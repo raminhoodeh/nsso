@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import VantaBackground from "@/components/VantaBackground";
 import GlassFilter from "@/components/GlassFilter";
@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     description: "The most beautiful way to present yourself online.",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
