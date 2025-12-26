@@ -31,7 +31,7 @@ async function ingestFilmList() {
         skip_empty_lines: true,
         trim: true,
         relax_column_count: true,
-    });
+    }) as Array<Record<string, unknown>>;
 
     console.log(`📊 Found ${records.length} records`);
     console.log('🔍 Processing first 3 records to debug...\n');
@@ -89,9 +89,7 @@ async function ingestFilmList() {
         }
     }
 
-}
-
-console.log(`\n✅ Film List Ingestion Complete: ${insertedCount}/${records.length} records inserted`);
+    console.log(`\n✅ Film List Ingestion Complete: ${insertedCount}/${records.length} records inserted`);
 }
 
 ingestFilmList().catch(console.error);
