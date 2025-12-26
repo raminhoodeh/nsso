@@ -44,6 +44,7 @@ function DashboardContent() {
     const [activeTab, setActiveTab] = useState<'page' | 'earnings'>('page')
     const [showPolarModal, setShowPolarModal] = useState(false)
     const [showDowngradeModal, setShowDowngradeModal] = useState(false)
+    const [urlCopied, setUrlCopied] = useState(false)
 
     // Premium/Username validation state
     const [desiredUsername, setDesiredUsername] = useState('')
@@ -232,6 +233,15 @@ function DashboardContent() {
     }
 
     // Save profile changes
+    const handleCopyUrl = () => {
+        const domain = user?.is_premium ? customDomain : desiredUsername
+        if (!domain) return
+        navigator.clipboard.writeText(`nsso.me/${domain}`)
+        setUrlCopied(true)
+        showToast('Profile URL copied!', 'success')
+        setTimeout(() => setUrlCopied(false), 2000)
+    }
+
     const saveProfile = async () => {
         if (!user) return
         setSaving(true)
@@ -633,6 +643,15 @@ function DashboardContent() {
                                                     fontWeight: 510
                                                 }}
                                             />
+
+                                            {/* Copy Button */}
+                                            <button
+                                                onClick={handleCopyUrl}
+                                                className="relative z-10 p-2 mr-1 text-white/50 hover:text-white transition-colors"
+                                                title="Copy URL"
+                                            >
+                                                {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+                                            </button>
 
                                             {/* Actions Section inside Input - Desktop Only */}
                                             <div className="relative z-10 hidden md:flex items-center gap-2 mr-1.5 shrink-0">

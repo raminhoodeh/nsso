@@ -19,7 +19,7 @@ export default function NSSOAgent() {
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 z-50 group hover:scale-105 transition-all duration-500"
+                    className="fixed bottom-6 right-6 z-[6000] group hover:scale-105 transition-all duration-500"
                 >
                     {/* Outer Glow/Blur Layer */}
                     <div className="absolute -inset-1 bg-white/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
@@ -63,7 +63,7 @@ export default function NSSOAgent() {
                 />
 
                 {/* Chat Window */}
-                <div className={`fixed inset-0 z-50 w-full h-full md:bottom-6 md:right-6 md:w-[676px] md:h-[92vh] md:max-h-[980px] md:inset-auto transition-all duration-300 transform ${isOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-10 scale-95 pointer-events-none absolute' // absolute helps remove it from flow layout if needed, though fixed handles it
+                <div className={`fixed inset-0 z-[6000] w-full h-full md:bottom-6 md:right-6 md:w-[676px] md:h-[92vh] md:max-h-[980px] md:inset-auto transition-all duration-300 transform ${isOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-10 scale-95 pointer-events-none absolute' // absolute helps remove it from flow layout if needed, though fixed handles it
                     }`}>
                     {/* Glow Effect */}
                     <div className="hidden md:block absolute -inset-1 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 rounded-[44px] blur-xl -z-10"></div>
