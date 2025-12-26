@@ -179,10 +179,12 @@ function DashboardContent() {
             if (data.checkoutUrl) {
                 window.location.href = data.checkoutUrl
             } else {
-                showToast('Failed to start checkout', 'error')
+                console.error('Checkout Error:', data)
+                showToast(data.details || data.error || 'Failed to start checkout', 'error')
             }
-        } catch {
-            showToast('Failed to start checkout', 'error')
+        } catch (err) {
+            console.error('Checkout Exception:', err)
+            showToast('Failed to start checkout. Check console.', 'error')
         }
         setProcessingCheckout(false)
     }

@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         }
 
         const payload = {
-            product_id: '5154b734-1a3b-41fe-92fe-f9a63e4453e8',
+            product_id: process.env.POLAR_PRODUCT_ID || '5154b734-1a3b-41fe-92fe-f9a63e4453e8',
             success_url: `${siteUrl}/dashboard?upgraded=true`,
             customer_email: authUser.email,
             metadata: {
