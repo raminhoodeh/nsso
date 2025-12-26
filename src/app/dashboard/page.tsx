@@ -553,7 +553,7 @@ function DashboardContent() {
                                             onBlur={saveProfile}
                                             placeholder="Need inspiration? Use this template: 'I am the [type of person] for [target customers] who want to [desired outcome]' and continue to elaborate on the experience of why you do this, how you do it, and what exactly is involved."
                                             rows={4}
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)] resize-none"
+                                            className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[17px] font-medium leading-[22px] p-4 placeholder:text-white/50 resize-none"
                                         />
                                     </div>
                                 </div>

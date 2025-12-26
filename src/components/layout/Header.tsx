@@ -194,12 +194,12 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
                                 <>
                                     {/* Backdrop */}
                                     <div
-                                        className="fixed inset-0 bg-black/50 z-40"
+                                        className="fixed inset-0 bg-black/50 z-[90]"
                                         onClick={() => setMobileMenuOpen(false)}
                                     />
 
                                     {/* Menu Panel */}
-                                    <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-50 shadow-2xl border-l border-white/10 animate-slide-in-right">
+                                    <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[100] shadow-2xl border-l border-white/10 animate-slide-in-right">
                                         <div className="flex flex-col h-full">
                                             {/* Header */}
                                             <div className="flex items-center justify-between p-6 border-b border-white/10">

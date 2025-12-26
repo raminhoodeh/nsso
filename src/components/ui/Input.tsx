@@ -58,7 +58,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
 
                 {/* Prefix */}
                 {prefix && (
-                    <span className="relative z-10 pl-4 text-[#545454] text-[17px] font-medium whitespace-nowrap">
+                    <span className="relative z-10 pl-4 text-white text-[17px] font-medium whitespace-nowrap">
                         {prefix}
                     </span>
                 )}
@@ -68,9 +68,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
                     ref={ref}
                     className={`
             relative z-10 flex-1 bg-transparent border-none outline-none
-            text-[#545454] text-[17px] font-medium leading-[22px]
+            text-white text-[17px] font-medium leading-[22px]
             py-3 ${prefix ? 'pl-1 pr-4' : 'px-4'}
-            placeholder:text-[rgba(84,84,84,0.5)]
+            placeholder:text-white/50
           `}
                     {...props}
                 />
