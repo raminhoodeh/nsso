@@ -343,13 +343,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
                 {/* Footer */}
                 {/* Footer - Only for non-logged-in users */}
-                {
-                    !viewer && (
-                        <div className="pt-12 flex justify-center pb-1">
-                            <CreateProfileButton />
-                        </div>
-                    )
-                }
+                {/* Footer - Always visible */}
+                <div className="pt-12 flex justify-center pb-1">
+                    <CreateProfileButton />
+                </div>
             </div >
         </main >
     )
