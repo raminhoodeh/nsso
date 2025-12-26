@@ -77,7 +77,7 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
     )
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50">
+        <header className="fixed top-0 left-0 right-0 z-[5000]">
             {/* Blur overlay */}
             <div
                 className="absolute inset-0 bg-transparent"
@@ -194,12 +194,12 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
                                 <>
                                     {/* Backdrop */}
                                     <div
-                                        className="fixed inset-0 bg-black/50 z-[90]"
+                                        className="fixed inset-0 bg-black/50 z-[5001]"
                                         onClick={() => setMobileMenuOpen(false)}
                                     />
 
                                     {/* Menu Panel */}
-                                    <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[100] shadow-2xl border-l border-white/10 animate-slide-in-right">
+                                    <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[5002] shadow-2xl border-l border-white/10 animate-slide-in-right">
                                         <div className="flex flex-col h-full">
                                             {/* Header */}
                                             <div className="flex items-center justify-between p-6 border-b border-white/10">

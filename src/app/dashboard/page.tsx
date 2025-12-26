@@ -398,7 +398,7 @@ function DashboardContent() {
             <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto space-y-6">
 
                 {/* Horizontal Tab Bar - Always visible */}
-                <div className="absolute left-1/2 -translate-x-1/2 top-[95px] z-50">
+                <div className="absolute left-1/2 -translate-x-1/2 top-[95px] z-30">
                     <div
                         className="border-[1.4px] border-[rgba(255,255,255,0.4)] border-solid flex gap-[6px] items-start overflow-clip p-[8px] rounded-[100px]"
                         style={{
