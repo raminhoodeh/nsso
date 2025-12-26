@@ -1,0 +1,465 @@
+@import "tailwindcss";
+
+/* ============================================
+   NSSO Design System - Global Styles
+   Liquid Glass Distortion + Vanta Integration
+   ============================================ */
+
+:root {
+  /* Core Brand Colors */
+  --nsso-bg-primary: #5a769d;
+  --nsso-bg-secondary: #43628c;
+  --nsso-bg-dark: #586E91;
+
+  /* Text Colors */
+  --nsso-text-primary: #FFFFFF;
+  --nsso-text-secondary: rgba(255, 255, 255, 0.7);
+  --nsso-text-muted: rgba(255, 255, 255, 0.5);
+
+  /* Glass Effect Variables */
+  --glass-blur: 7px;
+  --glass-bg: rgba(255, 255, 255, 0);
+  --glass-highlight: rgba(255, 255, 255, 0);
+  --glass-saturate: 120%;
+  --glass-brightness: 1;
+
+  /* Vanta Cloud Colors (as hex for JS) */
+  --vanta-bg: #586E91;
+  --vanta-sky: #586E91;
+  --vanta-cloud: #adcdde;
+  --vanta-cloud-shadow: #183550;
+  --vanta-sun: #ff9919;
+  --vanta-sun-glare: #ff6633;
+  --vanta-sunlight: #ff9933;
+
+  /* Recessed Input Colors */
+  --recessed-bg: rgba(208, 208, 208, 0.5);
+  --recessed-shadow: rgba(0, 0, 0, 0.1);
+
+  /* Windows Glass */
+  --windows-glass: #808080;
+
+  /* Separators */
+  --separator-light: rgba(255, 255, 255, 0.15);
+  --separator-dark: #5E5E5E;
+
+  /* Font families */
+  --font-sf-pro: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sf-pro-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--nsso-bg-primary);
+  --color-foreground: var(--nsso-text-primary);
+  --font-sans: var(--font-sf-pro);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html {
+  background: var(--nsso-bg-primary);
+}
+
+body {
+  background: transparent;
+  color: var(--nsso-text-primary);
+  font-family: var(--font-sf-pro);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   Liquid Glass Distortion System
+   From custom-code:glass-effect.html
+   ============================================ */
+[class*="glass-style-"] {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+[class*="glass-style-"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(var(--glass-blur, 7px));
+  filter: url(#glass-distortion) saturate(var(--glass-saturate, 120%)) brightness(var(--glass-brightness, 1.13));
+  z-index: 1;
+  pointer-events: none;
+}
+
+[class*="glass-style-"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.25));
+  border-radius: inherit;
+  z-index: 2;
+  pointer-events: none;
+}
+
+[class*="glass-style-"]>* {
+  position: relative;
+  z-index: 4;
+}
+
+/* Inner Shine Layer */
+[class*="glass-style-"] .glass-specular {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 1px 1px 1px var(--glass-highlight, rgba(255, 255, 255, 0.75));
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Glass Presets */
+.glass-style-1 {
+  --glass-blur: 7px;
+  --glass-bg: rgba(255, 255, 255, 0);
+  --glass-highlight: rgba(255, 255, 255, 0);
+  --glass-saturate: 120%;
+  --glass-brightness: 1;
+}
+
+.glass-style-2 {
+  --glass-blur: 100px;
+  --glass-bg: rgba(128, 128, 128, 0.3);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+  --glass-saturate: 100%;
+  --glass-brightness: 1;
+}
+
+.glass-style-card {
+  --glass-blur: 100px;
+  --glass-bg: rgba(128, 128, 128, 0.25);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  --glass-saturate: 100%;
+  --glass-brightness: 1.05;
+}
+
+/* ============================================
+   Glass Card Component Styles
+   ============================================ */
+.glass-card {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  backdrop-filter: blur(100px);
+  background: rgba(128, 128, 128, 0.25);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.3),
+    inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.25),
+    inset 1px 1.5px 4px 0px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.glass-card>* {
+  position: relative;
+  z-index: 3;
+}
+
+/* ============================================
+   Recessed Input Styles (from Figma)
+   ============================================ */
+.input-recessed {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.input-recessed::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(208, 208, 208, 0.5);
+  mix-blend-mode: color-burn;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.input-recessed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.1);
+  mix-blend-mode: luminosity;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.input-recessed input,
+.input-recessed select,
+.input-recessed textarea {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  color: #545454;
+  font-family: var(--font-sf-pro);
+  font-weight: 510;
+  font-size: 17px;
+  line-height: 22px;
+}
+
+.input-recessed input::placeholder,
+.input-recessed textarea::placeholder {
+  color: rgba(84, 84, 84, 0.5);
+}
+
+/* Input shadow effect */
+.input-shadow {
+  box-shadow:
+    inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.3),
+    inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.25),
+    inset 1px 1.5px 4px 0px rgba(0, 0, 0, 0.08),
+    inset 1px 1.5px 4px 0px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   Button Styles
+   ============================================ */
+.btn-glass {
+  position: relative;
+  border-radius: 500px;
+  padding: 12px 24px;
+  font-family: var(--font-sf-pro);
+  font-weight: 590;
+  font-size: 19px;
+  line-height: 24px;
+  color: rgba(255, 255, 255, 0.96);
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  overflow: hidden;
+  isolation: isolate;
+  transition: all 0.2s ease;
+}
+
+.btn-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.06);
+  mix-blend-mode: lighten;
+  pointer-events: none;
+}
+
+.btn-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(94, 94, 94, 0.18);
+  mix-blend-mode: color-dodge;
+  pointer-events: none;
+}
+
+.btn-glass:hover {
+  transform: scale(1.02);
+}
+
+.btn-glass:active {
+  transform: scale(0.98);
+}
+
+/* Primary Button (filled) */
+.btn-primary {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Secondary Button (outline) */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   Typography Classes
+   ============================================ */
+.text-headline {
+  font-family: var(--font-sf-pro-display);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 22px;
+}
+
+.text-body {
+  font-family: var(--font-sf-pro);
+  font-weight: 510;
+  font-size: 17px;
+  line-height: 22px;
+}
+
+.text-footnote {
+  font-family: var(--font-sf-pro);
+  font-weight: 510;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.text-caption {
+  font-family: var(--font-sf-pro);
+  font-weight: 510;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.text-large-title {
+  font-family: var(--font-sf-pro-display);
+  font-weight: 700;
+  font-size: 72px;
+  line-height: 97.5px;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+.separator-horizontal {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+.separator-vertical {
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Vanta background container */
+#vanta-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+}
+
+/* ============================================
+   Animation Classes
+   ============================================ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Toast Notifications
+   ============================================ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-size: 14px;
+  z-index: 9999;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* ============================================
+   Responsive Breakpoints
+   ============================================ */
+@media (max-width: 768px) {
+  .text-large-title {
+    font-size: 48px;
+    line-height: 60px;
+  }
+
+  .glass-card {
+    border-radius: 16px;
+  }
+}
