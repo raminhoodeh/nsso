@@ -4,6 +4,7 @@ import GlassCard from '@/components/ui/GlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
 import Link from 'next/link'
+import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import type { Metadata } from 'next'
 
@@ -92,13 +93,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     <div className="space-y-6">
                         {/* Profile Picture */}
                         {profile?.profile_pic_url && (
-                            <div className="w-full max-w-[200px] aspect-square rounded-3xl overflow-hidden mx-auto lg:mx-0">
-                                <img
-                                    src={profile.profile_pic_url}
-                                    alt={profile.full_name || 'Profile'}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
+                            <ProfileQRCodeToggle
+                                profilePicUrl={profile.profile_pic_url}
+                                username={username}
+                                fullName={profile.full_name || 'Profile'}
+                            />
                         )}
 
                         {/* Name and Headline */}

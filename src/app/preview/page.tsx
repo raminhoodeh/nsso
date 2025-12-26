@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { createClient } from '@/lib/supabase/client'
 import GlassCard from '@/components/ui/GlassCard'
@@ -108,14 +109,13 @@ export default function PreviewPage() {
                     {/* Left Column - Primary Identity */}
                     <div className="space-y-6">
                         {/* Profile Picture */}
-                        {profile?.profile_pic_url && (
-                            <div className="w-full max-w-[200px] aspect-square rounded-3xl overflow-hidden mx-auto lg:mx-0">
-                                <img
-                                    src={profile.profile_pic_url}
-                                    alt={profile.full_name || 'Profile'}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
+                        {/* Profile Picture */}
+                        {profile?.profile_pic_url && user?.username && (
+                            <ProfileQRCodeToggle
+                                profilePicUrl={profile.profile_pic_url}
+                                username={user.username}
+                                fullName={profile.full_name || 'Profile'}
+                            />
                         )}
 
                         {/* Name and Headline */}
