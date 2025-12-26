@@ -274,6 +274,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     return (
                                         <GlassCard key={product.id} className="p-6 flex flex-col h-full group">
                                             {/* Clickable Area (Image, Name, Price, Desc) */}
+                                            // @ts-expect-error - Conditional component type issue
                                             <ProductWrapper {...wrapperProps}>
                                                 {product.image_url && (
                                                     <div className="w-full aspect-square rounded-xl bg-black/20 overflow-hidden mb-6">
