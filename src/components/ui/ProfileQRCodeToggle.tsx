@@ -50,7 +50,7 @@ export default function ProfileQRCodeToggle({
                     {/* Hover Hint */}
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-white font-medium text-sm px-3 py-1 bg-white/20 backdrop-blur-md rounded-full">
-                            Shown QR
+                            Show QR
                         </span>
                     </div>
                 </div>
@@ -74,8 +74,8 @@ export default function ProfileQRCodeToggle({
                             includeMargin={false}
                         />
                     </div>
-                    <p className="mt-3 text-[#5a769d] font-bold text-xs tracking-wider uppercase text-center">
-                        Scan to View
+                    <p className="mt-3 text-[#5a769d] font-bold text-[10px] tracking-wide text-center leading-tight">
+                        All of you. All in one place
                     </p>
                 </div>
             </div>
