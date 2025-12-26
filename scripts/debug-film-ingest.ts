@@ -45,7 +45,7 @@ async function ingestFilmList() {
         console.log('Raw record:', JSON.stringify(record, null, 2));
 
         // Build content with filtering
-        const contentParts = Object.entries(record).map(([key, value]) => {
+        const contentParts = Object.entries(record as Record<string, unknown>).map(([key, value]) => {
             if (!key || key.trim() === '') {
                 console.log(`  ❌ Skipped: empty key`);
                 return null;
