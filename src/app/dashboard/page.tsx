@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Header from '@/components/layout/Header'
@@ -17,7 +17,7 @@ import type { User, Profile, Link, Contact, ContactMethod } from '@/lib/types'
 
 const CONTACT_METHODS: ContactMethod[] = ['Email', 'WhatsApp', 'Phone', 'Telegram', 'Location', 'Other']
 
-export default function DashboardPage() {
+function DashboardContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const supabase = createClient()
@@ -943,5 +943,13 @@ export default function DashboardPage() {
                 </div>
             )}
         </main>
+    )
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white text-xl">Loading...</div></div>}>
+            <DashboardContent />
+        </Suspense>
     )
 }
