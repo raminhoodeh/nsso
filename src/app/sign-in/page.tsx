@@ -10,11 +10,9 @@ import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 
-// SSO Provider icons
 const providers = [
-    { name: 'google', label: 'Google', icon: '🔵' },
-    { name: 'apple', label: 'Apple', icon: '🍎' },
-    { name: 'github', label: 'GitHub', icon: '🐙' },
+    { name: 'google', label: 'Google' },
+    { name: 'github', label: 'GitHub' },
 ] as const
 
 type Provider = typeof providers[number]['name']
@@ -118,7 +116,6 @@ export default function SignInPage() {
                             onClick={() => handleSSOSignIn(provider.name)}
                             className="justify-center"
                         >
-                            <span className="mr-2">{provider.icon}</span>
                             Continue with {provider.label}
                         </GlassButton>
                     ))}
