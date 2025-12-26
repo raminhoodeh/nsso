@@ -10,7 +10,7 @@ import ReferralTracker from "@/components/ReferralTracker";
 import ConditionalNSSOAgent from "@/components/agent/ConditionalNSSOAgent";
 
 export const metadata: Metadata = {
-  title: "nsso - Future Proof Yourself",
+  title: "nsso - Future-Proof Yourself",
   description: "The most beautiful way to present yourself online. Unify your personal and professional identity.",
   keywords: ["personal website", "portfolio", "link in bio", "personal branding", "digital identity"],
   authors: [{ name: "nsso" }],
