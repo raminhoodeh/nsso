@@ -59,7 +59,8 @@ export async function POST(request: Request) {
                 user_id: authUser.id,
                 desired_username: desiredUsername.toLowerCase(),
                 original_username: userData?.username || '',
-                referral_code: referralCode || '', // Send to Polar
+                original_username: userData?.username || '',
+                ...(referralCode ? { referral_code: referralCode } : {}), // Only send if present
             },
         }
 
