@@ -178,7 +178,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             start_year: new Date().getFullYear(),
             end_year: null
         }).select().single()
-        if (data) setExperiences([...experiences, data])
+        if (data) setExperiences([data, ...experiences])
     }
     const updateExperience = async (id: string, updates: Partial<Experience>) => {
         // Optimistic update
@@ -207,7 +207,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             start_year: new Date().getFullYear(),
             end_year: new Date().getFullYear()
         }).select().single()
-        if (data) setQualifications([...qualifications, data])
+        if (data) setQualifications([data, ...qualifications])
     }
     const updateQualification = async (id: string, updates: Partial<Qualification>) => {
         setQualifications(qualifications.map(q => q.id === id ? { ...q, ...updates } : q))
@@ -222,7 +222,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             contribution: '',
             description: ''
         }).select().single()
-        if (data) setProjects([...projects, data])
+        if (data) setProjects([data, ...projects])
     }
     const updateProject = async (id: string, updates: Partial<Project>) => {
         setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p))

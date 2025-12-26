@@ -311,16 +311,21 @@ function DashboardContent() {
     const updateLink = async (id: string, field: 'link_name' | 'link_url', value: string) => {
         setLinks(links.map(l => l.id === id ? { ...l, [field]: value } : l))
 
-        await supabase
+        const { error } = await supabase
             .from('links')
             .update({ [field]: value })
             .eq('id', id)
+
+        if (!error) {
+            showToast('Changes saved', 'success')
+        }
     }
 
     // Remove a link
     const removeLink = async (id: string) => {
         await supabase.from('links').delete().eq('id', id)
         setLinks(links.filter(l => l.id !== id))
+        showToast('Changes saved', 'success')
     }
 
     // Add a new contact
@@ -353,10 +358,14 @@ function DashboardContent() {
     ) => {
         setContacts(contacts.map(c => c.id === id ? { ...c, [field]: value } : c))
 
-        await supabase
+        const { error } = await supabase
             .from('contacts')
             .update({ [field]: value })
             .eq('id', id)
+
+        if (!error) {
+            showToast('Changes saved', 'success')
+        }
     }
 
     // Remove a contact
