@@ -62,6 +62,10 @@ export default function WalletLogin() {
 
     return (
         <div className="space-y-3">
+            <p className="text-center text-[11px] text-white/50 px-4 leading-tight mb-2">
+                Login via web3 to access crypto payments for your products & services
+            </p>
+
             <GlassButton
                 variant="secondary"
                 fullWidth
@@ -95,9 +99,7 @@ export default function WalletLogin() {
                 </span>
             </GlassButton>
 
-            <p className="text-center text-[11px] text-white/50 px-4 leading-tight">
-                Login via web3 to access crypto payments for your products & services
-            </p>
-        </div>
+
+        </div >
     )
 }

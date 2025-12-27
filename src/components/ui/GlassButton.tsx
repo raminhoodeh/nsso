@@ -33,10 +33,12 @@ export default function GlassButton({
       active:bg-[rgba(255,255,255,0.1)]
     `,
         secondary: `
-      bg-transparent
-      border border-[rgba(255,255,255,0.3)]
-      hover:border-[rgba(255,255,255,0.5)]
-      hover:bg-[rgba(255,255,255,0.1)]
+      bg-[rgba(128,128,128,0.3)]
+      border-[1.4px] border-[rgba(255,255,255,0.4)]
+      hover:border-[rgba(255,255,255,0.6)]
+      hover:bg-[rgba(128,128,128,0.4)]
+      mix-blend-luminosity
+      backdrop-blur-[50px]
     `,
         ghost: `
       bg-transparent
