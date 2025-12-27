@@ -85,7 +85,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
         const fetchProfileAndSetIntro = async () => {
             if (loading || hasInitialized) return;
 
-            let firstName = 'beautiful';
+            let firstName = 'creator';
             let isUserLoggedIn = !!user;
 
             if (user) {
@@ -121,10 +121,10 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 // Logged Out Logic
                 if (isFullScreen) {
-                    introText = "Hey beautiful, I’m here to help you feel clear about yourself, your offering and your plan of action. I’ve been loaded up with a custom database of all the latest AI tools, business strategy, courses, career advice, and services out there. A lot of these resources won’t be found from a normal search engine or AI tool, as they have been curated from unique sources by my founder. Copy / paste anything about yourself; your CV, LinkedIn etc. so I can give you more tailored advice. The more you tell me about yourself, the better my advice would be. I recommend that you make a nsso profile so I can do this more effectively. Select a category below or ask me anything to get started.";
+                    introText = "Hey creator, I’m here to help you feel clear about yourself, your offering and your plan of action. I’ve been loaded up with a custom database of all the latest AI tools, business strategy, courses, career advice, and services out there. A lot of these resources won’t be found from a normal search engine or AI tool, as they have been curated from unique sources by my founder. Copy / paste anything about yourself; your CV, LinkedIn etc. so I can give you more tailored advice. The more you tell me about yourself, the better my advice would be. I recommend that you make a nsso profile so I can do this more effectively. Select a category below or ask me anything to get started.";
                 } else {
                     // Pop-up
-                    introText = "Hey beautiful, I’m here to help you feel clear about yourself, your offering and your plan of action. Select a category below or ask me anything to get started.";
+                    introText = "Hey creator, I’m here to help you feel clear about yourself, your offering and your plan of action. Select a category below or ask me anything to get started.";
                 }
             }
 
