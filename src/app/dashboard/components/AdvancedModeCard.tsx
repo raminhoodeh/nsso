@@ -799,6 +799,21 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         </button>
                     </div>
 
+                    {/* Web3 Coming Soon Teaser */}
+                    <div className="relative group mb-4">
+                        <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                            <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/80 to-blue-500/80 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)] animate-pulse">
+                                Coming soon
+                            </span>
+                        </div>
+
+                        {/* Tooltip */}
+                        <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
+                            Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
+                        </div>
+                    </div>
+
                     <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
                         {products.map(product => (
                             <div key={product.id} className="relative group">
