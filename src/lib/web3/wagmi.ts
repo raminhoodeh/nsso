@@ -1,6 +1,6 @@
 import { http, createConfig } from 'wagmi'
 import { mainnet, sepolia } from 'wagmi/chains'
-import { walletConnect } from 'wagmi/connectors'
+import { walletConnect, injected } from 'wagmi/connectors'
 
 // Fallback project ID for development/testing if env var is missing
 // NOTE: This should be replaced with a proper ID from cloud.walletconnect.com
@@ -13,6 +13,7 @@ export const config = createConfig({
         [sepolia.id]: http(),
     },
     connectors: [
-        walletConnect({ projectId, showQrModal: false, metadata: { name: 'NSSO', description: 'NSSO Web3 Auth', url: 'https://nsso.me', icons: ['https://nsso.me/assets/nsso-logo.png'] } }),
+        injected(),
+        walletConnect({ projectId, showQrModal: true, metadata: { name: 'NSSO', description: 'NSSO Web3 Auth', url: 'https://nsso.me', icons: ['https://nsso.me/assets/nsso-logo.png'] } }),
     ],
 })

@@ -19,10 +19,16 @@ export default function WalletLogin() {
     const handleEthereumLogin = async () => {
         setLoading('ethereum')
         try {
-            // Prefer WalletConnect or Injected (Metamask)
-            const connector = connectors.find(c => c.id === 'walletConnect') || connectors[0]
-            if (connector) {
-                await connectEth({ connector })
+            // Connector selection strategy:
+            // 1. Try 'injected' (e.g., MetaMask extension) first
+            // 2. Fallback to 'walletConnect' (supports mobile + QR code)
+            const injectedConnector = connectors.find(c => c.id === 'injected')
+            const wcConnector = connectors.find(c => c.id === 'walletConnect')
+
+            const connectorToUse = injectedConnector || wcConnector || connectors[0]
+
+            if (connectorToUse) {
+                await connectEth({ connector: connectorToUse })
                 // TODO: Implement SIWE (Sign In With Ethereum) here
                 console.log('Connected Ethereum wallet')
             }
@@ -88,6 +94,10 @@ export default function WalletLogin() {
                     Continue with Solana
                 </span>
             </GlassButton>
+
+            <p className="text-center text-[11px] text-white/50 px-4 leading-tight">
+                Login via web3 to access crypto payments for your products & services
+            </p>
         </div>
     )
 }
