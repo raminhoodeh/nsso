@@ -11,6 +11,7 @@ import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import VantaBackground from '@/components/VantaBackground'
 import DimmingOverlay from '@/components/ui/DimmingOverlay'
+import WalletLogin from '@/components/auth/WalletLogin'
 
 const providers = [
     { name: 'google', label: 'Google' },
@@ -123,6 +124,9 @@ export default function SignInPage() {
                             Continue with {provider.label}
                         </GlassButton>
                     ))}
+
+                    {/* Wallet Login */}
+                    <WalletLogin />
                 </div>
 
                 {/* Separator */}
