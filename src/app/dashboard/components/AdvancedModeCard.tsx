@@ -803,9 +803,18 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     <div className="relative group mb-4">
                         <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
                             <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/80 to-blue-500/80 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)] animate-pulse">
-                                Coming soon
-                            </span>
+                            <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
+                                <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
+                                <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
+                                <img
+                                    alt=""
+                                    src="/assets/premium-bezel.png"
+                                    className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
+                                />
+                                <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                    Coming soon
+                                </span>
+                            </div>
                         </div>
 
                         {/* Tooltip */}
