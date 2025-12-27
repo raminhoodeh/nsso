@@ -16,24 +16,44 @@ export default function WalletLogin() {
     // Solana
     const { select, wallets, connect: connectSol } = useWallet()
 
+    const { showToast } = useToast()
+
     const handleEthereumLogin = async () => {
         setLoading('ethereum')
+        showToast('Looking for Ethereum wallets...', 'info')
+
         try {
+            // Log available connectors for debugging
+            console.log('Available connectors:', connectors.map(c => c.id))
+
             // Connector selection strategy:
             // 1. Try 'injected' (e.g., MetaMask extension) first
             // 2. Fallback to 'walletConnect' (supports mobile + QR code)
             const injectedConnector = connectors.find(c => c.id === 'injected')
             const wcConnector = connectors.find(c => c.id === 'walletConnect')
 
+            // Prioritize injected if properly available, else WalletConnect
             const connectorToUse = injectedConnector || wcConnector || connectors[0]
 
-            if (connectorToUse) {
-                await connectEth({ connector: connectorToUse })
-                // TODO: Implement SIWE (Sign In With Ethereum) here
-                console.log('Connected Ethereum wallet')
+            if (!connectorToUse) {
+                showToast('No Ethereum wallet found. Please install MetaMask or use a mobile wallet.', 'error')
+                return
             }
-        } catch (error) {
+
+            console.log('Connecting with:', connectorToUse.id)
+            showToast(`Connecting with ${connectorToUse.name}...`, 'info')
+
+            await connectEth({ connector: connectorToUse })
+
+            // TODO: Implement SIWE (Sign In With Ethereum) here
+            console.log('Connected Ethereum wallet')
+            showToast('Wallet connected! Backend verification required.', 'success')
+
+        } catch (error: any) {
             console.error('Ethereum login failed:', error)
+            // Show explicit error message
+            const msg = error?.message || 'Failed to connect wallet'
+            showToast(msg, 'error')
         } finally {
             setLoading(null)
         }
