@@ -49,7 +49,7 @@ export default function HomePage() {
 
       {/* Hero Section */}
       {/* Hero Section */}
-      <section className="pt-[calc(140px+15vh)] lg:pt-[140px] pb-16 px-6 lg:px-[165px] max-w-[1470px] mx-auto">
+      <section className="pt-[calc(140px+5vh)] lg:pt-[140px] pb-16 px-6 lg:px-[165px] max-w-[1470px] mx-auto">
 
         {/* Typographic Hero Animation/Layout - Centered Vertical Stack */}
         <div className="relative mb-48 flex flex-col items-center font-bold tracking-tight select-none z-0">

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 
 interface Toast {
     id: string
@@ -18,20 +18,39 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([])
+    // Store the timeout ID to clear it when showing a new toast
+    const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null)
 
     const showToast = useCallback((message: string, type: Toast['type'] = 'info') => {
         const id = Math.random().toString(36).substring(7)
-        setToasts(prev => [...prev, { id, message, type }])
 
-        // Auto dismiss after 3 seconds
-        setTimeout(() => {
-            setToasts(prev => prev.filter(t => t.id !== id))
+        // Clear existing timeout if any, to "refresh" the timer for the new toast
+        if (timerId) {
+            clearTimeout(timerId)
+        }
+
+        // Replace any existing toasts with the new one
+        setToasts([{ id, message, type }])
+
+        // Set a new timeout to auto dismiss
+        const newTimerId = setTimeout(() => {
+            setToasts([])
+            setTimerId(null)
         }, 3000)
-    }, [])
+
+        setTimerId(newTimerId)
+    }, [timerId])
 
     const hideToast = useCallback((id: string) => {
         setToasts(prev => prev.filter(t => t.id !== id))
     }, [])
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (timerId) clearTimeout(timerId)
+        }
+    }, [timerId])
 
     return (
         <ToastContext.Provider value={{ toasts, showToast, hideToast }}>
