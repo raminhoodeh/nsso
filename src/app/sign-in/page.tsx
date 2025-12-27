@@ -9,8 +9,6 @@ import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
-import VantaBackground from '@/components/VantaBackground'
-import DimmingOverlay from '@/components/ui/DimmingOverlay'
 import WalletLogin from '@/components/auth/WalletLogin'
 
 const providers = [
@@ -85,8 +83,6 @@ export default function SignInPage() {
 
     return (
         <main className="min-h-screen flex items-center justify-center px-6 py-12 relative overflow-hidden">
-            <VantaBackground />
-            <DimmingOverlay />
             <GlassCard className="w-full max-w-[440px] p-8 lg:p-12 relative z-10">
                 {/* Logo */}
                 <div className="text-center mb-8">

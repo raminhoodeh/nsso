@@ -49,7 +49,8 @@ export default function VantaBackground() {
 
     // Hide background on specific pages
     // Hide background on specific pages
-    const hiddenPaths = ['/sign-in', '/sign-up', '/reset-password', '/earnings']
+    // Hide background on specific pages
+    const hiddenPaths = ['/earnings']
 
     // Also hiding on dashboard product creator pages specifically
     const shouldHide = hiddenPaths.some(path => pathname?.startsWith(path)) ||
