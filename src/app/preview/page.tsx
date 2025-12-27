@@ -301,7 +301,7 @@ export default function PreviewPage() {
                                 return (
                                     <GlassCard key={product.id} className="p-6 flex flex-col h-full group">
                                         <ProductWrapper {...wrapperProps}>
-                                            // @ts-expect-error - Conditional component type issue
+
                                             {product.image_url && (
                                                 <div className="w-full aspect-square rounded-xl bg-black/20 overflow-hidden mb-6">
                                                     <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
