@@ -4,6 +4,7 @@ import GlassCard from '@/components/ui/GlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
 import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import type { Metadata } from 'next'
@@ -241,18 +242,33 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         <section>
                             <h2 className="text-3xl font-bold text-white mb-8">Projects</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {projects.map(project => (
-                                    <GlassCard key={project.id} className="p-6 md:p-8 flex flex-col h-full hover:bg-white/10 transition-colors">
-                                        <h3 className="text-2xl font-bold text-white mb-2">{project.project_name}</h3>
-                                        <div className="text-white/50 text-sm uppercase tracking-widest mb-4 font-bold">{project.contribution}</div>
-                                        <p className="text-white/70 leading-relaxed mb-6 flex-grow">{project.description}</p>
-                                        {project.project_photo_url && (
-                                            <div className="w-full aspect-video rounded-xl bg-black/20 overflow-hidden">
-                                                <img src={project.project_photo_url} alt={project.project_name} className="w-full h-full object-cover" />
-                                            </div>
-                                        )}
-                                    </GlassCard>
-                                ))}
+                                {projects.map((project) => {
+                                    const Wrapper = project.project_url ? 'a' : 'div'
+                                    const wrapperProps = project.project_url ? {
+                                        href: project.project_url,
+                                        target: '_blank',
+                                        rel: 'noopener noreferrer',
+                                        className: 'block h-full cursor-pointer transition-opacity hover:opacity-80'
+                                    } : { className: 'h-full' }
+
+                                    return (
+                                        <Wrapper key={project.id} {...wrapperProps}>
+                                            <GlassCard className="p-6 md:p-8 flex flex-col h-full hover:bg-white/10 transition-colors group">
+                                                <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                                                    {project.project_name}
+                                                    {project.project_url && <ExternalLink size={16} className="opacity-50" />}
+                                                </h3>
+                                                <div className="text-white/50 text-sm uppercase tracking-widest mb-4 font-bold">{project.contribution}</div>
+                                                <p className="text-white/70 leading-relaxed mb-6 flex-grow">{project.description}</p>
+                                                {project.project_photo_url && (
+                                                    <div className="w-full aspect-video rounded-xl bg-black/20 overflow-hidden">
+                                                        <img src={project.project_photo_url} alt={project.project_name} className="w-full h-full object-cover" />
+                                                    </div>
+                                                )}
+                                            </GlassCard>
+                                        </Wrapper>
+                                    )
+                                })}
                             </div>
                         </section>
                     )

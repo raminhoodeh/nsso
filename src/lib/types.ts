@@ -75,6 +75,7 @@ export interface Project {
     contribution: string
     description: string | null
     project_photo_url: string | null
+    project_url: string | null
     created_at: string
 }
 

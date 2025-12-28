@@ -220,7 +220,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             user_id: userId,
             project_name: '',
             contribution: '',
-            description: ''
+            description: '',
+            project_url: ''
         }).select().single()
         if (data) setProjects([data, ...projects])
     }
@@ -451,6 +452,16 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     value={proj.contribution}
                                     onChange={(e) => updateProject(proj.id, { contribution: e.target.value })}
                                     placeholder="e.g. Lead UI/UX Designer"
+                                    className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project URL (Optional)</label>
+                                <input
+                                    type="url"
+                                    value={proj.project_url || ''}
+                                    onChange={(e) => updateProject(proj.id, { project_url: e.target.value })}
+                                    placeholder="e.g. https://example.com"
                                     className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
                                 />
                             </div>
