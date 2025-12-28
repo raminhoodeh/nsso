@@ -15,7 +15,7 @@ import type { User, Profile, Link as LinkItem, Contact } from '@/lib/types'
 
 export default function PreviewPage() {
     const router = useRouter()
-    const supabase = createClient()
+    const [supabase] = useState(() => createClient())
     const { showToast } = useToast()
 
     const [user, setUser] = useState<User | null>(null)
