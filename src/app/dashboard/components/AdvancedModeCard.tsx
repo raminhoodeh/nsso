@@ -40,6 +40,12 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     // Selection States
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null) // For editing specific product
 
+    // Confirmation State
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; productId: string | null }>({
+        isOpen: false,
+        productId: null
+    })
+
     // Security Verification State
     const [verificationStatus, setVerificationStatus] = useState<'idle' | 'scanning' | 'secure' | 'unsafe'>('idle')
     const [securityMessage, setSecurityMessage] = useState('')
@@ -289,9 +295,19 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         }
         await supabase.from('products').update(updates).eq('id', id)
     }
-    const deleteProduct = async (id: string) => {
+    const confirmDeleteProduct = (id: string) => {
+        setDeleteConfirmation({ isOpen: true, productId: id })
+    }
+
+    const executeDeleteProduct = async () => {
+        if (!deleteConfirmation.productId) return
+
+        const id = deleteConfirmation.productId
         setProducts(products.filter(p => p.id !== id))
         if (selectedProduct?.id === id) setSelectedProduct(null)
+
+        setDeleteConfirmation({ isOpen: false, productId: null }) // Close immediately for UI
+
         await supabase.from('products').delete().eq('id', id)
     }
 
@@ -569,7 +585,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         return (
             <div className="flex flex-col gap-6 animate-fadeIn pt-6 relative">
                 <button
-                    onClick={() => deleteProduct(selectedProduct.id)}
+                    onClick={() => confirmDeleteProduct(selectedProduct.id)}
                     className="absolute top-[27px] right-0 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-10"
                 >
                     <X size={18} />
@@ -884,7 +900,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     {product.name || 'New Product'}
                                 </button>
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); deleteProduct(product.id); }}
+                                    onClick={(e) => { e.stopPropagation(); confirmDeleteProduct(product.id); }}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
                                 >
                                     <X size={12} />
@@ -916,6 +932,32 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     onCropComplete={handleCropComplete}
                     loading={isUploading}
                 />
+            )}
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmation.isOpen && (
+                <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })} />
+                    <div className="relative bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <h3 className="text-xl font-bold text-white mb-2">Are you sure?</h3>
+                        <p className="text-white/70 text-sm mb-6 leading-relaxed">
+                            You cannot restore your Product after it has been deleted. This action is permanent.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })}
+                                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={executeDeleteProduct}
+                                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </GlassCard>
     )
