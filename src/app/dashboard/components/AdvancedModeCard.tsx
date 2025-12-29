@@ -906,6 +906,17 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 {activeSection === 'products' && renderProducts()}
             </div>
 
+            {/* Cropper Modal */}
+            {cropperImage && (
+                <ImageCropperModal
+                    isOpen={cropperOpen}
+                    onClose={() => setCropperOpen(false)}
+                    imageSrc={cropperImage}
+                    aspectRatio={cropperAspect}
+                    onCropComplete={handleCropComplete}
+                    loading={isUploading}
+                />
+            )}
         </GlassCard>
     )
 }
