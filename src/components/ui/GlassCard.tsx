@@ -24,7 +24,7 @@ export default function GlassCard({
     return (
         <div
             className={`
-        relative rounded-[24px] overflow-hidden isolate
+        relative rounded-[24px] overflow-hidden isolate flex flex-col
         ${className}
       `}
         >
@@ -55,7 +55,7 @@ export default function GlassCard({
             />
 
             {/* Content */}
-            <div className="relative z-10">
+            <div className="relative z-10 h-full w-full">
                 {children}
             </div>
         </div>

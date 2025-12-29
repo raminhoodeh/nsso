@@ -170,38 +170,42 @@ export default function PreviewPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 !mt-24">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
-                                <GlassCard className="p-6 h-full max-h-[85vh] overflow-y-auto custom-scrollbar">
-                                    <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h3>
-                                    <div className="space-y-6">
-                                        {experiences.map(exp => (
-                                            <div key={exp.id} className="relative pl-6 border-l border-white/10">
-                                                <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
-                                                <h4 className="text-white font-semibold text-lg leading-tight mb-1">{exp.job_title}</h4>
-                                                <p className="text-white/70 font-medium mb-1">{exp.company_name}</p>
-                                                <p className="text-white/40 text-sm">
-                                                    {exp.start_year} — {exp.end_year || 'Present'}
-                                                </p>
-                                            </div>
-                                        ))}
+                                <GlassCard className="p-6 h-full max-h-[85vh]">
+                                    <div className="h-full overflow-y-auto custom-scrollbar pr-2">
+                                        <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h3>
+                                        <div className="space-y-6">
+                                            {experiences.map(exp => (
+                                                <div key={exp.id} className="relative pl-6 border-l border-white/10">
+                                                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
+                                                    <h4 className="text-white font-semibold text-lg leading-tight mb-1">{exp.job_title}</h4>
+                                                    <p className="text-white/70 font-medium mb-1">{exp.company_name}</p>
+                                                    <p className="text-white/40 text-sm">
+                                                        {exp.start_year} — {exp.end_year || 'Present'}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </GlassCard>
                             )}
 
                             {/* Qualifications Section */}
                             {qualifications.length > 0 && (
-                                <GlassCard className="p-6 h-full max-h-[85vh] overflow-y-auto custom-scrollbar">
-                                    <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h3>
-                                    <div className="space-y-6">
-                                        {qualifications.map(qual => (
-                                            <div key={qual.id} className="relative pl-6 border-l border-white/10">
-                                                <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
-                                                <h4 className="text-white font-semibold text-lg leading-tight mb-1">{qual.qualification_name}</h4>
-                                                <p className="text-white/70 font-medium mb-1">{qual.institution}</p>
-                                                <p className="text-white/40 text-sm">
-                                                    {qual.start_year} — {qual.end_year}
-                                                </p>
-                                            </div>
-                                        ))}
+                                <GlassCard className="p-6 h-full max-h-[85vh]">
+                                    <div className="h-full overflow-y-auto custom-scrollbar pr-2">
+                                        <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h3>
+                                        <div className="space-y-6">
+                                            {qualifications.map(qual => (
+                                                <div key={qual.id} className="relative pl-6 border-l border-white/10">
+                                                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
+                                                    <h4 className="text-white font-semibold text-lg leading-tight mb-1">{qual.qualification_name}</h4>
+                                                    <p className="text-white/70 font-medium mb-1">{qual.institution}</p>
+                                                    <p className="text-white/40 text-sm">
+                                                        {qual.start_year} — {qual.end_year}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </GlassCard>
                             )}
