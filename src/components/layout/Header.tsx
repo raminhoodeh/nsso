@@ -80,8 +80,8 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
         <header className="fixed top-0 left-0 right-0 z-[5000]">
             {/* Blur overlay */}
             <div
-                className="absolute inset-0 bg-transparent"
-                style={{ backdropFilter: 'blur(10px)' }}
+                className="absolute inset-0 bg-black/20 border-b border-white/10"
+                style={{ backdropFilter: 'blur(12px)' }}
                 aria-hidden="true"
             />
 
