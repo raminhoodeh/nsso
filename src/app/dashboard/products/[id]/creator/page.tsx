@@ -637,7 +637,7 @@ export default function SalesPageCreator() {
 
                             <div className="space-y-3">
                                 {(product.benefits || []).map((benefit, index) => (
-                                    <div key={index} className="flex items-center gap-3 group">
+                                    <div key={index} className="flex items-center gap-3 group relative">
                                         <List size={20} className="text-white/20 flex-shrink-0" />
                                         <div className="flex-1 relative rounded-[12px] overflow-hidden">
                                             <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
@@ -651,7 +651,7 @@ export default function SalesPageCreator() {
                                                     updateProduct({ benefits: newBenefits })
                                                 }}
                                                 placeholder="Start with a verb (e.g. 'Automate your workflow...')"
-                                                className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-3 placeholder:text-[rgba(84,84,84,0.5)]"
+                                                className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-3 pr-12 placeholder:text-[rgba(84,84,84,0.5)]"
                                             />
                                         </div>
                                         <button
@@ -659,9 +659,9 @@ export default function SalesPageCreator() {
                                                 const newBenefits = (product.benefits || []).filter((_, i) => i !== index)
                                                 updateProduct({ benefits: newBenefits })
                                             }}
-                                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-md opacity-0 group-hover:opacity-100"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-all opacity-0 group-hover:opacity-100 z-20"
                                         >
-                                            <X size={14} className="text-white font-bold" strokeWidth={3} />
+                                            <X size={16} />
                                         </button>
                                     </div>
                                 ))}
