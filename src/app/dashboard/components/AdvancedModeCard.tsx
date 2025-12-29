@@ -141,15 +141,48 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         }
     }
 
-    const handleImageUpload = async (file: File, pathPrefix: string): Promise<string | null> => {
+    import ImageCropperModal from '@/components/ui/ImageCropperModal'
+
+    // ... imports
+
+    // Selection States
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null) // For editing specific product
+
+    // Cropper State
+    const [cropperOpen, setCropperOpen] = useState(false)
+    const [cropperImage, setCropperImage] = useState<string | null>(null)
+    const [cropperAspect, setCropperAspect] = useState(1)
+    const [cropperTarget, setCropperTarget] = useState<{ type: 'project' | 'product', id?: string } | null>(null)
+
+
+    // ... 
+
+    // Modified Image Upload Handler (Now just prepares crop)
+    const handleImageSelect = (file: File, type: 'project' | 'product', id?: string) => {
+        if (!file) return
+        const reader = new FileReader()
+        reader.addEventListener('load', () => {
+            setCropperImage(reader.result as string)
+            setCropperAspect(type === 'project' ? 16 / 9 : 1) // 16:9 for Projects, 1:1 for Products
+            setCropperTarget({ type, id })
+            setCropperOpen(true)
+        })
+        reader.readAsDataURL(file)
+    }
+
+    // Final Upload after Crop
+    const handleCropComplete = async (croppedBlob: Blob) => {
+        if (!cropperTarget) return
         setIsUploading(true)
+
         try {
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${pathPrefix}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+            // Upload
+            const pathPrefix = cropperTarget.type === 'project' ? 'projects' : 'products'
+            const fileName = `${pathPrefix}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
 
             const { error: uploadError } = await supabase.storage
                 .from('portfolio-assets')
-                .upload(fileName, file)
+                .upload(fileName, croppedBlob, { contentType: 'image/jpeg' })
 
             if (uploadError) throw uploadError
 
@@ -157,13 +190,24 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 .from('portfolio-assets')
                 .getPublicUrl(fileName)
 
-            return data.publicUrl
+            const publicUrl = data.publicUrl
+
+            // Update State & DB
+            if (cropperTarget.type === 'project' && cropperTarget.id) {
+                updateProject(cropperTarget.id, { project_photo_url: publicUrl })
+            } else if (cropperTarget.type === 'product' && selectedProduct) {
+                // If we are editing a selected product
+                updateProduct(selectedProduct.id, { image_url: publicUrl })
+            }
+
         } catch (error) {
             console.error('Error uploading image:', error)
             alert('Error uploading image. Please try again.')
-            return null
         } finally {
             setIsUploading(false)
+            setCropperOpen(false)
+            setCropperImage(null)
+            setCropperTarget(null)
         }
     }
 
@@ -487,12 +531,12 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             type="file"
                                             accept="image/*"
                                             className="hidden"
-                                            onChange={async (e) => {
+                                            onChange={(e) => {
                                                 const file = e.target.files?.[0]
                                                 if (file) {
-                                                    const url = await handleImageUpload(file, 'projects')
-                                                    if (url) updateProject(proj.id, { project_photo_url: url })
+                                                    handleImageSelect(file, 'project', proj.id)
                                                 }
+                                                e.target.value = ''
                                             }}
                                         />
                                     </label>
@@ -573,12 +617,12 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         type="file"
                                         accept="image/*"
                                         className="hidden"
-                                        onChange={async (e) => {
+                                        onChange={(e) => {
                                             const file = e.target.files?.[0]
                                             if (file) {
-                                                const url = await handleImageUpload(file, 'products')
-                                                if (url) updateProduct(selectedProduct.id, { image_url: url })
+                                                handleImageSelect(file, 'product', selectedProduct.id)
                                             }
+                                            e.target.value = ''
                                         }}
                                     />
                                 </label>

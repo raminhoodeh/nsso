@@ -15,6 +15,7 @@ import EarningsTab from '@/app/dashboard/components/EarningsTab'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import type { User, Profile, Link, Contact, ContactMethod } from '@/lib/types'
+import ImageCropperModal from '@/components/ui/ImageCropperModal'
 
 const CONTACT_METHODS: ContactMethod[] = ['Email', 'WhatsApp', 'Phone', 'Telegram', 'Location', 'Other']
 
@@ -47,8 +48,14 @@ function DashboardContent() {
     const [showDowngradeModal, setShowDowngradeModal] = useState(false)
     const [urlCopied, setUrlCopied] = useState(false)
 
+    // Cropper State
+    const [cropperOpen, setCropperOpen] = useState(false)
+    const [cropperImage, setCropperImage] = useState<string | null>(null)
+    const [isUploading, setIsUploading] = useState(false)
+
     // Premium/Username validation state
     const [desiredUsername, setDesiredUsername] = useState('')
+
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
     const [usernameError, setUsernameError] = useState('')
     const [checkingUsername, setCheckingUsername] = useState(false)
@@ -268,19 +275,35 @@ function DashboardContent() {
     }
 
     // Handle profile picture upload
-    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle profile picture file selection
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
-        if (!file || !user) return
+        if (!file) return
 
-        const fileExt = file.name.split('.').pop()
+        const reader = new FileReader()
+        reader.addEventListener('load', () => {
+            setCropperImage(reader.result as string)
+            setCropperOpen(true)
+        })
+        reader.readAsDataURL(file)
+        e.target.value = '' // Reset input
+    }
+
+    // Handle Cropped Upload
+    const handleCropComplete = async (croppedBlob: Blob) => {
+        if (!user) return
+        setIsUploading(true)
+
+        const fileExt = 'jpg' // Canvas toBlob usually is png or jpg, we default to jpg/png
         const fileName = `${user.id}/${Date.now()}.${fileExt}`
 
         const { error: uploadError } = await supabase.storage
             .from('avatars')
-            .upload(fileName, file, { upsert: true })
+            .upload(fileName, croppedBlob, { upsert: true, contentType: 'image/jpeg' })
 
         if (uploadError) {
             showToast('Failed to upload image', 'error')
+            setIsUploading(false)
             return
         }
 
@@ -296,6 +319,9 @@ function DashboardContent() {
             .upsert({ user_id: user.id, profile_pic_url: publicUrl })
 
         showToast('Profile picture updated!', 'success')
+        setIsUploading(false)
+        setCropperOpen(false)
+        setCropperImage(null)
     }
 
     // Add a new link
@@ -526,11 +552,23 @@ function DashboardContent() {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
-                                    onChange={handleAvatarUpload}
+                                    onChange={handleFileSelect}
                                     className="hidden"
                                 />
                                 <p className="text-white/50 text-sm mt-2">Click to upload</p>
                             </div>
+
+                            {/* Cropper Modal */}
+                            {cropperImage && (
+                                <ImageCropperModal
+                                    isOpen={cropperOpen}
+                                    onClose={() => setCropperOpen(false)}
+                                    imageSrc={cropperImage}
+                                    aspectRatio={1} // 1:1 for Profile Pic
+                                    onCropComplete={handleCropComplete}
+                                    loading={isUploading}
+                                />
+                            )}
 
                             {/* Profile Fields */}
                             <div className="lg:col-span-2 space-y-4">

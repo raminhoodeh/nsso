@@ -249,15 +249,32 @@ export default function SalesPageCreator() {
         setTimeout(() => setCopiedField(null), 2000)
     }
 
-    const handleImageUpload = async (file: File) => {
+    import ImageCropperModal from '@/components/ui/ImageCropperModal'
+
+    // ... existing imports
+
+    // Cropper State
+    const [cropperOpen, setCropperOpen] = useState(false)
+    const [cropperImage, setCropperImage] = useState<string | null>(null)
+    // ...
+
+    const handleImageSelect = (file: File) => {
+        const reader = new FileReader()
+        reader.addEventListener('load', () => {
+            setCropperImage(reader.result as string)
+            setCropperOpen(true)
+        })
+        reader.readAsDataURL(file)
+    }
+
+    const handleCropComplete = async (croppedBlob: Blob) => {
         setIsUploading(true)
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${Math.random()}.${fileExt}`
+        const fileName = `${Math.random()}.jpg`
         const filePath = `products/${fileName}`
 
         const { error: uploadError } = await supabase.storage
             .from('images')
-            .upload(filePath, file)
+            .upload(filePath, croppedBlob, { contentType: 'image/jpeg' })
 
         if (uploadError) {
             console.error('Error uploading:', uploadError)
@@ -268,6 +285,8 @@ export default function SalesPageCreator() {
         const { data } = supabase.storage.from('images').getPublicUrl(filePath)
         await updateProduct({ image_url: data.publicUrl })
         setIsUploading(false)
+        setCropperOpen(false)
+        setCropperImage(null)
     }
 
     if (loading) {
@@ -410,14 +429,26 @@ export default function SalesPageCreator() {
                                                 type="file"
                                                 accept="image/*"
                                                 className="hidden"
-                                                onChange={async (e) => {
+                                                onChange={(e) => {
                                                     const file = e.target.files?.[0]
-                                                    if (file) await handleImageUpload(file)
+                                                    if (file) handleImageSelect(file)
+                                                    e.target.value = ''
                                                 }}
                                             />
                                         </label>
                                     </div>
                                 </div>
+                                {/* Cropper Modal */}
+                                {cropperImage && (
+                                    <ImageCropperModal
+                                        isOpen={cropperOpen}
+                                        onClose={() => setCropperOpen(false)}
+                                        imageSrc={cropperImage}
+                                        aspectRatio={1} // Product image is 1:1
+                                        onCropComplete={handleCropComplete}
+                                        loading={isUploading}
+                                    />
+                                )}
 
                                 {/* Purchase Link */}
                                 <div>
