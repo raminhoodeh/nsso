@@ -308,7 +308,7 @@ export default function SalesPageCreator() {
     }
 
     return (
-        <main className="min-h-screen pb-32 md:pb-12">
+        <main className="min-h-screen pb-32 md:pb-12 bg-[#43628c]">
             <Header />
 
             <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto">
@@ -725,7 +725,7 @@ export default function SalesPageCreator() {
                                         value={product.video_url || ''}
                                         onChange={(e) => updateProduct({ video_url: e.target.value })}
                                         placeholder="https://youtube.com/watch?v=..."
-                                        className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)]"
+                                        className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[17px] font-medium leading-[22px] p-4 placeholder:text-white/50"
                                     />
                                 </div>
                             </div>
