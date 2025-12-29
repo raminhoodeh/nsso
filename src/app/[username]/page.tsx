@@ -150,7 +150,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 !mt-24">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
-                                <GlassCard className="p-6 h-full">
+                                <GlassCard className="p-6 h-full max-h-[85vh] overflow-y-auto custom-scrollbar">
                                     <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h3>
                                     <div className="space-y-6">
                                         {experiences.map(exp => (
@@ -169,7 +169,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
                             {/* Qualifications Section */}
                             {qualifications.length > 0 && (
-                                <GlassCard className="p-6 h-full">
+                                <GlassCard className="p-6 h-full max-h-[85vh] overflow-y-auto custom-scrollbar">
                                     <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h3>
                                     <div className="space-y-6">
                                         {qualifications.map(qual => (
