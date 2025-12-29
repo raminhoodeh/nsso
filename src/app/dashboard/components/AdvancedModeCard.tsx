@@ -6,6 +6,7 @@ import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, 
 import DOMPurify from 'dompurify'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useUI } from '@/components/providers/UIProvider'
+import ImageCropperModal from '@/components/ui/ImageCropperModal'
 
 // GlassCard Component (Internal helper to match design system but allow layout control)
 // Updated background to be darker (bg-black/20) for better contrast over clouds
@@ -141,12 +142,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         }
     }
 
-    import ImageCropperModal from '@/components/ui/ImageCropperModal'
-
-    // ... imports
-
-    // Selection States
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null) // For editing specific product
+    // Cropper State
 
     // Cropper State
     const [cropperOpen, setCropperOpen] = useState(false)

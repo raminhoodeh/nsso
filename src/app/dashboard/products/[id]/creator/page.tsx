@@ -7,6 +7,7 @@ import { Product } from '@/lib/types'
 import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2, ShieldCheck, ShieldAlert, Lock } from 'lucide-react'
 import GlassCard from '@/components/ui/GlassCard'
 import Header from '@/components/layout/Header'
+import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import DOMPurify from 'dompurify'
 
 // AI Prompt Constants
@@ -172,6 +173,10 @@ export default function SalesPageCreator() {
     const [verificationStatus, setVerificationStatus] = useState<'idle' | 'scanning' | 'secure' | 'unsafe'>('idle')
     const [securityMessage, setSecurityMessage] = useState('')
 
+    // Cropper State
+    const [cropperOpen, setCropperOpen] = useState(false)
+    const [cropperImage, setCropperImage] = useState<string | null>(null)
+
     const productId = params.id as string
 
     useEffect(() => {
@@ -249,14 +254,7 @@ export default function SalesPageCreator() {
         setTimeout(() => setCopiedField(null), 2000)
     }
 
-    import ImageCropperModal from '@/components/ui/ImageCropperModal'
 
-    // ... existing imports
-
-    // Cropper State
-    const [cropperOpen, setCropperOpen] = useState(false)
-    const [cropperImage, setCropperImage] = useState<string | null>(null)
-    // ...
 
     const handleImageSelect = (file: File) => {
         const reader = new FileReader()
