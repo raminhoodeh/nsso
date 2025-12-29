@@ -138,7 +138,7 @@ export default function ProductSalesPage() {
     const youtubeId = product.video_url ? extractYouTubeId(product.video_url) : null
 
     return (
-        <div className="min-h-screen bg-[#60759a] p-4 md:p-8">
+        <div className="min-h-screen bg-[#43628c] p-4 md:p-8">
             <div className="max-w-[1400px] mx-auto">
                 {/* Golden Ratio Grid: 1.618fr 1fr */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
