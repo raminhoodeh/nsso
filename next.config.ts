@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/docs/deck',
-        destination: '/nsso-pitch-deck.pdf',
+        destination: '/deck.pdf',
         permanent: true,
       },
     ];
