@@ -890,6 +890,30 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         </div>
                     </div>
 
+                    {/* Facebook Pixel Coming Soon Teaser */}
+                    <div className="relative group mb-4">
+                        <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                            <span className="text-white/50 text-[15px]">Connect Facebook Pixel</span>
+                            <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
+                                <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
+                                <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
+                                <img
+                                    alt=""
+                                    src="/assets/premium-bezel.png"
+                                    className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
+                                />
+                                <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                    Coming soon
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Tooltip */}
+                        <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
+                            Track conversions and optimize your ads with Facebook Pixel integration.
+                        </div>
+                    </div>
+
                     <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
                         {products.map(product => (
                             <div key={product.id} className="relative group">
