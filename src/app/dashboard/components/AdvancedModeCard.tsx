@@ -814,173 +814,178 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // Main Expanded View
     return (
-        <GlassCard className="w-full min-h-[600px] flex flex-col md:flex-row relative">
+        <GlassCard
+            className="w-full min-h-[600px] relative"
+            style={{ '--glass-bg': 'rgba(0, 0, 0, 0.2)' } as React.CSSProperties}
+        >
+            <div className="flex flex-col md:flex-row w-full h-full">
 
-            {/* Collapse Button */}
-            <div
-                onClick={() => { setIsExpanded(false); setBackgroundDimmed(false); }}
-                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white cursor-pointer transition-colors"
-            >
-                <ChevronUp size={20} />
-            </div>
-
-            {/* LEFT COLUMN: Sidebar Navigation */}
-            <div className="w-full md:w-[300px] border-r border-white/10 p-6 flex flex-col gap-8 bg-black/20">
-
-                {/* Experiences Section */}
-                <div>
-                    <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold mb-4">Experiences</h3>
-                    <div className="flex flex-col gap-2">
-                        <button
-                            onClick={() => { setActiveSection('experiences'); setSelectedProduct(null); }}
-                            className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'experiences' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
-                        >
-                            Job Titles
-                        </button>
-                        <button
-                            onClick={() => { setActiveSection('qualifications'); setSelectedProduct(null); }}
-                            className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'qualifications' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
-                        >
-                            Qualifications
-                        </button>
-                        <button
-                            onClick={() => { setActiveSection('projects'); setSelectedProduct(null); }}
-                            className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'projects' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
-                        >
-                            Projects
-                        </button>
-                    </div>
+                {/* Collapse Button */}
+                <div
+                    onClick={() => { setIsExpanded(false); setBackgroundDimmed(false); }}
+                    className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white cursor-pointer transition-colors"
+                >
+                    <ChevronUp size={20} />
                 </div>
 
-                {/* Products Section */}
-                <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold">Products & Services</h3>
-                        <button
-                            onClick={addProduct}
-                            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                        >
-                            <Plus size={12} />
-                        </button>
-                    </div>
+                {/* LEFT COLUMN: Sidebar Navigation */}
+                <div className="w-full md:w-[300px] border-r border-white/10 p-6 flex flex-col gap-8 bg-black/20">
 
-                    {/* Web3 Coming Soon Teaser */}
-                    <div className="relative group mb-4">
-                        <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
-                            <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
-                            <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
-                                <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                                <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                                <img
-                                    alt=""
-                                    src="/assets/premium-bezel.png"
-                                    className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                                />
-                                <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                                    Coming soon
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Tooltip */}
-                        <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
-                            Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
-                        </div>
-                    </div>
-
-                    {/* Facebook Pixel Coming Soon Teaser */}
-                    <div className="relative group mb-4">
-                        <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
-                            <span className="text-white/50 text-[15px]">Connect Facebook Pixel</span>
-                            <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
-                                <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                                <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                                <img
-                                    alt=""
-                                    src="/assets/premium-bezel.png"
-                                    className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                                />
-                                <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                                    Coming soon
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Tooltip */}
-                        <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
-                            Track conversions and optimize your ads with Facebook Pixel integration.
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
-                        {products.map(product => (
-                            <div key={product.id} className="relative group">
-                                <button
-                                    onClick={() => { setActiveSection('products'); setSelectedProduct(product); }}
-                                    className={`w-full text-left px-4 py-3 rounded-xl transition-all truncate pr-8 ${activeSection === 'products' && selectedProduct?.id === product.id ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
-                                >
-                                    {product.name || 'New Product'}
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); confirmDeleteProduct(product.id); }}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
-                                >
-                                    <X size={12} />
-                                </button>
-                            </div>
-                        ))}
-                        {products.length === 0 && (
-                            <p className="text-white/60 text-xs italic px-2">No products added.</p>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* RIGHT COLUMN: Content Editor */}
-            <div className="flex-1 p-6 md:p-10 overflow-y-auto max-h-[800px] relative">
-                {activeSection === 'experiences' && renderExperiences()}
-                {activeSection === 'qualifications' && renderQualifications()}
-                {activeSection === 'projects' && renderProjects()}
-                {activeSection === 'products' && renderProducts()}
-            </div>
-
-            {/* Cropper Modal */}
-            {cropperImage && (
-                <ImageCropperModal
-                    isOpen={cropperOpen}
-                    onClose={() => setCropperOpen(false)}
-                    imageSrc={cropperImage}
-                    aspectRatio={cropperAspect}
-                    onCropComplete={handleCropComplete}
-                    loading={isUploading}
-                />
-            )}
-            {/* Delete Confirmation Modal */}
-            {deleteConfirmation.isOpen && (
-                <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })} />
-                    <div className="relative bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
-                        <h3 className="text-xl font-bold text-white mb-2">Are you sure?</h3>
-                        <p className="text-white/70 text-sm mb-6 leading-relaxed">
-                            You cannot restore your Product after it has been deleted. This action is permanent.
-                        </p>
-                        <div className="flex gap-3">
+                    {/* Experiences Section */}
+                    <div>
+                        <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold mb-4">Experiences</h3>
+                        <div className="flex flex-col gap-2">
                             <button
-                                onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })}
-                                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+                                onClick={() => { setActiveSection('experiences'); setSelectedProduct(null); }}
+                                className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'experiences' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
                             >
-                                Cancel
+                                Job Titles
                             </button>
                             <button
-                                onClick={executeDeleteProduct}
-                                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                                onClick={() => { setActiveSection('qualifications'); setSelectedProduct(null); }}
+                                className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'qualifications' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
                             >
-                                Delete
+                                Qualifications
+                            </button>
+                            <button
+                                onClick={() => { setActiveSection('projects'); setSelectedProduct(null); }}
+                                className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'projects' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                            >
+                                Projects
                             </button>
                         </div>
                     </div>
+
+                    {/* Products Section */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold">Products & Services</h3>
+                            <button
+                                onClick={addProduct}
+                                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                            >
+                                <Plus size={12} />
+                            </button>
+                        </div>
+
+                        {/* Web3 Coming Soon Teaser */}
+                        <div className="relative group mb-4">
+                            <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                                <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
+                                <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
+                                    <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
+                                    <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
+                                    <img
+                                        alt=""
+                                        src="/assets/premium-bezel.png"
+                                        className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
+                                    />
+                                    <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                        Coming soon
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Tooltip */}
+                            <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
+                                Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
+                            </div>
+                        </div>
+
+                        {/* Facebook Pixel Coming Soon Teaser */}
+                        <div className="relative group mb-4">
+                            <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                                <span className="text-white/50 text-[15px]">Connect Facebook Pixel</span>
+                                <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
+                                    <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
+                                    <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
+                                    <img
+                                        alt=""
+                                        src="/assets/premium-bezel.png"
+                                        className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
+                                    />
+                                    <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                        Coming soon
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Tooltip */}
+                            <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
+                                Track conversions and optimize your ads with Facebook Pixel integration.
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
+                            {products.map(product => (
+                                <div key={product.id} className="relative group">
+                                    <button
+                                        onClick={() => { setActiveSection('products'); setSelectedProduct(product); }}
+                                        className={`w-full text-left px-4 py-3 rounded-xl transition-all truncate pr-8 ${activeSection === 'products' && selectedProduct?.id === product.id ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        {product.name || 'New Product'}
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); confirmDeleteProduct(product.id); }}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ))}
+                            {products.length === 0 && (
+                                <p className="text-white/60 text-xs italic px-2">No products added.</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            )}
+
+                {/* RIGHT COLUMN: Content Editor */}
+                <div className="flex-1 p-6 md:p-10 overflow-y-auto max-h-[800px] relative">
+                    {activeSection === 'experiences' && renderExperiences()}
+                    {activeSection === 'qualifications' && renderQualifications()}
+                    {activeSection === 'projects' && renderProjects()}
+                    {activeSection === 'products' && renderProducts()}
+                </div>
+
+                {/* Cropper Modal */}
+                {cropperImage && (
+                    <ImageCropperModal
+                        isOpen={cropperOpen}
+                        onClose={() => setCropperOpen(false)}
+                        imageSrc={cropperImage}
+                        aspectRatio={cropperAspect}
+                        onCropComplete={handleCropComplete}
+                        loading={isUploading}
+                    />
+                )}
+                {/* Delete Confirmation Modal */}
+                {deleteConfirmation.isOpen && (
+                    <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })} />
+                        <div className="relative bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                            <h3 className="text-xl font-bold text-white mb-2">Are you sure?</h3>
+                            <p className="text-white/70 text-sm mb-6 leading-relaxed">
+                                You cannot restore your Product after it has been deleted. This action is permanent.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })}
+                                    className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={executeDeleteProduct}
+                                    className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </GlassCard>
     )
 }
