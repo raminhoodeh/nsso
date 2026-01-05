@@ -16,7 +16,7 @@ export default function GlassFilter() {
             }}
             aria-hidden="true"
         >
-            <filter id="glass-distortion">
+            <filter id="glass-distortion" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
                 <feTurbulence
                     type="turbulence"
                     baseFrequency="0.008"
@@ -27,6 +27,8 @@ export default function GlassFilter() {
                     in="SourceGraphic"
                     in2="noise"
                     scale={77}
+                    xChannelSelector="R"
+                    yChannelSelector="G"
                 />
             </filter>
         </svg>
