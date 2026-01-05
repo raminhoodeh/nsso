@@ -87,7 +87,10 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
                     '--glass-saturate': '180%'
                 } as React.CSSProperties}
                 aria-hidden="true"
-            />
+            >
+                {/* Inner specular highlight used by glass-style-* per definition */}
+                <div className="glass-specular" aria-hidden="true" />
+            </div>
 
             <nav className="relative max-w-[1470px] mx-auto px-6 lg:px-[165px] h-[88px] flex items-center justify-between">
                 {/* Logo */}
