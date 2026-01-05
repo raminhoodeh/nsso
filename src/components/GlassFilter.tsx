@@ -5,7 +5,17 @@
  */
 export default function GlassFilter() {
     return (
-        <svg style={{ display: 'none' }} aria-hidden="true">
+        <svg
+            style={{
+                position: 'absolute',
+                width: 0,
+                height: 0,
+                overflow: 'hidden',
+                pointerEvents: 'none',
+                visibility: 'hidden'
+            }}
+            aria-hidden="true"
+        >
             <filter id="glass-distortion">
                 <feTurbulence
                     type="turbulence"
