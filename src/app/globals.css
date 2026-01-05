@@ -105,6 +105,7 @@ body {
   filter: url(#glass-distortion) saturate(var(--glass-saturate, 120%)) brightness(var(--glass-brightness, 1.13));
   z-index: 1;
   pointer-events: none;
+  transform: translateZ(0);
 }
 
 [class*="glass-style-"]::after {
@@ -130,6 +131,7 @@ body {
   border-radius: inherit;
   pointer-events: none;
   z-index: 3;
+  transform: translateZ(0);
 }
 
 /* === Presets === */
@@ -166,6 +168,30 @@ body {
   --glass-highlight: rgba(255, 255, 255, 0.05);
   --glass-saturate: 100%;
   --glass-brightness: 1.05;
+}
+
+/* === Glass Style Navbar (System Integrated) === */
+.glass-style-navbar {
+  /* Inherits base properties from [class*="glass-style-"] */
+  --glass-blur: 25px;
+  --glass-bg: rgba(20, 20, 20, 0.2);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+  --glass-saturate: 180%;
+  --glass-brightness: 1.1;
+
+  /* Navbar specific overrides */
+  border-bottom: 1px solid var(--glass-highlight);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+/* Specific styling to override the global SVG filter for the navbar only */
+.glass-style-navbar::before {
+  /* Disable SVG filter to prevent artifacts on thin element */
+  filter: saturate(var(--glass-saturate)) brightness(var(--glass-brightness)) !important;
+  /* Ensure backdrop blur is applied */
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
 }
 
 /* ============================================

@@ -78,17 +78,15 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-[5000]">
-            {/* Liquid Glass Overlay */}
+            {/* Liquid Glass Overlay (System Integrated) */}
             <div
-                className="!absolute inset-0 glass-style-1 border-b border-white/10"
-                style={{}}
+                className="!absolute inset-0 glass-style-navbar"
                 aria-hidden="true"
             >
-                {/* Inner specular highlight used by glass-style-* per definition */}
                 <div className="glass-specular" aria-hidden="true" />
             </div>
 
-            <nav className="relative max-w-[1470px] mx-auto px-6 lg:px-[165px] h-[88px] flex items-center justify-between">
+            <nav className="relative z-[60] max-w-[1470px] mx-auto px-6 lg:px-[165px] h-[88px] flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center">
                     <Image

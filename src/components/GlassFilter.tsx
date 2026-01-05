@@ -11,10 +11,10 @@ export default function GlassFilter() {
                 width: 0,
                 height: 0,
                 overflow: 'hidden',
-                pointerEvents: 'none',
-                visibility: 'hidden'
+                pointerEvents: 'none'
             }}
             aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
         >
             <filter id="glass-distortion" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
                 <feTurbulence
