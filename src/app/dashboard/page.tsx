@@ -520,7 +520,7 @@ function DashboardContent() {
 
                 {/* Your Page Tab Content */}
                 {activeTab === 'page' && (
-                    <GlassCard className="p-6 lg:p-8 relative pt-[48px] rounded-[46px] overflow-visible">
+                    <GlassCard className="p-6 lg:p-8 relative pt-[48px] rounded-[40px] overflow-visible">
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
                             <h2 className="text-2xl font-bold text-white">
