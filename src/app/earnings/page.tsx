@@ -430,9 +430,7 @@ export default function EarningsPage() {
 
                     {/* Bottom Right: Notifications */}
                     <GlassCard className="p-10 flex flex-col justify-start min-h-[500px] relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#4d6c96]/20 to-[#4d6c96]/50" />
-
-                        <div className="relative z-10 space-y-4 mb-16">
+                        <div className="space-y-4 mb-16">
                             {[
                                 { icon: '/assets/earnings/icon-1.png', user: 'nsso.me/ramin' },
                                 { icon: '/assets/earnings/icon-2.png', user: 'nsso.me/troy' },
@@ -451,7 +449,7 @@ export default function EarningsPage() {
                             ))}
                         </div>
 
-                        <div className="relative z-10 text-center">
+                        <div className="text-center">
                             <h3 className="text-2xl font-bold text-white mb-2">Live updates on new subscribers</h3>
                             <p className="text-white/80 text-base">See who made their nsso profile from your unique link</p>
                         </div>
