@@ -78,7 +78,7 @@ export default function HomePage() {
         {/* Two Column Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           {/* Left Column - 3 Rows of Text */}
-          <GlassCard className="h-full flex flex-col justify-start relative overflow-hidden group" style={{ '--glass-bg': 'rgba(255, 255, 255, 0.05)' } as React.CSSProperties}>
+          <GlassCard className="h-full flex flex-col justify-start relative overflow-hidden group">
             <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
               {/* Top Row: Body Text */}
               <p className="text-white/80 text-lg font-medium text-center lg:text-left">
@@ -98,7 +98,7 @@ export default function HomePage() {
           </GlassCard>
 
           {/* Right Column - Product Demo */}
-          <GlassCard className="p-8 lg:p-10 h-full min-h-[350px] flex flex-col items-center justify-center text-center relative overflow-hidden" style={{ '--glass-bg': 'rgba(255, 255, 255, 0.05)' } as React.CSSProperties}>
+          <GlassCard className="p-8 lg:p-10 h-full min-h-[350px] flex flex-col items-center justify-center text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
             <div className="text-white/70 text-lg mb-6 relative z-10 max-w-lg leading-relaxed">
               <span className="text-white font-bold">All of you</span>; your bio, contact, links, experiences, projects, qualifications, products and services... <span className="text-white font-bold">all in one place</span>.
@@ -309,7 +309,7 @@ export default function HomePage() {
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
           <Link href="/earnings" className="block">
-            <GlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full" style={{ '--glass-bg': 'rgba(255, 255, 255, 0.05)' } as React.CSSProperties}>
+            <GlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-2">Monetise</h3>
               <p className="text-white/70 text-sm">
                 Do you have an engaged following? See our nsso earnings programme
@@ -318,7 +318,7 @@ export default function HomePage() {
           </Link>
 
           <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
-            <GlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full" style={{ '--glass-bg': 'rgba(255, 255, 255, 0.05)' } as React.CSSProperties}>
+            <GlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-2">Example Profile</h3>
               <p className="text-white/70 text-sm">
                 See how your unified identity could look.
