@@ -82,6 +82,7 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
             <div
                 className="absolute inset-0 glass-style-1 border-b border-white/10"
                 style={{
+                    '--glass-bg': 'rgba(0, 0, 0, 0.25)',
                     '--glass-blur': '12px',
                     '--glass-saturate': '180%'
                 } as React.CSSProperties}
