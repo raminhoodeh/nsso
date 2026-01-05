@@ -47,7 +47,7 @@ export default function GlassCard({
 
     return (
         <div
-            className={`glass-style-card overflow-visible ${className}`}
+            className={`glass-style-card rounded-[40px] overflow-visible ${className}`}
             style={mergedStyle}
         >
             {/* Inner specular highlight for 3D effect */}

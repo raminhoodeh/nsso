@@ -520,7 +520,7 @@ function DashboardContent() {
 
                 {/* Your Page Tab Content */}
                 {activeTab === 'page' && (
-                    <GlassCard className="p-6 lg:p-8 relative pt-[48px] overflow-visible">
+                    <GlassCard className="p-6 lg:p-8 relative pt-[48px] rounded-[46px] overflow-visible">
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
                             <h2 className="text-2xl font-bold text-white">
@@ -700,7 +700,7 @@ function DashboardContent() {
                                                 {/* Primary Action: CLAIM IT (Non-Premium) or UPDATE (Premium + Changed) or Badge */}
                                                 {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
                                                     <div
-                                                        className="p-[0.75px] rounded-[12px]"
+                                                        className="p-[0.75px] rounded-[100px]"
                                                         style={{
                                                             background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
                                                         }}
@@ -708,14 +708,14 @@ function DashboardContent() {
                                                         <button
                                                             onClick={user?.is_premium ? handleUpdateUsername : handleCheckout}
                                                             disabled={!usernameAvailable || processingCheckout || (user?.is_premium && !customDomain) || (!user?.is_premium && !desiredUsername)}
-                                                            className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                                            className="relative h-[42px] w-[133px] rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                             style={{
                                                                 boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
                                                             }}
                                                         >
                                                             {/* Shiny button background layers */}
-                                                            <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                                                            <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+                                                            <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                                            <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
 
                                                             <span
                                                                 className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
@@ -750,7 +750,7 @@ function DashboardContent() {
                                         {/* Primary Action Button (Mobile) */}
                                         {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
                                             <div
-                                                className="p-[0.75px] rounded-[12px] flex-1"
+                                                className="p-[0.75px] rounded-[100px] flex-1"
                                                 style={{
                                                     background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
                                                 }}
@@ -758,13 +758,13 @@ function DashboardContent() {
                                                 <button
                                                     onClick={user?.is_premium ? handleUpdateUsername : handleCheckout}
                                                     disabled={!usernameAvailable || processingCheckout || (user?.is_premium && !customDomain) || (!user?.is_premium && !desiredUsername)}
-                                                    className="relative h-[42px] w-full rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                                                    className="relative h-[42px] w-full rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
                                                     style={{
                                                         boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
                                                     }}
                                                 >
-                                                    <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                                                    <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+                                                    <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                                    <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
                                                     <span
                                                         className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
                                                         style={{
@@ -786,7 +786,7 @@ function DashboardContent() {
                                         {user?.is_premium && (
                                             <button
                                                 onClick={() => setShowDowngradeModal(true)}
-                                                className="h-[42px] px-6 rounded-[12px] border border-white/20 flex items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
+                                                className="h-[42px] px-6 rounded-[100px] border border-white/20 flex items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
                                             >
                                                 Downgrade
                                             </button>
@@ -797,7 +797,7 @@ function DashboardContent() {
                                     {user?.is_premium && (
                                         <button
                                             onClick={() => setShowDowngradeModal(true)}
-                                            className="hidden md:flex h-[54px] px-6 rounded-[12px] border border-white/20 items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
+                                            className="hidden md:flex h-[54px] px-6 rounded-[100px] border border-white/20 items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
                                         >
                                             Downgrade
                                         </button>

@@ -121,14 +121,14 @@ export default function EarningsTab() {
 
                                     {/* Copy Button - Desktop Only */}
                                     <div className="relative z-10 mr-1.5 hidden md:block">
-                                        <div className="p-[0.75px] rounded-[12px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}>
+                                        <div className="p-[0.75px] rounded-[100px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}>
                                             <button
                                                 onClick={copyReferralCode}
-                                                className="relative h-[42px] w-[100px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                                className="relative h-[42px] w-[100px] rounded-[100px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                 style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}
                                             >
-                                                <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                                                <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+                                                <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                                <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
                                                 <span className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>
                                                     Copy
                                                 </span>
@@ -143,14 +143,14 @@ export default function EarningsTab() {
 
                             {/* Mobile Copy Button */}
                             <div className="md:hidden w-full max-w-md">
-                                <div className="p-[0.75px] rounded-[12px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}>
+                                <div className="p-[0.75px] rounded-[100px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}>
                                     <button
                                         onClick={copyReferralCode}
-                                        className="relative h-[42px] w-full rounded-[12px] flex items-center justify-center transition-all active:scale-[0.98]"
+                                        className="relative h-[42px] w-full rounded-[100px] flex items-center justify-center transition-all active:scale-[0.98]"
                                         style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}
                                     >
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                                        <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                        <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
                                         <span className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>
                                             Copy
                                         </span>
@@ -262,15 +262,15 @@ export default function EarningsTab() {
                                 </div>
 
                                 {/* UPDATE Button */}
-                                <div className="p-[0.75px] rounded-[12px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}>
+                                <div className="p-[0.75px] rounded-[100px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}>
                                     <button
                                         onClick={updatePayPal}
                                         disabled={updating}
-                                        className="relative h-[54px] w-full md:w-[120px] rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                        className="relative h-[54px] w-full md:w-[120px] rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
                                         style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}
                                     >
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                                        <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                        <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
                                         <span className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>
                                             {updating ? 'Updating...' : 'UPDATE'}
                                         </span>

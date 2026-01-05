@@ -815,7 +815,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     // Main Expanded View
     return (
         <GlassCard
-            className="w-full min-h-[600px] relative"
+            className="w-full min-h-[600px] rounded-[46px] relative"
             style={{ '--glass-bg': 'rgba(0, 0, 0, 0.2)' } as React.CSSProperties}
         >
             <div className="flex flex-col md:flex-row w-full h-full">
