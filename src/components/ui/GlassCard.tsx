@@ -21,22 +21,22 @@ export default function GlassCard({
     // This preserves the darkness hierarchy while using the new liquid glass structure
     const variantStyles = {
         default: {
-            '--glass-bg': 'rgba(128, 128, 128, 0.25)',
+            '--glass-bg': 'rgba(0, 0, 0, 0.4)',
             '--glass-blur': '40px',
             '--glass-saturate': '100%',
-            '--glass-brightness': '1.05'
-        },
-        strong: {
-            '--glass-bg': 'rgba(128, 128, 128, 0.4)',
-            '--glass-blur': '50px',
-            '--glass-saturate': '105%',
             '--glass-brightness': '1'
         },
+        strong: {
+            '--glass-bg': 'rgba(0, 0, 0, 0.6)',
+            '--glass-blur': '50px',
+            '--glass-saturate': '105%',
+            '--glass-brightness': '0.9'
+        },
         subtle: {
-            '--glass-bg': 'rgba(128, 128, 128, 0.15)',
+            '--glass-bg': 'rgba(0, 0, 0, 0.25)',
             '--glass-blur': '30px',
             '--glass-saturate': '95%',
-            '--glass-brightness': '1.1'
+            '--glass-brightness': '1.05'
         }
     }
 
