@@ -4,6 +4,7 @@ interface GlassCardProps {
     children: ReactNode
     className?: string
     variant?: 'default' | 'strong' | 'subtle'
+    style?: React.CSSProperties
 }
 
 /**
@@ -13,7 +14,8 @@ interface GlassCardProps {
 export default function GlassCard({
     children,
     className = '',
-    variant = 'default'
+    variant = 'default',
+    style: customStyle
 }: GlassCardProps) {
     // Map variants to CSS variables for the glass effect system
     // This preserves the darkness hierarchy while using the new liquid glass structure
@@ -38,12 +40,15 @@ export default function GlassCard({
         }
     }
 
-    const style = variantStyles[variant] as React.CSSProperties
+    const mergedStyle = {
+        ...variantStyles[variant],
+        ...customStyle
+    } as React.CSSProperties
 
     return (
         <div
             className={`glass-style-card overflow-visible ${className}`}
-            style={style}
+            style={mergedStyle}
         >
             {/* Inner specular highlight for 3D effect */}
             <div className="glass-specular" aria-hidden="true" />

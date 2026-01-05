@@ -1,5 +1,6 @@
 'use client'
 
+import GlassCard from '@/components/ui/GlassCard'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout } from 'lucide-react'
@@ -7,14 +8,6 @@ import DOMPurify from 'dompurify'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useUI } from '@/components/providers/UIProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
-
-// GlassCard Component (Internal helper to match design system but allow layout control)
-// Updated background to be darker (bg-black/20) for better contrast over clouds
-const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-    <div className={`backdrop-blur-md bg-black/20 border border-white/10 shadow-[0_4px_24px_-1px_rgba(0,0,0,0.1)] rounded-[24px] overflow-hidden ${className}`}>
-        {children}
-    </div>
-)
 
 interface AdvancedModeCardProps {
     userId: string
@@ -321,15 +314,20 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 onClick={() => setIsExpanded(true)}
                 className="w-full relative overflow-hidden rounded-[24px]"
             >
-                <GlassCard className="p-6 cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-between group relative z-10">
-                    <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none z-0" style={{ backgroundImage: 'url(/siri-gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div>
-                            <h3 className="text-white font-bold text-2xl">Advanced Mode</h3>
-                            <p className="text-white/60 text-sm">Add Experiences, Projects, and Products</p>
+                <GlassCard
+                    className="cursor-pointer group relative z-10"
+                    style={{ '--glass-bg': 'rgba(0, 0, 0, 0.2)' } as React.CSSProperties}
+                >
+                    <div className="p-6 hover:bg-white/5 transition-colors flex items-center justify-between w-full h-full">
+                        <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none z-0" style={{ backgroundImage: 'url(/siri-gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div>
+                                <h3 className="text-white font-bold text-2xl">Advanced Mode</h3>
+                                <p className="text-white/60 text-sm">Add Experiences, Projects, and Products</p>
+                            </div>
                         </div>
+                        <ChevronDown className="text-white/50 group-hover:text-white transition-colors relative z-10" />
                     </div>
-                    <ChevronDown className="text-white/50 group-hover:text-white transition-colors relative z-10" />
                 </GlassCard>
             </div>
         )
