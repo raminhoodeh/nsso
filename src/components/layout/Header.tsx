@@ -80,9 +80,9 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
         <header className="fixed top-0 left-0 right-0 z-[5000]">
             {/* Liquid Glass Overlay */}
             <div
-                className="absolute inset-0 glass-style-1 border-b border-white/10"
+                className="!absolute inset-0 glass-style-1 border-b border-white/10"
                 style={{
-                    '--glass-bg': 'rgba(255, 255, 255, 0.1)',
+                    '--glass-bg': 'rgba(0, 0, 0, 0.4)',
                     '--glass-blur': '12px',
                     '--glass-saturate': '180%'
                 } as React.CSSProperties}
