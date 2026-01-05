@@ -229,7 +229,7 @@ export default function EarningsPage() {
                                 { name: 'Yure Felipe', role: 'Private Chef & Nutrition Coach', img: '/assets/earnings/profile-3.png' },
                                 { name: 'Ayda Ibrahim', role: 'Mental Health Therapist', img: '/assets/earnings/profile-4.png' },
                             ].map((user, i) => (
-                                <GlassCard key={i} className="p-2.5 flex flex-col gap-2">
+                                <GlassCard key={i} className="!rounded-[22px] p-2.5 flex flex-col gap-2">
                                     <div className="w-full aspect-square rounded-xl overflow-hidden bg-black/20">
                                         <img src={user.img} alt={user.name} className="w-full h-full object-cover" />
                                     </div>
