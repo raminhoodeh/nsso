@@ -81,7 +81,6 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
             {/* Liquid Glass Overlay */}
             <div
                 className="!absolute inset-0 glass-style-1 border-b border-white/10"
-                className="!absolute inset-0 glass-style-1 border-b border-white/10"
                 style={{}}
                 aria-hidden="true"
             >
