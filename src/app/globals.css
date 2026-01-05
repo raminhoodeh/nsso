@@ -114,7 +114,8 @@ body {
 
 [class*="glass-style-"]>* {
   position: relative;
-  z-index: 4;
+  /* Reduced z-index strictness to prevent stacking context issues with dropdowns */
+  z-index: 3;
 }
 
 /* Inner Shine Layer */

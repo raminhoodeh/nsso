@@ -15,47 +15,41 @@ export default function GlassCard({
     className = '',
     variant = 'default'
 }: GlassCardProps) {
+    // Map variants to CSS variables for the glass effect system
+    // This preserves the darkness hierarchy while using the new liquid glass structure
     const variantStyles = {
-        default: 'bg-[rgba(128,128,128,0.25)]',
-        strong: 'bg-[rgba(128,128,128,0.4)]',
-        subtle: 'bg-[rgba(128,128,128,0.15)]'
+        default: {
+            '--glass-bg': 'rgba(128, 128, 128, 0.25)',
+            '--glass-blur': '40px',
+            '--glass-saturate': '100%',
+            '--glass-brightness': '1.05'
+        },
+        strong: {
+            '--glass-bg': 'rgba(128, 128, 128, 0.4)',
+            '--glass-blur': '50px',
+            '--glass-saturate': '105%',
+            '--glass-brightness': '1'
+        },
+        subtle: {
+            '--glass-bg': 'rgba(128, 128, 128, 0.15)',
+            '--glass-blur': '30px',
+            '--glass-saturate': '95%',
+            '--glass-brightness': '1.1'
+        }
     }
+
+    const style = variantStyles[variant] as React.CSSProperties
 
     return (
         <div
-            className={`
-        relative rounded-[24px] overflow-hidden isolate flex flex-col
-        ${className}
-      `}
+            className={`glass-style-card overflow-visible ${className}`}
+            style={style}
         >
-            {/* Backdrop blur layer */}
-            <div
-                className="absolute inset-0 pointer-events-none rounded-[inherit]"
-                style={{ backdropFilter: 'blur(40px)' }}
-                aria-hidden="true"
-            />
+            {/* Inner specular highlight for 3D effect */}
+            <div className="glass-specular" aria-hidden="true" />
 
-            {/* Background layer */}
-            <div
-                className={`absolute inset-0 pointer-events-none rounded-[inherit] ${variantStyles[variant]}`}
-                aria-hidden="true"
-            />
-
-            {/* Inner shadow/highlight layer */}
-            <div
-                className="absolute inset-0 pointer-events-none rounded-[inherit]"
-                style={{
-                    boxShadow: `
-            inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.3),
-            inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.25),
-            inset 1px 1.5px 4px 0px rgba(0, 0, 0, 0.08)
-          `
-                }}
-                aria-hidden="true"
-            />
-
-            {/* Content */}
-            <div className="relative z-10 h-full w-full">
+            {/* Content container */}
+            <div className="relative h-full w-full">
                 {children}
             </div>
         </div>

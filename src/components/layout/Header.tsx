@@ -78,10 +78,14 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-[5000]">
-            {/* Blur overlay */}
+            {/* Liquid Glass Overlay */}
             <div
-                className="absolute inset-0 bg-black/20 border-b border-white/10"
-                style={{ backdropFilter: 'blur(12px)' }}
+                className="glass-style-1 absolute inset-0 border-b border-white/10"
+                style={{
+                    '--glass-bg': 'rgba(0, 0, 0, 0.2)',
+                    '--glass-blur': '12px',
+                    '--glass-saturate': '110%',
+                } as React.CSSProperties}
                 aria-hidden="true"
             />
 
