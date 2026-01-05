@@ -138,19 +138,19 @@ body {
 /* Glass Style 1 - Default Glass */
 .glass-style-1 {
   --glass-blur: 7px;
-  --glass-bg: rgba(0, 0, 0, 0.25);
+  --glass-bg: rgba(0, 0, 0, 0.2);
   --glass-highlight: rgba(255, 255, 255, 0.15);
   --glass-saturate: 120%;
-  --glass-brightness: 1;
+  --glass-brightness: 1.15;
 }
 
 /* Glass Style 2 - Frosted Ice */
 .glass-style-2 {
   --glass-blur: 10px;
-  --glass-bg: rgba(0, 0, 0, 0.25);
+  --glass-bg: rgba(0, 0, 0, 0.2);
   --glass-highlight: rgba(255, 255, 255, 0.15);
   --glass-saturate: 150%;
-  --glass-brightness: 1.2;
+  --glass-brightness: 1.25;
 }
 
 /* Glass Style 3 - Soft Dark Glass */
@@ -164,10 +164,10 @@ body {
 
 .glass-style-card {
   --glass-blur: 100px;
-  --glass-bg: rgba(128, 128, 128, 0.25);
+  --glass-bg: rgba(128, 128, 128, 0.2);
   --glass-highlight: rgba(255, 255, 255, 0.05);
   --glass-saturate: 100%;
-  --glass-brightness: 1.05;
+  --glass-brightness: 1.2;
 }
 
 /* === Glass Style Navbar (System Integrated) === */
