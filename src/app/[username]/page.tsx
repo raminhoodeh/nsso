@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
+import AddToMyNssoButton from '@/components/ui/AddToMyNssoButton'
 import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 
@@ -72,8 +73,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
         supabase.from('products').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
     ])
 
-    // Check if the viewer is logged in
+    // Check if the viewer is logged in and if they are already connected
     const { data: { user: viewer } } = await supabase.auth.getUser()
+
+    let connectionExists = false
+    if (viewer) {
+        const { data: existingConnection } = await supabase
+            .from('my_nsso')
+            .select('id')
+            .eq('user_id', viewer.id)
+            .eq('connected_user_id', user.id)
+            .single()
+
+        connectionExists = !!existingConnection
+    }
 
     const profile = profileResult.data
     const links = linksResult.data || []
@@ -111,9 +124,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                 <span className="font-normal">I'm </span>{profile?.full_name || 'Anonymous'}
                             </h1>
                             {profile?.headline && (
-                                <p className="text-xl lg:text-2xl text-white/70">
+                                <p className="text-xl lg:text-2xl text-white/70 mb-6">
                                     {profile.headline}
                                 </p>
+                            )}
+
+                            {/* Add to My nsso Button (Visible to everyone except self) */}
+                            {user.id !== viewer?.id && (
+                                <div className="flex justify-center lg:justify-start">
+                                    <AddToMyNssoButton
+                                        profileUserId={user.id}
+                                        isLoggedIn={!!viewer}
+                                        initialIsConnected={connectionExists}
+                                    />
+                                </div>
                             )}
                         </div>
 
