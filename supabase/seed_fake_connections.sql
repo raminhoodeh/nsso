@@ -40,12 +40,12 @@ BEGIN
     ON CONFLICT (id) DO NOTHING;
 
     -- 4. Create fake profiles in public.profiles
-    INSERT INTO public.profiles (user_id, first_name, last_name, bio, location, display_name)
+    INSERT INTO public.profiles (user_id, full_name, bio, headline)
     VALUES
-        (fake_user_1_id, 'Alice', 'Wonderland', 'Curious explorer.', 'London, UK', 'Alice W.'),
-        (fake_user_2_id, 'Bob', 'Builder', 'Always building things.', 'New York, USA', 'Bob B.'),
-        (fake_user_3_id, 'Charlie', 'Chef', 'Cooking up a storm.', 'Paris, France', 'Chef Charlie'),
-        (fake_user_4_id, 'Diana', 'Prince', 'Designing the future.', 'Themyscira', 'Diana P.')
+        (fake_user_1_id, 'Alice Wonderland', 'Curious explorer based in London.', 'Explorer'),
+        (fake_user_2_id, 'Bob Builder', 'Always building things in NY.', 'Builder'),
+        (fake_user_3_id, 'Charlie Chef', 'Cooking up a storm in Paris.', 'Head Chef'),
+        (fake_user_4_id, 'Diana Prince', 'Designing the future.', 'Designer')
     ON CONFLICT (user_id) DO NOTHING;
 
     -- 5. Create connections for Ramin (My nsso)
