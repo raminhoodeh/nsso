@@ -20,7 +20,7 @@ DECLARE
     fake_user_4_id UUID;
 BEGIN
     -- 1. Get the ID of the target user (Ramin)
-    SELECT id INTO target_user_id FROM auth.users WHERE email = target_email;
+    SELECT id INTO target_user_id FROM auth.users WHERE LOWER(email) = LOWER(target_email);
 
     IF target_user_id IS NULL THEN
         RAISE NOTICE 'Target user % not found. Please ensure the user exists.', target_email;
@@ -131,7 +131,7 @@ BEGIN
     -----------------------------------------------------------------------
     -- TARGET USER 2: Troy (troy@nsso.me)
     -----------------------------------------------------------------------
-    SELECT id INTO target_user_id_2 FROM auth.users WHERE email = 'troy@nsso.me';
+    SELECT id INTO target_user_id_2 FROM auth.users WHERE LOWER(email) = 'troy@nsso.me';
 
     IF target_user_id_2 IS NOT NULL THEN
         -- 1. Clear old connections
