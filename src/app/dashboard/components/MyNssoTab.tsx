@@ -14,6 +14,12 @@ export default function MyNssoTab() {
     const [connections, setConnections] = useState<MyNssoConnection[]>([])
     const [loading, setLoading] = useState(true)
 
+    // Handle background dimming
+    useEffect(() => {
+        setBackgroundDimmed(true)
+        return () => setBackgroundDimmed(false)
+    }, [setBackgroundDimmed])
+
     // Hoisted State for Modal
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [selectedConnection, setSelectedConnection] = useState<MyNssoConnection | null>(null)
@@ -83,9 +89,10 @@ export default function MyNssoTab() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 text-white/50 animate-pulse">
-                <div className="w-12 h-12 rounded-full bg-white/10 mb-4" />
-                <div>Loading your network...</div>
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-white text-xl text-center">
+                    All of you...<br />all in one place
+                </div>
             </div>
         )
     }
