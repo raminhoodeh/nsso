@@ -94,9 +94,9 @@ export default function MyNssoTab() {
         <div className="space-y-6">
             <GlassCard className="p-6 lg:p-8">
                 {/* Header Section */}
-                <div className="text-center space-y-2 mb-10">
+                <div className="text-left space-y-2 mb-10">
                     <h2 className="text-3xl font-bold text-white">My nsso Network</h2>
-                    <p className="text-white/60 max-w-lg mx-auto">
+                    <p className="text-white/60 max-w-lg">
                         Your personal timeline of everyone you&apos;ve met.
                         Scan QR codes to build your journey.
                     </p>
