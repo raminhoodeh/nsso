@@ -180,17 +180,12 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                             <th className="p-4 text-xs font-semibold text-white/60 uppercase tracking-wider w-[100px]">
                                 Notes
                             </th>
-
-                            {/* Action */}
-                            <th className="p-4 text-xs font-semibold text-white/60 uppercase tracking-wider text-right w-[100px]">
-                                Action
-                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {filteredConnections.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="p-8 text-center text-white/40">
+                                <td colSpan={4} className="p-8 text-center text-white/40">
                                     No connections found.
                                 </td>
                             </tr>
@@ -216,7 +211,7 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                                                     {conn.fullName}
                                                 </div>
                                             </Link>
-                                            <div className="text-white/40 text-xs truncate">@{conn.username}</div>
+                                            <div className="text-white/40 text-xs truncate">nsso.me/{conn.username}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -264,18 +259,6 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                                     >
                                         <NotebookPen size={16} />
                                     </button>
-                                </td>
-
-                                {/* Profile Link Action */}
-                                <td className="p-4 text-right">
-                                    <a
-                                        href={`/${conn.username}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                    >
-                                        <ExternalLink size={16} />
-                                    </a>
                                 </td>
                             </tr>
                         ))}
