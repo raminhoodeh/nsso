@@ -150,28 +150,31 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                                 </div>
                             </th>
 
-                            {/* Contextual Stamp (Location + Date) */}
+                            {/* Location */}
+                            <th
+                                className="p-4 text-xs font-semibold text-white/60 uppercase tracking-wider cursor-pointer group hover:bg-white/5 transition-colors"
+                                onClick={() => handleSort('location')}
+                            >
+                                <div className="flex items-center">
+                                    Location
+                                    <div className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-30 transition-opacity">
+                                        {sortField === 'location' && (sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                                    </div>
+                                </div>
+                            </th>
+
+                            {/* Date Met */}
                             <th
                                 className="p-4 text-xs font-semibold text-white/60 uppercase tracking-wider cursor-pointer group hover:bg-white/5 transition-colors"
                                 onClick={() => handleSort('date')}
                             >
                                 <div className="flex items-center">
-                                    Contextual Stamp
+                                    Date Met
                                     <div className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-30 transition-opacity">
                                         {sortField === 'date' && (sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                                     </div>
                                 </div>
                             </th>
-
-                            {/* Location (Sortable) */}
-                            {/* Merged into Contextual Stamp column visually, or sort logic handled there */}
-                            {/* Let's keep separate sort click areas if we want, but visually 1 column? 
-                                 Actually simplicity: 
-                                 Col 1: User
-                                 Col 2: Context (Location • Date) 
-                                 Col 3: Notes
-                                 Col 4: Action
-                             */}
 
                             {/* Notes */}
                             <th className="p-4 text-xs font-semibold text-white/60 uppercase tracking-wider w-[100px]">
@@ -187,7 +190,7 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                     <tbody className="divide-y divide-white/5">
                         {filteredConnections.length === 0 ? (
                             <tr>
-                                <td colSpan={4} className="p-8 text-center text-white/40">
+                                <td colSpan={5} className="p-8 text-center text-white/40">
                                     No connections found.
                                 </td>
                             </tr>
@@ -218,38 +221,37 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                                     </div>
                                 </td>
 
-                                {/* Contextual Stamp */}
+                                {/* Location */}
                                 <td className="p-4">
-                                    <div className="flex flex-col gap-1">
-                                        {/* Location */}
-                                        <div className="flex items-center gap-1.5 text-sm">
-                                            <MapPin size={12} className="text-white/40 flex-shrink-0" />
-                                            {editingLocationId === conn.id ? (
-                                                <input
-                                                    autoFocus
-                                                    type="text"
-                                                    value={locationValue}
-                                                    onChange={(e) => setLocationValue(e.target.value)}
-                                                    onBlur={() => saveLocation(conn.id)}
-                                                    onKeyDown={(e) => e.key === 'Enter' && saveLocation(conn.id)}
-                                                    className="bg-black/20 text-white rounded px-2 py-0.5 text-sm w-[200px] outline-none border border-white/20"
-                                                    placeholder="Where did you meet?"
-                                                />
-                                            ) : (
-                                                <span
-                                                    className={`cursor-pointer hover:text-white/80 transition-colors ${!conn.location ? 'text-white/30 italic decoration-dashed underline underline-offset-4 decoration-white/20' : 'text-white/70'}`}
-                                                    onClick={() => !conn.location && (() => { setEditingLocationId(conn.id); setLocationValue(''); })()}
-                                                    title={!conn.location ? "Click to add location" : ""}
-                                                >
-                                                    {conn.location || 'Add location...'}
-                                                </span>
-                                            )}
-                                        </div>
+                                    <div className="flex items-center gap-1.5 text-sm">
+                                        <MapPin size={12} className="text-white/40 flex-shrink-0" />
+                                        {editingLocationId === conn.id ? (
+                                            <input
+                                                autoFocus
+                                                type="text"
+                                                value={locationValue}
+                                                onChange={(e) => setLocationValue(e.target.value)}
+                                                onBlur={() => saveLocation(conn.id)}
+                                                onKeyDown={(e) => e.key === 'Enter' && saveLocation(conn.id)}
+                                                className="bg-black/20 text-white rounded px-2 py-0.5 text-sm w-[200px] outline-none border border-white/20"
+                                                placeholder="Where did you meet?"
+                                            />
+                                        ) : (
+                                            <span
+                                                className={`cursor-pointer hover:text-white/80 transition-colors ${!conn.location ? 'text-white/30 italic decoration-dashed underline underline-offset-4 decoration-white/20' : 'text-white/70'}`}
+                                                onClick={() => !conn.location && (() => { setEditingLocationId(conn.id); setLocationValue(''); })()}
+                                                title={!conn.location ? "Click to add location" : ""}
+                                            >
+                                                {conn.location || 'Add location...'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
 
-                                        {/* Date */}
-                                        <div className="text-xs text-white/40 ml-[18px]">
-                                            {formatDate(conn.dateMet)}
-                                        </div>
+                                {/* Date Met */}
+                                <td className="p-4">
+                                    <div className="text-sm text-white/60">
+                                        {formatDate(conn.dateMet)}
                                     </div>
                                 </td>
 

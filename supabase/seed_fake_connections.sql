@@ -28,7 +28,7 @@ BEGIN
         (fake_user_2_id, 'fake2@example.com', '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now()),
         (fake_user_3_id, 'fake3@example.com', '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now()),
         (fake_user_4_id, 'fake4@example.com', '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now())
-    ON CONFLICT (id) DO NOTHING; -- In case we run multiple times (though IDs are random, email might conflict if not unique)
+    ON CONFLICT (id) DO NOTHING;
 
     -- 3. Create fake users in public.users
     INSERT INTO public.users (id, email, username, user_type)
@@ -39,22 +39,17 @@ BEGIN
         (fake_user_4_id, 'fake4@example.com', 'diana_designer', 'premium')
     ON CONFLICT (id) DO NOTHING;
 
-    -- 4. Create fake profiles in public.profiles
-    INSERT INTO public.profiles (user_id, full_name, bio, headline)
+    -- 4. Create fake profiles in public.profiles (Corrected Schema with Pics)
+    INSERT INTO public.profiles (user_id, full_name, bio, headline, profile_pic_url)
     VALUES
-        (fake_user_1_id, 'Alice Wonderland', 'Curious explorer based in London.', 'Explorer'),
-        (fake_user_2_id, 'Bob Builder', 'Always building things in NY.', 'Builder'),
-        (fake_user_3_id, 'Charlie Chef', 'Cooking up a storm in Paris.', 'Head Chef'),
-        (fake_user_4_id, 'Diana Prince', 'Designing the future.', 'Designer')
-    ON CONFLICT (user_id) DO NOTHING;
+        (fake_user_1_id, 'Alice Wonderland', 'Curious explorer based in London.', 'Explorer', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice'),
+        (fake_user_2_id, 'Bob Builder', 'Always building things in NY.', 'Builder', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob'),
+        (fake_user_3_id, 'Charlie Chef', 'Cooking up a storm in Paris.', 'Head Chef', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie'),
+        (fake_user_4_id, 'Diana Prince', 'Designing the future.', 'Designer', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana')
+    ON CONFLICT (user_id) DO UPDATE
+    SET profile_pic_url = EXCLUDED.profile_pic_url, full_name = EXCLUDED.full_name;
 
     -- 5. Create connections for Ramin (My nsso)
-    -- Connection 1: Improved logic to avoid conflict if re-run
-    
-    -- Clear existing test connections to avoid duplicates if run multiple times? 
-    -- Or just use ON CONFLICT DO NOTHING. The table has (user_id, connected_user_id) unique constraint?
-    -- checking definition: PRIMARY KEY (user_id, connected_user_id)
-    
     INSERT INTO public.my_nsso (user_id, connected_user_id, date_met, location_name, location_lat, location_long, notes)
     VALUES
         -- Recent meet (today)
@@ -69,9 +64,9 @@ BEGIN
         -- Last Year
         (target_user_id, fake_user_4_id, now() - INTERVAL '3 months', 'Design Workshop', null, null, 'Shared some portfolio tips.')
     ON CONFLICT (user_id, connected_user_id) DO UPDATE 
-    SET notes = EXCLUDED.notes;
+    SET notes = EXCLUDED.notes, location_name = EXCLUDED.location_name;
 
-    -- 6. Also create the reverse connections (optional, but realistic)
+    -- 6. Also create the reverse connections
     INSERT INTO public.my_nsso (user_id, connected_user_id, date_met, location_name, location_lat, location_long)
     VALUES
         (fake_user_1_id, target_user_id, now(), 'Tech Conference 2026', 51.5074, -0.1278),
