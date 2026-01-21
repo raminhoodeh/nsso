@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Send, Sparkles, User, Bot, Maximize2, Minimize2, X } from 'lucide-react';
+import { Send, Sparkles, User, Bot, Maximize2, Minimize2, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Message {
     id: string;
@@ -73,6 +73,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const [hasInitialized, setHasInitialized] = useState(false);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const [showVennDiagram, setShowVennDiagram] = useState(false);
+    const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(true);
 
     const placeholders = [
         "What is your dream?",
@@ -235,6 +236,9 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const handleSendMessage = async (text: string) => {
         if (!text.trim()) return;
 
+        // Autos-collapse categories to give more space
+        setIsCategoriesExpanded(false);
+
         const newUserMessage: Message = {
             id: Date.now().toString(),
             role: 'user',
@@ -319,6 +323,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
     const handleCategoryClick = (category: string) => {
         setActiveCategory(category); // Set context for future messages
+        setIsCategoriesExpanded(false);
 
         // 1. Add User Message
         const userMsg: Message = {
@@ -420,16 +425,26 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             <div className="bg-black/20 backdrop-blur-md border-t border-white/10">
 
                 {/* Categories */}
-                <div className="px-6 pt-4 pb-2">
+                <div className="px-6 pt-4 pb-2 transition-all duration-300">
                     <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between md:gap-0 mb-3">
-                        <p className="text-white/40 text-xs font-medium uppercase tracking-wider">What you can ask me about</p>
+                        <button
+                            onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
+                            className="flex items-center gap-2 text-white/40 text-xs font-medium uppercase tracking-wider hover:text-white/70 transition-colors group"
+                        >
+                            What you can ask me about
+                            {isCategoriesExpanded ? (
+                                <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
+                            ) : (
+                                <ChevronUp size={14} className="group-hover:-translate-y-0.5 transition-transform" />
+                            )}
+                        </button>
                         <p
                             className="hidden md:block text-white/40 text-xs font-medium uppercase tracking-wider cursor-help hover:text-cyan-400 transition-colors relative"
                             onMouseEnter={() => setShowVennDiagram(true)}
                             onMouseLeave={() => setShowVennDiagram(false)}
                         >
                             Why not just use chat gpt?
-                            {/* Venn Diagram Tooltip - Rendered outside chatbot using portal */}
+                            {/* Venn Diagram Tooltip */}
                             {showVennDiagram && createPortal(
                                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 9999 }}>
                                     <img
@@ -442,21 +457,26 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                             )}
                         </p>
                     </div>
-                    <div className="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto scrollbar-none">
-                        {Object.keys(CATEGORY_QUESTIONS).map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => handleCategoryClick(cat)}
-                                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all shadow-sm mb-1 
-                                    ${activeCategory === cat
-                                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
-                                        : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-cyan-500/50 hover:text-cyan-300'
-                                    }`}
-                            >
-                                {cat}
-                            </button>
-                        ))}
+
+                    {/* Collapsible Area */}
+                    <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isCategoriesExpanded ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="flex flex-wrap gap-2 overflow-y-auto scrollbar-none pb-2">
+                            {Object.keys(CATEGORY_QUESTIONS).map(cat => (
+                                <button
+                                    key={cat}
+                                    onClick={() => handleCategoryClick(cat)}
+                                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all shadow-sm mb-1 
+                                        ${activeCategory === cat
+                                            ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
+                                            : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-cyan-500/50 hover:text-cyan-300'
+                                        }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
                     </div>
+
                     {/* Mobile Only: Why not just use chat gpt? (Below categories) */}
                     <div className="mt-3 block md:hidden">
                         <p
@@ -480,7 +500,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder={placeholders[placeholderIndex]}
-                            className="w-full bg-black/40 border border-white/10 rounded-[20px] pl-5 pr-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/30 focus:bg-black/60 focus:ring-1 focus:ring-cyan-500/20 transition-all shadow-inner text-base"
+                            className="w-full bg-black/40 border border-white/10 rounded-full pl-5 pr-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/30 focus:bg-black/60 focus:ring-1 focus:ring-cyan-500/20 transition-all shadow-inner text-base"
                         />
                         <button
                             type="submit"
