@@ -33,11 +33,7 @@ export default function MyNssoTab() {
         }
     }
 
-    // Handle background dimming
-    useEffect(() => {
-        setBackgroundDimmed(true)
-        return () => setBackgroundDimmed(false)
-    }, [setBackgroundDimmed])
+
 
     // Load Connections
     const loadConnections = async () => {
