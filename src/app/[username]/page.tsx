@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
+import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 
 interface PageProps {
@@ -84,6 +85,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     return (
         <main className="min-h-screen pt-12 pb-40">
+            {/* Logic Handlers */}
+            <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
+
             {/* Profile Content */}
             <div className="px-6 lg:px-[165px] max-w-[1470px] mx-auto space-y-24">
 

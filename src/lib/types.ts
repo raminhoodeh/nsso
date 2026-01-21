@@ -113,3 +113,15 @@ export interface FullUserProfile {
     projects: Project[]
     products: Product[]
 }
+
+export interface MyNssoConnection {
+    id: string
+    connectedUserId: string // The ID of the connected user
+    username: string
+    fullName: string
+    headline: string | null
+    profilePicUrl: string | null
+    dateMet: string
+    location: string
+    notes: string
+}
