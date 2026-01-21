@@ -5,6 +5,7 @@ DO $$
 DECLARE
     target_email TEXT := 'raminhoodeh@gmail.com';
     target_user_id UUID;
+    target_user_id_2 UUID;
     
     -- Fake User Emails
     email_1 TEXT := 'fake1@example.com';
@@ -126,6 +127,39 @@ BEGIN
         (fake_user_3_id, target_user_id, now() - INTERVAL '1 month', 'Paris trip', 48.8566, 2.3522),
         (fake_user_4_id, target_user_id, now() - INTERVAL '3 months', 'Design Workshop', null, null)
     ON CONFLICT (user_id, connected_user_id) DO NOTHING;
+
+    -----------------------------------------------------------------------
+    -- TARGET USER 2: Troy (troy@nsso.me)
+    -----------------------------------------------------------------------
+    SELECT id INTO target_user_id_2 FROM auth.users WHERE email = 'troy@nsso.me';
+
+    IF target_user_id_2 IS NOT NULL THEN
+        -- 1. Clear old connections
+        DELETE FROM public.my_nsso WHERE user_id = target_user_id_2;
+
+        -- 2. Insert new connections (Same as Ramin's)
+        INSERT INTO public.my_nsso (user_id, connected_user_id, date_met, location_name, location_lat, location_long, notes)
+        VALUES
+            (target_user_id_2, fake_user_1_id, now(), 'Tech Conference 2026', 51.5074, -0.1278, 'Met at the registration booth. Interested in AI.'),
+            (target_user_id_2, fake_user_2_id, now() - INTERVAL '1 day', 'Coffee Shop', 40.7128, -74.0060, 'Great chat about infrastructure.'),
+            (target_user_id_2, fake_user_3_id, now() - INTERVAL '1 month', 'Paris trip', 48.8566, 2.3522, 'Delicious food tour guide.'),
+            (target_user_id_2, fake_user_4_id, now() - INTERVAL '3 months', 'Design Workshop', null, null, 'Shared some portfolio tips.')
+        ON CONFLICT (user_id, connected_user_id) DO UPDATE 
+        SET notes = EXCLUDED.notes, location_name = EXCLUDED.location_name;
+
+        -- 3. Reverse connections (Optional, fake users -> Troy)
+        INSERT INTO public.my_nsso (user_id, connected_user_id, date_met, location_name, location_lat, location_long)
+        VALUES
+            (fake_user_1_id, target_user_id_2, now(), 'Tech Conference 2026', 51.5074, -0.1278),
+            (fake_user_2_id, target_user_id_2, now() - INTERVAL '1 day', 'Coffee Shop', 40.7128, -74.0060),
+            (fake_user_3_id, target_user_id_2, now() - INTERVAL '1 month', 'Paris trip', 48.8566, 2.3522),
+            (fake_user_4_id, target_user_id_2, now() - INTERVAL '3 months', 'Design Workshop', null, null)
+        ON CONFLICT (user_id, connected_user_id) DO NOTHING;
+
+        RAISE NOTICE 'Seed data also added for troy@nsso.me';
+    ELSE
+        RAISE NOTICE 'User troy@nsso.me not found, skipping.';
+    END IF;
 
     RAISE NOTICE 'Seed data fixed and refreshed successfully for %', target_email;
 
