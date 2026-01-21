@@ -10,7 +10,7 @@ export default function NSSOAgent() {
 
     // Pop-up mode logic. Full screen opens new tab.
     const handleExpand = () => {
-        window.open('/agent', '_blank');
+        window.open('/deity', '_blank');
     };
 
     return (
