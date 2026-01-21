@@ -266,7 +266,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 headers['Authorization'] = `Bearer ${session.access_token}`;
             }
 
-            const response = await fetch('/api/agent/chat', {
+            const response = await fetch('/api/deity/chat', {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
@@ -505,7 +505,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                         <button
                             type="submit"
                             disabled={!inputValue.trim() || isLoading}
-                            className="absolute right-2 top-2 p-2 bg-white/10 text-white rounded-full hover:bg-cyan-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/10 text-white rounded-full hover:bg-cyan-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
                         >
                             <Send size={18} />
                         </button>
