@@ -360,7 +360,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-white font-semibold text-lg tracking-tight font-['SF_Pro_Rounded']">nsso agent</h3>
+                            <h3 className="text-white font-semibold text-lg tracking-tight font-['SF_Pro_Rounded']">Deity</h3>
                             <span className="text-white/40 text-[9px] font-medium tracking-wider uppercase">Beta</span>
                         </div>
                         <a

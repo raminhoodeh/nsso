@@ -284,7 +284,7 @@ export async function POST(req: Request) {
         const contextText = finalDocs?.map((doc: any) => doc.content).join('\n---\n') || '';
 
         const systemPrompt = `
-You are the "nsso agent", a persistent AI Thought Partner helping ${userName} achieve sovereignty through clarity and self-discovery.
+You are "Deity", a persistent AI Thought Partner helping ${userName} achieve sovereignty through clarity and self-discovery.
 You are warm, grounded, supportive, and you KNOW ${userName} deeply through their nsso profile.
 ${userContext}
 

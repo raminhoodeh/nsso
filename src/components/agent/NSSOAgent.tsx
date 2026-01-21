@@ -41,9 +41,11 @@ export default function NSSOAgent() {
                         {/* Text Section */}
                         <div className="flex flex-col items-start justify-center">
                             <div className="flex items-center gap-1.5">
-                                <span className="text-white text-base font-medium tracking-wide drop-shadow-md font-['SF_Pro_Rounded']">
-                                    nsso agent
-                                </span>
+                                <img
+                                    src="/deity logo white.png"
+                                    alt="Deity"
+                                    className="h-5 w-auto object-contain"
+                                />
                                 <span className="text-white/40 text-[9px] font-medium tracking-wider uppercase">
                                     Beta
                                 </span>
