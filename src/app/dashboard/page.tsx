@@ -812,8 +812,6 @@ function DashboardContent() {
                                         )}
 
 
-                                        {/* My nsso Tab Content */}
-                                        {activeTab === 'my-nsso' && <MyNssoTab />}
                                         {/* Mobile Downgrade Button */}
                                         {user?.is_premium && (
                                             <button
@@ -868,6 +866,7 @@ function DashboardContent() {
 
                 {/* Earnings Tab Content - No wrapper */}
                 {activeTab === 'earnings' && <EarningsTab />}
+                {activeTab === 'my-nsso' && <MyNssoTab />}
 
 
                 {/* Only show Links, Contact, and Advanced Mode cards on "Your Page" tab */}
