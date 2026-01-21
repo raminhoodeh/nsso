@@ -361,7 +361,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="text-white font-semibold text-lg tracking-tight font-['SF_Pro_Rounded']">Deity</h3>
-                            <span className="text-white/40 text-[9px] font-medium tracking-wider uppercase">Beta</span>
+
                         </div>
                         <a
                             href="https://drive.google.com/file/d/1fRA7_xIrCw0XtOORljA3crcdSOCdFx3M/view?usp=sharing"

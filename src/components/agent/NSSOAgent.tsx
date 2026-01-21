@@ -46,9 +46,7 @@ export default function NSSOAgent() {
                                     alt="Deity"
                                     className="h-5 w-auto object-contain"
                                 />
-                                <span className="text-white/40 text-[9px] font-medium tracking-wider uppercase">
-                                    Beta
-                                </span>
+
                             </div>
                         </div>
                     </div>
