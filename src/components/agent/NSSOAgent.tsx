@@ -44,7 +44,7 @@ export default function NSSOAgent() {
                                 <img
                                     src="/deity logo white.png"
                                     alt="Deity"
-                                    className="h-5 w-auto object-contain"
+                                    className="h-7 w-auto object-contain"
                                 />
 
                             </div>
