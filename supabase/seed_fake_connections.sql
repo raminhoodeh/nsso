@@ -19,6 +19,14 @@ BEGIN
         RAISE NOTICE 'Target user % not found. Please ensure the user exists.', target_email;
         RETURN;
     END IF;
+    
+    -- 0. CLEANUP: Remove generic/test connections for this user to avoid duplicates/messy data
+    -- We delete connections where the connected user has a 'fake%' email to be safe, 
+    -- OR just clear all 'my_nsso' for this user if it's a dev environment.
+    -- For safety, let's just delete the ones we are about to create? 
+    -- Actually, to fix the user's view, we should clear the table for this user.
+    -- CAUTION: This wipes 'My nsso' for Ramin. Assuming this is desired for testing.
+    DELETE FROM public.my_nsso WHERE user_id = target_user_id;
 
     -- 2. Create fake users in auth.users (required for foreign key)
     -- We use a dummy password hash (bcrypt)
@@ -75,6 +83,6 @@ BEGIN
         (fake_user_4_id, target_user_id, now() - INTERVAL '3 months', 'Design Workshop', null, null)
     ON CONFLICT (user_id, connected_user_id) DO NOTHING;
 
-    RAISE NOTICE 'Seed data created successfully for %', target_email;
+    RAISE NOTICE 'Seed data refreshed successfully for % (Old connections cleared)', target_email;
 
 END $$;

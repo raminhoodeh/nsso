@@ -87,17 +87,24 @@ export async function GET(request: Request) {
         }
 
         // Transform data
-        let connections = data.map((item: any) => ({
-            id: item.id,
-            connectedUserId: item.connected_user_id,
-            dateMet: item.date_met,
-            location: item.location_name,
-            notes: item.notes,
-            username: item.connected_user?.username,
-            fullName: item.connected_user?.profiles?.full_name || item.connected_user?.username,
-            headline: item.connected_user?.profiles?.headline,
-            profilePicUrl: item.connected_user?.profiles?.profile_pic_url
-        }))
+        let connections = data.map((item: any) => {
+            // Handle profiles relation (Supabase can return array or object depending on relation type detected)
+            const profile = Array.isArray(item.connected_user?.profiles)
+                ? item.connected_user.profiles[0]
+                : item.connected_user?.profiles
+
+            return {
+                id: item.id,
+                connectedUserId: item.connected_user_id,
+                dateMet: item.date_met,
+                location: item.location_name,
+                notes: item.notes,
+                username: item.connected_user?.username,
+                fullName: profile?.full_name || item.connected_user?.username || 'Unknown User',
+                headline: profile?.headline,
+                profilePicUrl: profile?.profile_pic_url
+            }
+        })
 
         // Search filtering (in-memory for V1 simplicity with joining)
         if (search) {
