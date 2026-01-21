@@ -1,4 +1,4 @@
--- Seed fake data for "My nsso" testing
+-- Seed fake data for "My nsso" testing (Fixed for Existing Users)
 -- usage: Run this in your Supabase SQL Editor
 
 DO $$
@@ -6,11 +6,17 @@ DECLARE
     target_email TEXT := 'raminhoodeh@gmail.com';
     target_user_id UUID;
     
-    -- Variables for fake users
-    fake_user_1_id UUID := gen_random_uuid();
-    fake_user_2_id UUID := gen_random_uuid();
-    fake_user_3_id UUID := gen_random_uuid();
-    fake_user_4_id UUID := gen_random_uuid();
+    -- Fake User Emails
+    email_1 TEXT := 'fake1@example.com';
+    email_2 TEXT := 'fake2@example.com';
+    email_3 TEXT := 'fake3@example.com';
+    email_4 TEXT := 'fake4@example.com';
+
+    -- Fake User IDs (to be resolved)
+    fake_user_1_id UUID;
+    fake_user_2_id UUID;
+    fake_user_3_id UUID;
+    fake_user_4_id UUID;
 BEGIN
     -- 1. Get the ID of the target user (Ramin)
     SELECT id INTO target_user_id FROM auth.users WHERE email = target_email;
@@ -19,35 +25,66 @@ BEGIN
         RAISE NOTICE 'Target user % not found. Please ensure the user exists.', target_email;
         RETURN;
     END IF;
-    
-    -- 0. CLEANUP: Remove generic/test connections for this user to avoid duplicates/messy data
-    -- We delete connections where the connected user has a 'fake%' email to be safe, 
-    -- OR just clear all 'my_nsso' for this user if it's a dev environment.
-    -- For safety, let's just delete the ones we are about to create? 
-    -- Actually, to fix the user's view, we should clear the table for this user.
-    -- CAUTION: This wipes 'My nsso' for Ramin. Assuming this is desired for testing.
-    DELETE FROM public.my_nsso WHERE user_id = target_user_id;
 
-    -- 2. Create fake users in auth.users (required for foreign key)
-    -- We use a dummy password hash (bcrypt)
-    INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)
-    VALUES 
-        (fake_user_1_id, 'fake1@example.com', '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now()),
-        (fake_user_2_id, 'fake2@example.com', '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now()),
-        (fake_user_3_id, 'fake3@example.com', '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now()),
-        (fake_user_4_id, 'fake4@example.com', '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now())
-    ON CONFLICT (id) DO NOTHING;
-
-    -- 3. Create fake users in public.users
+    -----------------------------------------------------------------------
+    -- Helper Logic to Search or Create Fake User 1
+    -----------------------------------------------------------------------
+    SELECT id INTO fake_user_1_id FROM auth.users WHERE email = email_1;
+    IF fake_user_1_id IS NULL THEN
+        fake_user_1_id := gen_random_uuid();
+        INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)
+        VALUES (fake_user_1_id, email_1, '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now());
+    END IF;
+    -- Ensure public.users entry
     INSERT INTO public.users (id, email, username, user_type)
-    VALUES
-        (fake_user_1_id, 'fake1@example.com', 'alice_wonder', 'standard'),
-        (fake_user_2_id, 'fake2@example.com', 'bob_builder', 'premium'),
-        (fake_user_3_id, 'fake3@example.com', 'charlie_chef', 'standard'),
-        (fake_user_4_id, 'fake4@example.com', 'diana_designer', 'premium')
+    VALUES (fake_user_1_id, email_1, 'alice_wonder', 'standard')
     ON CONFLICT (id) DO NOTHING;
 
-    -- 4. Create fake profiles in public.profiles (Corrected Schema with Pics)
+
+    -----------------------------------------------------------------------
+    -- Helper Logic to Search or Create Fake User 2
+    -----------------------------------------------------------------------
+    SELECT id INTO fake_user_2_id FROM auth.users WHERE email = email_2;
+    IF fake_user_2_id IS NULL THEN
+        fake_user_2_id := gen_random_uuid();
+        INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)
+        VALUES (fake_user_2_id, email_2, '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now());
+    END IF;
+    INSERT INTO public.users (id, email, username, user_type)
+    VALUES (fake_user_2_id, email_2, 'bob_builder', 'premium')
+    ON CONFLICT (id) DO NOTHING;
+
+
+    -----------------------------------------------------------------------
+    -- Helper Logic to Search or Create Fake User 3
+    -----------------------------------------------------------------------
+    SELECT id INTO fake_user_3_id FROM auth.users WHERE email = email_3;
+    IF fake_user_3_id IS NULL THEN
+        fake_user_3_id := gen_random_uuid();
+        INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)
+        VALUES (fake_user_3_id, email_3, '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now());
+    END IF;
+    INSERT INTO public.users (id, email, username, user_type)
+    VALUES (fake_user_3_id, email_3, 'charlie_chef', 'standard')
+    ON CONFLICT (id) DO NOTHING;
+
+
+    -----------------------------------------------------------------------
+    -- Helper Logic to Search or Create Fake User 4
+    -----------------------------------------------------------------------
+    SELECT id INTO fake_user_4_id FROM auth.users WHERE email = email_4;
+    IF fake_user_4_id IS NULL THEN
+        fake_user_4_id := gen_random_uuid();
+        INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)
+        VALUES (fake_user_4_id, email_4, '$2a$10$dummyhashdummyhashdummyhashdummyhashdummyhash', now());
+    END IF;
+    INSERT INTO public.users (id, email, username, user_type)
+    VALUES (fake_user_4_id, email_4, 'diana_designer', 'premium')
+    ON CONFLICT (id) DO NOTHING;
+
+    -----------------------------------------------------------------------
+    -- Update Profiles (Upsert using the IDs we now confirmed)
+    -----------------------------------------------------------------------
     INSERT INTO public.profiles (user_id, full_name, bio, headline, profile_pic_url)
     VALUES
         (fake_user_1_id, 'Alice Wonderland', 'Curious explorer based in London.', 'Explorer', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice'),
@@ -57,7 +94,14 @@ BEGIN
     ON CONFLICT (user_id) DO UPDATE
     SET profile_pic_url = EXCLUDED.profile_pic_url, full_name = EXCLUDED.full_name;
 
-    -- 5. Create connections for Ramin (My nsso)
+
+    -----------------------------------------------------------------------
+    -- Reset Connections for Target User
+    -----------------------------------------------------------------------
+    -- 1. Clear old generic connections for the target user to maintain clean state
+    DELETE FROM public.my_nsso WHERE user_id = target_user_id;
+
+    -- 2. Insert new connections
     INSERT INTO public.my_nsso (user_id, connected_user_id, date_met, location_name, location_lat, location_long, notes)
     VALUES
         -- Recent meet (today)
@@ -74,7 +118,7 @@ BEGIN
     ON CONFLICT (user_id, connected_user_id) DO UPDATE 
     SET notes = EXCLUDED.notes, location_name = EXCLUDED.location_name;
 
-    -- 6. Also create the reverse connections
+    -- 3. Also create/update the reverse connections (Optional, but good for completeness)
     INSERT INTO public.my_nsso (user_id, connected_user_id, date_met, location_name, location_lat, location_long)
     VALUES
         (fake_user_1_id, target_user_id, now(), 'Tech Conference 2026', 51.5074, -0.1278),
@@ -83,6 +127,6 @@ BEGIN
         (fake_user_4_id, target_user_id, now() - INTERVAL '3 months', 'Design Workshop', null, null)
     ON CONFLICT (user_id, connected_user_id) DO NOTHING;
 
-    RAISE NOTICE 'Seed data refreshed successfully for % (Old connections cleared)', target_email;
+    RAISE NOTICE 'Seed data fixed and refreshed successfully for %', target_email;
 
 END $$;
