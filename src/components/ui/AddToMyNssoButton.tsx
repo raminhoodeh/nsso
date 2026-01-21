@@ -25,7 +25,7 @@ export default function AddToMyNssoButton({
     const handleClick = async () => {
         // 1. Handle Logged Out State
         if (!isLoggedIn) {
-            router.push('/auth/sign-in')
+            router.push('/sign-in')
             return
         }
 
