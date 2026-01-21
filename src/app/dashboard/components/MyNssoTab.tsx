@@ -91,62 +91,64 @@ export default function MyNssoTab() {
     }
 
     return (
-        <div className="space-y-16 pb-20">
-            {/* Header Section */}
-            <div className="text-center space-y-2">
-                <h2 className="text-3xl font-bold text-white">My nsso Network</h2>
-                <p className="text-white/60 max-w-lg mx-auto">
-                    Your personal timeline of everyone you&apos;ve met.
-                    Scan QR codes to build your journey.
-                </p>
-            </div>
+        <div className="space-y-6">
+            <GlassCard className="p-6 lg:p-8">
+                {/* Header Section */}
+                <div className="text-center space-y-2 mb-10">
+                    <h2 className="text-3xl font-bold text-white">My nsso Network</h2>
+                    <p className="text-white/60 max-w-lg mx-auto">
+                        Your personal timeline of everyone you&apos;ve met.
+                        Scan QR codes to build your journey.
+                    </p>
+                </div>
 
-            {/* Top Section: Table View */}
-            <div className="space-y-4">
-                {/*  <div className="flex items-center gap-2 px-2">
-                    <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Quick Access</span>
-                    <div className="h-[1px] flex-1 bg-white/10" />
-                </div> */}
-                <NetworkTable
-                    connections={connections}
-                    onUpdateConnection={handleUpdateConnection}
-                />
-            </div>
-
-            {/* Bottom Section: Timeline View */}
-            {connections.length > 0 && (
-                <div className="space-y-8 pt-8 border-t border-white/5 relative">
-                    {/*  <div className="flex items-center justify-center mb-12">
-                         <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 uppercase tracking-widest backdrop-blur-md">
-                            Your Journey
-                        </span>
+                {/* Top Section: Table View */}
+                <div className="space-y-4 mb-12">
+                    {/*  <div className="flex items-center gap-2 px-2">
+                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Quick Access</span>
+                        <div className="h-[1px] flex-1 bg-white/10" />
                     </div> */}
-
-                    <h3 className="text-center text-xl font-bold text-white/90">Your Journey</h3>
-
-                    <NetworkingTimeline
+                    <NetworkTable
                         connections={connections}
-                        onOpenNotes={(conn) => {
-                            // We can reuse the modal logic from Table if we hoist the state up, 
-                            // OR simpler: Just define a shared update handler and let Timeline trigger it?
-                            // Actually Timeline opens Notes too. 
-                            // Since the Notes Modal is built into NetworkTable currently, 
-                            // we should probably extract the Modal to this parent level OR 
-                            // let Timeline have its own Modal (might duplicate code but simpler refactor).
-
-                            // Better UX: Hoist the modal state here to MyNssoTab so both children can open it.
-                            // However, simply for V1 speed, let's keep it simple.
-                            // If user clicks note in Timeline, we need to show a modal.
-                            // For now, let's just pass a "not implemented" toast or 
-                            // Actually, I should refactor NetworkTable to accept `isNotesOpen` etc if hoisting.
-
-                            // Let's create a shared modal here in MyNssoTab instead!
-                            // Refactoring decision: Yes, hoist modal state.
-                            openModal(conn)
-                        }}
+                        onUpdateConnection={handleUpdateConnection}
                     />
                 </div>
-            )}
+
+                {/* Bottom Section: Timeline View */}
+                {connections.length > 0 && (
+                    <div className="space-y-8 pt-8 border-t border-white/5 relative">
+                        {/*  <div className="flex items-center justify-center mb-12">
+                             <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 uppercase tracking-widest backdrop-blur-md">
+                                Your Journey
+                            </span>
+                        </div> */}
+
+                        <h3 className="text-center text-xl font-bold text-white/90">Your Journey</h3>
+
+                        <NetworkingTimeline
+                            connections={connections}
+                            onOpenNotes={(conn) => {
+                                // We can reuse the modal logic from Table if we hoist the state up, 
+                                // OR simpler: Just define a shared update handler and let Timeline trigger it?
+                                // Actually Timeline opens Notes too. 
+                                // Since the Notes Modal is built into NetworkTable currently, 
+                                // we should probably extract the Modal to this parent level OR 
+                                // let Timeline have its own Modal (might duplicate code but simpler refactor).
+
+                                // Better UX: Hoist the modal state here to MyNssoTab so both children can open it.
+                                // However, simply for V1 speed, let's keep it simple.
+                                // If user clicks note in Timeline, we need to show a modal.
+                                // For now, let's just pass a "not implemented" toast or 
+                                // Actually, I should refactor NetworkTable to accept `isNotesOpen` etc if hoisting.
+
+                                // Let's create a shared modal here in MyNssoTab instead!
+                                // Refactoring decision: Yes, hoist modal state.
+                                openModal(conn)
+                            }}
+                        />
+                    </div>
+                )}
+            </GlassCard>
 
             {/* Shared Notes Modal */}
             {selectedConnection && (
