@@ -347,10 +347,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Add experience
-    const addExperience = async (company: string, title: string, startYear: number, endYear: number | null, description?: string): Promise<boolean> => {
+    const addExperience = async (company: string, title: string, startYear?: number, endYear?: number | null, description?: string): Promise<boolean> => {
         if (!user?.id) return false
 
         saveToHistory()
+
+        // Default to current year if not provided
+        const finalStartYear = startYear || new Date().getFullYear();
 
         const { data, error } = await supabase
             .from('experiences')
@@ -358,9 +361,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 user_id: user.id,
                 company_name: company,
                 job_title: title,
-                start_year: startYear,
-                end_year: endYear,
-                description
+                start_year: finalStartYear,
+                end_year: endYear ?? null,
+                description: description || ''
             })
             .select()
             .single()
@@ -379,7 +382,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Add project
-    const addProject = async (name: string, description: string, url?: string): Promise<boolean> => {
+    const addProject = async (name: string, description?: string, url?: string): Promise<boolean> => {
         if (!user?.id) return false
 
         saveToHistory()
@@ -389,8 +392,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .insert({
                 user_id: user.id,
                 project_name: name,
-                description: description,
-                project_url: url,
+                description: description || '',
+                project_url: url || '',
                 contribution: 'Creator' // Default value for required field
             })
             .select()
@@ -410,10 +413,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Add qualification
-    const addQualification = async (institution: string, degree: string, year: number): Promise<boolean> => {
+    const addQualification = async (institution: string, degree: string, year?: number): Promise<boolean> => {
         if (!user?.id) return false
 
         saveToHistory()
+
+        const finalYear = year || new Date().getFullYear();
 
         const { data, error } = await supabase
             .from('qualifications')
@@ -421,8 +426,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 user_id: user.id,
                 institution,
                 qualification_name: degree,
-                start_year: year, // Defaulting start_year to end_year as we don't have it
-                end_year: year
+                start_year: finalYear,
+                end_year: finalYear
             })
             .select()
             .single()
@@ -441,7 +446,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Add product
-    const addProduct = async (name: string, description: string, price?: string, url?: string): Promise<boolean> => {
+    const addProduct = async (name: string, description?: string, price?: string, url?: string): Promise<boolean> => {
         if (!user?.id) return false
 
         saveToHistory()
@@ -451,9 +456,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .insert({
                 user_id: user.id,
                 name: name,
-                description: description,
-                price,
-                purchase_link: url
+                description: description || '',
+                price: price || '0',
+                purchase_link: url || ''
             })
             .select()
             .single()
