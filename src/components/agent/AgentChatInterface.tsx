@@ -257,7 +257,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
             if (fastMode) {
                 // Fast mode: instant update
-                await updateField(action.target as keyof typeof profile, action.value);
+                await updateField(action.target as keyof typeof profile, action.value, true);
                 showToast(`Deity updated your ${action.target}`, 'success');
                 setIsTyping(false);
             } else {
@@ -267,9 +267,13 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
                 for (const word of words) {
                     currentText += (currentText ? ' ' : '') + word;
-                    await updateField(action.target as keyof typeof profile, currentText);
+                    // Update local state only (persist=false)
+                    await updateField(action.target as keyof typeof profile, currentText, false);
                     await new Promise(resolve => setTimeout(resolve, 50)); // 50ms per word
                 }
+
+                // Final save to DB (persist=true)
+                await updateField(action.target as keyof typeof profile, action.value, true);
 
                 showToast(`Deity updated your ${action.target}`, 'success');
                 setIsTyping(false);

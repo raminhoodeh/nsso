@@ -34,6 +34,7 @@ function DashboardContent() {
     // Local UI state (will be migrated to ProfileProvider in Phase 2)
     const [fullName, setFullName] = useState('')
     const [headline, setHeadline] = useState('')
+    const [bio, setBio] = useState('') // Local state for bio to prevent spam
     const [profilePicUrl, setProfilePicUrl] = useState('')
     const [customDomain, setCustomDomain] = useState('')
 
@@ -94,6 +95,7 @@ function DashboardContent() {
             if (profileData) {
                 setFullName(profileData.full_name || '')
                 setHeadline(profileData.headline || '')
+                setBio(profileData.bio || '')
                 setProfilePicUrl(profileData.profile_pic_url || '')
             }
 
@@ -138,6 +140,13 @@ function DashboardContent() {
             setCustomDomain(user.username)
         }
     }, [user])
+
+    // Sync local state with profile provider updates (e.g. from Deity)
+    useEffect(() => {
+        if (profile) {
+            if (profile.bio !== bio && !saving) setBio(profile.bio || '')
+        }
+    }, [profile?.bio])
 
     // Proactive Nudge: Suggest asking Deity if profile is incomplete
     useEffect(() => {
@@ -275,7 +284,7 @@ function DashboardContent() {
                 user_id: user.id,
                 full_name: fullName,
                 headline,
-                bio: profile?.bio || '',
+                bio,
                 profile_pic_url: profilePicUrl,
             })
 
@@ -716,13 +725,28 @@ function DashboardContent() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-white/50 text-xs font-bold uppercase tracking-wider mb-1 ml-1">BIO</label>
+                                    <div className="flex items-center justify-between mb-1 ml-1">
+                                        <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">BIO</label>
+                                        <button
+                                            onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                                detail: { initialMessage: "Help me write my bio..." }
+                                            }))}
+                                            className="flex items-center gap-1 px-2 py-1 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs"
+                                        >
+                                            <Sparkles className="w-3 h-3" />
+                                            <span className="text-[10px] font-medium">Ask Deity</span>
+                                        </button>
+                                    </div>
                                     <div className="relative rounded-[12px] overflow-hidden">
                                         <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
                                         <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
                                         <textarea
-                                            value={profile?.bio || ''}
-                                            onChange={(e) => updateField('bio', e.target.value)}
+                                            value={bio}
+                                            onChange={(e) => setBio(e.target.value)}
+                                            onBlur={() => {
+                                                updateField('bio', bio);
+                                                saveProfile();
+                                            }}
 
                                             placeholder="Need inspiration? Use this template: 'I am the [type of person] for [target customers] who want to [desired outcome]' and continue to elaborate on the experience of why you do this, how you do it, and what exactly is involved."
                                             rows={4}

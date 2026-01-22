@@ -32,7 +32,7 @@ interface ProfileContextType {
     loading: boolean
 
     // Update Methods (automatically save to Supabase)
-    updateField: (field: keyof Profile, value: string) => Promise<void>
+    updateField: (field: keyof Profile, value: string, persist?: boolean) => Promise<void>
     addLink: (name: string, url: string) => Promise<void>
     updateLink: (id: string, field: 'link_name' | 'link_url', value: string) => Promise<void>
     removeLink: (id: string) => Promise<void>
@@ -216,8 +216,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Update profile field
-    const updateField = async (field: keyof Profile, value: string) => {
-        console.log('🔄 ProfileProvider: updateField called', { field, value });
+    const updateField = async (field: keyof Profile, value: string, persist: boolean = true) => {
+        // console.log('🔄 ProfileProvider: updateField called', { field, value, persist });
         if (!user?.id) {
             console.error('❌ ProfileProvider: No user ID found');
             return;
@@ -229,18 +229,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         // Update local state
         setProfile(prev => prev ? { ...prev, [field]: value } : null)
 
-        // Persist to Supabase
-        const { error } = await supabase
-            .from('profiles')
-            .update({ [field]: value })
-            .eq('user_id', user.id)
+        // Persist to Supabase if requested
+        if (persist) {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ [field]: value })
+                .eq('user_id', user.id)
 
-        if (error) {
-            console.error('❌ ProfileProvider: Error updating profile:', error)
-            // Revert on error
-            undo()
-        } else {
-            console.log('✅ ProfileProvider: Profile updated successfully');
+            if (error) {
+                console.error('❌ ProfileProvider: Error updating profile:', error)
+                // Revert on error
+                undo()
+            } else {
+                console.log('✅ ProfileProvider: Profile persisted successfully');
+            }
         }
     }
 
