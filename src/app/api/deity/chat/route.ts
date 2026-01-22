@@ -332,7 +332,10 @@ export async function POST(req: Request) {
         const finalDocs = reranked.slice(0, Math.min(5, reranked.length));
 
         // 4. Construct System Prompt
-        const contextText = finalDocs?.map((doc: any) => doc.content).join('\n---\n') || '';
+        const contextText = finalDocs?.map((doc: any) => {
+            const sourceInfo = doc.metadata?.url || doc.metadata?.source || doc.metadata?.title || 'Unknown Source';
+            return `SOURCE/LINK: ${sourceInfo}\nCONTENT:\n${doc.content}`;
+        }).join('\n\n---\n\n') || '';
 
         // Bio assistance prompt (injected if profile is incomplete)
         const bioAssistancePrompt = needsBioHelp ? `
@@ -637,11 +640,20 @@ PARTIAL DATA RULES (DO NOT BE ANNNOYING):
 - **Contextual Form Filling**: If the user provides a blob of text, extract what you can and fill the rest with sensible defaults or empty strings. 
 - **Example**: User says "I worked at Stripe". Action: ADD_EXPERIENCE { company: "Stripe", title: "Employee", startYear: "2024" }. THEN say: "Added Stripe! What was your role there?"
 
+
+LINK HYGIENE RULES (STRICT):
+1. **NO LINK = NO RECOMMENDATION**: You are FORBIDDEN from recommending a resource (article, course, tool, etc.) if you cannot provide a clickable URL for it from the "SOURCE/LINK" field in the context.
+   - ❌ Bad: "I saw an article about this..." (with no link)
+   - ✅ Good: "Check out [This Article](https://example.com) that explains it."
+2. **Use Context Links**: The knowledge base context now provides \`SOURCE/LINK\` for every chunk. USE IT.
+3. **Format**: Always use Markdown: \`[Title](URL)\`.
+4. **If link is missing in context**: Do not mention that specific resource. Find another one that has a link, or give general advice without citing a "ghost" source.
+
 PERSONALITY RULES:
-1. **Direct Answers First:** If the user asks a specific question or selects a category, **answer immediately** using the available context.
-2. **Offer Contacts (Investors/VCs ONLY):** If (and ONLY if) you recommend an **Investor** or **Venture Capitalist**, explicitly offer to provide their contact details if you have them.
-3. **Clarifying Questions:** You may ask a clarifying question ONLY if the user's request is extremely vague.
-4. **Link Formatting:** Always format URLs as Markdown links using standard syntax: \`[Descriptive Text](URL)\`.
+        1. ** Direct Answers First:** If the user asks a specific question or selects a category, ** answer immediately ** using the available context.
+2. ** Offer Contacts(Investors / VCs ONLY):** If(and ONLY if) you recommend an ** Investor ** or ** Venture Capitalist **, explicitly offer to provide their contact details if you have them.
+3. ** Clarifying Questions:** You may ask a clarifying question ONLY if the user's request is extremely vague.
+        4. ** Link Formatting:** Always format URLs as Markdown links using standard syntax: \`[Descriptive Text](URL)\`.
 5. **Product Sales Page Assistance:**
    - If a user sends a prompt starting with "I am making the landing page copy..." or "Ok, my headline hook is going to be...", they are using the **Deity-Assisted Sales Page Creator**.
    - Fulfill the prompt exactly. Do not ask setup questions.
