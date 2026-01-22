@@ -243,6 +243,18 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
+    // Safe year parser helper
+    const parseYear = (value: string | number | undefined | null): number | undefined => {
+        if (!value) return undefined;
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+            const clean = value.replace(/[^0-9]/g, '');
+            if (!clean) return undefined;
+            return parseInt(clean, 10);
+        }
+        return undefined;
+    }
+
     // Action execution with word-by-word animation
     const executeAction = async (action: DeityAction) => {
         console.log('⚡ executing action:', action);
@@ -305,22 +317,25 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 showToast(`Failed to reorder links`, 'error');
             }
         } else if (action.action === 'ADD_EXPERIENCE' && action.company && action.title) {
+            const startYear = parseYear(action.startYear) || new Date().getFullYear();
+            const endYear = parseYear(action.endYear) || null; // Force null if undefined/NaN
+
             const success = await addExperience(
                 action.company,
                 action.title,
-                Number(action.startYear || new Date().getFullYear()),
-                action.endYear ? Number(action.endYear) : null,
+                startYear,
+                endYear,
                 action.description
             );
             if (success) {
                 showToast(`Added experience: ${action.title} at ${action.company}`, 'success');
             } else {
-                showToast(`Failed to add experience`, 'error');
+                showToast(`Failed to add experience (Check logs)`, 'error');
             }
-        } else if (action.action === 'ADD_PROJECT' && action.project_name && action.project_description) {
+        } else if (action.action === 'ADD_PROJECT' && action.project_name) { // Relaxed check: description not strictly required here if provider handles it
             const success = await addProject(
                 action.project_name,
-                action.project_description,
+                action.project_description, // Can be undefined
                 action.project_url
             );
             if (success) {
@@ -329,17 +344,19 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 showToast(`Failed to add project`, 'error');
             }
         } else if (action.action === 'ADD_QUALIFICATION' && action.institution && action.degree) {
+            const year = parseYear(action.year) || new Date().getFullYear();
+
             const success = await addQualification(
                 action.institution,
                 action.degree,
-                Number(action.year || new Date().getFullYear())
+                year
             );
             if (success) {
                 showToast(`Added qualification: ${action.degree}`, 'success');
             } else {
                 showToast(`Failed to add qualification`, 'error');
             }
-        } else if (action.action === 'ADD_PRODUCT' && action.product_name && action.product_description) {
+        } else if (action.action === 'ADD_PRODUCT' && action.product_name) { // Relaxed check
             const success = await addProduct(
                 action.product_name,
                 action.product_description,
