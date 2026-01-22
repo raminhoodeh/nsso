@@ -10,7 +10,7 @@ interface Message {
     role: 'user' | 'model';
     content: string;
     timestamp: number;
-    actions?: DeityAction[]; // Actions extracted from this message
+    actions?: (DeityAction & { status?: 'applied' | 'rejected' })[]; // Actions extracted from this message
 }
 
 interface AgentChatInterfaceProps {
@@ -187,19 +187,14 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
         const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
         const urlRegex = /(https?:\/\/[^\s]+)/g;
 
-        const parts = [];
-        let lastIndex = 0;
-        let match;
-
-        // First pass: Markdown links
-        // simpler approach: split by markdown links first
-        // We need a more robust parser for mixed content, but let's do a simple split for now.
+        // Strip JSON action blocks from display
+        const cleanContent = content.replace(/```json\s*\n{[\s\S]*?}\s*\n```/g, '').trim();
 
         // Let's use a split approach.
         const elements: React.ReactNode[] = [];
 
         // Split by markdown link pattern
-        const mdParts = content.split(/(\[[^\]]+\]\([^)]+\))/g);
+        const mdParts = cleanContent.split(/(\[[^\]]+\]\([^)]+\))/g);
 
         mdParts.forEach((part, i) => {
             const mdMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
@@ -361,17 +356,26 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
 
     // Handle Apply button click
-    const handleApplyAction = async (action: DeityAction) => {
+    const handleApplyAction = async (messageId: string, actionIndex: number, action: DeityAction) => {
         await executeAction(action);
+
+        setMessages(prev => prev.map(msg => {
+            if (msg.id === messageId && msg.actions) {
+                const newActions = [...msg.actions];
+                newActions[actionIndex] = { ...newActions[actionIndex], status: 'applied' };
+                return { ...msg, actions: newActions };
+            }
+            return msg;
+        }));
     };
 
     // Handle Reject button click
     const handleRejectAction = (messageId: string, actionIndex: number) => {
-        // Remove action from message
+        // Mark action as rejected instead of removing
         setMessages(prev => prev.map(msg => {
             if (msg.id === messageId && msg.actions) {
                 const newActions = [...msg.actions];
-                newActions.splice(actionIndex, 1);
+                newActions[actionIndex] = { ...newActions[actionIndex], status: 'rejected' };
                 return { ...msg, actions: newActions };
             }
             return msg;
@@ -630,13 +634,15 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                                     {msg.actions.map((action, idx) => (
                                         <div
                                             key={idx}
-                                            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm border border-white/20"
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition-all duration-300
+                                                ${action.status === 'applied' ? 'bg-green-500/10 border-green-500/30' :
+                                                    action.status === 'rejected' ? 'bg-red-500/5 border-red-500/20 opacity-60' :
+                                                        'border-white/20 bg-white/5'}`}
                                             style={{
-                                                backdropFilter: 'blur(20px)',
-                                                background: 'rgba(255, 255, 255, 0.05)'
+                                                backdropFilter: 'blur(20px)'
                                             }}
                                         >
-                                            <span className="text-white/60 text-xs">
+                                            <span className={`text-xs ${action.status === 'applied' ? 'text-green-200' : action.status === 'rejected' ? 'text-red-200/70' : 'text-white/60'}`}>
                                                 {action.action === 'UPDATE_FIELD' && `Update ${action.target}`}
                                                 {action.action === 'ADD_LINK' && `Add link: ${action.name}`}
                                                 {action.action === 'UPDATE_LINK' && `Rename to: ${action.name || 'update URL'}`}
@@ -647,21 +653,36 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                                                 {action.action === 'ADD_QUALIFICATION' && `Add qualification: ${action.degree}`}
                                                 {action.action === 'ADD_PRODUCT' && `Add product: ${action.product_name}`}
                                             </span>
-                                            <button
-                                                onClick={() => handleApplyAction(action)}
-                                                disabled={isTyping}
-                                                className="flex items-center gap-1 px-3 py-1 rounded-md bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-medium transition-colors disabled:opacity-50"
-                                            >
-                                                <Check size={14} />
-                                                Apply
-                                            </button>
-                                            <button
-                                                onClick={() => handleRejectAction(msg.id, idx)}
-                                                className="flex items-center gap-1 px-3 py-1 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-colors"
-                                            >
-                                                <XCircle size={14} />
-                                                Reject
-                                            </button>
+
+                                            {action.status === 'applied' ? (
+                                                <div className="flex items-center gap-1 px-2 py-1 text-green-400 text-xs font-medium">
+                                                    <Check size={14} />
+                                                    <span>Accepted</span>
+                                                </div>
+                                            ) : action.status === 'rejected' ? (
+                                                <div className="flex items-center gap-1 px-2 py-1 text-red-400/70 text-xs font-medium">
+                                                    <XCircle size={14} />
+                                                    <span>Rejected</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleApplyAction(msg.id, idx, action)}
+                                                        disabled={isTyping}
+                                                        className="flex items-center gap-1 px-3 py-1 rounded-md bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-medium transition-colors disabled:opacity-50"
+                                                    >
+                                                        <Check size={14} />
+                                                        Apply
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRejectAction(msg.id, idx)}
+                                                        className="flex items-center gap-1 px-3 py-1 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-colors"
+                                                    >
+                                                        <XCircle size={14} />
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
