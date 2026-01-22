@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
+import { useProfile } from '@/components/providers/ProfileProvider'
 import { useUI } from '@/components/providers/UIProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 
@@ -19,16 +20,42 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const [supabase] = useState(() => createClient())
     const [isExpanded, setIsExpanded] = useState(false)
     const [activeSection, setActiveSection] = useState<ActiveSection>('experiences')
-    const [isLoading, setIsLoading] = useState(false)
+    // const [isLoading, setIsLoading] = useState(false) // Driven by provider now
     const [isUploading, setIsUploading] = useState(false)
     const { setBackgroundDimmed } = useUI()
     const [showGuide, setShowGuide] = useState(false)
 
-    // Data States
+    // Global Profile Data
+    const {
+        experiences: globalExperiences,
+        qualifications: globalQualifications,
+        projects: globalProjects,
+        products: globalProducts,
+        loading: globalLoading
+    } = useProfile()
+
+    // Data States (Local state for optimistic UI)
     const [experiences, setExperiences] = useState<Experience[]>([])
     const [qualifications, setQualifications] = useState<Qualification[]>([])
     const [projects, setProjects] = useState<Project[]>([])
     const [products, setProducts] = useState<Product[]>([])
+
+    // Sync with Global State (Deity Updates)
+    useEffect(() => {
+        if (globalExperiences) setExperiences(globalExperiences)
+    }, [globalExperiences])
+
+    useEffect(() => {
+        if (globalQualifications) setQualifications(globalQualifications)
+    }, [globalQualifications])
+
+    useEffect(() => {
+        if (globalProjects) setProjects(globalProjects)
+    }, [globalProjects])
+
+    useEffect(() => {
+        if (globalProducts) setProducts(globalProducts)
+    }, [globalProducts])
 
     // Selection States
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null) // For editing specific product
@@ -99,47 +126,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
         return () => clearTimeout(timer)
     }, [selectedProduct?.paypal_html])
-
-    // Handle background dimming
-    useEffect(() => {
-        if (isExpanded) {
-            setBackgroundDimmed(true)
-        } else {
-            setBackgroundDimmed(false)
-        }
-
-        // Cleanup on unmount
-        return () => setBackgroundDimmed(false)
-
-    }, [isExpanded, setBackgroundDimmed])
-
-    // Fetch Data on Load
-    useEffect(() => {
-        if (userId) {
-            fetchData()
-        }
-    }, [userId])
-
-    const fetchData = async () => {
-        setIsLoading(true)
-        try {
-            const [expRes, qualRes, projRes, prodRes] = await Promise.all([
-                supabase.from('experiences').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-                supabase.from('qualifications').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-                supabase.from('projects').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-                supabase.from('products').select('*').eq('user_id', userId).order('created_at', { ascending: true })
-            ])
-
-            if (expRes.data) setExperiences(expRes.data)
-            if (qualRes.data) setQualifications(qualRes.data)
-            if (projRes.data) setProjects(projRes.data)
-            if (prodRes.data) setProducts(prodRes.data)
-        } catch (error) {
-            console.error('Error fetching advanced data:', error)
-        } finally {
-            setIsLoading(false)
-        }
-    }
 
     // Cropper State
 
