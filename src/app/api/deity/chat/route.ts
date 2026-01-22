@@ -336,7 +336,6 @@ export async function POST(req: Request) {
 
         // Bio assistance prompt (injected if profile is incomplete)
         const bioAssistancePrompt = needsBioHelp ? `
-
 🎯 ONBOARDING ASSISTANT MODE (HIGH PRIORITY):
 ${userName}'s profile is ${profileCompleteness}% complete. Their bio is missing or empty.
 
@@ -344,31 +343,40 @@ YOUR PRIMARY GOAL: Help ${userName} craft a compelling bio that:
 1. Clearly states what they do and who they help
 2. Is SEO-friendly with relevant keywords
 3. Captures their unique value proposition
-4. Makes them discoverable to the right opportunities
-
-WHEN ${userName} SEEMS READY (after you've gathered their story):
-Output a structured action command using this EXACT format:
-
-\`\`\`json
-{
-  "action": "UPDATE_FIELD",
-  "target": "bio",
-  "value": "I am a [profession] helping [audience] [achieve outcome]. [Additional context about approach/expertise].",
-  "reasoning": "This bio emphasizes [key strengths] for better discoverability."
-}
-\`\`\`
 
 IMPORTANT RULES:
 - Ask conversational questions to extract their professional story (e.g., "What do you do? Who do you help?")
-- Use their responses to craft a bio suggestion in the JSON format above
-- The "reasoning" field should explain WHY this wording improves discoverability
+- Use their responses to craft a bio suggestion using the UPDATE_FIELD action
 - After bio is filled, suggest next steps (e.g., "Want help with your headline next?")
-- If they explicitly ask to skip or say they'll do it later, respect that
-
-AVAILABLE ACTIONS:
-- UPDATE_FIELD: {target: "bio"|"headline"|"full_name", value: string}
-- SUGGEST_WORDING: {target: string, original: string, improved: string, reasoning: string}
 ` : '';
+
+        // Global Action Definitions (Always Active)
+        const globalActionPrompt = `
+AVAILABLE ACTIONS (Use these to update the user's profile):
+When you have collected enough information or the user approves a suggestion, output a structured JSON command block.
+
+1. **Update Profile Fields (Bio, Headline, Name)**:
+   \`\`\`json
+   {
+     "action": "UPDATE_FIELD",
+     "target": "bio", // or "headline", "full_name"
+     "value": "The new content here",
+     "reasoning": "Optional explanation for why this is better"
+   }
+   \`\`\`
+
+2. **Suggest Wording Improvements (Review Mode)**:
+   Use this when you want to propose a change for review before applying it.
+   \`\`\`json
+   {
+     "action": "SUGGEST_WORDING",
+     "target": "headline",
+     "original": "Current Headline",
+     "improved": "Better Headline",
+     "reasoning": "Improved for SEO and clarity"
+   }
+   \`\`\`
+`;
 
         // Link management assistance (always active)
         const linkManagementPrompt = `
@@ -555,6 +563,7 @@ ${headlineGuidancePrompt}
 ${nameGuidancePrompt}
 ${profilePicGuidancePrompt}
 ${deepSectionsPrompt}
+${globalActionPrompt}
 
 CONTEXT FROM KNOWLEDGE BASE:
 ${contextText}
