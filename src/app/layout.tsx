@@ -5,6 +5,7 @@ import GlassFilter from "@/components/GlassFilter";
 import { ToastProvider } from "@/components/ui/Toast";
 import { UIProvider } from "@/components/providers/UIProvider";
 import { UserProvider } from "@/components/providers/UserProvider";
+import { ProfileProvider } from "@/components/providers/ProfileProvider";
 import Web3Provider from "@/components/providers/Web3Provider";
 
 import DimmingOverlay from "@/components/ui/DimmingOverlay";
@@ -39,19 +40,21 @@ export default function RootLayout({
         <UIProvider>
           <Web3Provider>
             <UserProvider>
-              {/* SVG Filter for Glass Effects */}
-              <GlassFilter />
-              <ReferralTracker />
+              <ProfileProvider>
+                {/* SVG Filter for Glass Effects */}
+                <GlassFilter />
+                <ReferralTracker />
 
-              {/* Animated Cloud Background */}
-              <VantaBackground />
-              <DimmingOverlay />
+                {/* Animated Cloud Background */}
+                <VantaBackground />
+                <DimmingOverlay />
 
-              {/* Toast Notifications Provider */}
-              <ToastProvider>
-                {children}
-                <ConditionalNSSOAgent />
-              </ToastProvider>
+                {/* Toast Notifications Provider */}
+                <ToastProvider>
+                  {children}
+                  <ConditionalNSSOAgent />
+                </ToastProvider>
+              </ProfileProvider>
             </UserProvider>
           </Web3Provider>
         </UIProvider>

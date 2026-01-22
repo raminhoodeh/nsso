@@ -2,13 +2,15 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Send, Sparkles, User, Bot, Maximize2, Minimize2, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, Sparkles, User, Bot, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
+import { splitActionPayload, type DeityAction } from '@/lib/deity/actionParser';
 
 interface Message {
     id: string;
     role: 'user' | 'model';
     content: string;
     timestamp: number;
+    actions?: DeityAction[]; // Actions extracted from this message
 }
 
 interface AgentChatInterfaceProps {
@@ -64,9 +66,13 @@ const CATEGORY_QUESTIONS: Record<string, string[]> = {
 
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/components/providers/UserProvider';
+import { useProfile } from '@/components/providers/ProfileProvider';
+import { useToast } from '@/components/ui/Toast';
 
 export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose }: AgentChatInterfaceProps) {
     const { user, loading } = useUser();
+    const { profile, updateField, addLink, updateLink, removeLink, reorderLinks, addExperience, addProject, addQualification, addProduct, undo, canUndo, fastMode, setFastMode } = useProfile();
+    const { showToast } = useToast();
     const [messages, setMessages] = useState<Message[]>([]);
     const supabase = createClient();
 
@@ -74,6 +80,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const [showVennDiagram, setShowVennDiagram] = useState(false);
     const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(true);
+    const [isTyping, setIsTyping] = useState(false); // For word-by-word animation
 
     const placeholders = [
         "What is your dream?",
@@ -233,6 +240,112 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
+    // Action execution with word-by-word animation
+    const executeAction = async (action: DeityAction) => {
+        if (action.action === 'UPDATE_FIELD' && action.target && action.value) {
+            setIsTyping(true);
+
+            if (fastMode) {
+                // Fast mode: instant update
+                await updateField(action.target as keyof typeof profile, action.value);
+                showToast(`Deity updated your ${action.target}`, 'success');
+                setIsTyping(false);
+            } else {
+                // Review mode: word-by-word animation
+                const words = action.value.split(' ');
+                let currentText = '';
+
+                for (const word of words) {
+                    currentText += (currentText ? ' ' : '') + word;
+                    await updateField(action.target as keyof typeof profile, currentText);
+                    await new Promise(resolve => setTimeout(resolve, 50)); // 50ms per word
+                }
+
+                showToast(`Deity updated your ${action.target}`, 'success');
+                setIsTyping(false);
+            }
+        } else if (action.action === 'ADD_LINK' && action.name && action.url) {
+            await addLink(action.name, action.url);
+            showToast(`Added link: ${action.name}`, 'success');
+        } else if (action.action === 'UPDATE_LINK' && action.linkId) {
+            if (action.name) {
+                await updateLink(action.linkId, 'link_name', action.name);
+                showToast(`Renamed link to: ${action.name}`, 'success');
+            } else if (action.url) {
+                await updateLink(action.linkId, 'link_url', action.url);
+                showToast(`Updated link URL`, 'success');
+            }
+        } else if (action.action === 'REMOVE_LINK' && action.id) {
+            await removeLink(action.id);
+            showToast(`Removed link`, 'success');
+        } else if (action.action === 'REORDER_LINKS' && action.order) {
+            await reorderLinks(action.order);
+            showToast(`Reordered links`, 'success');
+        } else if (action.action === 'ADD_EXPERIENCE' && action.company && action.title) {
+            await addExperience(
+                action.company,
+                action.title,
+                action.startYear || new Date().getFullYear(),
+                action.endYear || null,
+                action.description
+            );
+            showToast(`Added experience: ${action.title} at ${action.company}`, 'success');
+        } else if (action.action === 'ADD_PROJECT' && action.project_name && action.project_description) {
+            await addProject(
+                action.project_name,
+                action.project_description,
+                action.project_url
+            );
+            showToast(`Added project: ${action.project_name}`, 'success');
+        } else if (action.action === 'ADD_QUALIFICATION' && action.institution && action.degree) {
+            await addQualification(
+                action.institution,
+                action.degree,
+                action.year || new Date().getFullYear()
+            );
+            showToast(`Added qualification: ${action.degree}`, 'success');
+        } else if (action.action === 'ADD_PRODUCT' && action.product_name && action.product_description) {
+            await addProduct(
+                action.product_name,
+                action.product_description,
+                action.price,
+                action.purchase_url
+            );
+            showToast(`Added product: ${action.product_name}`, 'success');
+        }
+    };
+
+    // Handle Apply button click
+    const handleApplyAction = async (action: DeityAction) => {
+        await executeAction(action);
+    };
+
+    // Handle Reject button click
+    const handleRejectAction = (messageId: string, actionIndex: number) => {
+        // Remove action from message
+        setMessages(prev => prev.map(msg => {
+            if (msg.id === messageId && msg.actions) {
+                const newActions = [...msg.actions];
+                newActions.splice(actionIndex, 1);
+                return { ...msg, actions: newActions };
+            }
+            return msg;
+        }));
+        showToast('Suggestion rejected', 'info');
+    };
+
+    // Handle Undo button click
+    const handleUndo = () => {
+        undo();
+        showToast('Last change undone', 'success');
+    };
+
+    // Toggle fast mode
+    const toggleFastMode = async () => {
+        await setFastMode(!fastMode);
+        showToast(`Fast mode ${!fastMode ? 'enabled' : 'disabled'}`, 'success');
+    };
+
     const handleSendMessage = async (text: string) => {
         if (!text.trim()) return;
 
@@ -297,15 +410,43 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 timestamp: Date.now()
             }]);
 
+            let accumulatedText = '';
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 const chunk = decoder.decode(value);
-                botResponseText += chunk;
+                accumulatedText += chunk;
 
+                // Check for action delimiter
+                const { message: messageText, actionsJson } = splitActionPayload(accumulatedText);
+
+                // Update message content (without action payload)
                 setMessages(prev => prev.map(msg =>
-                    msg.id === botMessageId ? { ...msg, content: botResponseText } : msg
+                    msg.id === botMessageId ? { ...msg, content: messageText } : msg
                 ));
+
+                // If actions detected, parse and attach to message
+                if (actionsJson) {
+                    try {
+                        const actions: DeityAction[] = JSON.parse(actionsJson);
+                        console.log('✨ Deity actions parsed:', actions);
+
+                        setMessages(prev => prev.map(msg =>
+                            msg.id === botMessageId ? { ...msg, actions } : msg
+                        ));
+
+                        // Auto-execute if fast mode enabled
+                        if (fastMode && actions.length > 0) {
+                            for (const action of actions) {
+                                await executeAction(action);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse actions:', e);
+                    }
+                    break; // Stop reading after actions extracted
+                }
             }
 
         } catch (error) {
@@ -389,6 +530,28 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                             <Minimize2 size={18} />
                         </button>
                     )}
+
+                    {/* Undo Button */}
+                    {canUndo && (
+                        <button
+                            onClick={handleUndo}
+                            className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-colors"
+                            title="Undo last change"
+                        >
+                            <RotateCcw size={18} />
+                        </button>
+                    )}
+
+                    {/* Fast Mode Toggle */}
+                    <button
+                        onClick={toggleFastMode}
+                        className={`p-2 hover:bg-white/10 rounded-full transition-colors ${fastMode ? 'text-cyan-400' : 'text-white/60 hover:text-white'
+                            }`}
+                        title={`Fast Mode: ${fastMode ? 'ON' : 'OFF'}`}
+                    >
+                        <Zap size={18} className={fastMode ? 'fill-cyan-400' : ''} />
+                    </button>
+
                     {onClose && (
                         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-colors">
                             <X size={18} />
@@ -400,13 +563,60 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 {messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] rounded-2xl p-4 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap ${msg.role === 'user'
-                            ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-tr-none'
-                            : 'bg-white/10 text-white/90 rounded-tl-none border border-white/5'
-                            }`}>
-                            {renderMessage(msg.content)}
+                    <div key={msg.id} className="flex flex-col gap-2">
+                        <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[85%] rounded-2xl p-4 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap ${msg.role === 'user'
+                                ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-tr-none'
+                                : 'bg-white/10 text-white/90 rounded-tl-none border border-white/5'
+                                }`}>
+                                {renderMessage(msg.content)}
+                            </div>
                         </div>
+
+                        {/* Action Buttons (only for model messages with actions) */}
+                        {msg.role === 'model' && msg.actions && msg.actions.length > 0 && (
+                            <div className="flex justify-start">
+                                <div className="max-w-[85%] flex flex-wrap gap-2">
+                                    {msg.actions.map((action, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm border border-white/20"
+                                            style={{
+                                                backdropFilter: 'blur(20px)',
+                                                background: 'rgba(255, 255, 255, 0.05)'
+                                            }}
+                                        >
+                                            <span className="text-white/60 text-xs">
+                                                {action.action === 'UPDATE_FIELD' && `Update ${action.target}`}
+                                                {action.action === 'ADD_LINK' && `Add link: ${action.name}`}
+                                                {action.action === 'UPDATE_LINK' && `Rename to: ${action.name || 'update URL'}`}
+                                                {action.action === 'REMOVE_LINK' && `Remove link`}
+                                                {action.action === 'REORDER_LINKS' && `Reorder ${action.order?.length} links`}
+                                                {action.action === 'ADD_EXPERIENCE' && `Add experience: ${action.company}`}
+                                                {action.action === 'ADD_PROJECT' && `Add project: ${action.project_name}`}
+                                                {action.action === 'ADD_QUALIFICATION' && `Add qualification: ${action.degree}`}
+                                                {action.action === 'ADD_PRODUCT' && `Add product: ${action.product_name}`}
+                                            </span>
+                                            <button
+                                                onClick={() => handleApplyAction(action)}
+                                                disabled={isTyping}
+                                                className="flex items-center gap-1 px-3 py-1 rounded-md bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-medium transition-colors disabled:opacity-50"
+                                            >
+                                                <Check size={14} />
+                                                Apply
+                                            </button>
+                                            <button
+                                                onClick={() => handleRejectAction(msg.id, idx)}
+                                                className="flex items-center gap-1 px-3 py-1 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-colors"
+                                            >
+                                                <XCircle size={14} />
+                                                Reject
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ))}
                 {isLoading && (

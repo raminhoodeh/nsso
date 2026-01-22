@@ -15,8 +15,10 @@ import EarningsTab from '@/app/dashboard/components/EarningsTab'
 import MyNssoTab from '@/app/dashboard/components/MyNssoTab'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
+import { useProfile } from '@/components/providers/ProfileProvider'
 import type { User, Profile, Link, Contact, ContactMethod } from '@/lib/types'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
+import { Sparkles } from 'lucide-react'
 
 const CONTACT_METHODS: ContactMethod[] = ['Email', 'WhatsApp', 'Phone', 'Telegram', 'Location', 'Other']
 
@@ -26,23 +28,21 @@ function DashboardContent() {
     const supabase = createClient()
     const { showToast } = useToast()
     const { user, refreshUser } = useUser()
+    const { profile, updateField, profileCompleteness, loading: profileLoading } = useProfile()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // User data state
-    // const [user, setUser] = useState<User | null>(null) // Using global context instead
-    const [profile, setProfile] = useState<Profile | null>(null)
-    const [links, setLinks] = useState<Link[]>([])
-    const [contacts, setContacts] = useState<Contact[]>([])
-
-    // Form state
+    // Local UI state (will be migrated to ProfileProvider in Phase 2)
     const [fullName, setFullName] = useState('')
     const [headline, setHeadline] = useState('')
-    const [bio, setBio] = useState('')
     const [profilePicUrl, setProfilePicUrl] = useState('')
     const [customDomain, setCustomDomain] = useState('')
 
+    // Local state for links/contacts (Phase 1: Bio only - these stay local for now)
+    const [links, setLinks] = useState<Link[]>([])
+    const [contacts, setContacts] = useState<Contact[]>([])
+
     // UI state
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(true || profileLoading)
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState<'page' | 'earnings' | 'my-nsso'>('page')
     const [showPolarModal, setShowPolarModal] = useState(false)
@@ -92,14 +92,12 @@ function DashboardContent() {
                 .single()
 
             if (profileData) {
-                setProfile(profileData)
                 setFullName(profileData.full_name || '')
                 setHeadline(profileData.headline || '')
-                setBio(profileData.bio || 'nsso stands for new sovereign self online.\n\nAt nsso, we want to see you recognise your uniqueness, value, and inherent beauty, so you can unlock the opportunities you deserve. That\'s why our mission is to evolve your identity alongside the world, by providing you with the most beautiful way to present yourself online.')
                 setProfilePicUrl(profileData.profile_pic_url || '')
             }
 
-            // Load links
+            // Load links (local state for Phase 1)
             const { data: linksData } = await supabase
                 .from('links')
                 .select('*')
@@ -110,7 +108,7 @@ function DashboardContent() {
                 setLinks(linksData)
             }
 
-            // Load contacts
+            // Load contacts (local state for Phase 1)
             const { data: contactsData } = await supabase
                 .from('contacts')
                 .select('*')
@@ -140,6 +138,20 @@ function DashboardContent() {
             setCustomDomain(user.username)
         }
     }, [user])
+
+    // Proactive Nudge: Suggest asking Deity if profile is incomplete
+    useEffect(() => {
+        if (!loading && profileCompleteness > 0 && profileCompleteness < 60) {
+            const hasSeenNudge = sessionStorage.getItem('deity_proactive_nudge')
+            if (!hasSeenNudge) {
+                const timer = setTimeout(() => {
+                    showToast('💡 Tip: Ask Deity to help complete your profile!', 'info')
+                    sessionStorage.setItem('deity_proactive_nudge', 'true')
+                }, 3000)
+                return () => clearTimeout(timer)
+            }
+        }
+    }, [loading, profileCompleteness, showToast])
 
     // Username availability check (debounced)
     // Username availability check (debounced)
@@ -263,7 +275,7 @@ function DashboardContent() {
                 user_id: user.id,
                 full_name: fullName,
                 headline,
-                bio,
+                bio: profile?.bio || '',
                 profile_pic_url: profilePicUrl,
             })
 
@@ -547,6 +559,42 @@ function DashboardContent() {
                     </div>
                 </div>
 
+                {/* Profile Completeness Banner */}
+                {profileCompleteness < 20 && (
+                    <div
+                        className="relative rounded-[20px] overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
+                        onClick={() => window.open('/deity', '_blank')}
+                        style={{
+                            border: '1.4px solid rgba(255, 255, 255, 0.4)',
+                            backdropFilter: 'blur(50px)'
+                        }}
+                    >
+                        {/* Background layers */}
+                        <div className="absolute inset-0 pointer-events-none">
+                            <div className="absolute bg-[rgba(255,255,255,0.1)] inset-0 mix-blend-luminosity" />
+                            <div
+                                className="absolute inset-0 opacity-30"
+                                style={{
+                                    backgroundImage: 'url(/siri-gradient.png)',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: '50% 50%'
+                                }}
+                            />
+                        </div>
+
+                        {/* Content */}
+                        <div className="relative p-6 flex items-center gap-4">
+                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                                <Sparkles className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-white font-semibold text-lg mb-1">Let Deity help you build your profile</h3>
+                                <p className="text-white/60 text-sm">Your profile is {profileCompleteness}% complete. Click here for personalized assistance.</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Your Page Tab Content */}
                 {activeTab === 'page' && (
                     <GlassCard className="p-6 lg:p-8 relative pt-[48px] rounded-[40px] overflow-visible">
@@ -555,6 +603,18 @@ function DashboardContent() {
                             <h2 className="text-2xl font-bold text-white">
                                 {profilePicUrl ? 'Hey, beautiful' : 'Profile'}
                             </h2>
+
+                            {/* Ask Deity Button */}
+                            <button
+                                onClick={() => window.open('/deity', '_blank')}
+                                className="flex items-center gap-2 px-4 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                                style={{
+                                    border: '1px solid rgba(255, 255, 255, 0.2)'
+                                }}
+                            >
+                                <Sparkles className="w-4 h-4" />
+                                <span className="text-sm font-medium">Ask Deity to help</span>
+                            </button>
                         </div>
 
                         {/* Profile Content */}
@@ -603,7 +663,16 @@ function DashboardContent() {
                             <div className="lg:col-span-2 space-y-4">
 
                                 <div className="space-y-4">
-                                    <label className="block text-white/50 text-xs font-bold uppercase tracking-wider mb-1 ml-1">FULL NAME</label>
+                                    <div className="flex items-center justify-between mb-1 ml-1">
+                                        <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">FULL NAME</label>
+                                        <button
+                                            onClick={() => window.open('/deity', '_blank')}
+                                            className="flex items-center gap-1 px-2 py-1 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs"
+                                        >
+                                            <Sparkles className="w-3 h-3" />
+                                            <span className="text-[10px] font-medium">Ask Deity</span>
+                                        </button>
+                                    </div>
                                     <Input
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
@@ -613,12 +682,28 @@ function DashboardContent() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="block text-white/50 text-xs font-bold uppercase tracking-wider mb-1 ml-1">HEADLINE</label>
+                                    <div className="flex items-center justify-between mb-1 ml-1">
+                                        <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">HEADLINE</label>
+                                        <div className="flex items-center gap-3">
+                                            {/* Character Counter */}
+                                            <span className="text-white/40 text-[10px] font-medium">
+                                                {headline.length}/120
+                                            </span>
+                                            <button
+                                                onClick={() => window.open('/deity', '_blank')}
+                                                className="flex items-center gap-1 px-2 py-1 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs"
+                                            >
+                                                <Sparkles className="w-3 h-3" />
+                                                <span className="text-[10px] font-medium">Ask Deity</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                     <Input
                                         value={headline}
                                         onChange={(e) => setHeadline(e.target.value)}
                                         onBlur={saveProfile}
                                         placeholder="What you do"
+                                        maxLength={120}
                                     />
                                 </div>
 
@@ -628,9 +713,9 @@ function DashboardContent() {
                                         <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
                                         <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
                                         <textarea
-                                            value={bio}
-                                            onChange={(e) => setBio(e.target.value)}
-                                            onBlur={saveProfile}
+                                            value={profile?.bio || ''}
+                                            onChange={(e) => updateField('bio', e.target.value)}
+
                                             placeholder="Need inspiration? Use this template: 'I am the [type of person] for [target customers] who want to [desired outcome]' and continue to elaborate on the experience of why you do this, how you do it, and what exactly is involved."
                                             rows={4}
                                             className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[17px] font-medium leading-[22px] p-4 placeholder:text-white/50 resize-none"
@@ -879,12 +964,25 @@ function DashboardContent() {
                                     <h2 className="text-2xl font-bold text-white">Links</h2>
                                     <p className="text-white/70 text-sm">Where can people find you and your work online?</p>
                                 </div>
-                                <button
-                                    onClick={addLink}
-                                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors shrink-0"
-                                >
-                                    +
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {/* Ask Deity Button */}
+                                    <button
+                                        onClick={() => window.open('/deity', '_blank')}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                                        style={{
+                                            border: '1px solid rgba(255, 255, 255, 0.2)'
+                                        }}
+                                    >
+                                        <Sparkles className="w-4 h-4" />
+                                        <span className="text-xs font-medium hidden sm:inline">Ask Deity</span>
+                                    </button>
+                                    <button
+                                        onClick={addLink}
+                                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors shrink-0"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-4">
@@ -898,6 +996,16 @@ function DashboardContent() {
                                             />
                                         </div>
                                         <div className="flex w-full md:flex-1 gap-4 items-center">
+                                            {/* Validation Status Indicator */}
+                                            <div
+                                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                                style={{
+                                                    backgroundColor: link.link_url && link.link_url.startsWith('http')
+                                                        ? 'rgb(34, 197, 94)' // green for valid
+                                                        : 'rgb(239, 68, 68)' // red for invalid/empty
+                                                }}
+                                                title={link.link_url && link.link_url.startsWith('http') ? 'Valid URL' : 'Invalid or missing URL'}
+                                            />
                                             <div className="flex-1 min-w-0">
                                                 <Input
                                                     value={link.link_url}

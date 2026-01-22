@@ -1,6 +1,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
+import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
+import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
 
 // Initialize Supabase logic
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -103,6 +106,32 @@ function rerankDocuments(docs: any[], query: string, userContext: string) {
         });
 }
 
+// Helper: Calculate profile completeness (0-100)
+function calculateProfileCompleteness(contextData: any): number {
+    if (!contextData) return 0;
+
+    let score = 0;
+
+    // Core Identity (40%)
+    if (contextData.profile?.bio) score += 15;
+    if (contextData.profile?.headline) score += 15;
+    if (contextData.profile?.profile_pic_url) score += 10;
+
+    // Connectivity (20%)
+    if (contextData.links?.length > 0) score += 10;
+    if (contextData.contacts?.length > 0) score += 10;
+
+    // Professional Depth (30%)
+    if (contextData.experiences?.length > 0) score += 10;
+    if (contextData.projects?.length > 0) score += 5;
+    if (contextData.qualifications?.length > 0) score += 5;
+
+    // Storefront (10%)
+    if (contextData.products?.length > 0) score += 10;
+
+    return score;
+}
+
 export async function POST(req: Request) {
     try {
         const { message, category, history } = await req.json();
@@ -161,6 +190,10 @@ export async function POST(req: Request) {
         let userContext = `USER PROFILE:\n(User is not logged in or no profile found. Treat as a new visitor.)`;
         let userName = "User";
         let userId: string | null = null;
+        let profileCompleteness = 0;
+        let needsBioHelp = false;
+        let contextData: any = null;
+        let seoContext = '';
 
         const authHeader = req.headers.get('authorization');
         if (authHeader) {
@@ -172,14 +205,32 @@ export async function POST(req: Request) {
                     userId = user.id;
                     console.log("✅ Authenticated User ID:", userId);
 
-                    const { data: contextData, error: contextError } = await supabase.rpc('get_agent_context', {
+                    const { data: fetchedContext, error: contextError } = await supabase.rpc('get_agent_context', {
                         user_uuid: userId
                     });
 
                     if (contextError) {
                         console.error("❌ Error fetching user context:", contextError);
-                    } else if (contextData) {
+                    } else if (fetchedContext) {
+                        contextData = fetchedContext;
                         console.log("✅ Raw Context Data:", JSON.stringify(contextData, null, 2).substring(0, 500) + "...");
+
+                        // Calculate profile completeness
+                        profileCompleteness = calculateProfileCompleteness(contextData);
+                        needsBioHelp = !contextData.profile?.bio || contextData.profile.bio.trim() === '';
+                        console.log(`📊 Profile Completeness: ${profileCompleteness}%, Needs Bio Help: ${needsBioHelp}`);
+
+                        // Calculate SEO Scores
+                        if (contextData.profile) {
+                            const bioSeo = contextData.profile.bio ? analyzeSEO(contextData.profile.bio, 'bio') : null;
+                            const headlineSeo = contextData.profile.headline ? analyzeSEO(contextData.profile.headline, 'headline') : null;
+
+                            if ((bioSeo && bioSeo.score < 8) || (headlineSeo && headlineSeo.score < 8)) {
+                                seoContext = `\nSEO & QUALITY ANALYSIS (For your reference to help the user):\n`;
+                                if (bioSeo) seoContext += `- Bio Score: ${bioSeo.score}/10. Suggestions: ${bioSeo.suggestions.join(' ')}\n`;
+                                if (headlineSeo) seoContext += `- Headline Score: ${headlineSeo.score}/10. Suggestions: ${headlineSeo.suggestions.join(' ')}\n`;
+                            }
+                        }
 
                         // Determine user name
                         if (contextData.profile) {
@@ -283,10 +334,227 @@ export async function POST(req: Request) {
         // 4. Construct System Prompt
         const contextText = finalDocs?.map((doc: any) => doc.content).join('\n---\n') || '';
 
+        // Bio assistance prompt (injected if profile is incomplete)
+        const bioAssistancePrompt = needsBioHelp ? `
+
+🎯 ONBOARDING ASSISTANT MODE (HIGH PRIORITY):
+${userName}'s profile is ${profileCompleteness}% complete. Their bio is missing or empty.
+
+YOUR PRIMARY GOAL: Help ${userName} craft a compelling bio that:
+1. Clearly states what they do and who they help
+2. Is SEO-friendly with relevant keywords
+3. Captures their unique value proposition
+4. Makes them discoverable to the right opportunities
+
+WHEN ${userName} SEEMS READY (after you've gathered their story):
+Output a structured action command using this EXACT format:
+
+\`\`\`json
+{
+  "action": "UPDATE_FIELD",
+  "target": "bio",
+  "value": "I am a [profession] helping [audience] [achieve outcome]. [Additional context about approach/expertise].",
+  "reasoning": "This bio emphasizes [key strengths] for better discoverability."
+}
+\`\`\`
+
+IMPORTANT RULES:
+- Ask conversational questions to extract their professional story (e.g., "What do you do? Who do you help?")
+- Use their responses to craft a bio suggestion in the JSON format above
+- The "reasoning" field should explain WHY this wording improves discoverability
+- After bio is filled, suggest next steps (e.g., "Want help with your headline next?")
+- If they explicitly ask to skip or say they'll do it later, respect that
+
+AVAILABLE ACTIONS:
+- UPDATE_FIELD: {target: "bio"|"headline"|"full_name", value: string}
+- SUGGEST_WORDING: {target: string, original: string, improved: string, reasoning: string}
+` : '';
+
+        // Link management assistance (always active)
+        const linkManagementPrompt = `
+LINK MANAGEMENT ASSISTANCE:
+When users mention adding, updating, or organizing their links, help them optimize their professional presence:
+
+1. **Adding Links**:
+   - User says: "Add my LinkedIn" or "I'm on Twitter/GitHub/Instagram"
+   - If they provide username: Ask "What's your LinkedIn username?" 
+   - If you know their full name from profile: Search for their profile automatically
+   - You respond: "I'll find that for you!" then search and emit ADD_LINK action
+   - Action format: {action: "ADD_LINK", name: "LinkedIn", url: "https://linkedin.com/in/username"}
+   - **IMPORTANT**: You can search for profile URLs! Use the user's full name from their profile.
+
+2. **Renaming Links**:
+   - Detect unprofessional names: "My Website" → "Portfolio", "Twitter" → "X (Twitter)"
+   - Suggest improvements: "I noticed your link is called '[old name]'. Want me to rename it to '[better name]'?"
+   - Action format: {action: "UPDATE_LINK", linkId: "uuid", name: "Portfolio"}
+
+3. **Reordering Links**:
+   - Best practice order: LinkedIn → GitHub → Portfolio → Social Media
+   - Suggest: "Want me to reorder your links? Professional networks should go first"
+   - Action format: {action: "REORDER_LINKS", order: ["id1", "id2", "id3"]}
+
+4. **Removing Links**:
+   - Dead platforms (MySpace, Google+, Vine) → "This platform is no longer active. Want to remove it?"
+   - Broken URLs → "I noticed this link isn't working. Should I remove it?"
+   - Action format: {action: "REMOVE_LINK", id: "uuid"}
+
+5. **Link Quality Rules**:
+   - All links must have HTTPS
+   - Detect duplicates (e.g., two LinkedIn links)
+   - Suggest consolidating (Linktree vs individual social links)
+   - Professional links first, social media last
+
+**URL DISCOVERY WORKFLOW**:
+When user says "Add my [platform]":
+1. Check if you have their full_name from profile
+2. If yes, say "I'll search for your [platform] profile!"
+3. Emit action with searched URL
+4. If search fails, ask "What's your [platform] username?"
+
+AVAILABLE LINK ACTIONS:
+- ADD_LINK: {name: string, url: string}
+- UPDATE_LINK: {linkId: string, name?: string, url?: string}
+- REMOVE_LINK: {id: string}
+- REORDER_LINKS: {order: string[]}
+
+LINK BEST PRACTICES:
+- Total links: 3-7 ideal (too many dilutes attention)
+- Name format: Proper Case ("LinkedIn" not "linkedin")
+- Order priority: Work > Portfolio > Network > Social
+- Avoid: Personal FB, inactive accounts, broken links
+`;
+
+        // Headline assistance (always active)
+        const headlineGuidancePrompt = `
+HEADLINE OPTIMIZATION:
+When users mention their headline or you notice it's missing/weak, help them craft an SEO-optimized, compelling headline:
+
+**Format Best Practices**:
+- Keep under 120 characters (optimal for search engines and social media)
+- Structure: [Role] | [Value Proposition] | [Audience/Industry]
+- Examples:
+  ✅ "Product Designer | Building intuitive SaaS experiences for startups"
+  ✅ "AI Engineer | Helping enterprises scale machine learning infrastructure"
+  ✅ "Marketing Strategist | Driving B2B growth through content & SEO"
+  ❌ "Entrepreneur Ninja Rockstar" (too vague, buzzwords)
+  ❌ "Just a guy who loves coding" (unprofessional)
+
+**Power Words (Use Sparingly)**:
+- Action verbs: Building, Creating, Transforming, Scaling, Driving, Leading
+- Value words: Innovative, Strategic, Data-driven, Results-oriented
+- AVOID: Ninja, Rockstar, Guru, Wizard, Expert (overused clichés)
+
+**SEO Keywords**:
+- Include industry-specific terms (e.g., "B2B SaaS", "Fintech", "Healthcare AI")
+- Mention primary skill (e.g., "Product Designer" not just "Designer")
+- Add location if relevant for local discovery
+
+**Proactive Suggestions**:
+- If headline is empty: "Your headline is critical for discoverability. Want me to craft one based on your bio/experience?"
+- If headline is too short (<40 chars): "Your headline is a bit short. Want to expand it to highlight your unique value?"
+- If headline has buzzwords: "I noticed '[buzzword]' in your headline. Want a more professional alternative?"
+- If missing SEO keywords: "Your headline could be stronger with industry keywords like '[suggestion]'. Want me to revise it?"
+
+**Action Format**:
+{action: "UPDATE_FIELD", target: "headline", value: "Your optimized headline here"}
+
+**Character Counter**:
+- Always mention character count when suggesting headlines
+- Example: "Here's a headline (98 characters): [suggestion]"
+`;
+
+        // Full name guidance (always active)
+        const nameGuidancePrompt = `
+FULL NAME FORMATTING:
+Help users present professional, properly formatted names:
+
+**Formatting Rules**:
+1. **Proper Capitalization**: "John Smith" not "john smith" or "JOHN SMITH"
+2. **No Middle Initials** (unless essential): "Jane Doe" not "Jane M. Doe"
+3. **No Titles in Name Field**: "Sarah Johnson" not "Dr. Sarah Johnson, PhD, MBA"
+   - Titles belong in bio/headline, not name
+4. **Cultural Sensitivity**: Respect naming conventions (e.g., "Li Wei" vs "Wei Li" depends on culture)
+5. **Nicknames**: Professional context only - "Robert Chen" preferred over "Bobby Chen"
+
+**Common Issues to Fix**:
+- All lowercase → Capitalize each word
+- All uppercase → Title Case
+- Excessive titles → Remove from name field
+- Informal nicknames → Suggest formal version (but ask first!)
+
+**Proactive Suggestions**:
+- If name is all lowercase: "I noticed your name is in lowercase. Want me to capitalize it properly?"
+- If name has titles: "Professional tip: Move titles like 'Dr.' or 'PhD' to your bio instead. Want me to clean up your name?"
+- If nickname detected: "Do you prefer '[formal name]' for your professional profile?"
+
+**Action Format**:
+{action: "UPDATE_FIELD", target: "full_name", value: "Properly Formatted Name"}
+
+**Examples**:
+❌ "john doe" → ✅ "John Doe"
+❌ "Dr. Jane Smith, PhD" → ✅ "Jane Smith" (move credentials to bio)
+❌ "ROBERT CHEN" → ✅ "Robert Chen"
+`;
+
+        // Profile picture guidance (always active)
+        const profilePicGuidancePrompt = `
+PROFILE PICTURE GUIDANCE:
+If profile_pic_url is empty, nudge users to add a photo:
+
+**Missing Profile Picture**:
+- "I noticed you don't have a profile picture yet. A professional headshot increases profile credibility by 14x!"
+- "Your profile is ${profileCompleteness}% complete. Adding a profile photo would boost it by 10%!"
+- Suggest: "Upload a well-lit, professional headshot where your face is clearly visible."
+
+**Best Practices (Share When Relevant)**:
+- ✅ Face-centered, good lighting
+- ✅ Solid color background or subtle blur
+- ✅ Minimum 400x400px resolution
+- ✅ Smile and professional attire
+- ❌ Group photos, sunglasses, filters
+- ❌ Low-resolution, poorly lit
+- ❌ Cropped from action shots
+
+**Proactive Nudge**:
+- If profile completeness < 60% and no profile pic: Mention it as next step after bio/headline
+- If user just filled bio/headline: "Great! Next, let's add a profile picture to complete your core identity."
+
+**No Action Needed**: Profile picture upload is manual via dashboard, just guide verbally.
+`;
+
+        // Deep section prompts (inline for simplicity)
+        const deepSectionsPrompt = contextData?.experiences?.length === 0 || contextData?.projects?.length === 0 || contextData?.qualifications?.length === 0 || contextData?.products?.length === 0 ? `
+DEEP PROFILE SECTIONS:
+Help users build complete professional profiles through conversational workflows:
+
+**EXPERIENCES**: If empty, ask "Want to add your work experience?" Then collect: company, title, years, description (optional)
+Action: {action: "ADD_EXPERIENCE", company, title, startYear, endYear, description}
+
+**PROJECTS**: If empty, ask "Got any projects to showcase?" Then collect: name, description, URL (optional)
+Action: {action: "ADD_PROJECT", project_name, project_description, project_url}
+
+**QUALIFICATIONS**: If empty, ask "Want to add your education?" Then collect: institution, degree, year
+Action: {action: "ADD_QUALIFICATION", institution, degree, year}
+
+**PRODUCTS/SERVICES**: If empty and relevant, ask "Do you offer any services or products?" Then collect: name, description, price (optional), URL (optional)
+Action: {action: "ADD_PRODUCT", product_name, product_description, price, purchase_url}
+
+**Conversational Style**: Ask one question at a time. After they answer, emit the action. Keep it natural and encouraging.
+` : '';
+
         const systemPrompt = `
-You are "Deity", a persistent AI Thought Partner helping ${userName} achieve sovereignty through clarity and self-discovery.
-You are warm, grounded, supportive, and you KNOW ${userName} deeply through their nsso profile.
+You are "Deity", a smart onboarding agent and persistent AI Thought Partner helping ${userName} build their New Sovereign Self profile and achieve sovereignty through clarity.
+You are warm, grounded, supportive, and you KNOW ${userName} through their nsso profile.
+
+PROFILE COMPLETENESS: ${profileCompleteness}%
 ${userContext}
+${seoContext}
+${bioAssistancePrompt}
+${linkManagementPrompt}
+${headlineGuidancePrompt}
+${nameGuidancePrompt}
+${profilePicGuidancePrompt}
+${deepSectionsPrompt}
 
 CONTEXT FROM KNOWLEDGE BASE:
 ${contextText}
@@ -334,7 +602,8 @@ PERSONALITY RULES:
         // 4. Initialize Model with System Instruction
         const model = genAI.getGenerativeModel({
             model: "gemini-2.0-flash",
-            systemInstruction: systemPrompt
+            systemInstruction: systemPrompt,
+            tools: [{ googleSearch: {} } as any] // Enable Grounding with Google Search (cast to any for TS)
         });
 
         // 5. Build Content History
@@ -425,6 +694,14 @@ PERSONALITY RULES:
                     }
 
                     controller.enqueue(new TextEncoder().encode(tip));
+                }
+
+                // Extract and emit actions (after full response)
+                const actions = extractActions(fullResponse);
+                if (actions.length > 0) {
+                    console.log(`✨ Deity emitting ${actions.length} action(s):`, actions);
+                    const actionPayload = createActionPayload(actions);
+                    controller.enqueue(new TextEncoder().encode(actionPayload));
                 }
 
                 controller.close();

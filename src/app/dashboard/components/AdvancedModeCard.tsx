@@ -3,7 +3,7 @@
 import GlassCard from '@/components/ui/GlassCard'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout } from 'lucide-react'
+import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles } from 'lucide-react'
 import DOMPurify from 'dompurify'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useUI } from '@/components/providers/UIProvider'
@@ -338,7 +338,18 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         <div className="flex flex-col gap-6 pt-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
-                <h4 className="text-white font-semibold text-lg">Job titles</h4>
+                <div className="flex items-center gap-3">
+                    <h4 className="text-white font-semibold text-lg">Job titles</h4>
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                            detail: { initialMessage: "I want to add my work experience..." }
+                        }))}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 transition-all group"
+                    >
+                        <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
+                        <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
+                    </button>
+                </div>
                 <button onClick={addExperience} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
                     <Plus size={16} />
                 </button>
@@ -409,7 +420,18 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const renderQualifications = () => (
         <div className="flex flex-col gap-6 pt-6">
             <div className="flex items-center justify-between mb-2">
-                <h4 className="text-white font-semibold text-lg">Qualifications</h4>
+                <div className="flex items-center gap-3">
+                    <h4 className="text-white font-semibold text-lg">Qualifications</h4>
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                            detail: { initialMessage: "I want to add my qualifications..." }
+                        }))}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 transition-all group"
+                    >
+                        <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
+                        <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
+                    </button>
+                </div>
                 <button onClick={addQualification} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
                     <Plus size={16} />
                 </button>
@@ -475,7 +497,18 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const renderProjects = () => (
         <div className="flex flex-col gap-6 pt-6">
             <div className="flex items-center justify-between mb-2">
-                <h4 className="text-white font-semibold text-lg">Projects</h4>
+                <div className="flex items-center gap-3">
+                    <h4 className="text-white font-semibold text-lg">Projects</h4>
+                    <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                            detail: { initialMessage: "I want to add a project..." }
+                        }))}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 transition-all group"
+                    >
+                        <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
+                        <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
+                    </button>
+                </div>
                 <button onClick={addProject} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
                     <Plus size={16} />
                 </button>
@@ -860,12 +893,23 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     <div>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold">Products & Services</h3>
-                            <button
-                                onClick={addProduct}
-                                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                            >
-                                <Plus size={12} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                        detail: { initialMessage: "I want to add a product or service..." }
+                                    }))}
+                                    className="w-6 h-6 flex items-center justify-center rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-colors"
+                                    title="Ask Deity"
+                                >
+                                    <Sparkles size={12} />
+                                </button>
+                                <button
+                                    onClick={addProduct}
+                                    className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                                >
+                                    <Plus size={12} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Web3 Coming Soon Teaser */}
