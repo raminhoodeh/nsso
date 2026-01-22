@@ -1,12 +1,28 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bot } from 'lucide-react';
 import AgentChatInterface from './AgentChatInterface';
 
 export default function NSSOAgent() {
     const [isOpen, setIsOpen] = useState(false);
+    const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
+
+    // Listen for custom event to open chat
+    useEffect(() => {
+        const handleOpenChat = (event: CustomEvent) => {
+            if (event.detail?.initialMessage) {
+                setInitialMessage(event.detail.initialMessage);
+            }
+            setIsOpen(true);
+        };
+
+        window.addEventListener('open-deity-chat', handleOpenChat as EventListener);
+        return () => {
+            window.removeEventListener('open-deity-chat', handleOpenChat as EventListener);
+        };
+    }, []);
 
     // Pop-up mode logic. Full screen opens new tab.
     const handleExpand = () => {
@@ -87,6 +103,7 @@ export default function NSSOAgent() {
                         isFullScreen={false}
                         onClose={() => setIsOpen(false)}
                         onMaximize={undefined} // Disable maximize on desktop as it's already full height
+                        initialMessage={initialMessage}
                     />
                 </div>
             </>

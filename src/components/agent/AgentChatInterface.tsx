@@ -18,6 +18,7 @@ interface AgentChatInterfaceProps {
     onMaximize?: () => void;
     onMinimize?: () => void;
     onClose?: () => void;
+    initialMessage?: string;
 }
 
 const CATEGORY_QUESTIONS: Record<string, string[]> = {
@@ -69,7 +70,7 @@ import { useUser } from '@/components/providers/UserProvider';
 import { useProfile } from '@/components/providers/ProfileProvider';
 import { useToast } from '@/components/ui/Toast';
 
-export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose }: AgentChatInterfaceProps) {
+export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage }: AgentChatInterfaceProps) {
     const { user, loading } = useUser();
     const { profile, updateField, addLink, updateLink, removeLink, reorderLinks, addExperience, addProject, addQualification, addProduct, undo, canUndo, fastMode, setFastMode } = useProfile();
     const { showToast } = useToast();
@@ -146,7 +147,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 {
                     id: 'tip',
                     role: 'model',
-                    content: '💡 Tip: Select a category below (Films, Courses, Career, etc.) for the best recommendations from our curated database!',
+                    content: '💡 Tip: I can help you write your bio, finding the right words to describe yourself is hard... but I\'m really good at it.',
                     timestamp: Date.now() + 1
                 }
             ];
@@ -164,6 +165,13 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
         }, 3000);
         return () => clearInterval(interval);
     }, [placeholders.length]);
+
+    // Handle initial message from props
+    useEffect(() => {
+        if (initialMessage && hasInitialized) {
+            handleSendMessage(initialMessage);
+        }
+    }, [initialMessage, hasInitialized]);
 
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -242,7 +250,9 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
     // Action execution with word-by-word animation
     const executeAction = async (action: DeityAction) => {
+        console.log('⚡ executing action:', action);
         if (action.action === 'UPDATE_FIELD' && action.target && action.value) {
+            console.log('📝 Update Field:', action.target, action.value);
             setIsTyping(true);
 
             if (fastMode) {

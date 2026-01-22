@@ -217,7 +217,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
     // Update profile field
     const updateField = async (field: keyof Profile, value: string) => {
-        if (!user?.id) return
+        console.log('🔄 ProfileProvider: updateField called', { field, value });
+        if (!user?.id) {
+            console.error('❌ ProfileProvider: No user ID found');
+            return;
+        }
 
         // Save current state to history
         saveToHistory()
@@ -232,9 +236,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .eq('user_id', user.id)
 
         if (error) {
-            console.error('Error updating profile:', error)
+            console.error('❌ ProfileProvider: Error updating profile:', error)
             // Revert on error
             undo()
+        } else {
+            console.log('✅ ProfileProvider: Profile updated successfully');
         }
     }
 

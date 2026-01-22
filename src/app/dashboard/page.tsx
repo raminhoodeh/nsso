@@ -563,7 +563,9 @@ function DashboardContent() {
                 {profileCompleteness < 20 && (
                     <div
                         className="relative rounded-[20px] overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
-                        onClick={() => window.open('/deity', '_blank')}
+                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                            detail: { initialMessage: "What is missing from my profile?" }
+                        }))}
                         style={{
                             border: '1.4px solid rgba(255, 255, 255, 0.4)',
                             backdropFilter: 'blur(50px)'
@@ -606,7 +608,9 @@ function DashboardContent() {
 
                             {/* Ask Deity Button */}
                             <button
-                                onClick={() => window.open('/deity', '_blank')}
+                                onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                    detail: { initialMessage: "How can you help me improve my profile?" }
+                                }))}
                                 className="flex items-center gap-2 px-4 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all"
                                 style={{
                                     border: '1px solid rgba(255, 255, 255, 0.2)'
@@ -666,7 +670,9 @@ function DashboardContent() {
                                     <div className="flex items-center justify-between mb-1 ml-1">
                                         <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">FULL NAME</label>
                                         <button
-                                            onClick={() => window.open('/deity', '_blank')}
+                                            onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                                detail: { initialMessage: "I need help with my full name..." }
+                                            }))}
                                             className="flex items-center gap-1 px-2 py-1 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs"
                                         >
                                             <Sparkles className="w-3 h-3" />
@@ -690,7 +696,9 @@ function DashboardContent() {
                                                 {headline.length}/120
                                             </span>
                                             <button
-                                                onClick={() => window.open('/deity', '_blank')}
+                                                onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                                    detail: { initialMessage: "Help me write a catchy headline..." }
+                                                }))}
                                                 className="flex items-center gap-1 px-2 py-1 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs"
                                             >
                                                 <Sparkles className="w-3 h-3" />
