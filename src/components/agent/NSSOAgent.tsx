@@ -5,9 +5,12 @@ import { useState, useEffect } from 'react';
 import { Bot } from 'lucide-react';
 import AgentChatInterface from './AgentChatInterface';
 
+import { useUI } from '@/components/providers/UIProvider';
+
 export default function NSSOAgent() {
     const [isOpen, setIsOpen] = useState(false);
     const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
+    const { isBackgroundDimmed } = useUI();
 
     // Listen for custom event to open chat
     useEffect(() => {
@@ -73,7 +76,8 @@ export default function NSSOAgent() {
             <>
                 {/* Dimming Overlay */}
                 <div
-                    className={`fixed inset-0 bg-black/60 backdrop-blur-[2px] z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    className={`fixed inset-0 backdrop-blur-[2px] z-40 transition-all duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                        } ${isBackgroundDimmed ? 'bg-black/0' : 'bg-black/60'
                         }`}
                     onClick={() => setIsOpen(false)}
                 />
