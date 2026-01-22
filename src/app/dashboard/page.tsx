@@ -145,8 +145,10 @@ function DashboardContent() {
     useEffect(() => {
         if (profile) {
             if (profile.bio !== bio && !saving) setBio(profile.bio || '')
+            if (profile.headline !== headline && !saving) setHeadline(profile.headline || '')
+            if (profile.full_name !== fullName && !saving) setFullName(profile.full_name || '')
         }
-    }, [profile?.bio])
+    }, [profile?.bio, profile?.headline, profile?.full_name])
 
     // Proactive Nudge: Suggest asking Deity if profile is incomplete
     useEffect(() => {
