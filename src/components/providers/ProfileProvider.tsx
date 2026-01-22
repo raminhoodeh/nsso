@@ -356,8 +356,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .from('experiences')
             .insert({
                 user_id: user.id,
-                company,
-                title,
+                company_name: company,
+                job_title: title,
                 start_year: startYear,
                 end_year: endYear,
                 description
@@ -389,8 +389,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .insert({
                 user_id: user.id,
                 project_name: name,
-                project_description: description,
-                project_url: url
+                description: description,
+                project_url: url,
+                contribution: 'Creator' // Default value for required field
             })
             .select()
             .single()
@@ -419,7 +420,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .insert({
                 user_id: user.id,
                 institution,
-                degree,
+                qualification_name: degree,
+                start_year: year, // Defaulting start_year to end_year as we don't have it
                 end_year: year
             })
             .select()
@@ -448,10 +450,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .from('products')
             .insert({
                 user_id: user.id,
-                product_name: name,
-                product_description: description,
+                name: name,
+                description: description,
                 price,
-                purchase_url: url
+                purchase_link: url
             })
             .select()
             .single()
