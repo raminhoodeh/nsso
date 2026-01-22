@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Product } from '@/lib/types'
 import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2, ShieldCheck, ShieldAlert, Lock } from 'lucide-react'
 import GlassCard from '@/components/ui/GlassCard'
+import { useToast } from '@/components/ui/Toast'
 import Header from '@/components/layout/Header'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import DOMPurify from 'dompurify'
@@ -247,10 +248,14 @@ export default function SalesPageCreator() {
         setSaving(false)
     }
 
+
+    const { showToast } = useToast()
+
     const copyPrompt = (type: keyof typeof PROMPTS) => {
         const text = PROMPTS[type]
         navigator.clipboard.writeText(text)
         setCopiedField(type)
+        showToast('Prompt ready for Deity', 'success')
         setTimeout(() => setCopiedField(null), 2000)
     }
 

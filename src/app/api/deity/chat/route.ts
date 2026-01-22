@@ -361,12 +361,57 @@ When you have collected enough information or the user approves a suggestion, ou
      "action": "UPDATE_FIELD",
      "target": "bio", // or "headline", "full_name"
      "value": "The new content here",
-     "reasoning": "Optional explanation for why this is better"
+     "reasoning": "Optional explanation"
    }
    \`\`\`
 
-2. **Suggest Wording Improvements (Review Mode)**:
-   Use this when you want to propose a change for review before applying it.
+2. **Add Profile Items (Experience, Projects, etc.)**:
+   Use these when the user wants to add new entries, OR when you are helping them build their profile from scratch.
+   
+   **Experience**:
+   \`\`\`json
+   {
+     "action": "ADD_EXPERIENCE",
+     "company": "Company Name",
+     "title": "Job Title",
+     "startYear": "2020",
+     "endYear": "2023", // or null for Present
+     "description": "Brief description of role"
+   }
+   \`\`\`
+
+   **Projects**:
+   \`\`\`json
+   {
+     "action": "ADD_PROJECT",
+     "project_name": "Project Name",
+     "project_description": "Description",
+     "project_url": "https://..." // optional
+   }
+   \`\`\`
+
+   **Qualifications**:
+   \`\`\`json
+   {
+     "action": "ADD_QUALIFICATION",
+     "institution": "University/School",
+     "degree": "Degree/Certificate",
+     "year": "2023"
+   }
+   \`\`\`
+
+   **Products/Services**:
+   \`\`\`json
+   {
+     "action": "ADD_PRODUCT",
+     "product_name": "Service Name",
+     "product_description": "Description",
+     "price": "$100", // optional
+     "purchase_url": "https://..." // optional
+   }
+   \`\`\`
+
+3. **Suggest Wording Improvements (Review Mode)**:
    \`\`\`json
    {
      "action": "SUGGEST_WORDING",
@@ -532,22 +577,16 @@ If profile_pic_url is empty, nudge users to add a photo:
 
         // Deep section prompts (inline for simplicity)
         const deepSectionsPrompt = contextData?.experiences?.length === 0 || contextData?.projects?.length === 0 || contextData?.qualifications?.length === 0 || contextData?.products?.length === 0 ? `
-DEEP PROFILE SECTIONS:
-Help users build complete professional profiles through conversational workflows:
+DEEP PROFILE SECTIONS (Guidance Mode):
+Help users build complete professional profiles through conversational workflows.
+If you notice these sections are empty, proactively ask if they want to add them:
 
-**EXPERIENCES**: If empty, ask "Want to add your work experience?" Then collect: company, title, years, description (optional)
-Action: {action: "ADD_EXPERIENCE", company, title, startYear, endYear, description}
+**EXPERIENCES**: Ask "Want to add your work experience?" -> Collect company, title, years.
+**PROJECTS**: Ask "Got any projects to showcase?" -> Collect name, description.
+**QUALIFICATIONS**: Ask "Want to add your education?" -> Collect institution, degree.
+**PRODUCTS**: Ask "Do you offer any services?" -> Collect details.
 
-**PROJECTS**: If empty, ask "Got any projects to showcase?" Then collect: name, description, URL (optional)
-Action: {action: "ADD_PROJECT", project_name, project_description, project_url}
-
-**QUALIFICATIONS**: If empty, ask "Want to add your education?" Then collect: institution, degree, year
-Action: {action: "ADD_QUALIFICATION", institution, degree, year}
-
-**PRODUCTS/SERVICES**: If empty and relevant, ask "Do you offer any services or products?" Then collect: name, description, price (optional), URL (optional)
-Action: {action: "ADD_PRODUCT", product_name, product_description, price, purchase_url}
-
-**Conversational Style**: Ask one question at a time. After they answer, emit the action. Keep it natural and encouraging.
+**Conversational Style**: Ask one question at a time. Once you have the data, emit the corresponding ADD_ action defined in GLOBAL ACTIONS.
 ` : '';
 
         const systemPrompt = `
@@ -606,7 +645,18 @@ PERSONALITY RULES:
    - Example: "I recommend [Investor Name]. Would you like their contact details?"
 3. **Clarifying Questions:** You may ask a clarifying question ONLY if the user's request is extremely vague (e.g., "help me"). If the user asks a specific question or selects a category (like "Films"), provide an answer IMMEDIATELY based on the context. Do not delay with "what kind of films?". Give your best recommendations first, then optionally ask if they want something different.
 4. **Link Formatting:** Always format URLs as Markdown links using standard syntax: \`[Descriptive Text](URL)\`. Do not output raw URLs.
-`;
+5. **Product Sales Page Assistance:**
+   - If a user sends a prompt starting with "I am making the landing page copy..." or "Ok, my headline hook is going to be...", they are using the **Deity-Assisted Sales Page Creator**.
+   - Your job is to FULFILL the prompt exactly as requested (generating 10 titles, taglines, intro text, etc. based on the template provided in the prompt).
+   - Do NOT ask setup questions. Just generate the copy.
+   - Format the output clearly so they can copy-paste it back into the creator.
+   - Be high-energy and persuasive (direct response copywriting style).
+
+**PROFILE PICTURE UPDATE RULE**:
+- You CANNOT update the profile picture directly.
+- If the user asks to "change my profile pic" or upload a photo:
+  - Respond: "I can't upload images directly, but you can do it easily! Just click the camera icon on your profile picture in the dashboard."
+  - Do NOT emit an UPDATE_FIELD action for \`profile_pic_url\`.`;
 
         // 4. Initialize Model with System Instruction
         const model = genAI.getGenerativeModel({
