@@ -63,15 +63,30 @@ export default function NSSOAgent() {
                 />
 
                 {/* Chat Window */}
-                <div className={`fixed inset-0 z-[6000] w-full h-full md:bottom-6 md:right-6 md:w-[676px] md:h-[92vh] md:max-h-[980px] md:inset-auto transition-all duration-300 transform ${isOpen ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-10 scale-95 pointer-events-none absolute' // absolute helps remove it from flow layout if needed, though fixed handles it
-                    }`}>
-                    {/* Glow Effect */}
-                    <div className="hidden md:block absolute -inset-1 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 rounded-[44px] blur-xl -z-10"></div>
+                <div
+                    className={`fixed z-[6000] w-full h-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+                        /* Mobile Styles (Default) */
+                        inset-0 
+                        ${isOpen
+                            ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto'
+                            : 'opacity-0 translate-y-10 scale-95 pointer-events-none'
+                        }
+                        
+                        /* Desktop Styles (Sidebar) */
+                        md:inset-auto md:top-0 md:right-0 md:h-screen md:w-[35vw] md:min-w-[420px] md:max-w-[600px]
+                        ${isOpen
+                            ? 'md:translate-x-0 md:opacity-100 md:scale-100'
+                            : 'md:translate-x-full md:opacity-100 md:scale-100 md:translate-y-0'
+                        }
+                    `}
+                >
+                    {/* Glow Effect - Adjusted for Sidebar */}
+                    <div className="hidden md:block absolute inset-y-0 -left-20 w-40 bg-gradient-to-r from-cyan-500/10 to-transparent blur-3xl -z-10 pointer-events-none opacity-50"></div>
 
                     <AgentChatInterface
                         isFullScreen={false}
                         onClose={() => setIsOpen(false)}
-                        onMaximize={handleExpand}
+                        onMaximize={undefined} // Disable maximize on desktop as it's already full height
                     />
                 </div>
             </>
