@@ -33,17 +33,17 @@ interface ProfileContextType {
 
     // Update Methods (automatically save to Supabase)
     updateField: (field: keyof Profile, value: string, persist?: boolean) => Promise<void>
-    addLink: (name: string, url: string) => Promise<void>
-    updateLink: (id: string, field: 'link_name' | 'link_url', value: string) => Promise<void>
-    removeLink: (id: string) => Promise<void>
-    reorderLinks: (orderedIds: string[]) => Promise<void>
+    addLink: (name: string, url: string) => Promise<boolean>
+    updateLink: (id: string, field: 'link_name' | 'link_url', value: string) => Promise<boolean>
+    removeLink: (id: string) => Promise<boolean>
+    reorderLinks: (orderedIds: string[]) => Promise<boolean>
     validateLinks: () => Promise<LinkValidation[]>
 
     // Deep Profile Sections
-    addExperience: (company: string, title: string, startYear: number, endYear: number | null, description?: string) => Promise<void>
-    addProject: (name: string, description: string, url?: string) => Promise<void>
-    addQualification: (institution: string, degree: string, year: number) => Promise<void>
-    addProduct: (name: string, description: string, price?: string, url?: string) => Promise<void>
+    addExperience: (company: string, title: string, startYear: number, endYear: number | null, description?: string) => Promise<boolean>
+    addProject: (name: string, description: string, url?: string) => Promise<boolean>
+    addQualification: (institution: string, degree: string, year: number) => Promise<boolean>
+    addProduct: (name: string, description: string, price?: string, url?: string) => Promise<boolean>
 
     // Undo Stack
     undo: () => Promise<void>
@@ -247,8 +247,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Add link
-    const addLink = async (name: string, url: string) => {
-        if (!user?.id) return
+    const addLink = async (name: string, url: string): Promise<boolean> => {
+        if (!user?.id) return false
 
         saveToHistory()
 
@@ -264,16 +264,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         if (data && !error) {
             setLinks(prev => [...prev, data])
+            return true
         }
 
         if (error) {
             console.error('Error adding link:', error)
             undo()
+            return false
         }
+        return false
     }
 
     // Update link
-    const updateLink = async (id: string, field: 'link_name' | 'link_url', value: string) => {
+    const updateLink = async (id: string, field: 'link_name' | 'link_url', value: string): Promise<boolean> => {
         saveToHistory()
 
         setLinks(links.map(l => l.id === id ? { ...l, [field]: value } : l))
@@ -286,20 +289,33 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         if (error) {
             console.error('Error updating link:', error)
             undo()
+            return false
         }
+        return true
     }
 
     // Remove link
-    const removeLink = async (id: string) => {
+    const removeLink = async (id: string): Promise<boolean> => {
         saveToHistory()
 
-        await supabase.from('links').delete().eq('id', id)
+        const { error } = await supabase.from('links').delete().eq('id', id)
+
+        if (error) {
+            console.error('Error removing link:', error)
+            // No strict undo for delete here, but we haven't updated local state yet if we reorder operations
+            // But the original code updated DB first? No wait
+            // Original: await supabase...delete; setLinks...
+            // If supabase fails, we shouldn't update local state.
+            return false
+        }
+
         setLinks(links.filter(l => l.id !== id))
+        return true
     }
 
     // Reorder links
-    const reorderLinks = async (orderedIds: string[]) => {
-        if (!user?.id) return
+    const reorderLinks = async (orderedIds: string[]): Promise<boolean> => {
+        if (!user?.id) return false
 
         saveToHistory()
 
@@ -310,15 +326,18 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         setLinks(reordered)
 
-        // Update order in database (using array position as order)
-        // Note: If we want persistent order, we'd need an 'order' column in links table
-        // For now, we'll rely on created_at or add a display_order column later
+        // Update order in database
+        let hasError = false
         for (let i = 0; i < orderedIds.length; i++) {
-            await supabase
+            const { error } = await supabase
                 .from('links')
                 .update({ updated_at: new Date().toISOString() })
                 .eq('id', orderedIds[i])
+            if (error) hasError = true
         }
+
+        if (hasError) console.error('Error reordering links')
+        return !hasError
     }
 
     // Validate all links
@@ -328,8 +347,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Add experience
-    const addExperience = async (company: string, title: string, startYear: number, endYear: number | null, description?: string) => {
-        if (!user?.id) return
+    const addExperience = async (company: string, title: string, startYear: number, endYear: number | null, description?: string): Promise<boolean> => {
+        if (!user?.id) return false
 
         saveToHistory()
 
@@ -348,17 +367,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         if (data && !error) {
             setExperiences(prev => [data, ...prev])
+            return true
         }
 
         if (error) {
             console.error('Error adding experience:', error)
             undo()
+            return false
         }
+        return false
     }
 
     // Add project
-    const addProject = async (name: string, description: string, url?: string) => {
-        if (!user?.id) return
+    const addProject = async (name: string, description: string, url?: string): Promise<boolean> => {
+        if (!user?.id) return false
 
         saveToHistory()
 
@@ -375,17 +397,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         if (data && !error) {
             setProjects(prev => [data, ...prev])
+            return true
         }
 
         if (error) {
             console.error('Error adding project:', error)
             undo()
+            return false
         }
+        return false
     }
 
     // Add qualification
-    const addQualification = async (institution: string, degree: string, year: number) => {
-        if (!user?.id) return
+    const addQualification = async (institution: string, degree: string, year: number): Promise<boolean> => {
+        if (!user?.id) return false
 
         saveToHistory()
 
@@ -402,17 +427,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         if (data && !error) {
             setQualifications(prev => [data, ...prev])
+            return true
         }
 
         if (error) {
             console.error('Error adding qualification:', error)
             undo()
+            return false
         }
+        return false
     }
 
     // Add product
-    const addProduct = async (name: string, description: string, price?: string, url?: string) => {
-        if (!user?.id) return
+    const addProduct = async (name: string, description: string, price?: string, url?: string): Promise<boolean> => {
+        if (!user?.id) return false
 
         saveToHistory()
 
@@ -430,12 +458,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         if (data && !error) {
             setProducts(prev => [data, ...prev])
+            return true
         }
 
         if (error) {
             console.error('Error adding product:', error)
             undo()
+            return false
         }
+        return false
     }
 
     // Undo last change

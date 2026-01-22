@@ -279,55 +279,86 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 setIsTyping(false);
             }
         } else if (action.action === 'ADD_LINK' && action.name && action.url) {
-            await addLink(action.name, action.url);
-            showToast(`Added link: ${action.name}`, 'success');
-        } else if (action.action === 'UPDATE_LINK' && action.linkId) {
-            if (action.name) {
-                await updateLink(action.linkId, 'link_name', action.name);
-                showToast(`Renamed link to: ${action.name}`, 'success');
-            } else if (action.url) {
-                await updateLink(action.linkId, 'link_url', action.url);
-                showToast(`Updated link URL`, 'success');
+            const success = await addLink(action.name, action.url);
+            if (success) {
+                showToast(`Added link: ${action.name}`, 'success');
+            } else {
+                showToast(`Failed to add link`, 'error');
             }
+        } else if (action.action === 'UPDATE_LINK' && action.linkId) {
+            let success = false;
+            if (action.name) {
+                success = await updateLink(action.linkId, 'link_name', action.name);
+                if (success) showToast(`Renamed link to: ${action.name}`, 'success');
+            } else if (action.url) {
+                success = await updateLink(action.linkId, 'link_url', action.url);
+                if (success) showToast(`Updated link URL`, 'success');
+            }
+            if (!success) showToast(`Failed to update link`, 'error');
         } else if (action.action === 'REMOVE_LINK' && action.id) {
-            await removeLink(action.id);
-            showToast(`Removed link`, 'success');
+            const success = await removeLink(action.id);
+            if (success) {
+                showToast(`Removed link`, 'success');
+            } else {
+                showToast(`Failed to remove link`, 'error');
+            }
         } else if (action.action === 'REORDER_LINKS' && action.order) {
-            await reorderLinks(action.order);
-            showToast(`Reordered links`, 'success');
+            const success = await reorderLinks(action.order);
+            if (success) {
+                showToast(`Reordered links`, 'success');
+            } else {
+                showToast(`Failed to reorder links`, 'error');
+            }
         } else if (action.action === 'ADD_EXPERIENCE' && action.company && action.title) {
-            await addExperience(
+            const success = await addExperience(
                 action.company,
                 action.title,
-                action.startYear || new Date().getFullYear(),
-                action.endYear || null,
+                Number(action.startYear || new Date().getFullYear()),
+                action.endYear ? Number(action.endYear) : null,
                 action.description
             );
-            showToast(`Added experience: ${action.title} at ${action.company}`, 'success');
+            if (success) {
+                showToast(`Added experience: ${action.title} at ${action.company}`, 'success');
+            } else {
+                showToast(`Failed to add experience`, 'error');
+            }
         } else if (action.action === 'ADD_PROJECT' && action.project_name && action.project_description) {
-            await addProject(
+            const success = await addProject(
                 action.project_name,
                 action.project_description,
                 action.project_url
             );
-            showToast(`Added project: ${action.project_name}`, 'success');
+            if (success) {
+                showToast(`Added project: ${action.project_name}`, 'success');
+            } else {
+                showToast(`Failed to add project`, 'error');
+            }
         } else if (action.action === 'ADD_QUALIFICATION' && action.institution && action.degree) {
-            await addQualification(
+            const success = await addQualification(
                 action.institution,
                 action.degree,
-                action.year || new Date().getFullYear()
+                Number(action.year || new Date().getFullYear())
             );
-            showToast(`Added qualification: ${action.degree}`, 'success');
+            if (success) {
+                showToast(`Added qualification: ${action.degree}`, 'success');
+            } else {
+                showToast(`Failed to add qualification`, 'error');
+            }
         } else if (action.action === 'ADD_PRODUCT' && action.product_name && action.product_description) {
-            await addProduct(
+            const success = await addProduct(
                 action.product_name,
                 action.product_description,
                 action.price,
                 action.purchase_url
             );
-            showToast(`Added product: ${action.product_name}`, 'success');
+            if (success) {
+                showToast(`Added product: ${action.product_name}`, 'success');
+            } else {
+                showToast(`Failed to add product`, 'error');
+            }
         }
     };
+
 
     // Handle Apply button click
     const handleApplyAction = async (action: DeityAction) => {
