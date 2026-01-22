@@ -25,6 +25,12 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const { setBackgroundDimmed } = useUI()
     const [showGuide, setShowGuide] = useState(false)
 
+    // Sync dimming state with expansion
+    useEffect(() => {
+        setBackgroundDimmed(isExpanded)
+        return () => setBackgroundDimmed(false)
+    }, [isExpanded, setBackgroundDimmed])
+
     // Global Profile Data
     const {
         experiences: globalExperiences,
@@ -841,7 +847,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
                 {/* Collapse Button */}
                 <div
-                    onClick={() => { setIsExpanded(false); setBackgroundDimmed(false); }}
+                    onClick={() => setIsExpanded(false)}
                     className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white cursor-pointer transition-colors"
                 >
                     <ChevronUp size={20} />
