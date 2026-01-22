@@ -29,8 +29,8 @@ export default function AgentPage() {
             {/* Dimming Overlay for the Vanta Background */}
             <div className="absolute inset-0 z-0 bg-black/60 pointer-events-none"></div>
 
-            <div className="w-full max-w-6xl h-[90vh] relative z-10 p-4 mt-16">
-                <div className="absolute -inset-1 top-4 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 rounded-[40px] blur-2xl"></div>
+            {/* Full Screen Content (Below Header) */}
+            <div className="w-full h-full pt-16 relative z-10">
                 <AgentChatInterface isFullScreen={true} onClose={handleClose} />
             </div>
         </div>

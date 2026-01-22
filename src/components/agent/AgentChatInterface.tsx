@@ -507,7 +507,12 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     };
 
     return (
-        <div className={`flex flex-col h-full bg-black/40 backdrop-blur-3xl border border-white/10 rounded-none md:rounded-l-[32px] md:rounded-r-none overflow-hidden shadow-2xl transition-all duration-500`}>
+        <div className={`flex flex-col h-full bg-black/40 backdrop-blur-3xl transition-all duration-500 
+            ${isFullScreen
+                ? 'w-full rounded-none border-none shadow-none'
+                : 'border border-white/10 rounded-none md:rounded-l-[32px] md:rounded-r-none overflow-hidden shadow-2xl'
+            }`}
+        >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10">
                 <div className="flex items-center gap-4">

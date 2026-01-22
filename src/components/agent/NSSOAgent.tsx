@@ -89,7 +89,7 @@ export default function NSSOAgent() {
                         }
                         
                         /* Desktop Styles (Sidebar) */
-                        md:inset-auto md:top-0 md:right-0 md:h-screen md:w-[35vw] md:min-w-[420px] md:max-w-[600px]
+                        md:inset-auto md:top-0 md:right-0 md:h-screen md:w-[42vw] md:min-w-[500px] md:max-w-[720px]
                         ${isOpen
                             ? 'md:translate-x-0 md:opacity-100 md:scale-100'
                             : 'md:translate-x-full md:opacity-100 md:scale-100 md:translate-y-0'
