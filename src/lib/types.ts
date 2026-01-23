@@ -10,6 +10,8 @@ export interface User {
     username: string
     first_name?: string
     last_name?: string
+    full_name?: string // Added for compatibility
+    avatar_url?: string // Added for compatibility
     user_type: UserType
     is_premium: boolean
     created_at: string
