@@ -27,6 +27,17 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    const checkAuthAndRedirect = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push('/dashboard')
+      }
+    }
+    checkAuthAndRedirect()
+  }, [router, supabase])
+
   const handleClaimIt = async () => {
     // Check if user is logged in
     const { data: { session } } = await supabase.auth.getSession()
