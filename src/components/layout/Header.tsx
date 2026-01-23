@@ -88,7 +88,7 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
 
             <nav className="relative z-[60] max-w-[1470px] mx-auto px-6 lg:px-[165px] h-[88px] flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center">
+                <Link href={user ? "/?view=home" : "/"} className="flex items-center">
                     <Image
                         src="/assets/nsso-logo.png"
                         alt="nsso"

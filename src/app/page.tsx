@@ -27,12 +27,19 @@ export default function HomePage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to dashboard (unless they clicked the logo)
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        router.push('/dashboard')
+      // Check if user came via logo click (view=home parameter)
+      const params = new URLSearchParams(window.location.search)
+      const viewHome = params.get('view') === 'home'
+
+      // Only redirect if NOT a logo click
+      if (!viewHome) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          router.push('/dashboard')
+        }
       }
     }
     checkAuthAndRedirect()
