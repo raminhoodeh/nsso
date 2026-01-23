@@ -174,189 +174,188 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                 )}
                                 {user ? (
                                     <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <button
-                                                onClick={() => router.push('/preview')}
-                                                className="px-4 py-2 rounded-full text-sm font-medium text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                                style={{
-                                                    backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
-                                                    backgroundSize: 'cover',
-                                                    backgroundPosition: 'center',
-                                                    boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
-                                                }}
-                                            >
-                                                Preview Page
-                                            </button>
+                                        <button
+                                            onClick={() => router.push('/preview')}
+                                            className="px-4 py-2 rounded-full text-sm font-medium text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            style={{
+                                                backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center',
+                                                boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
+                                            }}
+                                        >
+                                            Preview Page
+                                        </button>
 
-                                            <GlassButton
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={copyProfileUrl}
-                                            >
-                                                Copy page URL
-                                            </GlassButton>
+                                        <GlassButton
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={copyProfileUrl}
+                                        >
+                                            Copy page URL
+                                        </GlassButton>
 
-                                            {pathname !== '/dashboard' && (
-                                                <Link href="/dashboard">
-                                                    <GlassButton variant="ghost" size="sm">
-                                                        Dashboard
-                                                    </GlassButton>
-                                                </Link>
-                                            )}
-
-                                            <GlassButton
-                                                variant="secondary"
-                                                size="sm"
-                                                onClick={handleSignOut}
-                                            >
-                                                Sign Out
-                                            </GlassButton>
-                                        </div>
-                                        ) : (
-                                        <Link href="/sign-in">
-                                            <GlassButton variant="secondary" size="sm">
-                                                SIGN IN / SIGN UP
-                                            </GlassButton>
-                                        </Link>
-                                        )
-                                    </>
-                                )
-                    )}
-                            </div>
-
-                    {/* --- MOBILE NAVIGATION (HAMBURGER) --- */}
-                    <div className="flex md:hidden items-center gap-3">
-
-                        {/* Default Mode: Contextual Button (Preview/Copy) */}
-                        {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
-
-                        {/* Common Hamburger Menu for Logged In Users (Both Modes) */}
-                        {(isOwnerMode || (showAuthButtons && user)) && (
-                            <>
-                                {/* Hamburger Button */}
-                                <button
-                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                    className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                                    aria-label="Toggle menu"
-                                >
-                                    <svg
-                                        className="w-6 h-6"
-                                        fill="none"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        {mobileMenuOpen ? (
-                                            <path d="M6 18L18 6M6 6l12 12" />
-                                        ) : (
-                                            <path d="M4 6h16M4 12h16M4 18h16" />
+                                        {pathname !== '/dashboard' && (
+                                            <Link href="/dashboard">
+                                                <GlassButton variant="ghost" size="sm">
+                                                    Dashboard
+                                                </GlassButton>
+                                            </Link>
                                         )}
-                                    </svg>
-                                </button>
 
-                                {/* Mobile Slide-out Menu */}
-                                {mobileMenuOpen && (
-                                    <>
-                                        {/* Backdrop */}
-                                        <div
-                                            className="fixed inset-0 bg-black/50 z-[5001]"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        />
+                                        <GlassButton
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={handleSignOut}
+                                        >
+                                            Sign Out
+                                        </GlassButton>
+                                    </div>
+                                ) : (
+                                    <Link href="/sign-in">
+                                        <GlassButton variant="secondary" size="sm">
+                                            SIGN IN / SIGN UP
+                                        </GlassButton>
+                                    </Link>
+                                )}
+                            </>
+                        )
+                    )}
+                </div>
 
-                                        {/* Menu Panel */}
-                                        <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[5002] shadow-2xl border-l border-white/10 animate-slide-in-right">
-                                            <div className="flex flex-col h-full">
-                                                {/* Menu Header */}
-                                                <div className="flex items-center justify-between p-6 border-b border-white/10">
-                                                    <span className="text-white font-medium">Menu</span>
-                                                    <button
-                                                        onClick={() => setMobileMenuOpen(false)}
-                                                        className="p-1 text-white/60 hover:text-white transition-colors"
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
+                {/* --- MOBILE NAVIGATION (HAMBURGER) --- */}
+                <div className="flex md:hidden items-center gap-3">
 
-                                                {/* Menu Items */}
-                                                <div className="flex flex-col gap-2 p-4 flex-1">
+                    {/* Default Mode: Contextual Button (Preview/Copy) */}
+                    {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
 
-                                                    {/* Button: Copy Page URL (Both Modes) */}
+                    {/* Common Hamburger Menu for Logged In Users (Both Modes) */}
+                    {(isOwnerMode || (showAuthButtons && user)) && (
+                        <>
+                            {/* Hamburger Button */}
+                            <button
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                aria-label="Toggle menu"
+                            >
+                                <svg
+                                    className="w-6 h-6"
+                                    fill="none"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    {mobileMenuOpen ? (
+                                        <path d="M6 18L18 6M6 6l12 12" />
+                                    ) : (
+                                        <path d="M4 6h16M4 12h16M4 18h16" />
+                                    )}
+                                </svg>
+                            </button>
+
+                            {/* Mobile Slide-out Menu */}
+                            {mobileMenuOpen && (
+                                <>
+                                    {/* Backdrop */}
+                                    <div
+                                        className="fixed inset-0 bg-black/50 z-[5001]"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    />
+
+                                    {/* Menu Panel */}
+                                    <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[5002] shadow-2xl border-l border-white/10 animate-slide-in-right">
+                                        <div className="flex flex-col h-full">
+                                            {/* Menu Header */}
+                                            <div className="flex items-center justify-between p-6 border-b border-white/10">
+                                                <span className="text-white font-medium">Menu</span>
+                                                <button
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className="p-1 text-white/60 hover:text-white transition-colors"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            {/* Menu Items */}
+                                            <div className="flex flex-col gap-2 p-4 flex-1">
+
+                                                {/* Button: Copy Page URL (Both Modes) */}
+                                                <button
+                                                    onClick={() => {
+                                                        copyProfileUrl()
+                                                        setMobileMenuOpen(false)
+                                                    }}
+                                                    className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                                >
+                                                    Copy page URL
+                                                </button>
+
+                                                {/* Default Mode: Preview Page Button (if not on preview) */}
+                                                {!isOwnerMode && !isPreviewPage && (
                                                     <button
                                                         onClick={() => {
-                                                            copyProfileUrl()
+                                                            router.push('/preview')
                                                             setMobileMenuOpen(false)
                                                         }}
                                                         className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
                                                     >
-                                                        Copy page URL
+                                                        Preview Page
                                                     </button>
+                                                )}
 
-                                                    {/* Default Mode: Preview Page Button (if not on preview) */}
-                                                    {!isOwnerMode && !isPreviewPage && (
-                                                        <button
-                                                            onClick={() => {
-                                                                router.push('/preview')
-                                                                setMobileMenuOpen(false)
-                                                            }}
-                                                            className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
-                                                        >
-                                                            Preview Page
-                                                        </button>
-                                                    )}
-
-                                                    {/* Default Mode: Dashboard Link */}
-                                                    {!isOwnerMode && pathname !== '/dashboard' && (
-                                                        <Link
-                                                            href="/dashboard"
-                                                            onClick={() => setMobileMenuOpen(false)}
-                                                            className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
-                                                        >
-                                                            Dashboard
-                                                        </Link>
-                                                    )}
-
-                                                    {isAdmin && (
-                                                        <Link
-                                                            href="/admin"
-                                                            onClick={() => setMobileMenuOpen(false)}
-                                                            className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
-                                                        >
-                                                            Admin
-                                                        </Link>
-                                                    )}
-
-                                                    <div className="border-t border-white/10 my-2" />
-
-                                                    <button
-                                                        onClick={() => {
-                                                            handleSignOut()
-                                                            setMobileMenuOpen(false)
-                                                        }}
-                                                        className="w-full text-left px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                {/* Default Mode: Dashboard Link */}
+                                                {!isOwnerMode && pathname !== '/dashboard' && (
+                                                    <Link
+                                                        href="/dashboard"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
                                                     >
-                                                        Sign Out
-                                                    </button>
-                                                </div>
+                                                        Dashboard
+                                                    </Link>
+                                                )}
+
+                                                {isAdmin && (
+                                                    <Link
+                                                        href="/admin"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
+                                                    >
+                                                        Admin
+                                                    </Link>
+                                                )}
+
+                                                <div className="border-t border-white/10 my-2" />
+
+                                                <button
+                                                    onClick={() => {
+                                                        handleSignOut()
+                                                        setMobileMenuOpen(false)
+                                                    }}
+                                                    className="w-full text-left px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                >
+                                                    Sign Out
+                                                </button>
                                             </div>
                                         </div>
-                                    </>
-                                )}
-                            </>
-                        )}
+                                    </div>
+                                </>
+                            )}
+                        </>
+                    )}
 
-                        {/* Mobile - Not logged in (Default Mode Only) */}
-                        {!isOwnerMode && showAuthButtons && !user && (
-                            <Link href="/sign-in">
-                                <GlassButton variant="secondary" size="sm">
-                                    SIGN IN / SIGN UP
-                                </GlassButton>
-                            </Link>
-                        )}
-                    </div>
+                    {/* Mobile - Not logged in (Default Mode Only) */}
+                    {!isOwnerMode && showAuthButtons && !user && (
+                        <Link href="/sign-in">
+                            <GlassButton variant="secondary" size="sm">
+                                SIGN IN / SIGN UP
+                            </GlassButton>
+                        </Link>
+                    )}
+                </div>
             </nav>
 
             {/* Add slide-in animation */}
