@@ -101,7 +101,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     const isOwner = viewer?.id === user.id
 
     return (
-        <main className="min-h-screen pb-40" style={{ paddingTop: '88px' }}>
+        <main className="min-h-screen pb-40" style={{ paddingTop: '128px' }}>
             {/* Navigation */}
             <Header
                 variant={isOwner ? 'owner' : 'default'}
