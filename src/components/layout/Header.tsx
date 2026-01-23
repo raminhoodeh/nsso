@@ -213,7 +213,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 </div>
 
                 {/* --- MOBILE NAVIGATION (HAMBURGER) --- */}
-                <div className="flex md:hidden items-center gap-3">
+                <div className="flex md:hidden items-center gap-3 ml-auto">
 
                     {/* Default Mode: Contextual Button (Preview/Copy) */}
                     {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
