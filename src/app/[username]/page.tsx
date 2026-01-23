@@ -10,7 +10,6 @@ import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import AddToMyNssoButton from '@/components/ui/AddToMyNssoButton'
 import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
-import OwnerProfileNav from '@/components/profile/OwnerProfileNav'
 import Header from '@/components/layout/Header'
 
 interface PageProps {
@@ -102,13 +101,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
     const isOwner = viewer?.id === user.id
 
     return (
-        <main className="min-h-screen pb-40" style={{ paddingTop: isOwner ? '120px' : '48px' }}>
-            {/* Conditional Navigation - Owner vs Public */}
-            {isOwner ? (
-                <OwnerProfileNav username={username} />
-            ) : (
-                <Header />
-            )}
+        <main className="min-h-screen pb-40" style={{ paddingTop: '88px' }}>
+            {/* Navigation */}
+            <Header
+                variant={isOwner ? 'owner' : 'default'}
+                username={username}
+            />
 
             {/* Logic Handlers */}
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
