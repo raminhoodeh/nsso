@@ -41,9 +41,9 @@ interface ProfileContextType {
 
     // Deep Profile Sections
     addExperience: (company: string, title: string, startYear: number, endYear: number | null, description?: string) => Promise<boolean>
-    addProject: (name: string, description: string, url?: string) => Promise<boolean>
+    addProject: (name: string, description?: string, url?: string) => Promise<boolean>
     addQualification: (institution: string, degree: string, year: number) => Promise<boolean>
-    addProduct: (name: string, description: string, price?: string, url?: string) => Promise<boolean>
+    addProduct: (name: string, description?: string, price?: string, url?: string) => Promise<boolean>
 
     // Undo Stack
     undo: () => Promise<void>
@@ -352,8 +352,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         saveToHistory()
 
-        // Default to current year if not provided
-        const finalStartYear = startYear || new Date().getFullYear();
+        console.log('⚡ ProfileProvider: Adding experience:', { company, title, startYear, endYear, description })
 
         const { data, error } = await supabase
             .from('experiences')
@@ -361,7 +360,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 user_id: user.id,
                 company_name: company,
                 job_title: title,
-                start_year: finalStartYear,
+                start_year: startYear ?? null, // Use null if undefined
                 end_year: endYear ?? null,
                 description: description || ''
             })
@@ -369,7 +368,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .single()
 
         if (data && !error) {
-            setExperiences(prev => [data, ...prev])
+            console.log('✅ ProfileProvider: Added experience, updating state:', data)
+            setExperiences(prev => {
+                const newState = [data, ...prev];
+                console.log('✅ ProfileProvider: New experiences state length:', newState.length);
+                return newState;
+            })
             return true
         }
 
@@ -387,6 +391,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         saveToHistory()
 
+        console.log('⚡ ProfileProvider: Adding project:', { name, description, url })
+
         const { data, error } = await supabase
             .from('projects')
             .insert({
@@ -400,7 +406,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             .single()
 
         if (data && !error) {
-            setProjects(prev => [data, ...prev])
+            console.log('✅ ProfileProvider: Added project, updating state:', data)
+            setProjects(prev => {
+                const newState = [data, ...prev]
+                console.log('✅ ProfileProvider: New projects state length:', newState.length)
+                return newState
+            })
             return true
         }
 
@@ -418,7 +429,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         saveToHistory()
 
-        const finalYear = year || new Date().getFullYear();
+        console.log('⚡ ProfileProvider: Adding qualification:', { institution, degree, year })
 
         const { data, error } = await supabase
             .from('qualifications')
@@ -426,14 +437,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 user_id: user.id,
                 institution,
                 qualification_name: degree,
-                start_year: finalYear,
-                end_year: finalYear
+                start_year: year ?? null, // Use null if undefined
+                end_year: year ?? null
             })
             .select()
             .single()
 
         if (data && !error) {
-            setQualifications(prev => [data, ...prev])
+            console.log('✅ ProfileProvider: Added qualification, updating state:', data)
+            setQualifications(prev => {
+                const newState = [data, ...prev]
+                console.log('✅ ProfileProvider: New qualifications state length:', newState.length)
+                return newState
+            })
             return true
         }
 

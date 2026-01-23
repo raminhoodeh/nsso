@@ -316,22 +316,33 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 showToast(`Failed to reorder links`, 'error');
             }
-        } else if (action.action === 'ADD_EXPERIENCE' && action.company && action.title) {
-            const startYear = parseYear(action.startYear) || new Date().getFullYear();
-            const endYear = parseYear(action.endYear) || null; // Force null if undefined/NaN
+        } else if (action.action === 'ADD_EXPERIENCE') {
+            const company = action.company || (action as any).company_name;
+            const title = action.title || (action as any).job_title;
 
-            const success = await addExperience(
-                action.company,
-                action.title,
-                startYear,
-                endYear,
-                action.description
-            );
-            if (success) {
-                showToast(`Added experience: ${action.title} at ${action.company}`, 'success');
+            if (company && title) {
+                const startYear = parseYear(action.startYear || (action as any).start_year) || new Date().getFullYear();
+                const endYear = parseYear(action.endYear || (action as any).end_year) || null; // Force null if undefined/NaN
+
+                console.log(`⚡ Adding experience: ${title} at ${company} (${startYear} - ${endYear})`);
+
+                const success = await addExperience(
+                    company,
+                    title,
+                    startYear,
+                    endYear,
+                    action.description
+                );
+                if (success) {
+                    showToast(`Added experience: ${title} at ${company}. Check your dashboard → Advanced Mode → Job titles`, 'success');
+                } else {
+                    showToast(`Failed to add experience (Check logs)`, 'error');
+                }
             } else {
-                showToast(`Failed to add experience (Check logs)`, 'error');
+                console.warn('⚠️ ADD_EXPERIENCE missing required fields:', action);
+                showToast(`Failed to add experience: Missing info`, 'error');
             }
+
         } else if (action.action === 'ADD_PROJECT' && action.project_name) { // Relaxed check: description not strictly required here if provider handles it
             const success = await addProject(
                 action.project_name,
@@ -339,7 +350,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 action.project_url
             );
             if (success) {
-                showToast(`Added project: ${action.project_name}`, 'success');
+                showToast(`Added project: ${action.project_name}. Check your dashboard → Advanced Mode → Projects`, 'success');
             } else {
                 showToast(`Failed to add project`, 'error');
             }
@@ -352,7 +363,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 year
             );
             if (success) {
-                showToast(`Added qualification: ${action.degree}`, 'success');
+                showToast(`Added qualification: ${action.degree}. Check your dashboard → Advanced Mode → Qualifications`, 'success');
             } else {
                 showToast(`Failed to add qualification`, 'error');
             }
@@ -364,7 +375,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 action.purchase_url
             );
             if (success) {
-                showToast(`Added product: ${action.product_name}`, 'success');
+                showToast(`Added product: ${action.product_name}. Check your dashboard → Advanced Mode → Products`, 'success');
             } else {
                 showToast(`Failed to add product`, 'error');
             }
@@ -564,7 +575,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     };
 
     return (
-        <div className={`flex flex-col h-full bg-black/40 backdrop-blur-3xl transition-all duration-500 
+        <div className={`flex flex-col h-screen bg-black/40 backdrop-blur-3xl transition-all duration-500 
             ${isFullScreen
                 ? 'w-full rounded-none border-none shadow-none'
                 : 'border border-white/10 rounded-none md:rounded-l-[32px] md:rounded-r-none overflow-hidden shadow-2xl'

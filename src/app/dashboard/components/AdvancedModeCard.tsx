@@ -48,7 +48,10 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // Sync with Global State (Deity Updates)
     useEffect(() => {
-        if (globalExperiences) setExperiences(globalExperiences)
+        if (globalExperiences) {
+            console.log('🔄 AdvancedModeCard: Syncing globalExperiences:', globalExperiences.length)
+            setExperiences(globalExperiences)
+        }
     }, [globalExperiences])
 
     useEffect(() => {
