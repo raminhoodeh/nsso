@@ -98,6 +98,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
     const projects = projResult.data || []
     const products = prodResult.data || []
 
+    // Check if viewer is the owner
+    const isOwner = viewer?.id === user.id
+
     return (
         <main className="min-h-screen pt-12 pb-40">
             {/* Logic Handlers */}
