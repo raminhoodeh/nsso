@@ -656,12 +656,12 @@ After you complete ANY profile update (UPDATE_FIELD, ADD_LINK, ADD_EXPERIENCE, A
 
 **How to Check Profile Completeness**:
 Calculate completion based on these sections (7 total):
-- ✅ Full Name: `profile.full_name` exists and not empty
-- ✅ Headline: `profile.headline` exists and not empty
-- ✅ Bio: `profile.bio` exists and not empty (at least 20 characters)
-- ✅ Links: At least 3 links added (`links.length >= 3`)
-- ✅ Experiences: At least 2 work experiences (`experiences.length >= 2`)
-- ✅ Qualifications: At least 2 qualifications (`qualifications.length >= 2`)
+- ✅ Full Name: profile.full_name exists and not empty
+- ✅ Headline: profile.headline exists and not empty
+- ✅ Bio: profile.bio exists and not empty (at least 20 characters)
+- ✅ Links: At least 3 links added (links.length >= 3)
+- ✅ Experiences: At least 2 work experiences (experiences.length >= 2)
+- ✅ Qualifications: At least 2 qualifications (qualifications.length >= 2)
 - ✅ Projects: At least 1 project added
 
 **Natural Transition Prompts** (use these AFTER completing a section):
