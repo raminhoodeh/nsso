@@ -120,18 +120,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     </Link>
                 )}
 
-                {/* OWNER MODE MOBILE: Left Side Button */}
-                {isOwnerMode && (
-                    <div className="flex md:hidden">
-                        <GlassButton
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push('/dashboard')}
-                        >
-                            ← Dashboard
-                        </GlassButton>
-                    </div>
-                )}
+
 
 
                 {/* --- RIGHT SIDE / DESKTOP NAV --- */}
