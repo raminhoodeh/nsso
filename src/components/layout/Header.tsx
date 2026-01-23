@@ -120,9 +120,6 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     </Link>
                 )}
 
-
-
-
                 {/* --- RIGHT SIDE / DESKTOP NAV --- */}
                 <div className="hidden md:flex items-center gap-4">
                     {/* OWNER MODE DESKTOP */}
@@ -296,7 +293,18 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                                     </button>
                                                 )}
 
-                                                {/* Default Mode: Dashboard Link */}
+                                                {/* Owner Mode: Back to Dashboard */}
+                                                {isOwnerMode && (
+                                                    <Link
+                                                        href="/dashboard"
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
+                                                    >
+                                                        Back to Dashboard
+                                                    </Link>
+                                                )}
+
+                                                {/* Regular Mode: Dashboard (if not on dashboard) */}
                                                 {!isOwnerMode && pathname !== '/dashboard' && (
                                                     <Link
                                                         href="/dashboard"
