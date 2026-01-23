@@ -11,9 +11,11 @@ import { useState, useEffect } from 'react'
 
 interface HeaderProps {
     showAuthButtons?: boolean
+    variant?: 'default' | 'owner'
+    username?: string
 }
 
-export default function Header({ showAuthButtons = true }: HeaderProps) {
+export default function Header({ showAuthButtons = true, variant = 'default', username }: HeaderProps) {
     const { user } = useUser()
     const isAdmin = user?.user_type === 'admin'
     const supabase = createClient()
@@ -45,14 +47,18 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
     }
 
     const copyProfileUrl = () => {
-        if (!user?.username) return
-        const url = `${window.location.origin}/${user.username}`
+        const targetUsername = username || user?.username
+        if (!targetUsername) return
+        const url = `${window.location.origin}/${targetUsername}`
         navigator.clipboard.writeText(url)
         showToast('Profile URL copied to clipboard!', 'success')
     }
 
-    // Determine which primary button to show on mobile
-    const isPreviewPage = pathname === '/preview' || pathname.startsWith(`/${user?.username}`)
+    // Determine content based on variant
+    const isOwnerMode = variant === 'owner'
+
+    // Determine which primary button to show on mobile (Default Mode)
+    const isPreviewPage = pathname === '/preview' || (user?.username && pathname.startsWith(`/${user.username}`))
     const primaryMobileButton = isPreviewPage ? (
         <GlassButton
             variant="ghost"
@@ -87,85 +93,144 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
             </div>
 
             <nav className="relative z-[60] max-w-[1470px] mx-auto px-6 lg:px-[165px] h-[88px] flex items-center justify-between">
-                {/* Logo */}
-                <Link href={user ? "/?view=home" : "/"} className="flex items-center">
-                    <Image
-                        src="/assets/nsso-logo.png"
-                        alt="nsso"
-                        width={80}
-                        height={32}
-                        className="h-8 w-auto"
-                        priority
-                    />
-                </Link>
 
-                {/* Desktop Navigation */}
+                {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
+                {isOwnerMode ? (
+                    // OWNER MODE: Back to Dashboard button on Desktop
+                    <div className="hidden md:flex">
+                        <GlassButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push('/dashboard')}
+                        >
+                            ← Back to Dashboard
+                        </GlassButton>
+                    </div>
+                ) : (
+                    // DEFAULT MODE: Logo
+                    <Link href={user ? "/?view=home" : "/"} className="flex items-center">
+                        <Image
+                            src="/assets/nsso-logo.png"
+                            alt="nsso"
+                            width={80}
+                            height={32}
+                            className="h-8 w-auto"
+                            priority
+                        />
+                    </Link>
+                )}
+
+                {/* OWNER MODE MOBILE: Left Side Button */}
+                {isOwnerMode && (
+                    <div className="flex md:hidden">
+                        <GlassButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push('/dashboard')}
+                        >
+                            ← Dashboard
+                        </GlassButton>
+                    </div>
+                )}
+
+
+                {/* --- RIGHT SIDE / DESKTOP NAV --- */}
                 <div className="hidden md:flex items-center gap-4">
-                    {isAdmin && (
-                        <Link href="/admin">
-                            <GlassButton variant="ghost" size="sm">
-                                Admin
-                            </GlassButton>
-                        </Link>
-                    )}
-
-                    {showAuthButtons && (
-                        <>
-                            {user ? (
-                                <div className="flex items-center gap-4">
-                                    <button
-                                        onClick={() => router.push('/preview')}
-                                        className="px-4 py-2 rounded-full text-sm font-medium text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                        style={{
-                                            backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
-                                            backgroundSize: 'cover',
-                                            backgroundPosition: 'center',
-                                            boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
-                                        }}
-                                    >
-                                        Preview Page
-                                    </button>
-
-                                    <GlassButton
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={copyProfileUrl}
-                                    >
-                                        Copy page URL
-                                    </GlassButton>
-
-                                    {pathname !== '/dashboard' && (
-                                        <Link href="/dashboard">
-                                            <GlassButton variant="ghost" size="sm">
-                                                Dashboard
-                                            </GlassButton>
-                                        </Link>
-                                    )}
-
-                                    <GlassButton
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={handleSignOut}
-                                    >
-                                        Sign Out
-                                    </GlassButton>
-                                </div>
-                            ) : (
-                                <Link href="/sign-in">
-                                    <GlassButton variant="secondary" size="sm">
-                                        SIGN IN / SIGN UP
+                    {/* OWNER MODE DESKTOP */}
+                    {isOwnerMode ? (
+                        <div className="flex items-center gap-4">
+                            {isAdmin && (
+                                <Link href="/admin">
+                                    <GlassButton variant="ghost" size="sm">
+                                        Admin
                                     </GlassButton>
                                 </Link>
                             )}
-                        </>
+                            <GlassButton
+                                variant="ghost"
+                                size="sm"
+                                onClick={copyProfileUrl}
+                            >
+                                Copy page URL
+                            </GlassButton>
+                            <GlassButton
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleSignOut}
+                            >
+                                Sign Out
+                            </GlassButton>
+                        </div>
+                    ) : (
+                        // DEFAULT MODE DESKTOP
+                        isAdmin && (
+                            <Link href="/admin">
+                                <GlassButton variant="ghost" size="sm">
+                                    Admin
+                                </GlassButton>
+                            </Link>
+                        ),
+                        showAuthButtons && (
+                            <>
+                                {user ? (
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            onClick={() => router.push('/preview')}
+                                            className="px-4 py-2 rounded-full text-sm font-medium text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            style={{
+                                                backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center',
+                                                boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
+                                            }}
+                                        >
+                                            Preview Page
+                                        </button>
+
+                                        <GlassButton
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={copyProfileUrl}
+                                        >
+                                            Copy page URL
+                                        </GlassButton>
+
+                                        {pathname !== '/dashboard' && (
+                                            <Link href="/dashboard">
+                                                <GlassButton variant="ghost" size="sm">
+                                                    Dashboard
+                                                </GlassButton>
+                                            </Link>
+                                        )}
+
+                                        <GlassButton
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={handleSignOut}
+                                        >
+                                            Sign Out
+                                        </GlassButton>
+                                    </div>
+                                ) : (
+                                    <Link href="/sign-in">
+                                        <GlassButton variant="secondary" size="sm">
+                                            SIGN IN / SIGN UP
+                                        </GlassButton>
+                                    </Link>
+                                )
+                            </>
+                        )
                     )}
                 </div>
 
-                {/* Mobile Navigation */}
+                {/* --- MOBILE NAVIGATION (HAMBURGER) --- */}
                 <div className="flex md:hidden items-center gap-3">
-                    {showAuthButtons && user && primaryMobileButton}
 
-                    {showAuthButtons && user && (
+                    {/* Default Mode: Contextual Button (Preview/Copy) */}
+                    {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
+
+                    {/* Common Hamburger Menu for Logged In Users (Both Modes) */}
+                    {(isOwnerMode || (showAuthButtons && user)) && (
                         <>
                             {/* Hamburger Button */}
                             <button
@@ -202,7 +267,7 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
                                     {/* Menu Panel */}
                                     <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[5002] shadow-2xl border-l border-white/10 animate-slide-in-right">
                                         <div className="flex flex-col h-full">
-                                            {/* Header */}
+                                            {/* Menu Header */}
                                             <div className="flex items-center justify-between p-6 border-b border-white/10">
                                                 <span className="text-white font-medium">Menu</span>
                                                 <button
@@ -217,18 +282,20 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
 
                                             {/* Menu Items */}
                                             <div className="flex flex-col gap-2 p-4 flex-1">
-                                                {/* Show opposite button (if on preview, show Preview Page; if elsewhere, show Copy URL) */}
-                                                {!isPreviewPage ? (
-                                                    <button
-                                                        onClick={() => {
-                                                            copyProfileUrl()
-                                                            setMobileMenuOpen(false)
-                                                        }}
-                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
-                                                    >
-                                                        Copy page URL
-                                                    </button>
-                                                ) : (
+
+                                                {/* Button: Copy Page URL (Both Modes) */}
+                                                <button
+                                                    onClick={() => {
+                                                        copyProfileUrl()
+                                                        setMobileMenuOpen(false)
+                                                    }}
+                                                    className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                                >
+                                                    Copy page URL
+                                                </button>
+
+                                                {/* Default Mode: Preview Page Button (if not on preview) */}
+                                                {!isOwnerMode && !isPreviewPage && (
                                                     <button
                                                         onClick={() => {
                                                             router.push('/preview')
@@ -240,7 +307,8 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
                                                     </button>
                                                 )}
 
-                                                {pathname !== '/dashboard' && (
+                                                {/* Default Mode: Dashboard Link */}
+                                                {!isOwnerMode && pathname !== '/dashboard' && (
                                                     <Link
                                                         href="/dashboard"
                                                         onClick={() => setMobileMenuOpen(false)}
@@ -279,8 +347,8 @@ export default function Header({ showAuthButtons = true }: HeaderProps) {
                         </>
                     )}
 
-                    {/* Mobile - Not logged in */}
-                    {showAuthButtons && !user && (
+                    {/* Mobile - Not logged in (Default Mode Only) */}
+                    {!isOwnerMode && showAuthButtons && !user && (
                         <Link href="/sign-in">
                             <GlassButton variant="secondary" size="sm">
                                 SIGN IN / SIGN UP
