@@ -13,13 +13,6 @@ import type { Metadata } from 'next'
 import OwnerProfileNav from '@/components/profile/OwnerProfileNav'
 import Header from '@/components/layout/Header'
 
-import { ExternalLink } from 'lucide-react'
-import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
-import CreateProfileButton from '@/components/ui/CreateProfileButton'
-import AddToMyNssoButton from '@/components/ui/AddToMyNssoButton'
-import QRScanHandler from '@/components/logic/QRScanHandler'
-import type { Metadata } from 'next'
-
 interface PageProps {
     params: Promise<{ username: string }>
 }
