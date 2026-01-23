@@ -102,7 +102,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
     const isOwner = viewer?.id === user.id
 
     return (
-        <main className="min-h-screen pt-12 pb-40">
+        <main className="min-h-screen pb-40" style={{ paddingTop: isOwner ? '120px' : '48px' }}>
+            {/* Conditional Navigation - Owner vs Public */}
+            {isOwner ? (
+                <OwnerProfileNav username={username} />
+            ) : (
+                <Header />
+            )}
+
             {/* Logic Handlers */}
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
 
