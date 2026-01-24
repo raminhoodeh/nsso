@@ -163,7 +163,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                         <div key={i} className="bg-black/20 rounded-lg p-2">
                                             {p.project_photo_url && (
                                                 <div className="relative w-full h-20 rounded-md overflow-hidden mb-2">
-                                                    <Image src={p.project_photo_url} alt={p.project_name} fill className="object-cover" />
+                                                    <Image src={p.project_photo_url} alt={p.project_name} fill className="object-cover" unoptimized />
                                                 </div>
                                             )}
                                             <div className="text-white font-medium text-sm truncate">{p.project_name}</div>
@@ -181,7 +181,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                         <div key={i} className="flex gap-3 items-center bg-black/20 p-2 rounded-lg">
                                             {p.image_url && (
                                                 <div className="relative w-10 h-10 rounded overflow-hidden shrink-0">
-                                                    <Image src={p.image_url} alt={p.name} fill className="object-cover" />
+                                                    <Image src={p.image_url} alt={p.name} fill className="object-cover" unoptimized />
                                                 </div>
                                             )}
                                             <div>
@@ -224,6 +224,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                     alt={post.metadata.project_name}
                                     fill
                                     className="object-cover"
+                                    unoptimized
                                 />
                             </div>
                         )}
@@ -244,6 +245,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                     alt={post.metadata.name}
                                     fill
                                     className="object-cover"
+                                    unoptimized
                                 />
                             </div>
                         )}
@@ -272,6 +274,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                             alt={username}
                             fill
                             className="object-cover"
+                            unoptimized
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/40 text-sm font-bold">
@@ -350,6 +353,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                                 alt={comment.user.username}
                                                 fill
                                                 className="object-cover"
+                                                unoptimized
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-white/40 text-xs font-bold">
