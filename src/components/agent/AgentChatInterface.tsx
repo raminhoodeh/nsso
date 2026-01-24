@@ -815,6 +815,5 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 </form>
             </div>
         </div>
-        </div >
     );
 }
