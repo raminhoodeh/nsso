@@ -705,7 +705,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                                             {action.status === 'applied' ? (
                                                 <div className="flex items-center gap-1 px-2 py-1 text-green-400 text-xs font-medium">
                                                     <Check size={14} />
-                                                    <span>Accepted</span>
+                                                    <span>Done, profile updated!</span>
                                                 </div>
                                             ) : action.status === 'rejected' ? (
                                                 <div className="flex items-center gap-1 px-2 py-1 text-red-400/70 text-xs font-medium">
