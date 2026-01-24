@@ -126,6 +126,13 @@ export default function VantaBackground() {
                             spacing: 18,
                             maxDistance: 15
                         })
+
+                        // PERF: Force 1:1 pixel ratio on High-DPI (Retina) screens.
+                        // This reduces GPU load by 4x on MacBooks without visible quality loss for this specific effect.
+                        if (vantaEffect.current.renderer) {
+                            vantaEffect.current.renderer.setPixelRatio(1.0)
+                        }
+
                         console.log('[Vanta] Initialization success')
                     } catch (error) {
                         console.error('[Vanta] Initialization failed:', error)

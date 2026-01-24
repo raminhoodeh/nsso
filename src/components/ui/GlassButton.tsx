@@ -38,7 +38,7 @@ export default function GlassButton({
       hover:border-[rgba(255,255,255,0.6)]
       hover:bg-[rgba(128,128,128,0.4)]
       mix-blend-luminosity
-      backdrop-blur-[50px]
+      backdrop-blur-md
     `,
         ghost: `
       bg-transparent
@@ -70,7 +70,7 @@ export default function GlassButton({
         ${fullWidth ? 'w-full' : ''}
         ${className}
       `}
-            style={{ backdropFilter: 'blur(10px)' }}
+            style={{}}
             disabled={disabled}
             {...props}
         >

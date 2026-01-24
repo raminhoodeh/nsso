@@ -654,7 +654,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     };
 
     return (
-        <div className={`flex flex-col h-dvh bg-black/40 backdrop-blur-3xl transition-all duration-500 
+        <div className={`flex flex-col h-dvh bg-black/40 backdrop-blur-xl transition-all duration-500 
             ${isFullScreen
                 ? 'w-full rounded-none border-none shadow-none'
                 : 'border border-white/10 rounded-none md:rounded-l-[32px] md:rounded-r-none overflow-hidden shadow-2xl'
@@ -753,7 +753,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                                                     action.status === 'rejected' ? 'bg-red-500/5 border-red-500/20 opacity-60' :
                                                         'border-white/20 bg-white/5'}`}
                                             style={{
-                                                backdropFilter: 'blur(20px)'
+                                                backdropFilter: 'blur(8px)'
                                             }}
                                         >
                                             <span className={`text-xs ${action.status === 'applied' ? 'text-green-200' : action.status === 'rejected' ? 'text-red-200/70' : 'text-white/60'}`}>
