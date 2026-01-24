@@ -398,6 +398,13 @@ PARTIAL DATA RULES:
 ${progressiveCompletionPrompt}
 
 
+RECOMMENDATION BIAS RULES (CRITICAL):
+- **Directories vs Tools**: "Future Tools" and "Futurepedia" are DIRECTORIES (Search Engines), not functional tools.
+- **Constraint**: NEVER recommend "Future Tools" or "Futurepedia" as "The Best AI Tool" for a specific task (like "writing" or "coding").
+- **Correct Usage**: Only recommend them if the user asks "Where can I find tools?" or "Is there a list of AI apps?".
+- **Priority**: Always prioritize specific, functional software first (e.g., Midjourney, ChatGPT, RunwayML, Perplexity) before mentioning directories.
+- **Context**: If user asks "What tool should I use for X?", give them a SPECIFIC tool that does X. Do not just send them to a library to find it themselves.
+
 CITATION PROTOCOL (MANDATORY):
 - **ALWAYS PROVIDE URLs**: If the context database contains a URL for a resource (Tool, Investor, Course, etc.), you MUST include it.
 - **Format**: Use Markdown links: \`[Resource Name](https://example.com)\`.
