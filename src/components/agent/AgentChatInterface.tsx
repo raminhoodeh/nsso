@@ -110,42 +110,24 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
                     if (profile?.full_name) {
                         firstName = profile.full_name.split(' ')[0];
-                        if (profileData?.full_name) {
-                            firstName = profileData.full_name.split(' ')[0];
-                        } else if (user.username) {
-                            firstName = user.username;
-                        }
+                    } else if (user.username) {
+                        firstName = user.username;
+                    }
 
-                        const hasBio = !!profileData?.bio;
-                        const hasExperience = (profileData?.experiences as any[])?.length > 0;
+                    const hasBio = !!profile?.bio;
+                    // skipping experience check for now to avoid query complexity
+                    const hasExperience = true;
 
-                        if (isFullScreen) {
-                            if (!hasBio || !hasExperience) {
-                                introText = `Love your profile ${firstName || 'there'}… now let’s build it out!
+                    if (isFullScreen) {
+                        if (!hasBio || !hasExperience) {
+                            introText = `Love your profile ${firstName || 'there'}… now let’s build it out!
 
 I can help you in two powerful ways:
 1. **Profile Creation**: Tell me to "Add my experience at Google" or "Update my bio" to build your presence.
 2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
 
 Let's get started—what would you like to do first?`;
-                            } else {
-                                introText = `Love your profile ${firstName || 'there'}… now let’s get your name out there!
-
-I can help you in two powerful ways:
-1. **Profile Creation**: Tell me to "Add my experience at Google" or "Update my bio" to build your presence.
-2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
-
-Check out some of the areas I can help you with below.`;
-                            }
                         } else {
-                            // Pop-up
-                            introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
-                        }
-                    } catch (err) {
-                        console.error('Error fetching profile:', err);
-                        if (user.username) firstName = user.username;
-                        // Fallback for introText if profile fetch fails
-                        if (isFullScreen) {
                             introText = `Love your profile ${firstName || 'there'}… now let’s get your name out there!
 
 I can help you in two powerful ways:
@@ -153,40 +135,57 @@ I can help you in two powerful ways:
 2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
 
 Check out some of the areas I can help you with below.`;
-                        } else {
-                            introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
                         }
-                    }
-                } else {
-                    // Logged Out Logic
-                    if (isFullScreen) {
-                        introText = "Hey creator, I’m here to help you feel clear about yourself, your offering and your plan of action. I’ve been loaded up with a custom database of all the latest AI tools, business strategy, courses, career advice, and services out there. A lot of these resources won’t be found from a normal search engine or AI tool, as they have been curated from unique sources by my founder. Copy / paste anything about yourself; your CV, LinkedIn etc. so I can give you more tailored advice. The more you tell me about yourself, the better my advice would be. I recommend that you make a nsso profile so I can do this more effectively. Select a category below or ask me anything to get started.";
                     } else {
                         // Pop-up
-                        introText = "Hey creator, I’m here to help you feel clear about yourself, your offering and your plan of action. Select a category below or ask me anything to get started.";
+                        introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
+                    }
+                } catch (err) {
+                    console.error('Error fetching profile:', err);
+                    if (user.username) firstName = user.username;
+                    // Fallback for introText if profile fetch fails
+                    if (isFullScreen) {
+                        introText = `Love your profile ${firstName || 'there'}… now let’s get your name out there!
+
+I can help you in two powerful ways:
+1. **Profile Creation**: Tell me to "Add my experience at Google" or "Update my bio" to build your presence.
+2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
+
+Check out some of the areas I can help you with below.`;
+                    } else {
+                        introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
                     }
                 }
+            } else {
+                // Logged Out Logic
+                if (isFullScreen) {
+                    introText = "Hey creator, I’m here to help you feel clear about yourself, your offering and your plan of action. I’ve been loaded up with a custom database of all the latest AI tools, business strategy, courses, career advice, and services out there. A lot of these resources won’t be found from a normal search engine or AI tool, as they have been curated from unique sources by my founder. Copy / paste anything about yourself; your CV, LinkedIn etc. so I can give you more tailored advice. The more you tell me about yourself, the better my advice would be. I recommend that you make a nsso profile so I can do this more effectively. Select a category below or ask me anything to get started.";
+                } else {
+                    // Pop-up
+                    introText = "Hey creator, I’m here to help you feel clear about yourself, your offering and your plan of action. Select a category below or ask me anything to get started.";
+                }
+            }
 
-                const welcomeMessages: Message[] = [
-                    {
-                        id: 'welcome',
-                        role: 'model',
-                        content: introText,
-                        timestamp: Date.now()
-                    },
-                    {
-                        id: 'tip',
-                        role: 'model',
-                        content: '💡 Tip: I can help you write your bio, finding the right words to describe yourself is hard... but I\'m really good at it.',
-                        timestamp: Date.now() + 1
-                    }
-                ];
-                setMessages(welcomeMessages);
-                setHasInitialized(true);
-            };
+            const welcomeMessages: Message[] = [
+                {
+                    id: 'welcome',
+                    role: 'model',
+                    content: introText,
+                    timestamp: Date.now()
+                },
+                {
+                    id: 'tip',
+                    role: 'model',
+                    content: '💡 Tip: I can help you write your bio, finding the right words to describe yourself is hard... but I\'m really good at it.',
+                    timestamp: Date.now() + 1
+                }
+            ];
+            setMessages(welcomeMessages);
+            setHasInitialized(true);
+        };
 
-            fetchProfileAndSetIntro();
-        }, [isFullScreen, user, loading, hasInitialized]);
+        fetchProfileAndSetIntro();
+    }, [isFullScreen, user, loading, hasInitialized]);
 
     // Rotate placeholder text every 3 seconds
     useEffect(() => {
