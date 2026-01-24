@@ -246,18 +246,29 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    // Helper to ensure URL has protocol
+    const ensureProtocol = (url: string): string => {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
+            return url;
+        }
+        return `https://${url}`;
+    }
+
     // Add link
     const addLink = async (name: string, url: string): Promise<boolean> => {
         if (!user?.id) return false
 
         saveToHistory()
 
+        const cleanUrl = ensureProtocol(url);
+
         const { data, error } = await supabase
             .from('links')
             .insert({
                 user_id: user.id,
                 link_name: name,
-                link_url: url
+                link_url: cleanUrl
             })
             .select()
             .single()
@@ -279,11 +290,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const updateLink = async (id: string, field: 'link_name' | 'link_url', value: string): Promise<boolean> => {
         saveToHistory()
 
-        setLinks(links.map(l => l.id === id ? { ...l, [field]: value } : l))
+        const cleanValue = field === 'link_url' ? ensureProtocol(value) : value;
+
+        setLinks(links.map(l => l.id === id ? { ...l, [field]: cleanValue } : l))
 
         const { error } = await supabase
             .from('links')
-            .update({ [field]: value })
+            .update({ [field]: cleanValue })
             .eq('id', id)
 
         if (error) {
