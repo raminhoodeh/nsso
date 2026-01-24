@@ -51,7 +51,9 @@ export default function RootLayout({
 
                 {/* Toast Notifications Provider */}
                 <ToastProvider>
-                  {children}
+                  <div className="relative z-10 w-full min-h-screen">
+                    {children}
+                  </div>
                   <ConditionalNSSOAgent />
                 </ToastProvider>
               </ProfileProvider>
