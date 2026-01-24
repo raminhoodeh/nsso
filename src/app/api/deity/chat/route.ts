@@ -5,6 +5,8 @@ import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
 import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
 import { DEITY_TOOLS } from '@/lib/deity/tools';
+import { detectCategory, assembleSystemPrompt, CATEGORY_KEYWORDS } from '@/lib/deity/contextManager';
+import { verifyLinks } from '@/lib/deity/linkVerifier';
 
 // Initialize Supabase logic
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -142,27 +144,6 @@ export async function POST(req: Request) {
         }
 
         // Auto-detect category from message if not provided
-        const categoryKeywords: Record<string, string[]> = {
-            'Films / Inspiration': ['film', 'movie', 'cinema', 'documentary', 'watch'],
-            'Courses': ['course', 'learn', 'training', 'class', 'education', 'teach', 'study'],
-            'AI Tools': ['ai tool', 'automation', 'software', 'app', 'ai'],
-            'Career': ['job', 'career', 'resume', 'interview', 'cover letter', 'hire', 'work'],
-            'Start-up / Investors': ['investor', 'vc', 'funding', 'startup', 'pitch', 'accelerator', 'grant'],
-            'Services': ['service', 'agency', 'branding', 'marketing'],
-            'Places': ['place', 'location', 'venue', 'event', 'restaurant', 'bar'],
-            "Member's Clubs": ['club', 'membership', 'founder', 'network']
-        };
-
-        function detectCategory(msg: string): string | null {
-            const lowerMsg = msg.toLowerCase();
-            for (const [cat, keywords] of Object.entries(categoryKeywords)) {
-                if (keywords.some(kw => lowerMsg.includes(kw))) {
-                    return cat;
-                }
-            }
-            return null;
-        }
-
         const detectedCategory = category || detectCategory(message);
 
         // Determine file filters and threshold based on category
@@ -308,290 +289,130 @@ export async function POST(req: Request) {
         const embeddingResult = await embeddingModel.embedContent(message);
         const embedding = embeddingResult.embedding.values;
 
-        // 2. Search for relevant context
-        console.log(`Searching with category: ${category}, filters:`, filterFiles);
-
-        const { data: documents, error } = await supabase.rpc('hybrid_search', {
-            query_embedding: embedding,
-            query_text: message,
-            match_threshold: threshold,
-            match_count: 8,
-            filter_files: filterFiles
-        });
-
-        if (error) {
-            console.error('Hybrid search error:', error);
+        // 1b. Generate embedding for user profile (for re-ranking)
+        let profileEmbedding = null;
+        if (userContext && userContext.length > 50) {
+            try {
+                // Use a truncated version of context to avoid token limits, focusing on bio/experience
+                const contextForEmbedding = userContext.substring(0, 1000);
+                const profileEmbeddingResult = await embeddingModel.embedContent(contextForEmbedding);
+                profileEmbedding = profileEmbeddingResult.embedding.values;
+                console.log("✅ Generated Profile Embedding for Re-Ranking");
+            } catch (err) {
+                console.error("⚠️ Failed to generate profile embedding:", err);
+            }
         }
 
-        console.log(`Found ${documents?.length || 0} documents`);
-        if (documents?.length > 0) {
+        // 2. Search for relevant context (Intelligent Retrieval)
+        console.log(`Searching with category: ${detectedCategory || 'None'}, filters:`, filterFiles);
+
+        let documents: any[] = [];
+        const SOFT_FILTER_THRESHOLD = 0.60; // Threshold to trigger fallback
+
+        // Primary Search (Targeted)
+        const { data: primaryResults, error: primaryError } = await supabase.rpc('intelligent_search', {
+            query_embedding: embedding,
+            query_text: message,
+            profile_embedding: profileEmbedding,
+            match_threshold: threshold,
+            match_count: 8,
+            filter_files: filterFiles, // Apply category filters if any
+            candidate_count: 50
+        });
+
+        if (!primaryError && primaryResults) {
+            documents = primaryResults;
+        } else {
+            console.error("❌ Primary search failed:", primaryError);
+        }
+
+        // Soft-Filter Logic: Verification & Fallback
+        const topScore = documents.length > 0 ? documents[0].combined_score : 0;
+
+        // If we had a specific category BUT results are weak, try Global Search
+        if (detectedCategory && filterFiles && topScore < SOFT_FILTER_THRESHOLD) {
+            console.log(`⚠️ Soft-Filter Triggered: Targeted score (${topScore.toFixed(2)}) < ${SOFT_FILTER_THRESHOLD}. Switching to Global Search.`);
+
+            const { data: globalResults, error: globalError } = await supabase.rpc('intelligent_search', {
+                query_embedding: embedding,
+                query_text: message,
+                profile_embedding: profileEmbedding, // Still use profile re-ranking!
+                match_threshold: 0.45, // Slightly lower threshold for global
+                match_count: 8,
+                filter_files: null, // Clear filters
+                candidate_count: 50
+            });
+
+            if (!globalError && globalResults && globalResults.length > 0) {
+                console.log(`✅ Global Search rescued the query. Found ${globalResults.length} matches.`);
+                documents = globalResults;
+            } else {
+                console.log("⚠️ Global Search also failed to find high-relevance matches.");
+            }
+        } else if (documents.length > 0) {
+            console.log(`✅ Primary Search Successful. Top Score: ${topScore.toFixed(2)}`);
+        }
+
+        if (documents.length > 0) {
             console.log('First match source:', documents[0].metadata?.source);
         }
 
-        // 3. Re-rank by diversity and user relevance
-        const reranked = rerankDocuments(documents || [], message, userContext);
-        const finalDocs = reranked.slice(0, Math.min(5, reranked.length));
+        // 3. Select final documents (Intelligent Search already ranked them by relevance)
+        // We skip the old 'rerankDocuments' function because it doesn't use vector-based profile similarity.
+        let finalDocs = documents.slice(0, 5);
+
+        // --- PHASE 4: GROUNDED VERIFICATION (High-Performance "Fail-Open") ---
+        try {
+            // Extract URLs from metadata
+            const urlsToCheck: string[] = [];
+            finalDocs.forEach((doc: any) => {
+                const url = doc.metadata?.url || doc.metadata?.link;
+                if (url && url.startsWith('http')) {
+                    urlsToCheck.push(url);
+                }
+            });
+
+            if (urlsToCheck.length > 0) {
+                console.log(`🔍 Verifying ${urlsToCheck.length} links (Fail-Open)...`);
+                const deadLinks = await verifyLinks(urlsToCheck);
+
+                if (deadLinks.size > 0) {
+                    console.log(`⚠️ Filtering out ${deadLinks.size} dead links:`, Array.from(deadLinks));
+                    // Filter out docs with dead links OR strip the link from the doc
+                    finalDocs = finalDocs.filter((doc: any) => {
+                        const url = doc.metadata?.url || doc.metadata?.link;
+                        if (!url) return true; // No link, keep content
+                        return !deadLinks.has(url); // Remove if link is dead
+                    });
+                } else {
+                    console.log("✅ All links valid (or timed out/fail-open).");
+                }
+            }
+        } catch (verErr) {
+            console.error("⚠️ Link verification failed (bypassing):", verErr);
+            // Fail-Open: Do nothing, use docs as is
+        }
 
         // 4. Construct System Prompt
         const contextText = finalDocs?.map((doc: any) => {
             const sourceInfo = doc.metadata?.url || doc.metadata?.source || doc.metadata?.title || 'Unknown Source';
-            return `SOURCE/LINK: ${sourceInfo}\nCONTENT:\n${doc.content}`;
+            // Explicitly mark as verified for the LLM
+            return `SOURCE/LINK: ${sourceInfo} [VERIFIED]\nCONTENT:\n${doc.content}`;
         }).join('\n\n---\n\n') || '';
 
-        // Bio assistance prompt (injected if profile is incomplete)
-        const bioAssistancePrompt = needsBioHelp ? `
-🎯 ONBOARDING ASSISTANT MODE (HIGH PRIORITY):
-${userName}'s profile is ${profileCompleteness}% complete. Their bio is missing or empty.
-
-YOUR PRIMARY GOAL: Help ${userName} craft a compelling bio that:
-1. Clearly states what they do and who they help
-2. Is SEO-friendly with relevant keywords
-3. Captures their unique value proposition
-
-IMPORTANT RULES:
-- Ask conversational questions to extract their professional story (e.g., "What do you do? Who do you help?")
-- Use their responses to craft a bio suggestion using the UPDATE_FIELD action
-- After bio is filled, suggest next steps (e.g., "Want help with your headline next?")
-` : '';
-
-        // Global Action Definitions (Always Active)
-        const globalActionPrompt = `
-AVAILABLE ACTIONS:
-You have access to a set of native tools/functions to update the user's profile.
-Use these tools whenever you have gathered enough information to perform an action.
-
-AVAILABLE TOOLS:
-- update_profile_field(target, value): Update Bio, Headline, Name.
-- add_experience(company, title, startYear...): Add work history.
-- add_project(name, description...): Add portfolio items.
-- add_qualification(institution...): Add education.
-- add_product(name, description...): Add items to store.
-- add_link / update_link / remove_link / reorder_links: Manage links.
-- suggest_wording(target, improved...): Offer suggestions.
-
-CRITICAL INSTRUCTION:
-- DO NOT output JSON blocks (like \`\`\`json {...} \`\`\`) in your text response.
-- Instead, CALL THE FUNCTION directly using the available tools.
-- If you use a tool, you do not need to describe the JSON in text.
-`;
-
-        // Link management assistance (always active)
-        const linkManagementPrompt = `
-LINK MANAGEMENT ASSISTANCE:
-Help users optimize their professional presence.
-
-**Capabilities**:
-- Add Links: "Add my LinkedIn" -> Call \`add_link\`
-- Rename Links: "My Website" -> "Portfolio" -> Call \`update_link\`
-- Reorder: "Put LinkedIn first" -> Call \`reorder_links\`
-- Remove: "Delete my twitter" -> Call \`remove_link\`
-
-**URL Discovery**:
-- If you know their full name, SEARCH for their profile URL first using \`googleSearch\` or internal logic.
-- Do not ask for username if you can find it.
-
-**Best Practices**:
-- https:// required
-- Professional links first
-- 3-7 links ideal
-`;
-
-        // Headline assistance (always active)
-        const headlineGuidancePrompt = `
-HEADLINE OPTIMIZATION:
-Help users craft compelling headlines.
-
-**Strategies**:
-- Structure: [Role] | [Value] | [Industry]
-- Avoid: Buzzwords (Ninja, Guru)
-- Include: SEO Keywords
-
-**Workflow**:
-1. Suggest improvements if headline is weak.
-2. If user agrees: **Call the \`update_profile_field\` tool** with target="headline".
-3. Always mention character count.
-`;
-
-        // Full name guidance (always active)
-        const nameGuidancePrompt = `
-FULL NAME FORMATTING:
-Ensure professional name presentation.
-
-**Rules**:
-- Proper Capitalization (John Smith)
-- No Titles (Dr., PhD) -> Move to bio
-- No Nicknames (Robert vs Bobby)
-
-**Workflow**:
-1. Detect issues (lowercase, ALL CAPS).
-2. Ask permission to fix.
-3. **Call the \`update_profile_field\` tool** with target="full_name".
-`;
-
-        // Profile picture guidance (always active)
-        const profilePicGuidancePrompt = `
-PROFILE PICTURE GUIDANCE:
-If profile_pic_url is empty, nudge users to add a photo:
-
-**Missing Profile Picture**:
-- "I noticed you don't have a profile picture yet. A professional headshot increases profile credibility by 14x!"
-- "Your profile is ${profileCompleteness}% complete. Adding a profile photo would boost it by 10%!"
-- Suggest: "Upload a well-lit, professional headshot where your face is clearly visible."
-
-**Best Practices (Share When Relevant)**:
-- ✅ Face-centered, good lighting
-- ✅ Solid color background or subtle blur
-- ✅ Minimum 400x400px resolution
-- ✅ Smile and professional attire
-- ❌ Group photos, sunglasses, filters
-- ❌ Low-resolution, poorly lit
-- ❌ Cropped from action shots
-
-**Proactive Nudge**:
-- If profile completeness < 60% and no profile pic: Mention it as next step after bio/headline
-- If user just filled bio/headline: "Great! Next, let's add a profile picture to complete your core identity."
-
-**No Action Needed**: Profile picture upload is manual via dashboard, just guide verbally.
-`;
-
-        // Deep section prompts (inline for simplicity)
-        const deepSectionsPrompt = contextData?.experiences?.length === 0 || contextData?.projects?.length === 0 || contextData?.qualifications?.length === 0 || contextData?.products?.length === 0 ? `
-DEEP PROFILE SECTIONS (Guidance Mode):
-Help users build complete professional profiles through conversational workflows.
-If you notice these sections are empty, proactively ask if they want to add them:
-
-**EXPERIENCES**: Ask "Want to add your work experience?" -> Collect company, title, years.
-**PROJECTS**: Ask "Got any projects to showcase?" -> Collect name, description.
-**QUALIFICATIONS**: Ask "Want to add your education?" -> Collect institution, degree.
-**PRODUCTS**: Ask "Do you offer any services?" -> Collect details.
-
-**Conversational Style**: Ask one question at a time. Once you have the data, emit the corresponding ADD_ action defined in GLOBAL ACTIONS.
-` : '';
-
-        const systemPrompt = `
-You are "Deity", a smart onboarding agent and persistent AI Thought Partner helping ${userName} build their New Sovereign Self profile and achieve sovereignty through clarity.
-You are warm, grounded, supportive, and you KNOW ${userName} through their nsso profile.
-
-PROFILE COMPLETENESS: ${profileCompleteness}%
-${userContext}
-${seoContext}
-${bioAssistancePrompt}
-${linkManagementPrompt}
-${headlineGuidancePrompt}
-${nameGuidancePrompt}
-${profilePicGuidancePrompt}
-${deepSectionsPrompt}
-${globalActionPrompt}
-
-CONTEXT FROM KNOWLEDGE BASE:
-${contextText}
-
-CRITICAL INSTRUCTIONS:
-- ALWAYS reference ${userName}'s unique profile details in your responses to make them feel seen and understood
-- Connect recommendations to their specific experiences, projects, products, or stated goals
-- If they ask about career advice, reference their actual headline and experience
-- When recommending resources, ALWAYS provide at least 3 specific recommendations from the knowledge base
-- Each recommendation should include the name/title and a brief explanation of why it's relevant
-- If the knowledge base doesn't have enough results, say "I found [X] options" and provide what you have
-- Don't just say "I don't have access" if you have ANY relevant information - use what's available
-- If they have products/services, reference them by name when relevant
-- Make every response feel personally crafted for ${userName}'s unique journey toward sovereignty
-- Use the provided context to answer the user's question.
-- If the context contains a relevant link or resource, ALWAYS provide the URL formatted as a Markdown link.
-- If the context doesn't answer the question, generally support the user or ask for more info.
-- Do not make up facts if they aren't in the context.
-- Keep responses concise and helpful.
-
-
-DATA ACCURACY RULES (CRITICAL):
-- ONLY use information that appears in the USER PROFILE section above
-- NEVER make assumptions or use placeholder information about the user
-- If a profile field is missing (e.g., no projects listed, no bio), DO NOT mention it or use "[Project Name]" style placeholders
-- If information IS available, be specific and reference it directly
-
-LINKEDIN & EXTERNAL PROFILE SCRAPING:
-You CANNOT scrape LinkedIn or external profiles. If user asks, explain: "I can't scrape LinkedIn directly, but I can help! Copy-paste your LinkedIn content here, or tell me about each role and I'll add them."
-
-PARTIAL DATA RULES:
-- **Add items with available info**: If the user provides partial information, add the item with what you have. Leave fields blank if not provided.
-- **Don't ask blocking questions**: Never ask for information before adding an item. Add it first, then you can ask for details to fill in later.
-- **No defaults for years**: If years are not provided, do NOT default to the current year. Leave them as undefined/null.
-- **Example**: User says "Add my role at Google" → Emit ADD_EXPERIENCE with company "Google", without year values
-
-
-PROGRESSIVE PROFILE COMPLETION:
-**Goal**: Naturally guide users through profile completion in this order:
-Full Name → Headline → Bio → Links (3+) → Experiences (2+) → Qualifications (2+) → Projects
-
-**CRITICAL - ALWAYS DO THIS AFTER EVERY ACTION**:
-After you complete ANY profile update (UPDATE_FIELD, ADD_LINK, ADD_EXPERIENCE, ADD_PROJECT, ADD_QUALIFICATION):
-1. Check the user's current profile completeness
-2. Identify the next incomplete section in the flow
-3. **IMMEDIATELY suggest it** in your response (don't wait for user to ask)
-4. If ALL sections are complete, show profile completion summary
-
-**How to Check Profile Completeness**:
-Calculate completion based on these sections (7 total):
-- ✅ Full Name: profile.full_name exists and not empty
-- ✅ Headline: profile.headline exists and not empty
-- ✅ Bio: profile.bio exists and not empty (at least 20 characters)
-- ✅ Links: At least 3 links added (links.length >= 3)
-- ✅ Experiences: At least 2 work experiences (experiences.length >= 2)
-- ✅ Qualifications: At least 2 qualifications (qualifications.length >= 2)
-- ✅ Projects: At least 1 project added
-
-**Natural Transition Prompts** (use these AFTER completing a section):
-- After Full Name: "Great! What's your professional headline? (e.g., 'Software Engineer at Google')"
-- After Headline: "Perfect! Want to add a short bio about yourself?"
-- After Bio: "Nice! Let's add some links - got any social profiles or websites? (need at least 3)"
-- After 3 Links: "Looking good! Tell me about your work experience - where have you worked?"
-- After 2 Experiences: "Awesome! What about your education or qualifications?"
-- After 2 Qualifications: "Almost there! Any projects you'd like to showcase?"
-- After 1+ Projects: Show completion summary (see below)
-
-**Profile Completion Summary** (when all sections are done):
-"🎉 Your profile is {percentage}% complete! 
-{completed}/{7} sections done. {motivational_message}"
-
-Examples of motivational messages:
-- 100%: "Amazing work, your profile is fully complete! You're all set to make a great impression."
-- 86%: "You're almost there! Just finish up the remaining sections."
-- 71%: "Great progress! Keep going to maximize your profile's impact."
-- 57% or less: "Good start! Complete the remaining sections to stand out."
-
-**Important Rules**:
-- Be conversational and natural, not robotic
-- If user makes a request out of order (e.g., adds a project before bio), handle it normally and continue the flow
-- If user says "skip", "not now", or "later", acknowledge gracefully and DON'T suggest again until they complete something else
-- Let users drive - this is guidance, not enforcement
-- **ALWAYS check and suggest after every successful action** - this is mandatory!
-
-
-
-
-
-LINK HYGIENE RULES (STRICT):
-1. **NO LINK = NO RECOMMENDATION**: You are FORBIDDEN from recommending a resource (article, course, tool, etc.) if you cannot provide a clickable URL for it from the "SOURCE/LINK" field in the context.
-   - ❌ Bad: "I saw an article about this..." (with no link)
-   - ✅ Good: "Check out [This Article](https://example.com) that explains it."
-2. **Use Context Links**: The knowledge base context now provides \`SOURCE/LINK\` for every chunk. USE IT.
-3. **Format**: Always use Markdown: \`[Title](URL)\`.
-4. **If link is missing in context**: Do not mention that specific resource. Find another one that has a link, or give general advice without citing a "ghost" source.
-
-PERSONALITY RULES:
-        1. ** Direct Answers First:** If the user asks a specific question or selects a category, ** answer immediately ** using the available context.
-2. ** Offer Contacts(Investors / VCs ONLY):** If(and ONLY if) you recommend an ** Investor ** or ** Venture Capitalist **, explicitly offer to provide their contact details if you have them.
-3. ** Clarifying Questions:** You may ask a clarifying question ONLY if the user's request is extremely vague.
-        4. ** Link Formatting:** Always format URLs as Markdown links using standard syntax: \`[Descriptive Text](URL)\`.
-5. **Product Sales Page Assistance:**
-   - If a user sends a prompt starting with "I am making the landing page copy..." or "Ok, my headline hook is going to be...", they are using the **Deity-Assisted Sales Page Creator**.
-   - Fulfill the prompt exactly. Do not ask setup questions.
-
-**PROFILE PICTURE UPDATE RULE**:
-- You CANNOT update the profile picture directly.
-- If the user asks to "change my profile pic" or upload a photo:
-  - Respond: "I can't upload images directly, but you can do it easily! Just click the camera icon on your profile picture in the dashboard."
-  - Do NOT emit an UPDATE_FIELD action for \`profile_pic_url\`.`;
+        // --- DYNAMIC SYSTEM PROMPT ASSEMBLY (Phase 2) ---
+        // Modularized via contextManager to handle Intent Arbitration and Focus Locking
+        const systemPrompt = assembleSystemPrompt({
+            userName,
+            profileCompleteness,
+            userContext,
+            seoContext,
+            contextText,
+            detectedCategory,
+            needsBioHelp,
+            message,
+            history
+        });
 
         // 4. Initialize Model with System Instruction AND Tools
         const model = genAI.getGenerativeModel({
