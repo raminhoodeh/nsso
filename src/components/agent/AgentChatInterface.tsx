@@ -789,15 +789,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 )}
 
                 {/* Mobile Only: Why not just use chat gpt? (Below categories) */}
-                <div className="mt-3 block md:hidden">
-                    <p
-                        className="text-cyan-300 text-xs font-medium uppercase tracking-wider cursor-help hover:text-cyan-200 transition-colors relative text-left"
-                        onMouseEnter={() => setShowVennDiagram(true)}
-                        onMouseLeave={() => setShowVennDiagram(false)}
-                    >
-                        Why not just use chat gpt?
-                    </p>
-                </div>
+
             </div>
 
             {/* Input */}
