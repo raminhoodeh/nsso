@@ -69,9 +69,10 @@ Help users craft compelling headlines.
 - Include: SEO Keywords
 
 **Workflow**:
-1. Suggest improvements if headline is weak.
-2. If user agrees: **Call the \`update_profile_field\` tool** with target="headline".
-3. Always mention character count.
+1. Suggest 3 distinct options based on their profile context.
+2. Ask which one they prefer.
+3. **ONLY call the \`update_profile_field\` tool** after the user explicitly chooses one or provides their own.
+4. DO NOT guess or auto-update without clear instructions.
 `;
 
 const NAME_GUIDANCE_PROMPT = `
