@@ -55,6 +55,7 @@ function DashboardContent() {
     // PREFETCH STATES & REFS
     const [prefetchedFeed, setPrefetchedFeed] = useState<any>(null)
     const [prefetchedEarnings, setPrefetchedEarnings] = useState<EarningsStats | null>(null)
+    const [prefetchedMyNsso, setPrefetchedMyNsso] = useState<any>(null)
 
     // Eager Background Prefetching
     useEffect(() => {
@@ -84,7 +85,20 @@ function DashboardContent() {
             }
         }
 
-        // 3. Warm up Deity Agent (Preload Code)
+        // 3. Prefetch My nsso
+        const loadMyNsso = async () => {
+            try {
+                const res = await fetch('/api/my-nsso/connections?sort=date&order=desc')
+                if (res.ok) {
+                    const data = await res.json()
+                    setPrefetchedMyNsso(data)
+                }
+            } catch (err) {
+                console.error('Background my-nsso fetch failed', err)
+            }
+        }
+
+        // 4. Warm up Deity Agent (Preload Code)
         // This triggers the network request for the heavy chunk automatically
         const warmUpDeity = () => {
             import('@/components/agent/AgentChatInterface')
@@ -96,6 +110,7 @@ function DashboardContent() {
         const timer = setTimeout(() => {
             loadFeed()
             loadEarnings()
+            loadMyNsso()
             warmUpDeity()
         }, 1000)
 

@@ -8,11 +8,17 @@ import GlassCard from '@/components/ui/GlassCard'
 import { useToast } from '@/components/ui/Toast'
 import { useUI } from '@/components/providers/UIProvider'
 
-export default function MyNssoTab() {
+interface MyNssoTabProps {
+    initialData?: {
+        connections: MyNssoConnection[]
+    }
+}
+
+export default function MyNssoTab({ initialData }: MyNssoTabProps) {
     const { setBackgroundDimmed } = useUI()
     const { showToast } = useToast()
-    const [connections, setConnections] = useState<MyNssoConnection[]>([])
-    const [loading, setLoading] = useState(true)
+    const [connections, setConnections] = useState<MyNssoConnection[]>(initialData?.connections || [])
+    const [loading, setLoading] = useState(!initialData)
 
     // Handle background dimming
     useEffect(() => {
@@ -60,8 +66,10 @@ export default function MyNssoTab() {
     }
 
     useEffect(() => {
-        loadConnections()
-    }, [])
+        if (!initialData) {
+            loadConnections()
+        }
+    }, [initialData])
 
     // Update Connection Handler
     const handleUpdateConnection = async (id: string, data: { notes?: string, location?: string }) => {
