@@ -408,6 +408,66 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             }
             return msg;
         }));
+
+        // Trigger follow-up suggestion
+        triggerFollowUp();
+    };
+
+    const triggerFollowUp = async () => {
+        const botMessageId = (Date.now() + 100).toString();
+        setMessages(prev => [...prev, {
+            id: botMessageId,
+            role: 'model',
+            content: '',
+            timestamp: Date.now()
+        }]);
+
+        try {
+            const history = messages.map(m => ({ role: m.role, content: m.content }));
+            const { data: { session } } = await supabase.auth.getSession();
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+            const response = await fetch('/api/deity/chat', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    message: "[SYSTEM: The user just applied the suggested update. Briefly suggested the next logical step to improve their profile.]",
+                    history
+                }),
+            });
+
+            if (!response.body) throw new Error("No response body");
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedText = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                accumulatedText += decoder.decode(value);
+
+                const { message: messageText, actionsJson } = splitActionPayload(accumulatedText);
+
+                setMessages(prev => prev.map(msg =>
+                    msg.id === botMessageId ? { ...msg, content: messageText } : msg
+                ));
+
+                if (actionsJson) {
+                    try {
+                        const actionsParsed: DeityAction[] = JSON.parse(actionsJson);
+                        setMessages(prev => prev.map(msg =>
+                            msg.id === botMessageId ? { ...msg, actions: actionsParsed } : msg
+                        ));
+                    } catch (e) {
+                        console.error('Failed to parse actions in follow-up', e);
+                    }
+                    break;
+                }
+            }
+        } catch (error) {
+            console.error('Error in follow-up:', error);
+        }
     };
 
     // Handle Reject button click
