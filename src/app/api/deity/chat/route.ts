@@ -181,16 +181,11 @@ export async function POST(req: Request) {
             skipSearch = true;
             console.log(`⚡ Skipping Knowledge Search (${isSystemFollowUp ? 'System Follow-Up' : 'Profile Intent'} Detected)`);
         } else {
-            // No category specified AND no clear profile intent - use smart fallback
-            filterFiles = [
-                'nsso Database - AI TOOLS.csv',
-                'nsso Database - Courses.csv',
-                'nsso Database - Career.csv',
-                'nsso Database - Books.csv',
-                'nsso Database - Interesting Services.csv'
-            ];
+            // No category specified AND no clear profile intent - use GLOBAL SEARCH (Smart Fallback)
+            // By setting filterFiles to null, we search the ENTIRE database.
+            filterFiles = null;
             threshold = 0.45;
-            console.log('⚠️ No category/intent specified, using fallback filters:', filterFiles);
+            console.log('🌍 No category/intent specified, using GLOBAL SEARCH filters.');
         }
 
         // Fetch comprehensive user context for personalization

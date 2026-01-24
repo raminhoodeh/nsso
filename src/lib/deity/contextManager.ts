@@ -11,7 +11,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     'Courses': ['course', 'learn', 'training', 'class', 'education', 'teach', 'study'],
     'AI Tools': ['ai tool', 'automation', 'software', 'app', 'ai', 'tool'],
     'Career': ['job', 'career', 'resume', 'interview', 'cover letter', 'hire', 'work'],
-    'Start-up / Investors': ['investor', 'vc', 'funding', 'startup', 'pitch', 'accelerator', 'grant'],
+    'Start-up / Investors': ['investor', 'vc', 'funding', 'startup', 'pitch', 'accelerator', 'grant', 'capital', 'raise', 'angel', 'seed', 'pre-seed', 'deck', 'valuation'],
     'Services': ['service', 'agency', 'branding', 'marketing'],
     'Places': ['place', 'location', 'venue', 'event', 'restaurant', 'bar'],
     "Member's Clubs": ['club', 'membership', 'founder', 'network']
