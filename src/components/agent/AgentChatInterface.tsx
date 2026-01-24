@@ -584,26 +584,20 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center shadow-inner border border-white/20 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center border border-white/20 overflow-hidden backdrop-blur-sm">
                         <img
-                            src="/nsso-agent-avatar.png"
-                            alt="Agent Avatar"
-                            className="w-full h-full object-cover"
+                            src="/deity logo white.png"
+                            alt="Deity Avatar"
+                            className="w-3/5 h-3/5 object-contain opacity-90"
                         />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="text-white font-semibold text-lg tracking-tight font-['SF_Pro_Rounded']">Deity</h3>
-
                         </div>
-                        <a
-                            href="https://drive.google.com/file/d/1fRA7_xIrCw0XtOORljA3crcdSOCdFx3M/view?usp=sharing"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-cyan-300 font-medium tracking-wider uppercase hover:text-cyan-200 hover:underline transition-colors cursor-pointer"
-                        >
+                        <span className="text-xs text-white/40 font-medium tracking-wide">
                             PURPOSE PARTNER
-                        </a>
+                        </span>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -752,80 +746,83 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                                 <ChevronUp size={14} className="group-hover:-translate-y-0.5 transition-transform" />
                             )}
                         </button>
-                        <p
-                            className="hidden md:block text-white/40 text-xs font-medium uppercase tracking-wider cursor-help hover:text-cyan-400 transition-colors relative"
-                            onMouseEnter={() => setShowVennDiagram(true)}
-                            onMouseLeave={() => setShowVennDiagram(false)}
-                        >
-                            Why not just use chat gpt?
-                            {/* Venn Diagram Tooltip */}
-                            {showVennDiagram && createPortal(
-                                <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 9999 }}>
-                                    <img
-                                        src="/nsso-venn-diagram.jpg"
-                                        alt="NSSO Agent vs ChatGPT Venn Diagram"
-                                        className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl border-4 border-cyan-500/50"
-                                    />
-                                </div>,
-                                document.body
-                            )}
-                        </p>
-                    </div>
-
-                    {/* Collapsible Area */}
-                    <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isCategoriesExpanded ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                        <div className="flex flex-wrap gap-2 overflow-y-auto scrollbar-none pb-2">
-                            {Object.keys(CATEGORY_QUESTIONS).map(cat => (
-                                <button
-                                    key={cat}
-                                    onClick={() => handleCategoryClick(cat)}
-                                    className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all shadow-sm mb-1 
-                                        ${activeCategory === cat
-                                            ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
-                                            : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-cyan-500/50 hover:text-cyan-300'
-                                        }`}
-                                >
-                                    {cat}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Mobile Only: Why not just use chat gpt? (Below categories) */}
-                    <div className="mt-3 block md:hidden">
-                        <p
-                            className="text-cyan-300 text-xs font-medium uppercase tracking-wider cursor-help hover:text-cyan-200 transition-colors relative text-left"
-                            onMouseEnter={() => setShowVennDiagram(true)}
-                            onMouseLeave={() => setShowVennDiagram(false)}
-                        >
-                            Why not just use chat gpt?
-                        </p>
                     </div>
                 </div>
 
-                {/* Input */}
-                <div className="p-6 pt-2">
-                    <form
-                        onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputValue); }}
-                        className="relative group"
-                    >
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            placeholder={placeholders[placeholderIndex]}
-                            className="w-full bg-black/40 border border-white/10 rounded-full pl-5 pr-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/30 focus:bg-black/60 focus:ring-1 focus:ring-cyan-500/20 transition-all shadow-inner text-base"
-                        />
+                {/* Collapsible Area */}
+                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isCategoriesExpanded ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="flex flex-wrap gap-2 overflow-y-auto scrollbar-none pb-2">
+                        {Object.keys(CATEGORY_QUESTIONS).map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => handleCategoryClick(cat)}
+                                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all shadow-sm mb-1 
+                                        ${activeCategory === cat
+                                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
+                                        : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-cyan-500/50 hover:text-cyan-300'
+                                    }`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                        {/* NSSO Database Trigger */}
                         <button
-                            type="submit"
-                            disabled={!inputValue.trim() || isLoading}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/10 text-white rounded-full hover:bg-cyan-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
+                            className="px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-xs font-bold tracking-wide transition-all shadow-sm mb-1 hover:bg-cyan-500/20 hover:border-cyan-500"
+                            onMouseEnter={() => setShowVennDiagram(true)}
+                            onMouseLeave={() => setShowVennDiagram(false)}
                         >
-                            <Send size={18} />
+                            NSSO DATABASE
                         </button>
-                    </form>
+                    </div>
+                </div>
+
+                {/* Venn Diagram Tooltip Portal */}
+                {showVennDiagram && createPortal(
+                    <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 9999 }}>
+                        <img
+                            src="/nsso-venn-diagram.jpg"
+                            alt="NSSO Agent vs ChatGPT Venn Diagram"
+                            className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl border-4 border-cyan-500/50 block"
+                        />
+                    </div>,
+                    document.body
+                )}
+
+                {/* Mobile Only: Why not just use chat gpt? (Below categories) */}
+                <div className="mt-3 block md:hidden">
+                    <p
+                        className="text-cyan-300 text-xs font-medium uppercase tracking-wider cursor-help hover:text-cyan-200 transition-colors relative text-left"
+                        onMouseEnter={() => setShowVennDiagram(true)}
+                        onMouseLeave={() => setShowVennDiagram(false)}
+                    >
+                        Why not just use chat gpt?
+                    </p>
                 </div>
             </div>
+
+            {/* Input */}
+            <div className="p-6 pt-2">
+                <form
+                    onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputValue); }}
+                    className="relative group"
+                >
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder={placeholders[placeholderIndex]}
+                        className="w-full bg-black/40 border border-white/10 rounded-full pl-5 pr-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/30 focus:bg-black/60 focus:ring-1 focus:ring-cyan-500/20 transition-all shadow-inner text-base"
+                    />
+                    <button
+                        type="submit"
+                        disabled={!inputValue.trim() || isLoading}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/10 text-white rounded-full hover:bg-cyan-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
+                    >
+                        <Send size={18} />
+                    </button>
+                </form>
+            </div>
         </div>
+        </div >
     );
 }
