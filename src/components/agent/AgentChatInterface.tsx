@@ -586,9 +586,9 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center border border-white/20 overflow-hidden backdrop-blur-sm">
                         <img
-                            src="/deity logo white.png"
+                            src="/nsso-agent-avatar.png"
                             alt="Deity Avatar"
-                            className="w-3/5 h-3/5 object-contain opacity-90"
+                            className="w-full h-full object-cover opacity-90"
                         />
                     </div>
                     <div>
@@ -734,7 +734,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
                 {/* Categories */}
                 <div className="px-6 pt-4 pb-2 transition-all duration-300">
-                    <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between md:gap-0 mb-3">
+                    <div className="flex flex-col items-center gap-2 mb-3">
                         <button
                             onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
                             className="flex items-center gap-2 text-white/40 text-xs font-medium uppercase tracking-wider hover:text-white/70 transition-colors group"
@@ -751,7 +751,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
                 {/* Collapsible Area */}
                 <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isCategoriesExpanded ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-wrap gap-2 overflow-y-auto scrollbar-none pb-2">
+                    <div className="flex flex-wrap gap-2 justify-center overflow-y-auto scrollbar-none pb-2 px-4">
                         {Object.keys(CATEGORY_QUESTIONS).map(cat => (
                             <button
                                 key={cat}
