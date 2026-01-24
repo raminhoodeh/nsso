@@ -135,8 +135,6 @@ function calculateProfileCompleteness(contextData: any): number {
     return score;
 }
 
-import { detectCategory, assembleSystemPrompt, detectSectionIntent, CATEGORY_KEYWORDS } from '@/lib/deity/contextManager';
-import { verifyLinks } from '@/lib/deity/linkVerifier';
 
 // ... (existing imports)
 
@@ -200,68 +198,62 @@ export async function POST(req: Request) {
         if (!skipSearch) {
             console.log(`Searching with category: ${detectedCategory || 'None'}, filters:`, filterFiles);
 
-            // 1. Generate embedding for user query (moved inside check to save time)
+            // 1. Generate embedding for user query
             const embeddingResult = await embeddingModel.embedContent(message);
             const embedding = embeddingResult.embedding.values;
 
             // 1b. Generate embedding for user profile (for re-ranking)
             let profileEmbedding = null;
             if (userContext && userContext.length > 50) {
-                // ... generate profile embedding ...
+                try {
+                    const contextForEmbedding = userContext.substring(0, 1000);
+                    const profileEmbeddingResult = await embeddingModel.embedContent(contextForEmbedding);
+                    profileEmbedding = profileEmbeddingResult.embedding.values;
+                } catch (err) {
+                    console.error("⚠️ Failed to generate profile embedding:", err);
+                }
             }
 
-            // ... existing search logic ...
-        }
-
-        let documents: any[] = [];
-        const SOFT_FILTER_THRESHOLD = 0.60; // Threshold to trigger fallback
-
-        // Primary Search (Targeted)
-        const { data: primaryResults, error: primaryError } = await supabase.rpc('intelligent_search', {
-            query_embedding: embedding,
-            query_text: message,
-            profile_embedding: profileEmbedding,
-            match_threshold: threshold,
-            match_count: 8,
-            filter_files: filterFiles, // Apply category filters if any
-            candidate_count: 50
-        });
-
-        if (!primaryError && primaryResults) {
-            documents = primaryResults;
-        } else {
-            console.error("❌ Primary search failed:", primaryError);
-        }
-
-        // Soft-Filter Logic: Verification & Fallback
-        const topScore = documents.length > 0 ? documents[0].combined_score : 0;
-
-        // If we had a specific category BUT results are weak, try Global Search
-        if (detectedCategory && filterFiles && topScore < SOFT_FILTER_THRESHOLD) {
-            console.log(`⚠️ Soft-Filter Triggered: Targeted score (${topScore.toFixed(2)}) < ${SOFT_FILTER_THRESHOLD}. Switching to Global Search.`);
-
-            const { data: globalResults, error: globalError } = await supabase.rpc('intelligent_search', {
+            // Primary Search
+            const { data: primaryResults, error: primaryError } = await supabase.rpc('intelligent_search', {
                 query_embedding: embedding,
                 query_text: message,
-                profile_embedding: profileEmbedding, // Still use profile re-ranking!
-                match_threshold: 0.45, // Slightly lower threshold for global
+                profile_embedding: profileEmbedding,
+                match_threshold: threshold,
                 match_count: 8,
-                filter_files: null, // Clear filters
+                filter_files: filterFiles,
                 candidate_count: 50
             });
 
-            if (!globalError && globalResults && globalResults.length > 0) {
-                console.log(`✅ Global Search rescued the query. Found ${globalResults.length} matches.`);
-                documents = globalResults;
+            if (!primaryError && primaryResults) {
+                documents = primaryResults;
             } else {
-                console.log("⚠️ Global Search also failed to find high-relevance matches.");
+                console.error("❌ Primary search failed:", primaryError);
             }
-        } else if (documents.length > 0) {
-            console.log(`✅ Primary Search Successful. Top Score: ${topScore.toFixed(2)}`);
-        }
 
-        if (documents.length > 0) {
-            console.log('First match source:', documents[0].metadata?.source);
+            // Soft-Filter Logic
+            const topScore = documents.length > 0 ? documents[0].combined_score : 0;
+
+            if (detectedCategory && filterFiles && topScore < SOFT_FILTER_THRESHOLD) {
+                console.log(`⚠️ Soft-Filter Triggered. Switching to Global Search.`);
+                const { data: globalResults, error: globalError } = await supabase.rpc('intelligent_search', {
+                    query_embedding: embedding,
+                    query_text: message,
+                    profile_embedding: profileEmbedding,
+                    match_threshold: 0.45,
+                    match_count: 8,
+                    filter_files: null,
+                    candidate_count: 50
+                });
+
+                if (!globalError && globalResults?.length > 0) {
+                    documents = globalResults;
+                }
+            }
+
+            if (documents.length > 0) {
+                console.log('First match source:', documents[0].metadata?.source);
+            }
         }
 
         // 3. Select final documents (Intelligent Search already ranked them by relevance)
