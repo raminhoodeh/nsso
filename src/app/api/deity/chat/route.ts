@@ -419,7 +419,8 @@ export async function POST(req: Request) {
             model: "gemini-2.5-flash-preview-09-2025", // Specific version pinning
             systemInstruction: systemPrompt,
             tools: [
-                { functionDeclarations: DEITY_TOOLS }
+                { functionDeclarations: DEITY_TOOLS },
+                { googleSearch: {} } as any
             ]
         });
 
