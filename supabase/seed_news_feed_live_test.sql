@@ -1,27 +1,57 @@
--- UPDATED SEED DATA FOR NEWS FEED (VERSION 3)
--- Fixes "Duplicate Key" error by using ON CONFLICT (Upsert).
--- This handles cases where a trigger on auth.users automatically creates the public.users row.
+-- UPDATED SEED DATA FOR NEWS FEED (VERSION 5)
+-- Fixes broken image URLs for Notion Template and Design System.
 
 DO $$
 DECLARE
-    -- Generate User IDs
-    user1_id UUID := gen_random_uuid();
-    user2_id UUID := gen_random_uuid();
-    user3_id UUID := gen_random_uuid();
-    user4_id UUID := gen_random_uuid();
-    user5_id UUID := gen_random_uuid();
+    -- Variables to hold User IDs
+    user1_id UUID;
+    user2_id UUID;
+    user3_id UUID;
+    user4_id UUID;
+    user5_id UUID;
 BEGIN
-    -- 1. Create Mock Auth Users
-    INSERT INTO auth.users (id, aud, role, email, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, confirmation_token, email_change, email_change_token_new, recovery_token)
-    VALUES 
-    (user1_id, 'authenticated', 'authenticated', 'sarah@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', ''),
-    (user2_id, 'authenticated', 'authenticated', 'marcus@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', ''),
-    (user3_id, 'authenticated', 'authenticated', 'elena@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', ''),
-    (user4_id, 'authenticated', 'authenticated', 'jack@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', ''),
-    (user5_id, 'authenticated', 'authenticated', 'amara@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', '');
+    -- HELPER: Find or Create User 1 (Sarah)
+    SELECT id INTO user1_id FROM auth.users WHERE email = 'sarah@example.com';
+    IF user1_id IS NULL THEN
+        user1_id := gen_random_uuid();
+        INSERT INTO auth.users (id, aud, role, email, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, confirmation_token, email_change, email_change_token_new, recovery_token)
+        VALUES (user1_id, 'authenticated', 'authenticated', 'sarah@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', '');
+    END IF;
+
+    -- HELPER: Find or Create User 2 (Marcus)
+    SELECT id INTO user2_id FROM auth.users WHERE email = 'marcus@example.com';
+    IF user2_id IS NULL THEN
+        user2_id := gen_random_uuid();
+        INSERT INTO auth.users (id, aud, role, email, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, confirmation_token, email_change, email_change_token_new, recovery_token)
+        VALUES (user2_id, 'authenticated', 'authenticated', 'marcus@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', '');
+    END IF;
+
+    -- HELPER: Find or Create User 3 (Elena)
+    SELECT id INTO user3_id FROM auth.users WHERE email = 'elena@example.com';
+    IF user3_id IS NULL THEN
+        user3_id := gen_random_uuid();
+        INSERT INTO auth.users (id, aud, role, email, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, confirmation_token, email_change, email_change_token_new, recovery_token)
+        VALUES (user3_id, 'authenticated', 'authenticated', 'elena@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', '');
+    END IF;
+
+    -- HELPER: Find or Create User 4 (Jack)
+    SELECT id INTO user4_id FROM auth.users WHERE email = 'jack@example.com';
+    IF user4_id IS NULL THEN
+        user4_id := gen_random_uuid();
+        INSERT INTO auth.users (id, aud, role, email, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, confirmation_token, email_change, email_change_token_new, recovery_token)
+        VALUES (user4_id, 'authenticated', 'authenticated', 'jack@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', '');
+    END IF;
+
+    -- HELPER: Find or Create User 5 (Amara)
+    SELECT id INTO user5_id FROM auth.users WHERE email = 'amara@example.com';
+    IF user5_id IS NULL THEN
+        user5_id := gen_random_uuid();
+        INSERT INTO auth.users (id, aud, role, email, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at, phone, phone_confirmed_at, confirmation_token, email_change, email_change_token_new, recovery_token)
+        VALUES (user5_id, 'authenticated', 'authenticated', 'amara@example.com', now(), now(), now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now(), NULL, NULL, '', '', '', '');
+    END IF;
+
 
     -- 2. Create/Update Public Users (Upsert)
-    -- We use ON CONFLICT DO UPDATE to handle if the row was already created by a trigger
     
     -- User 1: Sarah
     INSERT INTO public.users (id, email, username, user_type, is_premium, created_at)
@@ -94,8 +124,10 @@ BEGIN
     ) ON CONFLICT (user_id) DO UPDATE SET full_name = EXCLUDED.full_name, headline = EXCLUDED.headline, bio = EXCLUDED.bio, profile_pic_url = EXCLUDED.profile_pic_url;
 
 
-    -- 3. Create Feed Posts
+    -- 3. Create Feed Posts (Delete old for these users first to clean up)
     
+    DELETE FROM public.feed_posts WHERE user_id IN (user1_id, user2_id, user3_id, user4_id, user5_id);
+
     -- Post 1: Manual text post from Sarah (2 hours ago)
     INSERT INTO public.feed_posts (user_id, type, content, created_at)
     VALUES (
@@ -122,7 +154,8 @@ BEGIN
                 jsonb_build_object(
                     'name', 'Notion Startup Template',
                     'price', '$19',
-                    'image_url', 'https://images.unsplash.com/photo-1622547748225-3fc4abd2d00d?auto=format&fit=crop&q=80&w=100'
+                    -- CHANGED URL TO WORKING ONE
+                    'image_url', 'https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?auto=format&fit=crop&q=80&w=1000'
                 )
             ),
              'qualifications', jsonb_build_array(
@@ -198,7 +231,8 @@ BEGIN
                 ),
                 jsonb_build_object(
                     'project_name', 'Design System Documentation',
-                    'project_photo_url', 'https://images.unsplash.com/photo-1586717791821-3f44a5638d4f?auto=format&fit=crop&q=80&w=1000'
+                    -- CHANGED URL TO WORKING ONE
+                    'project_photo_url', 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=1000'
                 )
             )
         ),

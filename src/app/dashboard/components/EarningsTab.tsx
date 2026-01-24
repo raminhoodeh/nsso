@@ -92,8 +92,8 @@ export default function EarningsTab() {
 
     return (
         <div className="space-y-6">
-            <GlassCard className="p-6 lg:p-8">
-                <h2 className="text-2xl font-bold text-white mb-12 pt-2 lg:mb-8 lg:pt-0">Referral & Payout Management</h2>
+            <GlassCard className="p-6 lg:p-8 relative pt-[48px]">
+                <h2 className="text-2xl font-bold text-white mb-12 lg:mb-8">Referral & Payout Management</h2>
 
                 {/* Section 1: Referral Identity */}
                 <div className="mb-10 pb-10 border-b border-white/10">

@@ -62,9 +62,9 @@ export default function FeedTab() {
 
     return (
         <div className="space-y-6">
-            <GlassCard className="p-6 lg:p-8">
+            <GlassCard className="p-6 lg:p-8 relative pt-[48px]">
                 {/* Header */}
-                <div className="text-left space-y-2 mb-8 pt-2">
+                <div className="text-left space-y-2 mb-8">
                     <h2 className="text-3xl font-bold text-white">News Feed</h2>
                     <p className="text-white/60">
                         A positive space for professional growth and updates.
