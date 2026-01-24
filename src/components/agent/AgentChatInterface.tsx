@@ -202,7 +202,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 // It's a markdown link
                 elements.push(
                     <a
-                        key={i}
+                        key={`link-${i}`}
                         href={mdMatch[2]}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -218,7 +218,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     if (subPart.match(/^https?:\/\//)) {
                         elements.push(
                             <a
-                                key={`${i}-${j}`}
+                                key={`url-${i}-${j}`}
                                 href={subPart}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -228,7 +228,20 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                             </a>
                         );
                     } else {
-                        elements.push(subPart);
+                        // Check for bold text: **text**
+                        const boldParts = subPart.split(/(\*\*[^*]+\*\*)/g);
+                        boldParts.forEach((boldPart, k) => {
+                            const boldMatch = boldPart.match(/^\*\*([^*]+)\*\*$/);
+                            if (boldMatch) {
+                                elements.push(
+                                    <strong key={`bold-${i}-${j}-${k}`} className="font-bold text-white">
+                                        {boldMatch[1]}
+                                    </strong>
+                                );
+                            } else if (boldPart) {
+                                elements.push(<span key={`text-${i}-${j}-${k}`}>{boldPart}</span>);
+                            }
+                        });
                     }
                 });
             }
