@@ -410,10 +410,14 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
         }));
 
         // Trigger follow-up suggestion
-        triggerFollowUp();
+        triggerFollowUp(action);
     };
 
-    const triggerFollowUp = async () => {
+    const triggerFollowUp = async (action?: DeityAction) => {
+        const actionDesc = action
+            ? (action.action === 'UPDATE_FIELD' && action.target ? action.target : 'profile')
+            : 'profile';
+
         const botMessageId = (Date.now() + 100).toString();
         setMessages(prev => [...prev, {
             id: botMessageId,
@@ -432,7 +436,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    message: "[SYSTEM: The user just applied the suggested update. Briefly suggested the next logical step to improve their profile.]",
+                    message: `[SYSTEM: The user successfully updated their ${actionDesc}. 1. Acknowledge this confirming it's done. 2. Suggest ONE other specific profile section to improve next (e.g. Bio, Experience, Projects). Do NOT suggest updating ${actionDesc} again.]`,
                     history
                 }),
             });
