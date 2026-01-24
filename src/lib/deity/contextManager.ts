@@ -144,6 +144,10 @@ export function detectSectionIntent(message: string, history: any[] = []): {
     hasEducationIntent: boolean;
     hasProductIntent: boolean;
 } {
+    const lowerMsg = message.toLowerCase();
+    const lastHistoryMsg = history.length > 0 ? history[history.length - 1]?.content?.toLowerCase() || '' : '';
+    const combinedContext = lowerMsg + ' ' + lastHistoryMsg; // Check immediate context
+
     // Check for explicit "Knowledge" signals (questions, seeking info)
     const isKnowledgeQuery = /^(what|how|where|who|why|can you|list|show|find|search|recommend|suggest|tell me)/i.test(lowerMsg) ||
         lowerMsg.includes('?') ||
