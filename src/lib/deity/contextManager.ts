@@ -284,10 +284,14 @@ IMPORTANT RULES:
     // We only inject these if there is semantic intent OR if we are in "General Chat" (no category) to allow discovery.
     // If user is in "Investors" mode, we don't randomly suggest adding Projects unless they asked.
 
-    if (intents.hasExperienceIntent || !detectedCategory) sectionPrompts += experienceGuidancePrompt + '\n';
-    if (intents.hasProjectIntent || !detectedCategory) sectionPrompts += projectsGuidancePrompt + '\n';
-    if (intents.hasEducationIntent || !detectedCategory) sectionPrompts += qualificationsGuidancePrompt + '\n';
-    if (intents.hasProductIntent || !detectedCategory) sectionPrompts += productsGuidancePrompt + '\n';
+    // CRITICAL FIX: If we are in Knowledge Mode, we SUPPRESS all section prompts to keep the model focused.
+    // Unless the user explicitly asked to "update" something (which would make isKnowledgeTurn false).
+    if (!isKnowledgeTurn) {
+        if (intents.hasExperienceIntent || !detectedCategory) sectionPrompts += experienceGuidancePrompt + '\n';
+        if (intents.hasProjectIntent || !detectedCategory) sectionPrompts += projectsGuidancePrompt + '\n';
+        if (intents.hasEducationIntent || !detectedCategory) sectionPrompts += qualificationsGuidancePrompt + '\n';
+        if (intents.hasProductIntent || !detectedCategory) sectionPrompts += productsGuidancePrompt + '\n';
+    }
 
     // Link Management - Sticky or triggered
     // If user says "linkedin.com/in/me", we want to help.
