@@ -186,9 +186,82 @@ export async function POST(req: Request) {
             console.log('⚠️ No category/intent specified, using fallback filters:', filterFiles);
         }
 
-        // ... (User Context Fetching is fine, keep it parallelizable later if needed)
+        // Fetch comprehensive user context for personalization
+        let userContext = `USER PROFILE:\n(User is not logged in or no profile found. Treat as a new visitor.)`;
+        let userName = "User";
+        let userId: string | null = null;
+        let profileCompleteness = 0;
+        let needsBioHelp = false;
+        let contextData: any = null;
+        let seoContext = '';
 
-        // ... (Inside the function body)
+        const authHeader = req.headers.get('authorization');
+        if (authHeader) {
+            try {
+                const token = authHeader.replace('Bearer ', '');
+                const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+                if (user && !authError) {
+                    userId = user.id;
+                    console.log("✅ Authenticated User ID:", userId);
+
+                    const { data: fetchedContext, error: contextError } = await supabase.rpc('get_agent_context', {
+                        user_uuid: userId
+                    });
+
+                    if (contextError) {
+                        console.error("❌ Error fetching user context:", contextError);
+                    } else if (fetchedContext) {
+                        contextData = fetchedContext;
+
+                        // Calculate profile completeness
+                        profileCompleteness = calculateProfileCompleteness(contextData);
+                        needsBioHelp = !contextData.profile?.bio || contextData.profile.bio.trim() === '';
+
+                        // Calculate SEO Scores
+                        if (contextData.profile) {
+                            const bioSeo = contextData.profile.bio ? analyzeSEO(contextData.profile.bio, 'bio') : null;
+                            const headlineSeo = contextData.profile.headline ? analyzeSEO(contextData.profile.headline, 'headline') : null;
+
+                            if ((bioSeo && bioSeo.score < 8) || (headlineSeo && headlineSeo.score < 8)) {
+                                seoContext = `\nSEO & QUALITY ANALYSIS (For your reference to help the user):\n`;
+                                if (bioSeo) seoContext += `- Bio Score: ${bioSeo.score}/10. Suggestions: ${bioSeo.suggestions.join(' ')}\n`;
+                                if (headlineSeo) seoContext += `- Headline Score: ${headlineSeo.score}/10. Suggestions: ${headlineSeo.suggestions.join(' ')}\n`;
+                            }
+                        }
+
+                        // Determine user name
+                        if (contextData.profile) {
+                            userName = contextData.profile.full_name || contextData.profile.username || "User";
+                        }
+
+                        // Build rich context string
+                        const ctx = [];
+
+                        if (contextData.profile) {
+                            ctx.push(`USER PROFILE:`);
+                            ctx.push(`Name: ${contextData.profile.full_name}`);
+                            if (contextData.profile.headline) ctx.push(`Headline: ${contextData.profile.headline}`);
+                            if (contextData.profile.bio) ctx.push(`Bio: ${contextData.profile.bio}`);
+                        }
+
+                        // Shortened Context Building to save lines
+                        if (contextData.experiences?.length > 0) ctx.push(`\nEXPERIENCE:\n` + contextData.experiences.map((e: any) => `- ${e.job_title} at ${e.company_name} (${e.start_year} - ${e.end_year || 'Present'})`).join('\n'));
+                        if (contextData.projects?.length > 0) ctx.push(`\nPROJECTS:\n` + contextData.projects.map((p: any) => `- ${p.project_name}: ${p.description}`).join('\n'));
+                        if (contextData.products?.length > 0) ctx.push(`\nPRODUCTS:\n` + contextData.products.map((p: any) => `- ${p.name}: ${p.description}`).join('\n'));
+                        if (contextData.qualifications?.length > 0) ctx.push(`\nQUALIFICATIONS:\n` + contextData.qualifications.map((q: any) => `- ${q.qualification_name} from ${q.institution}`).join('\n'));
+                        if (contextData.links?.length > 0) ctx.push(`\nLINKS:\n` + contextData.links.map((l: any) => `- ${l.link_name}: ${l.link_url}`).join('\n'));
+                        if (contextData.contacts?.length > 0) ctx.push(`\nCONTACTS:\n` + contextData.contacts.map((c: any) => `- ${c.method}: ${c.value}`).join('\n'));
+
+                        if (ctx.length > 0) {
+                            userContext = ctx.join('\n');
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Error in user context fetching block:', err);
+            }
+        }
 
         // 3. Search for relevant context (Intelligent Retrieval)
         let documents: any[] = [];
