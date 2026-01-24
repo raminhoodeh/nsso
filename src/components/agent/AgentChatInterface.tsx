@@ -517,30 +517,12 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 ));
 
                 // If actions detected, parse and attach to message
-                if (actionsJson) {
-                    try {
-                        const actionsParsed: DeityAction[] = JSON.parse(actionsJson);
-                        console.log('✨ Deity actions parsed:', actionsParsed);
+                if (actionsParsed.length > 0) {
+                    const actionsWithStatus = actionsParsed;
 
-                        // If fast mode, mark as applied immediately to prevent UI glitch
-                        const actionsWithStatus = fastMode
-                            ? actionsParsed.map(a => ({ ...a, status: 'applied' as const }))
-                            : actionsParsed;
-
-                        setMessages(prev => prev.map(msg =>
-                            msg.id === botMessageId ? { ...msg, actions: actionsWithStatus } : msg
-                        ));
-
-                        // Auto-execute if fast mode enabled
-                        if (fastMode && actionsParsed.length > 0) {
-                            for (const action of actionsParsed) {
-                                await executeAction(action);
-                            }
-                        }
-                    } catch (e) {
-                        console.error('Failed to parse actions:', e);
-                    }
-                    break; // Stop reading after actions extracted
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === botMessageId ? { ...msg, actions: actionsWithStatus } : msg
+                    ));
                 }
             }
 
