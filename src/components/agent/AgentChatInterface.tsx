@@ -436,7 +436,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    message: `[SYSTEM: The user successfully updated their ${actionDesc}. 1. Acknowledge this confirming it's done. 2. Suggest ONE other specific profile section to improve next (e.g. Bio, Experience, Projects). Do NOT suggest updating ${actionDesc} again.]`,
+                    message: `[SYSTEM: The user successfully updated their ${actionDesc}. 1. Acknowledge this confirming it's done. 2. Suggest ONE other specific profile section to improve next (e.g. Bio, Experience, Projects). Do NOT suggest updating ${actionDesc} again. Use text ONLY. Do NOT use any tools.]`,
                     history
                 }),
             });
