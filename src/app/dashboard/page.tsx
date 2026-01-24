@@ -20,6 +20,7 @@ import { useProfile } from '@/components/providers/ProfileProvider'
 import type { User, Profile, Link, Contact, ContactMethod } from '@/lib/types'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { Sparkles } from 'lucide-react'
+import type { EarningsStats } from '@/lib/earnings'
 
 const CONTACT_METHODS: ContactMethod[] = ['Email', 'WhatsApp', 'Phone', 'Telegram', 'Location', 'Other']
 
@@ -50,6 +51,41 @@ function DashboardContent() {
     const [showPolarModal, setShowPolarModal] = useState(false)
     const [showDowngradeModal, setShowDowngradeModal] = useState(false)
     const [urlCopied, setUrlCopied] = useState(false)
+
+    // PREFETCH STATES & REFS
+    const [prefetchedFeed, setPrefetchedFeed] = useState<any>(null)
+    const [prefetchedEarnings, setPrefetchedEarnings] = useState<EarningsStats | null>(null)
+    const feedPromiseRef = useRef<Promise<any> | null>(null)
+    const earningsPromiseRef = useRef<Promise<any> | null>(null)
+
+    // PREFETCH HANDLERS
+    const prefetchFeed = () => {
+        if (prefetchedFeed || feedPromiseRef.current) return
+
+        console.log('Prefetching Feed...')
+        const p = fetch('/api/news-feed')
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) setPrefetchedFeed(data)
+            })
+            .catch(err => console.error('Feed prefetch failed', err))
+
+        feedPromiseRef.current = p
+    }
+
+    const prefetchEarnings = () => {
+        if (prefetchedEarnings || earningsPromiseRef.current) return
+
+        console.log('Prefetching Earnings...')
+        const p = fetch('/api/earnings/stats')
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) setPrefetchedEarnings(data)
+            })
+            .catch(err => console.error('Earnings prefetch failed', err))
+
+        earningsPromiseRef.current = p
+    }
 
     // Cropper State
     const [cropperOpen, setCropperOpen] = useState(false)
@@ -518,6 +554,7 @@ function DashboardContent() {
                         {/* News Feed Tab */}
                         <button
                             onClick={() => setActiveTab('feed')}
+                            onMouseEnter={prefetchFeed}
                             className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
                         >
                             {activeTab === 'feed' && (
@@ -574,6 +611,7 @@ function DashboardContent() {
                         {/* Earnings Tab */}
                         <button
                             onClick={() => setActiveTab('earnings')}
+                            onMouseEnter={prefetchEarnings}
                             className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
                         >
                             {activeTab === 'earnings' && (
@@ -1007,10 +1045,10 @@ function DashboardContent() {
                 )}
 
                 {/* News Feed Tab Content */}
-                {activeTab === 'feed' && <FeedTab />}
+                {activeTab === 'feed' && <FeedTab initialData={prefetchedFeed} />}
 
-                {/* Earnings Tab Content - No wrapper */}
-                {activeTab === 'earnings' && <EarningsTab />}
+                {/* Earnings Tab Content */}
+                {activeTab === 'earnings' && <EarningsTab initialData={prefetchedEarnings || undefined} />}
                 {activeTab === 'my-nsso' && <MyNssoTab />}
 
 

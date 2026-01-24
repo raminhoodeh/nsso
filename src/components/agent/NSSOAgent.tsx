@@ -2,13 +2,27 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Bot } from 'lucide-react';
-import AgentChatInterface from './AgentChatInterface';
+import { Bot, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 
 import { useUI } from '@/components/providers/UIProvider';
 
+// Lazy load the heavy chat interface
+const AgentChatInterface = dynamic(
+    () => import('./AgentChatInterface'),
+    {
+        loading: () => (
+            <div className="h-full w-full flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
+            </div>
+        ),
+        ssr: false
+    }
+);
+
 export default function NSSOAgent() {
     const [isOpen, setIsOpen] = useState(false);
+    const [hasOpened, setHasOpened] = useState(false);
     const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
     const { isBackgroundDimmed } = useUI();
 
@@ -19,6 +33,7 @@ export default function NSSOAgent() {
                 setInitialMessage(event.detail.initialMessage);
             }
             setIsOpen(true);
+            setHasOpened(true);
         };
 
         window.addEventListener('open-deity-chat', handleOpenChat as EventListener);
@@ -32,12 +47,17 @@ export default function NSSOAgent() {
         window.open('/deity', '_blank');
     };
 
+    const handleOpen = () => {
+        setIsOpen(true);
+        setHasOpened(true);
+    }
+
     return (
         <>
             {/* Persistent Entry Point (Pill) */}
             {!isOpen && (
                 <button
-                    onClick={() => setIsOpen(true)}
+                    onClick={handleOpen}
                     className="fixed bottom-6 right-6 z-[6000] group hover:scale-105 transition-all duration-500"
                 >
                     {/* Outer Glow/Blur Layer */}
@@ -103,12 +123,14 @@ export default function NSSOAgent() {
                     {/* Glow Effect - Adjusted for Sidebar */}
                     <div className="hidden md:block absolute inset-y-0 -left-20 w-40 bg-gradient-to-r from-cyan-500/10 to-transparent blur-3xl -z-10 pointer-events-none opacity-50"></div>
 
-                    <AgentChatInterface
-                        isFullScreen={false}
-                        onClose={() => setIsOpen(false)}
-                        onMaximize={undefined} // Disable maximize on desktop as it's already full height
-                        initialMessage={initialMessage}
-                    />
+                    {hasOpened && (
+                        <AgentChatInterface
+                            isFullScreen={false}
+                            onClose={() => setIsOpen(false)}
+                            onMaximize={undefined} // Disable maximize on desktop as it's already full height
+                            initialMessage={initialMessage}
+                        />
+                    )}
                 </div>
             </>
         </>

@@ -6,13 +6,18 @@ import { useToast } from '@/components/ui/Toast'
 import { formatEarnings, type EarningsStats } from '@/lib/earnings'
 import { useUI } from '@/components/providers/UIProvider'
 import ReferralsTable from './ReferralsTable'
+import Skeleton from '@/components/ui/Skeleton'
 
-export default function EarningsTab() {
+interface EarningsTabProps {
+    initialData?: EarningsStats
+}
+
+export default function EarningsTab({ initialData }: EarningsTabProps) {
     const { showToast } = useToast()
     const { setBackgroundDimmed } = useUI()
-    const [loading, setLoading] = useState(true)
-    const [stats, setStats] = useState<EarningsStats | null>(null)
-    const [paypalSlug, setPaypalSlug] = useState('')
+    const [loading, setLoading] = useState(!initialData)
+    const [stats, setStats] = useState<EarningsStats | null>(initialData || null)
+    const [paypalSlug, setPaypalSlug] = useState(initialData?.paypalMeSlug || '')
     const [updating, setUpdating] = useState(false)
 
     // Handle background dimming when component mounts
@@ -23,6 +28,8 @@ export default function EarningsTab() {
 
     // Load earnings stats
     useEffect(() => {
+        if (initialData) return
+
         const loadStats = async () => {
             try {
                 const response = await fetch('/api/earnings/stats')
@@ -42,9 +49,8 @@ export default function EarningsTab() {
         }
 
         loadStats()
-    }, [])
+    }, [initialData])
 
-    // Copy referral code to clipboard
     const copyReferralCode = () => {
         if (stats?.referralCode) {
             navigator.clipboard.writeText(stats.referralCode)
@@ -52,7 +58,6 @@ export default function EarningsTab() {
         }
     }
 
-    // Update PayPal slug
     const updatePayPal = async () => {
         setUpdating(true)
         try {
@@ -64,7 +69,6 @@ export default function EarningsTab() {
 
             if (response.ok) {
                 showToast('PayPal information updated!', 'success')
-                // Refresh stats
                 const statsResponse = await fetch('/api/earnings/stats')
                 if (statsResponse.ok) {
                     const data = await statsResponse.json()
@@ -84,8 +88,23 @@ export default function EarningsTab() {
 
     if (loading) {
         return (
-            <GlassCard className="p-6 lg:p-8">
-                <div className="text-white text-center py-12">Loading earnings data...</div>
+            <GlassCard className="p-6 lg:p-8 relative pt-[48px]">
+                <Skeleton className="h-8 w-64 mb-12 bg-white/10" />
+
+                {/* Section 1 Skeleton */}
+                <div className="mb-10 pb-10 border-b border-white/10">
+                    <Skeleton className="h-6 w-48 mb-4 bg-white/10" />
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <Skeleton className="h-[200px] w-full rounded-2xl bg-white/5" />
+                        <div className="space-y-4">
+                            <Skeleton className="h-20 w-full rounded-xl bg-white/5" />
+                            <div className="flex gap-3">
+                                <Skeleton className="h-10 w-32 rounded-full bg-white/5" />
+                                <Skeleton className="h-10 w-32 rounded-full bg-white/5" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </GlassCard>
         )
     }

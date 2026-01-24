@@ -102,13 +102,18 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                             variant="ghost"
                             size="sm"
                             onClick={() => router.push('/dashboard')}
+                            onMouseEnter={() => router.prefetch('/dashboard')}
                         >
                             ← Back to Dashboard
                         </GlassButton>
                     </div>
                 ) : (
                     // DEFAULT MODE: Logo
-                    <Link href={user ? "/?view=home" : "/"} className="flex items-center">
+                    <Link
+                        href={user ? "/?view=home" : "/"}
+                        className="flex items-center"
+                        onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
+                    >
                         <Image
                             src="/assets/nsso-logo.png"
                             alt="nsso"
@@ -126,7 +131,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {isOwnerMode ? (
                         <div className="flex items-center gap-4">
                             {isAdmin && (
-                                <Link href="/admin">
+                                <Link href="/admin" onMouseEnter={() => router.prefetch('/admin')}>
                                     <GlassButton variant="ghost" size="sm">
                                         Admin
                                     </GlassButton>
@@ -152,7 +157,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         showAuthButtons && (
                             <>
                                 {isAdmin && (
-                                    <Link href="/admin">
+                                    <Link href="/admin" onMouseEnter={() => router.prefetch('/admin')}>
                                         <GlassButton variant="ghost" size="sm">
                                             Admin
                                         </GlassButton>
@@ -162,6 +167,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                     <div className="flex items-center gap-4">
                                         <button
                                             onClick={() => router.push('/preview')}
+                                            onMouseEnter={() => router.prefetch('/preview')}
                                             className="px-4 py-2 rounded-full text-sm font-medium text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
                                             style={{
                                                 backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
@@ -182,7 +188,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                         </GlassButton>
 
                                         {pathname !== '/dashboard' && (
-                                            <Link href="/dashboard">
+                                            <Link href="/dashboard" onMouseEnter={() => router.prefetch('/dashboard')}>
                                                 <GlassButton variant="ghost" size="sm">
                                                     Dashboard
                                                 </GlassButton>
@@ -198,7 +204,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                         </GlassButton>
                                     </div>
                                 ) : (
-                                    <Link href="/sign-in">
+                                    <Link href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}>
                                         <GlassButton variant="secondary" size="sm">
                                             SIGN IN / SIGN UP
                                         </GlassButton>
