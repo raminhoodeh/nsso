@@ -146,6 +146,9 @@ export async function POST(req: Request) {
             return new Response('Message is required', { status: 400 });
         }
 
+        // Optimization: Fast-track system follow-ups (Skip Search)
+        const isSystemFollowUp = message.startsWith('[SYSTEM:');
+
         // Auto-detect category
         const detectedCategory = category || detectCategory(message);
 
@@ -168,11 +171,12 @@ export async function POST(req: Request) {
             // User specified a category or auto-detected knowledge topic - use its filters
             filterFiles = CATEGORY_CONFIG[detectedCategory].files;
             threshold = CATEGORY_CONFIG[detectedCategory].threshold;
-        } else if (isProfileIntent) {
+        } else if (isProfileIntent || isSystemFollowUp) {
             // User is managing profile and no explicit knowledge category found.
+            // OR System follow-up message (no search needed).
             // SKIP SEARCH to save time and resources.
             skipSearch = true;
-            console.log('⚡ Skipping Knowledge Search (Profile Intent Detected)');
+            console.log(`⚡ Skipping Knowledge Search (${isSystemFollowUp ? 'System Follow-Up' : 'Profile Intent'} Detected)`);
         } else {
             // No category specified AND no clear profile intent - use smart fallback
             filterFiles = [
