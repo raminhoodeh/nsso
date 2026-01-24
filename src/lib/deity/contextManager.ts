@@ -234,8 +234,9 @@ YOUR PRIMARY GOAL: Help ${userName} craft a compelling bio that:
 
 IMPORTANT RULES:
 - Ask conversational questions to extract their professional story (e.g., "What do you do? Who do you help?")
-- Use their responses to craft a bio suggestion using the UPDATE_FIELD action
-- After bio is filled, suggest next steps (e.g., "Want help with your headline next?")
+- Use their responses to draft a bio suggestion in TEXT first.
+- Ask "Shall I save this to your profile?"
+- ONLY if they say "Yes", use the UPDATE_FIELD action.
 ` : '';
 
     // Section Prompts (Dynamic Injection based on Intent or Explicit Request)

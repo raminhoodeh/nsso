@@ -768,12 +768,14 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 {messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col gap-2">
                         <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] rounded-2xl p-4 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap ${msg.role === 'user'
-                                ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-tr-none'
-                                : 'bg-white/10 text-white/90 rounded-tl-none border border-white/5'
-                                }`}>
-                                {renderMessage(msg.content)}
-                            </div>
+                            {msg.content.trim() && (
+                                <div className={`max-w-[85%] rounded-2xl p-4 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap ${msg.role === 'user'
+                                    ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-tr-none'
+                                    : 'bg-white/10 text-white/90 rounded-tl-none border border-white/5'
+                                    }`}>
+                                    {renderMessage(msg.content)}
+                                </div>
+                            )}
                         </div>
 
                         {/* Action Buttons (only for model messages with actions) */}

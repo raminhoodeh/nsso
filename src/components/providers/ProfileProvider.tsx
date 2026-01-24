@@ -237,7 +237,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 .eq('user_id', user.id)
 
             if (error) {
-                console.error('❌ ProfileProvider: Error updating profile:', error)
+                console.error('❌ ProfileProvider: Error updating profile:', error, { field, value })
                 // Revert on error
                 undo()
                 return false
