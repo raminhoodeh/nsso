@@ -20,7 +20,7 @@ export default function GlassFilter() {
                 <feTurbulence
                     type="turbulence"
                     baseFrequency="0.008"
-                    numOctaves={1}
+                    numOctaves={2}
                     result="noise"
                 />
                 <feDisplacementMap
