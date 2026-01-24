@@ -32,7 +32,7 @@ interface ProfileContextType {
     loading: boolean
 
     // Update Methods (automatically save to Supabase)
-    updateField: (field: keyof Profile, value: string, persist?: boolean) => Promise<void>
+    updateField: (field: keyof Profile, value: string, persist?: boolean) => Promise<boolean>
     addLink: (name: string, url: string) => Promise<boolean>
     updateLink: (id: string, field: 'link_name' | 'link_url', value: string) => Promise<boolean>
     removeLink: (id: string) => Promise<boolean>
@@ -216,11 +216,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Update profile field
-    const updateField = async (field: keyof Profile, value: string, persist: boolean = true) => {
+    const updateField = async (field: keyof Profile, value: string, persist: boolean = true): Promise<boolean> => {
         // console.log('🔄 ProfileProvider: updateField called', { field, value, persist });
         if (!user?.id) {
             console.error('❌ ProfileProvider: No user ID found');
-            return;
+            return false;
         }
 
         // Save current state to history
@@ -240,10 +240,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 console.error('❌ ProfileProvider: Error updating profile:', error)
                 // Revert on error
                 undo()
+                return false
             } else {
                 console.log('✅ ProfileProvider: Profile persisted successfully');
+                return true
             }
         }
+        return true
     }
 
     // Helper to ensure URL has protocol

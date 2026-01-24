@@ -272,13 +272,18 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const executeAction = async (action: DeityAction) => {
         console.log('⚡ executing action:', action);
         if (action.action === 'UPDATE_FIELD' && action.target && action.value) {
-            console.log('📝 Update Field:', action.target, action.value);
+            const targetField = action.target.toLowerCase() as keyof typeof profile;
+            console.log('📝 Update Field:', targetField, action.value);
             setIsTyping(true);
 
             if (fastMode) {
                 // Fast mode: instant update
-                await updateField(action.target as keyof typeof profile, action.value, true);
-                showToast(`Deity updated your ${action.target}`, 'success');
+                const success = await updateField(targetField, action.value, true);
+                if (success) {
+                    showToast(`Deity updated your ${action.target}`, 'success');
+                } else {
+                    showToast(`Failed to update ${action.target}`, 'error');
+                }
                 setIsTyping(false);
             } else {
                 // Review mode: word-by-word animation
@@ -288,14 +293,18 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 for (const word of words) {
                     currentText += (currentText ? ' ' : '') + word;
                     // Update local state only (persist=false)
-                    await updateField(action.target as keyof typeof profile, currentText, false);
+                    await updateField(targetField, currentText, false);
                     await new Promise(resolve => setTimeout(resolve, 50)); // 50ms per word
                 }
 
                 // Final save to DB (persist=true)
-                await updateField(action.target as keyof typeof profile, action.value, true);
+                const success = await updateField(targetField, action.value, true);
 
-                showToast(`Deity updated your ${action.target}`, 'success');
+                if (success) {
+                    showToast(`Deity updated your ${action.target}`, 'success');
+                } else {
+                    showToast(`Failed to update ${action.target}`, 'error');
+                }
                 setIsTyping(false);
             }
         } else if (action.action === 'ADD_LINK' && action.name && action.url) {
