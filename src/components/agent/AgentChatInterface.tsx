@@ -593,7 +593,11 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-white font-semibold text-lg tracking-tight font-['SF_Pro_Rounded']">Deity</h3>
+                            <img
+                                src="/deity logo white.png"
+                                alt="Deity"
+                                className="h-6 w-auto object-contain"
+                            />
                         </div>
                         <span className="text-xs text-white/40 font-medium tracking-wide">
                             PURPOSE PARTNER
