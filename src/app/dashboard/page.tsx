@@ -141,23 +141,22 @@ function DashboardContent() {
                 return
             }
 
-            // Load user
-            const { data: userData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', authUser.id)
-                .single()
+            // Parallel Fetching
+            const [
+                { data: userData },
+                { data: profileData },
+                { data: linksData },
+                { data: contactsData }
+            ] = await Promise.all([
+                supabase.from('users').select('*').eq('id', authUser.id).single(),
+                supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
+                supabase.from('links').select('*').eq('user_id', authUser.id).order('created_at', { ascending: true }),
+                supabase.from('contacts').select('*').eq('user_id', authUser.id).order('created_at', { ascending: true })
+            ])
 
             if (userData) {
                 setCustomDomain(userData.username || '')
             }
-
-            // Load profile
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('user_id', authUser.id)
-                .single()
 
             if (profileData) {
                 setFullName(profileData.full_name || '')
@@ -166,23 +165,9 @@ function DashboardContent() {
                 setProfilePicUrl(profileData.profile_pic_url || '')
             }
 
-            // Load links (local state for Phase 1)
-            const { data: linksData } = await supabase
-                .from('links')
-                .select('*')
-                .eq('user_id', authUser.id)
-                .order('created_at', { ascending: true })
-
             if (linksData) {
                 setLinks(linksData)
             }
-
-            // Load contacts (local state for Phase 1)
-            const { data: contactsData } = await supabase
-                .from('contacts')
-                .select('*')
-                .eq('user_id', authUser.id)
-                .order('created_at', { ascending: true })
 
             if (contactsData) {
                 setContacts(contactsData)
