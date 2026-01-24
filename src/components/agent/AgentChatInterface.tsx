@@ -577,12 +577,20 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 ));
 
                 // If actions detected, parse and attach to message
-                if (actionsParsed.length > 0) {
-                    const actionsWithStatus = actionsParsed;
+                if (actionsJson) {
+                    try {
+                        const actionsParsed: DeityAction[] = JSON.parse(actionsJson);
+                        console.log('✨ Deity actions parsed:', actionsParsed);
 
-                    setMessages(prev => prev.map(msg =>
-                        msg.id === botMessageId ? { ...msg, actions: actionsWithStatus } : msg
-                    ));
+                        const actionsWithStatus = actionsParsed;
+
+                        setMessages(prev => prev.map(msg =>
+                            msg.id === botMessageId ? { ...msg, actions: actionsWithStatus } : msg
+                        ));
+                    } catch (e) {
+                        console.error('Failed to parse actions:', e);
+                    }
+                    break; // Stop reading after actions extracted
                 }
             }
 
