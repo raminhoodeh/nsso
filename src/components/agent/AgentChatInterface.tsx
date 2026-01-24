@@ -665,7 +665,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                                 <img
                                     src="/deity logo white.png"
                                     alt="Deity"
-                                    className="h-12 w-auto object-contain translate-y-1"
+                                    className="h-8 w-auto object-contain translate-y-1"
                                 />
                             </a>
                         </div>

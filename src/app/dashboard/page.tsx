@@ -29,7 +29,7 @@ function DashboardContent() {
     const supabase = createClient()
     const { showToast } = useToast()
     const { user, refreshUser } = useUser()
-    const { profile, updateField, profileCompleteness, loading: profileLoading } = useProfile()
+    const { profile, updateField, profileCompleteness, loading: profileLoading, links: providerLinks } = useProfile()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Local UI state (will be migrated to ProfileProvider in Phase 2)
@@ -149,7 +149,10 @@ function DashboardContent() {
             if (profile.headline !== headline && !saving) setHeadline(profile.headline || '')
             if (profile.full_name !== fullName && !saving) setFullName(profile.full_name || '')
         }
-    }, [profile?.bio, profile?.headline, profile?.full_name])
+        if (providerLinks) {
+            setLinks(providerLinks);
+        }
+    }, [profile?.bio, profile?.headline, profile?.full_name, providerLinks])
 
     // Proactive Nudge: Suggest asking Deity if profile is incomplete
     useEffect(() => {
