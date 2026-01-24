@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     children: ReactNode
-    variant?: 'primary' | 'secondary' | 'ghost'
+    variant?: 'primary' | 'secondary' | 'ghost' | 'shiny'
     size?: 'sm' | 'md' | 'lg'
     fullWidth?: boolean
 }
@@ -43,6 +43,18 @@ export default function GlassButton({
         ghost: `
       bg-transparent
       hover:bg-[rgba(255,255,255,0.1)]
+    `,
+        shiny: `
+      bg-[rgba(255,255,255,0.2)]
+      border border-white/50
+      shadow-[0_0_15px_rgba(255,255,255,0.3)]
+      hover:bg-[rgba(255,255,255,0.3)]
+      hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]
+      active:scale-[0.98]
+      backdrop-blur-md
+      text-white
+      font-bold
+      tracking-wide
     `
     }
 
@@ -73,6 +85,13 @@ export default function GlassButton({
                 className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(94,94,94,0.18)] mix-blend-color-dodge"
                 aria-hidden="true"
             />
+
+            {/* Shimmer Effect for Shiny Variant */}
+            {variant === 'shiny' && (
+                <div className="absolute inset-0 z-0 overflow-hidden rounded-[inherit] pointer-events-none">
+                    <div className="absolute top-0 left-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                </div>
+            )}
 
             {/* Content */}
             <span className="relative z-10 flex items-center justify-center gap-2">

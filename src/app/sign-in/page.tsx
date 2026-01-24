@@ -156,7 +156,7 @@ export default function SignInPage() {
 
                     <GlassButton
                         type="submit"
-                        variant="primary"
+                        variant="shiny"
                         fullWidth
                         disabled={loading}
                     >

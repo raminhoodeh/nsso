@@ -497,6 +497,15 @@ body {
   animation: pulse 2s ease-in-out infinite;
 }
 
+@keyframes shimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s infinite;
+}
+
 /* ============================================
    Toast Notifications
    ============================================ */

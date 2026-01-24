@@ -171,7 +171,7 @@ function SignUpForm() {
 
                     <GlassButton
                         type="submit"
-                        variant="primary"
+                        variant="shiny"
                         fullWidth
                         disabled={loading}
                     >
