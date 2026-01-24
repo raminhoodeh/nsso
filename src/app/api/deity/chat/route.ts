@@ -416,7 +416,7 @@ export async function POST(req: Request) {
 
         // 4. Initialize Model with System Instruction AND Tools
         const model = genAI.getGenerativeModel({
-            model: "gemini-flash-latest", // Verified available via ListModels
+            model: "gemini-2.5-flash-preview-09-2025", // Specific version pinning
             systemInstruction: systemPrompt,
             tools: [
                 { functionDeclarations: DEITY_TOOLS },
