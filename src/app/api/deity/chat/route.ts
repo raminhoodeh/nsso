@@ -140,7 +140,7 @@ function calculateProfileCompleteness(contextData: any): number {
 
 export async function POST(req: Request) {
     try {
-        const { message, category, history } = await req.json();
+        const { message, category, history, disableTools } = await req.json();
 
         if (!message) {
             return new Response('Message is required', { status: 400 });
@@ -390,7 +390,7 @@ export async function POST(req: Request) {
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash-preview-09-2025", // Reverting to stable pinned version
             systemInstruction: systemPrompt,
-            tools: [
+            tools: disableTools ? [] : [
                 { functionDeclarations: DEITY_TOOLS }
             ]
         });
