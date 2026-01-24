@@ -110,9 +110,11 @@ function DashboardContent() {
         const timer = setTimeout(() => {
             loadFeed()
             loadEarnings()
-            loadMyNsso()
             warmUpDeity()
         }, 1000)
+
+        // Start MyNsso fetch immediately (user priority)
+        loadMyNsso()
 
         return () => clearTimeout(timer)
     }, [])
