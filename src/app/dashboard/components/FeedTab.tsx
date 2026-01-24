@@ -4,12 +4,21 @@ import { useState, useEffect } from 'react'
 import CreatePostCard from './CreatePostCard'
 import FeedItemCard from './FeedItemCard'
 import { useUser } from '@/components/providers/UserProvider'
+import GlassCard from '@/components/ui/GlassCard'
+import { useUI } from '@/components/providers/UIProvider'
 
 export default function FeedTab() {
     const { user } = useUser()
+    const { setBackgroundDimmed } = useUI()
     const [posts, setPosts] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [cursor, setCursor] = useState<string | null>(null)
+
+    // Handle background dimming
+    useEffect(() => {
+        setBackgroundDimmed(true)
+        return () => setBackgroundDimmed(false)
+    }, [setBackgroundDimmed])
 
     const fetchFeed = async (nextCursor?: string) => {
         try {
@@ -43,53 +52,59 @@ export default function FeedTab() {
 
     if (loading) {
         return (
-            <div className="flex justify-center pt-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-white text-xl text-center">
+                    Loading your professional world...
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6 pb-20">
-            {/* Header / Intro */}
-            <div className="text-center mb-8 pt-8">
-                <h2 className="text-3xl font-bold text-white mb-2">News Feed</h2>
-                <p className="text-white/60">
-                    A positive space for professional growth and updates.
-                </p>
-            </div>
+        <div className="space-y-6">
+            <GlassCard className="p-6 lg:p-8">
+                {/* Header */}
+                <div className="text-left space-y-2 mb-8 pt-2">
+                    <h2 className="text-3xl font-bold text-white">News Feed</h2>
+                    <p className="text-white/60">
+                        A positive space for professional growth and updates.
+                    </p>
+                </div>
 
-            {/* Create Post */}
-            <CreatePostCard onPostCreated={handleNewPost} />
+                {/* Create Post */}
+                <div className="mb-8">
+                    <CreatePostCard onPostCreated={handleNewPost} />
+                </div>
 
-            {/* Feed Items */}
-            <div className="space-y-4">
-                {posts.map(post => (
-                    <FeedItemCard
-                        key={post.id}
-                        post={post}
-                        currentUserId={user?.id}
-                    />
-                ))}
+                {/* Feed Items */}
+                <div className="space-y-6">
+                    {posts.map(post => (
+                        <FeedItemCard
+                            key={post.id}
+                            post={post}
+                            currentUserId={user?.id}
+                        />
+                    ))}
 
-                {posts.length === 0 && (
-                    <div className="text-center py-10 text-white/40">
-                        <p>No updates yet. Be the first to post!</p>
+                    {posts.length === 0 && (
+                        <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                            <p className="text-white/40">No updates yet. Be the first to share something!</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Load More */}
+                {cursor && (
+                    <div className="flex justify-center pt-8">
+                        <button
+                            onClick={() => fetchFeed(cursor)}
+                            className="px-6 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all text-sm"
+                        >
+                            Load more activity
+                        </button>
                     </div>
                 )}
-            </div>
-
-            {/* Load More */}
-            {cursor && (
-                <div className="flex justify-center pt-4">
-                    <button
-                        onClick={() => fetchFeed(cursor)}
-                        className="text-white/60 hover:text-white text-sm"
-                    >
-                        Load more activity
-                    </button>
-                </div>
-            )}
+            </GlassCard>
         </div>
     )
 }

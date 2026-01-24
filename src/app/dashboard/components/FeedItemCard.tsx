@@ -6,7 +6,7 @@ import { useState } from 'react'
 interface FeedPost {
     id: string
     user_id: string
-    type: 'manual' | 'qualification_added' | 'project_added' | 'product_added'
+    type: 'manual' | 'qualification_added' | 'project_added' | 'product_added' | 'daily_summary'
     content: string
     reference_id?: string
     metadata: any
@@ -110,6 +110,67 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
 
     const renderContent = () => {
         switch (post.type) {
+            case 'daily_summary':
+                return (
+                    <div className="mt-2 space-y-3">
+                        {post.metadata.qualifications?.length > 0 && (
+                            <div className="bg-white/5 rounded-xl border border-white/10 p-3">
+                                <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">Qualifications</h5>
+                                <div className="space-y-2">
+                                    {post.metadata.qualifications.map((q: any, i: number) => (
+                                        <div key={i} className="flex gap-2 items-start">
+                                            <div className="w-1 h-1 rounded-full bg-blue-400 mt-2 shrink-0" />
+                                            <div>
+                                                <div className="text-white font-medium text-sm">{q.qualification_name}</div>
+                                                <div className="text-white/40 text-xs">{q.institution}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {post.metadata.projects?.length > 0 && (
+                            <div className="bg-white/5 rounded-xl border border-white/10 p-3">
+                                <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">New Projects</h5>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {post.metadata.projects.map((p: any, i: number) => (
+                                        <div key={i} className="bg-black/20 rounded-lg p-2">
+                                            {p.project_photo_url && (
+                                                <div className="relative w-full h-20 rounded-md overflow-hidden mb-2">
+                                                    <Image src={p.project_photo_url} alt={p.project_name} fill className="object-cover" />
+                                                </div>
+                                            )}
+                                            <div className="text-white font-medium text-sm truncate">{p.project_name}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {post.metadata.products?.length > 0 && (
+                            <div className="bg-white/5 rounded-xl border border-white/10 p-3">
+                                <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">New Products</h5>
+                                <div className="space-y-2">
+                                    {post.metadata.products.map((p: any, i: number) => (
+                                        <div key={i} className="flex gap-3 items-center bg-black/20 p-2 rounded-lg">
+                                            {p.image_url && (
+                                                <div className="relative w-10 h-10 rounded overflow-hidden shrink-0">
+                                                    <Image src={p.image_url} alt={p.name} fill className="object-cover" />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <div className="text-white font-medium text-sm">{p.name}</div>
+                                                <div className="text-emerald-400 text-xs">{p.price}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )
+
             case 'qualification_added':
                 return (
                     <div className="mt-2 p-4 bg-white/5 rounded-xl border border-white/10">
