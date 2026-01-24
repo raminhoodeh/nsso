@@ -269,7 +269,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     }
 
     // Action execution with word-by-word animation
-    const executeAction = async (action: DeityAction) => {
+    const executeAction = async (action: DeityAction): Promise<boolean> => {
         console.log('⚡ executing action:', action);
         if (action.action === 'UPDATE_FIELD' && action.target && action.value) {
             const targetField = action.target.toLowerCase() as keyof typeof profile;
@@ -285,6 +285,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     showToast(`Failed to update ${action.target}`, 'error');
                 }
                 setIsTyping(false);
+                return success;
             } else {
                 // Review mode: word-by-word animation
                 const words = action.value.split(' ');
@@ -306,6 +307,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     showToast(`Failed to update ${action.target}`, 'error');
                 }
                 setIsTyping(false);
+                return success;
             }
         } else if (action.action === 'ADD_LINK' && action.name && action.url) {
             const success = await addLink(action.name, action.url);
@@ -314,6 +316,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 showToast(`Failed to add link`, 'error');
             }
+            return success;
         } else if (action.action === 'UPDATE_LINK' && action.linkId) {
             let success = false;
             if (action.name) {
@@ -324,6 +327,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 if (success) showToast(`Updated link URL`, 'success');
             }
             if (!success) showToast(`Failed to update link`, 'error');
+            return success;
         } else if (action.action === 'REMOVE_LINK' && action.id) {
             const success = await removeLink(action.id);
             if (success) {
@@ -331,6 +335,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 showToast(`Failed to remove link`, 'error');
             }
+            return success;
         } else if (action.action === 'REORDER_LINKS' && action.order) {
             const success = await reorderLinks(action.order);
             if (success) {
@@ -338,6 +343,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 showToast(`Failed to reorder links`, 'error');
             }
+            return success;
         } else if (action.action === 'ADD_EXPERIENCE') {
             const company = action.company || (action as any).company_name;
             const title = action.title || (action as any).job_title;
@@ -360,9 +366,11 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                 } else {
                     showToast(`Failed to add experience (Check logs)`, 'error');
                 }
+                return success;
             } else {
                 console.warn('⚠️ ADD_EXPERIENCE missing required fields:', action);
                 showToast(`Failed to add experience: Missing info`, 'error');
+                return false;
             }
 
         } else if (action.action === 'ADD_PROJECT' && action.project_name) { // Relaxed check: description not strictly required here if provider handles it
@@ -376,6 +384,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 showToast(`Failed to add project`, 'error');
             }
+            return success;
         } else if (action.action === 'ADD_QUALIFICATION' && action.institution && action.degree) {
             const year = parseYear(action.year) || new Date().getFullYear();
 
@@ -389,6 +398,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 showToast(`Failed to add qualification`, 'error');
             }
+            return success;
         } else if (action.action === 'ADD_PRODUCT' && action.product_name) { // Relaxed check
             const success = await addProduct(
                 action.product_name,
@@ -401,7 +411,9 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             } else {
                 showToast(`Failed to add product`, 'error');
             }
+            return success;
         }
+        return false;
     };
 
 
@@ -606,10 +618,24 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
 
                         // Auto-execute if fast mode enabled
                         if (fastMode && actionsParsed.length > 0) {
-                            for (const action of actionsParsed) {
-                                await executeAction(action);
+                            for (let i = 0; i < actionsParsed.length; i++) {
+                                const action = actionsParsed[i];
+                                const success = await executeAction(action);
+
+                                if (!success) {
+                                    // Rollback status to rejected/failed in UI
+                                    setMessages(prev => prev.map(msg =>
+                                        msg.id === botMessageId && msg.actions ? {
+                                            ...msg,
+                                            actions: msg.actions.map((a, idx) =>
+                                                idx === i ? { ...a, status: 'rejected' as const } : a
+                                            )
+                                        } : msg
+                                    ));
+                                }
                             }
-                            // Trigger follow-up after auto-execution
+                            // Trigger follow-up after auto-execution (regardless of success/fail to keep flow moving? 
+                            // Or mainly if success. Let's trigger anyway as it might have partial success)
                             triggerFollowUp();
                         }
                     } catch (e) {
