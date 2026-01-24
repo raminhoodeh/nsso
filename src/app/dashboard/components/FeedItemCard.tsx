@@ -2,6 +2,7 @@ import { formatDistanceToNow } from 'date-fns'
 import Image from 'next/image'
 import GlassCard from '@/components/ui/GlassCard'
 import { useState } from 'react'
+import Link from 'next/link'
 
 interface FeedPost {
     id: string
@@ -13,8 +14,11 @@ interface FeedPost {
     created_at: string
     user: {
         username: string
-        full_name: string
-        avatar_url?: string
+        // Profile data from join
+        profile: {
+            full_name: string | null
+            profile_pic_url: string | null
+        } | null
     }
     likes: { user_id: string }[]
     _count: {
@@ -38,6 +42,11 @@ interface Comment {
     }
 }
 
+function toTitleCase(str: string) {
+    if (!str) return ''
+    return str.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+}
+
 export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps) {
     const [liked, setLiked] = useState(post.likes.some(l => l.user_id === currentUserId))
     const [likeCount, setLikeCount] = useState(post.likes.length)
@@ -49,6 +58,22 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
     const [commentCount, setCommentCount] = useState(post._count?.feed_comments || 0)
     const [newComment, setNewComment] = useState('')
     const [submittingComment, setSubmittingComment] = useState(false)
+
+    // Helper data extraction
+    // Handle array or object just in case PostgREST behaves differently
+    // user:users!user_id (...) -> profile:profiles(...)
+    // If it's a 1-to-1 relationship, likely an object. If not, array.
+    // Creating a safe getter.
+    const getProfile = () => {
+        const p = post.user.profile as any
+        if (Array.isArray(p)) return p[0]
+        return p
+    }
+    const profileData = getProfile()
+
+    const displayName = profileData?.full_name ? toTitleCase(profileData.full_name) : post.user.username
+    const avatar = profileData?.profile_pic_url
+    const username = post.user.username
 
     const handleLike = async () => {
         // Optimistic update
@@ -240,27 +265,35 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
         <GlassCard className="p-4 hover:bg-white/5 transition-colors">
             {/* Header */}
             <div className="flex items-center gap-3 mb-3">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white/10">
-                    {post.user.avatar_url ? (
+                <Link href={`/${username}`} className="relative w-10 h-10 rounded-full overflow-hidden bg-white/10 shrink-0 hover:ring-2 ring-white/20 transition-all">
+                    {avatar ? (
                         <Image
-                            src={post.user.avatar_url}
-                            alt={post.user.username}
+                            src={avatar}
+                            alt={username}
                             fill
                             className="object-cover"
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/40 text-sm font-bold">
-                            {post.user.full_name?.charAt(0) || post.user.username?.charAt(0)}
+                            {displayName.charAt(0)}
                         </div>
                     )}
-                </div>
+                </Link>
                 <div>
-                    <h3 className="text-white font-medium text-sm">
-                        {post.user.full_name || post.user.username}
-                    </h3>
-                    <p className="text-white/40 text-xs">
-                        {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                    </p>
+                    <Link href={`/${username}`} className="block group">
+                        <h3 className="text-white font-medium text-sm group-hover:underline decoration-white/50">
+                            {displayName}
+                        </h3>
+                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link href={`/${username}`} className="text-white/40 text-xs hover:text-white/60 hover:underline">
+                            @{username}
+                        </Link>
+                        <span className="text-white/20 text-xs">•</span>
+                        <p className="text-white/40 text-xs">
+                            {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                        </p>
+                    </div>
                 </div>
             </div>
 

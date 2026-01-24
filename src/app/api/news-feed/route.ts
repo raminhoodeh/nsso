@@ -19,7 +19,10 @@ export async function GET(request: Request) {
             .from('feed_posts')
             .select(`
                 *,
-                user:users!user_id(username, full_name, avatar_url),
+                user:users!user_id(
+                    username, 
+                    profile:profiles(full_name, profile_pic_url)
+                ),
                 likes:feed_likes(user_id),
                 _count:feed_comments(count)
             `)

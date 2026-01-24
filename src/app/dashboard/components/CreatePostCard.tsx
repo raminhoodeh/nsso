@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import GlassCard from '@/components/ui/GlassCard'
 import { useUser } from '@/components/providers/UserProvider'
+import { useProfile } from '@/components/providers/ProfileProvider'
 import Image from 'next/image'
 
 interface CreatePostCardProps {
@@ -11,9 +12,13 @@ interface CreatePostCardProps {
 
 export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
     const { user } = useUser()
+    const { profile } = useProfile()
     const [content, setContent] = useState('')
     const [isExpanded, setIsExpanded] = useState(false)
     const [loading, setLoading] = useState(false)
+
+    const avatarUrl = profile?.profile_pic_url || user?.avatar_url
+    const displayName = profile?.full_name || user?.full_name || user?.username
 
     const handleSubmit = async () => {
         if (!content.trim()) return
@@ -29,15 +34,15 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
             if (response.ok) {
                 const newPost = await response.json()
                 // The API returns the post, but might be missing relations (user)
-                // We fake the user relation for optimistic UI if needed, or better, 
-                // expected the API to return fully hydrated object or re-fetch.
-                // For simplicity, let's assume parent will refetch or we construct a basic object
+                // We fake the user relation for optimistic UI if needed
                 onPostCreated({
                     ...newPost,
                     user: {
                         username: user?.username,
-                        full_name: user?.full_name,
-                        avatar_url: user?.avatar_url
+                        profile: {
+                            full_name: displayName,
+                            profile_pic_url: avatarUrl
+                        }
                     },
                     likes: [],
                     _count: { feed_comments: 0 }
@@ -58,16 +63,16 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
         <GlassCard className="p-4 mb-6">
             <div className="flex gap-4">
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
-                    {user.avatar_url ? (
+                    {avatarUrl ? (
                         <Image
-                            src={user.avatar_url}
+                            src={avatarUrl}
                             alt={user.username || ''}
                             fill
                             className="object-cover"
                         />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/40 text-sm font-bold">
-                            {user.full_name?.charAt(0) || user.username?.charAt(0)}
+                            {displayName?.charAt(0)}
                         </div>
                     )}
                 </div>
