@@ -5,7 +5,7 @@ import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
 import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
 import { DEITY_TOOLS } from '@/lib/deity/tools';
-import { detectCategory, assembleSystemPrompt, detectSectionIntent, CATEGORY_KEYWORDS } from '@/lib/deity/contextManager';
+import { detectCategory, assembleSystemPrompt, detectSectionIntent, detectKnowledgeIntent, CATEGORY_KEYWORDS } from '@/lib/deity/contextManager';
 import { verifyLinks } from '@/lib/deity/linkVerifier';
 
 // Initialize Supabase logic
@@ -154,13 +154,17 @@ export async function POST(req: Request) {
 
         // Detect User Intent (Profile vs Knowledge)
         const intents = detectSectionIntent(message, history || []);
-        const isProfileIntent = intents.hasLinkIntent || intents.hasExperienceIntent ||
+        const isKnowledgeIntent = detectKnowledgeIntent(message);
+
+        // Profile Intent is now only valid if it's NOT a strong knowledge query
+        const isProfileIntent = !isKnowledgeIntent && (
+            intents.hasLinkIntent || intents.hasExperienceIntent ||
             intents.hasProjectIntent || intents.hasEducationIntent ||
             intents.hasProductIntent ||
             message.toLowerCase().includes('bio') ||
             message.toLowerCase().includes('headline') ||
-            message.toLowerCase().includes('help me') ||
-            message.toLowerCase().includes('update');
+            message.toLowerCase().includes('update')
+        );
 
         // Determine file filters and threshold based on category
         let filterFiles: string[] | null = null;
@@ -172,9 +176,8 @@ export async function POST(req: Request) {
             filterFiles = CATEGORY_CONFIG[detectedCategory].files;
             threshold = CATEGORY_CONFIG[detectedCategory].threshold;
         } else if (isProfileIntent || isSystemFollowUp) {
-            // User is managing profile and no explicit knowledge category found.
-            // OR System follow-up message (no search needed).
-            // SKIP SEARCH to save time and resources.
+            // User is explicitly managing profile (and not asking a question)
+            // OR System follow-up message.
             skipSearch = true;
             console.log(`⚡ Skipping Knowledge Search (${isSystemFollowUp ? 'System Follow-Up' : 'Profile Intent'} Detected)`);
         } else {

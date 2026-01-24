@@ -144,22 +144,56 @@ export function detectSectionIntent(message: string, history: any[] = []): {
     hasEducationIntent: boolean;
     hasProductIntent: boolean;
 } {
-    const lowerMsg = message.toLowerCase();
-    const lastHistoryMsg = history.length > 0 ? history[history.length - 1]?.content?.toLowerCase() || '' : '';
-    const combinedContext = lowerMsg + ' ' + lastHistoryMsg; // Check immediate context
+    // Check for explicit "Knowledge" signals (questions, seeking info)
+    const isKnowledgeQuery = /^(what|how|where|who|why|can you|list|show|find|search|recommend|suggest|tell me)/i.test(lowerMsg) ||
+        lowerMsg.includes('?') ||
+        lowerMsg.includes('example') ||
+        lowerMsg.includes('info') ||
+        lowerMsg.includes('help me find');
+
+    // Helper: strict match for ambiguous terms
+    // Returns true if keyword is present AND (is adjacent to 'my', 'add', 'update' OR is NOT a knowledge query)
+    const hasActionContext = (keyword: string) => {
+        if (!lowerMsg.includes(keyword)) return false;
+        if (isKnowledgeQuery) return false; // If asking "How do I designing...", it's knowledge, not action.
+        return true;
+    };
 
     return {
         hasLinkIntent: combinedContext.includes('link') || combinedContext.includes('url') || combinedContext.includes('website') || combinedContext.includes('social') || combinedContext.includes('portfolio') || combinedContext.includes('github') || combinedContext.includes('twitter') || combinedContext.includes('linkedin') || combinedContext.includes('instagram'),
 
-        hasExperienceIntent: combinedContext.includes('work') || combinedContext.includes('job') || combinedContext.includes('role') || combinedContext.includes('company') || combinedContext.includes('experience') || combinedContext.includes('career'),
+        // Experience: "work at", "my job", "add experience"
+        hasExperienceIntent: (combinedContext.includes('work') && !isKnowledgeQuery) ||
+            combinedContext.includes('job title') ||
+            (combinedContext.includes('experience') && !isKnowledgeQuery) ||
+            combinedContext.includes('my career'),
 
-        // Broadened Semantic Triggers for Projects - Phase 2
-        hasProjectIntent: combinedContext.includes('project') || combinedContext.includes('built') || combinedContext.includes('created') || combinedContext.includes('app') || combinedContext.includes('showcase') || combinedContext.includes('portfolio') || combinedContext.includes('design') || combinedContext.includes('developed') || combinedContext.includes('case study'),
+        // Projects: Stricter. "design" alone is NOT enough if asking a question.
+        hasProjectIntent: combinedContext.includes('project') ||
+            combinedContext.includes('built') ||
+            combinedContext.includes('created') ||
+            (combinedContext.includes('app') && !isKnowledgeQuery) ||
+            (combinedContext.includes('portfolio') && !isKnowledgeQuery) ||
+            (combinedContext.includes('design') && !isKnowledgeQuery) ||
+            (combinedContext.includes('case study') && !isKnowledgeQuery),
 
         hasEducationIntent: combinedContext.includes('degree') || combinedContext.includes('university') || combinedContext.includes('school') || combinedContext.includes('college') || combinedContext.includes('certificate') || combinedContext.includes('qualification') || combinedContext.includes('graduated') || combinedContext.includes('study'),
 
         hasProductIntent: combinedContext.includes('product') || combinedContext.includes('service') || combinedContext.includes('offer') || combinedContext.includes('sell') || combinedContext.includes('coaching') || combinedContext.includes('price') || combinedContext.includes('store')
     };
+}
+
+/**
+ * Detects if the user is asking a Knowledge Question (searching the database)
+ */
+export function detectKnowledgeIntent(message: string): boolean {
+    const lower = message.toLowerCase();
+    const knowledgeTriggers = [
+        'how to', 'what is', 'what are', 'list', 'recommend', 'suggest', 'find', 'search',
+        'tell me about', 'give me', 'show me', 'examples', 'best', 'top', 'vs', 'versus',
+        'ideas', 'inspiration', 'help with', 'learn', 'guide'
+    ];
+    return knowledgeTriggers.some(t => lower.includes(t)) || lower.includes('?');
 }
 
 /**
