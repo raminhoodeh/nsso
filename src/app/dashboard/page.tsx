@@ -55,37 +55,52 @@ function DashboardContent() {
     // PREFETCH STATES & REFS
     const [prefetchedFeed, setPrefetchedFeed] = useState<any>(null)
     const [prefetchedEarnings, setPrefetchedEarnings] = useState<EarningsStats | null>(null)
-    const feedPromiseRef = useRef<Promise<any> | null>(null)
-    const earningsPromiseRef = useRef<Promise<any> | null>(null)
 
-    // PREFETCH HANDLERS
-    const prefetchFeed = () => {
-        if (prefetchedFeed || feedPromiseRef.current) return
+    // Eager Background Prefetching
+    useEffect(() => {
+        // 1. Prefetch News Feed
+        const loadFeed = async () => {
+            try {
+                const res = await fetch('/api/news-feed')
+                if (res.ok) {
+                    const data = await res.json()
+                    setPrefetchedFeed(data)
+                }
+            } catch (err) {
+                console.error('Background feed fetch failed', err)
+            }
+        }
 
-        console.log('Prefetching Feed...')
-        const p = fetch('/api/news-feed')
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (data) setPrefetchedFeed(data)
-            })
-            .catch(err => console.error('Feed prefetch failed', err))
+        // 2. Prefetch Earnings
+        const loadEarnings = async () => {
+            try {
+                const res = await fetch('/api/earnings/stats')
+                if (res.ok) {
+                    const data = await res.json()
+                    setPrefetchedEarnings(data)
+                }
+            } catch (err) {
+                console.error('Background earnings fetch failed', err)
+            }
+        }
 
-        feedPromiseRef.current = p
-    }
+        // 3. Warm up Deity Agent (Preload Code)
+        // This triggers the network request for the heavy chunk automatically
+        const warmUpDeity = () => {
+            import('@/components/agent/AgentChatInterface')
+                .then(() => console.log('Deity Agent Ready (Warmed Up)'))
+                .catch(err => console.error('Deity Warmup Failed', err))
+        }
 
-    const prefetchEarnings = () => {
-        if (prefetchedEarnings || earningsPromiseRef.current) return
+        // Execute after a small delay to prioritize main content paint
+        const timer = setTimeout(() => {
+            loadFeed()
+            loadEarnings()
+            warmUpDeity()
+        }, 1000)
 
-        console.log('Prefetching Earnings...')
-        const p = fetch('/api/earnings/stats')
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (data) setPrefetchedEarnings(data)
-            })
-            .catch(err => console.error('Earnings prefetch failed', err))
-
-        earningsPromiseRef.current = p
-    }
+        return () => clearTimeout(timer)
+    }, [])
 
     // Cropper State
     const [cropperOpen, setCropperOpen] = useState(false)
@@ -554,7 +569,6 @@ function DashboardContent() {
                         {/* News Feed Tab */}
                         <button
                             onClick={() => setActiveTab('feed')}
-                            onMouseEnter={prefetchFeed}
                             className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
                         >
                             {activeTab === 'feed' && (
@@ -611,7 +625,6 @@ function DashboardContent() {
                         {/* Earnings Tab */}
                         <button
                             onClick={() => setActiveTab('earnings')}
-                            onMouseEnter={prefetchEarnings}
                             className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
                         >
                             {activeTab === 'earnings' && (
