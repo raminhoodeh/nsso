@@ -593,15 +593,19 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <img
-                                src="/deity logo white.png"
-                                alt="Deity"
-                                className="h-6 w-auto object-contain"
-                            />
+                            <a
+                                href="https://drive.google.com/file/d/1fRA7_xIrCw0XtOORljA3crcdSOCdFx3M/view?usp=sharing"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:opacity-80 transition-opacity"
+                            >
+                                <img
+                                    src="/deity logo white.png"
+                                    alt="Deity"
+                                    className="h-6 w-auto object-contain"
+                                />
+                            </a>
                         </div>
-                        <span className="text-xs text-white/40 font-medium tracking-wide">
-                            PURPOSE PARTNER
-                        </span>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
