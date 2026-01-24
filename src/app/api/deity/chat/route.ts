@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
 import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
+import { DEITY_TOOLS } from '@/lib/deity/tools';
 
 // Initialize Supabase logic
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -355,201 +356,76 @@ IMPORTANT RULES:
 
         // Global Action Definitions (Always Active)
         const globalActionPrompt = `
-AVAILABLE ACTIONS (Use these to update the user's profile):
-When you have collected enough information or the user approves a suggestion, output a structured JSON command block.
+AVAILABLE ACTIONS:
+You have access to a set of native tools/functions to update the user's profile.
+Use these tools whenever you have gathered enough information to perform an action.
 
-1. **Update Profile Fields (Bio, Headline, Name)**:
-   \`\`\`json
-   {
-     "action": "UPDATE_FIELD",
-     "target": "bio", // or "headline", "full_name"
-     "value": "The new content here",
-     "reasoning": "Optional explanation"
-   }
-   \`\`\`
+AVAILABLE TOOLS:
+- update_profile_field(target, value): Update Bio, Headline, Name.
+- add_experience(company, title, startYear...): Add work history.
+- add_project(name, description...): Add portfolio items.
+- add_qualification(institution...): Add education.
+- add_product(name, description...): Add items to store.
+- add_link / update_link / remove_link / reorder_links: Manage links.
+- suggest_wording(target, improved...): Offer suggestions.
 
-2. **Add Profile Items (Experience, Projects, etc.)**:
-   Use these when the user wants to add new entries, OR when you are helping them build their profile from scratch.
-   
-   **Experience**:
-   \`\`\`json
-   {
-     "action": "ADD_EXPERIENCE",
-     "company": "Company Name",
-     "title": "Job Title",
-     "startYear": "2020",
-     "endYear": "2023", // or null for Present
-     "description": "Brief description of role"
-   }
-   \`\`\`
-
-   **Projects**:
-   \`\`\`json
-   {
-     "action": "ADD_PROJECT",
-     "project_name": "Project Name",
-     "project_description": "Description",
-     "project_url": "https://..." // optional
-   }
-   \`\`\`
-
-   **Qualifications**:
-   \`\`\`json
-   {
-     "action": "ADD_QUALIFICATION",
-     "institution": "University/School",
-     "degree": "Degree/Certificate",
-     "year": "2023"
-   }
-   \`\`\`
-
-   **Products/Services**:
-   \`\`\`json
-   {
-     "action": "ADD_PRODUCT",
-     "product_name": "Service Name",
-     "product_description": "Description",
-     "price": "$100", // optional
-     "purchase_url": "https://..." // optional
-   }
-   \`\`\`
-
-3. **Suggest Wording Improvements (Review Mode)**:
-   \`\`\`json
-   {
-     "action": "SUGGEST_WORDING",
-     "target": "headline",
-     "original": "Current Headline",
-     "improved": "Better Headline",
-     "reasoning": "Improved for SEO and clarity"
-   }
-   \`\`\`
+CRITICAL INSTRUCTION:
+- DO NOT output JSON blocks (like \`\`\`json {...} \`\`\`) in your text response.
+- Instead, CALL THE FUNCTION directly using the available tools.
+- If you use a tool, you do not need to describe the JSON in text.
 `;
 
         // Link management assistance (always active)
         const linkManagementPrompt = `
 LINK MANAGEMENT ASSISTANCE:
-When users mention adding, updating, or organizing their links, help them optimize their professional presence:
+Help users optimize their professional presence.
 
-1. **Adding Links**:
-   - User says: "Add my LinkedIn" or "I'm on Twitter/GitHub/Instagram"
-   - If they provide username: Ask "What's your LinkedIn username?" 
-   - If you know their full name from profile: Search for their profile automatically
-   - You respond: "I'll find that for you!" then search and emit ADD_LINK action
-   - Action format: {action: "ADD_LINK", name: "LinkedIn", url: "https://linkedin.com/in/username"}
-   - **IMPORTANT**: You can search for profile URLs! Use the user's full name from their profile.
+**Capabilities**:
+- Add Links: "Add my LinkedIn" -> Call \`add_link\`
+- Rename Links: "My Website" -> "Portfolio" -> Call \`update_link\`
+- Reorder: "Put LinkedIn first" -> Call \`reorder_links\`
+- Remove: "Delete my twitter" -> Call \`remove_link\`
 
-2. **Renaming Links**:
-   - Detect unprofessional names: "My Website" → "Portfolio", "Twitter" → "X (Twitter)"
-   - Suggest improvements: "I noticed your link is called '[old name]'. Want me to rename it to '[better name]'?"
-   - Action format: {action: "UPDATE_LINK", linkId: "uuid", name: "Portfolio"}
+**URL Discovery**:
+- If you know their full name, SEARCH for their profile URL first using \`googleSearch\` or internal logic.
+- Do not ask for username if you can find it.
 
-3. **Reordering Links**:
-   - Best practice order: LinkedIn → GitHub → Portfolio → Social Media
-   - Suggest: "Want me to reorder your links? Professional networks should go first"
-   - Action format: {action: "REORDER_LINKS", order: ["id1", "id2", "id3"]}
-
-4. **Removing Links**:
-   - Dead platforms (MySpace, Google+, Vine) → "This platform is no longer active. Want to remove it?"
-   - Broken URLs → "I noticed this link isn't working. Should I remove it?"
-   - Action format: {action: "REMOVE_LINK", id: "uuid"}
-
-5. **Link Quality Rules**:
-   - All links must have HTTPS
-   - Detect duplicates (e.g., two LinkedIn links)
-   - Suggest consolidating (Linktree vs individual social links)
-   - Professional links first, social media last
-
-**URL DISCOVERY WORKFLOW**:
-When user says "Add my [platform]":
-1. Check if you have their full_name from profile
-2. If yes, say "I'll search for your [platform] profile!"
-3. Emit action with searched URL
-4. If search fails, ask "What's your [platform] username?"
-
-AVAILABLE LINK ACTIONS:
-- ADD_LINK: {name: string, url: string}
-- UPDATE_LINK: {linkId: string, name?: string, url?: string}
-- REMOVE_LINK: {id: string}
-- REORDER_LINKS: {order: string[]}
-
-LINK BEST PRACTICES:
-- Total links: 3-7 ideal (too many dilutes attention)
-- Name format: Proper Case ("LinkedIn" not "linkedin")
-- Order priority: Work > Portfolio > Network > Social
-- Avoid: Personal FB, inactive accounts, broken links
+**Best Practices**:
+- https:// required
+- Professional links first
+- 3-7 links ideal
 `;
 
         // Headline assistance (always active)
         const headlineGuidancePrompt = `
 HEADLINE OPTIMIZATION:
-When users mention their headline or you notice it's missing/weak, help them craft an SEO-optimized, compelling headline:
+Help users craft compelling headlines.
 
-**Format Best Practices**:
-- Keep under 120 characters (optimal for search engines and social media)
-- Structure: [Role] | [Value Proposition] | [Audience/Industry]
-- Examples:
-  ✅ "Product Designer | Building intuitive SaaS experiences for startups"
-  ✅ "AI Engineer | Helping enterprises scale machine learning infrastructure"
-  ✅ "Marketing Strategist | Driving B2B growth through content & SEO"
-  ❌ "Entrepreneur Ninja Rockstar" (too vague, buzzwords)
-  ❌ "Just a guy who loves coding" (unprofessional)
+**Strategies**:
+- Structure: [Role] | [Value] | [Industry]
+- Avoid: Buzzwords (Ninja, Guru)
+- Include: SEO Keywords
 
-**Power Words (Use Sparingly)**:
-- Action verbs: Building, Creating, Transforming, Scaling, Driving, Leading
-- Value words: Innovative, Strategic, Data-driven, Results-oriented
-- AVOID: Ninja, Rockstar, Guru, Wizard, Expert (overused clichés)
-
-**SEO Keywords**:
-- Include industry-specific terms (e.g., "B2B SaaS", "Fintech", "Healthcare AI")
-- Mention primary skill (e.g., "Product Designer" not just "Designer")
-- Add location if relevant for local discovery
-
-**Proactive Suggestions**:
-- If headline is empty: "Your headline is critical for discoverability. Want me to craft one based on your bio/experience?"
-- If headline is too short (<40 chars): "Your headline is a bit short. Want to expand it to highlight your unique value?"
-- If headline has buzzwords: "I noticed '[buzzword]' in your headline. Want a more professional alternative?"
-- If missing SEO keywords: "Your headline could be stronger with industry keywords like '[suggestion]'. Want me to revise it?"
-
-**Action Format**:
-{action: "UPDATE_FIELD", target: "headline", value: "Your optimized headline here"}
-
-**Character Counter**:
-- Always mention character count when suggesting headlines
-- Example: "Here's a headline (98 characters): [suggestion]"
+**Workflow**:
+1. Suggest improvements if headline is weak.
+2. If user agrees: **Call the \`update_profile_field\` tool** with target="headline".
+3. Always mention character count.
 `;
 
         // Full name guidance (always active)
         const nameGuidancePrompt = `
 FULL NAME FORMATTING:
-Help users present professional, properly formatted names:
+Ensure professional name presentation.
 
-**Formatting Rules**:
-1. **Proper Capitalization**: "John Smith" not "john smith" or "JOHN SMITH"
-2. **No Middle Initials** (unless essential): "Jane Doe" not "Jane M. Doe"
-3. **No Titles in Name Field**: "Sarah Johnson" not "Dr. Sarah Johnson, PhD, MBA"
-   - Titles belong in bio/headline, not name
-4. **Cultural Sensitivity**: Respect naming conventions (e.g., "Li Wei" vs "Wei Li" depends on culture)
-5. **Nicknames**: Professional context only - "Robert Chen" preferred over "Bobby Chen"
+**Rules**:
+- Proper Capitalization (John Smith)
+- No Titles (Dr., PhD) -> Move to bio
+- No Nicknames (Robert vs Bobby)
 
-**Common Issues to Fix**:
-- All lowercase → Capitalize each word
-- All uppercase → Title Case
-- Excessive titles → Remove from name field
-- Informal nicknames → Suggest formal version (but ask first!)
-
-**Proactive Suggestions**:
-- If name is all lowercase: "I noticed your name is in lowercase. Want me to capitalize it properly?"
-- If name has titles: "Professional tip: Move titles like 'Dr.' or 'PhD' to your bio instead. Want me to clean up your name?"
-- If nickname detected: "Do you prefer '[formal name]' for your professional profile?"
-
-**Action Format**:
-{action: "UPDATE_FIELD", target: "full_name", value: "Properly Formatted Name"}
-
-**Examples**:
-❌ "john doe" → ✅ "John Doe"
-❌ "Dr. Jane Smith, PhD" → ✅ "Jane Smith" (move credentials to bio)
-❌ "ROBERT CHEN" → ✅ "Robert Chen"
+**Workflow**:
+1. Detect issues (lowercase, ALL CAPS).
+2. Ask permission to fix.
+3. **Call the \`update_profile_field\` tool** with target="full_name".
 `;
 
         // Profile picture guidance (always active)
@@ -717,11 +593,14 @@ PERSONALITY RULES:
   - Respond: "I can't upload images directly, but you can do it easily! Just click the camera icon on your profile picture in the dashboard."
   - Do NOT emit an UPDATE_FIELD action for \`profile_pic_url\`.`;
 
-        // 4. Initialize Model with System Instruction
+        // 4. Initialize Model with System Instruction AND Tools
         const model = genAI.getGenerativeModel({
             model: "gemini-2.0-flash",
             systemInstruction: systemPrompt,
-            tools: [{ googleSearch: {} } as any] // Enable Grounding with Google Search (cast to any for TS)
+            tools: [
+                { functionDeclarations: DEITY_TOOLS },
+                { googleSearch: {} } as any
+            ]
         });
 
         // 5. Build Content History
@@ -748,16 +627,77 @@ PERSONALITY RULES:
             contents: chatContents
         });
 
-        // Create a readable stream for the response with lack-of-knowledge detection
+        // Create a readable stream for the response which handles Tool Calls
         const stream = new ReadableStream({
             async start(controller) {
                 let fullResponse = '';
+                const collectedActions: any[] = [];
 
                 // Stream chunks as they arrive
                 for await (const chunk of result.stream) {
+                    // Handle Text
                     const chunkText = chunk.text();
-                    fullResponse += chunkText;
-                    controller.enqueue(new TextEncoder().encode(chunkText));
+                    if (chunkText) {
+                        fullResponse += chunkText;
+                        controller.enqueue(new TextEncoder().encode(chunkText));
+                    }
+
+                    // Handle Function Calls (Tools)
+                    const calls = chunk.functionCalls();
+                    if (calls && calls.length > 0) {
+                        calls.forEach(call => {
+                            console.log("🛠️ Tool Call Detected:", call.name);
+
+                            // Map Tool Call back to DeityAction format for frontend
+                            const actionBox: any = { ...call.args };
+
+                            // Map function name to action type
+                            switch (call.name) {
+                                case 'update_profile_field':
+                                    actionBox.action = 'UPDATE_FIELD';
+                                    break;
+                                case 'add_experience':
+                                    actionBox.action = 'ADD_EXPERIENCE';
+                                    break;
+                                case 'add_project':
+                                    actionBox.action = 'ADD_PROJECT';
+                                    break;
+                                case 'add_qualification':
+                                    actionBox.action = 'ADD_QUALIFICATION';
+                                    break;
+                                case 'add_product':
+                                    actionBox.action = 'ADD_PRODUCT';
+                                    break;
+                                case 'add_link':
+                                    actionBox.action = 'ADD_LINK';
+                                    break;
+                                case 'update_link':
+                                    actionBox.action = 'UPDATE_LINK';
+                                    break;
+                                case 'remove_link':
+                                    actionBox.action = 'REMOVE_LINK';
+                                    break;
+                                case 'reorder_links':
+                                    actionBox.action = 'REORDER_LINKS';
+                                    break;
+                                case 'suggest_wording':
+                                    actionBox.action = 'SUGGEST_WORDING';
+                                    break;
+                                default:
+                                    // Unknown tool?
+                                    actionBox.action = call.name.toUpperCase();
+                            }
+
+                            collectedActions.push(actionBox);
+                        });
+                    }
+                }
+
+                // If we collected any actions, append them via the helper protocol
+                if (collectedActions.length > 0) {
+                    const payload = createActionPayload(collectedActions);
+                    controller.enqueue(new TextEncoder().encode(payload));
+                    console.log(`🚀 Emitted ${collectedActions.length} Actions via Protocol`);
                 }
 
                 // After full response, detect if LLM indicated lack of knowledge
@@ -778,21 +718,16 @@ PERSONALITY RULES:
                     responseLower.includes(phrase)
                 );
 
-                // If LLM lacks knowledge, append helpful tip with context-aware category suggestion
                 if (lacksKnowledge) {
-                    // Detect most relevant category for this query (reuse auto-detection logic)
                     const categoryKeywords: Record<string, string[]> = {
-                        'Films / Inspiration': ['film', 'movie', 'cinema', 'documentary', 'watch', 'inspiration', 'inspire'],
-                        'Courses': ['course', 'learn', 'training', 'class', 'education', 'teach', 'study'],
-                        'AI Tools': ['ai tool', 'automation', 'software', 'app', 'ai', 'tool'],
-                        'Career': ['job', 'career', 'resume', 'interview', 'cover letter', 'hire', 'work'],
-                        'Start-up / Investors': ['investor', 'vc', 'funding', 'startup', 'pitch', 'accelerator', 'grant'],
-                        'Services': ['service', 'agency', 'branding', 'marketing'],
-                        'Places': ['place', 'location', 'venue', 'event', 'restaurant', 'bar'],
-                        "Member's Clubs": ['club', 'membership', 'founder', 'network']
+                        'Films / Inspiration': ['film', 'movie'],
+                        'Courses': ['course', 'learn'],
+                        'AI Tools': ['ai', 'tool'],
+                        'Career': ['job', 'career'],
+                        'Start-up / Investors': ['investor', 'startup']
                     };
 
-                    function suggestCategory(msg: string): string | null {
+                    function suggestCategoryStreaming(msg: string): string | null {
                         const lowerMsg = msg.toLowerCase();
                         for (const [cat, keywords] of Object.entries(categoryKeywords)) {
                             if (keywords.some(kw => lowerMsg.includes(kw))) {
@@ -802,24 +737,11 @@ PERSONALITY RULES:
                         return null;
                     }
 
-                    const suggestedCategory = suggestCategory(message);
-
-                    let tip = "\n\n💡 **Tip:** ";
-                    if (suggestedCategory) {
-                        tip += `Try selecting the **${suggestedCategory}** category below to access my specialized recommendation engine with curated resources!`;
-                    } else {
-                        tip += "Try selecting a specific category below (like Films, Courses, Career, or AI Tools) to access my specialized recommendation engine with curated resources!";
+                    const suggestedCat = suggestCategoryStreaming(message);
+                    if (suggestedCat && suggestedCat !== category) {
+                        const tip = `\n\n💡 Tip: I noticed you were asking about ${suggestedCat}. Try selecting that category below for better search results!`;
+                        controller.enqueue(new TextEncoder().encode(tip));
                     }
-
-                    controller.enqueue(new TextEncoder().encode(tip));
-                }
-
-                // Extract and emit actions (after full response)
-                const actions = extractActions(fullResponse);
-                if (actions.length > 0) {
-                    console.log(`✨ Deity emitting ${actions.length} action(s):`, actions);
-                    const actionPayload = createActionPayload(actions);
-                    controller.enqueue(new TextEncoder().encode(actionPayload));
                 }
 
                 controller.close();
