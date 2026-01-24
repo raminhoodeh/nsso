@@ -97,12 +97,14 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             let firstName = 'creator';
             let isUserLoggedIn = !!user;
 
+            let introText = '';
+
             if (user) {
                 try {
-                    // Fetch profile to get full_name (as it's in profiles table, not users)
+                    // Fetch profile to get full_name and bio
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('full_name')
+                        .select('full_name, bio')
                         .eq('user_id', user.id)
                         .single();
 
@@ -111,21 +113,50 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
                     } else if (user.username) {
                         firstName = user.username;
                     }
+
+                    const hasBio = !!profile?.bio;
+                    // skipping experience check for now to avoid query complexity
+                    const hasExperience = true;
+
+                    const hasExperience = (profileData?.experiences as any[])?.length > 0;
+
+                    if (isFullScreen) {
+                        if (!hasBio || !hasExperience) {
+                            introText = `Love your profile ${firstName || 'there'}… now let’s build it out!
+
+I can help you in two powerful ways:
+1. **Profile Creation**: Tell me to "Add my experience at Google" or "Update my bio" to build your presence.
+2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
+
+Let's get started—what would you like to do first?`;
+                        } else {
+                            introText = `Love your profile ${firstName || 'there'}… now let’s get your name out there!
+
+I can help you in two powerful ways:
+1. **Profile Creation**: Tell me to "Add my experience at Google" or "Update my bio" to build your presence.
+2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
+
+Check out some of the areas I can help you with below.`;
+                        }
+                    } else {
+                        // Pop-up
+                        introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
+                    }
                 } catch (err) {
                     console.error('Error fetching profile:', err);
                     if (user.username) firstName = user.username;
-                }
-            }
+                    // Fallback for introText if profile fetch fails
+                    if (isFullScreen) {
+                        introText = `Love your profile ${firstName || 'there'}… now let’s get your name out there!
 
-            let introText = '';
+I can help you in two powerful ways:
+1. **Profile Creation**: Tell me to "Add my experience at Google" or "Update my bio" to build your presence.
+2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
 
-            if (isUserLoggedIn) {
-                // Logged In Logic
-                if (isFullScreen) {
-                    introText = `Love your profile ${firstName}… now let’s get your name out there! I’ve been loaded up with a custom database of all the latest AI tools, business strategy, courses, career advice, and services out there. A lot of these resources won’t be found from a normal search engine or AI tool, as they have been gained from sources that LLMs can’t yet reach. We will give you the best wisdom to get you to where and who you want to be, so you can gain the opportunities you deserve. We can’t wait for you to level up in life, and strengthen your nsso profile over time. Check out some of the areas I can help you with below.`;
-                } else {
-                    // Pop-up
-                    introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
+Check out some of the areas I can help you with below.`;
+                    } else {
+                        introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
+                    }
                 }
             } else {
                 // Logged Out Logic
