@@ -128,6 +128,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
             }
         } catch (error) {
             console.error('Failed to post comment', error)
+            alert("Failed to post comment. You may need to refresh your session.")
         } finally {
             setSubmittingComment(false)
         }
