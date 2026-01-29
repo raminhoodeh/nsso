@@ -43,7 +43,7 @@ export default function PreviewPage() {
             const [userData, profileData, linksData, contactsData, expResult, qualResult, projResult, prodResult] = await Promise.all([
                 supabase.from('users').select('*').eq('id', authUser.id).single(),
                 supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
-                supabase.from('links').select('*').eq('user_id', authUser.id).order('created_at'),
+                supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
                 supabase.from('contacts').select('*').eq('user_id', authUser.id).order('created_at'),
                 supabase.from('experiences').select('*').eq('user_id', authUser.id).order('start_year', { ascending: false }),
                 supabase.from('qualifications').select('*').eq('user_id', authUser.id).order('end_year', { ascending: false }),
