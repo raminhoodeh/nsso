@@ -45,9 +45,9 @@ export default function PreviewPage() {
                 supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
                 supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
                 supabase.from('contacts').select('*').eq('user_id', authUser.id).order('created_at'),
-                supabase.from('experiences').select('*').eq('user_id', authUser.id).order('start_year', { ascending: false }),
-                supabase.from('qualifications').select('*').eq('user_id', authUser.id).order('end_year', { ascending: false }),
-                supabase.from('projects').select('*').eq('user_id', authUser.id).order('created_at', { ascending: false }),
+                supabase.from('experiences').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }),
+                supabase.from('qualifications').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }),
+                supabase.from('projects').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }),
                 supabase.from('products').select('*').eq('user_id', authUser.id).order('created_at', { ascending: false }),
             ])
 

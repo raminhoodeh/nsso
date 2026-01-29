@@ -45,6 +45,11 @@ interface ProfileContextType {
     addQualification: (institution: string, degree: string, year: number) => Promise<boolean>
     addProduct: (name: string, description?: string, price?: string, url?: string) => Promise<boolean>
 
+    // Reorder Methods
+    reorderExperiences: (orderedIds: string[]) => Promise<boolean>
+    reorderQualifications: (orderedIds: string[]) => Promise<boolean>
+    reorderProjects: (orderedIds: string[]) => Promise<boolean>
+
     // Undo Stack
     undo: () => Promise<void>
     canUndo: boolean
@@ -117,6 +122,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 .from('experiences')
                 .select('*')
                 .eq('user_id', userId)
+                .order('display_order', { ascending: true })
                 .order('start_year', { ascending: false })
 
             if (experiencesData) setExperiences(experiencesData)
@@ -126,6 +132,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 .from('qualifications')
                 .select('*')
                 .eq('user_id', userId)
+                .order('display_order', { ascending: true })
                 .order('end_year', { ascending: false })
 
             if (qualificationsData) setQualifications(qualificationsData)
@@ -135,6 +142,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 .from('projects')
                 .select('*')
                 .eq('user_id', userId)
+                .order('display_order', { ascending: true })
                 .order('created_at', { ascending: false })
 
             if (projectsData) setProjects(projectsData)
@@ -508,6 +516,87 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return false
     }
 
+    // Reorder experiences
+    const reorderExperiences = async (orderedIds: string[]): Promise<boolean> => {
+        if (!user?.id) return false
+
+        saveToHistory()
+
+        // Reorder local state
+        const reordered = orderedIds
+            .map(id => experiences.find(e => e.id === id))
+            .filter((e): e is Experience => e !== undefined)
+
+        setExperiences(reordered)
+
+        // Update order in database
+        let hasError = false
+        for (let i = 0; i < orderedIds.length; i++) {
+            const { error } = await supabase
+                .from('experiences')
+                .update({ display_order: i })
+                .eq('id', orderedIds[i])
+            if (error) hasError = true
+        }
+
+        if (hasError) console.error('Error reordering experiences')
+        return !hasError
+    }
+
+    // Reorder qualifications
+    const reorderQualifications = async (orderedIds: string[]): Promise<boolean> => {
+        if (!user?.id) return false
+
+        saveToHistory()
+
+        // Reorder local state
+        const reordered = orderedIds
+            .map(id => qualifications.find(q => q.id === id))
+            .filter((q): q is Qualification => q !== undefined)
+
+        setQualifications(reordered)
+
+        // Update order in database
+        let hasError = false
+        for (let i = 0; i < orderedIds.length; i++) {
+            const { error } = await supabase
+                .from('qualifications')
+                .update({ display_order: i })
+                .eq('id', orderedIds[i])
+            if (error) hasError = true
+        }
+
+        if (hasError) console.error('Error reordering qualifications')
+        return !hasError
+    }
+
+    // Reorder projects
+    const reorderProjects = async (orderedIds: string[]): Promise<boolean> => {
+        if (!user?.id) return false
+
+        saveToHistory()
+
+        // Reorder local state
+        const reordered = orderedIds
+            .map(id => projects.find(p => p.id === id))
+            .filter((p): p is Project => p !== undefined)
+
+        setProjects(reordered)
+
+        // Update order in database
+        let hasError = false
+        for (let i = 0; i < orderedIds.length; i++) {
+            const { error } = await supabase
+                .from('projects')
+                .update({ display_order: i })
+                .eq('id', orderedIds[i])
+            if (error) hasError = true
+        }
+
+        if (hasError) console.error('Error reordering projects')
+        return !hasError
+    }
+
     // Undo last change
     const undo = async () => {
         if (history.length === 0) return
@@ -579,6 +668,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             addProject,
             addQualification,
             addProduct,
+            reorderExperiences,
+            reorderQualifications,
+            reorderProjects,
             undo,
             canUndo: history.length > 0,
             fastMode,

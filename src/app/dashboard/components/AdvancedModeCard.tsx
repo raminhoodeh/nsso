@@ -3,7 +3,10 @@
 import GlassCard from '@/components/ui/GlassCard'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles } from 'lucide-react'
+import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles, GripVertical } from 'lucide-react'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import DOMPurify from 'dompurify'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useProfile } from '@/components/providers/ProfileProvider'
@@ -15,6 +18,26 @@ interface AdvancedModeCardProps {
 }
 
 type ActiveSection = 'experiences' | 'qualifications' | 'projects' | 'products'
+
+// Sortable Item Component
+function SortableItem({ id, children, className }: { id: string; children: (listeners: any) => React.ReactNode; className?: string }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        touchAction: 'none', // Crucial for touch dragging
+        zIndex: isDragging ? 50 : 'auto',
+        position: 'relative' as const,
+    }
+
+    return (
+        <div ref={setNodeRef} style={style} className={className} {...attributes}>
+            {children(listeners)}
+        </div>
+    )
+}
 
 export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const [supabase] = useState(() => createClient())
@@ -37,8 +60,50 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         qualifications: globalQualifications,
         projects: globalProjects,
         products: globalProducts,
-        loading: globalLoading
+        loading: globalLoading,
+        reorderExperiences,
+        reorderQualifications,
+        reorderProjects
     } = useProfile()
+
+    // Sensors for Drag and Drop
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    )
+
+    // Handle Drag End
+    const handleDragEnd = async (event: DragEndEvent, type: 'experiences' | 'qualifications' | 'projects') => {
+        const { active, over } = event
+
+        if (over && active.id !== over.id) {
+            if (type === 'experiences') {
+                const oldIndex = experiences.findIndex((e) => e.id === active.id)
+                const newIndex = experiences.findIndex((e) => e.id === over.id)
+                const newItems = arrayMove(experiences, oldIndex, newIndex)
+                setExperiences(newItems) // Optimistic update
+                await reorderExperiences(newItems.map(i => i.id))
+            } else if (type === 'qualifications') {
+                const oldIndex = qualifications.findIndex((q) => q.id === active.id)
+                const newIndex = qualifications.findIndex((q) => q.id === over.id)
+                const newItems = arrayMove(qualifications, oldIndex, newIndex)
+                setQualifications(newItems)
+                await reorderQualifications(newItems.map(i => i.id))
+            } else if (type === 'projects') {
+                const oldIndex = projects.findIndex((p) => p.id === active.id)
+                const newIndex = projects.findIndex((p) => p.id === over.id)
+                const newItems = arrayMove(projects, oldIndex, newIndex)
+                setProjects(newItems)
+                await reorderProjects(newItems.map(i => i.id))
+            }
+        }
+    }
 
     // Data States (Local state for optimistic UI)
     const [experiences, setExperiences] = useState<Experience[]>([])
@@ -351,63 +416,77 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             </div>
 
             {/* List */}
-            <div className="flex flex-col gap-4">
-                {experiences.map((exp) => (
-                    <div key={exp.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
-                        <button
-                            onClick={() => deleteExperience(exp.id)}
-                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors"
-                        >
-                            <X size={18} />
-                        </button>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'experiences')}>
+                <SortableContext items={experiences.map(e => e.id)} strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col gap-4">
+                        {experiences.map((exp) => (
+                            <SortableItem key={exp.id} id={exp.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                                {(listeners) => (
+                                    <>
+                                        <div
+                                            {...listeners}
+                                            className="absolute top-4 left-4 w-6 h-6 flex items-center justify-center text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing transition-colors z-20"
+                                        >
+                                            <GripVertical size={16} />
+                                        </div>
+                                        <button
+                                            onClick={() => deleteExperience(exp.id)}
+                                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-20"
+                                        >
+                                            <X size={18} />
+                                        </button>
 
-                        <div className="grid gap-4">
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
-                                <input
-                                    type="text"
-                                    value={exp.company_name}
-                                    onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })}
-                                    placeholder="e.g. Google"
-                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
-                                <input
-                                    type="text"
-                                    value={exp.job_title}
-                                    onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })}
-                                    placeholder="e.g. Senior Product Designer"
-                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                />
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="flex-1">
-                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
-                                    <input
-                                        type="number"
-                                        value={exp.start_year}
-                                        onChange={(e) => updateExperience(exp.id, { start_year: parseInt(e.target.value) })}
-                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
-                                    <input
-                                        type="number"
-                                        value={exp.end_year || ''}
-                                        placeholder="Present"
-                                        onChange={(e) => updateExperience(exp.id, { end_year: e.target.value ? parseInt(e.target.value) : null })}
-                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                                        <div className="grid gap-4 pl-8">
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
+                                                <input
+                                                    type="text"
+                                                    value={exp.company_name}
+                                                    onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })}
+                                                    placeholder="e.g. Google"
+                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
+                                                <input
+                                                    type="text"
+                                                    value={exp.job_title}
+                                                    onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })}
+                                                    placeholder="e.g. Senior Product Designer"
+                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
+                                                />
+                                            </div>
+                                            <div className="flex gap-4">
+                                                <div className="flex-1">
+                                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
+                                                    <input
+                                                        type="number"
+                                                        value={exp.start_year}
+                                                        onChange={(e) => updateExperience(exp.id, { start_year: parseInt(e.target.value) })}
+                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
+                                                    <input
+                                                        type="number"
+                                                        value={exp.end_year || ''}
+                                                        placeholder="Present"
+                                                        onChange={(e) => updateExperience(exp.id, { end_year: e.target.value ? parseInt(e.target.value) : null })}
+                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </SortableItem>
+                        ))}
+                        {experiences.length === 0 && <p className="text-white/60 text-sm italic">No experiences added yet.</p>}
                     </div>
-                ))}
-                {experiences.length === 0 && <p className="text-white/60 text-sm italic">No experiences added yet.</p>}
-            </div>
+                </SortableContext>
+            </DndContext>
         </div>
     )
 
@@ -432,59 +511,73 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 </button>
             </div>
 
-            <div className="flex flex-col gap-4">
-                {qualifications.map((qual) => (
-                    <div key={qual.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
-                        <button onClick={() => deleteQualification(qual.id)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors">
-                            <X size={18} />
-                        </button>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'qualifications')}>
+                <SortableContext items={qualifications.map(q => q.id)} strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col gap-4">
+                        {qualifications.map((qual) => (
+                            <SortableItem key={qual.id} id={qual.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                                {(listeners) => (
+                                    <>
+                                        <div
+                                            {...listeners}
+                                            className="absolute top-4 left-4 w-6 h-6 flex items-center justify-center text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing transition-colors z-20"
+                                        >
+                                            <GripVertical size={16} />
+                                        </div>
+                                        <button onClick={() => deleteQualification(qual.id)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-20">
+                                            <X size={18} />
+                                        </button>
 
-                        <div className="grid gap-4">
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
-                                <input
-                                    type="text"
-                                    value={qual.institution}
-                                    onChange={(e) => updateQualification(qual.id, { institution: e.target.value })}
-                                    placeholder="e.g. Stanford University"
-                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
-                                <input
-                                    type="text"
-                                    value={qual.qualification_name}
-                                    onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })}
-                                    placeholder="e.g. MSc Computer Science"
-                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                />
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="flex-1">
-                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
-                                    <input
-                                        type="number"
-                                        value={qual.start_year}
-                                        onChange={(e) => updateQualification(qual.id, { start_year: parseInt(e.target.value) })}
-                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
-                                    <input
-                                        type="number"
-                                        value={qual.end_year}
-                                        onChange={(e) => updateQualification(qual.id, { end_year: parseInt(e.target.value) })}
-                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                                        <div className="grid gap-4 pl-8">
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
+                                                <input
+                                                    type="text"
+                                                    value={qual.institution}
+                                                    onChange={(e) => updateQualification(qual.id, { institution: e.target.value })}
+                                                    placeholder="e.g. Stanford University"
+                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
+                                                <input
+                                                    type="text"
+                                                    value={qual.qualification_name}
+                                                    onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })}
+                                                    placeholder="e.g. MSc Computer Science"
+                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
+                                                />
+                                            </div>
+                                            <div className="flex gap-4">
+                                                <div className="flex-1">
+                                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
+                                                    <input
+                                                        type="number"
+                                                        value={qual.start_year}
+                                                        onChange={(e) => updateQualification(qual.id, { start_year: parseInt(e.target.value) })}
+                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
+                                                    <input
+                                                        type="number"
+                                                        value={qual.end_year}
+                                                        onChange={(e) => updateQualification(qual.id, { end_year: parseInt(e.target.value) })}
+                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </SortableItem>
+                        ))}
+                        {qualifications.length === 0 && <p className="text-white/60 text-sm italic">No qualifications added yet.</p>}
                     </div>
-                ))}
-                {qualifications.length === 0 && <p className="text-white/60 text-sm italic">No qualifications added yet.</p>}
-            </div>
+                </SortableContext>
+            </DndContext>
         </div>
     )
 
@@ -509,82 +602,96 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 </button>
             </div>
 
-            <div className="flex flex-col gap-4">
-                {projects.map((proj) => (
-                    <div key={proj.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
-                        <button onClick={() => deleteProject(proj.id)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors">
-                            <X size={18} />
-                        </button>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'projects')}>
+                <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                    <div className="flex flex-col gap-4">
+                        {projects.map((proj) => (
+                            <SortableItem key={proj.id} id={proj.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                                {(listeners) => (
+                                    <>
+                                        <div
+                                            {...listeners}
+                                            className="absolute top-4 left-4 w-6 h-6 flex items-center justify-center text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing transition-colors z-20"
+                                        >
+                                            <GripVertical size={16} />
+                                        </div>
+                                        <button onClick={() => deleteProject(proj.id)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-20">
+                                            <X size={18} />
+                                        </button>
 
-                        <div className="grid gap-4">
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
-                                <input
-                                    type="text"
-                                    value={proj.project_name}
-                                    onChange={(e) => updateProject(proj.id, { project_name: e.target.value })}
-                                    placeholder="e.g. Neo-Bank Mobile App"
-                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
-                                <input
-                                    type="text"
-                                    value={proj.contribution}
-                                    onChange={(e) => updateProject(proj.id, { contribution: e.target.value })}
-                                    placeholder="e.g. Lead UI/UX Designer"
-                                    className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project URL (Optional)</label>
-                                <input
-                                    type="url"
-                                    value={proj.project_url || ''}
-                                    onChange={(e) => updateProject(proj.id, { project_url: e.target.value })}
-                                    placeholder="e.g. https://example.com"
-                                    className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Description</label>
-                                <textarea
-                                    value={proj.description || ''}
-                                    onChange={(e) => updateProject(proj.id, { description: e.target.value })}
-                                    placeholder="Describe the project..."
-                                    className="w-full bg-transparent text-white/70 text-sm placeholder-white/20 focus:outline-none border-b border-white/10 pb-2 min-h-[60px]"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Project Photo</label>
-                                <div className="flex items-center gap-4">
-                                    {proj.project_photo_url && (
-                                        <div className="w-16 h-16 rounded-lg bg-white/5 bg-cover bg-center border border-white/10" style={{ backgroundImage: `url(${proj.project_photo_url})` }} />
-                                    )}
-                                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10">
-                                        {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
-                                        <span className="text-sm text-white/70">{proj.project_photo_url ? 'Change Photo' : 'Upload Photo'}</span>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0]
-                                                if (file) {
-                                                    handleImageSelect(file, 'project', proj.id)
-                                                }
-                                                e.target.value = ''
-                                            }}
-                                        />
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+                                        <div className="grid gap-4 pl-8">
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={proj.project_name}
+                                                    onChange={(e) => updateProject(proj.id, { project_name: e.target.value })}
+                                                    placeholder="e.g. Neo-Bank Mobile App"
+                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
+                                                <input
+                                                    type="text"
+                                                    value={proj.contribution}
+                                                    onChange={(e) => updateProject(proj.id, { contribution: e.target.value })}
+                                                    placeholder="e.g. Lead UI/UX Designer"
+                                                    className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project URL (Optional)</label>
+                                                <input
+                                                    type="url"
+                                                    value={proj.project_url || ''}
+                                                    onChange={(e) => updateProject(proj.id, { project_url: e.target.value })}
+                                                    placeholder="e.g. https://example.com"
+                                                    className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Description</label>
+                                                <textarea
+                                                    value={proj.description || ''}
+                                                    onChange={(e) => updateProject(proj.id, { description: e.target.value })}
+                                                    placeholder="Describe the project..."
+                                                    className="w-full bg-transparent text-white/70 text-sm placeholder-white/20 focus:outline-none border-b border-white/10 pb-2 min-h-[60px]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Project Photo</label>
+                                                <div className="flex items-center gap-4">
+                                                    {proj.project_photo_url && (
+                                                        <div className="w-16 h-16 rounded-lg bg-white/5 bg-cover bg-center border border-white/10" style={{ backgroundImage: `url(${proj.project_photo_url})` }} />
+                                                    )}
+                                                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10">
+                                                        {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
+                                                        <span className="text-sm text-white/70">{proj.project_photo_url ? 'Change Photo' : 'Upload Photo'}</span>
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0]
+                                                                if (file) {
+                                                                    handleImageSelect(file, 'project', proj.id)
+                                                                }
+                                                                e.target.value = ''
+                                                            }}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </SortableItem>
+                        ))}
+                        {projects.length === 0 && <p className="text-white/60 text-sm italic">No projects added yet.</p>}
                     </div>
-                ))}
-                {projects.length === 0 && <p className="text-white/60 text-sm italic">No projects added yet.</p>}
-            </div>
+                </SortableContext>
+            </DndContext>
         </div>
     )
 
