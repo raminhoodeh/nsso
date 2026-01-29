@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { restoreUser } from '@/lib/auth-helpers'
 
 // GET comments for a post
 export async function GET(
@@ -77,7 +78,41 @@ export async function POST(
             `)
             .single()
 
-        if (error) throw error
+        if (error) {
+            // Auto-Heal: Check for Foreign Key violation (Code 23503) indicating orphaned user
+            if (error.code === '23503') {
+                await restoreUser(supabase, user)
+
+                // Retry the insert once
+                const { data: retryComment, error: retryError } = await supabase
+                    .from('feed_comments')
+                    .insert({
+                        post_id: params.postId,
+                        user_id: user.id,
+                        content: content.trim()
+                    })
+                    .select(`
+                        *,
+                        user:users(username, first_name, last_name, avatar_url)
+                    `)
+                    .single()
+
+                if (retryError) throw retryError
+
+                // Success on retry - use retryComment
+                const formattedRetryComment = {
+                    ...retryComment,
+                    user: {
+                        username: retryComment.user.username,
+                        full_name: `${retryComment.user.first_name || ''} ${retryComment.user.last_name || ''}`.trim() || retryComment.user.username,
+                        avatar_url: retryComment.user.avatar_url
+                    }
+                }
+                return NextResponse.json(formattedRetryComment)
+            }
+
+            throw error
+        }
 
         const formattedComment = {
             ...comment,
