@@ -547,9 +547,10 @@ function DashboardContent() {
             // Update display_order for all affected links
             const updates = newLinks.map((link, index) => ({
                 id: link.id,
-                user_id: link.user_id, // valid for upsert
-                display_order: index,
-                updated_at: new Date().toISOString()
+                user_id: link.user_id,
+                link_name: link.link_name,
+                link_url: link.link_url,
+                display_order: index
             }))
 
             const { error } = await supabase
