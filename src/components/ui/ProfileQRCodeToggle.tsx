@@ -55,13 +55,25 @@ export default function ProfileQRCodeToggle({
                     </div>
                 </div>
 
+                {/* Shine Effect */}
+                <div
+                    className={`absolute inset-0 z-20 pointer-events-none rounded-3xl overflow-hidden transition-opacity duration-700 ${isFlipped ? 'opacity-100' : 'opacity-0'}`}
+                    style={{
+                        background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.4) 55%, transparent 60%)',
+                        transform: isFlipped ? 'translateX(100%)' : 'translateX(-100%)',
+                        transition: 'transform 0.7s, opacity 0.7s'
+                    }}
+                />
+
                 {/* Back: QR Code */}
                 <div
-                    className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-xl rotate-y-180 bg-white/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 border border-white/20"
+                    className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-xl rotate-y-180 flex flex-col items-center justify-center p-4 border border-white/30"
                     style={{
                         backfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,240,240,0.9) 100%)'
+                        background: 'rgba(255, 255, 255, 0.4)',
+                        backdropFilter: 'blur(12px)',
+                        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
                     }}
                 >
                     <div className="bg-white p-2 rounded-xl shadow-inner">

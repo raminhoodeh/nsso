@@ -96,7 +96,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
                 {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
                 {isOwnerMode ? (
-                    // OWNER MODE: Back to Dashboard button on Desktop
+                    // OWNER MODE: Edit Profile button on Desktop
                     <div className="hidden md:flex">
                         <GlassButton
                             variant="ghost"
@@ -104,7 +104,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                             onClick={() => router.push('/dashboard')}
                             onMouseEnter={() => router.prefetch('/dashboard')}
                         >
-                            ← Back to Dashboard
+                            ← Edit Profile
                         </GlassButton>
                     </div>
                 ) : (
@@ -299,14 +299,14 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                                     </button>
                                                 )}
 
-                                                {/* Owner Mode: Back to Dashboard */}
+                                                {/* Owner Mode: Edit Profile */}
                                                 {isOwnerMode && (
                                                     <Link
                                                         href="/dashboard"
                                                         onClick={() => setMobileMenuOpen(false)}
                                                         className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
                                                     >
-                                                        Back to Dashboard
+                                                        Edit Profile
                                                     </Link>
                                                 )}
 

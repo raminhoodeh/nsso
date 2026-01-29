@@ -808,7 +808,7 @@ export default function SalesPageCreator() {
                                 onClick={() => router.push('/dashboard')}
                                 className="flex-1 md:h-[44px] min-h-[54px] md:min-h-0 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
                             >
-                                Back to Dashboard
+                                Edit Profile
                             </button>
                             <button
                                 onClick={() => router.push(`/products/${productId}?source=creator`)}

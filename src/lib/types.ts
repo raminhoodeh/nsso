@@ -30,6 +30,7 @@ export interface Link {
     user_id: string
     link_name: string
     link_url: string
+    display_order: number
     created_at: string
 }
 

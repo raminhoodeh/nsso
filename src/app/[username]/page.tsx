@@ -66,7 +66,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     // Load profile, links, contacts, and V2 data
     const [profileResult, linksResult, contactsResult, expResult, qualResult, projResult, prodResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('user_id', user.id).single(),
-        supabase.from('links').select('*').eq('user_id', user.id).order('created_at'),
+        supabase.from('links').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
         supabase.from('contacts').select('*').eq('user_id', user.id).order('created_at'),
         supabase.from('experiences').select('*').eq('user_id', user.id).order('start_year', { ascending: false }),
         supabase.from('qualifications').select('*').eq('user_id', user.id).order('end_year', { ascending: false }),

@@ -22,6 +22,23 @@ import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { Sparkles } from 'lucide-react'
 import type { EarningsStats } from '@/lib/earnings'
 
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core'
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { SortableLinkItem } from './components/SortableLinkItem'
+
 const CONTACT_METHODS: ContactMethod[] = ['Email', 'WhatsApp', 'Phone', 'Telegram', 'Location', 'Other']
 
 function DashboardContent() {
@@ -152,7 +169,7 @@ function DashboardContent() {
             ] = await Promise.all([
                 supabase.from('users').select('*').eq('id', authUser.id).single(),
                 supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
-                supabase.from('links').select('*').eq('user_id', authUser.id).order('created_at', { ascending: true }),
+                supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
                 supabase.from('contacts').select('*').eq('user_id', authUser.id).order('created_at', { ascending: true })
             ])
 
@@ -409,12 +426,17 @@ function DashboardContent() {
     const addLink = async () => {
         if (!user) return
 
+        const newOrder = links.length > 0
+            ? Math.max(...links.map(l => l.display_order)) + 1
+            : 0
+
         const { data, error } = await supabase
             .from('links')
             .insert({
                 user_id: user.id,
                 link_name: '',
                 link_url: '',
+                display_order: newOrder
             })
             .select()
             .single()
@@ -499,6 +521,46 @@ function DashboardContent() {
         const url = `${window.location.origin}/${user?.username}`
         navigator.clipboard.writeText(url)
         showToast('Profile URL copied!', 'success')
+    }
+
+    // Drag and Drop Sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    )
+
+    // Handle Drag End
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event
+
+        if (over && active.id !== over.id) {
+            const oldIndex = links.findIndex((item) => item.id === active.id)
+            const newIndex = links.findIndex((item) => item.id === over.id)
+
+            const newLinks = arrayMove(links, oldIndex, newIndex)
+
+            // Update local state immediately for responsiveness
+            setLinks(newLinks)
+
+            // Update display_order for all affected links
+            const updates = newLinks.map((link, index) => ({
+                id: link.id,
+                user_id: link.user_id, // valid for upsert
+                display_order: index,
+                updated_at: new Date().toISOString()
+            }))
+
+            const { error } = await supabase
+                .from('links')
+                .upsert(updates, { onConflict: 'id' })
+
+            if (error) {
+                console.error('Error updating order:', error)
+                showToast('Failed to save order', 'error')
+            }
+        }
     }
 
     if (loading) {
@@ -1101,42 +1163,25 @@ function DashboardContent() {
                             </div>
 
                             <div className="space-y-4">
-                                {links.map((link) => (
-                                    <div key={link.id} className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-                                        <div className="w-full md:flex-1">
-                                            <Input
-                                                value={link.link_name}
-                                                onChange={(e) => updateLink(link.id, 'link_name', e.target.value)}
-                                                placeholder="Link name (e.g. Portfolio)"
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext
+                                        items={links}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {links.map((link) => (
+                                            <SortableLinkItem
+                                                key={link.id}
+                                                link={link}
+                                                updateLink={updateLink}
+                                                removeLink={removeLink}
                                             />
-                                        </div>
-                                        <div className="flex w-full md:flex-1 gap-4 items-center">
-                                            {/* Validation Status Indicator */}
-                                            <div
-                                                className="w-2 h-2 rounded-full flex-shrink-0"
-                                                style={{
-                                                    backgroundColor: link.link_url && link.link_url.startsWith('http')
-                                                        ? 'rgb(34, 197, 94)' // green for valid
-                                                        : 'rgb(239, 68, 68)' // red for invalid/empty
-                                                }}
-                                                title={link.link_url && link.link_url.startsWith('http') ? 'Valid URL' : 'Invalid or missing URL'}
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <Input
-                                                    value={link.link_url}
-                                                    onChange={(e) => updateLink(link.id, 'link_url', e.target.value)}
-                                                    placeholder="https://..."
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={() => removeLink(link.id)}
-                                                className="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors shrink-0"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                        ))}
+                                    </SortableContext>
+                                </DndContext>
 
                                 {links.length === 0 && (
                                     <p className="text-white/50 text-center py-8">

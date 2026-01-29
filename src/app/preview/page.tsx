@@ -94,7 +94,7 @@ export default function PreviewPage() {
                         size="sm"
                         onClick={() => router.push('/dashboard')}
                     >
-                        ← Back to Dashboard
+                        ← Edit Profile
                     </GlassButton>
                     <GlassButton
                         variant="ghost"
