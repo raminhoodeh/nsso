@@ -148,7 +148,7 @@ export default function HomePage() {
               loop
               muted
               playsInline
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-[40px]"
               style={{ minHeight: '80vh' }}
             />
           </div>
