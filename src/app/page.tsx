@@ -93,47 +93,42 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Two Column Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-          {/* Left Column - 3 Rows of Text */}
-          <GlassCard className="h-full flex flex-col justify-start relative overflow-hidden group">
-            <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
-              {/* Top Row: Body Text */}
-              <p className="text-white/80 text-lg font-medium text-center lg:text-left">
-                With the most beautiful way to present yourself online
-              </p>
+        {/* Two Column Layout - Card Left, Video Right */}
+        <div className="flex flex-col lg:flex-row gap-8 items-stretch min-h-[80vh]">
+          {/* Left Half - Text Card */}
+          <div className="w-full lg:w-1/2">
+            <GlassCard className="h-full flex flex-col justify-start relative overflow-hidden group">
+              <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
+                {/* Top Row: Body Text */}
+                <p className="text-white/80 text-lg font-medium text-center lg:text-left">
+                  With the most beautiful way to present yourself online
+                </p>
 
-              {/* Middle Row: Title Text */}
-              <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
-                A way that makes you feel clear, and proud, of who you are
-              </h3>
+                {/* Middle Row: Title Text */}
+                <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
+                  A way that makes you feel clear, and proud, of who you are
+                </h3>
 
-              {/* Bottom Row: Subtitle Text */}
-              <p className="text-white/60 text-lg leading-relaxed mt-auto text-center lg:text-left">
-                Imagine having a link-in-bio tool, a resumé, website, and personal shop; all of you, all in one place. This is what it means to evolve your identity with our evolving world.
-              </p>
-            </div>
-          </GlassCard>
+                {/* Bottom Row: Subtitle Text */}
+                <p className="text-white/60 text-lg leading-relaxed mt-auto text-center lg:text-left">
+                  Imagine having a link-in-bio tool, a resumé, website, and personal shop; all of you, all in one place. This is what it means to evolve your identity with our evolving world.
+                </p>
+              </div>
+            </GlassCard>
+          </div>
 
-          {/* Right Column - Product Demo */}
-          <GlassCard className="p-8 lg:p-10 h-full min-h-[350px] flex flex-col items-center justify-center text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
-            <div className="text-white/70 text-lg mb-6 relative z-10 max-w-lg leading-relaxed">
-              <span className="text-white font-bold">All of you</span>; your bio, contact, links, experiences, projects, qualifications, products and services... <span className="text-white font-bold">all in one place</span>.
-            </div>
-            <div className="w-full max-w-[530px] h-[340px] rounded-[24px] border-[1px] border-white/10 shadow-2xl flex items-center justify-center relative z-10 overflow-hidden backdrop-blur-md isolate">
-              {/* Video Demo */}
-              <video
-                src="/nsso-homepage-profile-demo.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/10 pointer-events-none rounded-[24px]" />
-            </div>
-          </GlassCard>
+          {/* Right Half - Fullscreen Vertical Video */}
+          <div className="w-full lg:w-1/2 relative">
+            <video
+              src="/homepage-video.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+              style={{ minHeight: '80vh' }}
+            />
+          </div>
         </div>
       </section >
 
