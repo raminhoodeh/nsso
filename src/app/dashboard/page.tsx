@@ -12,7 +12,7 @@ import Input from '@/components/ui/Input'
 import { Plus, X, Upload, Loader2, CreditCard, Copy, Check } from 'lucide-react'
 import AdvancedModeCard from '@/app/dashboard/components/AdvancedModeCard'
 import EarningsTab from '@/app/dashboard/components/EarningsTab'
-import FeedTab from '@/app/dashboard/components/FeedTab'
+
 import MyNssoTab from '@/app/dashboard/components/MyNssoTab'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
@@ -64,30 +64,19 @@ function DashboardContent() {
     // UI state
     const [loading, setLoading] = useState(true || profileLoading)
     const [saving, setSaving] = useState(false)
-    const [activeTab, setActiveTab] = useState<'page' | 'feed' | 'earnings' | 'my-nsso'>('page')
+    const [activeTab, setActiveTab] = useState<'page' | 'earnings' | 'my-nsso'>('page')
     const [showPolarModal, setShowPolarModal] = useState(false)
     const [showDowngradeModal, setShowDowngradeModal] = useState(false)
     const [urlCopied, setUrlCopied] = useState(false)
 
     // PREFETCH STATES & REFS
-    const [prefetchedFeed, setPrefetchedFeed] = useState<any>(null)
+
     const [prefetchedEarnings, setPrefetchedEarnings] = useState<EarningsStats | null>(null)
     const [prefetchedMyNsso, setPrefetchedMyNsso] = useState<any>(null)
 
     // Eager Background Prefetching
     useEffect(() => {
-        // 1. Prefetch News Feed
-        const loadFeed = async () => {
-            try {
-                const res = await fetch('/api/news-feed')
-                if (res.ok) {
-                    const data = await res.json()
-                    setPrefetchedFeed(data)
-                }
-            } catch (err) {
-                console.error('Background feed fetch failed', err)
-            }
-        }
+
 
         // 2. Prefetch Earnings
         const loadEarnings = async () => {
@@ -125,7 +114,6 @@ function DashboardContent() {
 
         // Execute after a small delay to prioritize main content paint
         const timer = setTimeout(() => {
-            loadFeed()
             loadEarnings()
             warmUpDeity()
         }, 1000)
@@ -631,33 +619,7 @@ function DashboardContent() {
                             </p>
                         </button>
 
-                        {/* News Feed Tab */}
-                        <button
-                            onClick={() => setActiveTab('feed')}
-                            className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
-                        >
-                            {activeTab === 'feed' && (
-                                <div
-                                    className="absolute inset-0 pointer-events-none rounded-[100px]"
-                                    style={{
-                                        backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
-                                    }}
-                                />
-                            )}
-                            <p
-                                className={`relative font-semibold text-[13px] leading-[17px] overflow-ellipsis overflow-hidden whitespace-nowrap ${activeTab === 'feed' ? 'text-[rgba(255,255,255,0.96)]' : 'text-[rgba(255,255,255,0.6)]'}`}
-                                style={{
-                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                    fontWeight: 590,
-                                    fontVariationSettings: "'wdth' 100"
-                                }}
-                            >
-                                News Feed
-                            </p>
-                        </button>
+
 
                         {/* My nsso Tab */}
                         <button
@@ -1122,8 +1084,7 @@ function DashboardContent() {
                     </GlassCard>
                 )}
 
-                {/* News Feed Tab Content */}
-                {activeTab === 'feed' && <FeedTab initialData={prefetchedFeed} />}
+
 
                 {/* Earnings Tab Content */}
                 {activeTab === 'earnings' && <EarningsTab initialData={prefetchedEarnings || undefined} />}
