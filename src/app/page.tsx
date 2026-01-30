@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import GlassCard from '@/components/ui/GlassCard'
@@ -18,6 +18,7 @@ export default function HomePage() {
   const [reservedName, setReservedName] = useState('')
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const supabase = createClient()
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   // Animate through words
   useEffect(() => {
@@ -44,6 +45,28 @@ export default function HomePage() {
     }
     checkAuthAndRedirect()
   }, [router, supabase])
+
+  // Lazy load video when it enters viewport
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            video.play()
+          } else {
+            video.pause()
+          }
+        })
+      },
+      { threshold: 0.5 } // Play when 50% visible
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
 
   const handleClaimIt = async () => {
     // Check if user is logged in
@@ -120,8 +143,8 @@ export default function HomePage() {
           {/* Right Half - Fullscreen Vertical Video */}
           <div className="w-full lg:w-1/2 relative">
             <video
+              ref={videoRef}
               src="/homepage-video.mp4"
-              autoPlay
               loop
               muted
               playsInline
