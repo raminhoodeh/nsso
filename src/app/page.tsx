@@ -123,7 +123,7 @@ export default function HomePage() {
             <GlassCard className="h-full flex flex-col justify-start relative overflow-hidden group">
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
-                <p className="text-white/80 text-lg font-medium text-center lg:text-left">
+                <p className="text-white text-lg font-medium text-center lg:text-left">
                   Your bio, contact, links, experiences, projects, qualifications, products and services...
                 </p>
 
@@ -133,7 +133,7 @@ export default function HomePage() {
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
-                <p className="text-white/60 text-lg leading-relaxed text-center lg:text-left">
+                <p className="text-white text-lg leading-relaxed text-center lg:text-left">
                   Use nsso as a link-in-bio tool, a resumé, website, and personal shop. Your profile provides you with the most beautiful way to present yourself online - a way that makes you feel clear, and proud, of who you are.
                 </p>
               </div>
