@@ -110,7 +110,7 @@ export default function HomePage() {
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
-                <p className="text-white/60 text-lg leading-relaxed mt-auto text-center lg:text-left">
+                <p className="text-white/60 text-lg leading-relaxed text-center lg:text-left">
                   Use nsso as a link-in-bio tool, a resumé, website, and personal shop. Your profile provides you with the most beautiful way to present yourself online - a way that makes you feel clear, and proud, of who you are.
                 </p>
               </div>
