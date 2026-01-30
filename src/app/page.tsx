@@ -94,24 +94,24 @@ export default function HomePage() {
         </div>
 
         {/* Two Column Layout - Card Left, Video Right */}
-        <div className="flex flex-col lg:flex-row gap-8 items-stretch min-h-[80vh]">
+        <div className="flex flex-col lg:flex-row gap-24 items-stretch min-h-[80vh]">
           {/* Left Half - Text Card */}
           <div className="w-full lg:w-1/2">
             <GlassCard className="h-full flex flex-col justify-start relative overflow-hidden group">
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
                 <p className="text-white/80 text-lg font-medium text-center lg:text-left">
-                  With the most beautiful way to present yourself online
+                  Your bio, contact, links, experiences, projects, qualifications, products and services...
                 </p>
 
                 {/* Middle Row: Title Text */}
                 <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
-                  A way that makes you feel clear, and proud, of who you are
+                  All of you,<br />all in one place.
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
                 <p className="text-white/60 text-lg leading-relaxed mt-auto text-center lg:text-left">
-                  Imagine having a link-in-bio tool, a resumé, website, and personal shop; all of you, all in one place. This is what it means to evolve your identity with our evolving world.
+                  Use nsso as a link-in-bio tool, a resumé, website, and personal shop. Your profile provides you with the most beautiful way to present yourself online - a way that makes you feel clear, and proud, of who you are.
                 </p>
               </div>
             </GlassCard>
