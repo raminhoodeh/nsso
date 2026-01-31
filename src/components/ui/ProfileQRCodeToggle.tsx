@@ -55,15 +55,6 @@ export default function ProfileQRCodeToggle({
                     </div>
                 </div>
 
-                {/* Shine Effect */}
-                <div
-                    className={`absolute inset-0 z-20 pointer-events-none rounded-3xl overflow-hidden transition-opacity duration-700 ${isFlipped ? 'opacity-100' : 'opacity-0'}`}
-                    style={{
-                        background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.4) 55%, transparent 60%)',
-                        transform: isFlipped ? 'translateX(100%)' : 'translateX(-100%)',
-                        transition: 'transform 0.7s, opacity 0.7s'
-                    }}
-                />
 
                 {/* Back: QR Code */}
                 <div
