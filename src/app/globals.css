@@ -92,7 +92,7 @@ body {
    ============================================ */
 [class*="glass-style-"] {
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   isolation: isolate;
 }
 
@@ -101,10 +101,8 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  -webkit-backdrop-filter: blur(var(--glass-blur, 7px));
   backdrop-filter: blur(var(--glass-blur, 7px));
   /* Restore Liquid Glass Distortion */
-  -webkit-filter: url(#glass-distortion) saturate(var(--glass-saturate, 120%)) brightness(var(--glass-brightness, 1.13));
   filter: url(#glass-distortion) saturate(var(--glass-saturate, 120%)) brightness(var(--glass-brightness, 1.13));
   z-index: 1;
   pointer-events: none;
