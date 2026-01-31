@@ -143,7 +143,7 @@ export default function HomePage() {
                 <div className="flex flex-col gap-3 mt-12 w-full max-w-sm mx-auto lg:mx-0">
                   {/* Web3 Coming Soon Teaser */}
                   <div className="relative group">
-                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/10 border border-white/5 flex items-center justify-between cursor-help opacity-80 hover:opacity-100 transition-opacity">
                       <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
                       <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
                         <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
@@ -162,7 +162,7 @@ export default function HomePage() {
 
                   {/* Facebook Pixel Coming Soon Teaser */}
                   <div className="relative group">
-                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/10 border border-white/5 flex items-center justify-between cursor-help opacity-80 hover:opacity-100 transition-opacity">
                       <span className="text-white/50 text-[15px]">Connect Facebook Pixel</span>
                       <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
                         <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
