@@ -602,7 +602,7 @@ function DashboardContent() {
                         {/* News Feed Tab (Coming Soon) */}
                         <button
                             disabled
-                            className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all opacity-50 cursor-not-allowed group"
+                            className="relative flex h-[31px] items-center px-[14px] py-0 rounded-[100px] shrink-0 transition-all opacity-50 cursor-not-allowed group"
                         >
                             <p
                                 className="relative font-semibold text-[13px] leading-[17px] overflow-ellipsis overflow-hidden whitespace-nowrap text-[rgba(255,255,255,0.4)]"
@@ -1104,7 +1104,7 @@ function DashboardContent() {
                                     <p className="text-white/50 text-sm">Add your contact methods and social profiles.</p>
                                 </div>
                                 <button
-                                    onClick={addContact}
+                                    onClick={() => addContact()}
                                     className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                 >
                                     +
