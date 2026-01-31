@@ -142,7 +142,7 @@ export default function HomePage() {
                 {/* Coming Soon Features - Visual Filter for Whitespace */}
                 <div className="flex flex-col gap-3 mt-12 w-full max-w-sm mx-auto lg:mx-0">
                   {/* AI Assisted Profile Creation - Now Live */}
-                  <div className="relative group hover:z-50">
+                  <div className="relative group z-[30] hover:z-30">
                     <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
                       <span className="text-white/90 text-[15px]">AI-assisted profile creation</span>
                       <div className="relative border-[0.75px] border-emerald-500/30 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
@@ -153,7 +153,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   {/* Web3 Coming Soon Teaser */}
-                  <div className="relative group hover:z-50">
+                  <div className="relative group z-[20] hover:z-20">
                     <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
                       <span className="text-white/90 text-[15px]">Integrate web3 wallet</span>
                       <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
@@ -176,7 +176,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Facebook Pixel Coming Soon Teaser */}
-                  <div className="relative group hover:z-50">
+                  <div className="relative group z-[10] hover:z-10">
                     <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
                       <span className="text-white/90 text-[15px]">Connect Facebook Pixel</span>
                       <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
