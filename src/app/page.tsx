@@ -120,7 +120,10 @@ export default function HomePage() {
         <div className="flex flex-col lg:flex-row gap-24 items-stretch min-h-[80vh]">
           {/* Left Half - Text Card */}
           <div className="w-full lg:w-1/2">
-            <GlassCard className="h-full flex flex-col justify-start relative group">
+            <GlassCard
+              className="h-full flex flex-col justify-start relative group rounded-[40px]"
+              style={{ overflow: 'visible' }}
+            >
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
                 <p className="text-white text-lg font-medium text-center lg:text-left">
