@@ -151,6 +151,10 @@ export default function HomePage() {
                         </span>
                       </div>
                     </div>
+                    {/* Tooltip */}
+                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/ai:visible opacity-0 group-hover/ai:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl">
+                      Ask Deity to create your profile for you, gain suggested business and profile ideas based on your profile content
+                    </div>
                   </div>
                   {/* Web3 Coming Soon Teaser */}
                   <div className="relative group/web3 z-[20] hover:z-20">
