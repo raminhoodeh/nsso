@@ -42,6 +42,7 @@ interface VantaEffect {
     resize?: () => void
     options?: any
     setOptions?: (options: Partial<VantaConfig>) => void
+    renderer?: any
 }
 
 export default function VantaBackground() {
@@ -122,14 +123,15 @@ export default function VantaBackground() {
                             sunGlareColor: 0xff6633,
                             sunlightColor: 0xff9933,
                             speed: 0.5,
-                            points: 5,
-                            spacing: 18,
+                            points: 3,
+                            spacing: 20,
                             maxDistance: 15
                         })
 
                         // PERF: Force 1:1 pixel ratio on High-DPI (Retina) screens.
                         // This reduces GPU load by 4x on MacBooks without visible quality loss for this specific effect.
                         if (vantaEffect.current.renderer) {
+                            // @ts-ignore
                             vantaEffect.current.renderer.setPixelRatio(1.0)
                         }
 

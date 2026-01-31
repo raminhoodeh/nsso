@@ -171,6 +171,13 @@ body {
   --glass-brightness: 1.2;
 }
 
+/* === Optimization: Selective Distortion === */
+.glass-distortion-active {
+  overflow: visible !important;
+  will-change: transform;
+  /* Hint for compositor promotion */
+}
+
 /* === Glass Style Navbar (System Integrated) === */
 .glass-style-navbar {
   /* Inherits base properties from [class*="glass-style-"] */

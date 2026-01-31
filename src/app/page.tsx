@@ -121,8 +121,7 @@ export default function HomePage() {
           {/* Left Half - Text Card */}
           <div className="w-full lg:w-1/2">
             <GlassCard
-              className="h-full flex flex-col justify-start relative group rounded-[40px]"
-              style={{ overflow: 'visible' }}
+              className="h-full flex flex-col justify-start relative group rounded-[40px] glass-distortion-active"
             >
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
