@@ -39,6 +39,11 @@ interface ProfileContextType {
     reorderLinks: (orderedIds: string[]) => Promise<boolean>
     validateLinks: () => Promise<LinkValidation[]>
 
+    // Contact Methods
+    addContact: () => Promise<boolean>
+    updateContact: (id: string, field: 'method' | 'value' | 'custom_method_name', value: string) => Promise<boolean>
+    removeContact: (id: string) => Promise<boolean>
+
     // Deep Profile Sections
     addExperience: (company: string, title: string, startYear: number, endYear: number | null, description?: string) => Promise<boolean>
     addProject: (name: string, description?: string, url?: string) => Promise<boolean>
@@ -49,6 +54,7 @@ interface ProfileContextType {
     reorderExperiences: (orderedIds: string[]) => Promise<boolean>
     reorderQualifications: (orderedIds: string[]) => Promise<boolean>
     reorderProjects: (orderedIds: string[]) => Promise<boolean>
+    reorderContacts: (orderedIds: string[]) => Promise<boolean>
 
     // Undo Stack
     undo: () => Promise<void>
@@ -113,6 +119,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 .from('contacts')
                 .select('*')
                 .eq('user_id', userId)
+                .order('display_order', { ascending: true })
                 .order('created_at', { ascending: true })
 
             if (contactsData) setContacts(contactsData)
@@ -370,6 +377,70 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return validateLinksUtil(linksToValidate)
     }
 
+    // Add contact
+    const addContact = async (): Promise<boolean> => {
+        if (!user?.id) return false
+
+        saveToHistory()
+
+        const { data, error } = await supabase
+            .from('contacts')
+            .insert({
+                user_id: user.id,
+                method: 'Email',
+                value: '',
+                display_order: contacts.length // Append to end
+            })
+            .select()
+            .single()
+
+        if (data && !error) {
+            setContacts(prev => [...prev, data])
+            return true
+        }
+
+        if (error) {
+            console.error('Error adding contact:', error)
+            undo()
+            return false
+        }
+        return false
+    }
+
+    // Update contact
+    const updateContact = async (id: string, field: 'method' | 'value' | 'custom_method_name', value: string): Promise<boolean> => {
+        saveToHistory()
+
+        setContacts(contacts.map(c => c.id === id ? { ...c, [field]: value } : c))
+
+        const { error } = await supabase
+            .from('contacts')
+            .update({ [field]: value })
+            .eq('id', id)
+
+        if (error) {
+            console.error('Error updating contact:', error)
+            undo()
+            return false
+        }
+        return true
+    }
+
+    // Remove contact
+    const removeContact = async (id: string): Promise<boolean> => {
+        saveToHistory()
+
+        const { error } = await supabase.from('contacts').delete().eq('id', id)
+
+        if (error) {
+            console.error('Error removing contact:', error)
+            return false
+        }
+
+        setContacts(contacts.filter(c => c.id !== id))
+        return true
+    }
+
     // Add experience
     const addExperience = async (company: string, title: string, startYear?: number, endYear?: number | null, description?: string): Promise<boolean> => {
         if (!user?.id) return false
@@ -597,6 +668,33 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return !hasError
     }
 
+    // Reorder contacts
+    const reorderContacts = async (orderedIds: string[]): Promise<boolean> => {
+        if (!user?.id) return false
+
+        saveToHistory()
+
+        // Reorder local state
+        const reordered = orderedIds
+            .map(id => contacts.find(c => c.id === id))
+            .filter((c): c is Contact => c !== undefined)
+
+        setContacts(reordered)
+
+        // Update order in database
+        let hasError = false
+        for (let i = 0; i < orderedIds.length; i++) {
+            const { error } = await supabase
+                .from('contacts')
+                .update({ display_order: i })
+                .eq('id', orderedIds[i])
+            if (error) hasError = true
+        }
+
+        if (hasError) console.error('Error reordering contacts')
+        return !hasError
+    }
+
     // Undo last change
     const undo = async () => {
         if (history.length === 0) return
@@ -664,6 +762,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             removeLink,
             reorderLinks,
             validateLinks,
+            addContact,
+            updateContact,
+            removeContact,
             addExperience,
             addProject,
             addQualification,
@@ -671,6 +772,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             reorderExperiences,
             reorderQualifications,
             reorderProjects,
+            reorderContacts,
             undo,
             canUndo: history.length > 0,
             fastMode,

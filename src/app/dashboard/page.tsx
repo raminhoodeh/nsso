@@ -8,6 +8,8 @@ import { createClient } from '@/lib/supabase/client'
 import Header from '@/components/layout/Header'
 import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
+import CreateProfileButton from '@/components/ui/CreateProfileButton'
+import { SortableContactItem } from './components/SortableContactItem'
 import Input from '@/components/ui/Input'
 import { Plus, X, Upload, Loader2, CreditCard, Copy, Check } from 'lucide-react'
 import AdvancedModeCard from '@/app/dashboard/components/AdvancedModeCard'
@@ -47,7 +49,21 @@ function DashboardContent() {
     const supabase = createClient()
     const { showToast } = useToast()
     const { user, refreshUser } = useUser()
-    const { profile, updateField, profileCompleteness, loading: profileLoading, links: providerLinks } = useProfile()
+    const {
+        profile,
+        links,
+        contacts,
+        updateField: updateProfile,
+        updateLink,
+        addLink,
+        removeLink,
+        reorderLinks,
+        updateContact,
+        addContact,
+        removeContact,
+        reorderContacts,
+        loading: profileLoading
+    } = useProfile()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Local UI state (will be migrated to ProfileProvider in Phase 2)
@@ -57,14 +73,27 @@ function DashboardContent() {
     const [profilePicUrl, setProfilePicUrl] = useState('')
     const [customDomain, setCustomDomain] = useState('')
 
-    // Local state for links/contacts (Phase 1: Bio only - these stay local for now)
-    const [links, setLinks] = useState<Link[]>([])
-    const [contacts, setContacts] = useState<Contact[]>([])
+    // Calculate profile completeness
+    const profileCompleteness = (() => {
+        if (!profile) return 0
+        const fields = [
+            profile.full_name,
+            profile.headline,
+            profile.bio,
+            profile.profile_pic_url,
+            links.length > 0,
+            contacts.length > 0
+        ]
+        const filled = fields.filter(Boolean).length
+        return Math.round((filled / fields.length) * 100)
+    })()
 
     // UI state
-    const [loading, setLoading] = useState(true || profileLoading)
+    // Initial loading state combines auth check and profile fetch
+    const [loading, setLoading] = useState(true)
+
     const [saving, setSaving] = useState(false)
-    const [activeTab, setActiveTab] = useState<'page' | 'earnings' | 'my-nsso'>('page')
+    const [activeTab, setActiveTab] = useState<'profile' | 'earnings' | 'my-nsso' | 'news-feed'>('profile')
     const [showPolarModal, setShowPolarModal] = useState(false)
     const [showDowngradeModal, setShowDowngradeModal] = useState(false)
     const [urlCopied, setUrlCopied] = useState(false)
@@ -152,13 +181,9 @@ function DashboardContent() {
             const [
                 { data: userData },
                 { data: profileData },
-                { data: linksData },
-                { data: contactsData }
             ] = await Promise.all([
                 supabase.from('users').select('*').eq('id', authUser.id).single(),
                 supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
-                supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
-                supabase.from('contacts').select('*').eq('user_id', authUser.id).order('created_at', { ascending: true })
             ])
 
             if (userData) {
@@ -172,26 +197,28 @@ function DashboardContent() {
                 setProfilePicUrl(profileData.profile_pic_url || '')
             }
 
-            if (linksData) {
-                setLinks(linksData)
-            }
-
-            if (contactsData) {
-                setContacts(contactsData)
-            }
-
             setLoading(false)
         }
 
         loadData()
+    }, [supabase, router])
 
-        // Check for upgrade success
+    // Update loading state when profile loading finishes
+    useEffect(() => {
+        if (!profileLoading && !loading) {
+            // Profile loaded
+        }
+    }, [profileLoading, loading])
+
+    // Check for upgrade success
+    // Check for upgrade success
+    useEffect(() => {
         if (searchParams.get('upgraded') === 'true') {
             showToast('You are now Premium! Username claimed.', 'success')
             // Clean URL
             router.replace('/dashboard')
         }
-    }, [supabase, router, searchParams])
+    }, [searchParams, router, showToast])
 
     // Sync local customDomain state with user context when loaded
     useEffect(() => {
@@ -207,10 +234,7 @@ function DashboardContent() {
             if (profile.headline !== headline && !saving) setHeadline(profile.headline || '')
             if (profile.full_name !== fullName && !saving) setFullName(profile.full_name || '')
         }
-        if (providerLinks) {
-            setLinks(providerLinks);
-        }
-    }, [profile?.bio, profile?.headline, profile?.full_name, providerLinks])
+    }, [profile?.bio, profile?.headline, profile?.full_name])
 
     // Proactive Nudge: Suggest asking Deity if profile is incomplete
     useEffect(() => {
@@ -410,100 +434,6 @@ function DashboardContent() {
         setCropperImage(null)
     }
 
-    // Add a new link
-    const addLink = async () => {
-        if (!user) return
-
-        const newOrder = links.length > 0
-            ? Math.max(...links.map(l => l.display_order)) + 1
-            : 0
-
-        const { data, error } = await supabase
-            .from('links')
-            .insert({
-                user_id: user.id,
-                link_name: '',
-                link_url: '',
-                display_order: newOrder
-            })
-            .select()
-            .single()
-
-        if (data) {
-            setLinks([...links, data])
-        }
-        if (error) {
-            showToast('Failed to add link', 'error')
-        }
-    }
-
-    // Update a link
-    const updateLink = async (id: string, field: 'link_name' | 'link_url', value: string) => {
-        setLinks(links.map(l => l.id === id ? { ...l, [field]: value } : l))
-
-        const { error } = await supabase
-            .from('links')
-            .update({ [field]: value })
-            .eq('id', id)
-
-        if (!error) {
-            showToast('Changes saved', 'success')
-        }
-    }
-
-    // Remove a link
-    const removeLink = async (id: string) => {
-        await supabase.from('links').delete().eq('id', id)
-        setLinks(links.filter(l => l.id !== id))
-        showToast('Changes saved', 'success')
-    }
-
-    // Add a new contact
-    const addContact = async () => {
-        if (!user) return
-
-        const { data, error } = await supabase
-            .from('contacts')
-            .insert({
-                user_id: user.id,
-                method: 'Email',
-                value: '',
-            })
-            .select()
-            .single()
-
-        if (data) {
-            setContacts([...contacts, data])
-        }
-        if (error) {
-            showToast('Failed to add contact', 'error')
-        }
-    }
-
-    // Update a contact
-    const updateContact = async (
-        id: string,
-        field: 'method' | 'value' | 'custom_method_name',
-        value: string
-    ) => {
-        setContacts(contacts.map(c => c.id === id ? { ...c, [field]: value } : c))
-
-        const { error } = await supabase
-            .from('contacts')
-            .update({ [field]: value })
-            .eq('id', id)
-
-        if (!error) {
-            showToast('Changes saved', 'success')
-        }
-    }
-
-    // Remove a contact
-    const removeContact = async (id: string) => {
-        await supabase.from('contacts').delete().eq('id', id)
-        setContacts(contacts.filter(c => c.id !== id))
-    }
-
     // Copy profile URL
     const copyProfileUrl = () => {
         const url = `${window.location.origin}/${user?.username}`
@@ -511,7 +441,7 @@ function DashboardContent() {
         showToast('Profile URL copied!', 'success')
     }
 
-    // Drag and Drop Sensors
+    // DND Sensors
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -519,36 +449,27 @@ function DashboardContent() {
         })
     )
 
-    // Handle Drag End
-    const handleDragEnd = async (event: DragEndEvent) => {
+    const handleLinkDragEnd = (event: DragEndEvent) => {
         const { active, over } = event
 
-        if (over && active.id !== over.id) {
-            const oldIndex = links.findIndex((item) => item.id === active.id)
-            const newIndex = links.findIndex((item) => item.id === over.id)
+        if (active.id !== over?.id) {
+            const oldIndex = links.findIndex((link) => link.id === active.id)
+            const newIndex = links.findIndex((link) => link.id === over?.id)
 
             const newLinks = arrayMove(links, oldIndex, newIndex)
+            reorderLinks(newLinks.map(l => l.id))
+        }
+    }
 
-            // Update local state immediately for responsiveness
-            setLinks(newLinks)
+    const handleContactDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event
 
-            // Update display_order for all affected links
-            const updates = newLinks.map((link, index) => ({
-                id: link.id,
-                user_id: link.user_id,
-                link_name: link.link_name,
-                link_url: link.link_url,
-                display_order: index
-            }))
+        if (active.id !== over?.id) {
+            const oldIndex = contacts.findIndex((c) => c.id === active.id)
+            const newIndex = contacts.findIndex((c) => c.id === over?.id)
 
-            const { error } = await supabase
-                .from('links')
-                .upsert(updates, { onConflict: 'id' })
-
-            if (error) {
-                console.error('Error updating order:', error)
-                showToast('Failed to save order', 'error')
-            }
+            const newContacts = arrayMove(contacts, oldIndex, newIndex)
+            reorderContacts(newContacts.map(c => c.id))
         }
     }
 
@@ -590,12 +511,12 @@ function DashboardContent() {
                             />
                         </div>
 
-                        {/* Your Page Tab */}
+                        {/* Your Profile Tab */}
                         <button
-                            onClick={() => setActiveTab('page')}
+                            onClick={() => setActiveTab('profile')}
                             className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
                         >
-                            {activeTab === 'page' && (
+                            {activeTab === 'profile' && (
                                 <div
                                     className="absolute inset-0 pointer-events-none rounded-[100px]"
                                     style={{
@@ -615,7 +536,7 @@ function DashboardContent() {
                                     fontVariationSettings: "'wdth' 100"
                                 }}
                             >
-                                Your Page
+                                Your Profile
                             </p>
                         </button>
 
@@ -677,6 +598,28 @@ function DashboardContent() {
                                 Earnings
                             </p>
                         </button>
+
+                        {/* News Feed Tab (Coming Soon) */}
+                        <button
+                            disabled
+                            className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all opacity-50 cursor-not-allowed group"
+                        >
+                            <p
+                                className="relative font-semibold text-[13px] leading-[17px] overflow-ellipsis overflow-hidden whitespace-nowrap text-[rgba(255,255,255,0.4)]"
+                                style={{
+                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                                    fontWeight: 590,
+                                    fontVariationSettings: "'wdth' 100"
+                                }}
+                            >
+                                News Feed
+                            </p>
+
+                            {/* Tooltip on hover */}
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10">
+                                Coming Soon
+                            </div>
+                        </button>
                     </div>
                 </div>
 
@@ -718,8 +661,8 @@ function DashboardContent() {
                     </div>
                 )}
 
-                {/* Your Page Tab Content */}
-                {activeTab === 'page' && (
+                {/* Your Profile Tab Content */}
+                {activeTab === 'profile' && (
                     <GlassCard className="p-6 lg:p-8 relative pt-[48px] rounded-[40px] overflow-visible">
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
@@ -847,7 +790,7 @@ function DashboardContent() {
                                             value={bio}
                                             onChange={(e) => setBio(e.target.value)}
                                             onBlur={() => {
-                                                updateField('bio', bio);
+                                                updateProfile('bio', bio);
                                                 saveProfile();
                                             }}
 
@@ -1091,8 +1034,8 @@ function DashboardContent() {
                 {activeTab === 'my-nsso' && <MyNssoTab />}
 
 
-                {/* Only show Links, Contact, and Advanced Mode cards on "Your Page" tab */}
-                {activeTab === 'page' && (
+                {/* Only show Links, Contact, and Advanced Mode cards on "Your Profile" tab */}
+                {activeTab === 'profile' && (
                     <>
                         {/* Card 2: Links Section */}
                         <GlassCard className="p-6 lg:p-8">
@@ -1116,7 +1059,7 @@ function DashboardContent() {
                                         <span className="text-xs font-medium hidden sm:inline">Ask Deity</span>
                                     </button>
                                     <button
-                                        onClick={addLink}
+                                        onClick={() => addLink('', '')}
                                         className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors shrink-0"
                                     >
                                         +
@@ -1128,10 +1071,10 @@ function DashboardContent() {
                                 <DndContext
                                     sensors={sensors}
                                     collisionDetection={closestCenter}
-                                    onDragEnd={handleDragEnd}
+                                    onDragEnd={handleLinkDragEnd}
                                 >
                                     <SortableContext
-                                        items={links}
+                                        items={links.map(l => l.id)}
                                         strategy={verticalListSortingStrategy}
                                     >
                                         {links.map((link) => (
@@ -1154,71 +1097,39 @@ function DashboardContent() {
                         </GlassCard>
 
                         {/* Card 3: Contact Section */}
-                        <GlassCard className="p-6 lg:p-8">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="pr-8">
-                                    <h2 className="text-2xl font-bold text-white">Contact</h2>
-                                    <p className="text-white/70 text-sm">Add your preferred contact methods</p>
+                        <GlassCard className="p-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white mb-2">Contact</h2>
+                                    <p className="text-white/50 text-sm">Add your contact methods and social profiles.</p>
                                 </div>
                                 <button
                                     onClick={addContact}
-                                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors shrink-0"
+                                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                 >
                                     +
                                 </button>
                             </div>
-
                             <div className="space-y-4">
-                                {contacts.map((contact) => (
-                                    <div key={contact.id} className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-                                        <div className="w-full md:w-40">
-                                            <div className="relative rounded-[12px] overflow-hidden">
-                                                <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                                <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
-                                                <select
-                                                    value={contact.method}
-                                                    onChange={(e) => updateContact(contact.id, 'method', e.target.value)}
-                                                    className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] py-3 px-4 pr-10 cursor-pointer appearance-none"
-                                                >
-                                                    {CONTACT_METHODS.map((method) => (
-                                                        <option key={method} value={method}>{method}</option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 z-0 pointer-events-none text-[#545454]">
-                                                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {contact.method === 'Other' && (
-                                            <div className="w-full md:w-40">
-                                                <Input
-                                                    value={contact.custom_method_name || ''}
-                                                    onChange={(e) => updateContact(contact.id, 'custom_method_name', e.target.value)}
-                                                    placeholder="Method name"
-                                                />
-                                            </div>
-                                        )}
-
-                                        <div className="flex w-full md:flex-1 gap-4 items-center">
-                                            <div className="flex-1 min-w-0">
-                                                <Input
-                                                    value={contact.value}
-                                                    onChange={(e) => updateContact(contact.id, 'value', e.target.value)}
-                                                    placeholder={contact.method === 'Email' ? 'you@example.com' : 'Contact details'}
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={() => removeContact(contact.id)}
-                                                className="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors shrink-0"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={handleContactDragEnd}
+                                >
+                                    <SortableContext
+                                        items={contacts.map(c => c.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {contacts.map((contact) => (
+                                            <SortableContactItem
+                                                key={contact.id}
+                                                contact={contact}
+                                                updateContact={updateContact}
+                                                removeContact={removeContact}
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </DndContext>
 
                                 {contacts.length === 0 && (
                                     <p className="text-white/50 text-center py-8">
@@ -1226,8 +1137,6 @@ function DashboardContent() {
                                     </p>
                                 )}
                             </div>
-
-
                         </GlassCard>
 
                         {/* Advanced Mode Card (V2) */}

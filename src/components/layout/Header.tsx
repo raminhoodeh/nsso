@@ -65,7 +65,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             size="sm"
             onClick={copyProfileUrl}
         >
-            Copy page URL
+            Copy profile URL
         </GlassButton>
     ) : (
         <button
@@ -78,7 +78,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
             }}
         >
-            Preview Page
+            Preview Profile
         </button>
     )
 
@@ -142,7 +142,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                 size="sm"
                                 onClick={copyProfileUrl}
                             >
-                                Copy page URL
+                                Copy profile URL
                             </GlassButton>
                             <GlassButton
                                 variant="secondary"
@@ -176,7 +176,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                                 boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
                                             }}
                                         >
-                                            Preview Page
+                                            Preview Profile
                                         </button>
 
                                         <GlassButton
@@ -184,7 +184,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                             size="sm"
                                             onClick={copyProfileUrl}
                                         >
-                                            Copy page URL
+                                            Copy profile URL
                                         </GlassButton>
 
                                         {pathname !== '/dashboard' && (
@@ -283,7 +283,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                                     }}
                                                     className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
                                                 >
-                                                    Copy page URL
+                                                    Copy profile URL
                                                 </button>
 
                                                 {/* Default Mode: Preview Page Button (if not on preview) */}
@@ -295,7 +295,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                                         }}
                                                         className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
                                                     >
-                                                        Preview Page
+                                                        Preview Profile
                                                     </button>
                                                 )}
 
