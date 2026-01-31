@@ -378,11 +378,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
 
     // Add contact
+    // Add contact
     const addContact = async (): Promise<boolean> => {
         if (!user?.id) return false
 
         saveToHistory()
 
+        // Try inserting with display_order (preferred)
         const { data, error } = await supabase
             .from('contacts')
             .insert({
@@ -399,10 +401,30 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             return true
         }
 
+        // Fallback: If display_order fails (e.g. migration not run), try without it
         if (error) {
-            console.error('Error adding contact:', error)
-            undo()
-            return false
+            console.warn('Initial contact insert failed, retrying without display_order:', error)
+
+            const { data: fallbackData, error: fallbackError } = await supabase
+                .from('contacts')
+                .insert({
+                    user_id: user.id,
+                    method: 'Email',
+                    value: ''
+                })
+                .select()
+                .single()
+
+            if (fallbackData && !fallbackError) {
+                setContacts(prev => [...prev, fallbackData])
+                return true
+            }
+
+            if (fallbackError) {
+                console.error('Error adding contact (fallback):', fallbackError)
+                undo()
+                return false
+            }
         }
         return false
     }
