@@ -138,6 +138,47 @@ export default function HomePage() {
                 <p className="text-white text-lg leading-relaxed text-center lg:text-left">
                   Use nsso as a link-in-bio tool, a resumé, website, and personal shop. Your profile provides you with the most beautiful way to present yourself online - a way that makes you feel clear, and proud, of who you are.
                 </p>
+
+                {/* Coming Soon Features - Visual Filter for Whitespace */}
+                <div className="flex flex-col gap-3 mt-12 w-full max-w-sm mx-auto lg:mx-0">
+                  {/* Web3 Coming Soon Teaser */}
+                  <div className="relative group">
+                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                      <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
+                      <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
+                        <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
+                        <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
+                        <img
+                          alt=""
+                          src="/assets/premium-bezel.png"
+                          className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
+                        />
+                        <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                          Coming soon
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Facebook Pixel Coming Soon Teaser */}
+                  <div className="relative group">
+                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                      <span className="text-white/50 text-[15px]">Connect Facebook Pixel</span>
+                      <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
+                        <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
+                        <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
+                        <img
+                          alt=""
+                          src="/assets/premium-bezel.png"
+                          className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
+                        />
+                        <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                          Coming soon
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </GlassCard>
           </div>
