@@ -4,5 +4,5 @@
 DELETE FROM contacts 
 WHERE user_id IN (
     SELECT id FROM users 
-    WHERE email IN ('troy@nsso.me', 'raminhoodeh@gmail.com')
+    WHERE email IN ('troy@nsso.me', 'raminhoodeh@gmail.com', 'troycookecareer@gmail.com')
 );
