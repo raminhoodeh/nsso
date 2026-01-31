@@ -57,17 +57,34 @@ export default function ProfileQRCodeToggle({
 
 
                 {/* Back: QR Code */}
+                {/* Back: QR Code (Shiny Glass Effect) */}
                 <div
-                    className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-xl rotate-y-180 flex flex-col items-center justify-center p-4 border border-white/30"
+                    className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] rotate-y-180 flex flex-col items-center justify-center p-4 border border-white/50"
                     style={{
                         backfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)',
-                        background: 'rgba(255, 255, 255, 0.4)',
+                        background: 'rgba(255, 255, 255, 0.2)',
                         backdropFilter: 'blur(12px)',
-                        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)'
                     }}
                 >
-                    <div className="bg-white p-2 rounded-xl shadow-inner">
+                    {/* Lighten layer */}
+                    <div
+                        className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(255,255,255,0.06)] mix-blend-lighten"
+                        aria-hidden="true"
+                    />
+
+                    {/* Color dodge layer */}
+                    <div
+                        className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(94,94,94,0.18)] mix-blend-color-dodge"
+                        aria-hidden="true"
+                    />
+
+                    {/* Shimmer Effect */}
+                    <div className="absolute inset-0 z-0 overflow-hidden rounded-[inherit] pointer-events-none">
+                        <div className="absolute top-0 left-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                    </div>
+
+                    <div className="bg-white p-2 rounded-xl shadow-inner relative z-10">
                         <QRCodeSVG
                             value={profileUrl}
                             size={120}
@@ -77,9 +94,6 @@ export default function ProfileQRCodeToggle({
                             includeMargin={false}
                         />
                     </div>
-                    <p className="mt-3 text-[#5a769d] font-bold text-[10px] tracking-wide text-center leading-tight">
-                        All of you. All in one place
-                    </p>
                 </div>
             </div>
 
