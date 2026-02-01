@@ -206,7 +206,7 @@ body {
 
 /* === Utility: Clean Glass (No Distortion) === */
 .glass-clean::before {
-  filter: none !important;
+  display: none !important;
 }
 
 /* ============================================

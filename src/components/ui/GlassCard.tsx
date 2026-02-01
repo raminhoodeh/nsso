@@ -125,7 +125,7 @@ export default function GlassCard({
                     <div
                         className="absolute inset-0 rounded-[inherit] pointer-events-none"
                         style={{
-                            border: '1px solid rgba(255, 255, 255, 0.4)', // Higher contrast border
+                            border: '1px solid rgba(255, 255, 255, 0.25)', // Softer border to avoid "line" look
                             boxShadow: `
                                 inset 0 0 20px 0 rgba(255,255,255,0.1), /* Inner glow */
                                 inset 0 0 0 1px rgba(255,255,255,0.2) /* Sharp inner ring */
