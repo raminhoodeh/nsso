@@ -22,7 +22,7 @@ export default function CleanGlassCard({
             className={`relative overflow-hidden ${className}`}
             style={{
                 borderRadius: '40px',
-                backgroundColor: 'rgba(0, 0, 0, 0.3)', // Darker background for pop
+                backgroundColor: 'rgba(0, 0, 0, 0.2)', // Slightly brighter (less dark)
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', // Stronger shadow
                 border: '1px solid rgba(255, 255, 255, 0.15)',
                 ...customStyle
@@ -58,9 +58,9 @@ export default function CleanGlassCard({
                 className="absolute inset-0 pointer-events-none"
                 style={{
                     borderRadius: 'inherit',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 100%)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 100%)',
                     mixBlendMode: 'overlay',
-                    opacity: 0.6,
+                    opacity: 0.7,
                     zIndex: 1
                 }}
             />
