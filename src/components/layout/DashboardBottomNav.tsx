@@ -4,13 +4,33 @@ import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { User, LayoutDashboard, Newspaper } from 'lucide-react';
 
 const NAV_ITEMS = [
-    { id: 'profile', label: 'Your Page', icon: '/nav-profile.svg' },
-    { id: 'my-nsso', label: 'My nsso', icon: '/nav-my-nsso.svg' },
-    { id: 'deity', label: 'Deity', icon: '/nsso-agent-avatar.png' },
-    { id: 'earnings', label: 'Earnings', icon: '/nav-earnings.svg' },
-    { id: 'news-feed', label: 'Feed', icon: '/nav-news.svg', disabled: true },
+    {
+        id: 'profile',
+        label: 'Profile',
+        icon: User,
+        view: 'profile'
+    },
+    {
+        id: 'my-nsso',
+        label: 'My nsso',
+        icon: LayoutDashboard,
+        view: 'my-nsso'
+    },
+    {
+        id: 'deity',
+        label: 'Deity',
+        isDeity: true
+    },
+    {
+        id: 'news-feed',
+        label: 'Feed',
+        icon: Newspaper,
+        view: 'news-feed',
+        disabled: true
+    }
 ];
 
 function DashboardBottomNavContent() {
@@ -18,15 +38,17 @@ function DashboardBottomNavContent() {
     const searchParams = useSearchParams();
     const currentView = searchParams.get('view') || 'profile';
 
-    const handleNavClick = (id: string) => {
-        if (id === 'deity') {
+    const handleNavClick = (item: typeof NAV_ITEMS[0]) => {
+        if (item.id === 'deity') {
             window.dispatchEvent(new CustomEvent('open-deity-chat'));
             return;
         }
 
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('view', id);
-        router.push(`/dashboard?${params.toString()}`);
+        if (item.view) {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set('view', item.view);
+            router.push(`/dashboard?${params.toString()}`);
+        }
     };
 
     return (
@@ -37,48 +59,43 @@ function DashboardBottomNavContent() {
                 <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[rgba(255,255,255,0.15)] to-transparent" />
             </div>
 
-            <nav className="relative flex justify-around items-center h-[80px] px-2 pb-2">
+            <nav className="relative grid grid-cols-4 items-center h-[80px] px-2 pb-2">
                 {NAV_ITEMS.map((item) => {
-                    const isActive = currentView === item.id && item.id !== 'deity';
-                    const isDeity = item.id === 'deity';
+                    const isActive = currentView === item.view && !item.isDeity;
+                    const Icon = item.icon;
 
                     return (
                         <button
                             key={item.id}
                             disabled={item.disabled}
-                            onClick={() => !item.disabled && handleNavClick(item.id)}
+                            onClick={() => !item.disabled && handleNavClick(item)}
                             className={cn(
-                                "group relative flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all duration-300",
-                                item.disabled && "opacity-40 cursor-not-allowed",
-                                isDeity && "w-20 h-20 -translate-y-4"
+                                "group relative flex flex-col items-center justify-center gap-1.5 h-full transition-all duration-300",
+                                isActive ? "text-white" : "text-white/50",
+                                item.disabled && "opacity-40 cursor-not-allowed"
                             )}
                         >
-                            {/* Active pill background */}
+                            {/* Active pill background - simplified for cleaner look */}
                             {isActive && (
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 rounded-full blur-[2px]" />
+                                <div className="absolute top-2 w-10 h-1 bg-white/50 rounded-full blur-[2px]" />
                             )}
 
-                            {/* Deity Glow */}
-                            {isDeity && (
-                                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            {item.isDeity ? (
+                                <div className="relative w-6 h-6 rounded-full overflow-hidden ring-1 ring-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                                    <Image
+                                        src="/nsso-agent-avatar.png"
+                                        alt="Deity"
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                            ) : (
+                                Icon && <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
                             )}
 
-                            <div className={cn(
-                                "relative transition-all duration-300 mb-1",
-                                isActive ? "scale-110 -translate-y-1" : "group-hover:scale-105",
-                                isDeity ? "w-14 h-14" : "w-6 h-6"
-                            )}>
-                                <Image
-                                    src={item.icon}
-                                    alt={item.label}
-                                    fill
-                                    className={cn(
-                                        "object-contain transition-all duration-300",
-                                        isActive ? "brightness-150 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" : "opacity-60",
-                                        isDeity ? "opacity-100 rounded-full border border-white/20 shadow-lg" : ""
-                                    )}
-                                />
-                            </div>
+                            <span className="text-[10px] font-medium tracking-wide">
+                                {item.label}
+                            </span>
                         </button>
                     );
                 })}
@@ -94,3 +111,4 @@ export default function DashboardBottomNav() {
         </Suspense>
     );
 }
+

@@ -486,9 +486,11 @@ function DashboardContent() {
 
     return (
         <main className="min-h-screen pb-12">
-            <Header />
+            <div className="md:hidden">
+                <Header />
+            </div>
 
-            <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto space-y-6">
+            <div className="pt-[120px] md:pt-10 px-6 lg:px-12 max-w-[1470px] mx-auto space-y-6">
 
                 {/* Tab Bar Removed - Replaced by Global Sidebar/BottomNav */}
 
