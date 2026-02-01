@@ -121,7 +121,8 @@ export default function HomePage() {
           {/* Left Half - Text Card */}
           <div className="w-full lg:w-1/2">
             <GlassCard
-              className="h-full flex flex-col justify-start relative group rounded-[40px] glass-distortion-active"
+              variant="apple"
+              className="h-full flex flex-col justify-start relative group glass-distortion-active"
             >
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
@@ -411,7 +412,7 @@ export default function HomePage() {
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
           <Link href="/earnings" className="block">
-            <GlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
+            <GlassCard variant="apple" className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-2">Monetise</h3>
               <p className="text-white/70 text-sm">
                 Do you have an engaged following? See our nsso earnings programme
@@ -420,7 +421,7 @@ export default function HomePage() {
           </Link>
 
           <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
-            <GlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
+            <GlassCard variant="apple" className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-2">Example Profile</h3>
               <p className="text-white/70 text-sm">
                 See how your unified identity could look.
