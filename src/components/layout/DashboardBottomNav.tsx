@@ -1,22 +1,18 @@
-
 'use client'
 
 import React, { Suspense } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { Home, Search, ShoppingBag, User, Eye } from 'lucide-react';
-import { MyNssoIcon } from '../icons/MyNssoIcon';
 import { useToast } from '@/components/ui/Toast'
 
 // Navigation Configuration
 const NAV_ITEMS = [
-    { id: 'profile', label: 'Edit Profile', icon: User },
-    { id: 'my-nsso', label: 'My nsso', icon: MyNssoIcon },
-    { id: 'products', label: 'Products', icon: ShoppingBag },
-    { id: 'contacts', label: 'Network', icon: Search },
-    { id: 'preview', label: 'Preview', icon: Eye },
-];
+    { id: 'profile', label: 'Edit Profile', icon: '/nav-profile.svg' },
+    { id: 'my-nsso', label: 'My nsso', icon: '/nav-my-nsso.svg' },
+    { id: 'deity', label: 'Deity', icon: '/nsso-agent-avatar.png' },
+    { id: 'news', label: 'News Feed', icon: '/nav-news.svg' },
+]
 
 function BottomNavContent() {
     const router = useRouter()
@@ -25,40 +21,60 @@ function BottomNavContent() {
     const { showToast } = useToast()
 
     const handleItemClick = (id: string) => {
-        if (id === 'preview') {
-            router.push('/preview');
-            return;
+        if (id === 'news') {
+            showToast('News Feed coming soon', 'info')
+            return
         }
+        if (id === 'deity') {
+            window.dispatchEvent(new CustomEvent('open-deity-chat'))
+            return
+        }
+
         const params = new URLSearchParams(searchParams.toString())
         params.set('view', id)
         router.push(`/dashboard?${params.toString()}`)
     }
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe">
-            {/* Glass Container */}
-            <div className="mx-6 mb-8 rounded-[24px] overflow-hidden bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/10 shadow-2xl">
-                <div className="flex justify-between items-center px-8 h-[72px]">
-                    {NAV_ITEMS.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = activeView === item.id;
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#1C1C1E]/90 backdrop-blur-xl border-t border-white/10 pb-safe">
+            <div className="flex justify-between items-center px-8 h-[80px]">
+                {NAV_ITEMS.map((item) => {
+                    const isActive = activeView === item.id && item.id !== 'deity' && item.id !== 'news'
 
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => handleItemClick(item.id)}
-                                className="flex flex-col items-center justify-center gap-1 min-w-[64px]"
-                            >
-                                <div className={cn(
-                                    "transition-all duration-300",
-                                    isActive ? "text-white scale-110" : "text-white/40 hover:text-white/80"
-                                )}>
-                                    <Icon size={28} strokeWidth={isActive ? 2.5 : 2} />
-                                </div>
-                            </button>
-                        )
-                    })}
-                </div>
+                    return (
+                        <button
+                            key={item.id}
+                            onClick={() => handleItemClick(item.id)}
+                            className="flex flex-col items-center justify-center gap-1 min-w-[64px]"
+                        >
+                            <div className={cn(
+                                "transition-all duration-300 relative",
+                                isActive ? "opacity-100 scale-100" : "opacity-40 hover:opacity-80"
+                            )}>
+                                {item.id === 'deity' ? (
+                                    <div className="w-[28px] h-[28px] rounded-full overflow-hidden border border-white/20">
+                                        <Image
+                                            src={item.icon}
+                                            alt={item.label}
+                                            width={28}
+                                            height={28}
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="relative w-[24px] h-[24px]">
+                                        <Image
+                                            src={item.icon}
+                                            alt={item.label}
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </button>
+                    )
+                })}
             </div>
         </div>
     )
