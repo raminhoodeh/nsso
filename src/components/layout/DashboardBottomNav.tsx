@@ -1,4 +1,4 @@
-```
+
 'use client'
 
 import React, { Suspense } from 'react'
@@ -26,7 +26,7 @@ function BottomNavContent() {
     const handleItemClick = (id: string) => {
         const params = new URLSearchParams(searchParams.toString())
         params.set('view', id)
-        router.push(`/ dashboard ? ${ params.toString() } `)
+        router.push(`/dashboard?${params.toString()}`)
     }
 
     return (
