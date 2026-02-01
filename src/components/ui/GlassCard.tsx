@@ -59,17 +59,16 @@ export default function GlassCard({
             {/* Inner specular highlight for 3D effect - Conditional for non-apple variants */}
             {variant !== 'apple' && <div className="glass-specular" aria-hidden="true" />}
 
-            {/* Apple Variant Gradient Border */}
+            {/* Apple Variant Depth Effect - Border + Inner Highlights */}
             {variant === 'apple' && (
                 <div
                     className="absolute inset-0 rounded-[inherit] pointer-events-none z-[5]"
                     style={{
-                        padding: '1px',
-                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%)',
-                        mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                        maskComposite: 'exclude',
-                        WebkitMaskComposite: 'xor',
+                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                        boxShadow: `
+                            inset 0 1px 1px 0 rgba(255, 255, 255, 0.25),
+                            inset 0 -1px 1px 0 rgba(0, 0, 0, 0.1)
+                        `,
                     }}
                     aria-hidden="true"
                 />
