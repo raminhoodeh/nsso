@@ -702,10 +702,10 @@ function DashboardContent() {
                             </div>
 
                             <div className="space-y-4">
-                                {/* Flex container for Input + External Downgrade Button */}
-                                <div className="flex flex-col md:flex-row items-start gap-4">
+                                {/* Flex container for Input + Quote */}
+                                <div className="flex flex-col lg:flex-row items-center gap-4 w-full">
                                     {/* Figma Domain Input with integrated CLAIM IT button */}
-                                    <div className="relative w-full max-w-[522px] h-[54px] shrink-0">
+                                    <div className="relative w-full lg:flex-1 h-[54px]">
                                         {/* Base container with all layers */}
                                         <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
                                             {/* Glassmorphic background layers */}
@@ -767,7 +767,7 @@ function DashboardContent() {
 
                                         {/* Actions Section inside Input - Desktop Only */}
                                         <div className="relative z-10 hidden md:flex items-center gap-2 mr-1.5 shrink-0">
-                                            {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
+                                            {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) && (
                                                 <div
                                                     className="p-[0.75px] rounded-[100px]"
                                                     style={{
@@ -811,10 +811,6 @@ function DashboardContent() {
                                                         </div>
                                                     </button>
                                                 </div>
-                                            ) : (
-                                                <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5 whitespace-nowrap">
-                                                    Premium Active
-                                                </span>
                                             )}
                                         </div>
 
@@ -826,12 +822,19 @@ function DashboardContent() {
                                             }}
                                         />
                                     </div>
+
+                                    {/* Quote Section - Now sitting to the right */}
+                                    <div className="hidden lg:flex items-center h-[54px] shrink-0">
+                                        <p className="text-white/80 text-sm italic font-bold leading-tight">
+                                            "nsso is the most beautiful way to present yourself online" <span className="font-normal not-italic">- <a href="https://www.instagram.com/ramin.nsso" target="_blank" rel="noopener noreferrer" className="hover:underline">Ramin Hoodeh</a></span>
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {/* Mobile Actions Row (Below Input) */}
                                 <div className="flex md:hidden items-center gap-3 w-full">
                                     {/* Primary Action Button (Mobile) */}
-                                    {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
+                                    {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) && (
                                         <div
                                             className="p-[0.75px] rounded-[100px] flex-1"
                                             style={{
@@ -870,38 +873,7 @@ function DashboardContent() {
                                                 </div>
                                             </button>
                                         </div>
-                                    ) : (
-                                        <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5 flex-1 whitespace-nowrap">
-                                            Premium Active
-                                        </span>
                                     )}
-
-                                    {/* Mobile Downgrade Button */}
-                                    {user?.is_premium && (
-                                        <button
-                                            onClick={() => setShowDowngradeModal(true)}
-                                            className="h-[42px] px-6 rounded-[100px] border border-white/20 flex items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
-                                        >
-                                            Downgrade
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* Downgrade Button - Situated to the right (Desktop) */}
-                                {user?.is_premium && (
-                                    <button
-                                        onClick={() => setShowDowngradeModal(true)}
-                                        className="hidden md:flex h-[54px] px-6 rounded-[100px] border border-white/20 items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30 shrink-0"
-                                    >
-                                        Downgrade
-                                    </button>
-                                )}
-
-                                {/* Quote Section */}
-                                <div className="hidden lg:flex items-center h-[54px] ml-4">
-                                    <p className="text-white/80 text-sm italic font-bold max-w-[500px] leading-tight text-right lg:text-left">
-                                        "nsso is the most beautiful way to present yourself online" <span className="font-normal not-italic">- <a href="https://www.instagram.com/ramin.nsso" target="_blank" rel="noopener noreferrer" className="hover:underline">Ramin Hoodeh</a></span>
-                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -921,7 +893,7 @@ function DashboardContent() {
 
                         <p className="mt-4 text-white/60 text-sm">
                             {user?.is_premium
-                                ? `Your custom URL: nsso.me/${customDomain}`
+                                ? `Your custom URL is free for 1 year: nsso.me/${customDomain}`
                                 : 'Your custom URL is free for 1 year:'}
                         </p>
                     </GlassCard>
