@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 interface GlassCardProps {
     children: ReactNode
     className?: string
-    variant?: 'default' | 'strong' | 'subtle' | 'apple'
+    variant?: 'default' | 'strong' | 'subtle' | 'apple' | 'ultimate'
     style?: React.CSSProperties
 }
 
@@ -43,6 +43,12 @@ export default function GlassCard({
             '--glass-blur': '30px',
             '--glass-saturate': '180%',
             '--glass-brightness': '1'
+        },
+        ultimate: {
+            '--glass-bg': 'rgba(255, 255, 255, 0.07)',
+            '--glass-blur': '40px',
+            '--glass-saturate': '180%',
+            '--glass-brightness': '1.05'
         }
     }
 
@@ -51,15 +57,19 @@ export default function GlassCard({
         ...customStyle
     } as React.CSSProperties
 
+    const borderRadius = variant === 'apple' || variant === 'ultimate' ? 'rounded-[24px]' : 'rounded-[40px]'
+    const blendMode = variant === 'apple' || variant === 'ultimate' ? '[&::after]:mix-blend-screen' : ''
+    const shadowStyle = variant === 'apple' || variant === 'ultimate' ? 'shadow-none' : ''
+
     return (
         <div
-            className={`glass-style-card ${variant === 'apple' ? 'rounded-[24px] [&::after]:mix-blend-screen shadow-none' : 'rounded-[40px]'} overflow-visible ${className}`}
+            className={`glass-style-card ${borderRadius} ${blendMode} ${shadowStyle} overflow-visible ${className}`}
             style={mergedStyle}
         >
-            {/* Inner specular highlight for 3D effect - Conditional for non-apple variants */}
-            {variant !== 'apple' && <div className="glass-specular" aria-hidden="true" />}
+            {/* Inner specular highlight for default variants */}
+            {variant !== 'apple' && variant !== 'ultimate' && <div className="glass-specular" aria-hidden="true" />}
 
-            {/* Apple Variant Depth Effect - Border + Inner Highlights */}
+            {/* Apple Variant Depth Effect */}
             {variant === 'apple' && (
                 <div
                     className="absolute inset-0 rounded-[inherit] pointer-events-none z-[5]"
@@ -72,6 +82,47 @@ export default function GlassCard({
                     }}
                     aria-hidden="true"
                 />
+            )}
+
+            {/* Ultimate Glass System - All Advanced Techniques */}
+            {variant === 'ultimate' && (
+                <>
+                    {/* Layer 1: Specular highlight gradient (light refraction) */}
+                    <div
+                        className="absolute inset-0 rounded-[inherit] pointer-events-none z-[3]"
+                        style={{
+                            background: 'linear-gradient(165deg, rgba(255,255,255,0.35) 0%, transparent 40%, rgba(0,0,0,0.05) 100%)',
+                            mixBlendMode: 'overlay'
+                        }}
+                        aria-hidden="true"
+                    />
+
+                    {/* Layer 2: Frosted noise texture */}
+                    <div
+                        className="absolute inset-0 rounded-[inherit] pointer-events-none opacity-20 z-[4]"
+                        style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E")`,
+                            mixBlendMode: 'overlay'
+                        }}
+                        aria-hidden="true"
+                    />
+
+                    {/* Layer 3: Enhanced border with multi-directional lighting */}
+                    <div
+                        className="absolute inset-0 rounded-[inherit] pointer-events-none z-[5]"
+                        style={{
+                            border: '1px solid rgba(255, 255, 255, 0.18)',
+                            boxShadow: `
+                                inset 0 1px 2px 0 rgba(255, 255, 255, 0.4),
+                                inset 0 0.5px 0 0 rgba(255, 255, 255, 0.6),
+                                inset 0 -1px 2px 0 rgba(0, 0, 0, 0.15),
+                                0 1px 3px 0 rgba(0, 0, 0, 0.1),
+                                0 8px 16px -4px rgba(0, 0, 0, 0.1)
+                            `,
+                        }}
+                        aria-hidden="true"
+                    />
+                </>
             )}
 
             {/* Content container */}
