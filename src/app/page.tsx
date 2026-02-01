@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
-import GlassCard from '@/components/ui/GlassCard'
+import CleanGlassCard from '@/components/ui/CleanGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import Link from 'next/link'
@@ -120,9 +120,8 @@ export default function HomePage() {
         <div className="flex flex-col lg:flex-row gap-24 items-stretch min-h-[80vh]">
           {/* Left Half - Text Card */}
           <div className="w-full lg:w-1/2">
-            <GlassCard
-              variant="ultimate"
-              className="h-full flex flex-col justify-start relative group glass-distortion-active"
+            <CleanGlassCard
+              className="h-full flex flex-col justify-start relative group"
             >
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
@@ -204,7 +203,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </GlassCard>
+            </CleanGlassCard>
           </div>
 
           {/* Right Half - Fullscreen Vertical Video */}
@@ -409,24 +408,23 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
           <Link href="/earnings" className="block">
-            <GlassCard variant="ultimate" className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
+            <CleanGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-2">Monetise</h3>
               <p className="text-white/70 text-sm">
                 Do you have an engaged following? See our nsso earnings programme
               </p>
-            </GlassCard>
+            </CleanGlassCard>
           </Link>
 
           <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
-            <GlassCard variant="ultimate" className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
+            <CleanGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-2">Example Profile</h3>
               <p className="text-white/70 text-sm">
                 See how your unified identity could look.
               </p>
-            </GlassCard>
+            </CleanGlassCard>
           </a>
         </div>
 
