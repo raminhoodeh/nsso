@@ -285,22 +285,21 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                             </div>
                         </>
                     )}
-                </>
+
+
+                    {/* Mobile - Not logged in (Default Mode Only) */}
+                    {!isOwnerMode && showAuthButtons && !user && (
+                        <Link href="/sign-in">
+                            <GlassButton variant="secondary" size="sm">
+                                SIGN IN / SIGN UP
+                            </GlassButton>
+                        </Link>
                     )}
+                </div>
+            </nav>
 
-                {/* Mobile - Not logged in (Default Mode Only) */}
-                {!isOwnerMode && showAuthButtons && !user && (
-                    <Link href="/sign-in">
-                        <GlassButton variant="secondary" size="sm">
-                            SIGN IN / SIGN UP
-                        </GlassButton>
-                    </Link>
-                )}
-            </div>
-        </nav>
-
-            {/* Add slide-in animation */ }
-    <style jsx>{`
+            {/* Add slide-in animation */}
+            <style jsx>{`
                 @keyframes slide-in-right {
                     from {
                         transform: translateX(100%);
