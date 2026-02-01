@@ -7,6 +7,8 @@ import CleanGlassCard from '@/components/ui/CleanGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import Link from 'next/link'
+import { useUser } from '@/components/providers/UserProvider'
+import { cn } from '@/lib/utils'
 
 import { createClient } from '@/lib/supabase/client'
 
@@ -15,6 +17,7 @@ const animatedWords = ['Clarify', 'Organise', 'Future-Proof', 'Present']
 
 export default function HomePage() {
   const router = useRouter()
+  const { user } = useUser()
   const [reservedName, setReservedName] = useState('')
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const supabase = createClient()
@@ -86,11 +89,14 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen">
-      <Header />
+      {!user && <Header />}
 
       {/* Hero Section */}
       {/* Hero Section */}
-      <section className="pt-[calc(140px+5vh)] lg:pt-[140px] pb-16 px-6 lg:px-[165px] max-w-[1470px] mx-auto">
+      <section className={cn(
+        "pt-[calc(140px+5vh)] lg:pt-[140px] pb-16 px-6 max-w-[1470px] mx-auto",
+        user ? "lg:px-8" : "lg:px-[165px]"
+      )}>
 
         {/* Typographic Hero Animation/Layout - Centered Vertical Stack */}
         <div className="relative mb-48 flex flex-col items-center font-bold tracking-tight select-none z-0">
@@ -222,7 +228,10 @@ export default function HomePage() {
       </section >
 
       {/* CTA Section */}
-      < section className="py-16 px-6 lg:px-[165px] max-w-[1470px] mx-auto" >
+      <section className={cn(
+        "py-16 px-6 max-w-[1470px] mx-auto",
+        user ? "lg:px-8" : "lg:px-[165px]"
+      )}>
         <div className="text-center mb-8">
           <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2">
             Reserve your nsso profile name
