@@ -66,8 +66,21 @@ export async function POST(request: Request) {
 
         // --- Execute Free Upgrade ---
 
-        // 1. Update User Record
-        const { error: updateUserError } = await supabase
+        // Initialize Admin Client to bypass RLS for is_premium update
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
+            }
+        )
+
+        // 1. Update User Record using Admin Client
+        const { error: updateUserError } = await supabaseAdmin
             .from('users')
             .update({
                 username: desiredUsername,
@@ -86,7 +99,7 @@ export async function POST(request: Request) {
 
         // 2. Create "Free Tier" Subscription Record
         // We record a subscription so the system knows it's active, even if unpaid.
-        const { error: subError } = await supabase
+        const { error: subError } = await supabaseAdmin
             .from('subscriptions')
             .insert({
                 user_id: user.id,
