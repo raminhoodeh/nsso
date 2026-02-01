@@ -97,7 +97,7 @@ function DashboardSidebarContent() {
             <div className="px-8 py-8">
                 <div
                     className="cursor-pointer"
-                    onClick={() => router.push('/')}
+                    onClick={() => router.push('/?view=home')}
                 >
                     <Image
                         src="/assets/nsso-logo.png"
@@ -157,7 +157,7 @@ function DashboardSidebarContent() {
             {/* Footer Actions */}
             <div className="p-4 mt-auto border-t border-white/5 space-y-2">
                 {isAdmin && (
-                    <Link href="/admin" className="w-full">
+                    <Link href="/admin" className="w-full mb-3 block">
                         <button
                             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
                         >

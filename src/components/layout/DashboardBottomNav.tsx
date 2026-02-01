@@ -36,8 +36,8 @@ function BottomNavContent() {
     }
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#1C1C1E]/90 backdrop-blur-xl border-t border-white/10 pb-safe">
-            <div className="flex justify-between items-center px-8 h-[80px]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#1C1C1E]/60 backdrop-blur-xl border-t border-white/10 pb-safe">
+            <div className="flex justify-between items-center px-8 h-[64px]">
                 {NAV_ITEMS.map((item) => {
                     const isActive = activeView === item.id && item.id !== 'deity' && item.id !== 'news'
 
@@ -49,15 +49,15 @@ function BottomNavContent() {
                         >
                             <div className={cn(
                                 "transition-all duration-300 relative",
-                                isActive ? "opacity-100 scale-100" : "opacity-40 hover:opacity-80"
+                                isActive || item.id === 'deity' ? "opacity-100 scale-100" : "opacity-40 hover:opacity-80"
                             )}>
                                 {item.id === 'deity' ? (
-                                    <div className="w-[28px] h-[28px] rounded-full overflow-hidden border border-white/20">
+                                    <div className="w-[32px] h-[32px] rounded-full overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                                         <Image
                                             src={item.icon}
                                             alt={item.label}
-                                            width={28}
-                                            height={28}
+                                            width={32}
+                                            height={32}
                                             className="object-cover"
                                         />
                                     </div>
