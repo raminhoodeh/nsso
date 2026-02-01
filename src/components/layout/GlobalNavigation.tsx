@@ -4,11 +4,10 @@ import { useUser } from '@/components/providers/UserProvider';
 import DashboardSidebar from '@/components/layout/DashboardSidebar';
 import DashboardBottomNav from '@/components/layout/DashboardBottomNav';
 import { Suspense } from 'react';
-import { usePathname } from 'next/navigation';
+
 
 function GlobalNavigationContent() {
     const { user, loading } = useUser();
-    const pathname = usePathname();
 
     // Don't show anything while loading to prevent flicker
     if (loading) return null;
@@ -17,19 +16,13 @@ function GlobalNavigationContent() {
     if (!user) return null;
 
     // Define routes where Desktop Sidebar should be visible
-    // Basically: Dashboard, Earnings, Deity, News, Admin.
-    // Public profile / Preview pages (root or /[username]) should NOT have desktop sidebar.
-    const showDesktopSidebar = pathname === '/' || // Homepage when logged in
-        pathname?.startsWith('/dashboard') ||
-        pathname?.startsWith('/earnings') ||
-        pathname?.startsWith('/deity') ||
-        pathname?.startsWith('/news') ||
-        pathname?.startsWith('/admin') ||
-        pathname === '/check-username'; // Edge case
+    // Update: User requested Sidebar to be visible on Preview Profile (/[username]) as well.
+    // So we basically show it everywhere if logged in.
+    // Mobile responsiveness of Sidebar (hidden on mobile) is handled within the component itself or CSS.
 
     return (
         <>
-            {showDesktopSidebar && <DashboardSidebar />}
+            <DashboardSidebar />
             <DashboardBottomNav />
         </>
     );

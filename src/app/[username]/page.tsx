@@ -150,10 +150,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
     return (
         <main className="min-h-screen pb-40" style={{ paddingTop: '128px' }}>
             {/* Navigation */}
-            <Header
-                variant={isOwner ? 'owner' : 'default'}
-                username={username}
-            />
+            <div className={viewer ? "md:hidden" : ""}>
+                <Header
+                    variant={isOwner ? 'owner' : 'default'}
+                    username={username}
+                />
+            </div>
 
             {/* Logic Handlers */}
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
