@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 import GlassButton from '@/components/ui/GlassButton'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
@@ -84,7 +85,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     )
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-[5000]">
+        <header className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden")}>
             {/* Liquid Glass Overlay (System Integrated) */}
             <div
                 className="!absolute inset-0 glass-style-navbar"

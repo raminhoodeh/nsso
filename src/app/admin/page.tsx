@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Header from '@/components/layout/Header'
 import GlassCard from '@/components/ui/GlassCard'
 import { useToast } from '@/components/ui/Toast'
 import type { User } from '@/lib/types'
@@ -112,7 +111,6 @@ export default function AdminPage() {
 
     return (
         <main className="min-h-screen pb-12">
-            <Header />
 
             <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto">
                 <GlassCard className="p-6 lg:p-8">
