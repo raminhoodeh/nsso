@@ -126,12 +126,12 @@ export default function HomePage() {
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
                 <p className="text-white text-lg font-medium text-center lg:text-left">
-                  Your Entire Professional World. One App.
+                  Your entire professional world. One app.
                 </p>
 
                 {/* Middle Row: Title Text */}
                 <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
-                  The Only Sovereign<br />Networking Super App.
+                  The only sovereign<br />networking super app.
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
