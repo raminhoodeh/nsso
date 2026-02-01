@@ -24,10 +24,26 @@ export default function CleanGlassCard({
                 borderRadius: '40px',
                 backgroundColor: 'rgba(0, 0, 0, 0.2)', // Slightly brighter (less dark)
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', // Stronger shadow
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                // border: '1px solid rgba(255, 255, 255, 0.15)', // Removed in favor of gradient stroke
                 ...customStyle
             }}
         >
+            {/* ... other layers ... */}
+
+            {/* Gradient Border Overlay (New) */}
+            <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    borderRadius: 'inherit',
+                    padding: '1px',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                    mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    maskComposite: 'exclude',
+                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    zIndex: 50
+                }}
+            />
             {/* SVG Filter Definition */}
             <svg style={{ display: 'none' }}>
                 <filter id="glass-distortion">
