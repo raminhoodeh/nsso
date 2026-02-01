@@ -56,8 +56,24 @@ export default function GlassCard({
             className={`glass-style-card ${variant === 'apple' ? 'rounded-[24px] [&::after]:mix-blend-screen shadow-none' : 'rounded-[40px]'} overflow-visible ${className}`}
             style={mergedStyle}
         >
-            {/* Inner specular highlight for 3D effect */}
-            <div className="glass-specular" aria-hidden="true" />
+            {/* Inner specular highlight for 3D effect - Conditional for non-apple variants */}
+            {variant !== 'apple' && <div className="glass-specular" aria-hidden="true" />}
+
+            {/* Apple Variant Gradient Border */}
+            {variant === 'apple' && (
+                <div
+                    className="absolute inset-0 rounded-[inherit] pointer-events-none z-[5]"
+                    style={{
+                        padding: '1px',
+                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%)',
+                        mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                        maskComposite: 'exclude',
+                        WebkitMaskComposite: 'xor',
+                    }}
+                    aria-hidden="true"
+                />
+            )}
 
             {/* Content container */}
             <div className="relative h-full w-full">
