@@ -812,7 +812,7 @@ function DashboardContent() {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5">
+                                                <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5 whitespace-nowrap">
                                                     Premium Active
                                                 </span>
                                             )}
@@ -871,7 +871,7 @@ function DashboardContent() {
                                             </button>
                                         </div>
                                     ) : (
-                                        <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5 flex-1">
+                                        <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5 flex-1 whitespace-nowrap">
                                             Premium Active
                                         </span>
                                     )}
@@ -891,7 +891,7 @@ function DashboardContent() {
                                 {user?.is_premium && (
                                     <button
                                         onClick={() => setShowDowngradeModal(true)}
-                                        className="hidden md:flex h-[54px] px-6 rounded-[100px] border border-white/20 items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
+                                        className="hidden md:flex h-[54px] px-6 rounded-[100px] border border-white/20 items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30 shrink-0"
                                     >
                                         Downgrade
                                     </button>
