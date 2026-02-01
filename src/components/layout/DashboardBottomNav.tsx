@@ -44,23 +44,12 @@ function BottomNavContent() {
                                 onClick={() => handleItemClick(item.id)}
                                 className="flex flex-col items-center justify-center gap-1 min-w-[64px]"
                             >
-                                {item.isDeity ? (
-                                    <div className="relative w-8 h-8 rounded-full overflow-hidden ring-1 ring-white/20 shadow-lg shadow-purple-500/20">
-                                        <Image
-                                            src="/nsso-agent-avatar.png"
-                                            alt="Deity"
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className={cn(
-                                        "transition-all duration-300",
-                                        isActive ? "text-white scale-110" : "text-white/40 hover:text-white/80"
-                                    )}>
-                                        <Icon size={28} strokeWidth={isActive ? 2.5 : 2} />
-                                    </div>
-                                )}
+                                <div className={cn(
+                                    "transition-all duration-300",
+                                    isActive ? "text-white scale-110" : "text-white/40 hover:text-white/80"
+                                )}>
+                                    <Icon size={28} strokeWidth={isActive ? 2.5 : 2} />
+                                </div>
                             </button>
                         )
                     })}
