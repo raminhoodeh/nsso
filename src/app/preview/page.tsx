@@ -88,7 +88,7 @@ export default function PreviewPage() {
         <main className="min-h-screen">
             {/* Navigation Bar */}
             <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md">
-                <div className="max-w-[1470px] mx-auto px-6 lg:px-[165px] h-[72px] flex items-center justify-between">
+                <div className="max-w-[1800px] mx-auto px-6 lg:px-10 h-[72px] flex items-center justify-between">
                     <GlassButton
                         variant="ghost"
                         size="sm"
@@ -107,7 +107,7 @@ export default function PreviewPage() {
             </nav>
 
             {/* Profile Content */}
-            <div className="pt-[120px] pb-40 px-6 lg:px-[165px] max-w-[1470px] mx-auto">
+            <div className="pt-[120px] pb-40 px-6 lg:px-10 max-w-[1800px] mx-auto">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     {/* Left Column - Primary Identity */}

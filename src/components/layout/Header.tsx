@@ -93,7 +93,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 <div className="glass-specular" aria-hidden="true" />
             </div>
 
-            <nav className="relative z-[60] max-w-[1470px] mx-auto px-6 lg:px-[165px] h-[88px] flex items-center justify-between">
+            <nav className="relative z-[60] max-w-[1800px] mx-auto px-6 lg:px-10 h-[88px] flex items-center justify-between">
 
                 {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
                 {isOwnerMode ? (

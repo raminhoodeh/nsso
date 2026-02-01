@@ -159,7 +159,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
 
             {/* Profile Content */}
-            <div className="px-6 lg:px-8 max-w-[1470px] mx-auto space-y-12">
+            <div className="px-6 lg:px-10 max-w-[1800px] mx-auto space-y-12">
 
                 {/* 1. Identity & Resume Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
