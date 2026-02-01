@@ -133,6 +133,24 @@ export default function PreviewPage() {
                             )}
                         </div>
 
+                        {/* Mobile Contact Details (Below Headline) */}
+                        {contacts.length > 0 && (
+                            <div className="block lg:hidden !mt-10 space-y-2">
+                                <GlassCard className="p-4 bg-white/5 border-white/10">
+                                    <div className="space-y-3">
+                                        {contacts.map((contact) => (
+                                            <div key={contact.id} className="text-white text-center flex items-center justify-center gap-2">
+                                                <span className="text-white/70">
+                                                    {contact.method === 'Other' ? contact.custom_method_name : contact.method}:
+                                                </span>{' '}
+                                                <span>{contact.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </GlassCard>
+                            </div>
+                        )}
+
                         {/* Bio Card */}
                         {profile?.bio && (
                             <GlassCard className="p-6 !mt-10">
@@ -368,24 +386,7 @@ export default function PreviewPage() {
                         </div>
                     </section>
                 )}
-                {/* Mobile Contact Section */}
-                {contacts.length > 0 && (
-                    <section className="block lg:hidden mt-20 px-6 lg:px-[165px] max-w-[1470px] mx-auto">
-                        <GlassCard className="p-6">
 
-                            <div className="space-y-2">
-                                {contacts.map((contact) => (
-                                    <div key={contact.id} className="text-white text-center">
-                                        <span className="text-white/70">
-                                            {contact.method === 'Other' ? contact.custom_method_name : contact.method}:
-                                        </span>{' '}
-                                        <span>{contact.value}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </GlassCard>
-                    </section>
-                )}
 
                 <div className="pt-12 flex justify-center pb-1">
                     <CreateProfileButton />

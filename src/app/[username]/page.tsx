@@ -202,7 +202,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
                         {/* Mobile Contact Details (Below Headline) */}
                         {contacts.length > 0 && (
-                            <div className="block lg:hidden !mt-6 space-y-2">
+                            <div className="block lg:hidden !mt-10 space-y-2">
                                 <GlassCard className="p-4 bg-white/5 border-white/10">
                                     <div className="space-y-3">
                                         {contacts.map(renderContactItem)}
