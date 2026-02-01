@@ -87,7 +87,7 @@ export default function PreviewPage() {
     return (
         <main className="min-h-screen">
             {/* Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md">
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md md:hidden">
                 <div className="max-w-[1800px] mx-auto px-6 lg:px-10 h-[72px] flex items-center justify-between">
                     <GlassButton
                         variant="ghost"

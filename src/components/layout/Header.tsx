@@ -15,9 +15,10 @@ interface HeaderProps {
     showAuthButtons?: boolean
     variant?: 'default' | 'owner'
     username?: string
+    className?: string
 }
 
-export default function Header({ showAuthButtons = true, variant = 'default', username }: HeaderProps) {
+export default function Header({ showAuthButtons = true, variant = 'default', username, className }: HeaderProps) {
     const { user } = useUser()
     const isAdmin = user?.user_type === 'admin'
     const supabase = createClient()
@@ -25,6 +26,8 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const router = useRouter()
     const { showToast } = useToast()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+    // ... (rest)
 
     // Close mobile menu on route change
     useEffect(() => {
@@ -60,7 +63,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const isOwnerMode = variant === 'owner'
 
     // Determine which primary button to show on mobile (Default Mode)
-    const isPreviewPage = pathname === '/preview' || (user?.username && pathname.startsWith(`/${user.username}`))
+    const isPreviewPage = pathname === '/preview' || (user?.username && pathname?.startsWith(`/${user.username}`))
     const primaryMobileButton = isPreviewPage ? (
         <GlassButton
             variant="ghost"
@@ -85,7 +88,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     )
 
     return (
-        <header className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden")}>
+        <header className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden", className)}>
             {/* Liquid Glass Overlay (System Integrated) */}
             <div
                 className="!absolute inset-0 glass-style-navbar"
