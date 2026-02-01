@@ -1,10 +1,13 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: Request) {
     try {
         const { desiredUsername } = await request.json()
+        // ... (rest of function)
+
         const cookieStore = await cookies()
 
         const supabase = createServerClient(
@@ -67,10 +70,19 @@ export async function POST(request: Request) {
         // --- Execute Free Upgrade ---
 
         // Initialize Admin Client to bypass RLS for is_premium update
-        const { createClient } = await import('@supabase/supabase-js')
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+        if (!serviceRoleKey) {
+            console.error('FATAL: SUPABASE_SERVICE_ROLE_KEY is missing')
+            return NextResponse.json(
+                { error: 'Configuration Error: Service Role Key missing' },
+                { status: 500 }
+            )
+        }
+
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+            serviceRoleKey,
             {
                 auth: {
                     autoRefreshToken: false,
@@ -80,19 +92,20 @@ export async function POST(request: Request) {
         )
 
         // 1. Update User Record using Admin Client
+        console.log(`Attempting admin update for user ${user.id} to set username: ${desiredUsername}`)
+
         const { error: updateUserError } = await supabaseAdmin
             .from('users')
             .update({
                 username: desiredUsername,
-                is_premium: true, // Grant premium status freely
-                updated_at: new Date().toISOString()
+                is_premium: true // Grant premium status freely
             })
             .eq('id', user.id)
 
         if (updateUserError) {
-            console.error('Error updating user record:', updateUserError)
+            console.error('Detailed Admin Update Error:', JSON.stringify(updateUserError, null, 2))
             return NextResponse.json(
-                { error: 'Failed to update user record' },
+                { error: `Failed to update user record: ${updateUserError.message}` },
                 { status: 500 }
             )
         }

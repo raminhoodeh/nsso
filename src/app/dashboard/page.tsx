@@ -292,7 +292,15 @@ function DashboardContent() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ desiredUsername }),
             })
-            const data = await response.json()
+
+            let data
+            const responseText = await response.text()
+            try {
+                data = JSON.parse(responseText)
+            } catch (e) {
+                console.error('API Response was not JSON:', responseText)
+                data = { error: 'Server returned invalid response' }
+            }
 
             if (response.ok && data.success) {
                 showToast(`Domain claimed! Welcome to Premium.`, 'success')
@@ -304,7 +312,8 @@ function DashboardContent() {
                 // Let's reload to be safe and ensure fresh data
                 window.location.reload()
             } else {
-                console.error('Claim Error:', data)
+                console.error('Claim Error Data:', data)
+                console.error('Claim Response Status:', response.status, response.statusText)
                 showToast(data.error || 'Failed to claim domain', 'error')
             }
         } catch (err) {
@@ -767,51 +776,52 @@ function DashboardContent() {
 
                                         {/* Actions Section inside Input - Desktop Only */}
                                         <div className="relative z-10 hidden md:flex items-center gap-2 mr-1.5 shrink-0">
-                                            {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) && (
-                                                <div
-                                                    className="p-[0.75px] rounded-[100px]"
+                                            {/* Always show button, content changes based on state */}
+                                            <div
+                                                className="p-[0.75px] rounded-[100px]"
+                                                style={{
+                                                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                                }}
+                                            >
+                                                <button
+                                                    onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
+                                                    disabled={
+                                                        (!user?.is_premium && !usernameAvailable) ||
+                                                        processingCheckout ||
+                                                        (user?.is_premium && !customDomain) ||
+                                                        (user?.is_premium && customDomain === user?.username) ||
+                                                        (!user?.is_premium && !desiredUsername)
+                                                    }
+                                                    className={cn(
+                                                        "relative h-[42px] px-6 rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]",
+                                                        (user?.is_premium ? customDomain !== user?.username : usernameAvailable) ? "bg-white/10 text-white" : "bg-transparent text-white/50"
+                                                    )}
                                                     style={{
-                                                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                                        boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
                                                     }}
                                                 >
-                                                    <button
-                                                        onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
-                                                        disabled={
-                                                            (!user?.is_premium && !usernameAvailable) ||
-                                                            processingCheckout ||
-                                                            (user?.is_premium && !customDomain) ||
-                                                            (!user?.is_premium && !desiredUsername)
-                                                        }
-                                                        className={cn(
-                                                            "relative h-[42px] px-6 rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]",
-                                                            usernameAvailable ? "bg-white/10 text-white" : "bg-transparent text-white/50"
-                                                        )}
-                                                        style={{
-                                                            boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                                                        }}
-                                                    >
-                                                        <div className="absolute inset-0 rounded-[100px] bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
-                                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
-                                                        <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
+                                                    <div className="absolute inset-0 rounded-[100px] bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
+                                                    <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                                    <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
 
-                                                        <div className="relative z-10 flex items-center gap-2">
-                                                            {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
-                                                            <span
-                                                                className="text-[16px] font-semibold text-white/96 tracking-wide"
-                                                                style={{
-                                                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                                    fontWeight: 590
-                                                                }}
-                                                            >
-                                                                {processingCheckout
-                                                                    ? (user?.is_premium ? 'Updating...' : 'Claiming...')
-                                                                    : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                    </button>
-                                                </div>
-                                            )}
+                                                    <div className="relative z-10 flex items-center gap-2">
+                                                        {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
+                                                        <span
+                                                            className="text-[16px] font-semibold text-white/96 tracking-wide"
+                                                            style={{
+                                                                fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                                                                fontWeight: 590
+                                                            }}
+                                                        >
+                                                            {processingCheckout
+                                                                ? (user?.is_premium ? 'Updating...' : 'Claiming...')
+                                                                : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            </div>
+
                                         </div>
 
                                         {/* Inset shadow overlay */}
