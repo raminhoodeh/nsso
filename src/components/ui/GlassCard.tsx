@@ -3,7 +3,7 @@ import { ReactNode } from 'react'
 interface GlassCardProps {
     children: ReactNode
     className?: string
-    variant?: 'default' | 'strong' | 'subtle'
+    variant?: 'default' | 'strong' | 'subtle' | 'apple'
     style?: React.CSSProperties
 }
 
@@ -37,6 +37,12 @@ export default function GlassCard({
             '--glass-blur': '30px',
             '--glass-saturate': '95%',
             '--glass-brightness': '1.2'
+        },
+        apple: {
+            '--glass-bg': 'rgba(255, 255, 255, 0.07)',
+            '--glass-blur': '30px',
+            '--glass-saturate': '180%',
+            '--glass-brightness': '1'
         }
     }
 
@@ -47,7 +53,7 @@ export default function GlassCard({
 
     return (
         <div
-            className={`glass-style-card rounded-[40px] overflow-visible ${className}`}
+            className={`glass-style-card ${variant === 'apple' ? 'rounded-[24px] mix-blend-screen' : 'rounded-[40px]'} overflow-visible ${className}`}
             style={mergedStyle}
         >
             {/* Inner specular highlight for 3D effect */}
