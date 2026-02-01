@@ -28,6 +28,9 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
+import GlobalNavigation from "@/components/layout/GlobalNavigation";
+import AuthenticatedLayoutWrapper from "@/components/layout/AuthenticatedLayoutWrapper";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,9 +54,10 @@ export default function RootLayout({
 
                 {/* Toast Notifications Provider */}
                 <ToastProvider>
-                  <div className="relative z-10 w-full min-h-screen">
+                  <GlobalNavigation />
+                  <AuthenticatedLayoutWrapper>
                     {children}
-                  </div>
+                  </AuthenticatedLayoutWrapper>
                   <ConditionalNSSOAgent />
                 </ToastProvider>
               </ProfileProvider>

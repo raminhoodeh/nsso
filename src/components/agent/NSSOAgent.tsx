@@ -58,7 +58,7 @@ export default function NSSOAgent() {
             {!isOpen && (
                 <button
                     onClick={handleOpen}
-                    className="fixed bottom-6 right-6 z-[6000] group hover:scale-105 transition-all duration-500"
+                    className="fixed bottom-6 right-6 z-[6000] group hover:scale-105 transition-all duration-500 hidden md:block"
                 >
                     {/* Outer Glow/Blur Layer */}
                     <div className="absolute -inset-1 bg-white/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />

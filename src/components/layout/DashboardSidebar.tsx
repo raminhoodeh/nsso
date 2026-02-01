@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Sparkles } from 'lucide-react';
@@ -16,10 +16,13 @@ const NAV_ITEMS = [
 function DashboardSidebarContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const currentView = searchParams.get('view') || 'profile';
+    const pathname = usePathname();
+
+    const isDashboard = pathname === '/dashboard';
+    const currentView = isDashboard ? (searchParams.get('view') || 'profile') : null;
 
     const handleNavClick = (view: string) => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams();
         params.set('view', view);
         router.push(`/dashboard?${params.toString()}`);
     };

@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 const NAV_ITEMS = [
     { id: 'profile', label: 'Your Page', icon: '/nav-profile.svg' },
     { id: 'my-nsso', label: 'My nsso', icon: '/nav-my-nsso.svg' },
+    { id: 'deity', label: 'Deity', icon: '/nsso-agent-avatar.png' },
     { id: 'earnings', label: 'Earnings', icon: '/nav-earnings.svg' },
     { id: 'news-feed', label: 'Feed', icon: '/nav-news.svg', disabled: true },
 ];
@@ -17,9 +18,14 @@ function DashboardBottomNavContent() {
     const searchParams = useSearchParams();
     const currentView = searchParams.get('view') || 'profile';
 
-    const handleNavClick = (view: string) => {
+    const handleNavClick = (id: string) => {
+        if (id === 'deity') {
+            window.dispatchEvent(new CustomEvent('open-deity-chat'));
+            return;
+        }
+
         const params = new URLSearchParams(searchParams.toString());
-        params.set('view', view);
+        params.set('view', id);
         router.push(`/dashboard?${params.toString()}`);
     };
 
@@ -33,7 +39,9 @@ function DashboardBottomNavContent() {
 
             <nav className="relative flex justify-around items-center h-[80px] px-2 pb-2">
                 {NAV_ITEMS.map((item) => {
-                    const isActive = currentView === item.id;
+                    const isActive = currentView === item.id && item.id !== 'deity';
+                    const isDeity = item.id === 'deity';
+
                     return (
                         <button
                             key={item.id}
@@ -41,7 +49,8 @@ function DashboardBottomNavContent() {
                             onClick={() => !item.disabled && handleNavClick(item.id)}
                             className={cn(
                                 "group relative flex flex-col items-center justify-center w-16 h-16 rounded-full transition-all duration-300",
-                                item.disabled && "opacity-40 cursor-not-allowed"
+                                item.disabled && "opacity-40 cursor-not-allowed",
+                                isDeity && "w-20 h-20 -translate-y-4"
                             )}
                         >
                             {/* Active pill background */}
@@ -49,9 +58,15 @@ function DashboardBottomNavContent() {
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 rounded-full blur-[2px]" />
                             )}
 
+                            {/* Deity Glow */}
+                            {isDeity && (
+                                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            )}
+
                             <div className={cn(
-                                "relative w-6 h-6 transition-all duration-300 mb-1",
-                                isActive ? "scale-110 -translate-y-1" : "group-hover:scale-105"
+                                "relative transition-all duration-300 mb-1",
+                                isActive ? "scale-110 -translate-y-1" : "group-hover:scale-105",
+                                isDeity ? "w-14 h-14" : "w-6 h-6"
                             )}>
                                 <Image
                                     src={item.icon}
@@ -59,7 +74,8 @@ function DashboardBottomNavContent() {
                                     fill
                                     className={cn(
                                         "object-contain transition-all duration-300",
-                                        isActive ? "brightness-150 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" : "opacity-60"
+                                        isActive ? "brightness-150 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" : "opacity-60",
+                                        isDeity ? "opacity-100 rounded-full border border-white/20 shadow-lg" : ""
                                     )}
                                 />
                             </div>
