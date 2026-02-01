@@ -21,45 +21,52 @@ export default function CleanGlassCard({
         <div
             className={`relative overflow-hidden ${className}`}
             style={{
-                borderRadius: '40px', // Matches 'ultimate' variant
-                backgroundColor: 'rgba(255, 255, 255, 0.01)', // Crystal clear base
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', // Deep shadow for depth
-                border: '1px solid rgba(255, 255, 255, 0.15)', // Subtle crisp border
+                borderRadius: '40px',
+                backgroundColor: 'rgba(0, 0, 0, 0.3)', // Darker background for pop
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', // Stronger shadow
+                border: '1px solid rgba(255, 255, 255, 0.15)',
                 ...customStyle
             }}
         >
+            {/* SVG Filter Definition */}
+            <svg style={{ display: 'none' }}>
+                <filter id="glass-distortion">
+                    <feTurbulence type="turbulence" baseFrequency="0.008" numOctaves="2" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="77" />
+                </filter>
+            </svg>
+
             {/* 
               Layer 1: The Glass Physics 
-              Applied directly to a dedicated background layer to avoid content clipping issues
+              Applied directly to a dedicated background layer
             */}
             <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                     borderRadius: 'inherit',
-                    backdropFilter: 'blur(40px) saturate(220%)', // The "Prism" effect
+                    backdropFilter: 'blur(40px) saturate(220%)',
                     WebkitBackdropFilter: 'blur(40px) saturate(220%)',
+                    filter: 'url(#glass-distortion)', // The requested liquid distortion
                     zIndex: 0
                 }}
             />
 
             {/* 
               Layer 2: Gradient Sheen (Specular Highlight)
-              Adds the premium "polished glass" look
             */}
             <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                     borderRadius: 'inherit',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 100%)',
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 100%)',
                     mixBlendMode: 'overlay',
-                    opacity: 0.8,
+                    opacity: 0.6,
                     zIndex: 1
                 }}
             />
 
             {/* 
               Layer 3: Inner Glow (Volume)
-              Gives the card thickness and dimension
             */}
             <div
                 className="absolute inset-0 pointer-events-none"
