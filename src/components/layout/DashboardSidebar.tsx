@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -12,7 +13,7 @@ const NAV_ITEMS = [
     { id: 'news-feed', label: 'News Feed', icon: '/nav-news.svg', disabled: true, comingSoon: true },
 ];
 
-export default function DashboardSidebar() {
+function DashboardSidebarContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const currentView = searchParams.get('view') || 'profile';
@@ -93,5 +94,13 @@ export default function DashboardSidebar() {
                 {/* Placeholder for future sidebar widgets */}
             </div>
         </aside>
+    );
+}
+
+export default function DashboardSidebar() {
+    return (
+        <Suspense fallback={<aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 p-6 pt-[120px]" />}>
+            <DashboardSidebarContent />
+        </Suspense>
     );
 }

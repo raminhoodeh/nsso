@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -11,7 +12,7 @@ const NAV_ITEMS = [
     { id: 'news-feed', label: 'Feed', icon: '/nav-news.svg', disabled: true },
 ];
 
-export default function DashboardBottomNav() {
+function DashboardBottomNavContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const currentView = searchParams.get('view') || 'profile';
@@ -62,18 +63,18 @@ export default function DashboardBottomNav() {
                                     )}
                                 />
                             </div>
-
-                            {/* Label (Optional for bottom nav, maybe hide on very small screens if crowded) */}
-                            {/* <span className={cn(
-                                "text-[10px] font-medium transition-colors duration-300",
-                                isActive ? "text-white" : "text-white/40"
-                            )}>
-                                {item.label}
-                            </span> */}
                         </button>
                     );
                 })}
             </nav>
         </div>
+    );
+}
+
+export default function DashboardBottomNav() {
+    return (
+        <Suspense fallback={<div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden h-[80px]" />}>
+            <DashboardBottomNavContent />
+        </Suspense>
     );
 }
