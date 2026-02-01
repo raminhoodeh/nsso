@@ -5,7 +5,7 @@ import React, { Suspense } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, Eye } from 'lucide-react';
 import { MyNssoIcon } from '../icons/MyNssoIcon';
 import { useToast } from '@/components/ui/Toast'
 
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
     { id: 'my-nsso', label: 'My nsso', icon: MyNssoIcon },
     { id: 'products', label: 'Products', icon: ShoppingBag },
     { id: 'contacts', label: 'Network', icon: Search },
+    { id: 'preview', label: 'Preview', icon: Eye },
 ];
 
 function BottomNavContent() {
@@ -24,6 +25,10 @@ function BottomNavContent() {
     const { showToast } = useToast()
 
     const handleItemClick = (id: string) => {
+        if (id === 'preview') {
+            router.push('/preview');
+            return;
+        }
         const params = new URLSearchParams(searchParams.toString())
         params.set('view', id)
         router.push(`/dashboard?${params.toString()}`)

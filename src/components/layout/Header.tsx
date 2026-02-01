@@ -8,6 +8,7 @@ import GlassButton from '@/components/ui/GlassButton'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { useState, useEffect } from 'react'
+import { LogOut } from 'lucide-react'
 
 interface HeaderProps {
     showAuthButtons?: boolean
@@ -97,114 +98,48 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
                 {isOwnerMode ? (
                     // OWNER MODE: Edit Profile button REMOVED as per Phase 7 requirements
+                    // Also hidden on desktop if user is logged in (handled by parent logic or CSS)
+                    /* --- DESKTOP HIDING LOGIC --- */
+                    /* We want to hide the ENTIRE nav content on desktop if user is logged in,
+                       BUT we might still want the Logo to be visible?
+                       User said: "there is no more need for a nav bar on desktop once the user has logged in."
+                       So we should invalid render or return null for desktop if user is logged in?
+                       Actually, let's wrap the desktop specific parts.
+                     */
                     <div className="hidden md:flex">
                         {/* Space reserved if needed later */}
                     </div>
                 ) : (
                     // DEFAULT MODE: Logo
-                    <Link
-                        href={user ? "/?view=home" : "/"}
-                        className="flex items-center"
-                        onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
-                    >
-                        <Image
-                            src="/assets/nsso-logo.png"
-                            alt="nsso"
-                            width={80}
-                            height={32}
-                            className="h-8 w-auto"
-                            priority
-                        />
-                    </Link>
+                    // Show logo ONLY if NOT logged in OR on Mobile
+                    // If logged in on desktop -> Sidebar has logo.
+                    (!user || true) && ( // logic check: we sidebar has logo.
+                        <Link
+                            href={user ? "/?view=home" : "/"}
+                            className={user ? "flex md:hidden items-center" : "flex items-center"}
+                            onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
+                        >
+                            <Image
+                                src="/assets/nsso-logo.png"
+                                alt="nsso"
+                                width={80}
+                                height={32}
+                                className="h-8 w-auto"
+                                priority
+                            />
+                        </Link>
+                    )
                 )}
 
                 {/* --- RIGHT SIDE / DESKTOP NAV --- */}
+                {/* COMPLETELY HIDDEN ON DESKTOP IF LOGGED IN */}
                 <div className="hidden md:flex items-center gap-4">
-                    {/* OWNER MODE DESKTOP */}
-                    {isOwnerMode ? (
-                        <div className="flex items-center gap-4">
-                            {isAdmin && (
-                                <Link href="/admin" onMouseEnter={() => router.prefetch('/admin')}>
-                                    <GlassButton variant="ghost" size="sm">
-                                        Admin
-                                    </GlassButton>
-                                </Link>
-                            )}
-                            <GlassButton
-                                variant="ghost"
-                                size="sm"
-                                onClick={copyProfileUrl}
-                            >
-                                Copy profile URL
+                    {!user && (
+                        <Link href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}>
+                            <GlassButton variant="secondary" size="sm">
+                                SIGN IN / SIGN UP
                             </GlassButton>
-                            <GlassButton
-                                variant="secondary"
-                                size="sm"
-                                onClick={handleSignOut}
-                            >
-                                Sign Out
-                            </GlassButton>
-                        </div>
-                    ) : (
-                        // DEFAULT MODE DESKTOP
-                        showAuthButtons && (
-                            <>
-                                {isAdmin && (
-                                    <Link href="/admin" onMouseEnter={() => router.prefetch('/admin')}>
-                                        <GlassButton variant="ghost" size="sm">
-                                            Admin
-                                        </GlassButton>
-                                    </Link>
-                                )}
-                                {user ? (
-                                    <div className="flex items-center gap-4">
-                                        <button
-                                            onClick={() => router.push('/preview')}
-                                            onMouseEnter={() => router.prefetch('/preview')}
-                                            className="px-4 py-2 rounded-full text-sm font-medium text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                            style={{
-                                                backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center',
-                                                boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
-                                            }}
-                                        >
-                                            Preview Profile
-                                        </button>
-
-                                        <GlassButton
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={copyProfileUrl}
-                                        >
-                                            Copy profile URL
-                                        </GlassButton>
-
-                                        {pathname !== '/dashboard' && (
-                                            <Link href="/dashboard" onMouseEnter={() => router.prefetch('/dashboard')}>
-                                                <GlassButton variant="ghost" size="sm">
-                                                    Dashboard
-                                                </GlassButton>
-                                            </Link>
-                                        )}
-
-                                        <GlassButton
-                                            variant="secondary"
-                                            size="sm"
-                                            onClick={handleSignOut}
-                                        >
-                                            Sign Out
-                                        </GlassButton>
-                                    </div>
-                                ) : (
-                                    <Link href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}>
-                                        <GlassButton variant="secondary" size="sm">
-                                            SIGN IN / SIGN UP
-                                        </GlassButton>
-                                    </Link>
-                                )}
-                            </>
-                        )
+                        </Link>
                     )}
                 </div>
 
@@ -214,148 +149,158 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {/* Default Mode: Contextual Button (Preview/Copy) */}
                     {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
 
-                    {/* Common Hamburger Menu for Logged In Users (Both Modes) */}
-                    {(isOwnerMode || (showAuthButtons && user)) && (
-                        <>
-                            {/* Hamburger Button */}
-                            <button
-                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
-                                aria-label="Toggle menu"
+                    {/* Hamburger Menu ONLY for Admin */}
+                    {isAdmin && (
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                            aria-label="Toggle menu"
+                        >
+                            <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
-                                <svg
-                                    className="w-6 h-6"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    {mobileMenuOpen ? (
-                                        <path d="M6 18L18 6M6 6l12 12" />
-                                    ) : (
-                                        <path d="M4 6h16M4 12h16M4 18h16" />
-                                    )}
-                                </svg>
-                            </button>
+                                {mobileMenuOpen ? (
+                                    <path d="M6 18L18 6M6 6l12 12" />
+                                ) : (
+                                    <path d="M4 6h16M4 12h16M4 18h16" />
+                                )}
+                            </svg>
+                        </button>
+                    )}
 
-                            {/* Mobile Slide-out Menu */}
-                            {mobileMenuOpen && (
-                                <>
-                                    {/* Backdrop */}
-                                    <div
-                                        className="fixed inset-0 bg-black/50 z-[5001]"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    />
+                    {/* Non-Admin Mobile: Sign Out Icon */}
+                    {user && !isAdmin && (
+                        <button
+                            onClick={handleSignOut}
+                            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                            aria-label="Sign Out"
+                        >
+                            <LogOut size={20} />
+                        </button>
+                    )}
 
-                                    {/* Menu Panel */}
-                                    <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[5002] shadow-2xl border-l border-white/10 animate-slide-in-right">
-                                        <div className="flex flex-col h-full">
-                                            {/* Menu Header */}
-                                            <div className="flex items-center justify-between p-6 border-b border-white/10">
-                                                <span className="text-white font-medium">Menu</span>
-                                                <button
-                                                    onClick={() => setMobileMenuOpen(false)}
-                                                    className="p-1 text-white/60 hover:text-white transition-colors"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                    {/* Mobile Slide-out Menu */}
+                    {mobileMenuOpen && (
+                        <>
+                            {/* Backdrop */}
+                            <div
+                                className="fixed inset-0 bg-black/50 z-[5001]"
+                                onClick={() => setMobileMenuOpen(false)}
+                            />
 
-                                            {/* Menu Items */}
-                                            <div className="flex flex-col gap-2 p-4 flex-1">
-
-                                                {/* Button: Copy Page URL (Both Modes) */}
-                                                <button
-                                                    onClick={() => {
-                                                        copyProfileUrl()
-                                                        setMobileMenuOpen(false)
-                                                    }}
-                                                    className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
-                                                >
-                                                    Copy profile URL
-                                                </button>
-
-                                                {/* Default Mode: Preview Page Button (if not on preview) */}
-                                                {!isOwnerMode && !isPreviewPage && (
-                                                    <button
-                                                        onClick={() => {
-                                                            router.push('/preview')
-                                                            setMobileMenuOpen(false)
-                                                        }}
-                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
-                                                    >
-                                                        Preview Profile
-                                                    </button>
-                                                )}
-
-                                                {/* Owner Mode: Edit Profile */}
-                                                {isOwnerMode && (
-                                                    <Link
-                                                        href="/dashboard"
-                                                        onClick={() => setMobileMenuOpen(false)}
-                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
-                                                    >
-                                                        Edit Profile
-                                                    </Link>
-                                                )}
-
-                                                {/* Regular Mode: Dashboard (if not on dashboard) */}
-                                                {!isOwnerMode && pathname !== '/dashboard' && (
-                                                    <Link
-                                                        href="/dashboard"
-                                                        onClick={() => setMobileMenuOpen(false)}
-                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
-                                                    >
-                                                        Dashboard
-                                                    </Link>
-                                                )}
-
-                                                {isAdmin && (
-                                                    <Link
-                                                        href="/admin"
-                                                        onClick={() => setMobileMenuOpen(false)}
-                                                        className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
-                                                    >
-                                                        Admin
-                                                    </Link>
-                                                )}
-
-                                                <div className="border-t border-white/10 my-2" />
-
-                                                <button
-                                                    onClick={() => {
-                                                        handleSignOut()
-                                                        setMobileMenuOpen(false)
-                                                    }}
-                                                    className="w-full text-left px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                >
-                                                    Sign Out
-                                                </button>
-                                            </div>
-                                        </div>
+                            {/* Menu Panel */}
+                            <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[5002] shadow-2xl border-l border-white/10 animate-slide-in-right">
+                                <div className="flex flex-col h-full">
+                                    {/* Menu Header */}
+                                    <div className="flex items-center justify-between p-6 border-b border-white/10">
+                                        <span className="text-white font-medium">Menu</span>
+                                        <button
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="p-1 text-white/60 hover:text-white transition-colors"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
                                     </div>
-                                </>
-                            )}
+
+                                    {/* Menu Items */}
+                                    <div className="flex flex-col gap-2 p-4 flex-1">
+
+                                        {/* Button: Copy Page URL (Both Modes) */}
+                                        <button
+                                            onClick={() => {
+                                                copyProfileUrl()
+                                                setMobileMenuOpen(false)
+                                            }}
+                                            className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                        >
+                                            Copy profile URL
+                                        </button>
+
+                                        {/* Default Mode: Preview Page Button (if not on preview) */}
+                                        {!isOwnerMode && !isPreviewPage && (
+                                            <button
+                                                onClick={() => {
+                                                    router.push('/preview')
+                                                    setMobileMenuOpen(false)
+                                                }}
+                                                className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors"
+                                            >
+                                                Preview Profile
+                                            </button>
+                                        )}
+
+                                        {/* Owner Mode: Edit Profile */}
+                                        {isOwnerMode && (
+                                            <Link
+                                                href="/dashboard"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
+                                            >
+                                                Edit Profile
+                                            </Link>
+                                        )}
+
+                                        {/* Regular Mode: Dashboard (if not on dashboard) */}
+                                        {!isOwnerMode && pathname !== '/dashboard' && (
+                                            <Link
+                                                href="/dashboard"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
+                                            >
+                                                Dashboard
+                                            </Link>
+                                        )}
+
+                                        {isAdmin && (
+                                            <Link
+                                                href="/admin"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className="w-full text-left px-4 py-3 text-white hover:bg-white/10 rounded-lg transition-colors block"
+                                            >
+                                                Admin
+                                            </Link>
+                                        )}
+
+                                        <div className="border-t border-white/10 my-2" />
+
+                                        <button
+                                            onClick={() => {
+                                                handleSignOut()
+                                                setMobileMenuOpen(false)
+                                            }}
+                                            className="w-full text-left px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                        >
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </>
                     )}
-
-                    {/* Mobile - Not logged in (Default Mode Only) */}
-                    {!isOwnerMode && showAuthButtons && !user && (
-                        <Link href="/sign-in">
-                            <GlassButton variant="secondary" size="sm">
-                                SIGN IN / SIGN UP
-                            </GlassButton>
-                        </Link>
+                </>
                     )}
-                </div>
-            </nav>
 
-            {/* Add slide-in animation */}
-            <style jsx>{`
+                {/* Mobile - Not logged in (Default Mode Only) */}
+                {!isOwnerMode && showAuthButtons && !user && (
+                    <Link href="/sign-in">
+                        <GlassButton variant="secondary" size="sm">
+                            SIGN IN / SIGN UP
+                        </GlassButton>
+                    </Link>
+                )}
+            </div>
+        </nav>
+
+            {/* Add slide-in animation */ }
+    <style jsx>{`
                 @keyframes slide-in-right {
                     from {
                         transform: translateX(100%);

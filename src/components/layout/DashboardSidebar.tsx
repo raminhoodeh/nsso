@@ -16,6 +16,7 @@ import ComingSoonBadge from '@/components/ui/ComingSoonBadge';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { useUser } from '@/components/providers/UserProvider';
+import Link from 'next/link';
 
 // Define interface for navigation items
 interface NavItem {
@@ -57,6 +58,7 @@ function DashboardSidebarContent() {
     const supabase = createClient();
     const { showToast } = useToast();
     const { user } = useUser();
+    const isAdmin = user?.user_type === 'admin';
 
     const currentView = searchParams.get('view') || 'profile';
     const isCreatorPage = pathname?.includes('/creator');
@@ -154,6 +156,17 @@ function DashboardSidebarContent() {
 
             {/* Footer Actions */}
             <div className="p-4 mt-auto border-t border-white/5 space-y-2">
+                {isAdmin && (
+                    <Link href="/admin" className="w-full">
+                        <button
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
+                        >
+                            <LayoutDashboard size={18} className="group-hover:text-white transition-colors" />
+                            <span className="font-medium text-[14px]">Admin</span>
+                        </button>
+                    </Link>
+                )}
+
                 {/* Preview Profile */}
                 <button
                     onClick={() => router.push('/preview')}
