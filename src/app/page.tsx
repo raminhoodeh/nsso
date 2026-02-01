@@ -8,9 +8,11 @@ import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import Link from 'next/link'
 import { useUser } from '@/components/providers/UserProvider'
+import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { cn } from '@/lib/utils'
-
 import { createClient } from '@/lib/supabase/client'
+
+
 
 // Animated words for hero section
 const animatedWords = ['Clarify', 'Organise', 'Future-Proof', 'Present']
@@ -461,7 +463,7 @@ export default function HomePage() {
       </section >
 
       {/* Video Feature Section */}
-      < section className="w-full min-h-screen flex items-center justify-center bg-black" >
+      <section className="w-full lg:min-h-screen flex flex-col items-center justify-center lg:bg-black pt-12 pb-24 lg:py-0 gap-12">
         <div className="w-full h-full max-w-[1470px] aspect-video">
           <iframe
             width="100%"
@@ -471,10 +473,15 @@ export default function HomePage() {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
-            className="w-full h-full"
+            className="w-full h-full lg:rounded-none"
           ></iframe>
         </div>
-      </section >
+
+        {/* Create Profile Button - Mobile Only */}
+        <div className="lg:hidden">
+          <CreateProfileButton />
+        </div>
+      </section>
     </main >
   )
 }
