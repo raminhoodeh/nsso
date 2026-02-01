@@ -93,7 +93,8 @@ function DashboardContent() {
     const [loading, setLoading] = useState(true)
 
     const [saving, setSaving] = useState(false)
-    const [activeTab, setActiveTab] = useState<'profile' | 'earnings' | 'my-nsso' | 'news-feed'>('profile')
+    // URL-based state for navigation
+    const currentView = searchParams.get('view') || 'profile'
     const [showPolarModal, setShowPolarModal] = useState(false)
     const [showDowngradeModal, setShowDowngradeModal] = useState(false)
     const [urlCopied, setUrlCopied] = useState(false)
@@ -489,139 +490,7 @@ function DashboardContent() {
 
             <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto space-y-6">
 
-                {/* Horizontal Tab Bar - Always visible */}
-                <div className="absolute left-1/2 -translate-x-1/2 top-[95px] z-30">
-                    <div
-                        className="border-[1.4px] border-[rgba(255,255,255,0.4)] border-solid flex gap-[6px] items-start overflow-clip p-[8px] rounded-[100px]"
-                        style={{
-                            backdropFilter: 'blur(50px)'
-                        }}
-                    >
-                        {/* Background layers */}
-                        <div className="absolute inset-0 pointer-events-none rounded-[100px]">
-                            <div className="absolute bg-[rgba(255,255,255,0.1)] inset-0 mix-blend-luminosity rounded-[100px]" />
-                            <div
-                                className="absolute inset-0 opacity-30 rounded-[100px]"
-                                style={{
-                                    backgroundImage: 'url(/siri-gradient.png)',
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: '50% 50%',
-                                    backdropFilter: 'blur(50px)'
-                                }}
-                            />
-                        </div>
-
-                        {/* Your Profile Tab */}
-                        <button
-                            onClick={() => setActiveTab('profile')}
-                            className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
-                        >
-                            {activeTab === 'profile' && (
-                                <div
-                                    className="absolute inset-0 pointer-events-none rounded-[100px]"
-                                    style={{
-                                        backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
-                                    }}
-                                />
-                            )}
-                            <p
-                                className={`relative font-semibold text-[13px] leading-[17px] overflow-ellipsis overflow-hidden whitespace-nowrap ${activeTab === 'page' ? 'text-[rgba(255,255,255,0.96)]' : 'text-[rgba(255,255,255,0.6)]'
-                                    }`}
-                                style={{
-                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                    fontWeight: 590,
-                                    fontVariationSettings: "'wdth' 100"
-                                }}
-                            >
-                                Your Profile
-                            </p>
-                        </button>
-
-
-
-                        {/* My nsso Tab */}
-                        <button
-                            onClick={() => setActiveTab('my-nsso')}
-                            className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
-                        >
-                            {activeTab === 'my-nsso' && (
-                                <div
-                                    className="absolute inset-0 pointer-events-none rounded-[100px]"
-                                    style={{
-                                        backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
-                                    }}
-                                />
-                            )}
-                            <p
-                                className={`relative font-semibold text-[13px] leading-[17px] overflow-ellipsis overflow-hidden whitespace-nowrap ${activeTab === 'my-nsso' ? 'text-[rgba(255,255,255,0.96)]' : 'text-[rgba(255,255,255,0.6)]'}`}
-                                style={{
-                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                    fontWeight: 590,
-                                    fontVariationSettings: "'wdth' 100"
-                                }}
-                            >
-                                My nsso
-                            </p>
-                        </button>
-
-                        {/* Earnings Tab */}
-                        <button
-                            onClick={() => setActiveTab('earnings')}
-                            className="relative flex h-[31px] items-center overflow-clip px-[14px] py-0 rounded-[100px] shrink-0 transition-all"
-                        >
-                            {activeTab === 'earnings' && (
-                                <div
-                                    className="absolute inset-0 pointer-events-none rounded-[100px]"
-                                    style={{
-                                        backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(192,192,192,0.4)), url(/siri-gradient.png)`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.2)'
-                                    }}
-                                />
-                            )}
-                            <p
-                                className={`relative font-semibold text-[13px] leading-[17px] overflow-ellipsis overflow-hidden whitespace-nowrap ${activeTab === 'earnings' ? 'text-[rgba(255,255,255,0.96)]' : 'text-[rgba(255,255,255,0.6)]'
-                                    }`}
-                                style={{
-                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                    fontWeight: 590,
-                                    fontVariationSettings: "'wdth' 100"
-                                }}
-                            >
-                                Earnings
-                            </p>
-                        </button>
-
-                        {/* News Feed Tab (Coming Soon) */}
-                        <button
-                            disabled
-                            className="relative flex h-[31px] items-center px-[14px] py-0 rounded-[100px] shrink-0 transition-all opacity-50 cursor-not-allowed group"
-                        >
-                            <p
-                                className="relative font-semibold text-[13px] leading-[17px] overflow-ellipsis overflow-hidden whitespace-nowrap text-[rgba(255,255,255,0.4)]"
-                                style={{
-                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                    fontWeight: 590,
-                                    fontVariationSettings: "'wdth' 100"
-                                }}
-                            >
-                                News Feed
-                            </p>
-
-                            {/* Tooltip on hover */}
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10">
-                                Coming Soon
-                            </div>
-                        </button>
-                    </div>
-                </div>
+                {/* Tab Bar Removed - Replaced by Global Sidebar/BottomNav */}
 
                 {/* Profile Completeness Banner */}
                 {profileCompleteness < 20 && (
@@ -662,7 +531,7 @@ function DashboardContent() {
                 )}
 
                 {/* Your Profile Tab Content */}
-                {activeTab === 'profile' && (
+                {currentView === 'profile' && (
                     <GlassCard className="p-6 lg:p-8 relative pt-[48px] rounded-[40px] overflow-visible">
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
@@ -1030,12 +899,12 @@ function DashboardContent() {
 
 
                 {/* Earnings Tab Content */}
-                {activeTab === 'earnings' && <EarningsTab initialData={prefetchedEarnings || undefined} />}
-                {activeTab === 'my-nsso' && <MyNssoTab />}
+                {currentView === 'earnings' && <EarningsTab initialData={prefetchedEarnings || undefined} />}
+                {currentView === 'my-nsso' && <MyNssoTab />}
 
 
                 {/* Only show Links, Contact, and Advanced Mode cards on "Your Profile" tab */}
-                {activeTab === 'profile' && (
+                {currentView === 'profile' && (
                     <>
                         {/* Card 2: Links Section */}
                         <GlassCard className="p-6 lg:p-8">
