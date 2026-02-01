@@ -163,7 +163,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         {/* Mobile Links Section */}
                         {links.length > 0 && (
                             <div className="space-y-3 block lg:hidden !mt-10">
-                                <h3 className="text-white/50 text-sm uppercase tracking-wider mb-4 font-bold text-center">Links</h3>
+
                                 {links.map((link) => (
                                     <a
                                         key={link.id}
@@ -236,7 +236,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         {
                             contacts.length > 0 && (
                                 <div className="space-y-2">
-                                    <h3 className="text-white/50 text-sm uppercase tracking-wider mb-4">Contact</h3>
+
                                     {contacts.map((contact) => (
                                         <div key={contact.id} className="text-white">
                                             <span className="text-white/70">
@@ -253,7 +253,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         {
                             links.length > 0 && (
                                 <div className="space-y-3">
-                                    <h3 className="text-white/50 text-sm uppercase tracking-wider mb-4">Links</h3>
+
                                     {links.map((link) => (
                                         <a
                                             key={link.id}
@@ -383,7 +383,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     contacts.length > 0 && (
                         <section className="block lg:hidden mt-20">
                             <GlassCard className="p-6">
-                                <h2 className="text-3xl font-bold text-white mb-8 text-center">Contact</h2>
+
                                 <div className="space-y-2">
                                     {contacts.map((contact) => (
                                         <div key={contact.id} className="text-white text-center">

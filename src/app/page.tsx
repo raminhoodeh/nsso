@@ -126,17 +126,17 @@ export default function HomePage() {
               <div className="relative z-10 flex flex-col gap-4 h-full p-4 lg:p-10">
                 {/* Top Row: Body Text */}
                 <p className="text-white text-lg font-medium text-center lg:text-left">
-                  Your bio, contact, links, experiences, projects, qualifications, products and services...
+                  Your Entire Professional World. One App.
                 </p>
 
                 {/* Middle Row: Title Text */}
                 <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
-                  All of you,<br />all in one place.
+                  The Only Sovereign<br />Networking Super App.
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
                 <p className="text-white text-lg leading-relaxed text-center lg:text-left">
-                  Use nsso as a link-in-bio tool, a resumé, website, and personal shop. Your profile provides you with the most beautiful way to present yourself online - a way that makes you feel clear, and proud, of who you are.
+                  Stop sharing fragmented links. Start building a unified digital economy. nsso integrates your visual identity, global network, and instant marketplace into a single, high-performance ecosystem.
                 </p>
 
                 {/* Coming Soon Features - Visual Filter for Whitespace */}
