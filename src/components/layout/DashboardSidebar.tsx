@@ -17,7 +17,17 @@ import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { useUser } from '@/components/providers/UserProvider';
 
-const NAV_ITEMS = [
+// Define interface for navigation items
+interface NavItem {
+    id: string;
+    label: string;
+    icon: React.ElementType; // Use ElementType for components
+    view: string;
+    badge?: React.ReactNode;
+    comingSoon?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
     {
         id: 'profile',
         label: 'Profile',
@@ -35,7 +45,8 @@ const NAV_ITEMS = [
         label: 'News Feed',
         icon: Newspaper,
         view: 'news-feed',
-        badge: <ComingSoonBadge />
+        badge: <ComingSoonBadge />,
+        comingSoon: true
     }
 ];
 
@@ -48,8 +59,13 @@ function DashboardSidebarContent() {
     const { user } = useUser();
 
     const currentView = searchParams.get('view') || 'profile';
+    const isCreatorPage = pathname?.includes('/creator');
 
-    const handleNavClick = (view: string) => {
+    const handleNavClick = (view: string, comingSoon?: boolean) => {
+        if (comingSoon) {
+            showToast('News Feed coming soon', 'success');
+            return;
+        }
         const params = new URLSearchParams(searchParams.toString());
         params.set('view', view);
         router.push(`/dashboard?${params.toString()}`);
@@ -69,7 +85,12 @@ function DashboardSidebarContent() {
     };
 
     return (
-        <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 glass-panel border-r border-white/10">
+        <aside className={cn(
+            "hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 border-r transition-colors duration-300",
+            isCreatorPage
+                ? "bg-[#43628c] border-[#5475a4]" // Match creator page blue
+                : "glass-panel border-white/10" // Default glass
+        )}>
             {/* Logo Area */}
             <div className="px-8 py-8">
                 <div
@@ -96,12 +117,13 @@ function DashboardSidebarContent() {
                     return (
                         <button
                             key={item.id}
-                            onClick={() => handleNavClick(item.view)}
+                            onClick={() => handleNavClick(item.view, item.comingSoon)}
                             className={cn(
                                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
                                 isActive
                                     ? "bg-white/10 text-white shadow-lg shadow-black/5"
-                                    : "text-white/60 hover:text-white hover:bg-white/5"
+                                    : "text-white/60 hover:text-white hover:bg-white/5",
+                                item.comingSoon && "cursor-pointer"
                             )}
                         >
                             {/* Active Indicator */}
@@ -135,7 +157,7 @@ function DashboardSidebarContent() {
                 {/* Preview Profile */}
                 <button
                     onClick={() => router.push('/preview')}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all text-left group"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
                 >
                     <Eye size={18} className="group-hover:text-white transition-colors" />
                     <span className="font-medium text-[14px]">Preview Profile</span>
@@ -144,7 +166,7 @@ function DashboardSidebarContent() {
                 {/* Copy URL */}
                 <button
                     onClick={copyProfileUrl}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-all text-left group"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
                 >
                     <LinkIcon size={18} className="group-hover:text-white transition-colors" />
                     <span className="font-medium text-[14px]">Copy Link</span>
@@ -153,9 +175,9 @@ function DashboardSidebarContent() {
                 {/* Sign Out */}
                 <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400/80 hover:text-red-400 hover:bg-white/5 transition-all text-left group"
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-red-400/90 hover:text-red-300 hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
                 >
-                    <LogOut size={18} className="group-hover:text-red-400 transition-colors" />
+                    <LogOut size={18} className="group-hover:text-red-300 transition-colors" />
                     <span className="font-medium text-[14px]">Sign Out</span>
                 </button>
             </div>

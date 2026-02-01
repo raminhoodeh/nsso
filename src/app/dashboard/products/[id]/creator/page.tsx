@@ -314,7 +314,7 @@ export default function SalesPageCreator() {
 
     return (
         <main className="min-h-screen pb-32 md:pb-12 bg-[#43628c]">
-            <Header />
+            {/* Header Removed to avoid duplicate logo */}\n
 
             <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto">
 
