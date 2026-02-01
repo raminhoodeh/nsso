@@ -39,16 +39,16 @@ export default function GlassCard({
             '--glass-brightness': '1.2'
         },
         apple: {
-            '--glass-bg': 'rgba(255, 255, 255, 0.07)',
-            '--glass-blur': '30px',
-            '--glass-saturate': '180%',
+            '--glass-bg': 'rgba(255, 255, 255, 0.01)', // Almost zero opacity to avoid grey cast
+            '--glass-blur': '40px',
+            '--glass-saturate': '200%', // High saturation for "Prism" effect
             '--glass-brightness': '1'
         },
         ultimate: {
-            '--glass-bg': 'rgba(255, 255, 255, 0.07)',
+            '--glass-bg': 'rgba(255, 255, 255, 0.01)', // Crystal clear base
             '--glass-blur': '40px',
-            '--glass-saturate': '180%',
-            '--glass-brightness': '1.05'
+            '--glass-saturate': '220%', // Extreme vibrancy
+            '--glass-brightness': '1.1'
         }
     }
 
@@ -64,7 +64,15 @@ export default function GlassCard({
     return (
         <div
             className={`glass-style-card ${variant === 'apple' ? 'rounded-[24px] [&::after]:mix-blend-normal shadow-lg' : 'rounded-[40px]'} overflow-visible ${className}`}
-            style={mergedStyle}
+            style={{
+                ...mergedStyle,
+                // Force backdrop-filter directly for true saturation pulling
+                // This overrides the globals.css split implementation for high-end variants
+                ...((variant === 'apple' || variant === 'ultimate') && {
+                    backdropFilter: `blur(${variant === 'apple' ? '40px' : '40px'}) saturate(${variant === 'ultimate' ? '220%' : '200%'})`,
+                    WebkitBackdropFilter: `blur(${variant === 'apple' ? '40px' : '40px'}) saturate(${variant === 'ultimate' ? '220%' : '200%'})`
+                })
+            }}
         >
             {/* Inner specular highlight for default variants */}
             {variant !== 'apple' && variant !== 'ultimate' && <div className="glass-specular" aria-hidden="true" />}
