@@ -200,6 +200,13 @@ body {
   /* Ensure backdrop blur is applied */
   backdrop-filter: blur(var(--glass-blur)) !important;
   -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
+}
+
+/* === Utility: Clean Glass (No Distortion) === */
+.glass-clean::before {
+  filter: none !important;
 }
 
 /* ============================================

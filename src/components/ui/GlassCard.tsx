@@ -60,10 +60,11 @@ export default function GlassCard({
     const borderRadius = variant === 'apple' || variant === 'ultimate' ? 'rounded-[24px]' : 'rounded-[40px]'
     const blendMode = variant === 'apple' || variant === 'ultimate' ? '[&::after]:mix-blend-screen' : ''
     const shadowStyle = variant === 'apple' || variant === 'ultimate' ? 'shadow-none' : ''
+    const cleanGlassClass = (variant === 'apple' || variant === 'ultimate') ? 'glass-clean' : ''
 
     return (
         <div
-            className={`glass-style-card ${variant === 'apple' ? 'rounded-[24px] [&::after]:mix-blend-normal shadow-lg' : 'rounded-[40px]'} overflow-visible ${className}`}
+            className={`glass-style-card ${cleanGlassClass} ${variant === 'apple' ? 'rounded-[24px] [&::after]:mix-blend-normal shadow-lg' : 'rounded-[40px]'} overflow-visible ${className}`}
             style={{
                 ...mergedStyle,
                 // Force backdrop-filter directly for true saturation pulling
