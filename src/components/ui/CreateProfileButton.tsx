@@ -9,7 +9,7 @@ interface CreateProfileButtonProps {
 export default function CreateProfileButton({ className = '' }: CreateProfileButtonProps) {
     return (
         <Link
-            href="/"
+            href="/sign-in"
             className={`
                 relative group flex items-center justify-center px-6 py-2 rounded-full overflow-hidden transition-all duration-300
                 backdrop-blur-xl bg-black/60 hover:bg-black/70
