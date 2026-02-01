@@ -69,40 +69,41 @@ export default function GlassCard({
             {/* Inner specular highlight for default variants */}
             {variant !== 'apple' && variant !== 'ultimate' && <div className="glass-specular" aria-hidden="true" />}
 
-            {/* Apple Variant Gradient Border - Enhanced for Visibility */}
+            {/* Apple Variant Crystalline Border */}
             {variant === 'apple' && (
                 <div
                     className="absolute inset-0 rounded-[24px] pointer-events-none"
                     style={{
                         padding: '1px',
-                        background: 'linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 100%)',
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%)',
                         mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                         maskComposite: 'exclude',
                         WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                         WebkitMaskComposite: 'xor',
+                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.15)', // Inner crystalline glow
                         zIndex: 50
                     }}
                     aria-hidden="true"
                 />
             )}
 
-            {/* Ultimate Glass System - All Advanced Techniques */}
+            {/* Ultimate Glass System - Saturation & Vibrancy Mode */}
             {variant === 'ultimate' && (
                 <>
-                    {/* Layer 1: Specular highlight gradient (light refraction) - Above base glass */}
+                    {/* Layer 1: Specular highlight gradient (light refraction) */}
                     <div
                         className="absolute inset-0 rounded-[inherit] pointer-events-none"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 100%)',
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%)',
                             mixBlendMode: 'overlay',
                             zIndex: 3
                         }}
                         aria-hidden="true"
                     />
 
-                    {/* Layer 2: Frosted noise texture - Boosted visibility */}
+                    {/* Layer 2: Subtle polished noise - reduced opacity for cleaner look */}
                     <div
-                        className="absolute inset-0 rounded-[inherit] pointer-events-none opacity-50"
+                        className="absolute inset-0 rounded-[inherit] pointer-events-none opacity-20"
                         style={{
                             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.3'/%3E%3C/svg%3E")`,
                             mixBlendMode: 'overlay',
@@ -111,17 +112,14 @@ export default function GlassCard({
                         aria-hidden="true"
                     />
 
-                    {/* Layer 3: Enhanced border with multi-directional lighting - Above content for crisp edges */}
+                    {/* Layer 3: Enhanced border with multi-directional lighting */}
                     <div
                         className="absolute inset-0 rounded-[inherit] pointer-events-none"
                         style={{
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            border: '1px solid rgba(255, 255, 255, 0.4)', // Higher contrast border
                             boxShadow: `
-                                inset 0 1px 2px 0 rgba(255, 255, 255, 0.6),
-                                inset 0 0.5px 0 0 rgba(255, 255, 255, 0.8),
-                                inset 0 -1px 2px 0 rgba(0, 0, 0, 0.25),
-                                0 2px 4px 0 rgba(0, 0, 0, 0.15),
-                                0 8px 20px -4px rgba(0, 0, 0, 0.2)
+                                inset 0 0 20px 0 rgba(255,255,255,0.1), /* Inner glow */
+                                inset 0 0 0 1px rgba(255,255,255,0.2) /* Sharp inner ring */
                             `,
                             zIndex: 50
                         }}
