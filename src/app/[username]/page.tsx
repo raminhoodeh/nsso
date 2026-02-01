@@ -100,6 +100,53 @@ export default async function PublicProfilePage({ params }: PageProps) {
     // Check if viewer is the owner
     const isOwner = viewer?.id === user.id
 
+    // Helper to render contact item with smart linking
+    const renderContactItem = (contact: any) => {
+        const method = contact.method === 'Other' ? contact.custom_method_name : contact.method
+        let href = ''
+        let isExternal = false
+
+        switch (contact.method.toLowerCase()) {
+            case 'email':
+                href = `mailto:${contact.value}`
+                break
+            case 'whatsapp':
+                href = `https://wa.me/${contact.value.replace(/\D/g, '')}`
+                isExternal = true
+                break
+            case 'telegram':
+                href = `https://t.me/${contact.value.replace('@', '')}`
+                isExternal = true
+                break
+        }
+
+        const content = (
+            <div className="text-white flex items-center justify-center lg:justify-start gap-2">
+                <span className="text-white/70">{method}:</span>
+                <span className={href ? "hover:underline hover:text-white transition-colors" : ""}>
+                    {contact.value}
+                </span>
+                {isExternal && <ExternalLink size={12} className="opacity-50" />}
+            </div>
+        )
+
+        if (href) {
+            return (
+                <a
+                    key={contact.id}
+                    href={href}
+                    target={isExternal ? "_blank" : undefined}
+                    rel={isExternal ? "noopener noreferrer" : undefined}
+                    className="block hover:opacity-80 transition-opacity"
+                >
+                    {content}
+                </a>
+            )
+        }
+
+        return <div key={contact.id}>{content}</div>
+    }
+
     return (
         <main className="min-h-screen pb-40" style={{ paddingTop: '128px' }}>
             {/* Navigation */}
@@ -112,7 +159,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
 
             {/* Profile Content */}
-            <div className="px-6 lg:px-[165px] max-w-[1470px] mx-auto space-y-12">
+            <div className="px-6 lg:px-8 max-w-[1470px] mx-auto space-y-12">
 
                 {/* 1. Identity & Resume Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -150,6 +197,17 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                 </div>
                             )}
                         </div>
+
+                        {/* Mobile Contact Details (Below Headline) */}
+                        {contacts.length > 0 && (
+                            <div className="block lg:hidden !mt-6 space-y-2">
+                                <GlassCard className="p-4 bg-white/5 border-white/10">
+                                    <div className="space-y-3">
+                                        {contacts.map(renderContactItem)}
+                                    </div>
+                                </GlassCard>
+                            </div>
+                        )}
 
                         {/* Bio Card */}
                         {profile?.bio && (
@@ -237,14 +295,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             contacts.length > 0 && (
                                 <div className="space-y-2">
 
-                                    {contacts.map((contact) => (
-                                        <div key={contact.id} className="text-white">
-                                            <span className="text-white/70">
-                                                {contact.method === 'Other' ? contact.custom_method_name : contact.method}:
-                                            </span>{' '}
-                                            <span>{contact.value}</span>
-                                        </div>
-                                    ))}
+                                    {contacts.map(renderContactItem)}
                                 </div>
                             )
                         }
@@ -378,26 +429,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     )
                 }
 
-                {/* Mobile Contact Section */}
-                {
-                    contacts.length > 0 && (
-                        <section className="block lg:hidden mt-24">
-                            <GlassCard className="p-6">
-
-                                <div className="space-y-2">
-                                    {contacts.map((contact) => (
-                                        <div key={contact.id} className="text-white text-center">
-                                            <span className="text-white/70">
-                                                {contact.method === 'Other' ? contact.custom_method_name : contact.method}:
-                                            </span>{' '}
-                                            <span>{contact.value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </GlassCard>
-                        </section>
-                    )
-                }
+                {/* Mobile Contact Section REMOVED (Moved to top) */}
 
                 {/* Footer */}
                 {/* Footer - Only for non-logged-in users */}

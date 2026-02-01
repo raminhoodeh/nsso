@@ -30,7 +30,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
     {
         id: 'profile',
-        label: 'Profile',
+        label: 'Edit Profile',
         icon: User,
         view: 'profile'
     },
@@ -169,7 +169,7 @@ function DashboardSidebarContent() {
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
                 >
                     <LinkIcon size={18} className="group-hover:text-white transition-colors" />
-                    <span className="font-medium text-[14px]">Copy Link</span>
+                    <span className="font-medium text-[14px]">Copy profile link</span>
                 </button>
 
                 {/* Sign Out */}

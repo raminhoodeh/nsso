@@ -490,7 +490,7 @@ function DashboardContent() {
                 <Header />
             </div>
 
-            <div className="pt-[120px] md:pt-10 px-6 lg:px-12 max-w-[1470px] mx-auto space-y-6">
+            <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto space-y-6">
 
                 {/* Tab Bar Removed - Replaced by Global Sidebar/BottomNav */}
 

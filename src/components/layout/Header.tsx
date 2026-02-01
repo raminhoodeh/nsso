@@ -96,16 +96,9 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
                 {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
                 {isOwnerMode ? (
-                    // OWNER MODE: Edit Profile button on Desktop
+                    // OWNER MODE: Edit Profile button REMOVED as per Phase 7 requirements
                     <div className="hidden md:flex">
-                        <GlassButton
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push('/dashboard')}
-                            onMouseEnter={() => router.prefetch('/dashboard')}
-                        >
-                            ← Edit Profile
-                        </GlassButton>
+                        {/* Space reserved if needed later */}
                     </div>
                 ) : (
                     // DEFAULT MODE: Logo
@@ -375,6 +368,6 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     animation: slide-in-right 0.3s ease-out;
                 }
             `}</style>
-        </header>
+        </header >
     )
 }

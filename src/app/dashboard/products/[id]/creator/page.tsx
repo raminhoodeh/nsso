@@ -316,7 +316,7 @@ export default function SalesPageCreator() {
         <main className="min-h-screen pb-32 md:pb-12 bg-[#43628c]">
             {/* Header Removed to avoid duplicate logo */}\n
 
-            <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto">
+            <div className="pt-[120px] px-6 lg:px-8 max-w-[1470px] mx-auto">
 
                 <GlassCard className="p-8 lg:p-12">
                     {/* Header */}

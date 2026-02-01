@@ -1,49 +1,42 @@
+```
 'use client'
 
 import React, { Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { Home, User, Newspaper, Sparkles } from 'lucide-react'
+import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { MyNssoIcon } from '../icons/MyNssoIcon';
 import { useToast } from '@/components/ui/Toast'
 
 // Navigation Configuration
 const NAV_ITEMS = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'my-nsso', label: 'My nsso', icon: Home },
-    { id: 'deity', label: 'Deity', icon: Sparkles, isDeity: true },
-    { id: 'news-feed', label: 'Feed', icon: Newspaper },
-]
+    { id: 'profile', label: 'Edit Profile', icon: User },
+    { id: 'my-nsso', label: 'My nsso', icon: MyNssoIcon },
+    { id: 'products', label: 'Products', icon: ShoppingBag },
+    { id: 'contacts', label: 'Network', icon: Search },
+];
 
 function BottomNavContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const currentView = searchParams.get('view') || 'profile'
+    const activeView = searchParams.get('view') || 'profile'
     const { showToast } = useToast()
 
     const handleItemClick = (id: string) => {
-        if (id === 'news-feed') {
-            showToast('News Feed coming soon', 'success')
-            return
-        }
-
-        if (id === 'deity') {
-            window.dispatchEvent(new CustomEvent('open-deity-chat'))
-            return
-        }
-
         const params = new URLSearchParams(searchParams.toString())
         params.set('view', id)
-        router.push(`/dashboard?${params.toString()}`)
+        router.push(`/ dashboard ? ${ params.toString() } `)
     }
 
     return (
         <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden pb-safe">
-            <div className="bg-black/80 backdrop-blur-xl border-t border-white/10 px-6 py-4">
-                <div className="grid grid-cols-4 gap-0">
+            {/* Glass Container */}
+            <div className="mx-6 mb-8 rounded-[24px] overflow-hidden bg-[#1C1C1E]/80 backdrop-blur-xl border border-white/10 shadow-2xl">
+                <div className="flex justify-between items-center px-8 h-[72px]">
                     {NAV_ITEMS.map((item) => {
-                        const isActive = currentView === item.id && !item.isDeity
-                        const Icon = item.icon
+                        const Icon = item.icon;
+                        const isActive = activeView === item.id;
 
                         return (
                             <button
