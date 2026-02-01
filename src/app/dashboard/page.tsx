@@ -12,6 +12,7 @@ import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { SortableContactItem } from './components/SortableContactItem'
 import Input from '@/components/ui/Input'
 import { Plus, X, Upload, Loader2, CreditCard, Copy, Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import AdvancedModeCard from '@/app/dashboard/components/AdvancedModeCard'
 import EarningsTab from '@/app/dashboard/components/EarningsTab'
 
@@ -280,29 +281,35 @@ function DashboardContent() {
         return () => clearTimeout(timer)
     }, [desiredUsername, customDomain, user?.is_premium, user?.username])
 
-    // Handle checkout
-    // Handle checkout
-    const handleCheckout = async () => {
+    // Handle Free Domain Claim
+    const handleClaimFreeDomain = async () => {
         if (!desiredUsername || !usernameAvailable) return
         setProcessingCheckout(true)
 
         try {
-            const response = await fetch('/api/polar-checkout', {
+            const response = await fetch('/api/claim-free-domain', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ desiredUsername }),
             })
             const data = await response.json()
 
-            if (data.checkoutUrl) {
-                window.location.href = data.checkoutUrl
+            if (response.ok && data.success) {
+                showToast(`Domain claimed! Welcome to Premium.`, 'success')
+                // Refresh user state to reflect premium status immediately
+                await refreshUser()
+                // Force a reload to ensure all premium UI elements are visible if needed, 
+                // or just rely on state. Let's rely on state.
+                // Actually, refreshUser might happen too fast before DB propagation in some cases? 
+                // Let's reload to be safe and ensure fresh data
+                window.location.reload()
             } else {
-                console.error('Checkout Error:', data)
-                showToast(data.details || data.error || 'Failed to start checkout', 'error')
+                console.error('Claim Error:', data)
+                showToast(data.error || 'Failed to claim domain', 'error')
             }
         } catch (err) {
-            console.error('Checkout Exception:', err)
-            showToast('Failed to start checkout. Check console.', 'error')
+            console.error('Claim Exception:', err)
+            showToast('Failed to claim domain. Please try again.', 'error')
         }
         setProcessingCheckout(false)
     }
@@ -717,184 +724,206 @@ function DashboardContent() {
                                                     backgroundPosition: 'center'
                                                 }}
                                             />
+                                        </div>
 
-                                            {/* Prefix text - nsso.me/ */}
-                                            <span
-                                                className="relative z-10 text-[22px] font-medium text-white/96 shrink-0 pl-4"
-                                                style={{
-                                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                    fontWeight: 510
-                                                }}
-                                            >
-                                                nsso.me/
-                                            </span>
+                                        {/* Prefix text - nsso.me/ */}
+                                        <span
+                                            className="relative z-10 text-[22px] font-medium text-white/96 shrink-0 pl-4"
+                                            style={{
+                                                fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                                                fontWeight: 510
+                                            }}
+                                        >
+                                            nsso.me/
+                                        </span>
 
-                                            {/* Input field - Always editable now */}
-                                            <input
-                                                type="text"
-                                                value={user?.is_premium ? customDomain : desiredUsername}
-                                                onChange={(e) => {
-                                                    if (user?.is_premium) {
-                                                        setCustomDomain(e.target.value)
-                                                    } else {
-                                                        setDesiredUsername(e.target.value)
-                                                    }
-                                                }}
-                                                placeholder="yourname"
-                                                className="relative z-10 flex-1 bg-transparent border-none outline-none text-[22px] font-medium text-[#545454] placeholder:text-[#545454]/50 min-w-0"
-                                                style={{
-                                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                    fontWeight: 510
-                                                }}
-                                            />
+                                        {/* Input field */}
+                                        <input
+                                            type="text"
+                                            value={user?.is_premium ? customDomain : desiredUsername}
+                                            onChange={(e) => {
+                                                if (user?.is_premium) {
+                                                    setCustomDomain(e.target.value)
+                                                } else {
+                                                    setDesiredUsername(e.target.value)
+                                                }
+                                            }}
+                                            placeholder="yourname"
+                                            className="relative z-10 flex-1 bg-transparent border-none outline-none text-[22px] font-medium text-[#545454] placeholder:text-[#545454]/50 min-w-0"
+                                            style={{
+                                                fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                                                fontWeight: 510
+                                            }}
+                                        />
 
-                                            {/* Copy Button */}
-                                            <button
-                                                onClick={handleCopyUrl}
-                                                className="relative z-10 p-2 mr-1 text-white/50 hover:text-white transition-colors"
-                                                title="Copy URL"
-                                            >
-                                                {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
-                                            </button>
+                                        {/* Copy Button */}
+                                        <button
+                                            onClick={handleCopyUrl}
+                                            className="relative z-10 p-2 mr-1 text-white/50 hover:text-white transition-colors"
+                                            title="Copy URL"
+                                        >
+                                            {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+                                        </button>
 
-                                            {/* Actions Section inside Input - Desktop Only */}
-                                            <div className="relative z-10 hidden md:flex items-center gap-2 mr-1.5 shrink-0">
-
-                                                {/* Primary Action: CLAIM IT (Non-Premium) or UPDATE (Premium + Changed) or Badge */}
-                                                {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
-                                                    <div
-                                                        className="p-[0.75px] rounded-[100px]"
+                                        {/* Actions Section inside Input - Desktop Only */}
+                                        <div className="relative z-10 hidden md:flex items-center gap-2 mr-1.5 shrink-0">
+                                            {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
+                                                <div
+                                                    className="p-[0.75px] rounded-[100px]"
+                                                    style={{
+                                                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                                    }}
+                                                >
+                                                    <button
+                                                        onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
+                                                        disabled={
+                                                            (!user?.is_premium && !usernameAvailable) ||
+                                                            processingCheckout ||
+                                                            (user?.is_premium && !customDomain) ||
+                                                            (!user?.is_premium && !desiredUsername)
+                                                        }
+                                                        className={cn(
+                                                            "relative h-[42px] px-6 rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]",
+                                                            usernameAvailable ? "bg-white/10 text-white" : "bg-transparent text-white/50"
+                                                        )}
                                                         style={{
-                                                            background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                                            boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
                                                         }}
                                                     >
-                                                        <button
-                                                            onClick={user?.is_premium ? handleUpdateUsername : handleCheckout}
-                                                            disabled={!usernameAvailable || processingCheckout || (user?.is_premium && !customDomain) || (!user?.is_premium && !desiredUsername)}
-                                                            className="relative h-[42px] w-[133px] rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                                            style={{
-                                                                boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                                                            }}
-                                                        >
-                                                            {/* Shiny button background layers */}
-                                                            <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
-                                                            <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
+                                                        <div className="absolute inset-0 rounded-[100px] bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
+                                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                                        <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
 
+                                                        <div className="relative z-10 flex items-center gap-2">
+                                                            {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
                                                             <span
-                                                                className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
+                                                                className="text-[16px] font-semibold text-white/96 tracking-wide"
                                                                 style={{
                                                                     fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                                                     fontWeight: 590
                                                                 }}
                                                             >
-                                                                {processingCheckout ? 'Processing...' : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')}
+                                                                {processingCheckout
+                                                                    ? (user?.is_premium ? 'Updating...' : 'Claiming...')
+                                                                    : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
+                                                                }
                                                             </span>
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5">
-                                                        Premium Active
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Inset shadow overlay */}
-                                            <div
-                                                className="absolute inset-0 pointer-events-none rounded-[12px]"
-                                                style={{
-                                                    boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)'
-                                                }}
-                                            />
+                                                        </div>
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5">
+                                                    Premium Active
+                                                </span>
+                                            )}
                                         </div>
-                                    </div>
 
-                                    {/* Mobile Actions Row (Below Input) */}
-                                    <div className="flex md:hidden items-center gap-3 w-full">
-                                        {/* Primary Action Button (Mobile) */}
-                                        {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
-                                            <div
-                                                className="p-[0.75px] rounded-[100px] flex-1"
+                                        {/* Inset shadow overlay */}
+                                        <div
+                                            className="absolute inset-0 pointer-events-none rounded-[12px]"
+                                            style={{
+                                                boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Mobile Actions Row (Below Input) */}
+                                <div className="flex md:hidden items-center gap-3 w-full">
+                                    {/* Primary Action Button (Mobile) */}
+                                    {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) ? (
+                                        <div
+                                            className="p-[0.75px] rounded-[100px] flex-1"
+                                            style={{
+                                                background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                            }}
+                                        >
+                                            <button
+                                                onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
+                                                disabled={
+                                                    (!user?.is_premium && !usernameAvailable) ||
+                                                    processingCheckout ||
+                                                    (user?.is_premium && !customDomain) ||
+                                                    (!user?.is_premium && !desiredUsername)
+                                                }
+                                                className="relative h-[42px] w-full rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
                                                 style={{
-                                                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                                    boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
                                                 }}
                                             >
-                                                <button
-                                                    onClick={user?.is_premium ? handleUpdateUsername : handleCheckout}
-                                                    disabled={!usernameAvailable || processingCheckout || (user?.is_premium && !customDomain) || (!user?.is_premium && !desiredUsername)}
-                                                    className="relative h-[42px] w-full rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
-                                                    style={{
-                                                        boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                                                    }}
-                                                >
-                                                    <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
-                                                    <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
+                                                <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
+                                                <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
+                                                <div className="relative z-10 flex items-center gap-2">
+                                                    {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
                                                     <span
-                                                        className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
+                                                        className="text-[16px] font-semibold text-white/96 tracking-wide"
                                                         style={{
                                                             fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                                             fontWeight: 590
                                                         }}
                                                     >
-                                                        {processingCheckout ? 'Processing...' : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')}
+                                                        {processingCheckout
+                                                            ? (user?.is_premium ? 'Updating...' : 'Claiming...')
+                                                            : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
+                                                        }
                                                     </span>
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5 flex-1">
-                                                Premium Active
-                                            </span>
-                                        )}
-
-
-                                        {/* Mobile Downgrade Button */}
-                                        {user?.is_premium && (
-                                            <button
-                                                onClick={() => setShowDowngradeModal(true)}
-                                                className="h-[42px] px-6 rounded-[100px] border border-white/20 flex items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
-                                            >
-                                                Downgrade
+                                                </div>
                                             </button>
-                                        )}
-                                    </div>
+                                        </div>
+                                    ) : (
+                                        <span className="h-[42px] px-4 rounded-[12px] border border-white/45 flex items-center justify-center text-[14px] font-semibold text-white/60 bg-white/5 flex-1">
+                                            Premium Active
+                                        </span>
+                                    )}
 
-                                    {/* Downgrade Button - Situated to the right */}
+                                    {/* Mobile Downgrade Button */}
                                     {user?.is_premium && (
                                         <button
                                             onClick={() => setShowDowngradeModal(true)}
-                                            className="hidden md:flex h-[54px] px-6 rounded-[100px] border border-white/20 items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
+                                            className="h-[42px] px-6 rounded-[100px] border border-white/20 flex items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
                                         >
                                             Downgrade
                                         </button>
                                     )}
-
-                                    {/* Quote Section */}
-                                    <div className="hidden lg:flex items-center h-[54px] ml-4">
-                                        <p className="text-white/80 text-sm italic font-bold max-w-[500px] leading-tight text-right lg:text-left">
-                                            "nsso is the most beautiful way to present yourself online" <span className="font-normal not-italic">- <a href="https://www.instagram.com/ramin.nsso" target="_blank" rel="noopener noreferrer" className="hover:underline">Ramin Hoodeh</a></span>
-                                        </p>
-                                    </div>
                                 </div>
 
-                                {/* Username availability indicator */}
-                                {((!user?.is_premium && desiredUsername) || (user?.is_premium && customDomain !== user?.username && customDomain)) && (
-                                    <div>
-                                        {checkingUsername ? (
-                                            <p className="text-white/50 text-sm">Checking availability...</p>
-                                        ) : usernameAvailable === true ? (
-                                            <p className="text-green-400 text-sm">✓ This username is available!</p>
-                                        ) : usernameAvailable === false ? (
-                                            <p className="text-red-400 text-sm">✗ {usernameError || 'Username not available'}</p>
-                                        ) : null}
-                                    </div>
+                                {/* Downgrade Button - Situated to the right (Desktop) */}
+                                {user?.is_premium && (
+                                    <button
+                                        onClick={() => setShowDowngradeModal(true)}
+                                        className="hidden md:flex h-[54px] px-6 rounded-[100px] border border-white/20 items-center justify-center text-[15px] font-medium text-white/90 hover:text-white/95 hover:bg-white/5 transition-all hover:border-white/30"
+                                    >
+                                        Downgrade
+                                    </button>
                                 )}
 
-                                <p className="text-white/80 text-sm">
-                                    {user?.is_premium
-                                        ? `Your custom URL: nsso.me/${customDomain}`
-                                        : 'Upgrade to premium ($8/mo) to claim your custom URL'}
-                                </p>
+                                {/* Quote Section */}
+                                <div className="hidden lg:flex items-center h-[54px] ml-4">
+                                    <p className="text-white/80 text-sm italic font-bold max-w-[500px] leading-tight text-right lg:text-left">
+                                        "nsso is the most beautiful way to present yourself online" <span className="font-normal not-italic">- <a href="https://www.instagram.com/ramin.nsso" target="_blank" rel="noopener noreferrer" className="hover:underline">Ramin Hoodeh</a></span>
+                                    </p>
+                                </div>
                             </div>
                         </div>
+
+                        {/* Username availability indicator */}
+                        {((!user?.is_premium && desiredUsername) || (user?.is_premium && customDomain !== user?.username && customDomain)) && (
+                            <div className="mt-2 pl-1">
+                                {checkingUsername ? (
+                                    <p className="text-white/50 text-sm">Checking availability...</p>
+                                ) : usernameAvailable === true ? (
+                                    <p className="text-green-400 text-sm">✓ This username is available!</p>
+                                ) : usernameAvailable === false ? (
+                                    <p className="text-red-400 text-sm">✗ {usernameError || 'Username not available'}</p>
+                                ) : null}
+                            </div>
+                        )}
+
+                        <p className="mt-4 text-white/60 text-sm">
+                            {user?.is_premium
+                                ? `Your custom URL: nsso.me/${customDomain}`
+                                : 'Your custom URL is free for 1 year:'}
+                        </p>
                     </GlassCard>
                 )}
 
@@ -906,153 +935,157 @@ function DashboardContent() {
 
 
                 {/* Only show Links, Contact, and Advanced Mode cards on "Your Profile" tab */}
-                {currentView === 'profile' && (
-                    <>
-                        {/* Card 2: Links Section */}
-                        <GlassCard className="p-6 lg:p-8">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="pr-8">
-                                    <h2 className="text-2xl font-bold text-white">Links</h2>
-                                    <p className="text-white/70 text-sm">Where can people find you and your work online?</p>
+                {
+                    currentView === 'profile' && (
+                        <>
+                            {/* Card 2: Links Section */}
+                            <GlassCard className="p-6 lg:p-8">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="pr-8">
+                                        <h2 className="text-2xl font-bold text-white">Links</h2>
+                                        <p className="text-white/70 text-sm">Where can people find you and your work online?</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {/* Ask Deity Button */}
+                                        <button
+                                            onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                                detail: { initialMessage: "Help me find links to add to my profile..." }
+                                            }))}
+                                            className="flex items-center gap-2 px-3 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                                            style={{
+                                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                                            }}
+                                        >
+                                            <Sparkles className="w-4 h-4" />
+                                            <span className="text-xs font-medium hidden sm:inline">Ask Deity</span>
+                                        </button>
+                                        <button
+                                            onClick={() => addLink('', '')}
+                                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors shrink-0"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    {/* Ask Deity Button */}
-                                    <button
-                                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
-                                            detail: { initialMessage: "Help me find links to add to my profile..." }
-                                        }))}
-                                        className="flex items-center gap-2 px-3 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all"
-                                        style={{
-                                            border: '1px solid rgba(255, 255, 255, 0.2)'
-                                        }}
+
+                                <div className="space-y-4">
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleLinkDragEnd}
                                     >
-                                        <Sparkles className="w-4 h-4" />
-                                        <span className="text-xs font-medium hidden sm:inline">Ask Deity</span>
-                                    </button>
+                                        <SortableContext
+                                            items={links.map(l => l.id)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            {links.map((link) => (
+                                                <SortableLinkItem
+                                                    key={link.id}
+                                                    link={link}
+                                                    updateLink={updateLink}
+                                                    removeLink={removeLink}
+                                                />
+                                            ))}
+                                        </SortableContext>
+                                    </DndContext>
+
+                                    {links.length === 0 && (
+                                        <p className="text-white/50 text-center py-8">
+                                            No links yet. Click + to add your first link.
+                                        </p>
+                                    )}
+                                </div>
+                            </GlassCard>
+
+                            {/* Card 3: Contact Section */}
+                            <GlassCard className="p-8">
+                                <div className="flex justify-between items-center mb-6">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white mb-2">Contact</h2>
+                                        <p className="text-white/50 text-sm">Add your contact methods and social profiles.</p>
+                                    </div>
                                     <button
-                                        onClick={() => addLink('', '')}
-                                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors shrink-0"
+                                        onClick={() => addContact()}
+                                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                                     >
                                         +
                                     </button>
                                 </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragEnd={handleLinkDragEnd}
-                                >
-                                    <SortableContext
-                                        items={links.map(l => l.id)}
-                                        strategy={verticalListSortingStrategy}
+                                <div className="space-y-4">
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleContactDragEnd}
                                     >
-                                        {links.map((link) => (
-                                            <SortableLinkItem
-                                                key={link.id}
-                                                link={link}
-                                                updateLink={updateLink}
-                                                removeLink={removeLink}
-                                            />
-                                        ))}
-                                    </SortableContext>
-                                </DndContext>
+                                        <SortableContext
+                                            items={contacts.map(c => c.id)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            {contacts.map((contact) => (
+                                                <SortableContactItem
+                                                    key={contact.id}
+                                                    contact={contact}
+                                                    updateContact={updateContact}
+                                                    removeContact={removeContact}
+                                                />
+                                            ))}
+                                        </SortableContext>
+                                    </DndContext>
 
-                                {links.length === 0 && (
-                                    <p className="text-white/50 text-center py-8">
-                                        No links yet. Click + to add your first link.
-                                    </p>
-                                )}
-                            </div>
-                        </GlassCard>
-
-                        {/* Card 3: Contact Section */}
-                        <GlassCard className="p-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-white mb-2">Contact</h2>
-                                    <p className="text-white/50 text-sm">Add your contact methods and social profiles.</p>
+                                    {contacts.length === 0 && (
+                                        <p className="text-white/50 text-center py-8">
+                                            No contact methods yet. Click + to add one.
+                                        </p>
+                                    )}
                                 </div>
-                                <button
-                                    onClick={() => addContact()}
-                                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                                >
-                                    +
-                                </button>
-                            </div>
-                            <div className="space-y-4">
-                                <DndContext
-                                    sensors={sensors}
-                                    collisionDetection={closestCenter}
-                                    onDragEnd={handleContactDragEnd}
-                                >
-                                    <SortableContext
-                                        items={contacts.map(c => c.id)}
-                                        strategy={verticalListSortingStrategy}
-                                    >
-                                        {contacts.map((contact) => (
-                                            <SortableContactItem
-                                                key={contact.id}
-                                                contact={contact}
-                                                updateContact={updateContact}
-                                                removeContact={removeContact}
-                                            />
-                                        ))}
-                                    </SortableContext>
-                                </DndContext>
+                            </GlassCard>
 
-                                {contacts.length === 0 && (
-                                    <p className="text-white/50 text-center py-8">
-                                        No contact methods yet. Click + to add one.
-                                    </p>
-                                )}
-                            </div>
-                        </GlassCard>
-
-                        {/* Advanced Mode Card (V2) */}
-                        {user && <AdvancedModeCard userId={user.id} />}
-                    </>
-                )}
-            </div>
+                            {/* Advanced Mode Card (V2) */}
+                            {user && <AdvancedModeCard userId={user.id} />}
+                        </>
+                    )
+                }
+            </div >
 
             {/* Downgrade Confirmation Modal */}
-            {showDowngradeModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-                    <GlassCard className="w-full max-w-md p-8">
-                        <h2 className="text-2xl font-bold text-white mb-4 text-center">
-                            Cancel Subscription?
-                        </h2>
-                        <div className="text-center mb-6">
-                            <div className="text-5xl mb-4">⚠️</div>
-                            <p className="text-white/70 mb-4">
-                                Your subscription will remain active until the end of your current billing period.
-                            </p>
-                            <p className="text-red-400 font-medium">
-                                After that, you will lose your custom URL (nsso.me/{customDomain}) and it may be claimed by someone else.
-                            </p>
-                        </div>
-                        <div className="flex gap-4">
-                            <GlassButton
-                                variant="secondary"
-                                fullWidth
-                                onClick={() => setShowDowngradeModal(false)}
-                            >
-                                Keep Premium
-                            </GlassButton>
-                            <GlassButton
-                                variant="primary"
-                                fullWidth
-                                onClick={handleDowngrade}
-                                disabled={processingDowngrade}
-                            >
-                                {processingDowngrade ? 'Processing...' : 'Cancel Subscription'}
-                            </GlassButton>
-                        </div>
-                    </GlassCard>
-                </div>
-            )}
-        </main>
+            {
+                showDowngradeModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                        <GlassCard className="w-full max-w-md p-8">
+                            <h2 className="text-2xl font-bold text-white mb-4 text-center">
+                                Cancel Subscription?
+                            </h2>
+                            <div className="text-center mb-6">
+                                <div className="text-5xl mb-4">⚠️</div>
+                                <p className="text-white/70 mb-4">
+                                    Your subscription will remain active until the end of your current billing period.
+                                </p>
+                                <p className="text-red-400 font-medium">
+                                    After that, you will lose your custom URL (nsso.me/{customDomain}) and it may be claimed by someone else.
+                                </p>
+                            </div>
+                            <div className="flex gap-4">
+                                <GlassButton
+                                    variant="secondary"
+                                    fullWidth
+                                    onClick={() => setShowDowngradeModal(false)}
+                                >
+                                    Keep Premium
+                                </GlassButton>
+                                <GlassButton
+                                    variant="primary"
+                                    fullWidth
+                                    onClick={handleDowngrade}
+                                    disabled={processingDowngrade}
+                                >
+                                    {processingDowngrade ? 'Processing...' : 'Cancel Subscription'}
+                                </GlassButton>
+                            </div>
+                        </GlassCard>
+                    </div>
+                )
+            }
+        </main >
     )
 }
 

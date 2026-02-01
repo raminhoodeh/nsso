@@ -119,7 +119,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 .from('contacts')
                 .select('*')
                 .eq('user_id', userId)
-                .order('display_order', { ascending: true })
                 .order('created_at', { ascending: true })
 
             if (contactsData) setContacts(contactsData)
