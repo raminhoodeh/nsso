@@ -53,7 +53,7 @@ export default function GlassCard({
 
     return (
         <div
-            className={`glass-style-card ${variant === 'apple' ? 'rounded-[24px] mix-blend-screen' : 'rounded-[40px]'} overflow-visible ${className}`}
+            className={`glass-style-card ${variant === 'apple' ? 'rounded-[24px] [&::after]:mix-blend-screen shadow-none' : 'rounded-[40px]'} overflow-visible ${className}`}
             style={mergedStyle}
         >
             {/* Inner specular highlight for 3D effect */}
