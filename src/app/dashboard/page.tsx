@@ -705,7 +705,7 @@ function DashboardContent() {
                                 {/* Flex container for Input + Quote */}
                                 <div className="flex flex-col lg:flex-row items-center gap-4 w-full">
                                     {/* Figma Domain Input with integrated CLAIM IT button */}
-                                    <div className="relative w-full lg:flex-1 h-[54px]">
+                                    <div className="relative w-full lg:flex-1 h-[54px] flex items-center">
                                         {/* Base container with all layers */}
                                         <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
                                             {/* Glassmorphic background layers */}
