@@ -112,7 +112,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
 
             {/* Profile Content */}
-            <div className="px-6 lg:px-[165px] max-w-[1470px] mx-auto space-y-24">
+            <div className="px-6 lg:px-[165px] max-w-[1470px] mx-auto space-y-12">
 
                 {/* 1. Identity & Resume Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -185,7 +185,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 !mt-24">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 !mt-10">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
                                 <GlassCard className="p-6 h-full max-h-[85vh]">
@@ -381,7 +381,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {/* Mobile Contact Section */}
                 {
                     contacts.length > 0 && (
-                        <section className="block lg:hidden mt-20">
+                        <section className="block lg:hidden mt-24">
                             <GlassCard className="p-6">
 
                                 <div className="space-y-2">
