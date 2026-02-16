@@ -11,6 +11,22 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'ymckairbwictbfsfpqzt.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'm.media-amazon.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'image.tmdb.org',
+      },
     ],
   },
   async redirects() {
