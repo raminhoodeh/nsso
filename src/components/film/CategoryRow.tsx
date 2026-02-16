@@ -29,7 +29,7 @@ const CategoryRow = ({ title, films, onFilmClick }: CategoryRowProps) => {
 
             <div className="relative -mx-4 px-4 md:-mx-12 md:px-12">
                 <button
-                    className="absolute left-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-r from-black/80 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:opacity-0 cursor-pointer"
+                    className="absolute left-0 top-0 bottom-0 z-30 w-16 bg-gradient-to-r from-black/60 via-black/20 to-transparent flex items-center justify-start pl-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:opacity-0 cursor-pointer"
                     onClick={() => scroll(-500)}
                     aria-label="Scroll left"
                 >
@@ -38,7 +38,7 @@ const CategoryRow = ({ title, films, onFilmClick }: CategoryRowProps) => {
 
                 <div
                     ref={rowRef}
-                    className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth py-4 pr-12"
+                    className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth py-8 pr-12 pl-2"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {films.map((film) => (
@@ -52,7 +52,7 @@ const CategoryRow = ({ title, films, onFilmClick }: CategoryRowProps) => {
                 </div>
 
                 <button
-                    className="absolute right-0 top-0 bottom-0 z-30 w-12 bg-gradient-to-l from-black/80 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                    className="absolute right-0 top-0 bottom-0 z-30 w-16 bg-gradient-to-l from-black/60 via-black/20 to-transparent flex items-center justify-end pr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                     onClick={() => scroll(500)}
                     aria-label="Scroll right"
                 >

@@ -18,10 +18,10 @@ interface MovieCardProps {
 const MovieCard = ({ film, onClick }: MovieCardProps) => {
     return (
         <div
-            className="relative flex-none w-48 transition-transform duration-300 transform cursor-pointer hover:scale-110 hover:z-10"
+            className="relative flex-none w-48 transition-transform duration-300 transform cursor-pointer hover:scale-105 hover:z-10 group"
             onClick={() => onClick(film)}
         >
-            <div className="aspect-[2/3] bg-gray-800 rounded-md overflow-hidden shadow-lg relative">
+            <div className="aspect-[2/3] glass-style-card rounded-[24px] overflow-hidden shadow-2xl relative border border-white/10 group-hover:border-white/30 transition-colors">
                 <Image
                     src={film.poster}
                     alt={film.title}

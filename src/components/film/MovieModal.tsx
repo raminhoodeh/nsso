@@ -50,7 +50,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
     }, [film]);
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md transition-opacity duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-2xl transition-opacity duration-300">
             {/* Global Previous Button */}
             <button
                 onClick={(e) => { e.stopPropagation(); onPrev(); }}
@@ -72,7 +72,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
                 onClick={e => e.stopPropagation()}
             >
                 {/* Main Content Area (70% Height) */}
-                <div className="relative w-full h-[70%] bg-[#141414] rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden border border-gray-800 mb-4">
+                <div className="relative w-full h-[70%] glass-style-card rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-white/10 mb-4">
                     <button
                         className="absolute top-4 right-4 z-50 p-2 text-white bg-black/60 rounded-full hover:bg-white/20 backdrop-blur-sm"
                         onClick={onClose}
@@ -111,7 +111,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
                     </div>
 
                     {/* Right Column: Content (25%) */}
-                    <div className="w-full md:w-[25%] h-full bg-[#181818] overflow-y-auto custom-scrollbar border-l border-gray-800">
+                    <div className="w-full md:w-[25%] h-full bg-transparent overflow-y-auto custom-scrollbar border-l border-white/10">
                         <div className="p-6 flex flex-col h-full">
                             <h2 className="text-2xl font-bold text-white mb-1 leading-tight">{film.title}</h2>
                             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mb-4 font-medium">
@@ -155,7 +155,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
                                 data-title={f.title}
                                 onClick={(e) => { e.stopPropagation(); onSelect(f); }}
                                 className={`
-                                   flex-shrink-0 cursor-pointer transition-all duration-300 relative rounded-lg overflow-hidden border-2
+                                   flex-shrink-0 cursor-pointer transition-all duration-300 relative rounded-2xl overflow-hidden border-2
                                    ${f.title === film.title ? 'w-48 h-32 border-white scale-105 shadow-xl z-10' : 'w-40 h-24 border-transparent opacity-60 hover:opacity-100 hover:scale-105'}
                                `}
                             >
