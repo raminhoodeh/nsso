@@ -51,10 +51,19 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-2xl transition-opacity duration-300">
+            {/* Back Button (Top Left) */}
+            <button
+                onClick={onClose}
+                className="absolute left-6 top-6 z-[120] flex items-center gap-2 px-6 py-3 bg-black/40 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 group"
+            >
+                <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                <span className="font-medium text-lg">Back</span>
+            </button>
+
             {/* Global Previous Button */}
             <button
                 onClick={(e) => { e.stopPropagation(); onPrev(); }}
-                className="absolute left-4 top-1/3 z-50 p-3 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all hidden md:block"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all hidden md:block"
             >
                 <ChevronLeft size={48} />
             </button>
@@ -62,7 +71,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
             {/* Global Next Button */}
             <button
                 onClick={(e) => { e.stopPropagation(); onNext(); }}
-                className="absolute right-4 top-1/3 z-50 p-3 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all hidden md:block"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all hidden md:block"
             >
                 <ChevronRight size={48} />
             </button>
@@ -73,13 +82,6 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
             >
                 {/* Main Content Area (70% Height) */}
                 <div className="relative w-full h-[70%] glass-style-card rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-white/10 mb-4">
-                    <button
-                        className="absolute top-4 right-4 z-50 p-3 text-white/90 bg-black/60 hover:bg-red-600 hover:text-white rounded-full backdrop-blur-md transition-all duration-300 transform hover:scale-110 shadow-lg border border-white/10 cursor-pointer"
-                        onClick={onClose}
-                        aria-label="Close"
-                    >
-                        <X size={32} />
-                    </button>
 
                     {/* Left Column: Media (75%) */}
                     <div className="w-full md:w-[75%] h-full relative bg-black flex items-center justify-center group">
