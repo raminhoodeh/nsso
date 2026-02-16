@@ -74,10 +74,11 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
                 {/* Main Content Area (70% Height) */}
                 <div className="relative w-full h-[70%] glass-style-card rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-white/10 mb-4">
                     <button
-                        className="absolute top-4 right-4 z-50 p-2 text-white bg-black/60 rounded-full hover:bg-white/20 backdrop-blur-sm"
+                        className="absolute top-4 right-4 z-50 p-3 text-white/90 bg-black/60 hover:bg-red-600 hover:text-white rounded-full backdrop-blur-md transition-all duration-300 transform hover:scale-110 shadow-lg border border-white/10 cursor-pointer"
                         onClick={onClose}
+                        aria-label="Close"
                     >
-                        <X size={24} />
+                        <X size={32} />
                     </button>
 
                     {/* Left Column: Media (75%) */}
