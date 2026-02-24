@@ -25,7 +25,7 @@ if (!apiKey) {
     process.exit(1);
 }
 const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
 const CONTEXT_DIR = path.join(process.cwd(), 'nsso agent context database');
 

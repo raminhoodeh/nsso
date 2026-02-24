@@ -274,7 +274,7 @@ export async function POST(req: Request) {
             console.log(`Searching with category: ${detectedCategory || 'None'}, filters:`, filterFiles);
 
             // 1. Generate embedding for user query
-            const embeddingResult = await embeddingModel.embedContent(message);
+            const embeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: message }] }, outputDimensionality: 768 } as any);
             const embedding = embeddingResult.embedding.values;
 
             // 1b. Generate embedding for user profile (for re-ranking)
@@ -282,7 +282,7 @@ export async function POST(req: Request) {
             if (userContext && userContext.length > 50) {
                 try {
                     const contextForEmbedding = userContext.substring(0, 1000);
-                    const profileEmbeddingResult = await embeddingModel.embedContent(contextForEmbedding);
+                    const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any);
                     profileEmbedding = profileEmbeddingResult.embedding.values;
                 } catch (err) {
                     console.error("⚠️ Failed to generate profile embedding:", err);
