@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
-const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+const embeddingModel = genAI.getGenerativeModel({ model: "models/text-embedding-004" });
 
 // Category configuration with optimized thresholds
 const CATEGORY_CONFIG: Record<string, { files: string[], threshold: number }> = {
