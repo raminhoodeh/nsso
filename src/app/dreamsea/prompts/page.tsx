@@ -364,30 +364,30 @@ export default function DreamseaPromptsPage() {
 
     // Main Admin UI
     return (
-        <main className={`relative z-10 max-w-[780px] mx-auto pt-24 pb-20 px-6 ${inter.className}`}>
+        <main className={`relative z-10 max-w-[1600px] mx-auto pt-24 pb-20 px-6 ${inter.className}`}>
             
             {/* Header */}
-            <header className="text-center mb-10">
+            <header className="text-center mb-10 p-10 bg-[#0f2648] border border-white/10 rounded-[40px] shadow-2xl backdrop-blur-md">
                 <span className="block mb-3 text-6xl animate-pulse cursor-default">🌙</span>
-                <h1 className={`text-4xl md:text-5xl font-semibold text-[#C1DCED] mb-5 tracking-tight ${playfair.className}`}>Dreamsea · Dream Prompts</h1>
-                <div className="inline-block py-4 px-7 bg-white/5 border border-white/10 rounded-full backdrop-blur-xl">
-                    <p className={`text-lg italic text-[#8A9AB0] ${playfair.className}`}>"A dream is an unopened letter from the divine."</p>
+                <h1 className={`text-4xl md:text-5xl font-semibold text-[#C1DCED] mb-6 tracking-tight ${playfair.className}`}>Dreamsea · Dream Prompts</h1>
+                <div className="inline-block py-4 px-10 bg-[#050810]/40 border border-white/10 rounded-full backdrop-blur-xl">
+                    <p className={`text-lg italic text-[#C1DCED]/80 ${playfair.className}`}>"A dream is an unopened letter from the divine."</p>
                 </div>
             </header>
 
             <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-[#C1DCED]/30 to-transparent mx-auto mb-10" />
 
             {/* Tabs */}
-            <div className="flex gap-1.5 p-1.5 mb-10 bg-[#050810]/50 border border-white/10 rounded-2xl">
+            <div className="flex gap-1.5 p-2 mb-10 bg-[#0f2648] border border-white/10 rounded-2xl shadow-xl">
                 <button
                     onClick={() => setActiveSection('prompts')}
-                    className={`flex-1 py-3 rounded-xl font-semibold transition-all ${activeSection === 'prompts' ? 'bg-[#213E60] border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
+                    className={`flex-1 py-3.5 rounded-xl font-semibold transition-all ${activeSection === 'prompts' ? 'bg-[#213E60] border border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
                 >
                     ✦ AI Prompts
                 </button>
                 <button
                     onClick={() => setActiveSection('wiki')}
-                    className={`flex-1 py-3 rounded-xl font-semibold transition-all ${activeSection === 'wiki' ? 'bg-[#213E60] border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
+                    className={`flex-1 py-3.5 rounded-xl font-semibold transition-all ${activeSection === 'wiki' ? 'bg-[#213E60] border border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
                 >
                     📖 Dream Wiki
                 </button>
@@ -396,97 +396,104 @@ export default function DreamseaPromptsPage() {
             {/* SECTION: AI PROMPTS */}
             {activeSection === 'prompts' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <p className="text-center text-sm text-[#8A9AB0] leading-relaxed mb-10">
-                        These are the eight voices that interpret every dream.<br />
-                        Edit them thoughtfully — your words will reach every dreamer. ✦<br /><br />
-                        Where you see <strong className="text-[#C1DCED]">{"{TRANSCRIPT}"}</strong> below, the actual dream recording will appear.
-                    </p>
+                    <div className="mb-10 p-6 bg-[#0f2648] border border-white/10 rounded-2xl shadow-lg">
+                        <p className="text-center text-sm text-[#C1DCED]/90 leading-relaxed">
+                            These are the eight voices that interpret every dream.<br />
+                            Edit them thoughtfully — your words will reach every dreamer. ✦<br /><br />
+                            Where you see <strong className="text-[#C1DCED] font-bold">{"{TRANSCRIPT}"}</strong> below, the actual dream recording will appear.
+                        </p>
+                    </div>
 
                     {/* Anatomy Guide */}
                     <div className="mb-12">
                         <button 
                             onClick={() => setIsAnatomyOpen(!isAnatomyOpen)}
-                            className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between group hover:border-[#C1DCED]/30 transition-all backdrop-blur-xl"
+                            className="w-full p-6 bg-[#0f2648] border border-white/10 rounded-2xl flex items-center justify-between group hover:border-[#C1DCED]/30 transition-all shadow-lg"
                         >
-                            <span className={`text-lg font-semibold text-[#C1DCED] ${playfair.className}`}>✦ How to write a beautiful prompt</span>
+                            <span className={`text-xl font-semibold text-[#C1DCED] shadow-sm ${playfair.className}`}>✦ How to write a beautiful prompt</span>
                             <div className="flex items-center gap-3">
-                                <span className="text-[11px] font-medium text-[#8A9AB0] px-3 py-1 bg-white/5 border border-white/10 rounded-full tracking-wider">A GUIDE FOR AZIN</span>
-                                <span className={`text-[#8A9AB0] transition-transform duration-300 ${isAnatomyOpen ? 'rotate-180' : ''}`}>▼</span>
+                                <span className="text-[11px] font-bold text-[#C1DCED] px-4 py-1.5 bg-white/5 border border-white/10 rounded-full tracking-wider">A GUIDE FOR AZIN</span>
+                                <span className={`text-[#C1DCED] transition-transform duration-300 ${isAnatomyOpen ? 'rotate-180' : ''}`}>▼</span>
                             </div>
                         </button>
-
+                        
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isAnatomyOpen ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                             <div className="pt-4 px-1">
-                                <p className="p-5 bg-[#C1DCED]/5 border border-white/10 rounded-xl text-sm leading-relaxed text-[#8A9AB0] mb-5">
-                                    Every prompt you write is a conversation with an ancient intelligence. The clearer your instructions, the more poetic and precise the response. A great prompt has four parts — think of them as layers of a dream: the deeper you go, the richer the meaning.
-                                </p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                                    {[
-                                        { n: 1, t: 'Persona', d: 'Who is the AI speaking as? Give it an identity grounded in a tradition, role, or archetype.', e: '"You are a Sufi dream scholar who has studied the dream interpretations of Ibn Arabi for forty years..."'},
-                                        { n: 2, t: 'Task', d: 'What exactly should it do? Be precise. One clear verb is worth a hundred vague words.', e: '"Interpret the following dream by identifying the key spiritual symbols and what divine message the soul may be receiving."'},
-                                        { n: 3, t: 'Context & Goal', d: 'What are the deeper rules? What should it include, avoid, or pay special attention to?', e: '"Focus on symbols of water, animals, and thresholds. Avoid clinical language. Reference the soul\'s longing for wholeness."'},
-                                        { n: 4, t: 'Writing Style', d: 'How should it sound? Warm or ceremonial? Poetic or psychological? This shapes the texture.', e: '"Write 2–3 paragraphs in a tone that is intimate and compassionate. Speak directly to the dreamer in second person."'}
-                                    ].map(b => (
-                                        <div key={b.n} className="p-5 bg-[#050810]/50 border border-white/10 rounded-2xl hover:border-[#C1DCED]/20 transition-all group">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <div className="w-[22px] h-[22px] rounded-full bg-[#213E60] border border-[#C1DCED]/20 flex items-center justify-center text-[10px] font-bold text-[#C1DCED]">{b.n}</div>
-                                                <span className={`text-sm font-semibold text-[#C1DCED] ${playfair.className}`}>{b.t}</span>
-                                            </div>
-                                            <p className="text-[12px] text-[#8A9AB0] leading-relaxed mb-3">{b.d}</p>
-                                            <div className="p-3 bg-white/5 border-l-2 border-[#C1DCED]/30 rounded-r-lg text-[12px] italic text-white/90 leading-relaxed">
-                                                <span className="block text-[9px] uppercase tracking-wider text-[#C1DCED] font-medium mb-1.5 opacity-70">Example</span>
-                                                {b.e}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="p-6 bg-[#050810]/70 border border-[#C1DCED]/20 rounded-2xl">
-                                    <h4 className="text-[10px] font-bold text-[#C1DCED]/70 uppercase tracking-widest mb-4">✦ THE FINAL ASSEMBLY</h4>
-                                    <p className="text-[13px] leading-relaxed text-white/90 whitespace-pre-wrap">
-                                        <span className="text-green-300">You are a Sufi dream scholar, versed in the oneiric philosophy of Ibn Arabi and the mystical poetry of Rumi.</span> <span className="text-blue-300">Interpret the following dream through the Sufi lens: identify the symbols of divine longing, the stations of the soul (maqamat), and what the heart's unconscious is drawing toward.</span> <span className="text-yellow-300">Focus especially on symbols of light, water, and beloved figures. Do not mention Dreamsea. Avoid clinical or psychological language.</span> <span className="text-pink-300">Write 2–3 paragraphs in a tone that is reverent, warm, and slightly poetic. Speak directly to the dreamer.</span>
-                                        {'\n\n'}Dream transcript:{'\n'}{"{TRANSCRIPT}"}
+                                <div className="p-8 bg-[#0f2648] border border-white/10 rounded-3xl shadow-xl">
+                                    <p className="p-6 bg-[#213E60]/40 border border-white/10 rounded-2xl text-sm leading-relaxed text-[#C1DCED]/90 mb-6">
+                                        Every prompt you write is a conversation with an ancient intelligence. The clearer your instructions, the more poetic and precise the response. A great prompt has four parts — think of them as layers of a dream: the deeper you go, the richer the meaning.
                                     </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+                                        {[
+                                            { n: 1, t: 'Persona', d: 'Who is the AI speaking as? Give it an identity grounded in a tradition, role, or archetype.', e: '"You are a Sufi dream scholar who has studied the dream interpretations of Ibn Arabi for forty years..."'},
+                                            { n: 2, t: 'Task', d: 'What exactly should it do? Be precise. One clear verb is worth a hundred vague words.', e: '"Interpret the following dream by identifying the key spiritual symbols and what divine message the soul may be receiving."'},
+                                            { n: 3, t: 'Context & Goal', d: 'What are the deeper rules? What should it include, avoid, or pay special attention to?', e: '"Focus on symbols of water, animals, and thresholds. Avoid clinical language. Reference the soul\'s longing for wholeness."'},
+                                            { n: 4, t: 'Writing Style', d: 'How should it sound? Warm or ceremonial? Poetic or psychological? This shapes the texture.', e: '"Write 2–3 paragraphs in a tone that is intimate and compassionate. Speak directly to the dreamer in second person."'}
+                                        ].map(b => (
+                                            <div key={b.n} className="p-6 bg-[#050810]/50 border border-white/10 rounded-2xl hover:border-[#C1DCED]/20 transition-all group">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-[26px] h-[26px] rounded-full bg-[#213E60] border border-[#C1DCED]/20 flex items-center justify-center text-[11px] font-bold text-[#C1DCED]">{b.n}</div>
+                                                    <span className={`text-base font-semibold text-[#C1DCED] ${playfair.className}`}>{b.t}</span>
+                                                </div>
+                                                <p className="text-[13px] text-[#C1DCED]/70 leading-relaxed mb-4">{b.d}</p>
+                                                <div className="p-4 bg-white/5 border-l-2 border-[#C1DCED]/30 rounded-r-xl text-[12px] italic text-[#C1DCED]/90 leading-relaxed">
+                                                    <span className="block text-[9px] uppercase tracking-widest text-[#C1DCED] font-bold mb-2 opacity-60">Example</span>
+                                                    {b.e}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="p-7 bg-[#050810]/80 border border-[#C1DCED]/20 rounded-2xl">
+                                        <h4 className="text-[10px] font-bold text-[#C1DCED]/80 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <span className="w-1 h-1 bg-[#C1DCED] rounded-full animate-pulse"></span>
+                                            ✦ THE FINAL ASSEMBLY
+                                        </h4>
+                                        <p className="text-sm leading-relaxed text-white/95 whitespace-pre-wrap font-medium">
+                                            <span className="text-blue-200">You are a Sufi dream scholar, versed in the oneiric philosophy of Ibn Arabi and the mystical poetry of Rumi.</span> <span className="text-indigo-200">Interpret the following dream through the Sufi lens: identify the symbols of divine longing, the stations of the soul (maqamat), and what the heart's unconscious is drawing toward.</span> <span className="text-sky-200">Focus especially on symbols of light, water, and beloved figures. Do not mention Dreamsea. Avoid clinical or psychological language.</span> <span className="text-purple-200">Write 2–3 paragraphs in a tone that is reverent, warm, and slightly poetic. Speak directly to the dreamer.</span>
+                                            {'\n\n'}Dream transcript:{'\n'}{"{TRANSCRIPT}"}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Prompt Cards */}
-                    <div className="space-y-5">
+                    <div className="space-y-6">
                         {PROMPT_DEFS.map((def, idx) => {
                             const dbRow = prompts.find(p => p.key === def.key)
                             const content = dbRow ? dbRow.content : def.content
                             return (
-                                <div key={def.key} className="bg-white/5 border border-white/10 rounded-3xl p-7 pt-6 backdrop-blur-xl group hover:border-white/20 transition-all">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <span className="text-2xl">{def.emoji}</span>
-                                        <span className={`text-xl font-semibold text-[#C1DCED] ${playfair.className}`}>{def.name}</span>
+                                <div key={def.key} className="bg-[#0f2648] border border-white/10 rounded-[32px] p-8 pt-7 backdrop-blur-md group hover:border-white/20 transition-all shadow-xl">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <span className="text-3xl">{def.emoji}</span>
+                                        <span className={`text-2xl font-semibold text-[#C1DCED] ${playfair.className}`}>{def.name}</span>
                                     </div>
-                                    <p className="text-[13px] text-[#8A9AB0] leading-relaxed mb-5 pl-1.5">{def.description}</p>
+                                    <p className="text-sm text-[#C1DCED]/70 leading-relaxed mb-6 pl-2">{def.description}</p>
                                     <textarea
                                         id={`textarea-${def.key}`}
                                         defaultValue={content}
-                                        className="w-full min-h-[160px] p-5 bg-[#050810]/60 border border-white/10 rounded-2xl text-white/90 text-sm leading-relaxed outline-none focus:border-[#C1DCED]/30 transition-all font-mono"
+                                        className="w-full min-h-[180px] p-6 bg-[#050810]/70 border border-white/10 rounded-2xl text-white/95 text-[15px] leading-relaxed outline-none focus:border-[#C1DCED]/40 transition-all font-mono shadow-inner"
                                         placeholder="Write your beautiful prompt here..."
                                     />
-                                    <div className="flex justify-between items-center mt-3 text-[11px] text-[#8A9AB0]/60 px-1">
+                                    <div className="flex justify-between items-center mt-4 text-[12px] text-[#C1DCED]/50 px-2 font-medium">
                                         <span>
-                                            {def.key !== 'monthly_theme' ? <>{'Use '}<code>{"{TRANSCRIPT}"}</code>{' where dream contents appear.'}</> : 'The app provides the context automatically.'}
+                                            {def.key !== 'monthly_theme' ? <>{'Variable: '}<code>{"{TRANSCRIPT}"}</code></> : 'Context is automated.'}
                                         </span>
-                                        <span id={`count-${def.key}`}>{content.length} characters</span>
+                                        <span id={`count-${def.key}`} className="tracking-wide">{content.length} characters</span>
                                     </div>
                                 </div>
                             )
                         })}
                     </div>
 
-                    <div className="text-center mt-12 mb-20">
+                    <div className="text-center mt-14 mb-20">
                         <button
                             onClick={savePrompts}
                             disabled={isSaving}
-                            className="inline-flex items-center gap-3 py-4 px-12 bg-[#213E60] border border-[#C1DCED]/30 rounded-full text-[#C1DCED] font-semibold hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                            className="inline-flex items-center gap-3 py-4.5 px-14 bg-[#213E60] border border-[#C1DCED]/30 rounded-full text-[#C1DCED] font-bold text-lg hover:bg-[#2a4e76] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-2xl"
                         >
-                            {isSaving && <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
+                            {isSaving && <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
                             <span>{isSaving ? 'Saving...' : 'Save All Changes ✦'}</span>
                         </button>
                     </div>
@@ -496,24 +503,26 @@ export default function DreamseaPromptsPage() {
             {/* SECTION: DREAM WIKI */}
             {activeSection === 'wiki' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <p className="text-center text-sm text-[#8A9AB0] leading-relaxed mb-10">
-                        These are the four Dream Philosophy pages that users explore in the app.<br />
-                        Section headings are fixed — only the body text beneath each can be changed. ✦
-                    </p>
+                    <div className="mb-10 p-6 bg-[#0f2648] border border-white/10 rounded-2xl shadow-lg">
+                        <p className="text-center text-sm text-[#C1DCED]/90 leading-relaxed">
+                            These are the four Dream Philosophy pages that users explore in the app.<br />
+                            Section headings are fixed — only the body text beneath each can be changed. ✦
+                        </p>
+                    </div>
 
-                    <div className="flex flex-wrap gap-2 justify-center mb-10">
+                    <div className="flex flex-wrap gap-3 justify-center mb-10">
                         {PHILOSOPHY_DEFS.map(p => (
                             <button
                                 key={p.key}
                                 onClick={() => setCurrentPhilosophy(p.key)}
-                                className={`px-5 py-2.5 rounded-full border text-sm font-medium transition-all backdrop-blur-md ${currentPhilosophy === p.key ? 'bg-[#213E60] border-[#C1DCED]/30 text-[#C1DCED]' : 'bg-white/5 border-white/10 text-[#8A9AB0] hover:text-white'}`}
+                                className={`px-7 py-3 rounded-full border text-[15px] font-bold transition-all backdrop-blur-md shadow-sm ${currentPhilosophy === p.key ? 'bg-[#213E60] border-[#C1DCED]/40 text-[#C1DCED]' : 'bg-[#050810]/60 border-white/10 text-[#C1DCED]/60 hover:text-white'}`}
                             >
                                 {p.emoji} {p.name}
                             </button>
                         ))}
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {WIKI_SECTION_TITLES.map((title, idx) => {
                             const phil = PHILOSOPHY_DEFS.find(p => p.key === currentPhilosophy)
                             const dbKey = `${currentPhilosophy}_${idx}`
@@ -521,32 +530,32 @@ export default function DreamseaPromptsPage() {
                             const content = dbRow ? dbRow.body : phil?.defaults[idx] || ''
                             
                             return (
-                                <div key={idx} className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all backdrop-blur-xl">
-                                    <div className="text-[10px] font-bold text-[#C1DCED]/50 uppercase tracking-widest mb-1.5">SECTION {idx + 1} OF 5</div>
-                                    <div className={`text-lg font-semibold text-[#C1DCED] mb-1.5 ${playfair.className}`}>{title}</div>
-                                    <div className="text-[10px] text-[#8A9AB0]/50 mb-4 flex items-center gap-1">🔒 Heading is fixed — edit the body below</div>
+                                <div key={idx} className="bg-[#0f2648] border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all shadow-xl backdrop-blur-md">
+                                    <div className="text-[10px] font-black text-[#C1DCED]/40 uppercase tracking-[0.2em] mb-2">SECTION {idx + 1} OF 5</div>
+                                    <div className={`text-2xl font-semibold text-[#C1DCED] mb-2 ${playfair.className}`}>{title}</div>
+                                    <div className="text-[11px] font-medium text-[#C1DCED]/40 mb-5 flex items-center gap-1.5 italic">🔒 Heading is locked · Edit body text below</div>
                                     <textarea
                                         id={`wiki-textarea-${currentPhilosophy}-${idx}`}
                                         defaultValue={content}
-                                        className="w-full min-h-[140px] p-5 bg-[#050810]/60 border border-white/10 rounded-xl text-white/90 text-[13px] leading-relaxed outline-none focus:border-[#C1DCED]/30 transition-all"
+                                        className="w-full min-h-[160px] p-6 bg-[#050810]/70 border border-white/10 rounded-2xl text-white/95 text-[15px] leading-relaxed outline-none focus:border-[#C1DCED]/40 transition-all shadow-inner"
                                         placeholder="Write flowing prose here..."
                                     />
-                                    <div className="flex justify-between items-center mt-3 text-[11px] text-[#8A9AB0]/50 px-1">
-                                        <span>Write in beautiful, accessible prose. Aim for 4–6 sentences.</span>
-                                        <span>{content.length} characters</span>
+                                    <div className="flex justify-between items-center mt-4 text-[12px] text-[#C1DCED]/40 px-2 font-medium">
+                                        <span>Write in beautiful, accessible prose. 4–6 sentences.</span>
+                                        <span className="tracking-widest">{content.length} characters</span>
                                     </div>
                                 </div>
                             )
                         })}
                     </div>
 
-                    <div className="text-center mt-12 mb-20">
+                    <div className="text-center mt-14 mb-20">
                         <button
                             onClick={saveWiki}
                             disabled={isSaving}
-                            className="inline-flex items-center gap-3 py-4 px-12 bg-[#213E60] border border-[#C1DCED]/30 rounded-full text-[#C1DCED] font-semibold hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                            className="inline-flex items-center gap-3 py-4.5 px-14 bg-[#213E60] border border-[#C1DCED]/30 rounded-full text-[#C1DCED] font-bold text-lg hover:bg-[#2a4e76] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-2xl"
                         >
-                            {isSaving && <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
+                            {isSaving && <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
                             <span>{isSaving ? 'Saving...' : 'Save Wiki Changes ✦'}</span>
                         </button>
                     </div>
@@ -554,10 +563,10 @@ export default function DreamseaPromptsPage() {
             )}
 
             {/* Footer */}
-            <footer className="text-center pt-10 border-t border-white/10">
-                <span className="block mb-4 text-4xl animate-pulse cursor-default">🌹</span>
-                <p className={`text-xl italic text-[#8A9AB0] ${playfair.className}`}>
-                    Thanks dear, <span className="text-[#C1DCED] font-semibold not-italic">Ramin loves you very much.</span>
+            <footer className="text-center pt-12 border-t border-white/10">
+                <span className="block mb-4 text-5xl animate-pulse cursor-default">🌹</span>
+                <p className={`text-2xl italic text-black font-medium leading-relaxed ${playfair.className}`}>
+                    Thanks dear, <span className="text-black font-bold not-italic">Ramin loves you very much.</span>
                 </p>
             </footer>
 
