@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dreamsea · Dream Prompts</title>
+    <meta name="description" content="Edit the AI prompts that power Dreamsea dream interpretations.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!--
+    ═══════════════════════════════════════════════════════
+    SUPABASE SETUP — Run this SQL once in your Supabase project:
+    (supabase.com → SQL Editor → New Query → paste → Run)
+    ═══════════════════════════════════════════════════════
+
+    CREATE TABLE dreamsea_prompts (
+      key         TEXT PRIMARY KEY,
+      name        TEXT NOT NULL,
+      emoji       TEXT,
+      description TEXT,
+      content     TEXT NOT NULL,
+      order_num   INTEGER,
+      updated_at  TIMESTAMPTZ DEFAULT now()
+    );
+
+    ALTER TABLE dreamsea_prompts ENABLE ROW LEVEL SECURITY;
+    CREATE POLICY "Allow all" ON dreamsea_prompts FOR ALL USING (true);
+
+    ═══════════════════════════════════════════════════════
+    DEPLOYMENT → nsso.me/dreamsea/prompts
+    ═══════════════════════════════════════════════════════
+    Option A (Simplest — Next.js public folder):
+      Copy this file to: /public/dreamsea/prompts/index.html
+      Deploy to Vercel — it's instantly live at /dreamsea/prompts
+
+    Option B (Next.js page):
+      Create app/dreamsea/prompts/page.tsx and embed this as an iframe
+      or convert to a React component.
+
+    ═══════════════════════════════════════════════════════
+    PASSWORD — Change "dreamsea" to something Azin prefers:
+    ═══════════════════════════════════════════════════════
+    Search for: GATE_PASSWORD
+    -->
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:   #050810;
+            --ocean:  #0d1d38;
+            --card:   rgba(13, 29, 56, 0.6);
+            --ice:    #C1DCED;
+            --cream:  #F0EDE4;
+            --muted:  #8A9AB0;
+            --teal:   #213E60;
+            --border: rgba(193, 220, 237, 0.12);
+            --glow:   rgba(193, 220, 237, 0.08);
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--navy);
+            color: var(--cream);
+            font-family: 'Inter', sans-serif;
+            font-weight: 300;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+
+
+        /* ── Password Gate ── */
+        #gate {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 8, 16, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .gate-card {
+            text-align: center;
+            padding: 48px 40px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            max-width: 360px;
+            width: 90%;
+            animation: gateIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes gateIn {
+            from { opacity: 0; transform: scale(0.88) translateY(20px); }
+            to   { opacity: 1; transform: scale(1)    translateY(0); }
+        }
+
+        .gate-moon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 16px;
+            animation: moonFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes moonFloat {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-8px); }
+        }
+
+        .gate-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--ice);
+            margin-bottom: 8px;
+        }
+
+        .gate-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 28px;
+        }
+
+        .gate-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(193, 220, 237, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--cream);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            text-align: center;
+            letter-spacing: 0.2em;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .gate-input:focus {
+            border-color: rgba(193, 220, 237, 0.4);
+            box-shadow: 0 0 0 3px rgba(193, 220, 237, 0.08);
+        }
+
+        .gate-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--teal);
+            border: 1px solid rgba(193, 220, 237, 0.2);
+            border-radius: 12px;
+            color: var(--ice);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .gate-btn:hover { opacity: 0.85; }
+        .gate-btn:active { transform: scale(0.98); }
+
+        .gate-error {
+            color: #ff8fa3;
+            font-size: 13px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gate-error.show { opacity: 1; }
+
+        /* ── Main Layout ── */
+        #main {
+            position: relative;
+            z-index: 1;
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 60px 24px 80px;
+            display: none;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-moon {
+            font-size: 56px;
+            display: block;
+            margin-bottom: 12px;
+            animation: moonFloat 5s ease-in-out infinite;
+        }
+
+        .header-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(28px, 6vw, 42px);
+            font-weight: 600;
+            color: var(--ice);
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+        }
+
+        .quote-wrapper {
+            display: inline-block;
+            padding: 16px 28px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            margin-bottom: 12px;
+        }
+
+        .quote {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 16px;
+            color: var(--muted);
+            letter-spacing: 0.01em;
+        }
+
+        .divider {
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--ice), transparent);
+            margin: 36px auto;
+            opacity: 0.3;
+        }
+
+        .section-intro {
+            text-align: center;
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 40px;
+            line-height: 1.7;
+        }
+
+        .section-intro strong {
+            color: var(--ice);
+            font-weight: 500;
+        }
+
+        /* ── Prompt Cards ── */
+        .prompt-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            animation: cardIn 0.5s ease both;
+        }
+
+        .prompt-card:hover {
+            border-color: rgba(193, 220, 237, 0.25);
+            box-shadow: 0 8px 32px rgba(193, 220, 237, 0.04);
+        }
+
+        .prompt-card:nth-child(1) { animation-delay: 0.05s; }
+        .prompt-card:nth-child(2) { animation-delay: 0.10s; }
+        .prompt-card:nth-child(3) { animation-delay: 0.15s; }
+        .prompt-card:nth-child(4) { animation-delay: 0.20s; }
+        .prompt-card:nth-child(5) { animation-delay: 0.25s; }
+        .prompt-card:nth-child(6) { animation-delay: 0.30s; }
+        .prompt-card:nth-child(7) { animation-delay: 0.35s; }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .card-emoji {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .card-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ice);
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 16px;
+            line-height: 1.6;
+            padding-left: 34px;
+        }
+
+        .card-textarea {
+            width: 100%;
+            min-height: 160px;
+            padding: 16px;
+            background: rgba(5, 8, 16, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--cream);
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+            line-height: 1.75;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .card-textarea:focus {
+            border-color: rgba(193, 220, 237, 0.35);
+            box-shadow: 0 0 0 3px rgba(193, 220, 237, 0.06);
+        }
+
+        .card-textarea::placeholder {
+            color: var(--muted);
+            opacity: 0.5;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .card-hint {
+            font-size: 11.5px;
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
+        .card-hint code {
+            background: rgba(193, 220, 237, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 11px;
+            color: var(--ice);
+        }
+
+        .char-count {
+            font-size: 11px;
+            color: var(--muted);
+            opacity: 0.5;
+        }
+
+        /* ── Save Section ── */
+        .save-section {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 60px;
+        }
+
+        #save-btn,
+        #wiki-save-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 48px;
+            background: var(--teal);
+            border: 1px solid rgba(193, 220, 237, 0.25);
+            border-radius: 999px;
+            color: var(--ice);
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            letter-spacing: 0.01em;
+        }
+
+        #save-btn:hover,
+        #wiki-save-btn:hover {
+            opacity: 0.88;
+            box-shadow: 0 8px 32px rgba(193, 220, 237, 0.1);
+        }
+
+        #save-btn:active,
+        #wiki-save-btn:active { transform: scale(0.97); }
+
+        #save-btn:disabled,
+        #wiki-save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(193, 220, 237, 0.3);
+            border-top-color: var(--ice);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Toast ── */
+        #toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 12px 28px;
+            font-size: 14px;
+            color: var(--cream);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 999;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            white-space: nowrap;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toast.success { border-color: rgba(134, 239, 172, 0.3); color: #86efac; }
+        #toast.error   { border-color: rgba(252, 165, 165, 0.3); color: #fca5a5; }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-rose {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 12px;
+            animation: roseFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes roseFloat {
+            0%, 100% { transform: rotate(-5deg) scale(1); }
+            50%       { transform: rotate(5deg) scale(1.08); }
+        }
+
+        .footer-text {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        .footer-text span {
+            color: var(--ice);
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        /* ── Loading skeleton ── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--border) 25%, rgba(193,220,237,0.06) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes skeleton {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Prompt Anatomy Guide ── */
+        .anatomy-section {
+            margin-bottom: 48px;
+        }
+
+        .anatomy-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 18px 22px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--ice);
+            font-family: 'Playfair Display', serif;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .anatomy-toggle:hover {
+            border-color: rgba(193, 220, 237, 0.28);
+            box-shadow: 0 4px 24px rgba(193, 220, 237, 0.06);
+        }
+
+        .anatomy-toggle-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .anatomy-badge {
+            font-size: 11px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            color: var(--muted);
+            background: rgba(193, 220, 237, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 3px 10px;
+            letter-spacing: 0.04em;
+        }
+
+        .anatomy-chevron {
+            font-size: 12px;
+            color: var(--muted);
+            transition: transform 0.3s;
+        }
+
+        .anatomy-chevron.open { transform: rotate(180deg); }
+
+        .anatomy-body {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .anatomy-body.open { max-height: 2400px; }
+
+        .anatomy-inner {
+            padding: 8px 4px 4px;
+        }
+
+        .anatomy-intro {
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.75;
+            margin-bottom: 20px;
+            padding: 16px 18px;
+            background: rgba(193, 220, 237, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .anatomy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) { .anatomy-grid { grid-template-columns: 1fr; } }
+
+        .anatomy-block {
+            background: rgba(5, 8, 16, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            transition: border-color 0.2s;
+        }
+
+        .anatomy-block:hover { border-color: rgba(193, 220, 237, 0.22); }
+
+        .anatomy-block-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .anatomy-block-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--teal);
+            border: 1px solid rgba(193, 220, 237, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--ice);
+            flex-shrink: 0;
+        }
+
+        .anatomy-block-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ice);
+        }
+
+        .anatomy-block-what {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .anatomy-block-example {
+            font-size: 12px;
+            font-style: italic;
+            color: var(--cream);
+            background: rgba(193, 220, 237, 0.04);
+            border-left: 2px solid rgba(193, 220, 237, 0.25);
+            padding: 8px 12px;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+        }
+
+        .anatomy-block-example strong {
+            font-style: normal;
+            color: var(--ice);
+            font-weight: 500;
+            font-size: 10px;
+            display: block;
+            margin-bottom: 4px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .anatomy-assembled {
+            background: rgba(5, 8, 16, 0.7);
+            border: 1px solid rgba(193, 220, 237, 0.18);
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .anatomy-assembled-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--ice);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            opacity: 0.7;
+        }
+
+        .anatomy-assembled-text {
+            font-size: 12.5px;
+            line-height: 1.8;
+            color: var(--cream);
+            white-space: pre-wrap;
+        }
+
+        .anatomy-assembled-text .p-persona  { color: #86efac; }
+        .anatomy-assembled-text .p-task     { color: #93c5fd; }
+        .anatomy-assembled-text .p-context  { color: #fcd34d; }
+        .anatomy-assembled-text .p-style    { color: #f9a8d4; }
+
+        .anatomy-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ── Meta Section Tabs ── */
+        .meta-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 36px;
+            background: rgba(5, 8, 16, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 5px;
+        }
+
+        .meta-tab {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-family: 'Playfair Display', serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--muted);
+            background: transparent;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+
+        .meta-tab.active {
+            background: var(--teal);
+            border-color: rgba(193, 220, 237, 0.2);
+            color: var(--ice);
+        }
+
+        .meta-tab:hover:not(.active) { color: var(--cream); }
+
+        /* ── Philosophy Pills ── */
+        .philosophy-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 28px;
+            justify-content: center;
+        }
+
+        .phil-pill {
+            padding: 9px 18px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--card);
+            color: var(--muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .phil-pill.active {
+            background: var(--teal);
+            border-color: rgba(193, 220, 237, 0.25);
+            color: var(--ice);
+        }
+
+        .phil-pill:hover:not(.active) {
+            border-color: rgba(193, 220, 237, 0.2);
+            color: var(--cream);
+        }
+
+        /* ── Wiki Cards ── */
+        .wiki-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            animation: cardIn 0.4s ease both;
+            transition: border-color 0.2s;
+        }
+
+        .wiki-card:hover { border-color: rgba(193, 220, 237, 0.22); }
+
+        .wiki-card-num {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--ice);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.45;
+            margin-bottom: 4px;
+        }
+
+        .wiki-card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--ice);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .wiki-lock-note {
+            font-size: 11px;
+            color: var(--muted);
+            opacity: 0.5;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            #main { padding: 40px 16px 60px; }
+            .prompt-card { padding: 20px; }
+            .quote-wrapper { padding: 12px 20px; }
+            .meta-tab { font-size: 13px; padding: 10px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Starfield ── -->
+
+
+<!-- ── Password Gate ── -->
+<div id="gate">
+    <div class="gate-card">
+        <span class="gate-moon">🌙</span>
+        <h2 class="gate-title">Dream Prompts</h2>
+        <p class="gate-sub">Enter your passphrase to continue</p>
+        <input
+            type="password"
+            id="gate-input"
+            class="gate-input"
+            placeholder="· · · · · · · ·"
+            autofocus
+            autocomplete="off"
+        />
+        <button class="gate-btn" onclick="checkPassword()">Enter the Dream ✦</button>
+        <p class="gate-error" id="gate-error">That isn't quite right, dear 🌸</p>
+    </div>
+</div>
+
+<!-- ── Main Content ── -->
+<div id="main">
+
+    <!-- Header -->
+    <header class="header">
+        <span class="header-moon">🌙</span>
+        <h1 class="header-title">Dreamsea · Dream Prompts</h1>
+        <div class="quote-wrapper">
+            <p class="quote">"A dream is an unopened letter from the divine."</p>
+        </div>
+    </header>
+
+    <div class="divider"></div>
+
+    <!-- Meta Section Tabs -->
+    <div class="meta-tabs">
+        <button class="meta-tab active" id="tab-prompts" onclick="switchSection('prompts')">✦ AI Prompts</button>
+        <button class="meta-tab" id="tab-wiki" onclick="switchSection('wiki')">📖 Dream Wiki</button>
+    </div>
+
+    <!-- ══ SECTION: AI PROMPTS ══ -->
+    <div id="section-prompts">
+
+    <p class="section-intro">
+        These are the eight voices that interpret every dream.<br>
+        Edit them thoughtfully — your words will reach every dreamer. ✦<br><br>
+        Where you see <strong>{TRANSCRIPT}</strong> below, the actual dream recording will appear.
+    </p>
+
+    <!-- Prompt Anatomy Guide -->
+    <div class="anatomy-section">
+        <button class="anatomy-toggle" onclick="toggleAnatomy()" id="anatomy-toggle-btn">
+            <span>✦ How to write a beautiful prompt</span>
+            <div class="anatomy-toggle-right">
+                <span class="anatomy-badge">A guide for Azin</span>
+                <span class="anatomy-chevron" id="anatomy-chevron">▼</span>
+            </div>
+        </button>
+
+        <div class="anatomy-body" id="anatomy-body">
+            <div class="anatomy-inner">
+
+                <p class="anatomy-intro">
+                    Every prompt you write is a conversation with an ancient intelligence. The clearer your instructions, the more poetic and precise the response. A great prompt has four parts — think of them as layers of a dream: the deeper you go, the richer the meaning.
+                </p>
+
+                <div class="anatomy-grid">
+
+                    <!-- Block 1: Persona -->
+                    <div class="anatomy-block">
+                        <div class="anatomy-block-header">
+                            <div class="anatomy-block-num">1</div>
+                            <span class="anatomy-block-title">Persona</span>
+                        </div>
+                        <p class="anatomy-block-what">Who is the AI speaking as? Give it an identity grounded in a tradition, role, or archetype. The more specific and poetic the persona, the richer the voice.</p>
+                        <div class="anatomy-block-example">
+                            <strong>Example</strong>
+                            "You are a Sufi dream scholar who has studied the dream interpretations of Ibn Arabi for forty years, and who speaks with the warmth of a wise elder."
+                        </div>
+                    </div>
+
+                    <!-- Block 2: Task -->
+                    <div class="anatomy-block">
+                        <div class="anatomy-block-header">
+                            <div class="anatomy-block-num">2</div>
+                            <span class="anatomy-block-title">Task</span>
+                        </div>
+                        <p class="anatomy-block-what">What exactly should it do? Be precise. Should it interpret? Summarise? Name? Write a title? One clear verb is worth a hundred vague words.</p>
+                        <div class="anatomy-block-example">
+                            <strong>Example</strong>
+                            "Interpret the following dream by identifying the key spiritual symbols and what divine message the dreamer's soul may be receiving."
+                        </div>
+                    </div>
+
+                    <!-- Block 3: Core Context & Goal -->
+                    <div class="anatomy-block">
+                        <div class="anatomy-block-header">
+                            <div class="anatomy-block-num">3</div>
+                            <span class="anatomy-block-title">Core Context &amp; Goal</span>
+                        </div>
+                        <p class="anatomy-block-what">What are the deeper rules or boundaries? What should it include, avoid, or pay special attention to? This is where your therapeutic expertise belongs.</p>
+                        <div class="anatomy-block-example">
+                            <strong>Example</strong>
+                            "Focus on symbols of water, animals, and thresholds. Avoid clinical language. Do not mention Dreamsea. Reference the soul's longing for wholeness."
+                        </div>
+                    </div>
+
+                    <!-- Block 4: Writing Style -->
+                    <div class="anatomy-block">
+                        <div class="anatomy-block-header">
+                            <div class="anatomy-block-num">4</div>
+                            <span class="anatomy-block-title">Writing Style</span>
+                        </div>
+                        <p class="anatomy-block-what">How should it sound? Warm or ceremonial? Short or long? First person or second? Poetic or psychological? This shapes the entire emotional texture of the response.</p>
+                        <div class="anatomy-block-example">
+                            <strong>Example</strong>
+                            "Write 2–3 paragraphs in a tone that is intimate and compassionate. Speak directly to the dreamer in second person (\"you\"). End with a gentle question for reflection."
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Assembled Example -->
+                <div class="anatomy-assembled">
+                    <div class="anatomy-assembled-label">✦ A complete prompt — all four parts assembled</div>
+                    <div class="anatomy-assembled-text"><span class="p-persona">You are a Sufi dream scholar, versed in the oneiric philosophy of Ibn Arabi and the mystical poetry of Rumi.</span> <span class="p-task">Interpret the following dream through the Sufi lens: identify the symbols of divine longing, the stations of the soul (maqamat), and what the heart's unconscious is drawing toward.</span> <span class="p-context">Focus especially on symbols of light, water, and beloved figures. Do not mention Dreamsea. Avoid clinical or psychological language — stay within the language of the heart.</span> <span class="p-style">Write 2–3 paragraphs in a tone that is reverent, warm, and slightly poetic. Speak directly to the dreamer in second person. End with a line that opens rather than closes.</span>
+
+Dream transcript:
+{TRANSCRIPT}</div>
+                    <div class="anatomy-legend">
+                        <div class="legend-item"><div class="legend-dot" style="background:#86efac"></div> Persona</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#93c5fd"></div> Task</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#fcd34d"></div> Context &amp; Goal</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#f9a8d4"></div> Writing Style</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Prompt Cards -->
+    <div id="prompts-container"></div>
+
+    <!-- Prompts Save Button -->
+    <div class="save-section">
+        <button id="save-btn" onclick="saveAll()">
+            <div class="spinner" id="spinner"></div>
+            <span id="save-label">Save All Changes ✦</span>
+        </button>
+    </div>
+
+    </div><!-- /section-prompts -->
+
+    <!-- ══ SECTION: DREAM WIKI ══ -->
+    <div id="section-wiki" style="display:none">
+
+        <p class="section-intro">
+            These are the four Dream Philosophy pages that users explore in the app.<br>
+            Section headings are fixed — only the body text beneath each can be changed. ✦
+        </p>
+
+        <!-- Philosophy Pills -->
+        <div class="philosophy-pills">
+            <button class="phil-pill active" id="phil-jungian" onclick="switchPhilosophy('jungian')">🔮 Jungian</button>
+            <button class="phil-pill" id="phil-persian" onclick="switchPhilosophy('persian')">🌹 Persian</button>
+            <button class="phil-pill" id="phil-egyptian" onclick="switchPhilosophy('egyptian')">👁️ Egyptian</button>
+            <button class="phil-pill" id="phil-japanese" onclick="switchPhilosophy('japanese')">🍃 Japanese</button>
+        </div>
+
+        <!-- Wiki Cards -->
+        <div id="wiki-container"></div>
+
+        <!-- Wiki Save Button -->
+        <div class="save-section">
+            <button id="wiki-save-btn" onclick="saveWiki()">
+                <div class="spinner" id="wiki-spinner"></div>
+                <span id="wiki-save-label">Save Wiki Changes ✦</span>
+            </button>
+        </div>
+
+    </div><!-- /section-wiki -->
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span class="footer-rose">🌹</span>
+        <p class="footer-text">
+            Thanks dear, <span>Ramin loves you very much.</span>
+        </p>
+    </footer>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// CONFIG — Change GATE_PASSWORD to whatever Azin prefers
+// ═══════════════════════════════════════
+const GATE_PASSWORD  = 'azinam';
+const SUPABASE_URL   = 'https://lttgrqjxuneyzqdapwnz.supabase.co';
+const SUPABASE_KEY   = 'sb_publishable_duD6qT-0E_oKetylGoMtiQ_9yoOVbJx';
+const PROMPTS_TABLE  = 'dreamsea_prompts';
+
+// ═══════════════════════════════════════
+// PROMPT DEFINITIONS (with defaults)
+// ═══════════════════════════════════════
+const PROMPT_DEFS = [
+    {
+        key:         'title',
+        emoji:       '📖',
+        name:        'Dream Title',
+        description: 'Generates a short, evocative title for each dream. It should feel timeless and mythic — like naming a painting in an ancient gallery.',
+        order_num:   1,
+        content:
+`You are a poetic dream archivist. Based on the following dream transcript, generate one short, evocative title for this dream.
+The title should feel timeless and mythic — as if naming a painting in an ancient gallery.
+Return only the title. No punctuation at the end. No explanation.
+
+Dream transcript:
+{TRANSCRIPT}`
+    },
+    {
+        key:         'subtitle',
+        emoji:       '✨',
+        name:        'Dream Subtitle',
+        description: 'Writes one sentence capturing the emotional or symbolic essence of the dream — like a caption beneath a painting, evocative rather than literal.',
+        order_num:   2,
+        content:
+`You are a poetic dream archivist. Based on the following dream transcript, write one sentence that captures the emotional or symbolic essence of this dream.
+It should read like a caption beneath a painting — evocative, not literal.
+Return only the subtitle sentence.
+
+Dream transcript:
+{TRANSCRIPT}`
+    },
+    {
+        key:         'jungian',
+        emoji:       '🔮',
+        name:        'Jungian Interpretation',
+        description: 'Interprets the dream through the lens of Carl Jung — archetypes, shadow material, the Self, and individuation. 2–3 rich paragraphs.',
+        order_num:   3,
+        content:
+`You are a Jungian depth psychologist, drawing on the work of Carl Jung, Marie-Louise von Franz, and the tradition of analytical psychology.
+Interpret the following dream through the Jungian lens: identify archetypes, shadow material, anima/animus figures, the Self, and the process of individuation.
+Consider what the unconscious is communicating and what integration it is calling for.
+Write 2–3 paragraphs in a tone that is psychologically rich yet accessible.
+Do not mention Dreamsea. Speak directly to the dreamer in second person.
+
+Dream transcript:
+{TRANSCRIPT}`
+    },
+    {
+        key:         'persian',
+        emoji:       '🌹',
+        name:        'Persian Interpretation',
+        description: 'Interprets through Islamic oneiromancy, Ibn Sirin, and Sufi dream philosophy. Reverent, wise, and spiritually grounded.',
+        order_num:   4,
+        content:
+`You are a master of Persian dream interpretation, drawing on the traditions of Islamic oneiromancy, the works of Ibn Sirin, and Sufi dream philosophy.
+Interpret the following dream through the Persian lens: consider the spiritual significance of symbols, divine guidance, moral lessons, and the soul's journey.
+Write 2–3 paragraphs in a tone that is reverent and wise.
+Do not mention Dreamsea. Speak directly to the dreamer in second person.
+
+Dream transcript:
+{TRANSCRIPT}`
+    },
+    {
+        key:         'egyptian',
+        emoji:       '👁️',
+        name:        'Egyptian Interpretation',
+        description: 'Interprets through the Chester Beatty Dream Papyrus and sacred tradition of Serapis dream incubation. Ceremonial and mystical in tone.',
+        order_num:   5,
+        content:
+`You are a priest of the Egyptian dream temples, versed in the Chester Beatty Dream Papyrus and the sacred tradition of Serapis dream incubation.
+Interpret the following dream through the Egyptian lens: consider the gods, the Duat (underworld), the soul's ka and ba, and the symbolic language of ancient Egyptian mythology.
+Write 2–3 paragraphs in a tone that is ceremonial and mystical.
+Do not mention Dreamsea. Speak directly to the dreamer in second person.
+
+Dream transcript:
+{TRANSCRIPT}`
+    },
+    {
+        key:         'japanese',
+        emoji:       '🍃',
+        name:        'Japanese Interpretation',
+        description: 'Interprets through Zen practice, Shinto dream oracles, and the mugen tradition of Noh theatre. Quiet, contemplative, and poetic.',
+        order_num:   6,
+        content:
+`You are a Zen monk and scholar of Japanese dream tradition, drawing on Shinto dream oracles (yume-awase), Buddhist teachings on the unconscious, and the poetic tradition of mugen (dream-vision) in Noh theatre.
+Interpret the following dream through the Japanese lens: consider impermanence, the boundary between waking and dreaming, ancestral messages, and nature symbolism.
+Write 2–3 paragraphs in a tone that is quiet, contemplative, and poetic.
+Do not mention Dreamsea. Speak directly to the dreamer in second person.
+
+Dream transcript:
+{TRANSCRIPT}`
+    },
+    {
+        key:         'monthly_theme',
+        emoji:       '🌊',
+        name:        'Monthly Dream Theme',
+        description: 'Synthesises all of a user\'s dreams from the past month into one overarching psychological theme. Written in second person, 4 sentences. No {TRANSCRIPT} needed — the app provides all dreams automatically.',
+        order_num:   7,
+        content:
+`The following are dream interpretations from the past month for a single individual.
+You are a Jungian depth psychologist reviewing this person's unconscious activity.
+In exactly 4 sentences, synthesise the overarching psychological theme or recurring pattern that emerges across these dreams.
+Write in second person ("You are..."). Be specific and psychologically insightful — not generic or motivational. Reference actual themes from the material.`
+    },
+    {
+        key:         'affirmation',
+        emoji:       '💫',
+        name:        'Daily Affirmation',
+        description: 'Appears in the "Repeat this affirmation" section on the You page. Takes the monthly dream theme and distils it into one short, powerful present-tense statement. Maximum 20 words. No {TRANSCRIPT} needed.',
+        order_num:   8,
+        content:
+`Based on the following psychological dream theme, write one short, powerful affirmation in the present tense, first person ("I am..." or "I trust...").
+It should feel like a direct message from the unconscious — grounded and honest, not a corporate motivational quote. Maximum 20 words.
+
+Theme:
+{THEME}`
+    },
+];
+
+
+// ═══════════════════════════════════════
+// ANATOMY GUIDE TOGGLE
+// ═══════════════════════════════════════
+function toggleAnatomy() {
+    const body    = document.getElementById('anatomy-body');
+    const chevron = document.getElementById('anatomy-chevron');
+    body.classList.toggle('open');
+    chevron.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════
+// PASSWORD GATE
+// ═══════════════════════════════════════
+function checkPassword() {
+    const val = document.getElementById('gate-input').value;
+    const err = document.getElementById('gate-error');
+    if (val === GATE_PASSWORD) {
+        document.getElementById('gate').style.transition = 'opacity 0.5s';
+        document.getElementById('gate').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('gate').style.display = 'none';
+            document.getElementById('main').style.display = 'block';
+            loadPrompts();
+        }, 500);
+    } else {
+        err.classList.add('show');
+        document.getElementById('gate-input').value = '';
+        document.getElementById('gate-input').focus();
+        setTimeout(() => err.classList.remove('show'), 3000);
+    }
+}
+
+document.getElementById('gate-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+});
+
+// ═══════════════════════════════════════
+// SUPABASE REST HELPERS
+// ═══════════════════════════════════════
+const headers = {
+    'apikey':        SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type':  'application/json',
+};
+
+async function fetchPrompts() {
+    const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/${PROMPTS_TABLE}?select=*&order=order_num`,
+        { headers }
+    );
+    if (!res.ok) return null;
+    return res.json();
+}
+
+async function upsertPrompt(row) {
+    const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/${PROMPTS_TABLE}`,
+        {
+            method:  'POST',
+            headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+            body:    JSON.stringify(row),
+        }
+    );
+    return res.ok;
+}
+
+// ═══════════════════════════════════════
+// RENDER PROMPT CARDS
+// ═══════════════════════════════════════
+function renderCards(dbData) {
+    const container = document.getElementById('prompts-container');
+    container.innerHTML = '';
+
+    PROMPT_DEFS.forEach(def => {
+        const dbRow    = dbData ? dbData.find(r => r.key === def.key) : null;
+        const content  = dbRow ? dbRow.content : def.content;
+        const showHint = def.key !== 'monthly_theme';
+
+        const card = document.createElement('div');
+        card.className = 'prompt-card';
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="card-emoji">${def.emoji}</span>
+                <span class="card-name">${def.name}</span>
+            </div>
+            <p class="card-desc">${def.description}</p>
+            <textarea
+                class="card-textarea"
+                id="textarea-${def.key}"
+                data-key="${def.key}"
+                rows="8"
+                placeholder="Write your prompt here…"
+                oninput="updateCharCount('${def.key}')"
+            >${escapeHtml(content)}</textarea>
+            <div class="card-footer">
+                <span class="card-hint">
+                    ${showHint ? 'Use <code>{TRANSCRIPT}</code> where the dream recording should appear.' : 'The app automatically provides all dreams — no placeholder needed.'}
+                </span>
+                <span class="char-count" id="count-${def.key}">${content.length} chars</span>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function updateCharCount(key) {
+    const ta  = document.getElementById(`textarea-${key}`);
+    const el  = document.getElementById(`count-${key}`);
+    if (ta && el) el.textContent = `${ta.value.length} chars`;
+}
+
+function escapeHtml(str) {
+    return str
+        .replace(/&/g,  '&amp;')
+        .replace(/</g,  '&lt;')
+        .replace(/>/g,  '&gt;')
+        .replace(/"/g,  '&quot;');
+}
+
+// ═══════════════════════════════════════
+// LOAD PROMPTS (on login)
+// ═══════════════════════════════════════
+async function loadPrompts() {
+    // Show skeletons while loading
+    const container = document.getElementById('prompts-container');
+    container.innerHTML = PROMPT_DEFS.map(() => `
+        <div class="prompt-card">
+            <div style="height:24px;width:160px;margin-bottom:10px;" class="skeleton"></div>
+            <div style="height:14px;width:90%;margin-bottom:20px;" class="skeleton"></div>
+            <div style="height:140px;width:100%;" class="skeleton"></div>
+        </div>
+    `).join('');
+
+    try {
+        const data = await fetchPrompts();
+        renderCards(data);
+        loadWiki(); // pre-load wiki data in background
+    } catch (e) {
+        renderCards(null); // fall back to defaults
+        showToast('⚠️ Could not load saved prompts — showing defaults', 'error');
+    }
+}
+
+// ═══════════════════════════════════════
+// SAVE ALL
+// ═══════════════════════════════════════
+async function saveAll() {
+    const btn     = document.getElementById('save-btn');
+    const label   = document.getElementById('save-label');
+    const spinner = document.getElementById('spinner');
+
+    btn.disabled        = true;
+    spinner.style.display = 'block';
+    label.textContent   = 'Saving…';
+
+    const now = new Date().toISOString();
+    let allOk = true;
+
+    for (const def of PROMPT_DEFS) {
+        const ta = document.getElementById(`textarea-${def.key}`);
+        if (!ta) continue;
+
+        const ok = await upsertPrompt({
+            key:         def.key,
+            name:        def.name,
+            emoji:       def.emoji,
+            description: def.description,
+            order_num:   def.order_num,
+            content:     ta.value,
+            updated_at:  now,
+        });
+        if (!ok) allOk = false;
+    }
+
+    spinner.style.display = 'none';
+    btn.disabled          = false;
+    label.textContent     = 'Save All Changes ✦';
+
+    if (allOk) {
+        showToast('✦ All prompts saved beautifully ✦', 'success');
+    } else {
+        showToast('⚠️ Some prompts could not be saved. Please try again.', 'error');
+    }
+}
+
+// ═══════════════════════════════════════
+// TOAST NOTIFICATION
+// ═══════════════════════════════════════
+let toastTimer;
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className   = `show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.className = ''; }, 3800);
+}
+
+// ═══════════════════════════════════════
+// SECTION SWITCHER (Prompts ↔ Wiki)
+// ═══════════════════════════════════════
+function switchSection(section) {
+    document.getElementById('section-prompts').style.display = section === 'prompts' ? 'block' : 'none';
+    document.getElementById('section-wiki').style.display    = section === 'wiki'    ? 'block' : 'none';
+    document.getElementById('tab-prompts').classList.toggle('active', section === 'prompts');
+    document.getElementById('tab-wiki').classList.toggle('active',    section === 'wiki');
+}
+
+// ═══════════════════════════════════════
+// WIKI DATA — all 20 sections (4 × 5)
+// ═══════════════════════════════════════
+const WIKI_SECTION_TITLES = [
+    "What's the purpose of the human?",
+    "How do dreams serve the purpose of the human?",
+    "Where do dreams come from?",
+    "How to interpret a dream",
+    "Integrating and applying the message",
+];
+
+const PHILOSOPHY_DEFS = [
+    {
+        key: 'jungian', emoji: '🔮', name: 'Jungian',
+        defaults: [
+            `For Carl Jung, the deepest purpose of human life is individuation — the lifelong process of becoming who you truly are by integrating all parts of the psyche: the conscious and the unconscious, the light and the shadow, the personal and the collective. The human being is not finished at birth; we are a work in progress, continuously shaped by our encounters with the unknown dimensions of ourselves. To live with awareness of this process is, for Jung, the highest form of human development.`,
+            `Dreams are the royal road to the unconscious. Jung understood them not as disguised wish-fulfilments (as Freud did) but as direct, honest communications from the deeper self. The dream does not lie — it speaks in symbolic language because symbols can carry meanings too rich and complex for rational thought alone. Each dream is an attempt by the psyche to compensate for what the waking ego is ignoring, overvaluing, or failing to integrate. Dreams are how the unconscious talks.`,
+            `Jung identified two layers of the unconscious: the personal unconscious, containing forgotten memories, repressed emotions, and unresolved experiences; and the collective unconscious, a deeper shared layer of humanity's accumulated psychological experience. The collective unconscious expresses itself through archetypes — universal patterns and figures such as the Shadow, the Anima/Animus, the Wise Old Man, the Great Mother, and the Self. When these archetypes appear in dreams, they carry enormous energy and significance.`,
+            `Jungian dream interpretation begins with amplification: sitting with the dream's images and asking what they remind you of — personally, culturally, mythologically. Do not rush to explanation. The dream's figures are not just symbols; they are autonomous parts of your own psyche, speaking to you. Ask who or what each figure represents within yourself. Pay particular attention to what unsettles you — this is usually where shadow material lives. Active imagination, journalling, and working with a trained analyst can deepen the process.`,
+            `Integration is the heart of Jungian work. A dream understood but not lived is not yet fully received. Integration means finding ways to honour the dream's message in waking life — through creative expression, changed behaviour, ritual, or inner dialogue with the figures that appeared. The goal is not to master the unconscious, but to enter into relationship with it. Over time, this relationship — between ego and Self, between consciousness and depth — becomes the foundation of a life lived from the inside out.`,
+        ]
+    },
+    {
+        key: 'persian', emoji: '🌹', name: 'Persian',
+        defaults: [
+            `In the Persian and broader Islamic mystical tradition, the human being is understood as God's most complete creation — a mirror in which the divine attributes are reflected. The Sufi tradition, drawing on thinkers like Ibn Arabi and Rumi, teaches that the human soul carries the divine trust (amana) — the capacity for consciousness, love, and return to the Source. To live well is to polish that mirror, clearing away the dust of ego and distraction.`,
+            `In the Persian tradition, dreams occupy a sacred intermediate realm — the Alam al-Mithal or World of Imagination — that exists between the physical world and the divine. The Prophet Muhammad is recorded as saying that 'a good dream is one of the forty-six parts of prophecy.' True dreams (ru'ya sadiqah) are understood as direct communications from God or the angels, offering guidance, warning, or spiritual insight.`,
+            `Persian dream philosophy distinguishes three sources: divine dreams, which come from God and carry spiritual truth; soul dreams, which arise from the dreamer's own preoccupations and desires; and confused dreams, which are mere reflections of daily life. True dreams — those sent by God — often carry a quality of clarity, light, and emotional resonance that distinguishes them from ordinary dreaming.`,
+            `In the Persian tradition, dream interpretation is considered a sacred science — ta'bir — approached with humility, prayer, and moral seriousness. Ibn Sirin's encyclopaedia of symbols remains the foundational reference. Key principles: always consider the moral character of the dreamer; the time of the dream matters (pre-dawn dreams are considered most true); symbols can carry their opposite meanings in some contexts.`,
+            `In the Persian tradition, a dream's message is integrated through prayer, gratitude, and conscious action. If a dream brings a warning, one engages in acts of charity and protection. If a dream brings glad tidings, one increases in gratitude and worship. The Sufi tradition adds a deeper layer: every dream is an invitation to go inward, to examine the state of the soul, and to align more closely with the divine will.`,
+        ]
+    },
+    {
+        key: 'egyptian', emoji: '👁️', name: 'Egyptian',
+        defaults: [
+            `In ancient Egyptian understanding, the human being is a complex of multiple souls. The ka is the vital life force, the ba is the unique personality that survives death, and the akh is the transfigured, immortal self achieved through a righteous life. To fulfil one's purpose was to live in alignment with Ma'at: to act with justice, honour the gods, care for the living, and prepare the soul for its journey through the Duat after death.`,
+            `The ancient Egyptians built some of the world's earliest dream temples — places where priests and seekers would sleep on sacred ground to receive divine visions. Dreams were considered a state in which the ba could travel between the world of the living and the Duat, receiving messages from gods and ancestors. The Chester Beatty Dream Papyrus (c. 1275 BCE) records hundreds of dream symbols and their meanings.`,
+            `In Egyptian belief, dreams were sent by the gods — particularly Thoth (god of wisdom and writing), Sekhmet (goddess of healing), and the guardian deity Bes. The sleeping state allowed the barrier between the living world and the Duat to dissolve, enabling the soul to receive transmissions from divine beings and deceased ancestors. A dream sent by a god was distinguished by its vividness and the dreamer's feeling upon waking.`,
+            `Egyptian dream interpretation followed a systematic symbolic vocabulary preserved by temple scribes. The Chester Beatty Papyrus reveals a pattern: 'If a man sees himself in a dream doing X — good: it means Y.' Interpretation depended on identifying the primary symbol, understanding its divine association, and reading it against the dreamer's current circumstances. Temple priests, known as Masters of the Secret Things, were the official interpreters.`,
+            `The Egyptians took swift ritual action in response to significant dreams. If a dream warned of danger, protective amulets were worn and prayers were offered. If a god appeared with instruction, the dreamer would undertake the prescribed action. The dream was understood as a living communication from an intelligent universe, deserving of a living response. Every dream is an act of sacred correspondence.`,
+        ]
+    },
+    {
+        key: 'japanese', emoji: '🍃', name: 'Japanese',
+        defaults: [
+            `In Japanese philosophical and spiritual tradition — drawing on Shinto, Zen Buddhism, and the poetic tradition — the human being exists to cultivate aware (sensitivity to transience), ma (the sacred quality of space and pause), and mushin (effortless, egoless presence). Human life is understood as an inseparable part of the natural world. The purpose of the human is not domination or achievement, but refinement — the gradual polishing of consciousness through attention and simplicity.`,
+            `In Japanese tradition, the boundary between waking and dreaming is considered porous and sacred. The concept of mugen — the dream-vision state — is central to the Noh theatre tradition, where the living encounter the spirits of the dead through dreamlike states. Shinto practice included yume-awase, the sharing and communal interpretation of dreams, and hatsuyume, the significance given to the first dream of the new year.`,
+            `In Japanese understanding, dreams arise at the threshold between the self and the spirit world. The kami — divine spirits present in all living things — may communicate through dreams. Deceased ancestors may visit the living in sleep to offer guidance or to seek resolution. And the dreamer's own deepest nature — what Zen calls Buddha-nature — may speak through symbolic imagery unavailable to the rational, busy daytime mind.`,
+            `Japanese dream interpretation emphasises receptivity over analysis. Rather than rushing to decode symbols, the tradition invites the dreamer to sit with the dream — to feel it, to notice what arises in the body, to let its emotional weather settle before reaching for meaning. When interpretation is sought, it is done through the lens of the dreamer's current life situation. Symbols are read poetically, not literally.`,
+            `In the Japanese tradition, a dream is integrated through quiet action — journalling in the haiku spirit, a walk in nature, a conversation with a trusted elder, or a moment of formal gratitude. The goal is not to extract maximum information from the dream, but to let the dream change the quality of your attention. A dream well-received shifts how you see. This is the deepest form of integration: not just understanding what the dream said, but allowing it to alter how you move through the day.`,
+        ]
+    },
+];
+
+// ═══════════════════════════════════════
+// WIKI STATE
+// ═══════════════════════════════════════
+let currentPhilosophy = 'jungian';
+let wikiDbData = null; // cached Supabase response
+
+// ═══════════════════════════════════════
+// PHILOSOPHY SWITCHER
+// ═══════════════════════════════════════
+function switchPhilosophy(key) {
+    currentPhilosophy = key;
+    ['jungian','persian','egyptian','japanese'].forEach(k => {
+        document.getElementById(`phil-${k}`).classList.toggle('active', k === key);
+    });
+    renderWikiCards(key, wikiDbData);
+}
+
+// ═══════════════════════════════════════
+// RENDER WIKI CARDS
+// ═══════════════════════════════════════
+function renderWikiCards(philosophyKey, dbData) {
+    const container = document.getElementById('wiki-container');
+    const def = PHILOSOPHY_DEFS.find(p => p.key === philosophyKey);
+    if (!def) return;
+
+    container.innerHTML = '';
+    WIKI_SECTION_TITLES.forEach((title, idx) => {
+        const dbKey  = `${philosophyKey}_${idx}`;
+        const dbRow  = dbData ? dbData.find(r => r.key === dbKey) : null;
+        const body   = dbRow ? dbRow.body : def.defaults[idx];
+
+        const card = document.createElement('div');
+        card.className = 'wiki-card';
+        card.style.animationDelay = `${idx * 0.06}s`;
+        card.innerHTML = `
+            <div class="wiki-card-num">Section ${idx + 1} of 5</div>
+            <div class="wiki-card-title">${escapeHtml(title)}</div>
+            <div class="wiki-lock-note">🔒 Heading is fixed — edit the body below</div>
+            <textarea
+                class="card-textarea"
+                id="wiki-textarea-${philosophyKey}-${idx}"
+                rows="6"
+                oninput="updateWikiCharCount('${philosophyKey}', ${idx})"
+            >${escapeHtml(body)}</textarea>
+            <div class="card-footer">
+                <span class="card-hint">Write in flowing, accessible prose. Aim for 4–6 sentences.</span>
+                <span class="char-count" id="wiki-count-${philosophyKey}-${idx}">${body.length} chars</span>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function updateWikiCharCount(philosophy, idx) {
+    const ta = document.getElementById(`wiki-textarea-${philosophy}-${idx}`);
+    const el = document.getElementById(`wiki-count-${philosophy}-${idx}`);
+    if (ta && el) el.textContent = `${ta.value.length} chars`;
+}
+
+// ═══════════════════════════════════════
+// LOAD WIKI FROM SUPABASE
+// ═══════════════════════════════════════
+async function loadWiki() {
+    try {
+        const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/dreamsea_wiki?select=*&order=key`,
+            { headers }
+        );
+        wikiDbData = res.ok ? await res.json() : null;
+    } catch (e) {
+        wikiDbData = null;
+    }
+    renderWikiCards(currentPhilosophy, wikiDbData);
+}
+
+// ═══════════════════════════════════════
+// SAVE WIKI TO SUPABASE
+// ═══════════════════════════════════════
+async function saveWiki() {
+    const btn     = document.getElementById('wiki-save-btn');
+    const label   = document.getElementById('wiki-save-label');
+    const spinner = document.getElementById('wiki-spinner');
+
+    btn.disabled          = true;
+    spinner.style.display = 'block';
+    label.textContent     = 'Saving…';
+
+    const now  = new Date().toISOString();
+    let allOk  = true;
+
+    // Save ALL 4 philosophies from whatever is currently rendered
+    // (Only the active philosophy's textareas exist in the DOM — save others from cache)
+    for (const def of PHILOSOPHY_DEFS) {
+        for (let idx = 0; idx < 5; idx++) {
+            const taId = `wiki-textarea-${def.key}-${idx}`;
+            const ta   = document.getElementById(taId);
+
+            // If textarea not in DOM (inactive philosophy), use cached or default
+            let body;
+            if (ta) {
+                body = ta.value;
+            } else {
+                const dbKey = `${def.key}_${idx}`;
+                const dbRow = wikiDbData ? wikiDbData.find(r => r.key === dbKey) : null;
+                body = dbRow ? dbRow.body : def.defaults[idx];
+            }
+
+            const res = await fetch(
+                `${SUPABASE_URL}/rest/v1/dreamsea_wiki`,
+                {
+                    method:  'POST',
+                    headers: { ...headers, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+                    body:    JSON.stringify({
+                        key:        `${def.key}_${idx}`,
+                        philosophy: def.key,
+                        section_idx: idx,
+                        title:      WIKI_SECTION_TITLES[idx],
+                        body:       body,
+                        updated_at: now,
+                    }),
+                }
+            );
+            if (!res.ok) allOk = false;
+        }
+    }
+
+    // Refresh local cache
+    await loadWiki();
+
+    spinner.style.display = 'none';
+    btn.disabled          = false;
+    label.textContent     = 'Save Wiki Changes ✦';
+
+    showToast(allOk ? '✦ Wiki saved beautifully ✦' : '⚠️ Some sections could not be saved.', allOk ? 'success' : 'error');
+}
+</script>
+
+</body>
+</html>
