@@ -364,7 +364,7 @@ export default function DreamseaPromptsPage() {
 
     // Main Admin UI
     return (
-        <main className={`relative z-10 max-w-[1600px] mx-auto pt-24 pb-20 px-6 ${inter.className}`}>
+        <main className={`relative z-10 max-w-[1360px] mx-auto pt-24 pb-20 px-6 ${inter.className}`}>
             
             {/* Header */}
             <header className="text-center mb-10 p-10 bg-[#0f2648] border border-white/10 rounded-[40px] shadow-2xl backdrop-blur-md">
