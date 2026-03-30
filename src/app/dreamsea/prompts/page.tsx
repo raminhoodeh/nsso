@@ -423,6 +423,15 @@ export default function DreamseaPromptsPage() {
                                     <p className="p-6 bg-[#213E60]/40 border border-white/10 rounded-2xl text-sm leading-relaxed text-[#C1DCED]/90 mb-6">
                                         Every prompt you write is a conversation with an ancient intelligence. The clearer your instructions, the more poetic and precise the response. A great prompt has four parts — think of them as layers of a dream: the deeper you go, the richer the meaning.
                                     </p>
+                                    <div className="p-6 bg-[#0a1e3a]/60 border border-[#C1DCED]/15 rounded-2xl mb-6">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="text-lg">🪄</span>
+                                            <span className={`text-base font-semibold text-[#C1DCED] ${playfair.className}`}>Automatic Dream Wiki Integration</span>
+                                        </div>
+                                        <p className="text-[13px] text-[#C1DCED]/80 leading-relaxed">
+                                            <strong className="text-[#C1DCED]">You don&apos;t need to copy anything from the Dream Wiki into your prompts.</strong> Dreamsea does this automatically. When a dream is interpreted, the app pulls the matching philosophy&apos;s Wiki content (e.g. the Jungian Wiki for the Jungian interpretation) and feeds it to the AI behind the scenes. So if you update the Dream Wiki text, those changes will automatically shape future dream interpretations — no extra steps needed.
+                                        </p>
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
                                         {[
                                             { n: 1, t: 'Persona', d: 'Who is the AI speaking as? Give it an identity grounded in a tradition, role, or archetype.', e: '"You are a Sufi dream scholar who has studied the dream interpretations of Ibn Arabi for forty years..."'},
@@ -508,6 +517,13 @@ export default function DreamseaPromptsPage() {
                             These are the four Dream Philosophy pages that users explore in the app.<br />
                             Section headings are fixed — only the body text beneath each can be changed. ✦
                         </p>
+                        <div className="mt-5 p-5 bg-[#0a1e3a]/60 border border-[#C1DCED]/15 rounded-xl">
+                            <p className="text-center text-[13px] text-[#C1DCED]/80 leading-relaxed">
+                                🪄 <strong className="text-[#C1DCED]">These Wiki pages do double duty.</strong> Users read them in the app as educational content,
+                                and Dreamsea also feeds them to the AI automatically when interpreting dreams. So when you update the text here,
+                                you&apos;re also shaping how the AI understands and interprets dreams through each philosophy — no extra work required.
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3 justify-center mb-10">
