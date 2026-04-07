@@ -21,43 +21,44 @@ const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" 
 // Category configuration with optimized thresholds
 const CATEGORY_CONFIG: Record<string, { files: string[], threshold: number }> = {
     'Films / Inspiration': {
-        files: ['nsso Database - Film List.csv'],
+        files: ['Films.csv'],
         threshold: 0.35 // Lower for creative/broad matches
     },
     'Courses': {
-        files: ['nsso Database - Courses.csv'],
+        files: ['COURSES.csv'],
         threshold: 0.4
     },
     'AI Tools': {
-        files: ['nsso Database - AI TOOLS.csv'],
+        files: ['AI TOOLS.csv', 'AI Job Application Tools.csv', 'AI Business Advice.md'],
         threshold: 0.4
     },
     'Career': {
-        files: ['nsso Database - Career.csv', 'nsso Database - Cover Letter Structure.csv'],
+        files: [
+            'Career Coaching.csv', 'Companies Hiring.csv', 
+            'Remote Job Boards and Companies - Remote Boards.csv', 
+            'Tech PM Job Boards.csv', 'US Tech Companies.csv', 
+            'Make Money Online.csv', 'Content Creation Advice.md'
+        ],
         threshold: 0.45
     },
     'Services': {
-        files: ['nsso Database - Interesting Services.csv'],
+        files: ['SERVICES.csv'],
         threshold: 0.4
     },
     'Places': {
-        files: ['nsso Database - Places and Clubs.csv'],
+        files: ['PLACES TO GO.csv'],
         threshold: 0.4
     },
     "Member's Clubs": {
-        files: ['nsso Database - Places and Clubs.csv'],
+        files: ['PLACES TO GO.csv'],
         threshold: 0.4
     },
     'Start-up / Investors': {
         files: [
-            'nsso Database - Angel Investors.csv', 'nsso Database - Angel Investors 2.csv',
-            'nsso Database - Business Grants.csv', 'nsso Database - Business Grants 2.csv',
-            'nsso Database - EIS Investors.csv', 'nsso Database - EIS Investors (1).csv',
-            'nsso Database - Early Stage Investors.csv', 'nsso Database - Early Stage Investors (1).csv',
-            'nsso Database - Family Offices.csv', 'nsso Database - Investor emails.csv',
-            'nsso Database - VC Firms.csv', 'nsso Database - VC Investor.csv',
-            'nsso Database - Startup Accelerator.csv', 'nsso Database - Startup Accelerators.csv',
-            'nsso Database - Pitch Deck Structures.csv', 'nsso Database - Business Technology and Strategy Knowledge.csv'
+            'Angel Investor Database.csv', 'EIS Investors.csv', 
+            'Family Offices Database.csv', 'UK Business Grants.csv', 
+            'VC Investor Database.csv', 'ACCELERATORS.csv',
+            'Business_Knowledge.csv', 'Pitch Deck Structures.md'
         ],
         threshold: 0.5 // Higher for precise business matching
     }
@@ -279,7 +280,7 @@ export async function POST(req: Request) {
 
             // 1b. Generate embedding for user profile (for re-ranking)
             let profileEmbedding = null;
-            if (userContext && userContext.length > 50) {
+            if (userId && userContext && userContext.length > 50) {
                 try {
                     const contextForEmbedding = userContext.substring(0, 1000);
                     const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any);
@@ -385,14 +386,16 @@ export async function POST(req: Request) {
             detectedCategory,
             needsBioHelp,
             message,
-            history
+            history,
+            isLoggedIn: !!userId
         });
 
         // 4. Initialize Model with System Instruction AND Tools
+        // Disable tools entirely for Guest Users to prevent any hallucinated profile updates, and save tokens!
         const model = genAI.getGenerativeModel({
             model: "gemini-2.0-flash",
             systemInstruction: systemPrompt,
-            tools: disableTools ? [] : [
+            tools: (disableTools || !userId) ? [] : [
                 { functionDeclarations: DEITY_TOOLS }
             ]
         });

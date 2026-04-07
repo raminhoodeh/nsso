@@ -33,7 +33,7 @@ async function checkUrl(url: string): Promise<LinkStatus> {
             method: 'HEAD', // Try HEAD first as it's lightest
             signal: controller.signal,
             headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; NSSO-Deity-Bot/1.0)' // Identify ourselves politely
+                'User-Agent': 'Mozilla/5.0 (compatible; nsso-Deity-Bot/1.0)' // Identify ourselves politely
             }
         });
 

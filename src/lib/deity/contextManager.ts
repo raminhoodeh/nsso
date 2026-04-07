@@ -234,10 +234,11 @@ export function assembleSystemPrompt(params: {
     needsBioHelp: boolean;
     message: string;
     history: any[];
+    isLoggedIn: boolean;
 }): string {
     const {
         userName, profileCompleteness, userContext, seoContext, contextText,
-        detectedCategory, needsBioHelp, message, history
+        detectedCategory, needsBioHelp, message, history, isLoggedIn
     } = params;
 
     const lowerMsg = message.toLowerCase();
@@ -262,7 +263,7 @@ export function assembleSystemPrompt(params: {
     const shouldShowBioHelp = needsBioHelp && ((!isKnowledgeTurn) || isProfileFocused || stickyBio);
 
     // Bio Assistance Prompt (Dynamic)
-    const bioAssistancePrompt = shouldShowBioHelp ? `
+    const bioAssistancePrompt = (shouldShowBioHelp && isLoggedIn) ? `
 🎯 ONBOARDING ASSISTANT MODE (HIGH PRIORITY):
 ${userName}'s profile is ${profileCompleteness}% complete. Their bio is missing or empty.
 
@@ -286,7 +287,7 @@ IMPORTANT RULES:
 
     // CRITICAL FIX: If we are in Knowledge Mode, we SUPPRESS all section prompts to keep the model focused.
     // Unless the user explicitly asked to "update" something (which would make isKnowledgeTurn false).
-    if (!isKnowledgeTurn) {
+    if (!isKnowledgeTurn && isLoggedIn) {
         if (intents.hasExperienceIntent || !detectedCategory) sectionPrompts += experienceGuidancePrompt + '\n';
         if (intents.hasProjectIntent || !detectedCategory) sectionPrompts += projectsGuidancePrompt + '\n';
         if (intents.hasEducationIntent || !detectedCategory) sectionPrompts += qualificationsGuidancePrompt + '\n';
@@ -295,18 +296,18 @@ IMPORTANT RULES:
 
     // Link Management - Sticky or triggered
     // If user says "linkedin.com/in/me", we want to help.
-    const showLinkHelp = intents.hasLinkIntent || isStickyContext(history, ['link', 'url', 'social']);
+    const showLinkHelp = isLoggedIn && (intents.hasLinkIntent || isStickyContext(history, ['link', 'url', 'social']));
     const linkPrompt = showLinkHelp ? LINK_MANAGEMENT_PROMPT : '';
 
     // Passive Skills - Always available but lower priority in prompt
     // We suppress them in strict Knowledge Mode to save context window and focus ?? 
     // Actually, name/headline/pic are small enough to keep.
-    const activePassiveSkills = `
+    const activePassiveSkills = isLoggedIn ? `
 ${linkPrompt}
 ${HEADLINE_GUIDANCE_PROMPT}
 ${NAME_GUIDANCE_PROMPT}
 ${PROFILE_PIC_GUIDANCE_PROMPT}
-`;
+` : '';
 
     const KNOWLEDGE_OVERVIEW = `
 **YOUR KNOWLEDGE BASE (What you have access to):**
@@ -318,8 +319,25 @@ You have exclusive access to a curated database of resources. Even if you don't 
 - **Lifestyle**: Member's Clubs, Places, Services.
 `;
 
+    const actionToolsPrompt = isLoggedIn ? GLOBAL_ACTION_PROMPT : `
+YOUR GUEST USER ACQUISITION STRATEGY (NEPQ METHODOLOGY):
+- This user is a GUEST (Not logged in). You cannot update their profile or call tools.
+- Your goal is to guide them to naturally conclude they need an nsso account using NEPQ (Neuro Emotional Persuasion Questioning).
+- TONE: Calm, curious, respectful. Act as a trusted expert. NEVER sound desperate, needy, or overly enthusiastic.
+
+THE NEPQ INTERACTION FRAMEWORK:
+1. DISARMAMENT (Value First): When they ask a knowledge question, provide a high-quality answer from your database. Do not mention accounts yet.
+2. SITUATION / PROBLEM AWARENESS: End your answers with a curious, open-ended question to understand their true motivations.
+   - e.g., "I'm curious, what specifically prompted you to look for [topic] at this time?" or "Could you describe your current process for [relevant activity]?"
+3. CONSEQUENCE: When they reveal a pain point, gently ask about its impact.
+   - e.g., "How does that delay actually impact your team day-to-day?"
+4. TRANSITION TO PRESENTATION: ONLY AFTER they articulate their 'Pain' or 'Gap', present the free nsso account as the direct solution.
+   - e.g., "Based on what you've shared about needing to [solve X], the next logical step would be to create a free nsso profile. Once logged in, I use your context to give you highly specific, tailored advice rather than generic lists. Does that feel like a helpful way to proceed?"
+5. EXCEPTION: If the user explicitly asks you to "save" something or "update my bio," you must explain: "I can absolutely do that, but you'll need to create a free account first so I have a place to save it!"
+`;
+
     // 3. Logic for Progressive Completion vs Knowledge Next Steps
-    const progressiveCompletionPrompt = isKnowledgeTurn ? `
+    const progressiveCompletionPrompt = (isKnowledgeTurn || !isLoggedIn) ? `
 **KNOWLEDGE MODE - NEXT STEPS (CRITICAL):**
 Since you are currently answering a specific knowledge question, DO NOT suggest unrelated profile updates like "Add your bio" or "Add experience".
 Instead, your "Next Step" suggestion must be:
@@ -360,7 +378,7 @@ ${bioAssistancePrompt}
 ${sectionPrompts}
 ${activePassiveSkills}
 
-${GLOBAL_ACTION_PROMPT}
+${actionToolsPrompt}
 
 CONTEXT FROM KNOWLEDGE BASE:
 ${contextText}
