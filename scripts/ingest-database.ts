@@ -14,9 +14,20 @@ const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
-async function generateEmbedding(text: string) {
-    const result = await model.embedContent({ content: { parts: [{ text }] }, outputDimensionality: 768 } as any);
-    return result.embedding.values;
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+async function generateEmbedding(text: string, retries = 3): Promise<number[]> {
+    try {
+        const result = await model.embedContent({ content: { parts: [{ text }] }, outputDimensionality: 768 } as any);
+        return result.embedding.values;
+    } catch (error: any) {
+        if (retries > 0) {
+            console.log(`Rate limit hit, sleeping for 3s...`);
+            await delay(3000);
+            return generateEmbedding(text, retries - 1);
+        }
+        throw error;
+    }
 }
 
 async function processCSV(filePath: string, fileName: string) {

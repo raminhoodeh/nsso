@@ -392,13 +392,16 @@ export async function POST(req: Request) {
 
         // 4. Initialize Model with System Instruction AND Tools
         // Disable tools entirely for Guest Users to prevent any hallucinated profile updates, and save tokens!
-        const model = genAI.getGenerativeModel({
+        const modelOptions: any = {
             model: "gemini-2.0-flash",
             systemInstruction: systemPrompt,
-            tools: (disableTools || !userId) ? [] : [
-                { functionDeclarations: DEITY_TOOLS }
-            ]
-        });
+        };
+        
+        if (!disableTools && userId) {
+            modelOptions.tools = [{ functionDeclarations: DEITY_TOOLS }];
+        }
+
+        const model = genAI.getGenerativeModel(modelOptions);
 
         // 5. Build Content History
         const chatContents = [];
