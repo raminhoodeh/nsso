@@ -1,0 +1,49 @@
+/* ── Pin Drop Animation ─────────────────────────────────────────────────────── */
+@keyframes pinDrop {
+  0%   { transform: translateY(-20px) scale(0.8); opacity: 0; }
+  60%  { transform: translateY(4px) scale(1.05); opacity: 1; }
+  80%  { transform: translateY(-3px) scale(0.98); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.marker-pin-drop {
+  animation: pinDrop 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ── Info Card Slide-in ─────────────────────────────────────────────────────── */
+@keyframes slideUp {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+.info-card {
+  animation: slideUp 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* ── Filter Panel Pulse (when filter count changes) ─────────────────────────── */
+@keyframes badgePop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+.filter-badge.pop {
+  animation: badgePop 0.25s ease-out;
+}
+
+/* ── Near Me Button Pulse ───────────────────────────────────────────────────── */
+@keyframes nearMePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(67,97,238,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(67,97,238,0); }
+}
+.btn-near-me.locating {
+  animation: nearMePulse 1.2s ease infinite;
+  border-color: var(--brand-blue);
+}
+
+/* ── Loading overlay fade out ──────────────────────────────────────────────── */
+@keyframes fadeOut {
+  to { opacity: 0; pointer-events: none; }
+}
+.loading-overlay.hide {
+  animation: fadeOut 0.5s ease forwards;
+}
