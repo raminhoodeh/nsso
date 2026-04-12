@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import filmsData from '@/data/films.json';
 import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard from '@/components/film/MovieCard';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc';
 import { useUI } from '@/components/providers/UIProvider';
@@ -16,6 +16,8 @@ export default function RazinFlixPage() {
     const [selectedFilm, setSelectedFilm] = useState<any>(null);
     const [modalContext, setModalContext] = useState<{ list: any[], index: number }>({ list: [], index: 0 });
     const [scrolled, setScrolled] = useState(false);
+    const [films, setFilms] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const { setBackgroundDimmed } = useUI();
 
@@ -24,8 +26,28 @@ export default function RazinFlixPage() {
         return () => setBackgroundDimmed(false);
     }, [setBackgroundDimmed]);
 
-    // Type assertion for filmsData if needed, or just let it infer
-    const films: any[] = filmsData as any[];
+    useEffect(() => {
+        const fetchFilms = async () => {
+            try {
+                const supabase = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                );
+                const { data, error } = await supabase
+                    .from('razinflix_films')
+                    .select('*')
+                    .order('id', { ascending: true });
+                
+                if (error) throw error;
+                if (data) setFilms(data);
+            } catch (err) {
+                console.error('Failed to load films from Supabase:', err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchFilms();
+    }, []);
 
     const handleFilmClick = (film: any, list: any[]) => {
         setSelectedFilm(film);
@@ -66,10 +88,12 @@ export default function RazinFlixPage() {
         
         if (!searchTerm) {
             films.forEach(film => {
-                film.categories.forEach((c: string) => {
-                    if (!cats[c]) cats[c] = [];
-                    cats[c].push(film);
-                });
+                if (film.categories) {
+                    film.categories.forEach((c: string) => {
+                        if (!cats[c]) cats[c] = [];
+                        cats[c].push(film);
+                    });
+                }
             });
         } else {
             cats['Search Results'] = films.filter(f =>
@@ -175,7 +199,12 @@ export default function RazinFlixPage() {
 
             {/* Content Feed */}
             <div className={`space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12' : 'pt-24'}`}>
-                {viewMode === 'category' ? (
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
+                        <Loader2 className="animate-spin mb-4" size={48} />
+                        <p>Syncing Directory from PostgreSQL...</p>
+                    </div>
+                ) : viewMode === 'category' ? (
                     <>
                         {Object.entries(categories)
                             .filter(([title, films]) => films.length > 0)
