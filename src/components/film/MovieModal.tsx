@@ -185,7 +185,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             </button>
 
             <div
-                className="relative w-full max-w-[100vw] md:max-w-6xl flex-1 md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] bg-[#141414] md:bg-transparent rounded-t-[32px] md:rounded-none overflow-hidden mt-auto"
+                className="relative w-full max-w-[100vw] md:max-w-[1600px] flex-1 md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] bg-[#141414] md:bg-transparent rounded-t-[32px] md:rounded-none overflow-hidden mt-auto"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Native Apple Close Header (Mobile) */}
