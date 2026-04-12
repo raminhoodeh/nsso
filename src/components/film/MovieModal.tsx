@@ -35,7 +35,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         description: film?.description || '',
         year: film?.year || '',
         rating: film?.rating || '',
-        trailer_key: film?.trailer_key || ''
+        trailer_key: film?.trailer_key ? `https://youtube.com/watch?v=${film.trailer_key}` : ''
     });
     const [editPoster, setEditPoster] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -47,7 +47,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             description: film?.description || '',
             year: film?.year || '',
             rating: film?.rating || '',
-            trailer_key: film?.trailer_key || ''
+            trailer_key: film?.trailer_key ? `https://youtube.com/watch?v=${film.trailer_key}` : ''
         });
         setEditPoster(null);
         setPreviewUrl(null);
@@ -355,8 +355,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 </div>
                             </div>
                             
-                            {/* Subtle Edit / Save Controls inside Bottom Right corner */}
-                            <div className="absolute bottom-6 right-6 flex gap-2">
+                            {/* Subtle Edit / Save Controls Row (Relative to prevent overlap) */}
+                            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-white/5">
                                 {isEditing ? (
                                     <>
                                         <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-red-400" aria-label="Cancel">
