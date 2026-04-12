@@ -26,6 +26,12 @@ interface MovieModalProps {
 
 const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
+    const touchStartXModal = useRef(0);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = 'auto'; };
+    }, []);
 
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
@@ -191,7 +197,17 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 </button>
                 
                 {/* Main Content Area (70% Height) */}
-                <div className="relative w-full h-[70%] md:h-[70%] glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-4">
+                <div 
+                    onTouchStart={(e) => { touchStartXModal.current = e.touches[0].clientX; }}
+                    onTouchEnd={(e) => {
+                        const deltaX = e.changedTouches[0].clientX - touchStartXModal.current;
+                        if (Math.abs(deltaX) > 50) {
+                            if (deltaX > 0) onPrev();
+                            else onNext();
+                        }
+                    }}
+                    className="relative w-full h-[70%] md:h-[70%] glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-4"
+                >
 
                     {/* Left Column: Media (75%) */}
                     <div className="w-full md:w-[75%] h-full relative bg-black flex items-center justify-center group overflow-hidden touch-pan-y">
@@ -258,8 +274,23 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                     </div>
 
                     {/* Right Column: Content (25%) */}
-                    <div className="w-full md:w-[25%] h-full bg-transparent overflow-y-auto custom-scrollbar border-l border-white/10">
-                        <div className="p-6 flex flex-col h-full">
+                    <div className="w-full md:w-[25%] h-full bg-transparent overflow-y-auto custom-scrollbar border-l border-white/10 relative">
+                        
+                        {/* Static Edit/Save Button (Top Right) */}
+                        <div className="absolute top-4 right-4 z-[110]">
+                            {isEditing ? (
+                                <div className="flex gap-2 bg-black/40 backdrop-blur rounded-full shadow-lg p-1">
+                                    <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-red-400" aria-label="Cancel"><X size={16} /></button>
+                                    <button onClick={handleSave} className="p-2 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-full transition-colors" aria-label="Save">
+                                        {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                    </button>
+                                </div>
+                            ) : (
+                                <button onClick={() => setIsEditing(true)} className="p-3 bg-black/60 hover:bg-black/80 rounded-full transition-colors text-white/50 hover:text-white shadow-xl backdrop-blur border border-white/10" aria-label="Edit"><Edit2 size={16} /></button>
+                            )}
+                        </div>
+
+                        <div className="p-6 flex flex-col h-full pt-16 md:pt-6">
                             {isEditing ? (
                                 <textarea
                                     value={editForm.title}
@@ -364,23 +395,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 </div>
                             </div>
                             
-                            {/* Subtle Edit / Save Controls Row (Relative to prevent overlap) */}
-                            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-white/5">
-                                {isEditing ? (
-                                    <>
-                                        <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-red-400" aria-label="Cancel">
-                                            <X size={16} />
-                                        </button>
-                                        <button onClick={handleSave} className="p-2 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-full transition-colors" aria-label="Save">
-                                            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                                        </button>
-                                    </>
-                                ) : (
-                                    <button onClick={() => setIsEditing(true)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/30 hover:text-white" aria-label="Edit">
-                                        <Edit2 size={16} />
-                                    </button>
-                                )}
-                            </div>
+                            {/* Bottom Divider */}
+                            <div className="mt-auto pt-4 border-t border-white/5" />
                         </div>
                     </div>
                 </div>
