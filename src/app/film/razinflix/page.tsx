@@ -173,20 +173,22 @@ export default function RazinFlixPage() {
     return (
         <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans">
             {/* Navbar - Logo Removed */}
-            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4 flex items-center justify-end ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
-                <div className="relative">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Titles, people, genres"
-                        className="bg-black/80 border border-gray-600 text-white text-sm rounded-none pl-10 pr-4 py-2 w-32 md:w-64 focus:outline-none focus:border-white transition-all shadow-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4 flex items-center justify-center md:justify-end ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
+                <div className="flex items-center w-full md:w-auto gap-2">
+                    <div className="relative flex-1 md:w-96">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Titles, people, genres"
+                            className="bg-black/80 border border-gray-600 text-white text-sm rounded-none pl-10 pr-4 py-2 w-full focus:outline-none focus:border-white transition-all shadow-sm"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                     <select
                         value={viewMode}
                         onChange={(e) => setViewMode(e.target.value as ViewMode)}
-                        className="bg-black/80 border border-gray-600 text-white text-sm rounded-none px-4 py-2 ml-2 md:ml-4 focus:outline-none focus:border-white transition-all shadow-sm cursor-pointer"
+                        className="bg-black/80 border border-gray-600 text-white text-sm rounded-none px-4 py-2 flex-1 md:w-56 overflow-hidden text-ellipsis focus:outline-none focus:border-white transition-all shadow-sm cursor-pointer"
                     >
                         <option value="category">Category View</option>
                         <option value="alpha">Alphabetical (A-Z)</option>

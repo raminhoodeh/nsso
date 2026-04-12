@@ -27,34 +27,6 @@ interface MovieModalProps {
 const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
 
-    // Gestural Physics State
-    const [dragY, setDragY] = useState(0);
-    const [startY, setStartY] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
-
-    const handleTouchStart = (e: React.TouchEvent) => {
-        setStartY(e.touches[0].clientY);
-        setIsDragging(true);
-    };
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (!isDragging) return;
-        const currentY = e.touches[0].clientY;
-        const deltaY = currentY - startY;
-        if (deltaY > 0) { // Only permit downward drag vectors
-            setDragY(deltaY);
-        }
-    };
-
-    const handleTouchEnd = () => {
-        setIsDragging(false);
-        if (dragY > 120) {
-            onClose(); // Threshold breached: shatter
-        } else {
-            setDragY(0); // Snap back physically
-        }
-    };
-
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -179,7 +151,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     }, [film]);
 
     return (
-        <div className={`fixed inset-0 z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] ${dragY > 0 ? 'bg-black/20 backdrop-blur-sm' : 'bg-black/40 backdrop-blur-2xl'}`}>
+        <div className={`fixed inset-0 z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] bg-black/40 backdrop-blur-2xl`}>
             <div className="absolute inset-0" onClick={onClose} />
             {/* Back Button (Top Left) */}
             <button
@@ -207,30 +179,22 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             </button>
 
             <div
-                style={{ transform: `translateY(${dragY}px)` }}
-                className={`relative w-full max-w-[100vw] md:max-w-6xl h-[92vh] md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] ${isDragging ? '' : 'transition-transform duration-300'}`}
+                className="relative w-full max-w-[100vw] md:max-w-6xl h-[92vh] md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)]"
                 onClick={e => e.stopPropagation()}
             >
-                {/* Mobile Grab Handle Indicator (Massive Touch Hidden Bounding Box) */}
-                <div 
-                    onTouchStart={handleTouchStart} 
-                    onTouchMove={handleTouchMove} 
-                    onTouchEnd={handleTouchEnd}
-                    className="absolute -top-6 left-0 right-0 h-16 md:hidden z-[130] flex items-center justify-center touch-pan-y"
+                {/* Native Apple Close Header (Mobile) */}
+                <button
+                    onClick={onClose}
+                    className="md:hidden w-full bg-[#1c1c1e] active:bg-[#2c2c2e] text-white/90 font-bold text-[15px] py-4 rounded-t-[32px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors"
                 >
-                    <div className="w-12 h-1.5 bg-white/20 rounded-full" />
-                </div>
+                    Close
+                </button>
                 
                 {/* Main Content Area (70% Height) */}
-                <div className="relative w-full h-[70%] glass-style-card rounded-t-[32px] md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border-t md:border border-white/10 mb-0 md:mb-4">
+                <div className="relative w-full h-[70%] md:h-[70%] glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-4">
 
                     {/* Left Column: Media (75%) */}
-                    <div 
-                        onTouchStart={handleTouchStart} 
-                        onTouchMove={handleTouchMove} 
-                        onTouchEnd={handleTouchEnd}
-                        className="w-full md:w-[75%] h-full relative bg-black flex items-center justify-center group overflow-hidden touch-pan-y"
-                    >
+                    <div className="w-full md:w-[75%] h-full relative bg-black flex items-center justify-center group overflow-hidden touch-pan-y">
                         {isEditing ? (
                             <div className="absolute inset-0 z-50 bg-black/70 flex flex-col items-center justify-center p-8 text-center border-4 border-dashed border-white/20 hover:border-white/50 transition-colors cursor-pointer">
                                 <Upload size={48} className="text-white/50 mb-4" />
