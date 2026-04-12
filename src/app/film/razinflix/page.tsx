@@ -185,6 +185,13 @@ export default function RazinFlixPage() {
                         <option value="rating_desc">IMDb Rating (Highest)</option>
                         <option value="rating_asc">IMDb Rating (Lowest)</option>
                     </select>
+                    <button 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsHeroMuted(!isHeroMuted); }}
+                        className="hidden md:flex p-2 ml-2 rounded-full bg-black/80 hover:bg-black border border-gray-600 text-white transition-colors items-center justify-center"
+                        title={isHeroMuted ? "Unmute Trailer" : "Mute Trailer"}
+                    >
+                        {isHeroMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                    </button>
                 </div>
             </nav>
 
@@ -250,13 +257,6 @@ export default function RazinFlixPage() {
                             className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 hover:bg-black/60 text-white/50 hover:text-white backdrop-blur transition-all"
                         >
                             <ChevronRight size={36} />
-                        </button>
-                        
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setIsHeroMuted(!isHeroMuted); }}
-                            className="hidden md:flex absolute bottom-32 right-12 z-50 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur border border-white/10 transition-colors"
-                        >
-                            {isHeroMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
                         </button>
 
                         {/* Billboard Content (Typography Slides In) */}
