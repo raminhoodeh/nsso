@@ -157,7 +157,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     }, [film]);
 
     return (
-        <div className={`fixed inset-0 z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] bg-black/40 backdrop-blur-2xl`}>
+        <div className={`fixed top-0 left-0 w-[100dvw] h-[100dvh] z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] bg-[#0c0c0e] md:bg-black/40 md:backdrop-blur-2xl overscroll-none`}>
             <div className="absolute inset-0" onClick={onClose} />
             {/* Back Button (Top Left) */}
             <button
@@ -185,11 +185,11 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             </button>
 
             <div
-                className="relative w-full max-w-[100vw] md:max-w-6xl h-[92vh] md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)]"
+                className="relative w-full max-w-[100vw] md:max-w-6xl flex-1 md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] bg-[#141414] md:bg-transparent rounded-t-[32px] md:rounded-none overflow-hidden mt-auto"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Native Apple Close Header (Mobile) */}
-                <div className="md:hidden relative w-full bg-[#1c1c1e] text-white/90 font-bold text-[15px] rounded-t-[32px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors">
+                <div className="md:hidden flex-none relative w-full bg-[#1c1c1e] text-white/90 font-bold text-[15px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors">
                     <button onClick={onClose} className="w-full py-4 text-center active:bg-[#2c2c2e] rounded-t-[32px]">
                         Back
                     </button>
@@ -217,7 +217,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                             else onNext();
                         }
                     }}
-                    className="relative w-full h-[70%] md:h-[70%] glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-4"
+                    className="relative w-full flex-1 md:h-[70%] glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-4 bg-black/20"
                 >
 
                     {/* Left Column: Media (75%) */}
@@ -301,7 +301,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                             )}
                         </div>
 
-                        <div className="p-6 flex flex-col h-full pt-16 md:pt-6">
+                        <div className="p-6 flex flex-col h-full">
                             {isEditing ? (
                                 <textarea
                                     value={editForm.title}
@@ -413,7 +413,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 </div>
 
                 {/* Bottom Carousel: Recommended Films (Intelligent Overlap Algorithm) */}
-                <div className="w-full h-[25%] px-0 md:px-12 flex flex-col justify-center mt-6 md:mt-0">
+                <div className="w-full h-auto min-h-[25%] px-0 md:px-12 flex flex-col justify-center mt-6 md:mt-0 mb-6 md:mb-0">
                     <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-6 md:pl-4 mb-3">Similar Films</h3>
                     <div className="w-full overflow-x-auto flex gap-4 px-6 md:p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
                         {similarFilms.map((f, idx) => (
