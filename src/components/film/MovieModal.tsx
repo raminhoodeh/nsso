@@ -34,7 +34,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         title: film?.title || '',
         description: film?.description || '',
         year: film?.year || '',
-        rating: film?.rating || ''
+        rating: film?.rating || '',
+        trailer_key: film?.trailer_key || ''
     });
     const [editPoster, setEditPoster] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -45,7 +46,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             title: film?.title || '',
             description: film?.description || '',
             year: film?.year || '',
-            rating: film?.rating || ''
+            rating: film?.rating || '',
+            trailer_key: film?.trailer_key || ''
         });
         setEditPoster(null);
         setPreviewUrl(null);
@@ -62,6 +64,13 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             fd.append('description', editForm.description);
             fd.append('year', editForm.year);
             fd.append('rating', editForm.rating);
+
+            // Extract just the key if they pasted a full URL
+            let cleanedKey = editForm.trailer_key;
+            const match = cleanedKey.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+            if (match && match[1]) cleanedKey = match[1];
+            fd.append('trailer_key', cleanedKey);
+
             if (editPoster) {
                 fd.append('poster', editPoster);
             }
@@ -151,38 +160,6 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 <span className="font-medium text-lg">Back</span>
             </button>
-
-            {/* Edit/Save Button (Top Right) */}
-            <div className="absolute right-6 top-6 z-[120] flex gap-3">
-                {isEditing ? (
-                    <>
-                        <button
-                            onClick={() => setIsEditing(false)}
-                            className="flex items-center gap-2 px-6 py-3 bg-red-500/20 hover:bg-red-500/40 text-red-100 rounded-full backdrop-blur-md border border-red-500/20 transition-all duration-300"
-                            disabled={isSaving}
-                        >
-                            <X size={20} />
-                            <span className="font-medium">Cancel</span>
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="flex items-center gap-2 px-6 py-3 bg-green-500/80 hover:bg-green-500 text-white rounded-full backdrop-blur-md border border-green-400/50 transition-all duration-300"
-                            disabled={isSaving}
-                        >
-                            {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
-                            <span className="font-medium">{isSaving ? 'Saving...' : 'Save Changes'}</span>
-                        </button>
-                    </>
-                ) : (
-                    <button
-                        onClick={() => setIsEditing(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-black/40 hover:bg-white/10 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105"
-                    >
-                        <Edit2 size={18} />
-                        <span className="font-medium text-lg">Edit Record</span>
-                    </button>
-                )}
-            </div>
 
             {/* Global Previous Button */}
             <button
@@ -331,6 +308,18 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 )}
                             </div>
 
+                            {isEditing && (
+                                <div className="mb-4">
+                                    <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">YouTube URL or Key</span>
+                                    <input
+                                        value={editForm.trailer_key}
+                                        onChange={(e) => setEditForm({ ...editForm, trailer_key: e.target.value })}
+                                        className="bg-white/5 border border-white/20 rounded px-2 py-1 w-full text-white text-sm focus:outline-none"
+                                        placeholder="https://youtube.com/watch?v=..."
+                                    />
+                                </div>
+                            )}
+
                             <div className="space-y-3 text-sm text-gray-400 mt-auto">
                                 <div>
                                     <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Director</span>
@@ -364,6 +353,24 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                         ))}
                                     </div>
                                 </div>
+                            </div>
+                            
+                            {/* Subtle Edit / Save Controls inside Bottom Right corner */}
+                            <div className="absolute bottom-6 right-6 flex gap-2">
+                                {isEditing ? (
+                                    <>
+                                        <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-red-400" aria-label="Cancel">
+                                            <X size={16} />
+                                        </button>
+                                        <button onClick={handleSave} className="p-2 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-full transition-colors" aria-label="Save">
+                                            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button onClick={() => setIsEditing(true)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/30 hover:text-white" aria-label="Edit">
+                                        <Edit2 size={16} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

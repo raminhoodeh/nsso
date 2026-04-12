@@ -14,7 +14,8 @@ export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<ViewMode>('category');
     const [selectedFilm, setSelectedFilm] = useState<any>(null);
-    const [featuredFilm, setFeaturedFilm] = useState<any>(null);
+    const [featuredFilms, setFeaturedFilms] = useState<any[]>([]);
+    const [featuredIndex, setFeaturedIndex] = useState(0);
     const [modalContext, setModalContext] = useState<{ list: any[], index: number }>({ list: [], index: 0 });
     const [scrolled, setScrolled] = useState(false);
     const [films, setFilms] = useState<any[]>([]);
@@ -42,10 +43,11 @@ export default function RazinFlixPage() {
                 if (error) throw error;
                 if (data) {
                     setFilms(data);
-                    // Select a random featured film with a trailer
+                    // Select 5 random featured films with a trailer
                     const filmsWithTrailers = data.filter((f: any) => f.trailer_key);
                     if (filmsWithTrailers.length > 0) {
-                        setFeaturedFilm(filmsWithTrailers[Math.floor(Math.random() * filmsWithTrailers.length)]);
+                        const shuffled = filmsWithTrailers.sort(() => 0.5 - Math.random());
+                        setFeaturedFilms(shuffled.slice(0, 5));
                     }
                 }
             } catch (err) {
@@ -195,13 +197,14 @@ export default function RazinFlixPage() {
             </nav>
 
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
-            {!searchTerm && viewMode === 'category' && featuredFilm && (
-                <div className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-4 md:px-16">
+            {!searchTerm && viewMode === 'category' && featuredFilms.length > 0 && (
+                <div className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-4 md:px-16 group">
                     
                     {/* Background Autoplay Trailer */}
                     <div className="absolute inset-0 z-0">
                         <iframe
-                             src={`https://www.youtube.com/embed/${featuredFilm.trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilm.trailer_key}&disablekb=1`}
+                             key={featuredFilms[featuredIndex].id}
+                             src={`https://www.youtube.com/embed/${featuredFilms[featuredIndex].trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilms[featuredIndex].trailer_key}&disablekb=1`}
                              frameBorder="0"
                              allow="autoplay"
                              className="w-full h-full object-cover scale-[1.35] opacity-60 pointer-events-none"
@@ -215,22 +218,22 @@ export default function RazinFlixPage() {
                     {/* Billboard Content */}
                     <div className="relative z-20 max-w-3xl space-y-6">
                         <h1 className="text-white font-black text-5xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight">
-                            {featuredFilm.title}
+                            {featuredFilms[featuredIndex].title}
                         </h1>
                         <p className="text-gray-300 text-lg md:text-xl line-clamp-3 font-medium drop-shadow-md">
-                            {featuredFilm.description}
+                            {featuredFilms[featuredIndex].description}
                         </p>
                         
                         <div className="flex gap-4 pt-4">
                             <button 
-                                onClick={() => handleFilmClick(featuredFilm, films)}
+                                onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
                                 className="px-8 py-3 bg-white text-black font-bold rounded flex items-center gap-3 hover:bg-gray-200 transition-all shadow-lg hover:scale-105"
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                                 Play Trailer
                             </button>
                             <button 
-                                onClick={() => handleFilmClick(featuredFilm, films)}
+                                onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
                                 className="px-8 py-3 bg-gray-500/50 text-white font-medium rounded flex items-center gap-3 hover:bg-gray-500/80 transition-all backdrop-blur shadow-lg hover:scale-105"
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -238,6 +241,20 @@ export default function RazinFlixPage() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Navigation Arrows */}
+                    <button 
+                        onClick={() => setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length)}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all opacity-0 group-hover:opacity-100 hidden md:block"
+                    >
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <button 
+                        onClick={() => setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all opacity-0 group-hover:opacity-100 hidden md:block"
+                    >
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </button>
                 </div>
             )}
 

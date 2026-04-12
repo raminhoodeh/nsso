@@ -14,6 +14,7 @@ export async function POST(request: Request) {
         const description = formData.get('description')?.toString();
         const year = formData.get('year')?.toString();
         const rating = formData.get('rating')?.toString();
+        const trailer_key = formData.get('trailer_key')?.toString();
         const posterFile = formData.get('poster') as File | null;
 
         if (!id) return NextResponse.json({ error: 'Film ID is required.' }, { status: 400 });
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
         if (description !== undefined) updatePayload.description = description;
         if (year !== undefined) updatePayload.year = year;
         if (rating !== undefined) updatePayload.rating = rating;
+        if (trailer_key !== undefined) updatePayload.trailer_key = trailer_key;
         if (newPosterUrl) updatePayload.poster = newPosterUrl;
 
         const { data: updatedFilm, error: updateError } = await supabase
