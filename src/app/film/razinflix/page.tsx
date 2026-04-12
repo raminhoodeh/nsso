@@ -210,26 +210,30 @@ export default function RazinFlixPage() {
                             else setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
                         }
                     }}
-                    className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-6 md:px-24 group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
+                    className="relative h-[85vh] w-full overflow-hidden bg-black group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
                 >
-                    
-                    {/* Background Autoplay Trailer */}
-                    <div className="absolute inset-0 z-0">
-                        <iframe
-                             key={featuredFilms[featuredIndex].id}
-                             src={`https://www.youtube.com/embed/${featuredFilms[featuredIndex].trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilms[featuredIndex].trailer_key}&disablekb=1`}
-                             frameBorder="0"
-                             allow="autoplay"
-                             className="w-full h-full object-cover scale-[1.35] opacity-60 pointer-events-none"
-                        ></iframe>
-                    </div>
+                    <style>{`@keyframes nativeFade { 0% { opacity: 0; transform: scale(1.05); filter: blur(4px); } 100% { opacity: 1; transform: scale(1); filter: blur(0px); } }`}</style>
+                    <div 
+                        key={featuredFilms[featuredIndex].id} 
+                        className="w-full h-full absolute inset-0 flex items-end justify-start pb-8 md:pb-24 px-6 md:px-24"
+                        style={{ animation: 'nativeFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+                    >
+                        {/* Background Autoplay Trailer */}
+                        <div className="absolute inset-0 z-0">
+                            <iframe
+                                 src={`https://www.youtube.com/embed/${featuredFilms[featuredIndex].trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilms[featuredIndex].trailer_key}&disablekb=1`}
+                                 frameBorder="0"
+                                 allow="autoplay"
+                                 className="w-full h-full object-cover scale-[1.35] opacity-60 pointer-events-none"
+                            ></iframe>
+                        </div>
 
-                    {/* Gradient Fade Overlays */}
-                    <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black via-black/50 to-transparent z-10 pointer-events-none"></div>
-                    <div className="absolute inset-y-0 left-0 w-[50%] bg-gradient-to-r from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
+                        {/* Gradient Fade Overlays */}
+                        <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black via-black/50 to-transparent z-10 pointer-events-none"></div>
+                        <div className="absolute inset-y-0 left-0 w-[50%] bg-gradient-to-r from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
 
-                    {/* Billboard Content */}
-                    <div className="relative z-20 max-w-3xl space-y-6">
+                        {/* Billboard Content */}
+                        <div className="relative z-20 max-w-3xl space-y-6">
                         <h1 className="text-white font-black text-5xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight">
                             {featuredFilms[featuredIndex].title}
                         </h1>
@@ -279,7 +283,7 @@ export default function RazinFlixPage() {
             )}
 
             {/* Content Feed */}
-            <div className={`space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12' : 'pt-24'}`}>
+            <div className={`space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-24'}`}>
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
                         <Loader2 className="animate-spin mb-4" size={48} />

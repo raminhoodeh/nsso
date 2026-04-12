@@ -384,7 +384,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                         </span>
                                     )}
                                 </div>
-                                <div>
+                                <div className="hidden md:block">
                                     <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Categories</span>
                                     <div className="flex flex-wrap gap-1">
                                         {film.categories.map(cat => (
@@ -422,7 +422,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 </div>
 
                 {/* Bottom Carousel: Recommended Films (Intelligent Overlap Algorithm) */}
-                <div className="w-full h-[25%] px-0 md:px-12 flex flex-col justify-center">
+                <div className="w-full h-[25%] px-0 md:px-12 flex flex-col justify-center mt-6 md:mt-0">
                     <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-6 md:pl-4 mb-3">Similar Films</h3>
                     <div className="w-full overflow-x-auto flex gap-4 px-6 md:p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
                         {similarFilms.map((f, idx) => (
