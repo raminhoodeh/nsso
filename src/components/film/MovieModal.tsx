@@ -217,7 +217,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                             else onNext();
                         }
                     }}
-                    className="relative w-full flex-1 md:h-[70%] glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-4 bg-black/20"
+                    className="relative w-full flex-1 md:h-[50%] md:flex-none glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-6 bg-black/20"
                 >
 
                     {/* Left Column: Media (75%) */}
@@ -413,7 +413,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 </div>
 
                 {/* Bottom Carousel: Recommended Films (Intelligent Overlap Algorithm) */}
-                <div className="w-full h-auto min-h-[25%] px-0 md:px-12 flex flex-col justify-center mt-6 md:mt-0 mb-6 md:mb-0">
+                <div className="w-full h-auto min-h-[25%] md:min-h-[40%] px-0 md:px-12 flex flex-col justify-center mt-6 md:mt-0 mb-6 md:mb-0">
                     <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-6 md:pl-4 mb-3">Similar Films</h3>
                     <div className="w-full overflow-x-auto flex gap-4 px-6 md:p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
                         {similarFilms.map((f, idx) => (
@@ -421,7 +421,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 key={idx}
                                 data-title={f.title}
                                 onClick={(e) => { e.stopPropagation(); onSelect(f); }}
-                                className="flex-shrink-0 cursor-pointer transition-all duration-300 relative rounded-xl overflow-hidden border-2 w-28 h-40 border-transparent opacity-70 hover:opacity-100 hover:scale-105 hover:border-white/50"
+                                className="flex-shrink-0 cursor-pointer transition-all duration-300 relative rounded-xl overflow-hidden border-2 w-28 h-40 md:w-40 md:h-56 border-transparent opacity-70 hover:opacity-100 hover:scale-105 hover:border-white/50"
                             >
                                 <div className="relative w-full h-full">
                                     <Image src={f.poster} alt={f.title} fill className="object-cover" />
