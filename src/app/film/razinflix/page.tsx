@@ -36,7 +36,22 @@ export default function RazinFlixPage() {
 
     // Group films by category
     const categories = useMemo(() => {
-        const cats: Record<string, any[]> = {};
+        const cats: Record<string, any[]> = {
+            'Japanese Anime': [],
+            'Television & Miniseries': [],
+            'Global Documentaries': [],
+            'The Crime & Thriller Collection': [],
+            'Mind-Bending Sci-Fi & Fantasy': [],
+            'Surrealism & The Subconscious': [],
+            'Iranian Cinema & Middle East': [],
+            'Love & Heartbreak': [],
+            'Coming of Age & Youth': [],
+            'Historical Epics & Period Pieces': [],
+            'Psychological & Character Studies': [],
+            'Contemporary Comedy & Satire': [],
+            'World Cinema & Drama': []
+        };
+        
         if (!searchTerm) {
             films.forEach(film => {
                 film.categories.forEach((c: string) => {
@@ -92,7 +107,9 @@ export default function RazinFlixPage() {
 
             {/* Categories */}
             <div className={`space-y-4 ${!searchTerm ? 'pb-12' : 'pt-24'}`}>
-                {Object.entries(categories).map(([title, films]) => (
+                {Object.entries(categories)
+                    .filter(([title, films]) => films.length > 0)
+                    .map(([title, films]) => (
                     <CategoryRow
                         key={title}
                         title={title}
