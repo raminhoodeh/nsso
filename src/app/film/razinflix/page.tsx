@@ -210,13 +210,22 @@ export default function RazinFlixPage() {
                             else setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
                         }
                     }}
-                    className="relative h-[85vh] w-full overflow-hidden bg-black group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
+                    className="relative h-[65vh] md:h-[85vh] w-full overflow-hidden bg-black group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
                 >
-                    <style>{`@keyframes nativeFade { 0% { opacity: 0; transform: scale(1.05); filter: blur(4px); } 100% { opacity: 1; transform: scale(1); filter: blur(0px); } }`}</style>
+                    <style>{`
+                        @keyframes slideInX { 
+                            0% { opacity: 0; transform: translateX(40px); } 
+                            100% { opacity: 1; transform: translateX(0); } 
+                        }
+                        @keyframes nativeFade { 
+                            0% { opacity: 0.5; filter: blur(2px); } 
+                            100% { opacity: 1; filter: blur(0px); } 
+                        }
+                    `}</style>
                     <div 
                         key={featuredFilms[featuredIndex].id} 
-                        className="w-full h-full absolute inset-0 flex items-end justify-start pb-8 md:pb-24 px-6 md:px-24"
-                        style={{ animation: 'nativeFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+                        className="w-full h-full absolute inset-0 flex items-end justify-start pb-4 md:pb-24 px-6 md:px-24"
+                        style={{ animation: 'nativeFade 0.6s ease-out forwards' }}
                     >
                         {/* Background Autoplay Trailer */}
                         <div className="absolute inset-0 z-0">
@@ -229,12 +238,12 @@ export default function RazinFlixPage() {
                         </div>
 
                         {/* Gradient Fade Overlays */}
-                        <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black via-black/50 to-transparent z-10 pointer-events-none"></div>
-                        <div className="absolute inset-y-0 left-0 w-[50%] bg-gradient-to-r from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
+                        <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-black/90 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
+                        <div className="absolute inset-y-0 left-0 w-[80%] md:w-[50%] bg-gradient-to-r from-black/80 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
 
-                        {/* Billboard Content */}
-                        <div className="relative z-20 max-w-3xl space-y-6">
-                        <h1 className="text-white font-black text-5xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight">
+                        {/* Billboard Content (Typography Slides In) */}
+                        <div className="relative z-20 max-w-3xl space-y-4 md:space-y-6" style={{ animation: 'slideInX 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+                        <h1 className="text-white font-black text-4xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight">
                             {featuredFilms[featuredIndex].title}
                         </h1>
                         <p className="text-gray-300 text-lg md:text-xl line-clamp-3 font-medium drop-shadow-md">
