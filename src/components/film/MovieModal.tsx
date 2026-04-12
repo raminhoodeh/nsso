@@ -189,12 +189,23 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 onClick={e => e.stopPropagation()}
             >
                 {/* Native Apple Close Header (Mobile) */}
-                <button
-                    onClick={onClose}
-                    className="md:hidden w-full bg-[#1c1c1e] active:bg-[#2c2c2e] text-white/90 font-bold text-[15px] py-4 rounded-t-[32px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors"
-                >
-                    Back
-                </button>
+                <div className="md:hidden relative w-full bg-[#1c1c1e] text-white/90 font-bold text-[15px] rounded-t-[32px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors">
+                    <button onClick={onClose} className="w-full py-4 text-center active:bg-[#2c2c2e] rounded-t-[32px]">
+                        Back
+                    </button>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center z-[135]">
+                        {isEditing ? (
+                            <div className="flex gap-2">
+                                <button onClick={() => setIsEditing(false)} className="p-2 text-red-500 hover:text-red-400" aria-label="Cancel"><X size={20} /></button>
+                                <button onClick={handleSave} className="p-2 text-green-500 hover:text-green-400" aria-label="Save">
+                                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                                </button>
+                            </div>
+                        ) : (
+                            <button onClick={() => setIsEditing(true)} className="p-2 text-white/50 hover:text-white" aria-label="Edit"><Edit2 size={18} /></button>
+                        )}
+                    </div>
+                </div>
                 
                 {/* Main Content Area (70% Height) */}
                 <div 
@@ -276,8 +287,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                     {/* Right Column: Content (25%) */}
                     <div className="w-full md:w-[25%] h-full bg-transparent overflow-y-auto custom-scrollbar border-l border-white/10 relative">
                         
-                        {/* Static Edit/Save Button (Top Right) */}
-                        <div className="absolute top-4 right-4 z-[110]">
+                        {/* Static Edit/Save Button (Desktop Only) */}
+                        <div className="hidden md:block absolute top-4 right-4 z-[110]">
                             {isEditing ? (
                                 <div className="flex gap-2 bg-black/40 backdrop-blur rounded-full shadow-lg p-1">
                                     <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-red-400" aria-label="Cancel"><X size={16} /></button>
@@ -301,7 +312,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                     placeholder="Film Title"
                                 />
                             ) : (
-                                <h2 className="text-2xl font-bold text-white mb-1 leading-tight">{film.title}</h2>
+                                <h2 className="text-2xl font-bold text-white mb-1 leading-tight capitalize">{film.title}</h2>
                             )}
                             
                             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mb-4 font-medium">

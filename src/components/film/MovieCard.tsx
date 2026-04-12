@@ -64,7 +64,7 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
                 )}
                 
                 <div className={`absolute inset-x-0 bottom-0 p-3 text-xs text-white bg-gradient-to-t from-black via-black/80 to-transparent transition-opacity duration-300 ${isHoverPlaying ? 'z-40 opacity-100' : 'z-20 opacity-100 group-hover:opacity-0'}`}>
-                    <h3 className="font-bold truncate">{film.title}</h3>
+                    <h3 className="font-bold truncate capitalize">{film.title}</h3>
                     <div className="flex items-center justify-between text-gray-300">
                         <span>{film.year}</span>
                         {film.rating && film.rating !== 'N/A' && (

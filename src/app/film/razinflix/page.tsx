@@ -214,7 +214,7 @@ export default function RazinFlixPage() {
                             else setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
                         }
                     }}
-                    className="relative h-[65vh] md:h-[85vh] w-full overflow-hidden bg-black group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
+                    className="relative h-[75vh] md:h-[85vh] w-full overflow-hidden bg-black group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
                 >
                     <style>{`
                         @keyframes slideInX { 
@@ -247,26 +247,26 @@ export default function RazinFlixPage() {
 
                         {/* Billboard Content (Typography Slides In) */}
                         <div className="relative z-20 max-w-3xl space-y-4 md:space-y-6" style={{ animation: 'slideInX 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
-                        <h1 className="text-white font-black text-4xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight">
+                        <h1 className="text-white font-black text-4xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight capitalize">
                             {featuredFilms[featuredIndex].title}
                         </h1>
                         <p className="text-gray-300 text-lg md:text-xl line-clamp-3 font-medium drop-shadow-md">
                             {featuredFilms[featuredIndex].description}
                         </p>
                         
-                        <div className="flex gap-4 pt-4">
+                        <div className="flex gap-3 pt-6">
                             <button 
                                 onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
-                                className="px-8 py-3 bg-white text-black font-bold rounded flex items-center gap-3 hover:bg-gray-200 transition-all shadow-lg hover:scale-105"
+                                className="px-5 py-2.5 bg-white text-black font-bold rounded flex items-center gap-2 text-sm md:text-base hover:bg-gray-200 transition-all shadow-lg hover:scale-105 whitespace-nowrap"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                                 Play Trailer
                             </button>
                             <button 
                                 onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
-                                className="px-8 py-3 bg-gray-500/50 text-white font-medium rounded flex items-center gap-3 hover:bg-gray-500/80 transition-all backdrop-blur shadow-lg hover:scale-105"
+                                className="px-5 py-2.5 bg-gray-500/50 text-white font-medium rounded flex items-center gap-2 text-sm md:text-base hover:bg-gray-500/80 transition-all backdrop-blur shadow-lg hover:scale-105 whitespace-nowrap"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                                 More Info
                             </button>
                         </div>
@@ -340,8 +340,8 @@ export default function RazinFlixPage() {
             </div>
 
             {/* Footer */}
-            <div className="text-center pb-8 pt-12 text-sm text-gray-500">
-                © 2025 Razin Flix.
+            <div className="text-center pb-6 pt-8 text-sm text-gray-500">
+                © 2026 RazinFlix.
             </div>
 
             {/* Modal */}
