@@ -82,21 +82,7 @@ export default function RazinFlixPage() {
 
     // Group films by category
     const categories = useMemo(() => {
-        const cats: Record<string, any[]> = {
-            'Japanese Anime': [],
-            'Television & Miniseries': [],
-            'Global Documentaries': [],
-            'The Crime & Thriller Collection': [],
-            'Mind-Bending Sci-Fi & Fantasy': [],
-            'Surrealism & The Subconscious': [],
-            'Iranian Cinema & Middle East': [],
-            'Love & Heartbreak': [],
-            'Coming of Age & Youth': [],
-            'Historical Epics & Period Pieces': [],
-            'Psychological & Character Studies': [],
-            'Contemporary Comedy & Satire': [],
-            'World Cinema & Drama': []
-        };
+        const cats: Record<string, any[]> = {};
         
         if (!searchTerm) {
             films.forEach(film => {
