@@ -33,17 +33,23 @@ export async function POST(request: Request) {
             const ext = posterFile.type === 'image/png' ? 'png' : 'jpg';
             const filename = `film-${id}-${Date.now()}.${ext}`;
 
+            // Auto-create bucket if missing (silent fail if exists)
+            await supabase.storage.createBucket('razinflix_posters', { public: true });
+
+            // Convert to ArrayBuffer for Node.js Supabase compatibility
+            const arrayBuffer = await posterFile.arrayBuffer();
+
             // Upload via Service Key
             const { error: uploadError } = await supabase.storage
                 .from('razinflix_posters')
-                .upload(filename, posterFile, {
+                .upload(filename, arrayBuffer, {
                     contentType: posterFile.type,
                     upsert: true
                 });
 
             if (uploadError) {
                 console.error('Upload Error:', uploadError);
-                return NextResponse.json({ error: 'Failed to upload photo to Supabase Storage.' }, { status: 500 });
+                return NextResponse.json({ error: 'Failed to upload photo to Supabase Storage. ' + uploadError.message }, { status: 500 });
             }
 
             // Retrieve Public URL
