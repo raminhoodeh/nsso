@@ -27,6 +27,34 @@ interface MovieModalProps {
 const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
 
+    // Gestural Physics State
+    const [dragY, setDragY] = useState(0);
+    const [startY, setStartY] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setStartY(e.touches[0].clientY);
+        setIsDragging(true);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isDragging) return;
+        const currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+        if (deltaY > 0) { // Only permit downward drag vectors
+            setDragY(deltaY);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+        if (dragY > 120) {
+            onClose(); // Threshold breached: shatter
+        } else {
+            setDragY(0); // Snap back physically
+        }
+    };
+
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -151,11 +179,12 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     }, [film]);
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-2xl transition-opacity duration-300">
+        <div className={`fixed inset-0 z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] ${dragY > 0 ? 'bg-black/20 backdrop-blur-sm' : 'bg-black/40 backdrop-blur-2xl'}`}>
+            <div className="absolute inset-0" onClick={onClose} />
             {/* Back Button (Top Left) */}
             <button
                 onClick={onClose}
-                className="absolute left-6 top-6 z-[120] flex items-center gap-2 px-6 py-3 bg-black/40 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 group"
+                className="absolute left-6 top-[calc(max(env(safe-area-inset-top),_1.5rem))] z-[120] flex items-center gap-2 px-6 py-3 bg-black/40 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 group"
             >
                 <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 <span className="font-medium text-lg">Back</span>
@@ -178,9 +207,15 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             </button>
 
             <div
-                className="relative w-full max-w-[95vw] h-[85vh] flex flex-col items-center justify-center"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ transform: `translateY(${dragY}px)` }}
+                className={`relative w-full max-w-[95vw] h-[92vh] md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] ${isDragging ? '' : 'transition-transform duration-300'}`}
                 onClick={e => e.stopPropagation()}
             >
+                {/* Mobile Grab Handle Indicator */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full md:hidden z-[130]" />
                 {/* Main Content Area (70% Height) */}
                 <div className="relative w-full h-[70%] glass-style-card rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-white/10 mb-4">
 

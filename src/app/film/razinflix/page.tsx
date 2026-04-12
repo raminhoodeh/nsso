@@ -170,9 +170,9 @@ export default function RazinFlixPage() {
     }, []);
 
     return (
-        <div className="min-h-screen text-white pb-20 font-sans">
+        <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans">
             {/* Navbar - Logo Removed */}
-            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 py-4 flex items-center justify-end ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
+            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4 flex items-center justify-end ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
                 <div className="relative">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input
@@ -200,7 +200,7 @@ export default function RazinFlixPage() {
             {!searchTerm && viewMode === 'category' && featuredFilms.length > 0 && (
                 <div 
                     onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
-                    className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-4 md:px-24 group cursor-pointer"
+                    className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-6 md:px-24 group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
                 >
                     
                     {/* Background Autoplay Trailer */}
