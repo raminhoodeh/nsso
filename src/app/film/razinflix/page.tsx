@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard from '@/components/film/MovieCard';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc';
@@ -23,6 +23,7 @@ export default function RazinFlixPage() {
 
     const { setBackgroundDimmed } = useUI();
     const touchStartX = useRef(0);
+    const [isHeroMuted, setIsHeroMuted] = useState(true);
 
     useEffect(() => {
         setBackgroundDimmed(true);
@@ -204,7 +205,13 @@ export default function RazinFlixPage() {
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
             {!searchTerm && viewMode === 'category' && featuredFilms.length > 0 && (
                 <div 
-                    onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
+                    onClick={() => {
+                        if (window.innerWidth >= 768) {
+                            setIsHeroMuted(!isHeroMuted);
+                        } else {
+                            handleFilmClick(featuredFilms[featuredIndex], films);
+                        }
+                    }}
                     onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
                     onTouchEnd={(e) => {
                         const touchEndX = e.changedTouches[0].clientX;
@@ -234,7 +241,7 @@ export default function RazinFlixPage() {
                         {/* Background Autoplay Trailer */}
                         <div className="absolute inset-0 z-0">
                             <iframe
-                                 src={`https://www.youtube.com/embed/${featuredFilms[featuredIndex].trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilms[featuredIndex].trailer_key}&disablekb=1`}
+                                 src={`https://www.youtube.com/embed/${featuredFilms[featuredIndex].trailer_key}?autoplay=1&mute=${isHeroMuted ? 1 : 0}&start=10&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilms[featuredIndex].trailer_key}&disablekb=1`}
                                  frameBorder="0"
                                  allow="autoplay"
                                  className="w-full h-full object-cover scale-[1.35] opacity-60 pointer-events-none"
@@ -244,6 +251,27 @@ export default function RazinFlixPage() {
                         {/* Gradient Fade Overlays */}
                         <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-black/90 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
                         <div className="absolute inset-y-0 left-0 w-[80%] md:w-[50%] bg-gradient-to-r from-black/80 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
+
+                        {/* Desktop Hero Controls */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length); }}
+                            className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 hover:bg-black/60 text-white/50 hover:text-white backdrop-blur transition-all"
+                        >
+                            <ChevronLeft size={36} />
+                        </button>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length); }}
+                            className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 hover:bg-black/60 text-white/50 hover:text-white backdrop-blur transition-all"
+                        >
+                            <ChevronRight size={36} />
+                        </button>
+                        
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setIsHeroMuted(!isHeroMuted); }}
+                            className="hidden md:flex absolute bottom-32 right-12 z-50 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur border border-white/10 transition-colors"
+                        >
+                            {isHeroMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+                        </button>
 
                         {/* Billboard Content (Typography Slides In) */}
                         <div className="relative z-20 max-w-3xl space-y-4 md:space-y-6" style={{ animation: 'slideInX 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
