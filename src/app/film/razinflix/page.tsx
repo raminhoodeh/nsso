@@ -99,11 +99,13 @@ export default function RazinFlixPage() {
         
         if (!searchTerm) {
             films.forEach(film => {
-                if (film.categories) {
-                    film.categories.forEach((c: string) => {
-                        if (!cats[c]) cats[c] = [];
-                        cats[c].push(film);
-                    });
+                if (film.categories && film.categories.length > 0) {
+                    // Forcefully prioritize Japanese Anime per UX directive, otherwise strictly assign 1 category
+                    const targetCategory = film.categories.includes('Japanese Anime')
+                                           ? 'Japanese Anime'
+                                           : film.categories[0];
+                    if (!cats[targetCategory]) cats[targetCategory] = [];
+                    cats[targetCategory].push(film);
                 }
             });
         } else {

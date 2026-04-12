@@ -193,7 +193,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                     onClick={onClose}
                     className="md:hidden w-full bg-[#1c1c1e] active:bg-[#2c2c2e] text-white/90 font-bold text-[15px] py-4 rounded-t-[32px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors"
                 >
-                    Close
+                    Back
                 </button>
                 
                 {/* Main Content Area (70% Height) */}
