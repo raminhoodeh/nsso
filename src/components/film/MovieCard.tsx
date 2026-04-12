@@ -13,12 +13,13 @@ interface Film {
 interface MovieCardProps {
     film: Film;
     onClick: (film: Film) => void;
+    isGrid?: boolean;
 }
 
-const MovieCard = ({ film, onClick }: MovieCardProps) => {
+const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
     return (
         <div
-            className="relative flex-none w-48 transition-transform duration-300 transform cursor-pointer hover:scale-105 hover:z-10 group"
+            className={`relative transition-transform duration-300 transform cursor-pointer hover:scale-105 hover:z-10 group ${isGrid ? 'w-full' : 'flex-none w-48'}`}
             onClick={() => onClick(film)}
         >
             <div className="aspect-[2/3] glass-style-card rounded-[24px] overflow-hidden shadow-2xl relative border border-white/10 group-hover:border-white/30 transition-colors">
