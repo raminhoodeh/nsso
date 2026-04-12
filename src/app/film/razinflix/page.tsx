@@ -198,7 +198,10 @@ export default function RazinFlixPage() {
 
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
             {!searchTerm && viewMode === 'category' && featuredFilms.length > 0 && (
-                <div className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-4 md:px-16 group">
+                <div 
+                    onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
+                    className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-4 md:px-24 group cursor-pointer"
+                >
                     
                     {/* Background Autoplay Trailer */}
                     <div className="absolute inset-0 z-0">
@@ -226,14 +229,14 @@ export default function RazinFlixPage() {
                         
                         <div className="flex gap-4 pt-4">
                             <button 
-                                onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
+                                onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
                                 className="px-8 py-3 bg-white text-black font-bold rounded flex items-center gap-3 hover:bg-gray-200 transition-all shadow-lg hover:scale-105"
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                                 Play Trailer
                             </button>
                             <button 
-                                onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
+                                onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
                                 className="px-8 py-3 bg-gray-500/50 text-white font-medium rounded flex items-center gap-3 hover:bg-gray-500/80 transition-all backdrop-blur shadow-lg hover:scale-105"
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -242,19 +245,26 @@ export default function RazinFlixPage() {
                         </div>
                     </div>
 
-                    {/* Navigation Arrows */}
-                    <button 
-                        onClick={() => setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length)}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all opacity-0 group-hover:opacity-100 hidden md:block"
+                    {/* Navigation Arrows (Massive Hitboxes) */}
+                    <div 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length);
+                        }}
+                        className="absolute left-0 top-0 bottom-0 w-24 z-30 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:flex"
                     >
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
-                    </button>
-                    <button 
-                        onClick={() => setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 text-white/50 hover:text-white bg-black/20 hover:bg-black/60 rounded-full transition-all opacity-0 group-hover:opacity-100 hidden md:block"
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    </div>
+                    
+                    <div 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
+                        }}
+                        className="absolute right-0 top-0 bottom-0 w-24 z-30 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:flex"
                     >
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
-                    </button>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                    </div>
                 </div>
             )}
 
