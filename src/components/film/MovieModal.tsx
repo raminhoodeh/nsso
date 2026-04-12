@@ -184,7 +184,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             {/* Back Button (Top Left) */}
             <button
                 onClick={onClose}
-                className="absolute left-6 top-[calc(max(env(safe-area-inset-top),_1.5rem))] z-[120] flex items-center gap-2 px-6 py-3 bg-black/40 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 group"
+                className="absolute left-6 top-[calc(max(env(safe-area-inset-top),_1.5rem))] z-[120] hidden md:flex items-center gap-2 px-6 py-3 bg-black/40 hover:bg-black/80 text-white rounded-full backdrop-blur-md border border-white/10 transition-all duration-300 hover:scale-105 group"
             >
                 <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 <span className="font-medium text-lg">Back</span>
@@ -207,20 +207,30 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             </button>
 
             <div
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
                 style={{ transform: `translateY(${dragY}px)` }}
-                className={`relative w-full max-w-[95vw] h-[92vh] md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] ${isDragging ? '' : 'transition-transform duration-300'}`}
+                className={`relative w-full max-w-[100vw] md:max-w-6xl h-[92vh] md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] ${isDragging ? '' : 'transition-transform duration-300'}`}
                 onClick={e => e.stopPropagation()}
             >
-                {/* Mobile Grab Handle Indicator */}
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/20 rounded-full md:hidden z-[130]" />
+                {/* Mobile Grab Handle Indicator (Massive Touch Hidden Bounding Box) */}
+                <div 
+                    onTouchStart={handleTouchStart} 
+                    onTouchMove={handleTouchMove} 
+                    onTouchEnd={handleTouchEnd}
+                    className="absolute -top-6 left-0 right-0 h-16 md:hidden z-[130] flex items-center justify-center touch-pan-y"
+                >
+                    <div className="w-12 h-1.5 bg-white/20 rounded-full" />
+                </div>
+                
                 {/* Main Content Area (70% Height) */}
-                <div className="relative w-full h-[70%] glass-style-card rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border border-white/10 mb-4">
+                <div className="relative w-full h-[70%] glass-style-card rounded-t-[32px] md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden border-t md:border border-white/10 mb-0 md:mb-4">
 
                     {/* Left Column: Media (75%) */}
-                    <div className="w-full md:w-[75%] h-full relative bg-black flex items-center justify-center group overflow-hidden">
+                    <div 
+                        onTouchStart={handleTouchStart} 
+                        onTouchMove={handleTouchMove} 
+                        onTouchEnd={handleTouchEnd}
+                        className="w-full md:w-[75%] h-full relative bg-black flex items-center justify-center group overflow-hidden touch-pan-y"
+                    >
                         {isEditing ? (
                             <div className="absolute inset-0 z-50 bg-black/70 flex flex-col items-center justify-center p-8 text-center border-4 border-dashed border-white/20 hover:border-white/50 transition-colors cursor-pointer">
                                 <Upload size={48} className="text-white/50 mb-4" />
@@ -412,9 +422,9 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 </div>
 
                 {/* Bottom Carousel: Recommended Films (Intelligent Overlap Algorithm) */}
-                <div className="w-full h-[25%] px-12 flex flex-col justify-center">
-                    <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-4 mb-3">Similar Films</h3>
-                    <div className="w-full overflow-x-auto flex gap-4 p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
+                <div className="w-full h-[25%] px-0 md:px-12 flex flex-col justify-center">
+                    <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-6 md:pl-4 mb-3">Similar Films</h3>
+                    <div className="w-full overflow-x-auto flex gap-4 px-6 md:p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
                         {similarFilms.map((f, idx) => (
                             <div
                                 key={idx}

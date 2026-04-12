@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard from '@/components/film/MovieCard';
@@ -22,6 +22,7 @@ export default function RazinFlixPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     const { setBackgroundDimmed } = useUI();
+    const touchStartX = useRef(0);
 
     useEffect(() => {
         setBackgroundDimmed(true);
@@ -200,6 +201,15 @@ export default function RazinFlixPage() {
             {!searchTerm && viewMode === 'category' && featuredFilms.length > 0 && (
                 <div 
                     onClick={() => handleFilmClick(featuredFilms[featuredIndex], films)}
+                    onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+                    onTouchEnd={(e) => {
+                        const touchEndX = e.changedTouches[0].clientX;
+                        const deltaX = touchEndX - touchStartX.current;
+                        if (Math.abs(deltaX) > 50) {
+                            if (deltaX > 0) setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length);
+                            else setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
+                        }
+                    }}
                     className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-6 md:px-24 group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
                 >
                     
