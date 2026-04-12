@@ -273,7 +273,7 @@ export default function RazinFlixPage() {
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
                         <Loader2 className="animate-spin mb-4" size={48} />
-                        <p>Syncing Directory from PostgreSQL...</p>
+                        <p className="font-medium tracking-wide">Loading from Razin database...</p>
                     </div>
                 ) : viewMode === 'category' ? (
                     <>
@@ -312,9 +312,9 @@ export default function RazinFlixPage() {
             </div>
 
             {/* Footer */}
-            <footer className="mt-20 px-12 py-8 text-gray-500 text-sm text-center">
-                © 2025 Razin Flix. Data provided by CSV.
-            </footer>
+            <div className="text-center pb-8 pt-12 text-sm text-gray-500">
+                © 2025 Razin Flix.
+            </div>
 
             {/* Modal */}
             {
