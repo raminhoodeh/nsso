@@ -267,8 +267,9 @@ export default function RazinFlixPage() {
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    {/* Navigation Arrows (Massive Hitboxes) */}
+                {/* Navigation Arrows (Massive Hitboxes) */}
                     <div 
                         onClick={(e) => {
                             e.stopPropagation();
