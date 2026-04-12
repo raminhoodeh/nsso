@@ -164,6 +164,13 @@ export default function RazinFlixPage() {
             {/* Navbar - Logo Removed */}
             <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4 flex items-center justify-center md:justify-end ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
                 <div className="flex items-center w-full md:w-auto gap-2">
+                    <button 
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsHeroMuted(!isHeroMuted); }}
+                        className="hidden md:flex p-2 rounded-full bg-black/80 hover:bg-black border border-gray-600 text-white transition-colors items-center justify-center"
+                        title={isHeroMuted ? "Unmute Trailer" : "Mute Trailer"}
+                    >
+                        {isHeroMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                    </button>
                     <div className="relative flex-1 md:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
@@ -185,13 +192,6 @@ export default function RazinFlixPage() {
                         <option value="rating_desc">IMDb Rating (Highest)</option>
                         <option value="rating_asc">IMDb Rating (Lowest)</option>
                     </select>
-                    <button 
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsHeroMuted(!isHeroMuted); }}
-                        className="hidden md:flex p-2 ml-2 rounded-full bg-black/80 hover:bg-black border border-gray-600 text-white transition-colors items-center justify-center"
-                        title={isHeroMuted ? "Unmute Trailer" : "Mute Trailer"}
-                    >
-                        {isHeroMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                    </button>
                 </div>
             </nav>
 
