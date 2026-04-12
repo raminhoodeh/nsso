@@ -21,9 +21,10 @@ interface MovieModalProps {
     onNext: () => void;
     onPrev: () => void;
     onSelect: (film: Film) => void;
+    onSearch?: (term: string) => void;
 }
 
-const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: MovieModalProps) => {
+const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
 
     // Edit State
@@ -82,6 +83,39 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
             setIsSaving(false);
         }
     };
+
+    // Advanced "Similar Films" Similarity Matrix (Client-Side Jaccard Indexing)
+    const [similarFilms, setSimilarFilms] = useState<Film[]>([]);
+
+    useEffect(() => {
+        if (!film || !filmList.length) return;
+
+        // Naive tokenizer stripping stop-words visually
+        const getTokens = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
+        const targetTokens = new Set(getTokens(film.description));
+
+        const scored = filmList.filter(f => f.id !== film.id).map(f => {
+            let score = 0;
+            // High weight: Director match
+            if (f.director && film.director && f.director === film.director) score += 50;
+            
+            // Medium weight: Categorical intersection
+            if (f.categories && film.categories) {
+                const catOverlap = f.categories.filter(c => film.categories.includes(c)).length;
+                score += (catOverlap * 10);
+            }
+            
+            // Algorithmic weight: Description keyword Jaccard overlap
+            const fTokens = getTokens(f.description || '');
+            const overlap = fTokens.filter(t => targetTokens.has(t)).length;
+            score += (overlap * 2); 
+            
+            return { film: f, score };
+        });
+
+        const recommendations = scored.sort((a, b) => b.score - a.score).slice(0, 15).map(s => s.film);
+        setSimilarFilms(recommendations);
+    }, [film, filmList]);
 
 
     if (!film) return null;
@@ -300,13 +334,31 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
                             <div className="space-y-3 text-sm text-gray-400 mt-auto">
                                 <div>
                                     <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Director</span>
-                                    <span className="text-white text-sm">{film.director}</span>
+                                    {isEditing ? (
+                                        <input
+                                            value={editForm.director}
+                                            onChange={(e) => setEditForm({...editForm, director: e.target.value})}
+                                            className="bg-white/5 border border-white/20 rounded px-2 py-1 w-full text-white text-sm focus:outline-none"
+                                            placeholder="Director Name"
+                                        />
+                                    ) : (
+                                        <span 
+                                            className="text-white text-sm hover:underline cursor-pointer transition-colors hover:text-red-400"
+                                            onClick={() => onSearch && onSearch(film.director)}
+                                        >
+                                            {film.director}
+                                        </span>
+                                    )}
                                 </div>
                                 <div>
                                     <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Categories</span>
                                     <div className="flex flex-wrap gap-1">
                                         {film.categories.map(cat => (
-                                            <span key={cat} className="px-2 py-0.5 text-[10px] text-gray-300 bg-gray-800 rounded border border-gray-700">
+                                            <span 
+                                                key={cat} 
+                                                onClick={() => onSearch && onSearch(cat)}
+                                                className="px-2 py-0.5 text-[10px] text-gray-300 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700 hover:border-gray-500 cursor-pointer transition-all hover:text-white"
+                                            >
                                                 {cat}
                                             </span>
                                         ))}
@@ -317,18 +369,16 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect }: 
                     </div>
                 </div>
 
-                {/* Bottom Carousel (Remaining Height) */}
-                <div className="w-full h-[25%] px-12 flex items-center">
-                    <div className="w-full overflow-x-auto flex gap-4 p-4 no-scrollbar items-center" ref={carouselRef}>
-                        {filmList.map((f, idx) => (
+                {/* Bottom Carousel: Recommended Films (Intelligent Overlap Algorithm) */}
+                <div className="w-full h-[25%] px-12 flex flex-col justify-center">
+                    <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-4 mb-3">Similar Films</h3>
+                    <div className="w-full overflow-x-auto flex gap-4 p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
+                        {similarFilms.map((f, idx) => (
                             <div
                                 key={idx}
                                 data-title={f.title}
                                 onClick={(e) => { e.stopPropagation(); onSelect(f); }}
-                                className={`
-                                   flex-shrink-0 cursor-pointer transition-all duration-300 relative rounded-2xl overflow-hidden border-2
-                                   ${f.title === film.title ? 'w-48 h-32 border-white scale-105 shadow-xl z-10' : 'w-40 h-24 border-transparent opacity-60 hover:opacity-100 hover:scale-105'}
-                               `}
+                                className="flex-shrink-0 cursor-pointer transition-all duration-300 relative rounded-xl overflow-hidden border-2 w-28 h-40 border-transparent opacity-70 hover:opacity-100 hover:scale-105 hover:border-white/50"
                             >
                                 <div className="relative w-full h-full">
                                     <Image src={f.poster} alt={f.title} fill className="object-cover" />

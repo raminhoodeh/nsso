@@ -14,6 +14,7 @@ export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<ViewMode>('category');
     const [selectedFilm, setSelectedFilm] = useState<any>(null);
+    const [featuredFilm, setFeaturedFilm] = useState<any>(null);
     const [modalContext, setModalContext] = useState<{ list: any[], index: number }>({ list: [], index: 0 });
     const [scrolled, setScrolled] = useState(false);
     const [films, setFilms] = useState<any[]>([]);
@@ -39,7 +40,14 @@ export default function RazinFlixPage() {
                     .order('id', { ascending: true });
                 
                 if (error) throw error;
-                if (data) setFilms(data);
+                if (data) {
+                    setFilms(data);
+                    // Select a random featured film with a trailer
+                    const filmsWithTrailers = data.filter((f: any) => f.trailer_key);
+                    if (filmsWithTrailers.length > 0) {
+                        setFeaturedFilm(filmsWithTrailers[Math.floor(Math.random() * filmsWithTrailers.length)]);
+                    }
+                }
             } catch (err) {
                 console.error('Failed to load films from Supabase:', err);
             } finally {
@@ -186,13 +194,49 @@ export default function RazinFlixPage() {
                 </div>
             </nav>
 
-            {/* Rebranded Hero Section (Hidden on search) */}
-            {!searchTerm && (
-                <div className="relative h-[70vh] w-full flex items-center justify-center overflow-hidden">
-                    {/* Background gradient hint */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#586E91]/20 to-transparent pointer-events-none"></div>
-                    <div className="text-red-600 font-extrabold text-6xl md:text-8xl tracking-tighter animate-logo select-none z-10 drop-shadow-2xl">
-                        RAZIN FLIX
+            {/* Cinematic Hero Billboard (Hidden on search/filter) */}
+            {!searchTerm && viewMode === 'category' && featuredFilm && (
+                <div className="relative h-[85vh] w-full flex items-end justify-start overflow-hidden bg-black pb-24 px-4 md:px-16">
+                    
+                    {/* Background Autoplay Trailer */}
+                    <div className="absolute inset-0 z-0">
+                        <iframe
+                             src={`https://www.youtube.com/embed/${featuredFilm.trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilm.trailer_key}&disablekb=1`}
+                             frameBorder="0"
+                             allow="autoplay"
+                             className="w-full h-full object-cover scale-[1.35] opacity-60 pointer-events-none"
+                        ></iframe>
+                    </div>
+
+                    {/* Gradient Fade Overlays */}
+                    <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black via-black/50 to-transparent z-10 pointer-events-none"></div>
+                    <div className="absolute inset-y-0 left-0 w-[50%] bg-gradient-to-r from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
+
+                    {/* Billboard Content */}
+                    <div className="relative z-20 max-w-3xl space-y-6">
+                        <h1 className="text-white font-black text-5xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight">
+                            {featuredFilm.title}
+                        </h1>
+                        <p className="text-gray-300 text-lg md:text-xl line-clamp-3 font-medium drop-shadow-md">
+                            {featuredFilm.description}
+                        </p>
+                        
+                        <div className="flex gap-4 pt-4">
+                            <button 
+                                onClick={() => handleFilmClick(featuredFilm, films)}
+                                className="px-8 py-3 bg-white text-black font-bold rounded flex items-center gap-3 hover:bg-gray-200 transition-all shadow-lg hover:scale-105"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                Play Trailer
+                            </button>
+                            <button 
+                                onClick={() => handleFilmClick(featuredFilm, films)}
+                                className="px-8 py-3 bg-gray-500/50 text-white font-medium rounded flex items-center gap-3 hover:bg-gray-500/80 transition-all backdrop-blur shadow-lg hover:scale-105"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                More Info
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -250,11 +294,16 @@ export default function RazinFlixPage() {
                 selectedFilm && (
                     <MovieModal
                         film={selectedFilm}
-                        filmList={modalContext.list}
+                        filmList={films}
                         onClose={() => setSelectedFilm(null)}
                         onNext={handleNextFilm}
                         onPrev={handlePrevFilm}
                         onSelect={setSelectedFilm}
+                        onSearch={(term) => {
+                            setSearchTerm(term);
+                            setViewMode('category'); 
+                            setSelectedFilm(null);
+                        }}
                     />
                 )
             }
