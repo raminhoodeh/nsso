@@ -76,6 +76,8 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                 await delay(600);
                 addLog(`▶ DATA: Cleaning up title formatting and organizing into genres...`);
                 await delay(700);
+                addLog(`▶ GEMINI AI: Synthesizing a high-fidelity cinematic plot description...`);
+                await delay(700);
                 addLog(`▶ IMDB: Checking rating algorithms to verify audience scores...`);
                 await delay(700);
                 addLog(`▶ YOUTUBE API: Searching for the highest quality official trailer...`);
@@ -170,7 +172,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                     placeholder="e.g. The Matrix 1999, Avatar, Inception (2010)"
                                     className="w-full h-48 bg-[#0c0c0e] text-white border border-white/10 rounded-2xl p-4 resize-none focus:outline-none focus:border-[#007AFF] transition-colors leading-relaxed font-medium"
                                 />
-                                <p className="text-xs text-gray-500 mt-2 px-2 leading-relaxed">
+                                <p className="text-sm text-gray-500 mt-2 px-2 leading-relaxed">
                                     Type the name of the film and RazinFlix will figure out the rest - enter the year of the film if there might be a duplicate, for adding multiple films at once, separate the names and years and year by either a comma or linebreak.
                                 </p>
                             </div>
@@ -187,7 +189,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                     disabled={!inputText.trim()}
                                     className="w-full py-4 bg-[#007AFF] hover:bg-[#0066d6] active:bg-[#005bb5] disabled:bg-[#007AFF]/30 disabled:text-white/30 text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#007AFF]/20 text-lg flex items-center justify-center gap-2"
                                 >
-                                    <Plus size={20} /> Add Film +
+                                    <Plus size={20} /> Add Film
                                 </button>
                             </div>
                         </>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY || "dcddb94a3ed73106f5ac8b2a9548c692";
 
@@ -13,6 +14,7 @@ const TMDB_GENRES: Record<number, string> = {
 
 export async function POST(request: Request) {
     try {
+        const GOOGLE_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
         const { title, year } = await request.json();
 
         if (!title) {
@@ -68,9 +70,28 @@ export async function POST(request: Request) {
              poster = "https://via.placeholder.com/300x450?text=" + title.replace(/ /g, '+');
         }
 
+        // 1.5 Generate Atmospheric Description using Gemini 2.5 Flash
+        if (GOOGLE_API_KEY) {
+            try {
+                const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+                const prompt = `Write a captivating, atmospheric, and emotionally resonant 2-3 sentence cinematic description for the film "${title}" (${fetchedYear}). Use this background context if helpful: "${description}". Do not include the title of the film or the year in your response, just the raw atmospheric description. Do not use quotes, bold text, or introductory text. Return only the description, nothing else.`;
+                const result = await model.generateContent(prompt);
+                let newDesc = result.response.text().trim();
+                if (newDesc.startsWith('"') && newDesc.endsWith('"')) {
+                    newDesc = newDesc.slice(1, -1);
+                }
+                newDesc = newDesc.replace(/\*\*/g, '');
+                if (newDesc.length > 10) {
+                    description = newDesc;
+                }
+            } catch (e) {
+                console.error("Gemini API Error:", e);
+            }
+        }
+
         // 2. Fetch YouTube Trailer
         let trailer_key = '';
-        const GOOGLE_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
         if (GOOGLE_API_KEY) {
             try {
                 const ytQuery = encodeURIComponent(`${title} ${fetchedYear} official trailer -review -reaction -full -gameplay`);
