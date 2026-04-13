@@ -475,6 +475,9 @@ export default function RazinFlixPage() {
                             setFilms(prev => prev.map(f => f.id === updatedFilm.id ? updatedFilm : f));
                             setSelectedFilm(updatedFilm);
                         }}
+                        onDelete={(id) => {
+                            setFilms(prev => prev.filter(f => f.id !== id));
+                        }}
                         onSearch={(term) => {
                             setSearchTerm(term);
                             setViewMode('category'); 

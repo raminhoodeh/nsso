@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Edit2, Save, Upload, Loader2, Check } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Edit2, Save, Upload, Loader2, Check, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 interface Film {
@@ -22,10 +22,11 @@ interface MovieModalProps {
     onPrev: () => void;
     onSelect: (film: Film) => void;
     onUpdate?: (film: Film) => void;
+    onDelete?: (id: number) => void;
     onSearch?: (term: string) => void;
 }
 
-const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onSearch }: MovieModalProps) => {
+const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onDelete, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const touchStartXModal = useRef(0);
 
@@ -37,6 +38,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     // Edit State
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [editForm, setEditForm] = useState({
         title: film?.title || '',
         description: film?.description || '',
@@ -107,6 +109,28 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             alert(err.message || 'Error saving file.');
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!film) return;
+        if (!window.confirm(`Are you sure you want to completely delete "${film.title}" from the database? This cannot be undone.`)) return;
+        
+        setIsDeleting(true);
+        try {
+            const res = await fetch('/api/razinflix/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: film.id })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to delete');
+            
+            if (onDelete) onDelete(film.id);
+            onClose();
+        } catch(err: any) {
+            alert(err.message || 'Error deleting file.');
+            setIsDeleting(false);
         }
     };
 
@@ -207,7 +231,10 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center z-[135]">
                         {isEditing ? (
                             <div className="flex gap-2">
-                                <button onClick={() => setIsEditing(false)} className="p-2 text-red-500 hover:text-red-400" aria-label="Cancel"><X size={20} /></button>
+                                <button onClick={handleDelete} className="p-2 text-red-500/80 hover:text-red-500" aria-label="Delete">
+                                    {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                                </button>
+                                <button onClick={() => setIsEditing(false)} className="p-2 text-gray-400 hover:text-gray-300" aria-label="Cancel"><X size={20} /></button>
                                 <button onClick={handleSave} className="p-2 text-green-500 hover:text-green-400" aria-label="Save">
                                     {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                                 </button>
@@ -302,7 +329,10 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                         <div className="hidden md:block absolute top-4 right-4 z-[110]">
                             {isEditing ? (
                                 <div className="flex gap-2 bg-black/40 backdrop-blur rounded-full shadow-lg p-1">
-                                    <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-red-400" aria-label="Cancel"><X size={16} /></button>
+                                    <button onClick={handleDelete} className="p-2 bg-red-500/10 hover:bg-red-500/30 text-red-400 rounded-full transition-colors" aria-label="Delete">
+                                        {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                    </button>
+                                    <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400" aria-label="Cancel"><X size={16} /></button>
                                     <button onClick={handleSave} className="p-2 bg-green-500/20 hover:bg-green-500/40 text-green-400 rounded-full transition-colors" aria-label="Save">
                                         {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                                     </button>
