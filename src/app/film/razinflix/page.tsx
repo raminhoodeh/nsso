@@ -4,7 +4,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard from '@/components/film/MovieCard';
-import { Search, Loader2, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
+import AddFilmModal from '@/components/film/AddFilmModal';
+import { Search, Loader2, ChevronLeft, ChevronRight, Volume2, VolumeX, Plus } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
@@ -12,6 +13,7 @@ import { useUI } from '@/components/providers/UIProvider';
 
 export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('category');
     const [selectedFilm, setSelectedFilm] = useState<any>(null);
     const [featuredFilms, setFeaturedFilms] = useState<any[]>([]);
@@ -239,10 +241,19 @@ export default function RazinFlixPage() {
     }, []);
 
     return (
-        <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans">
-            {/* Navbar - Logo Removed */}
-            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4 flex items-center justify-center md:justify-end ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
-                <div className="flex items-center w-full md:w-auto gap-2">
+        <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans relative">
+            {/* Navbar */}
+            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-0 ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
+                
+                {/* Desktop Add Button (Absolute Left) */}
+                <div className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2">
+                    <button onClick={() => setIsAddModalOpen(true)} className="bg-[#007AFF] hover:bg-[#0066d6] text-white px-4 py-2 flex items-center justify-center gap-1 rounded-full shadow-lg transition-all font-semibold border border-white/10 text-sm hover:scale-105">
+                        <Plus size={16} /> Add Film +
+                    </button>
+                </div>
+
+                {/* Desktop Right Side Navigation */}
+                <div className="flex w-full md:w-auto items-center justify-between md:justify-end gap-2 md:ml-auto">
                     <button 
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsHeroMuted(!isHeroMuted); }}
                         className="hidden md:flex p-2 rounded-full bg-black/80 hover:bg-black border border-gray-600 text-white transition-colors items-center justify-center"
@@ -272,6 +283,13 @@ export default function RazinFlixPage() {
                         <option value="rating_asc">IMDb Rating (Lowest)</option>
                         <option value="update_mode">Update Mode</option>
                     </select>
+                </div>
+
+                {/* Mobile Add Button Row (Under Search) */}
+                <div className="md:hidden w-full flex justify-end">
+                    <button onClick={() => setIsAddModalOpen(true)} className="w-full bg-[#007AFF] text-white px-4 py-2.5 flex items-center justify-center gap-1 rounded-full shadow-lg transition-colors font-semibold border border-[#007AFF]/50 text-sm">
+                        <Plus size={16} /> Add Film +
+                    </button>
                 </div>
             </nav>
 
@@ -456,6 +474,15 @@ export default function RazinFlixPage() {
                     />
                 )
             }
+
+            {isAddModalOpen && (
+                <AddFilmModal 
+                    onClose={() => setIsAddModalOpen(false)} 
+                    onFilmAdded={(newFilm) => {
+                        setFilms(prev => [newFilm, ...prev]);
+                    }} 
+                />
+            )}
         </div >
     );
 }

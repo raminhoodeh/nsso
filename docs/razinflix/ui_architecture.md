@@ -17,4 +17,12 @@ The RazinFlix frontend uses a Next.js App Router paradigm, optimized deeply for 
 - **Desktop Expansion**: Desktop modal shells expand 45% horizontally (`max-w-[1600px]`) with a 20% reduced height footprint (`md:h-[50%]`) specifically to escalate the bounding volume of the Similar Films poster carousels underneath. Width vectors scale accordingly (`w-40`).
 
 ## 3. Topography Rules
-All strings piped into Movie Title Nodes enforce CSS `.capitalize`. SVG icon spacing uses `flex-shrink-0` to guarantee grid alignment irrespective of typography wrapping in CTA buttons.
+## 4. Administrative Features
+
+### Update Mode & Self-Healing Poster Validation
+The frontend relies on an "Update Mode" string in `viewMode` for systematic database curation. Rather than relying solely on arbitrary manual sorting, this engine programmatically forces titles that require immediate metadata polishing (missing posters, missing trailers) to the absolute top grid index.
+
+**Self-Healing Poster Validation Implementation:**
+- **Dynamic Pinging:** Because static string heuristics (`N/A`, `placeholder`) cannot detect URL payloads that look correct but physically `404` at runtime, the mode executes a non-blocking `window.Image()` loop checking all fetched posters from the user's browser in batch groupings. 
+- **Aggressive Timeouts:** To prevent asynchronous `Promise.all` stalls caused by completely dead or permanently-hanging remote image servers, a strict 4000ms unmount timeout is forced. Any image failing to emit an `onload` or `onerror` response within this window is forcefully marked as broken, ensuring completion on 100% of the dataset.
+- **Vercel Cache-Bypass:** TMDB domains are passed with `unoptimized={true}` inside `next/image` tags (in `MovieCard`). Due to aggressive server-side rate limits, valid TMDB links frequently 504 on the Next.js `_next/image` proxy server while the underlying base-URL is completely healthy. Bypassing the optimization loop prevents healthy DB links from appearing completely blank or being falsely flagged by administrators.
