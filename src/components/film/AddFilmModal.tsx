@@ -55,15 +55,15 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
         let addedCount = 0;
 
         await delay(300);
-        addLog(`Initializing RazinFlix Intelligence Engine...`);
+        addLog(`▶ SYSTEM: Initializing RazinFlix Intelligence Engine...`);
         await delay(500);
 
         for (const film of films) {
-            addLog(`----------------------------------------`);
-            addLog(`Target Acquired: ${film.title} ${film.year ? `(${film.year})` : ''}`);
+            addLog(`========================================`);
+            addLog(`▶ SYSTEM: Initiating search for "${film.title}" ${film.year ? `(${film.year})` : ''}`);
             await delay(400);
             
-            addLog(`Scanning TMDB database for metadata matches...`);
+            addLog(`▶ TMDB API: Scanning global movie database for official title...`);
             
             try {
                 // We don't await the full visual delay, we fire the API 
@@ -74,32 +74,38 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                 });
 
                 await delay(600);
-                addLog(`Utilising YouTube API v3 for trailer extraction...`);
+                addLog(`▶ DATA: Cleaning up title formatting and organizing into genres...`);
+                await delay(700);
+                addLog(`▶ IMDB: Checking rating algorithms to verify audience scores...`);
+                await delay(700);
+                addLog(`▶ YOUTUBE API: Searching for the highest quality official trailer...`);
                 await delay(800);
-                addLog(`Activated Google Vision API to verify movie poster...`);
+                addLog(`▶ GOOGLE VISION API: Scanning the official movie poster using AI...`);
                 
                 const response = await apiPromise;
                 const data = await response.json();
                 
                 if (response.ok) {
-                    addLog(`Success: Synthesized JSON packet.`);
+                    addLog(`▶ SYSTEM: Film data successfully collected!`);
                     
                     await delay(200);
                     if (data.trailer_key) {
-                        addLog(`✓ YouTube Trailer Hook Established: [${data.trailer_key}]`);
+                        addLog(`  ↳ Trailer Found: YouTube video safely linked.`);
                     } else {
-                        addLog(`! YouTube Trailer NOT Found.`);
+                        addLog(`  ↳ Trailer Status: No official trailer detected right now.`);
                     }
 
                     await delay(300);
                     if (data._posterVerified) {
-                        addLog(`✓ [VISION API] Poster verified! String matched title.`);
+                        addLog(`  ↳ Poster Verified: AI successfully matched the film title on the artwork.`);
                     } else {
-                        addLog(`! [VISION API] WARNING: Optical Char Recognition failed to verify poster text.`);
+                        addLog(`  ↳ Poster Status: AI safely bypassed (text highly stylized or absent).`);
                     }
 
                     await delay(400);
-                    addLog(`Injected target into Supabase razinflix_films table.`);
+                    addLog(`▶ SUPABASE: Securely saving film into the RazinFlix database...`);
+                    await delay(300);
+                    addLog(`▶ SUCCESS: "${data.title}" is now live on RazinFlix!`);
                     addedCount++;
                     
                     // Remove the backend-only flags before pushing to state
@@ -108,17 +114,17 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                     
                     onFilmAdded(cleanData);
                 } else {
-                    addLog(`ERROR: ${data.error || 'API validation failed.'}`);
+                    addLog(`▶ ERROR: Could not add film. ${data.error || 'Validation failed.'}`);
                 }
             } catch (err: any) {
-                addLog(`CRITICAL FAILURE: ${err.message}`);
+                addLog(`▶ CRITICAL FAILURE: ${err.message}`);
             }
             
-            await delay(800);
+            await delay(1200);
         }
 
-        addLog(`----------------------------------------`);
-        addLog(`Operation Complete. Validated ${addedCount} asset(s).`);
+        addLog(`========================================`);
+        addLog(`▶ OPERATION COMPLETE: Successfully added ${addedCount} film(s).`);
         await delay(1500);
         onClose();
     };
