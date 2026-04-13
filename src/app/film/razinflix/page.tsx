@@ -7,7 +7,7 @@ import MovieCard from '@/components/film/MovieCard';
 import { Search, Loader2, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
-type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc';
+type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
 import { useUI } from '@/components/providers/UIProvider';
 
 export default function RazinFlixPage() {
@@ -146,6 +146,29 @@ export default function RazinFlixPage() {
                  if (rB === -1 && rA !== -1) return -1;
                  return rA - rB;
             });
+        } else if (viewMode === 'update_mode') {
+            const hasMissingPoster = (f: any) => {
+                if (!f.poster || f.poster === 'N/A') return true;
+                const p = f.poster.toLowerCase();
+                if (p.includes('null') || p.includes('placeholder') || p.includes('nopicture') || p.includes('no-image')) return true;
+                return false;
+            };
+
+            const hasMissingTrailer = (f: any) => !f.trailer_key;
+            
+            result.sort((a, b) => {
+                const aNoPoster = hasMissingPoster(a);
+                const bNoPoster = hasMissingPoster(b);
+                if (aNoPoster && !bNoPoster) return -1;
+                if (!aNoPoster && bNoPoster) return 1;
+
+                const aNoTrailer = hasMissingTrailer(a);
+                const bNoTrailer = hasMissingTrailer(b);
+                if (aNoTrailer && !bNoTrailer) return -1;
+                if (!aNoTrailer && bNoTrailer) return 1;
+
+                return extractYear(b.year) - extractYear(a.year);
+            });
         }
         return result;
     }, [films, viewMode, searchTerm]);
@@ -191,6 +214,7 @@ export default function RazinFlixPage() {
                         <option value="date_desc">Release Date (Newest)</option>
                         <option value="rating_desc">IMDb Rating (Highest)</option>
                         <option value="rating_asc">IMDb Rating (Lowest)</option>
+                        <option value="update_mode">Update Mode</option>
                     </select>
                 </div>
             </nav>
