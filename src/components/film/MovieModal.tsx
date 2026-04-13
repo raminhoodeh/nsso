@@ -240,7 +240,11 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 </button>
                             </div>
                         ) : (
-                            <button onClick={() => setIsEditing(true)} className="p-2 text-white/50 hover:text-white" aria-label="Edit"><Edit2 size={18} /></button>
+                            <button onClick={() => {
+                                const pwd = window.prompt("Enter password:");
+                                if (pwd === "azinam") setIsEditing(true);
+                                else if (pwd !== null) alert("Incorrect password.");
+                            }} className="p-2 text-white/50 hover:text-white" aria-label="Edit"><Edit2 size={18} /></button>
                         )}
                     </div>
                 </div>
@@ -338,7 +342,11 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                     </button>
                                 </div>
                             ) : (
-                                <button onClick={() => setIsEditing(true)} className="p-3 bg-black/60 hover:bg-black/80 rounded-full transition-colors text-white/50 hover:text-white shadow-xl backdrop-blur border border-white/10" aria-label="Edit"><Edit2 size={16} /></button>
+                                <button onClick={() => {
+                                    const pwd = window.prompt("Enter password:");
+                                    if (pwd === "azinam") setIsEditing(true);
+                                    else if (pwd !== null) alert("Incorrect password.");
+                                }} className="p-3 bg-black/60 hover:bg-black/80 rounded-full transition-colors text-white/50 hover:text-white shadow-xl backdrop-blur border border-white/10" aria-label="Edit"><Edit2 size={16} /></button>
                             )}
                         </div>
 
@@ -454,8 +462,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                                 "Prestige Television & Miniseries",
                                                 "Nostalgic Cult Classics", 
                                                 "Japanese Anime",
-                                                "Uncategorized",
-                                                "Recently Added"
+                                                "Uncategorized"
                                             ].map(cat => <option key={cat} value={cat} className="bg-black text-white">{cat}</option>)}
                                         </select>
                                     ) : (

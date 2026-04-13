@@ -247,7 +247,11 @@ export default function RazinFlixPage() {
                 
                 {/* Desktop Add Button (Absolute Left) */}
                 <div className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2">
-                    <button onClick={() => setIsAddModalOpen(true)} className="bg-[#007AFF] hover:bg-[#0066d6] text-white px-4 py-2 flex items-center justify-center gap-1 rounded-full shadow-lg transition-all font-semibold border border-white/10 text-sm hover:scale-105">
+                    <button onClick={() => {
+                        const pwd = window.prompt("Enter password:");
+                        if (pwd === "azinam") setIsAddModalOpen(true);
+                        else if (pwd !== null) alert("Incorrect password.");
+                    }} className="bg-[#007AFF] hover:bg-[#0066d6] text-white px-4 py-2 flex items-center justify-center gap-1 rounded-full shadow-lg transition-all font-semibold border border-white/10 text-sm hover:scale-105">
                         <Plus size={16} /> Add Film
                     </button>
                 </div>
@@ -287,7 +291,11 @@ export default function RazinFlixPage() {
 
                 {/* Mobile Add Button Row (Under Search) */}
                 <div className="md:hidden w-full flex justify-end">
-                    <button onClick={() => setIsAddModalOpen(true)} className="w-full bg-[#007AFF] text-white px-4 py-2.5 flex items-center justify-center gap-1 rounded-full shadow-lg transition-colors font-semibold border border-[#007AFF]/50 text-sm">
+                    <button onClick={() => {
+                        const pwd = window.prompt("Enter password:");
+                        if (pwd === "azinam") setIsAddModalOpen(true);
+                        else if (pwd !== null) alert("Incorrect password.");
+                    }} className="w-full bg-[#007AFF] text-white px-4 py-2.5 flex items-center justify-center gap-1 rounded-full shadow-lg transition-colors font-semibold border border-[#007AFF]/50 text-sm">
                         <Plus size={16} /> Add Film
                     </button>
                 </div>
@@ -409,7 +417,7 @@ export default function RazinFlixPage() {
             )}
 
             {/* Content Feed */}
-            <div className={`space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-24'}`}>
+            <div className={`space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-44 md:pt-24'}`}>
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
                         <Loader2 className="animate-spin mb-4" size={48} />
