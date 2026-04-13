@@ -83,10 +83,30 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                 
                 if (response.ok) {
                     addLog(`Success: Synthesized JSON packet.`);
+                    
+                    await delay(200);
+                    if (data.trailer_key) {
+                        addLog(`✓ YouTube Trailer Hook Established: [${data.trailer_key}]`);
+                    } else {
+                        addLog(`! YouTube Trailer NOT Found.`);
+                    }
+
                     await delay(300);
+                    if (data._posterVerified) {
+                        addLog(`✓ [VISION API] Poster verified! String matched title.`);
+                    } else {
+                        addLog(`! [VISION API] WARNING: Optical Char Recognition failed to verify poster text.`);
+                    }
+
+                    await delay(400);
                     addLog(`Injected target into Supabase razinflix_films table.`);
                     addedCount++;
-                    onFilmAdded(data);
+                    
+                    // Remove the backend-only flags before pushing to state
+                    const cleanData = { ...data };
+                    delete cleanData._posterVerified;
+                    
+                    onFilmAdded(cleanData);
                 } else {
                     addLog(`ERROR: ${data.error || 'API validation failed.'}`);
                 }

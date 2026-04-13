@@ -68,7 +68,58 @@ export async function POST(request: Request) {
              poster = "https://via.placeholder.com/300x450?text=" + title.replace(/ /g, '+');
         }
 
-        // 2. Initialize Supabase Client
+        // 2. Fetch YouTube Trailer
+        let trailer_key = '';
+        const GOOGLE_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+        if (GOOGLE_API_KEY) {
+            try {
+                const ytQuery = encodeURIComponent(`${title} ${fetchedYear} official trailer -review -reaction -full -gameplay`);
+                const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${ytQuery}&key=${GOOGLE_API_KEY}`;
+                const ytData = await fetch(ytUrl).then(r => r.json());
+                if (ytData.items && ytData.items.length > 0) {
+                    trailer_key = ytData.items[0].id?.videoId || '';
+                }
+            } catch (e) {
+                console.error("YouTube API Error:", e);
+            }
+        }
+
+        // 3. Verify Poster with Google Vision API
+        let posterVerified = false;
+        let visionText = '';
+        if (poster && GOOGLE_API_KEY && !poster.includes('via.placeholder.com')) {
+            try {
+                const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
+                const visionPayload = {
+                    requests: [{
+                        image: { source: { imageUri: poster } },
+                        features: [{ type: "TEXT_DETECTION" }]
+                    }]
+                };
+                const visionRes = await fetch(visionUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(visionPayload)
+                });
+                const visionData = await visionRes.json();
+                
+                if (visionData.responses && visionData.responses[0]?.textAnnotations) {
+                    visionText = visionData.responses[0].textAnnotations[0]?.description?.toLowerCase() || '';
+                    const titleWords = title.toLowerCase().split(' ').filter((w: string) => w.length > 2);
+                    
+                    if (titleWords.length === 0) {
+                        posterVerified = visionText.includes(title.toLowerCase());
+                    } else {
+                        // If at least one distinct word from the title is physically rendered on the poster
+                        posterVerified = titleWords.some((w: string) => visionText.includes(w));
+                    }
+                }
+            } catch (e) {
+                console.error("Vision API Error:", e);
+            }
+        }
+
+        // 4. Initialize Supabase Client
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -80,7 +131,7 @@ export async function POST(request: Request) {
             rating: rating,
             poster: poster,
             description: description,
-            trailer_key: '', 
+            trailer_key: trailer_key, 
             categories: categories
         };
 
@@ -95,7 +146,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        return NextResponse.json(data);
+        return NextResponse.json({ ...data, _posterVerified: posterVerified });
     } catch (e: any) {
         console.error('Add Film API Error:', e);
         return NextResponse.json({ error: e.message || 'Internal Server Error' }, { status: 500 });
