@@ -42,7 +42,9 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         description: film?.description || '',
         year: film?.year || '',
         rating: film?.rating || '',
-        trailer_key: film?.trailer_key ? `https://youtube.com/watch?v=${film.trailer_key}` : ''
+        trailer_key: film?.trailer_key ? `https://youtube.com/watch?v=${film.trailer_key}` : '',
+        director: film?.director || '',
+        category: film?.categories && film.categories.length > 0 ? film.categories[0] : 'Uncategorized'
     });
     const [editPoster, setEditPoster] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -54,7 +56,9 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             description: film?.description || '',
             year: film?.year || '',
             rating: film?.rating || '',
-            trailer_key: film?.trailer_key ? `https://youtube.com/watch?v=${film.trailer_key}` : ''
+            trailer_key: film?.trailer_key ? `https://youtube.com/watch?v=${film.trailer_key}` : '',
+            director: film?.director || '',
+            category: film?.categories && film.categories.length > 0 ? film.categories[0] : 'Uncategorized'
         });
         setEditPoster(null);
         setPreviewUrl(null);
@@ -71,6 +75,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             fd.append('description', editForm.description);
             fd.append('year', editForm.year);
             fd.append('rating', editForm.rating);
+            fd.append('director', editForm.director);
+            fd.append('categories', editForm.category);
 
             // Extract just the key if they pasted a full URL
             let cleanedKey = editForm.trailer_key;
@@ -397,17 +403,44 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 </div>
                                 <div className="hidden md:block">
                                     <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Categories</span>
-                                    <div className="flex flex-wrap gap-1">
-                                        {film.categories.map(cat => (
-                                            <span 
-                                                key={cat} 
-                                                onClick={() => onSearch && onSearch(cat)}
-                                                className="px-2 py-0.5 text-[10px] text-gray-300 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700 hover:border-gray-500 cursor-pointer transition-all hover:text-white"
-                                            >
-                                                {cat}
-                                            </span>
-                                        ))}
-                                    </div>
+                                    {isEditing ? (
+                                        <select
+                                            value={editForm.category}
+                                            onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                                            className="bg-gray-800 border border-gray-600 rounded px-2 py-1.5 w-full text-white text-sm focus:outline-none focus:border-[#007AFF] shadow-xl appearance-none"
+                                        >
+                                            {[
+                                                "Critically-Acclaimed Mind-Bending Sci-Fi", 
+                                                "Visually Striking Emotional Dramas",
+                                                "Gritty Heist & Crime Thrillers", 
+                                                "Suspenseful Psychological Mysteries",
+                                                "Epic Historical Period Pieces", 
+                                                "Heartfelt Coming-of-Age Tales",
+                                                "Surreal & Left-of-Center Cinema", 
+                                                "Dark Comedies & Sharp Satire",
+                                                "Riveting Global Documentaries", 
+                                                "Classic Masterpieces of World Cinema",
+                                                "Intense Action, War & Adventure", 
+                                                "Prestige Television & Miniseries",
+                                                "Nostalgic Cult Classics", 
+                                                "Japanese Anime",
+                                                "Uncategorized",
+                                                "Recently Added"
+                                            ].map(cat => <option key={cat} value={cat} className="bg-black text-white">{cat}</option>)}
+                                        </select>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-1">
+                                            {film.categories.map(cat => (
+                                                <span 
+                                                    key={cat} 
+                                                    onClick={() => onSearch && onSearch(cat)}
+                                                    className="px-2 py-0.5 text-[10px] text-gray-300 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700 hover:border-gray-500 cursor-pointer transition-all hover:text-white"
+                                                >
+                                                    {cat}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             
