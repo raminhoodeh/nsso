@@ -287,7 +287,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 />
                                 {previewUrl && (
                                      <div className="absolute inset-0 z-[-1] opacity-50">
-                                         <Image src={previewUrl} alt="Preview" fill className="object-cover blur-sm" />
+                                         <Image src={previewUrl} alt="Preview" fill className="object-cover blur-sm" unoptimized={true} />
                                      </div>
                                 )}
                                 {(previewUrl || editPoster) && (
@@ -319,6 +319,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                         alt={film.title}
                                         fill
                                         className="object-contain md:object-cover opacity-80"
+                                        unoptimized={true}
                                     />
                                 </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent pointer-events-none" />
@@ -499,7 +500,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 className="flex-shrink-0 cursor-pointer transition-all duration-300 relative rounded-xl overflow-hidden border-2 w-28 h-40 md:w-40 md:h-56 border-transparent opacity-70 hover:opacity-100 hover:scale-105 hover:border-white/50"
                             >
                                 <div className="relative w-full h-full">
-                                    <Image src={f.poster} alt={f.title} fill className="object-cover" />
+                                    <Image src={f.poster} alt={f.title} fill className="object-cover" unoptimized={true} />
                                 </div>
                             </div>
                         ))}
