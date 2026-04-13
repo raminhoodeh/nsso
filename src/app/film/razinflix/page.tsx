@@ -20,10 +20,44 @@ export default function RazinFlixPage() {
     const [scrolled, setScrolled] = useState(false);
     const [films, setFilms] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [brokenPosters, setBrokenPosters] = useState<Set<number>>(new Set());
+    const [isCheckingPosters, setIsCheckingPosters] = useState(false);
 
     const { setBackgroundDimmed } = useUI();
     const touchStartX = useRef(0);
     const [isHeroMuted, setIsHeroMuted] = useState(true);
+
+    useEffect(() => {
+        if (viewMode === 'update_mode' && !isCheckingPosters && films.length > 0) {
+            setIsCheckingPosters(true);
+            const checkAll = async () => {
+                const batchSize = 10;
+                for (let i = 0; i < films.length; i += batchSize) {
+                    const batch = films.slice(i, i + batchSize);
+                    const newlyBroken = new Set<number>();
+                    await Promise.all(batch.map(async (f) => {
+                        if (!f.poster || f.poster === 'N/A') return;
+                        const p = f.poster.toLowerCase();
+                        if (p.includes('null') || p.includes('placeholder') || p.includes('nopicture') || p.includes('no-image')) return;
+                        
+                        const isValid = await new Promise<boolean>((resolve) => {
+                             const img = new window.Image();
+                             img.onload = () => resolve(true);
+                             img.onerror = () => resolve(false);
+                             img.src = f.poster;
+                        });
+                        if (!isValid) {
+                             newlyBroken.add(f.id);
+                        }
+                    }));
+                    if (newlyBroken.size > 0) {
+                        setBrokenPosters(prev => new Set([...prev, ...newlyBroken]));
+                    }
+                }
+            };
+            checkAll();
+        }
+    }, [viewMode, films, isCheckingPosters]);
 
     useEffect(() => {
         setBackgroundDimmed(true);
@@ -151,6 +185,7 @@ export default function RazinFlixPage() {
                 if (!f.poster || f.poster === 'N/A') return true;
                 const p = f.poster.toLowerCase();
                 if (p.includes('null') || p.includes('placeholder') || p.includes('nopicture') || p.includes('no-image')) return true;
+                if (brokenPosters.has(f.id)) return true;
                 return false;
             };
 
@@ -171,7 +206,7 @@ export default function RazinFlixPage() {
             });
         }
         return result;
-    }, [films, viewMode, searchTerm]);
+    }, [films, viewMode, searchTerm, brokenPosters]);
 
     // Handle scroll for navbar bg
     useEffect(() => {
