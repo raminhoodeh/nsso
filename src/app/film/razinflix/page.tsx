@@ -152,14 +152,32 @@ export default function RazinFlixPage() {
                     cats[targetCategory].push(film);
                 }
             });
+
+            // Post-process to aggressively consolidate and delete visually thin categories
+            const finalCats: Record<string, any[]> = {};
+            const leftovers: any[] = [];
+            
+            Object.keys(cats).forEach(key => {
+                 if (cats[key].length < 5) {
+                     leftovers.push(...cats[key]);
+                 } else {
+                     finalCats[key] = cats[key];
+                 }
+            });
+
+            if (leftovers.length > 0) {
+                 if (!finalCats["Visually Striking Emotional Dramas"]) finalCats["Visually Striking Emotional Dramas"] = [];
+                 finalCats["Visually Striking Emotional Dramas"].push(...leftovers);
+            }
+            return finalCats;
         } else {
             cats['Search Results'] = films.filter(f =>
                 f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 f.director.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 f.description.toLowerCase().includes(searchTerm.toLowerCase())
             );
+            return cats;
         }
-        return cats;
     }, [searchTerm, films]);
 
     // Flat sorted array for dynamic views
