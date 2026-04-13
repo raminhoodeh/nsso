@@ -1,16 +1,22 @@
 # Gemini AI Categorization & Enrichment Pipeline
 
 ## 1. System Objective
-A backend node architecture designed to independently crawl the film database and enforce high-fidelity metadata standards.
+A backend architecture designed to completely automate and enforce high-fidelity metadata formatting organically—utilizing Google Generative AI (Gemini 2.5 Flash), Google Cloud Vision OCR, and the YouTube Data API v3 dynamically.
 
-## 2. Execution Scripts
-Located within `/scripts/`, these execute via `ts-node` or `tsx` utilizing the `@google/generative-ai` SDK (`gemini-2.5-flash`).
+## 2. Ingestion Engine Pipeline (`/api/razinflix/add`)
+When an Admin adds a film, the pipeline fires 3 core asynchronous tasks:
 
-### `enrich-descriptions.ts`
-- **Goal**: Replaces short standard CSV descriptions with deeply atmospheric, emotionally evocative 3-sentence cinematic summaries.
-- **Logistics**: Operates in multi-batch queues of 5, pushing independent updates concurrently to bypass aggressive throttling on the v1beta endpoint. Checks for existing long strings (`>250 chars`) to automatically skip parsing.
+### 1. YouTube Trailer Resolution
+- Hits the **YouTube Data API v3** querying for `{Title} {Year} official trailer -review -reaction` to isolate studio-verified trailers instantly, natively populating the `trailer_key`.
 
-### `enrich-categories.ts`
-- **Goal**: Scrapes the new atmospheric descriptions to group films into a rigid pool of 13 "Netflix-style" categories (`Epic Historical Period Pieces`, `Mind-Bending Sci-Fi`, etc.)
-- **Overrides**: Implements hard-coded bypass logic explicitly isolating `Japanese Anime` based on historical directors (Hayao Miyazaki, Isao Takahata) or precise titles (Akira, Ghost in the Shell), ensuring anime films are never mapped into Western structural clusters.
-- **Output Validation**: String purification algorithms strip standard LLM generation artifacts (leading stars, bullet points, residual quotation wrappers) before converting the output back into a PostgreSQL array.
+### 2. Google Vision API OCR Parsing
+- Checks TMDB poster payload using Google Cloud Vision REST. Runs `TEXT_DETECTION` to semantically evaluate whether the English-text `Title` actually appears physically written inside the `.jpg` poster image matrix, guaranteeing high-resolution native English posters and explicitly skipping blank generic TMDB artwork.
+
+### 3. Gemini 2.5 Flash Autonomous Taxonomic Grounding
+- Overrides and deprecates TMDB's generic genres entirely.
+- Executes `gemini-2.5-flash` natively to synthetically evaluate the film title and exact TMDB description, explicitly generating an atmospheric 2-sentence structural plot.
+- Synthesizes and grounds the results perfectly into one of the **14 specific RazinFlix Categories**, generating zero "Recently Added" generic taxonomies. 
+
+## 3. Dedicated Scripts (`/scripts/`)
+- **`cleanup-categories.mjs`**: Autonomous Node pipeline built with Gemini 2.5 Flash that reads arbitrary or abandoned Postgres categories, selects the closest taxonomic fit out of our predefined list of 14, and dynamically patches (`POST`) the database records back to full health.
+- **`resolve_dups.py`**: Local backend script executing `SequenceMatcher` Levenshtein-distance fuzzing and token overlap checks. Detects rogue duplicates directly against the Supabase POSTGREST tables. It evaluates identical string matches (e.g. `Bladerunner 2049` vs `Blade Runner 2049`) and dynamically scrubs the poorest resolution database entry via data-quality scoring equations (Poster validation + description string lengths).
