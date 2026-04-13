@@ -42,8 +42,29 @@ export default function RazinFlixPage() {
                         
                         const isValid = await new Promise<boolean>((resolve) => {
                              const img = new window.Image();
-                             img.onload = () => resolve(true);
-                             img.onerror = () => resolve(false);
+                             let isDone = false;
+                             const timeout = setTimeout(() => {
+                                 if (!isDone) {
+                                     isDone = true;
+                                     img.src = ''; // Cancel loading attempt
+                                     resolve(false); // Assume broken if hangs > 4s
+                                 }
+                             }, 4000);
+                             
+                             img.onload = () => {
+                                 if (!isDone) {
+                                     isDone = true;
+                                     clearTimeout(timeout);
+                                     resolve(true);
+                                 }
+                             };
+                             img.onerror = () => {
+                                 if (!isDone) {
+                                     isDone = true;
+                                     clearTimeout(timeout);
+                                     resolve(false);
+                                 }
+                             };
                              img.src = f.poster;
                         });
                         if (!isValid) {
