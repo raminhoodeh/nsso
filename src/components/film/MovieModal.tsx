@@ -21,10 +21,11 @@ interface MovieModalProps {
     onNext: () => void;
     onPrev: () => void;
     onSelect: (film: Film) => void;
+    onUpdate?: (film: Film) => void;
     onSearch?: (term: string) => void;
 }
 
-const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onSearch }: MovieModalProps) => {
+const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const touchStartXModal = useRef(0);
 
@@ -90,7 +91,11 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             if (!res.ok) throw new Error(data.error || 'Failed to update');
             
             // Push updated film upstream
-            onSelect(data.film);
+            if (onUpdate) {
+                onUpdate(data.film);
+            } else {
+                onSelect(data.film);
+            }
             setIsEditing(false);
         } catch(err: any) {
             alert(err.message || 'Error saving file.');
@@ -308,7 +313,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                     onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                                     maxLength={100}
                                     rows={2}
-                                    className="text-2xl font-bold bg-white/5 border border-white/20 rounded p-2 text-white mb-2 w-full focus:outline-none focus:border-white leading-tight resize-none"
+                                    className="text-2xl flex-shrink-0 font-bold bg-white/5 border border-white/20 rounded p-2 text-white mb-2 w-full md:pr-24 focus:outline-none focus:border-white leading-tight resize-none"
                                     placeholder="Film Title"
                                 />
                             ) : (

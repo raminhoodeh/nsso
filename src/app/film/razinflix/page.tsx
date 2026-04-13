@@ -471,6 +471,10 @@ export default function RazinFlixPage() {
                         onNext={handleNextFilm}
                         onPrev={handlePrevFilm}
                         onSelect={setSelectedFilm}
+                        onUpdate={(updatedFilm) => {
+                            setFilms(prev => prev.map(f => f.id === updatedFilm.id ? updatedFilm : f));
+                            setSelectedFilm(updatedFilm);
+                        }}
                         onSearch={(term) => {
                             setSearchTerm(term);
                             setViewMode('category'); 

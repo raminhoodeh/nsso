@@ -62,7 +62,6 @@ export async function POST(request: Request) {
             if (film.release_date && !fetchedYear) {
                 fetchedYear = film.release_date.split('-')[0];
             }
-            // By design, DO NOT inherit TMDB categories to avoid polluting bespoke taxonomies.
         } else {
              // Fallback for missing poster heuristic
              poster = "https://via.placeholder.com/300x450?text=" + title.replace(/ /g, '+');
@@ -82,6 +81,39 @@ export async function POST(request: Request) {
                 newDesc = newDesc.replace(/\*\*/g, '');
                 if (newDesc.length > 10) {
                     description = newDesc;
+                }
+
+                // 1.6 Generate RazinFlix-Specific Category using Gemini 2.5 Flash
+                const CATEGORIES = [
+                    "Critically-Acclaimed Mind-Bending Sci-Fi", "Visually Striking Emotional Dramas",
+                    "Gritty Heist & Crime Thrillers", "Suspenseful Psychological Mysteries",
+                    "Epic Historical Period Pieces", "Heartfelt Coming-of-Age Tales",
+                    "Surreal & Left-of-Center Cinema", "Dark Comedies & Sharp Satire",
+                    "Riveting Global Documentaries", "Classic Masterpieces of World Cinema",
+                    "Intense Action, War & Adventure", "Prestige Television & Miniseries",
+                    "Nostalgic Cult Classics", "Japanese Anime"
+                ];
+
+                const catPrompt = `You are an expert film categorization engine bridging subjective aesthetics with cinematic genres.
+Select EXACTLY ONE category from the following strict list that best fits this film:
+${CATEGORIES.map(c => `- ${c}`).join('\n')}
+
+Film Title: "${title}"
+Year: ${fetchedYear}
+Description: ${description}
+
+Do not include quotes, brackets, or any conversational text. Return ONLY the exact string from the allowed list above.`;
+                
+                const catResult = await model.generateContent(catPrompt);
+                let newCategory = catResult.response.text().trim();
+                if (newCategory.startsWith('- ')) newCategory = newCategory.substring(2);
+                if (newCategory.startsWith('"') && newCategory.endsWith('"')) newCategory = newCategory.slice(1, -1);
+                
+                if (CATEGORIES.includes(newCategory)) {
+                    categories = [newCategory];
+                } else {
+                    const match = CATEGORIES.find(c => newCategory.includes(c) || c.includes(newCategory));
+                    if (match) categories = [match];
                 }
             } catch (e) {
                 console.error("Gemini API Error:", e);
