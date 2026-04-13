@@ -267,7 +267,7 @@ export default function RazinFlixPage() {
                 <div className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2">
                     <button onClick={() => {
                         const pwd = window.prompt("Enter password:");
-                        if (pwd === "azinam") setIsAddModalOpen(true);
+                        if (pwd?.toLowerCase() === "azinam") setIsAddModalOpen(true);
                         else if (pwd !== null) alert("Incorrect password.");
                     }} className="bg-[#007AFF] hover:bg-[#0066d6] text-white px-4 py-2 flex items-center justify-center gap-1 rounded-full shadow-lg transition-all font-semibold border border-white/10 text-sm hover:scale-105">
                         <Plus size={16} /> Add Film
@@ -311,7 +311,7 @@ export default function RazinFlixPage() {
                 <div className="md:hidden w-full flex justify-end">
                     <button onClick={() => {
                         const pwd = window.prompt("Enter password:");
-                        if (pwd === "azinam") setIsAddModalOpen(true);
+                        if (pwd?.toLowerCase() === "azinam") setIsAddModalOpen(true);
                         else if (pwd !== null) alert("Incorrect password.");
                     }} className="w-full bg-[#007AFF] text-white px-4 py-2.5 flex items-center justify-center gap-1 rounded-full shadow-lg transition-colors font-semibold border border-[#007AFF]/50 text-sm">
                         <Plus size={16} /> Add Film

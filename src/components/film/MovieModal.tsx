@@ -242,7 +242,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                         ) : (
                             <button onClick={() => {
                                 const pwd = window.prompt("Enter password:");
-                                if (pwd === "azinam") setIsEditing(true);
+                                if (pwd?.toLowerCase() === "azinam") setIsEditing(true);
                                 else if (pwd !== null) alert("Incorrect password.");
                             }} className="p-2 text-white/50 hover:text-white" aria-label="Edit"><Edit2 size={18} /></button>
                         )}
@@ -344,7 +344,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                             ) : (
                                 <button onClick={() => {
                                     const pwd = window.prompt("Enter password:");
-                                    if (pwd === "azinam") setIsEditing(true);
+                                    if (pwd?.toLowerCase() === "azinam") setIsEditing(true);
                                     else if (pwd !== null) alert("Incorrect password.");
                                 }} className="p-3 bg-black/60 hover:bg-black/80 rounded-full transition-colors text-white/50 hover:text-white shadow-xl backdrop-blur border border-white/10" aria-label="Edit"><Edit2 size={16} /></button>
                             )}
