@@ -172,7 +172,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                     placeholder="e.g. The Matrix 1999, Avatar, Inception (2010)"
                                     className="w-full h-48 bg-[#0c0c0e] text-white border border-white/10 rounded-2xl p-4 resize-none focus:outline-none focus:border-[#007AFF] transition-colors leading-relaxed font-medium"
                                 />
-                                <p className="text-sm text-gray-500 mt-2 px-2 leading-relaxed">
+                                <p className="text-sm md:text-base text-gray-200 mt-3 px-2 leading-relaxed">
                                     Type the name of the film and RazinFlix will figure out the rest - enter the year of the film if there might be a duplicate, for adding multiple films at once, separate the names and years and year by either a comma or linebreak.
                                 </p>
                             </div>

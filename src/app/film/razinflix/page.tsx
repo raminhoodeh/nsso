@@ -419,6 +419,11 @@ export default function RazinFlixPage() {
                     <>
                         {Object.entries(categories)
                             .filter(([title, films]) => films.length > 0)
+                            .sort(([titleA], [titleB]) => {
+                                if (titleA === 'Recently Added') return -1;
+                                if (titleB === 'Recently Added') return 1;
+                                return 0;
+                            })
                             .map(([title, films]) => (
                             <CategoryRow
                                 key={title}

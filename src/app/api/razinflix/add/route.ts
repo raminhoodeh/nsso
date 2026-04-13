@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         let rating = 'N/A';
         let description = 'Anew cinematic journey added manually to the database.';
         let fetchedYear = year || '';
-        let categories: string[] = ['Uncategorized'];
+        let categories: string[] = ['Recently Added'];
 
         if (tmdbData.results && tmdbData.results.length > 0) {
             const film = tmdbData.results[0];
@@ -62,9 +62,7 @@ export async function POST(request: Request) {
             if (film.release_date && !fetchedYear) {
                 fetchedYear = film.release_date.split('-')[0];
             }
-            if (film.genre_ids && film.genre_ids.length > 0) {
-                categories = film.genre_ids.map((id: number) => TMDB_GENRES[id]).filter(Boolean);
-            }
+            // By design, DO NOT inherit TMDB categories to avoid polluting bespoke taxonomies.
         } else {
              // Fallback for missing poster heuristic
              poster = "https://via.placeholder.com/300x450?text=" + title.replace(/ /g, '+');
