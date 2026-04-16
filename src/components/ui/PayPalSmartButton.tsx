@@ -152,7 +152,7 @@ export default function PayPalSmartButton({
                     renderPromise.catch((err: any) => {
                         console.error("PayPal Advanced Checkout render failed:", err)
                         if (containerRef.current) {
-                            containerRef.current.innerHTML = '<div class="text-red-500 text-xs">Button Error</div>'
+                            containerRef.current.innerHTML = '<div class="text-red-500 text-xs text-center py-4">Wait, check PayPal</div>'
                         }
                     })
                 }
@@ -188,17 +188,10 @@ export default function PayPalSmartButton({
     // SCENARIO A: Found a Hosted Button ID OR Advanced Checkout Enabled (Smart Engine)
     if (hostedButtonId || useAdvancedCheckout) {
         return (
-            <div className="w-full flex justify-center py-2">
+            <div className="w-full flex justify-center">
                 <div
                     ref={containerRef}
-                    className="w-full max-w-[320px] z-10 relative mix-blend-multiply transition-opacity duration-500"
-                    style={{ 
-                        // This forces the white background of the PayPal iframe to become transparent 
-                        // while keeping the buttons themselves visible.
-                        // We also clip the bottom slightly to hide the mandatory tagline/footer.
-                        maxHeight: '175px', 
-                        overflow: 'hidden' 
-                    }}
+                    className="w-full max-w-[320px] z-10 relative transition-opacity duration-500"
                 />
             </div>
         )
