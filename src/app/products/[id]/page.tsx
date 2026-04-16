@@ -144,7 +144,7 @@ export default function ProductSalesPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
 
                     {/* LEFT COLUMN - Primary Content */}
-                    <div className="space-y-8 px-12 md:px-16">
+                    <div className="space-y-8 px-3 md:px-16">
                         {/* Back Button */}
                         <div className="mb-8">
                             <button
@@ -196,12 +196,20 @@ export default function ProductSalesPage() {
                         {/* Benefits */}
                         {product.benefits && product.benefits.length > 0 && (
                             <ul className="space-y-3">
-                                {product.benefits.map((benefit, index) => (
-                                    <li key={index} className="flex items-start gap-3 text-[17px] text-white/80 leading-[22px]" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 510 }}>
-                                        <span className="text-white/40 mt-1">•</span>
-                                        <span>{benefit}</span>
-                                    </li>
-                                ))}
+                                {product.benefits.map((benefit, index) => {
+                                    const isIncludes = benefit.trim().startsWith('Includes:') || benefit.includes('Includes:');
+                                    // Strip any markdown bold asterisks
+                                    const cleanBenefit = benefit.replace(/\*\*/g, '').replace(/\*/g, '');
+                                    return (
+                                        <li key={index} className="flex items-start gap-3 text-[17px] text-white/80 leading-[22px]" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif" }}>
+                                            <span className="text-white/40 mt-1" style={{ fontStyle: 'normal', fontWeight: 400 }}>•</span>
+                                            <span style={{
+                                                fontWeight: isIncludes ? 400 : 510,
+                                                fontStyle: isIncludes ? 'italic' : 'normal',
+                                            }}>{cleanBenefit}</span>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
 
