@@ -416,17 +416,9 @@ export default function ProductSalesPage() {
                                 </div>
                             )}
 
-                            {/* Payment Well — recessed container for PayPal buttons */}
+                            {/* PayPal / Apple Pay */}
                             {product.paypal_html && (
-                                <div
-                                    className="w-full rounded-[14px] overflow-hidden mt-1"
-                                    style={{
-                                        background: 'rgba(255, 255, 255, 0.95)',
-                                        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
-                                        maxHeight: '210px',
-                                    }}
-                                >
-                                    <div className="px-3 pt-3 pb-1">
+                                <div className="w-full max-w-[320px] flex justify-center mt-2">
                                         <PayPalSmartButton 
                                             html={product.paypal_html} 
                                             isPlatformOwner={isPlatformOwner} 
@@ -434,7 +426,6 @@ export default function ProductSalesPage() {
                                             productName={product.name}
                                             successUrl={product.success_url}
                                         />
-                                    </div>
                                 </div>
                             )}
 
