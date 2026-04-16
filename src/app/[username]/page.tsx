@@ -427,7 +427,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                             isPlatformOwner={isPlatformOwner} 
                                                             price={product.price}
                                                             productName={product.name}
-                                                            successUrl={isPlatformOwner ? "https://drive.google.com/drive/folders/1MF0xhcGp3GI7CJhj9TcotxLex_rahkWu?usp=sharing" : undefined}
                                                         />
                                                     </div>
                                                 )}

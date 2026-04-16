@@ -23,6 +23,7 @@ interface Product {
     image_url: string
     purchase_link: string
     paypal_html: string
+    success_url?: string
 }
 
 interface Contact {
@@ -418,13 +419,13 @@ export default function ProductSalesPage() {
                             {/* PayPal Button */}
                             {product.paypal_html && (
                                 <div className="w-full max-w-[280px] flex justify-center">
-                                    <PayPalSmartButton 
-                                        html={product.paypal_html} 
-                                        isPlatformOwner={isPlatformOwner} 
-                                        price={product.price}
-                                        productName={product.name}
-                                        successUrl={isPlatformOwner ? "https://drive.google.com/drive/folders/1MF0xhcGp3GI7CJhj9TcotxLex_rahkWu?usp=sharing" : undefined}
-                                    />
+                                        <PayPalSmartButton 
+                                            html={product.paypal_html} 
+                                            isPlatformOwner={isPlatformOwner} 
+                                            price={product.price}
+                                            productName={product.name}
+                                            successUrl={product.success_url}
+                                        />
                                 </div>
                             )}
 
