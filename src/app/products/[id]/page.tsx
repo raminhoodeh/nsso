@@ -201,7 +201,7 @@ export default function ProductSalesPage() {
                         </p>
 
                         {/* Mobile-only Product Card — shown early so users see the product before the bullet list */}
-                        <div className="lg:hidden relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6 w-full flex flex-col items-center">
+                        <div className="lg:hidden relative rounded-[20px] overflow-hidden bg-white shadow-lg border border-slate-200 p-6 w-full flex flex-col items-center">
                             {/* Product Image */}
                             {product.image_url && (
                                 <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
@@ -215,12 +215,12 @@ export default function ProductSalesPage() {
                             )}
 
                             {/* Product Name */}
-                            <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-slate-900 mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.name}
                             </h3>
 
                             {/* Price */}
-                            <p className="text-[29px] font-bold text-white mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <p className="text-[29px] font-bold text-slate-800 mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.price}
                             </p>
 
@@ -230,22 +230,20 @@ export default function ProductSalesPage() {
                                     <div
                                         className="p-[0.75px] rounded-[12px]"
                                         style={{
-                                            background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 100%)'
                                         }}
                                     >
                                         <a
                                             href={product.purchase_link}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="relative h-[44px] w-full rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            className="relative h-[44px] w-full rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98] bg-slate-900"
                                             style={{
                                                 boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
                                             }}
                                         >
-                                            <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                                            <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
                                             <span
-                                                className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
+                                                className="relative z-10 text-[16px] font-semibold text-white tracking-wide"
                                                 style={{
                                                     fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                                     fontWeight: 590
@@ -260,13 +258,13 @@ export default function ProductSalesPage() {
 
                             {/* PayPal Button */}
                             {product.paypal_html && (
-                                <div className="w-full max-w-[280px] flex justify-center">
+                                <div className="w-full max-w-[280px] flex justify-center mt-2">
                                     <PayPalSmartButton 
                                         html={product.paypal_html} 
                                         isPlatformOwner={isPlatformOwner} 
                                         price={product.price}
                                         productName={product.name}
-                                        successUrl={isPlatformOwner ? "https://drive.google.com/drive/folders/1MF0xhcGp3GI7CJhj9TcotxLex_rahkWu?usp=sharing" : undefined}
+                                        successUrl={product.success_url}
                                     />
                                 </div>
                             )}
