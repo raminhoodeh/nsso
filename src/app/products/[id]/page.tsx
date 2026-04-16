@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
+import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 
 interface Product {
     id: string
@@ -253,10 +254,9 @@ export default function ProductSalesPage() {
 
                             {/* PayPal Button */}
                             {product.paypal_html && (
-                                <div
-                                    className="mb-4 w-full max-w-[280px] flex justify-center"
-                                    dangerouslySetInnerHTML={{ __html: product.paypal_html }}
-                                />
+                                <div className="w-full max-w-[280px] flex justify-center">
+                                    <PayPalSmartButton html={product.paypal_html} />
+                                </div>
                             )}
                         </div>
 
@@ -406,10 +406,9 @@ export default function ProductSalesPage() {
 
                             {/* PayPal Button */}
                             {product.paypal_html && (
-                                <div
-                                    className="mb-4 w-full max-w-[280px] flex justify-center"
-                                    dangerouslySetInnerHTML={{ __html: product.paypal_html }}
-                                />
+                                <div className="w-full max-w-[280px] flex justify-center">
+                                    <PayPalSmartButton html={product.paypal_html} />
+                                </div>
                             )}
 
                             {/* Value Proposition */}

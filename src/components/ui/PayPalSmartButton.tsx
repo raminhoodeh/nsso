@@ -59,7 +59,8 @@ export default function PayPalSmartButton({ html }: PayPalSmartButtonProps) {
                 const script = document.createElement('script')
                 // Using 'ba' as client-id as found in original code, but 'sb' (sandbox) is safer default if 'ba' is invalid.
                 // Keeping 'ba' effectively but adding error handling.
-                script.src = "https://www.paypal.com/sdk/js?client-id=ba&components=hosted-buttons"
+                const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'ba'
+                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons&enable-funding=googlepay`
                 script.async = true
                 script.onload = () => resolve(true)
                 script.onerror = (err) => {
