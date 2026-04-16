@@ -416,9 +416,9 @@ export default function ProductSalesPage() {
                                 </div>
                             )}
 
-                            {/* PayPal Button */}
+                             {/* PayPal Button */}
                             {product.paypal_html && (
-                                <div className="w-full max-w-[280px] flex justify-center">
+                                <div className="w-full max-w-[320px] flex justify-center">
                                         <PayPalSmartButton 
                                             html={product.paypal_html} 
                                             isPlatformOwner={isPlatformOwner} 

@@ -116,6 +116,14 @@ export default function PayPalSmartButton({
                 const { value, currency } = parsePrice(price || '0')
                 
                 const renderPromise = window.paypal.Buttons({
+                    style: {
+                        layout: 'vertical',
+                        color: 'gold',
+                        shape: 'rect',
+                        label: 'pay',
+                        height: 55,
+                        tagline: false
+                    },
                     createOrder: (data: any, actions: any) => {
                         return actions.order.create({
                             purchase_units: [{
