@@ -299,14 +299,14 @@ export default function ProductSalesPage() {
 
                         {/* Testimonial Carousel */}
                         {product.testimonials && product.testimonials.length > 0 && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-4 md:p-8">
-                                <div className="flex items-center gap-4">
+                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-3 md:p-8">
+                                <div className="flex items-center gap-2 md:gap-4">
                                     {product.testimonials.length > 1 && (
                                         <button
                                             onClick={prevTestimonial}
-                                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
+                                            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
                                         >
-                                            <ChevronLeft size={20} className="text-white" />
+                                            <ChevronLeft size={18} className="text-white" />
                                         </button>
                                     )}
 
@@ -322,9 +322,9 @@ export default function ProductSalesPage() {
                                     {product.testimonials.length > 1 && (
                                         <button
                                             onClick={nextTestimonial}
-                                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
+                                            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
                                         >
-                                            <ChevronRight size={20} className="text-white" />
+                                            <ChevronRight size={18} className="text-white" />
                                         </button>
                                     )}
                                 </div>
@@ -414,7 +414,7 @@ export default function ProductSalesPage() {
 
                             {/* Value Proposition */}
                             {product.value_proposition && (
-                                <p className="text-[13px] text-white/60 leading-[18px] mt-4 text-center">
+                                <p className="text-[15px] md:text-[13px] text-white/60 leading-[20px] md:leading-[18px] mt-4 text-center">
                                     {product.value_proposition}
                                 </p>
                             )}
