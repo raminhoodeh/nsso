@@ -357,86 +357,93 @@ export default function ProductSalesPage() {
                     {/* RIGHT COLUMN - Conversion & Context */}
                     <div className="space-y-6">
                         {/* Product Card */}
-                        <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 w-full flex flex-col">
-                            {/* TOP GLASS SECTION */}
-                            <div className="p-6 flex flex-col items-center">
-                                {/* Product Image */}
-                                {product.image_url && (
-                                    <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
-                                        <Image
-                                            src={product.image_url}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                )}
+                        <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6 w-full flex flex-col items-center">
+                            {/* Product Image */}
+                            {product.image_url && (
+                                <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
+                                    <Image
+                                        src={product.image_url}
+                                        alt={product.name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                            )}
 
-                                {/* Product Name */}
-                                <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                    {product.name}
-                                </h3>
+                            {/* Product Name */}
+                            <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                                {product.name}
+                            </h3>
 
-                                {/* Price */}
-                                <p className="text-[29px] font-bold text-white mb-0 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                    {product.price}
-                                </p>
-                            </div>
+                            {/* Price */}
+                            <p className="text-[29px] font-bold text-white mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                                {product.price}
+                            </p>
 
-                            {/* BOTTOM WHITE SECTION */}
-                            <div className="bg-white p-6 pt-8 flex flex-col items-center">
-                                {/* Purchase Link Button */}
-                                {product.purchase_link && (
-                                    <div className="w-full max-w-[280px] mb-3">
-                                        <div
-                                            className="p-[0.75px] rounded-[12px]"
+                            {/* Purchase Link Button */}
+                            {product.purchase_link && (
+                                <div className="w-full max-w-[280px] mb-3">
+                                    <div
+                                        className="p-[0.75px] rounded-[12px]"
+                                        style={{
+                                            background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                        }}
+                                    >
+                                        <a
+                                            href={product.purchase_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="relative h-[44px] w-full rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
                                             style={{
-                                                background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.01) 40%, rgba(0,0,0,0.01) 57%, rgba(0,0,0,0.05) 100%)'
+                                                boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
                                             }}
                                         >
-                                            <a
-                                                href={product.purchase_link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="relative h-[44px] w-full rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98] bg-slate-900"
+                                            {/* Shiny button background layers */}
+                                            <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
+                                            <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+
+                                            <span
+                                                className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
                                                 style={{
-                                                    boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
+                                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                                                    fontWeight: 590
                                                 }}
                                             >
-                                                <span
-                                                    className="relative z-10 text-[16px] font-semibold text-white tracking-wide"
-                                                    style={{
-                                                        fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                        fontWeight: 590
-                                                    }}
-                                                >
-                                                    Link to Purchase
-                                                </span>
-                                            </a>
-                                        </div>
+                                                Link to Purchase
+                                            </span>
+                                        </a>
                                     </div>
-                                )}
+                                </div>
+                            )}
 
-                                 {/* PayPal Button */}
-                                {product.paypal_html && (
-                                    <div className="w-full max-w-[320px] flex justify-center">
-                                            <PayPalSmartButton 
-                                                html={product.paypal_html} 
-                                                isPlatformOwner={isPlatformOwner} 
-                                                price={product.price}
-                                                productName={product.name}
-                                                successUrl={product.success_url}
-                                            />
+                            {/* Payment Well — recessed container for PayPal buttons */}
+                            {product.paypal_html && (
+                                <div
+                                    className="w-full rounded-[14px] overflow-hidden mt-1"
+                                    style={{
+                                        background: 'rgba(255, 255, 255, 0.95)',
+                                        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+                                        maxHeight: '210px',
+                                    }}
+                                >
+                                    <div className="px-3 pt-3 pb-1">
+                                        <PayPalSmartButton 
+                                            html={product.paypal_html} 
+                                            isPlatformOwner={isPlatformOwner} 
+                                            price={product.price}
+                                            productName={product.name}
+                                            successUrl={product.success_url}
+                                        />
                                     </div>
-                                )}
+                                </div>
+                            )}
 
-                                {/* Value Proposition */}
-                                {product.value_proposition && (
-                                    <p className="text-[14px] md:text-[13px] text-slate-500 leading-[20px] md:leading-[18px] mt-4 text-center font-medium">
-                                        {product.value_proposition}
-                                    </p>
-                                )}
-                            </div>
+                            {/* Value Proposition */}
+                            {product.value_proposition && (
+                                <p className="text-[15px] md:text-[13px] text-white/60 leading-[20px] md:leading-[18px] mt-4 text-center">
+                                    {product.value_proposition}
+                                </p>
+                            )}
                         </div>
 
                         {/* YouTube Video Embed */}
