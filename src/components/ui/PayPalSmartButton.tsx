@@ -88,7 +88,7 @@ export default function PayPalSmartButton({
                     ? (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'ba') 
                     : 'ba'
                 
-                const fundingString = isPlatformOwner ? '&enable-funding=googlepay,applepay' : ''
+                const fundingString = isPlatformOwner ? '&enable-funding=applepay' : ''
                 
                 script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons,applepay,googlepay,buttons${fundingString}`
                 script.async = true
