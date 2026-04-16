@@ -188,10 +188,19 @@ export default function PayPalSmartButton({
     // SCENARIO A: Found a Hosted Button ID OR Advanced Checkout Enabled (Smart Engine)
     if (hostedButtonId || useAdvancedCheckout) {
         return (
-            <div
-                ref={containerRef}
-                className="w-full flex justify-center items-center z-10 relative min-h-[50px]"
-            />
+            <div className="w-full flex justify-center py-2">
+                <div
+                    ref={containerRef}
+                    className="w-full max-w-[320px] z-10 relative mix-blend-multiply transition-opacity duration-500"
+                    style={{ 
+                        // This forces the white background of the PayPal iframe to become transparent 
+                        // while keeping the buttons themselves visible.
+                        // We also clip the bottom slightly to hide the mandatory tagline/footer.
+                        maxHeight: '175px', 
+                        overflow: 'hidden' 
+                    }}
+                />
+            </div>
         )
     }
 
