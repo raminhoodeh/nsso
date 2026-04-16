@@ -89,8 +89,9 @@ export default function PayPalSmartButton({
                     : 'ba'
                 
                 const fundingString = isPlatformOwner ? '&enable-funding=applepay' : ''
+                const currencyParam = isPlatformOwner ? '&currency=GBP' : ''
                 
-                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons,applepay,googlepay,buttons${fundingString}`
+                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons,buttons${fundingString}${currencyParam}`
                 script.async = true
                 script.onload = () => resolve(true)
                 script.onerror = (err) => {
@@ -148,7 +149,7 @@ export default function PayPalSmartButton({
                     },
                     onError: (err: any) => {
                         console.error("PayPal Advanced Checkout Error:", err);
-                        setError("Payment process encountered an error.");
+                        // Don't destroy the button UI - let users retry
                     }
                 }).render(containerRef.current)
 
