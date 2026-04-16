@@ -96,7 +96,7 @@ export default function ProductSalesPage() {
             setCurrentTestimonial((prev) =>
                 (prev + 1) % product.testimonials.length
             )
-        }, 5000) // Rotate every 5 seconds
+        }, 10000) // Rotate every 10 seconds
 
         return () => clearInterval(interval)
     }, [product?.testimonials])
@@ -193,6 +193,73 @@ export default function ProductSalesPage() {
                             {product.intro_text}
                         </p>
 
+                        {/* Mobile-only Product Card — shown early so users see the product before the bullet list */}
+                        <div className="lg:hidden relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6 w-full flex flex-col items-center">
+                            {/* Product Image */}
+                            {product.image_url && (
+                                <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
+                                    <Image
+                                        src={product.image_url}
+                                        alt={product.name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Product Name */}
+                            <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                                {product.name}
+                            </h3>
+
+                            {/* Price */}
+                            <p className="text-[29px] font-bold text-white mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                                {product.price}
+                            </p>
+
+                            {/* Purchase Link Button */}
+                            {product.purchase_link && (
+                                <div className="w-full max-w-[280px] mb-3">
+                                    <div
+                                        className="p-[0.75px] rounded-[12px]"
+                                        style={{
+                                            background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                                        }}
+                                    >
+                                        <a
+                                            href={product.purchase_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="relative h-[44px] w-full rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                            style={{
+                                                boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
+                                            }}
+                                        >
+                                            <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
+                                            <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+                                            <span
+                                                className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
+                                                style={{
+                                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                                                    fontWeight: 590
+                                                }}
+                                            >
+                                                Link to Purchase
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* PayPal Button */}
+                            {product.paypal_html && (
+                                <div
+                                    className="mb-4 w-full max-w-[280px] flex justify-center"
+                                    dangerouslySetInnerHTML={{ __html: product.paypal_html }}
+                                />
+                            )}
+                        </div>
+
                         {/* Benefits */}
                         {product.benefits && product.benefits.length > 0 && (
                             <ul className="space-y-3">
@@ -232,7 +299,7 @@ export default function ProductSalesPage() {
 
                         {/* Testimonial Carousel */}
                         {product.testimonials && product.testimonials.length > 0 && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-8">
+                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-4 md:p-8">
                                 <div className="flex items-center gap-4">
                                     {product.testimonials.length > 1 && (
                                         <button
