@@ -118,7 +118,7 @@ export default function PayPalSmartButton({
                 const renderPromise = window.paypal.Buttons({
                     style: {
                         layout: 'vertical',
-                        color: 'black',
+                        color: 'gold',
                         shape: 'rect',
                         label: 'pay',
                         height: 50,
@@ -192,11 +192,6 @@ export default function PayPalSmartButton({
                 <div
                     ref={containerRef}
                     className="w-full max-w-[320px] z-10 relative transition-opacity duration-500"
-                    style={useAdvancedCheckout ? {
-                        // 3 buttons * 50px + margins = ~170px. Max-height of 175px perfectly clips the mandatory footer text for a premium look.
-                        maxHeight: '175px',
-                        overflow: 'hidden'
-                    } : {}}
                 />
             </div>
         )
