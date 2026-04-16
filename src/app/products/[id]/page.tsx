@@ -40,6 +40,7 @@ export default function ProductSalesPage() {
     const [userContacts, setUserContacts] = useState<Contact[]>([])
     const [ownerUsername, setOwnerUsername] = useState<string>('')
     const [isOwner, setIsOwner] = useState(false)
+    const [isPlatformOwner, setIsPlatformOwner] = useState(false)
     const [currentTestimonial, setCurrentTestimonial] = useState(0)
     const [loading, setLoading] = useState(true)
 
@@ -67,15 +68,19 @@ export default function ProductSalesPage() {
                     setUserContacts(contactsData)
                 }
 
-                // Fetch owner's username
+                // Fetch owner's username and email to check platform ownership
                 const { data: userData } = await supabase
                     .from('users')
-                    .select('username')
+                    .select('username, email')
                     .eq('id', productData.user_id)
                     .single()
 
                 if (userData?.username) {
                     setOwnerUsername(userData.username)
+                }
+
+                if (userData?.email === 'raminhoodeh@gmail.com') {
+                    setIsPlatformOwner(true)
                 }
 
                 // Check if current user is owner
@@ -255,7 +260,10 @@ export default function ProductSalesPage() {
                             {/* PayPal Button */}
                             {product.paypal_html && (
                                 <div className="w-full max-w-[280px] flex justify-center">
-                                    <PayPalSmartButton html={product.paypal_html} />
+                                    <PayPalSmartButton 
+                                        html={product.paypal_html} 
+                                        isPlatformOwner={isPlatformOwner} 
+                                    />
                                 </div>
                             )}
                         </div>
@@ -407,7 +415,10 @@ export default function ProductSalesPage() {
                             {/* PayPal Button */}
                             {product.paypal_html && (
                                 <div className="w-full max-w-[280px] flex justify-center">
-                                    <PayPalSmartButton html={product.paypal_html} />
+                                    <PayPalSmartButton 
+                                        html={product.paypal_html} 
+                                        isPlatformOwner={isPlatformOwner} 
+                                    />
                                 </div>
                             )}
 

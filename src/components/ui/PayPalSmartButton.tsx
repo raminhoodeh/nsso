@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 interface PayPalSmartButtonProps {
     html: string
+    isPlatformOwner?: boolean
 }
 
 declare global {
@@ -13,7 +14,7 @@ declare global {
     }
 }
 
-export default function PayPalSmartButton({ html }: PayPalSmartButtonProps) {
+export default function PayPalSmartButton({ html, isPlatformOwner = false }: PayPalSmartButtonProps) {
     const containerRef = useRef<HTMLDivElement>(null)
     const [isSdkReady, setIsSdkReady] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -59,8 +60,14 @@ export default function PayPalSmartButton({ html }: PayPalSmartButtonProps) {
                 const script = document.createElement('script')
                 // Using 'ba' as client-id as found in original code, but 'sb' (sandbox) is safer default if 'ba' is invalid.
                 // Keeping 'ba' effectively but adding error handling.
-                const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'ba'
-                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons&enable-funding=googlepay`
+                // Conditionally load SDK based on ownership to avoid cross-merchant errors
+                const clientId = isPlatformOwner 
+                    ? (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'ba') 
+                    : 'ba'
+                
+                const fundingString = isPlatformOwner ? '&enable-funding=googlepay,applepay' : ''
+                
+                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons${fundingString}`
                 script.async = true
                 script.onload = () => resolve(true)
                 script.onerror = (err) => {

@@ -99,6 +99,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     // Check if viewer is the owner
     const isOwner = viewer?.id === user.id
+    
+    // Check if this profile belongs to the platform owner (determines PayPal SDK routing)
+    const isPlatformOwner = user.email === 'raminhoodeh@gmail.com'
 
     // Helper to render contact item with smart linking
     const renderContactItem = (contact: any) => {
@@ -419,7 +422,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                 )}
                                                 {product.paypal_active && product.paypal_html && (
                                                     <div className="w-full flex justify-center">
-                                                        <PayPalSmartButton html={product.paypal_html} />
+                                                        <PayPalSmartButton 
+                                                            html={product.paypal_html} 
+                                                            isPlatformOwner={isPlatformOwner} 
+                                                        />
                                                     </div>
                                                 )}
                                             </div>
