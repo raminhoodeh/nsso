@@ -67,6 +67,7 @@ export default function InrosProfileCanvas({
     isOwner,
     isPlatformOwner,
     introsBios,
+    introsEnabled = false,
 }: any) {
     const [currentLens, setCurrentLens] = useState<LensType>('default')
     const [bioFading, setBioFading] = useState(false)
@@ -80,8 +81,9 @@ export default function InrosProfileCanvas({
         commerce: 'client',
     }
 
-    // Resolve bio: use DB-generated intro if available, else fall back to INROS_DATA hardcoded
+    // Resolve bio: use DB-generated intro if feature is enabled AND variant exists
     const resolvedBio = (() => {
+        if (!introsEnabled) return activeData.bio
         const introKey = lensToIntroKey[currentLens]
         if (introKey && introsBios?.[introKey]) return introsBios[introKey]
         return activeData.bio
@@ -203,8 +205,8 @@ export default function InrosProfileCanvas({
 
                     {/* Bio Card — chips live inside the card */}
                     <GlassCard className={`p-6 !mt-10 ${activeData.focus === 'profile-hero' ? getFocusStyles('profile-hero') : ''}`}>
-                        {/* Chip row */}
-                        <div className="flex flex-wrap gap-2 mb-5">
+                        {/* Chip row — only when Intros feature is enabled */}
+                        {introsEnabled && <div className="flex flex-wrap gap-2 mb-5">
                             {(Object.keys(INROS_DATA) as LensType[]).map((lensId) => {
                                 const isActive = currentLens === lensId
                                 return (
@@ -236,7 +238,7 @@ export default function InrosProfileCanvas({
                                     </button>
                                 )
                             })}
-                        </div>
+                        </div>}
 
                         {/* Bio text — cross-fades on lens switch */}
                         <p

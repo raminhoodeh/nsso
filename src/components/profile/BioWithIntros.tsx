@@ -17,6 +17,7 @@ interface IntrosBios {
 interface BioWithIntrosProps {
     defaultBio: string | null
     introsBios: IntrosBios | null
+    introsEnabled?: boolean
 }
 
 // ─────────────────────────────────────────────────────────
@@ -37,13 +38,14 @@ const CHIPS: { key: 'default' | IntroKey; label: string }[] = [
 // - If intros_bios exists → shows 4 chips; viewer picks audience,
 //   bio swaps in-place with a fade transition
 // ─────────────────────────────────────────────────────────
-export default function BioWithIntros({ defaultBio, introsBios }: BioWithIntrosProps) {
+export default function BioWithIntros({ defaultBio, introsBios, introsEnabled = false }: BioWithIntrosProps) {
     const [active, setActive] = useState<'default' | IntroKey>('default')
     const [fading, setFading] = useState(false)
 
     if (!defaultBio) return null
 
-    const hasIntros = !!introsBios
+    // Only show chips if the feature is enabled AND bios have been generated
+    const hasIntros = introsEnabled && !!introsBios
 
     // Smooth cross-fade when switching chips
     const handleChipClick = (key: 'default' | IntroKey) => {

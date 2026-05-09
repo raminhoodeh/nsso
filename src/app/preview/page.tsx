@@ -156,6 +156,7 @@ export default function PreviewPage() {
                         <BioWithIntros
                             defaultBio={profile?.bio ?? null}
                             introsBios={(profile as any)?.intros_bios ?? null}
+                            introsEnabled={(profile as any)?.intros_enabled ?? false}
                         />
 
                         {/* Mobile Links Section */}

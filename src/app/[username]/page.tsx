@@ -181,6 +181,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     isOwner={isOwner}
                     isPlatformOwner={isPlatformOwner}
                     introsBios={(profile as any)?.intros_bios ?? null}
+                    introsEnabled={(profile as any)?.intros_enabled ?? false}
                 />
             ) : (
             <div className="px-6 lg:px-10 max-w-[1800px] mx-auto space-y-12">
@@ -237,6 +238,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         <BioWithIntros
                             defaultBio={profile?.bio ?? null}
                             introsBios={(profile as any)?.intros_bios ?? null}
+                            introsEnabled={(profile as any)?.intros_enabled ?? false}
                         />
 
                         {/* Mobile Links Section */}

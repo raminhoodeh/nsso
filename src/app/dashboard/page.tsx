@@ -78,7 +78,9 @@ function DashboardContent() {
     const [introsBios, setIntrosBios] = useState<{
         recruiter: string; collaborator: string; client: string
     } | null>(null)
+    const [introsEnabled, setIntrosEnabled] = useState(false)
     const [generatingIntros, setGeneratingIntros] = useState(false)
+    const [togglingIntros, setTogglingIntros] = useState(false)
 
     // Calculate profile completeness
     const profileCompleteness = (() => {
@@ -203,9 +205,8 @@ function DashboardContent() {
                 setHeadline(profileData.headline || '')
                 setBio(profileData.bio || '')
                 setProfilePicUrl(profileData.profile_pic_url || '')
-                if (profileData.intros_bios) {
-                    setIntrosBios(profileData.intros_bios)
-                }
+                if (profileData.intros_bios) setIntrosBios(profileData.intros_bios)
+                setIntrosEnabled(profileData.intros_enabled ?? false)
             }
 
             setLoading(false)
@@ -409,6 +410,37 @@ function DashboardContent() {
         } catch {
             showToast('Failed to save. Try again.', 'error')
         }
+    }
+
+    // INTROS: Toggle the feature on/off
+    const handleToggleIntros = async () => {
+        if (!user) return
+        setTogglingIntros(true)
+        const turningOn = !introsEnabled
+        try {
+            if (turningOn) {
+                // Enabling: clear any stale intros so user must regenerate fresh
+                const { error } = await supabase
+                    .from('profiles')
+                    .upsert({ user_id: user.id, intros_enabled: true, intros_bios: null })
+                if (error) throw error
+                setIntrosEnabled(true)
+                setIntrosBios(null)
+                showToast('Intros enabled — generate your audience bios below.', 'success')
+            } else {
+                // Disabling: turn off the feature, clear intros from DB
+                const { error } = await supabase
+                    .from('profiles')
+                    .upsert({ user_id: user.id, intros_enabled: false, intros_bios: null })
+                if (error) throw error
+                setIntrosEnabled(false)
+                setIntrosBios(null)
+                showToast('Intros disabled — your profile shows one bio.', 'success')
+            }
+        } catch {
+            showToast('Failed to update Intros setting.', 'error')
+        }
+        setTogglingIntros(false)
     }
 
     // Save profile changes
@@ -732,53 +764,92 @@ function DashboardContent() {
 
                                 {/* INTROS — Audience Bio Generator */}
                                 <div className="mt-6 pt-6 border-t border-white/10">
-                                    <div className="flex items-center justify-between mb-3">
+
+                                    {/* Header row: label + toggle */}
+                                    <div className="flex items-center justify-between mb-1">
                                         <div>
                                             <h4 className="text-white font-semibold text-sm uppercase tracking-wider flex items-center gap-2">
                                                 <Sparkles className="w-4 h-4 text-purple-400" />
                                                 Intros
                                             </h4>
                                             <p className="text-white/40 text-xs mt-1">
-                                                AI-tailored versions of your bio — edit freely before they go live
+                                                {introsEnabled
+                                                    ? 'AI-tailored bio variants — edit freely before they go live'
+                                                    : 'Show tailored bio variants to recruiters, collaborators & clients'}
                                             </p>
                                         </div>
+
+                                        {/* iOS-style toggle */}
                                         <button
-                                            onClick={handleGenerateIntros}
-                                            disabled={generatingIntros || !bio || bio.length < 20}
-                                            className="flex items-center gap-2 px-4 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                                            style={{ border: '1px solid rgba(255, 255, 255, 0.2)' }}
+                                            onClick={handleToggleIntros}
+                                            disabled={togglingIntros}
+                                            aria-checked={introsEnabled}
+                                            role="switch"
+                                            className="relative flex-shrink-0 w-11 h-6 rounded-full transition-all duration-300 disabled:opacity-50"
+                                            style={{
+                                                background: introsEnabled
+                                                    ? 'rgba(168, 85, 247, 0.7)'
+                                                    : 'rgba(255,255,255,0.12)',
+                                                border: introsEnabled
+                                                    ? '1px solid rgba(168,85,247,0.5)'
+                                                    : '1px solid rgba(255,255,255,0.15)',
+                                                boxShadow: introsEnabled
+                                                    ? 'inset 0 0 8px rgba(168,85,247,0.3)'
+                                                    : 'none',
+                                            }}
                                         >
-                                            {generatingIntros
-                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
-                                                : introsBios
-                                                    ? <><Sparkles className="w-4 h-4" /> Regenerate</>
-                                                    : <><Sparkles className="w-4 h-4" /> Generate Intros</>
-                                            }
+                                            <span
+                                                className="absolute top-[3px] w-[18px] h-[18px] rounded-full bg-white shadow-md transition-all duration-300"
+                                                style={{ left: introsEnabled ? 'calc(100% - 21px)' : '3px' }}
+                                            />
                                         </button>
                                     </div>
 
-                                    {introsBios && (
-                                        <div className="space-y-5">
-                                            {(['recruiter', 'collaborator', 'client'] as const).map((key) => (
-                                                <div key={key}>
-                                                    <label className="block text-white/50 text-xs font-bold uppercase tracking-wider mb-1 ml-1">
-                                                        {key}
-                                                    </label>
-                                                    <div className="relative rounded-[12px] overflow-hidden">
-                                                        <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
-                                                        <textarea
-                                                            value={introsBios[key]}
-                                                            onChange={(e) => setIntrosBios(prev =>
-                                                                prev ? { ...prev, [key]: e.target.value } : null
-                                                            )}
-                                                            onBlur={() => handleSaveIntro(key)}
-                                                            rows={3}
-                                                            className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[15px] font-medium leading-[22px] p-4 placeholder:text-white/50 resize-none"
-                                                        />
-                                                    </div>
+                                    {/* Content: only visible when enabled */}
+                                    {introsEnabled && (
+                                        <div className="mt-4 space-y-4">
+                                            {/* Generate / Regenerate button */}
+                                            <div className="flex justify-end">
+                                                <button
+                                                    onClick={handleGenerateIntros}
+                                                    disabled={generatingIntros || !bio || bio.length < 20}
+                                                    className="flex items-center gap-2 px-4 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    style={{ border: '1px solid rgba(255, 255, 255, 0.2)' }}
+                                                >
+                                                    {generatingIntros
+                                                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                                                        : introsBios
+                                                            ? <><Sparkles className="w-4 h-4" /> Regenerate</>
+                                                            : <><Sparkles className="w-4 h-4" /> Generate Intros</>
+                                                    }
+                                                </button>
+                                            </div>
+
+                                            {/* Editable textareas — only when bios exist */}
+                                            {introsBios && (
+                                                <div className="space-y-5">
+                                                    {(['recruiter', 'collaborator', 'client'] as const).map((key) => (
+                                                        <div key={key}>
+                                                            <label className="block text-white/50 text-xs font-bold uppercase tracking-wider mb-1 ml-1">
+                                                                {key}
+                                                            </label>
+                                                            <div className="relative rounded-[12px] overflow-hidden">
+                                                                <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
+                                                                <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                                                <textarea
+                                                                    value={introsBios[key]}
+                                                                    onChange={(e) => setIntrosBios(prev =>
+                                                                        prev ? { ...prev, [key]: e.target.value } : null
+                                                                    )}
+                                                                    onBlur={() => handleSaveIntro(key)}
+                                                                    rows={3}
+                                                                    className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[15px] font-medium leading-[22px] p-4 placeholder:text-white/50 resize-none"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     )}
                                 </div>
