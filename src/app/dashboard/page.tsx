@@ -74,6 +74,12 @@ function DashboardContent() {
     const [profilePicUrl, setProfilePicUrl] = useState('')
     const [customDomain, setCustomDomain] = useState('')
 
+    // INTROS state
+    const [introsBios, setIntrosBios] = useState<{
+        recruiter: string; collaborator: string; client: string
+    } | null>(null)
+    const [generatingIntros, setGeneratingIntros] = useState(false)
+
     // Calculate profile completeness
     const profileCompleteness = (() => {
         if (!profile) return 0
@@ -197,6 +203,9 @@ function DashboardContent() {
                 setHeadline(profileData.headline || '')
                 setBio(profileData.bio || '')
                 setProfilePicUrl(profileData.profile_pic_url || '')
+                if (profileData.intros_bios) {
+                    setIntrosBios(profileData.intros_bios)
+                }
             }
 
             setLoading(false)
@@ -367,6 +376,39 @@ function DashboardContent() {
             showToast('Failed to cancel subscription', 'error')
         }
         setProcessingDowngrade(false)
+    }
+
+    // INTROS: Generate all 3 bio variants via Gemini
+    const handleGenerateIntros = async () => {
+        if (!bio || bio.length < 20) return
+        setGeneratingIntros(true)
+        try {
+            const res = await fetch('/api/generate-intros', { method: 'POST' })
+            const data = await res.json()
+            if (!res.ok) {
+                showToast(data.error || 'Generation failed', 'error')
+            } else {
+                setIntrosBios(data)
+                showToast('Intros generated! Edit freely below.', 'success')
+            }
+        } catch {
+            showToast('Generation failed. Please try again.', 'error')
+        }
+        setGeneratingIntros(false)
+    }
+
+    // INTROS: Save a single edited intro variant onBlur (silent save)
+    const handleSaveIntro = async (key: 'recruiter' | 'collaborator' | 'client') => {
+        if (!introsBios) return
+        try {
+            await fetch('/api/generate-intros', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [key]: introsBios[key] }),
+            })
+        } catch {
+            showToast('Failed to save. Try again.', 'error')
+        }
     }
 
     // Save profile changes
@@ -687,6 +729,60 @@ function DashboardContent() {
                                         />
                                     </div>
                                 </div>
+
+                                {/* INTROS — Audience Bio Generator */}
+                                <div className="mt-6 pt-6 border-t border-white/10">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div>
+                                            <h4 className="text-white font-semibold text-sm uppercase tracking-wider flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                                Intros
+                                            </h4>
+                                            <p className="text-white/40 text-xs mt-1">
+                                                AI-tailored versions of your bio — edit freely before they go live
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={handleGenerateIntros}
+                                            disabled={generatingIntros || !bio || bio.length < 20}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                            style={{ border: '1px solid rgba(255, 255, 255, 0.2)' }}
+                                        >
+                                            {generatingIntros
+                                                ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
+                                                : introsBios
+                                                    ? <><Sparkles className="w-4 h-4" /> Regenerate</>
+                                                    : <><Sparkles className="w-4 h-4" /> Generate Intros</>
+                                            }
+                                        </button>
+                                    </div>
+
+                                    {introsBios && (
+                                        <div className="space-y-5">
+                                            {(['recruiter', 'collaborator', 'client'] as const).map((key) => (
+                                                <div key={key}>
+                                                    <label className="block text-white/50 text-xs font-bold uppercase tracking-wider mb-1 ml-1">
+                                                        {key}
+                                                    </label>
+                                                    <div className="relative rounded-[12px] overflow-hidden">
+                                                        <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
+                                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                                        <textarea
+                                                            value={introsBios[key]}
+                                                            onChange={(e) => setIntrosBios(prev =>
+                                                                prev ? { ...prev, [key]: e.target.value } : null
+                                                            )}
+                                                            onBlur={() => handleSaveIntro(key)}
+                                                            rows={3}
+                                                            className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[15px] font-medium leading-[22px] p-4 placeholder:text-white/50 resize-none"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
                             </div>
                         </div>
 

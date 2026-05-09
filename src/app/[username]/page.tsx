@@ -11,6 +11,8 @@ import AddToMyNssoButton from '@/components/ui/AddToMyNssoButton'
 import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 import Header from '@/components/layout/Header'
+import InrosProfileCanvas from '@/components/profile/InrosProfileCanvas'
+import BioWithIntros from '@/components/profile/BioWithIntros'
 
 interface PageProps {
     params: Promise<{ username: string }>
@@ -164,6 +166,22 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
 
             {/* Profile Content */}
+            {isPlatformOwner ? (
+                <InrosProfileCanvas 
+                    user={user}
+                    viewer={viewer}
+                    profile={profile}
+                    links={links}
+                    contacts={contacts}
+                    experiences={experiences}
+                    qualifications={qualifications}
+                    projects={projects}
+                    products={products}
+                    connectionExists={connectionExists}
+                    isOwner={isOwner}
+                    isPlatformOwner={isPlatformOwner}
+                />
+            ) : (
             <div className="px-6 lg:px-10 max-w-[1800px] mx-auto space-y-12">
 
                 {/* 1. Identity & Resume Section */}
@@ -215,13 +233,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         )}
 
                         {/* Bio Card */}
-                        {profile?.bio && (
-                            <GlassCard className="p-6 !mt-10">
-                                <p className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap">
-                                    {profile.bio}
-                                </p>
-                            </GlassCard>
-                        )}
+                        <BioWithIntros
+                            defaultBio={profile?.bio ?? null}
+                            introsBios={(profile as any)?.intros_bios ?? null}
+                        />
 
                         {/* Mobile Links Section */}
                         {links.length > 0 && (
@@ -448,6 +463,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     <CreateProfileButton />
                 </div>
             </div >
+            )}
         </main >
     )
 }
