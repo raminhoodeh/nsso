@@ -180,6 +180,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     connectionExists={connectionExists}
                     isOwner={isOwner}
                     isPlatformOwner={isPlatformOwner}
+                    introsBios={(profile as any)?.intros_bios ?? null}
                 />
             ) : (
             <div className="px-6 lg:px-10 max-w-[1800px] mx-auto space-y-12">

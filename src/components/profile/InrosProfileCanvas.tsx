@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import GlassCard from '@/components/ui/GlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
@@ -65,10 +65,36 @@ export default function InrosProfileCanvas({
     products,
     connectionExists,
     isOwner,
-    isPlatformOwner
+    isPlatformOwner,
+    introsBios,
 }: any) {
     const [currentLens, setCurrentLens] = useState<LensType>('default')
+    const [bioFading, setBioFading] = useState(false)
     const activeData = INROS_DATA[currentLens]
+
+    // Map lens keys to intros_bios keys
+    const lensToIntroKey: Record<LensType, keyof typeof introsBios | null> = {
+        default: null,
+        corporate: 'recruiter',
+        creative: 'collaborator',
+        commerce: 'client',
+    }
+
+    // Resolve bio: use DB-generated intro if available, else fall back to INROS_DATA hardcoded
+    const resolvedBio = (() => {
+        const introKey = lensToIntroKey[currentLens]
+        if (introKey && introsBios?.[introKey]) return introsBios[introKey]
+        return activeData.bio
+    })()
+
+    const handleLensSwitch = (lens: LensType) => {
+        if (lens === currentLens) return
+        setBioFading(true)
+        setTimeout(() => {
+            setCurrentLens(lens)
+            setBioFading(false)
+        }, 150)
+    }
 
     const renderContactItem = (contact: any) => {
         const method = contact.method === 'Other' ? contact.custom_method_name : contact.method
@@ -125,27 +151,6 @@ export default function InrosProfileCanvas({
 
     return (
         <div className="px-6 lg:px-10 max-w-[1800px] mx-auto flex flex-col gap-12">
-            
-            {/* INROS Switcher */}
-            <div className="max-w-[1470px] mx-auto w-full text-center relative z-[100] mb-2">
-                <h3 className="text-[#5ac8f5] font-semibold mb-2">INROS Lens</h3>
-                <p className="text-white/60 text-sm mb-4">Change the viewer context to see the profile adapt.</p>
-                <div className="flex justify-center gap-3 flex-wrap">
-                    {(Object.keys(INROS_DATA) as LensType[]).map((lensId) => (
-                        <button
-                            key={lensId}
-                            onClick={() => setCurrentLens(lensId)}
-                            className={`px-4 py-2 rounded-full border text-sm transition-all duration-300 ${
-                                currentLens === lensId 
-                                ? 'bg-[#60a5fa] text-white border-[#5ac8f5] shadow-[0_0_15px_rgba(90,200,245,0.4)]' 
-                                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                            }`}
-                        >
-                            {INROS_DATA[lensId].label}
-                        </button>
-                    ))}
-                </div>
-            </div>
 
             {/* Top Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12" style={{ order: activeData.order.top }}>
@@ -196,10 +201,49 @@ export default function InrosProfileCanvas({
                         </div>
                     )}
 
-                    {/* Bio Card */}
+                    {/* Bio Card — chips live inside the card */}
                     <GlassCard className={`p-6 !mt-10 ${activeData.focus === 'profile-hero' ? getFocusStyles('profile-hero') : ''}`}>
-                        <p className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap transition-opacity duration-300">
-                            {activeData.bio}
+                        {/* Chip row */}
+                        <div className="flex flex-wrap gap-2 mb-5">
+                            {(Object.keys(INROS_DATA) as LensType[]).map((lensId) => {
+                                const isActive = currentLens === lensId
+                                return (
+                                    <button
+                                        key={lensId}
+                                        onClick={() => handleLensSwitch(lensId)}
+                                        aria-pressed={isActive}
+                                        className="relative flex items-center justify-center px-4 py-1.5 rounded-full text-[13px] tracking-wide transition-all duration-200 ease-out select-none overflow-hidden"
+                                        style={{
+                                            background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                                            border: isActive ? '1px solid rgba(255,255,255,0.22)' : '1px solid rgba(255,255,255,0.08)',
+                                            backdropFilter: isActive ? 'blur(8px)' : 'none',
+                                            WebkitBackdropFilter: isActive ? 'blur(8px)' : 'none',
+                                            boxShadow: isActive ? 'inset 1px 1px 1px rgba(255,255,255,0.18), 0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                                            color: isActive ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.4)',
+                                            fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                                            fontWeight: isActive ? 590 : 400,
+                                        }}
+                                    >
+                                        {/* Specular highlight on active chip */}
+                                        {isActive && (
+                                            <span
+                                                aria-hidden="true"
+                                                className="absolute inset-0 rounded-full pointer-events-none"
+                                                style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%)' }}
+                                            />
+                                        )}
+                                        <span className="relative z-10">{INROS_DATA[lensId].label}</span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        {/* Bio text — cross-fades on lens switch */}
+                        <p
+                            className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap"
+                            style={{ opacity: bioFading ? 0 : 1, transition: 'opacity 150ms ease' }}
+                        >
+                            {resolvedBio}
                         </p>
                     </GlassCard>
 
