@@ -12,6 +12,7 @@ import GlassButton from '@/components/ui/GlassButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
 import { useToast } from '@/components/ui/Toast'
+import BioWithIntros from '@/components/profile/BioWithIntros'
 import type { User, Profile, Link as LinkItem, Contact } from '@/lib/types'
 
 export default function PreviewPage() {
@@ -152,13 +153,10 @@ export default function PreviewPage() {
                         )}
 
                         {/* Bio Card */}
-                        {profile?.bio && (
-                            <GlassCard className="p-6 !mt-10">
-                                <p className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap">
-                                    {profile.bio}
-                                </p>
-                            </GlassCard>
-                        )}
+                        <BioWithIntros
+                            defaultBio={profile?.bio ?? null}
+                            introsBios={(profile as any)?.intros_bios ?? null}
+                        />
 
                         {/* Mobile Links Section */}
                         {links.length > 0 && (

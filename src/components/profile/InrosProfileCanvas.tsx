@@ -172,8 +172,8 @@ export default function InrosProfileCanvas({
                         <h1 className="text-4xl lg:text-5xl font-bold text-white mb-2">
                             <span className="font-normal">I'm </span>{initialProfile?.full_name || 'Anonymous'}
                         </h1>
-                        <p className="text-xl lg:text-2xl text-[#5ac8f5] font-medium mb-6 transition-opacity duration-300">
-                            {activeData.headline}
+                        <p className="text-xl lg:text-2xl text-[#5ac8f5] font-medium mb-6">
+                            {initialProfile?.headline || ''}
                         </p>
 
                         {/* Add to My nsso Button */}
