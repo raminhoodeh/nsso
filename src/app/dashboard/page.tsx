@@ -422,7 +422,8 @@ function DashboardContent() {
                 // Enabling: clear any stale intros so user must regenerate fresh
                 const { error } = await supabase
                     .from('profiles')
-                    .upsert({ user_id: user.id, intros_enabled: true, intros_bios: null })
+                    .update({ intros_enabled: true, intros_bios: null })
+                    .eq('user_id', user.id)
                 if (error) throw error
                 setIntrosEnabled(true)
                 setIntrosBios(null)
@@ -431,14 +432,16 @@ function DashboardContent() {
                 // Disabling: turn off the feature, clear intros from DB
                 const { error } = await supabase
                     .from('profiles')
-                    .upsert({ user_id: user.id, intros_enabled: false, intros_bios: null })
+                    .update({ intros_enabled: false, intros_bios: null })
+                    .eq('user_id', user.id)
                 if (error) throw error
                 setIntrosEnabled(false)
                 setIntrosBios(null)
                 showToast('Intros disabled — your profile shows one bio.', 'success')
             }
-        } catch {
-            showToast('Failed to update Intros setting.', 'error')
+        } catch (err: any) {
+            console.error('Toggle intros error:', err)
+            showToast(`Failed to update Intros: ${err?.message || 'unknown error'}`, 'error')
         }
         setTogglingIntros(false)
     }
