@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY || "dcddb94a3ed73106f5ac8b2a9548c692";
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 const TMDB_GENRES: Record<number, string> = {
   28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy",
