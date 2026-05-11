@@ -2,9 +2,18 @@ import os
 import requests
 import json
 
-SUPABASE_URL = "https://ymckairbwictbfsfpqzt.supabase.co"
+from dotenv import load_dotenv
+
+# Load environment variables from .env.local
+load_dotenv(".env.local")
+
+SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "https://ymckairbwictbfsfpqzt.supabase.co")
 # The service role key has bypass RLS privileges, used safely in localhost scripts
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltY2thaXJid2ljdGJmc2ZwcXp0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTk1MzQ3NiwiZXhwIjoyMDgxNTI5NDc2fQ.Aj2H97hwrWMnW9yp7y2MiPXBEAQYzU6wJlDXCT_c8Kk"
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+
+if not SUPABASE_KEY:
+    print("Error: SUPABASE_SERVICE_ROLE_KEY environment variable is not set in .env.local")
+    exit(1)
 
 headers = {
     "apikey": SUPABASE_KEY,
