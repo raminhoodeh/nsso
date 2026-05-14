@@ -1,3 +1,5 @@
+'use client'
+
 import { ReactNode } from 'react'
 
 interface CleanGlassCardProps {
@@ -7,10 +9,8 @@ interface CleanGlassCardProps {
 }
 
 /**
- * CleanGlassCard - A "Clean Slate" implementation of the Ultimate Glass aesthetic.
- * 
- * Bypasses all legacy global CSS and SVG filters to ensure zero rendering artifacts.
- * Uses pure CSS for a high-performance, Apple-like glass effect.
+ * CleanGlassCard - Rebuilt for maximum reliability and visual fidelity.
+ * Uses the global SVG-based Liquid Glass distortion system.
  */
 export default function CleanGlassCard({
     children,
@@ -19,84 +19,32 @@ export default function CleanGlassCard({
 }: CleanGlassCardProps) {
     return (
         <div
-            className={`relative overflow-hidden ${className}`}
+            className={`
+                relative 
+                overflow-hidden 
+                rounded-[40px] 
+                bg-black/20 
+                border-x border-b border-white/10 
+                shadow-2xl 
+                glass-style-card 
+                glass-distortion-active 
+                group
+                ${className}
+            `}
             style={{
-                borderRadius: '40px',
-                backgroundColor: 'rgba(0, 0, 0, 0.2)', // Slightly brighter (less dark)
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', // Stronger shadow
-                // border: '1px solid rgba(255, 255, 255, 0.15)', // Removed in favor of gradient stroke
+                isolation: 'isolate',
+                ['--glass-buffer' as any]: '-60px',
                 ...customStyle
             }}
         >
-            {/* ... other layers ... */}
+            {/* 1. Specular highlight (Design System) */}
+            <div className="glass-specular opacity-40 group-hover:opacity-60 transition-opacity" aria-hidden="true" />
 
-            {/* Gradient Border Overlay (New) */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                    borderRadius: 'inherit',
-                    padding: '1px',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                    mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    maskComposite: 'exclude',
-                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    zIndex: 50
-                }}
-            />
-            {/* SVG Filter Definition */}
-            <svg style={{ display: 'none' }}>
-                <filter id="glass-distortion">
-                    <feTurbulence type="turbulence" baseFrequency="0.008" numOctaves="2" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="77" />
-                </filter>
-            </svg>
-
-            {/* 
-              Layer 1: The Glass Physics 
-              Applied directly to a dedicated background layer
-            */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                    borderRadius: 'inherit',
-                    backdropFilter: 'blur(40px) saturate(220%)',
-                    WebkitBackdropFilter: 'blur(40px) saturate(220%)',
-                    filter: 'url(#glass-distortion)', // The requested liquid distortion
-                    zIndex: 0
-                }}
-            />
-
-            {/* 
-              Layer 2: Gradient Sheen (Specular Highlight)
-            */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                    borderRadius: 'inherit',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 100%)',
-                    mixBlendMode: 'overlay',
-                    opacity: 0.7,
-                    zIndex: 1
-                }}
-            />
-
-            {/* 
-              Layer 3: Inner Glow (Volume)
-            */}
-            <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                    borderRadius: 'inherit',
-                    boxShadow: 'inset 0 0 20px 0 rgba(255, 255, 255, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                    zIndex: 1
-                }}
-            />
-
-            {/* Content Container */}
+            {/* 2. Content Container */}
             <div className="relative z-10 h-full w-full">
                 {children}
             </div>
+
         </div>
     )
 }

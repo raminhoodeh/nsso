@@ -99,7 +99,7 @@ body {
 [class*="glass-style-"]::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: var(--glass-buffer, 0);
   border-radius: inherit;
   backdrop-filter: blur(var(--glass-blur, 7px));
   /* Restore Liquid Glass Distortion */
@@ -173,7 +173,8 @@ body {
 
 /* === Optimization: Selective Distortion === */
 .glass-distortion-active {
-  overflow: visible !important;
+  isolation: isolate;
+  overflow: hidden;
   will-change: transform;
   /* Hint for compositor promotion */
 }

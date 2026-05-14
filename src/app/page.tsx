@@ -422,7 +422,8 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
           <Link href="/earnings" className="block">
             <CleanGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
-              <h3 className="text-xl font-bold text-white mb-2">Monetise</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Monetise</h3>
+              <div className="h-px w-full bg-white/10 mb-4" />
               <p className="text-white/70 text-sm">
                 Do you have an engaged following? See our nsso earnings programme
               </p>
@@ -431,7 +432,8 @@ export default function HomePage() {
 
           <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
             <CleanGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
-              <h3 className="text-xl font-bold text-white mb-2">Example Profile</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Example Profile</h3>
+              <div className="h-px w-full bg-white/10 mb-4" />
               <p className="text-white/70 text-sm">
                 See how your unified identity could look.
               </p>
