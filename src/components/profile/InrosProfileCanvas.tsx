@@ -66,28 +66,14 @@ export default function InrosProfileCanvas({
     connectionExists,
     isOwner,
     isPlatformOwner,
-    introsBios,
-    introsEnabled = false,
 }: any) {
     const [currentLens, setCurrentLens] = useState<LensType>('default')
     const [bioFading, setBioFading] = useState(false)
     const activeData = INROS_DATA[currentLens]
 
-    // Map lens keys to intros_bios keys
-    const lensToIntroKey: Record<LensType, keyof typeof introsBios | null> = {
-        default: null,
-        corporate: 'recruiter',
-        creative: 'collaborator',
-        commerce: 'client',
-    }
+    const visibleLenses = Object.keys(INROS_DATA) as LensType[]
 
-    // Resolve bio: use DB-generated intro if feature is enabled AND variant exists
-    const resolvedBio = (() => {
-        if (!introsEnabled) return activeData.bio
-        const introKey = lensToIntroKey[currentLens]
-        if (introKey && introsBios?.[introKey]) return introsBios[introKey]
-        return activeData.bio
-    })()
+    const resolvedBio = activeData.bio
 
     const handleLensSwitch = (lens: LensType) => {
         if (lens === currentLens) return
@@ -205,9 +191,9 @@ export default function InrosProfileCanvas({
 
                     {/* Bio Card — chips live inside the card */}
                     <GlassCard className={`p-6 !mt-10 ${activeData.focus === 'profile-hero' ? getFocusStyles('profile-hero') : ''}`}>
-                        {/* Chip row — only when Intros feature is enabled */}
-                        {introsEnabled && <div className="flex flex-wrap gap-2 mb-5">
-                            {(Object.keys(INROS_DATA) as LensType[]).map((lensId) => {
+                        {/* Chip row */}
+                        <div className="flex flex-wrap gap-2 mb-5">
+                            {visibleLenses.map((lensId) => {
                                 const isActive = currentLens === lensId
                                 return (
                                     <button
@@ -238,7 +224,7 @@ export default function InrosProfileCanvas({
                                     </button>
                                 )
                             })}
-                        </div>}
+                        </div>
 
                         {/* Bio text — cross-fades on lens switch */}
                         <p

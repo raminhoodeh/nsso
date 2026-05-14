@@ -12,7 +12,6 @@ import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 import Header from '@/components/layout/Header'
 import InrosProfileCanvas from '@/components/profile/InrosProfileCanvas'
-import BioWithIntros from '@/components/profile/BioWithIntros'
 
 interface PageProps {
     params: Promise<{ username: string }>
@@ -180,8 +179,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     connectionExists={connectionExists}
                     isOwner={isOwner}
                     isPlatformOwner={isPlatformOwner}
-                    introsBios={(profile as any)?.intros_bios ?? null}
-                    introsEnabled={(profile as any)?.intros_enabled ?? false}
                 />
             ) : (
             <div className="px-6 lg:px-10 max-w-[1800px] mx-auto space-y-12">
@@ -235,11 +232,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         )}
 
                         {/* Bio Card */}
-                        <BioWithIntros
-                            defaultBio={profile?.bio ?? null}
-                            introsBios={(profile as any)?.intros_bios ?? null}
-                            introsEnabled={(profile as any)?.intros_enabled ?? false}
-                        />
+                        {profile?.bio && (
+                            <GlassCard className="p-6 !mt-10">
+                                <p className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap">
+                                    {profile.bio}
+                                </p>
+                            </GlassCard>
+                        )}
 
                         {/* Mobile Links Section */}
                         {links.length > 0 && (
