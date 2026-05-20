@@ -140,11 +140,7 @@ export default function VantaBackground() {
                         console.error('[Vanta] Initialization failed:', error)
                     }
 
-                    // Initialize optimization ONLY if not in rollback mode
-                    // TEMPORARILY DISABLED: Video recording needs more testing
-                    if (false && !isRollback && vantaEffect.current) {
-                        initializeOptimization()
-                    }
+                    // Optimization remains disabled until video recording is validated.
                 } else {
                     console.warn('[Vanta] Scripts missing during init', { VANTA: !!window.VANTA, THREE: !!window.THREE })
                 }
@@ -213,7 +209,7 @@ export default function VantaBackground() {
     }, [isRollback, shouldHide])
 
     // Initialize optimization system
-    const initializeOptimization = () => {
+    function initializeOptimization() {
         if (!vantaEffect.current) return
 
         // Find canvas element created by Vanta

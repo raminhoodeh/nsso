@@ -20,7 +20,11 @@ async function generateEmbedding(text: string) {
 }
 
 async function ingestFilmList() {
-    const filePath = path.join(process.cwd(), 'nsso agent context database', 'nsso Database - Film List.csv');
+    const contextDir = path.resolve(
+        process.cwd(),
+        process.env.NSSO_CONTEXT_DIR || 'nsso agent context database'
+    );
+    const filePath = path.join(contextDir, 'nsso Database - Film List.csv');
     const fileName = 'nsso Database - Film List.csv';
 
     console.log('📁 Reading Film List CSV...');

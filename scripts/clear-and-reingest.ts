@@ -14,7 +14,10 @@ const supabase = createClient(
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 const embModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
-const CONTEXT_DIR = path.join(process.cwd(), 'nsso agent context database');
+const CONTEXT_DIR = path.resolve(
+    process.cwd(),
+    process.env.NSSO_CONTEXT_DIR || 'nsso agent context database'
+);
 const BATCH_SIZE = 10;
 const DELETE_BATCH = 500;
 

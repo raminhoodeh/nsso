@@ -122,7 +122,10 @@ async function processMarkdown(filePath: string, fileName: string) {
 }
 
 async function ingestDatabase() {
-    const dbDir = '/Users/raminvision/Desktop/nsso/Updated Database';
+    const dbDir = path.resolve(
+        process.cwd(),
+        process.env.NSSO_CONTEXT_DIR || 'nsso agent context database'
+    );
     console.log(`\n📁 Reading database directory: ${dbDir}`);
     
     const files = fs.readdirSync(dbDir).filter(f => !f.startsWith('.'));

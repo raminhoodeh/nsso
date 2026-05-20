@@ -30,8 +30,29 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
+!.env.example
+
+# local/private source data
+/nsso agent context database/
+/private/
+
+# local diagnostics and generated outputs
+*.log
+/check_*.sql
+/test_*.sql
+/verify_*.sql
+/clear_film_data.sql
+/test_db.js
+/check_models.js
+/update_products_urls.py
+/src/app/dashboard/page.tsx.*
+
+# local experiments and vendor checkouts
+/liquid-glass-js-main/
+/liquid-logo-main/
+/src/lib/liquid-glass/
 
 # vercel
 .vercel

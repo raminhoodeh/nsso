@@ -51,7 +51,7 @@ export default function SignInPage() {
 
             if (!existingUser) {
                 // Create user record
-                const username = Math.random().toString(36).substring(2, 10)
+                const username = data.user.id.replace(/-/g, '').slice(0, 10)
                 await supabase.from('users').insert({
                     id: data.user.id,
                     email: data.user.email,

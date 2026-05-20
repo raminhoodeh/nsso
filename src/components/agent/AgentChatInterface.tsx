@@ -95,8 +95,6 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
             if (loading || hasInitialized) return;
 
             let firstName = 'creator';
-            let isUserLoggedIn = !!user;
-
             let introText = '';
 
             if (user) {
@@ -603,7 +601,6 @@ Check out some of the areas I can help you with below.`;
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            let botResponseText = '';
 
             const botMessageId = (Date.now() + 1).toString();
 

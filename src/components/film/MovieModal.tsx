@@ -167,9 +167,6 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         setSimilarFilms(recommendations);
     }, [film, filmList]);
 
-
-    if (!film) return null;
-
     // Keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {

@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 
 interface Product {
@@ -343,12 +344,12 @@ export default function ProductSalesPage() {
 
                         {/* Footer Attribution */}
                         <div className="mt-12 pt-8 border-t border-white/10">
-                            <a
+                            <Link
                                 href="/"
                                 className="text-white/60 hover:text-white/80 transition-colors text-sm font-medium"
                             >
                                 Sales page created with nsso →
-                            </a>
+                            </Link>
                         </div>
                     </div>
 

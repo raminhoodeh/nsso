@@ -27,7 +27,10 @@ if (!apiKey) {
 const genAI = new GoogleGenerativeAI(apiKey);
 const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
-const CONTEXT_DIR = path.join(process.cwd(), 'nsso agent context database');
+const CONTEXT_DIR = path.resolve(
+    process.cwd(),
+    process.env.NSSO_CONTEXT_DIR || 'nsso agent context database'
+);
 
 async function generateEmbedding(text: string) {
     try {
