@@ -10,6 +10,10 @@ One URL. Every side of you. Powered by AI that knows you by name.
 
 [**nsso.me**](https://nsso.me) · [**Live Profile Demo**](https://nsso.me/ramin)
 
+<img width="834" height="593" alt="image" src="https://github.com/user-attachments/assets/9a964090-b4fe-481a-bf3a-372a689427a8" />
+
+<img width="840" height="586" alt="image" src="https://github.com/user-attachments/assets/40047f26-7af6-496d-8355-bfe0dbe647b5" />
+
 ---
 
 </div>
@@ -19,6 +23,8 @@ One URL. Every side of you. Powered by AI that knows you by name.
 Professional identity online is a fragmentation problem masquerading as a presentation problem. You have a LinkedIn, a Linktree, a personal site, a portfolio, a payment link, and a WhatsApp number - none of which speak to each other, and none of which present you at the depth your work actually deserves.
 
 **nsso** solves this. It is a unified professional homepage - one URL, one identity surface — that triples as a **next-gen résumé**, a **link-in-bio tool**, and a **personal storefront**. Built around the belief that presenting yourself well is an act of clarity, not vanity.
+
+<img width="835" height="485" alt="image" src="https://github.com/user-attachments/assets/7dd0ef9a-296f-4d35-89cf-78a8d2a7d07c" />
 
 ---
 
@@ -34,9 +40,16 @@ Professional identity online is a fragmentation problem masquerading as a presen
 - **QR-code networking** — shareable profile QR for in-person introductions; "Add to My NSSO" connection system on every public profile
 - **Profile completeness scoring (0–100)** calculated server-side across five weighted dimensions — surfaced to the AI agent for targeted coaching nudges
 
+- <img width="832" height="535" alt="image" src="https://github.com/user-attachments/assets/4ccbf6e9-99b8-46ef-a0d6-f1ec6a9b992a" />
+
+<img width="830" height="516" alt="image" src="https://github.com/user-attachments/assets/7d66c9c9-6807-4162-bf04-2aa81bc85579" />
+
 ### 🤖 Deity — Agentic AI Profile Coach
 
 Deity is not a chatbot that gives advice about your profile. It is an **AI agent that directly reads, writes, and mutates your live profile in real time**, with full contextual awareness of everything in it.
+
+<img width="879" height="397" alt="image" src="https://github.com/user-attachments/assets/b8924358-95bf-47c8-8831-947af06a4242" />
+
 
 **How it works:**
 
