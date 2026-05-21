@@ -7,7 +7,6 @@
 - **App Router frontend** built with Next.js, React, TypeScript, and Tailwind CSS.
 - **Supabase backend integration** for profiles, links, contacts, products, referrals, news feed data, and RazinFlix records.
 - **Deity AI assistant** that uses Gemini plus a Supabase-backed knowledge base to help edit and reason over profile context.
-- **RazinFlix** film library UI with metadata enrichment, poster handling, trailer resolution, and admin maintenance routes.
 - **Web3 wallet plumbing** through Wagmi, Viem, and Solana wallet adapters.
 - **Payment integrations** for Polar and PayPal-powered flows.
 
@@ -39,9 +38,6 @@ The chatbot ingestion source CSVs are intentionally not published. Keep private 
 
 ## Documentation
 
-- [RazinFlix AI pipeline](docs/razinflix/ai_pipeline.md)
-- [RazinFlix database schema](docs/razinflix/database_schema.md)
-- [RazinFlix UI architecture](docs/razinflix/ui_architecture.md)
 - [Chatbot context ingestion](docs/chatbot-context.md)
 
 ## Public repo notes
