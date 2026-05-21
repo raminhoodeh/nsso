@@ -16,11 +16,9 @@ One URL. Every side of you. Powered by AI that knows you by name.
 
 ## What is nsso?
 
-Professional identity online is a fragmentation problem masquerading as a presentation problem. You have a LinkedIn, a Linktree, a personal site, a portfolio, a payment link, and a WhatsApp number — none of which speak to each other, and none of which present you at the depth your work actually deserves.
+Professional identity online is a fragmentation problem masquerading as a presentation problem. You have a LinkedIn, a Linktree, a personal site, a portfolio, a payment link, and a WhatsApp number - none of which speak to each other, and none of which present you at the depth your work actually deserves.
 
-**nsso** solves this. It is a unified professional homepage — one URL, one identity surface — that triples as a **next-gen résumé**, a **link-in-bio tool**, and a **personal storefront**. Built around the belief that presenting yourself well is an act of clarity, not vanity.
-
-> *"Give a man a purpose and the ability to achieve it, and he'll walk over broken glass with a smile."*
+**nsso** solves this. It is a unified professional homepage - one URL, one identity surface — that triples as a **next-gen résumé**, a **link-in-bio tool**, and a **personal storefront**. Built around the belief that presenting yourself well is an act of clarity, not vanity.
 
 ---
 
@@ -65,7 +63,7 @@ When Deity identifies profile intent, it operates with nine declared function sc
 
 Tool declarations are entirely omitted for guest sessions. There is no function schema in scope for the model to call, meaning a malicious prompt cannot trigger a tool invocation regardless of how it is phrased.
 
-### ✍️ Intros — AI-Generated Audience-Tailored Bios
+### ✍️ Intros - AI-Generated Audience-Tailored Bios
 
 Gemini 2.0 Flash generates three distinct bio variants for three target audiences the user specifies (e.g. "investors," "clients," "collaborators") — each rewritten in tone and emphasis for that reader. No manual copy needed.
 
@@ -167,9 +165,6 @@ npm run build    # production build
 
 ## Documentation
 
-- [RazinFlix AI pipeline](docs/razinflix/ai_pipeline.md)
-- [RazinFlix database schema](docs/razinflix/database_schema.md)
-- [RazinFlix UI architecture](docs/razinflix/ui_architecture.md)
 - [Chatbot context ingestion](docs/chatbot-context.md)
 
 ---
