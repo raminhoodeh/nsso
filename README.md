@@ -20,7 +20,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-The app can render without every integration enabled, but feature areas that call Supabase, Gemini, Polar, PayPal, TMDB, or wallet providers require the matching environment variables in `.env.local`.
+The app can render without every integration enabled, but feature areas that call Supabase, Gemini, Polar, PayPal, or wallet providers require the matching environment variables in `.env.local`.
 
 ## Useful commands
 
