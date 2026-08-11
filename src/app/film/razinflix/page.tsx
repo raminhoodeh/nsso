@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
-import MovieCard from '@/components/film/MovieCard';
+import MovieCard, { type Film } from '@/components/film/MovieCard';
 import AddFilmModal from '@/components/film/AddFilmModal';
 import { Search, Loader2, ChevronLeft, ChevronRight, Volume2, VolumeX, Plus } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
@@ -15,12 +15,12 @@ export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState<ViewMode>('category');
-    const [selectedFilm, setSelectedFilm] = useState<any>(null);
-    const [featuredFilms, setFeaturedFilms] = useState<any[]>([]);
+    const [selectedFilm, setSelectedFilm] = useState<Film | null>(null);
+    const [featuredFilms, setFeaturedFilms] = useState<Film[]>([]);
     const [featuredIndex, setFeaturedIndex] = useState(0);
-    const [modalContext, setModalContext] = useState<{ list: any[], index: number }>({ list: [], index: 0 });
+    const [modalContext, setModalContext] = useState<{ list: Film[], index: number }>({ list: [], index: 0 });
     const [scrolled, setScrolled] = useState(false);
-    const [films, setFilms] = useState<any[]>([]);
+    const [films, setFilms] = useState<Film[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [brokenPosters, setBrokenPosters] = useState<Set<number>>(new Set());
     const [isCheckingPosters, setIsCheckingPosters] = useState(false);
@@ -101,9 +101,10 @@ export default function RazinFlixPage() {
                 
                 if (error) throw error;
                 if (data) {
-                    setFilms(data);
+                    const loadedFilms = data as Film[];
+                    setFilms(loadedFilms);
                     // Select 5 random featured films with a trailer
-                    const filmsWithTrailers = data.filter((f: any) => f.trailer_key);
+                    const filmsWithTrailers = loadedFilms.filter(film => film.trailer_key);
                     if (filmsWithTrailers.length > 0) {
                         const shuffled = filmsWithTrailers.sort(() => 0.5 - Math.random());
                         setFeaturedFilms(shuffled.slice(0, 5));
@@ -118,7 +119,7 @@ export default function RazinFlixPage() {
         fetchFilms();
     }, []);
 
-    const handleFilmClick = (film: any, list: any[]) => {
+    const handleFilmClick = (film: Film, list: Film[]) => {
         setSelectedFilm(film);
         setModalContext({ list, index: list.indexOf(film) });
     };
@@ -139,7 +140,7 @@ export default function RazinFlixPage() {
 
     // Group films by category
     const categories = useMemo(() => {
-        const cats: Record<string, any[]> = {};
+        const cats: Record<string, Film[]> = {};
         
         if (!searchTerm) {
             films.forEach(film => {
@@ -154,8 +155,8 @@ export default function RazinFlixPage() {
             });
 
             // Post-process to aggressively consolidate and delete visually thin categories
-            const finalCats: Record<string, any[]> = {};
-            const leftovers: any[] = [];
+            const finalCats: Record<string, Film[]> = {};
+            const leftovers: Film[] = [];
             
             Object.keys(cats).forEach(key => {
                  if (cats[key].length < 5) {
@@ -222,7 +223,7 @@ export default function RazinFlixPage() {
                  return rA - rB;
             });
         } else if (viewMode === 'update_mode') {
-            const hasMissingPoster = (f: any) => {
+            const hasMissingPoster = (f: Film) => {
                 if (!f.poster || f.poster === 'N/A') return true;
                 const p = f.poster.toLowerCase();
                 if (p.includes('null') || p.includes('placeholder') || p.includes('nopicture') || p.includes('no-image')) return true;
@@ -230,7 +231,7 @@ export default function RazinFlixPage() {
                 return false;
             };
 
-            const hasMissingTrailer = (f: any) => !f.trailer_key;
+            const hasMissingTrailer = (f: Film) => !f.trailer_key;
             
             result.sort((a, b) => {
                 const aNoPoster = hasMissingPoster(a);
@@ -444,7 +445,7 @@ export default function RazinFlixPage() {
                 ) : viewMode === 'category' ? (
                     <>
                         {Object.entries(categories)
-                            .filter(([title, films]) => films.length > 0)
+                            .filter(([, categoryFilms]) => categoryFilms.length > 0)
                             .sort(([titleA], [titleB]) => {
                                 if (titleA === 'Recently Added') return -1;
                                 if (titleB === 'Recently Added') return 1;
@@ -517,7 +518,11 @@ export default function RazinFlixPage() {
                 <AddFilmModal 
                     onClose={() => setIsAddModalOpen(false)} 
                     onFilmAdded={(newFilm) => {
-                        setFilms(prev => [newFilm, ...prev]);
+                        setFilms(prev => {
+                            const existingIndex = prev.findIndex(film => film.id === newFilm.id);
+                            if (existingIndex === -1) return [newFilm, ...prev];
+                            return prev.map(film => film.id === newFilm.id ? newFilm : film);
+                        });
                     }} 
                 />
             )}

@@ -1,14 +1,17 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 
-interface Film {
+export interface Film {
     id: number;
     title: string;
     year: string;
     rating: string;
     poster: string;
+    description: string;
+    director: string;
     categories: string[];
     trailer_key?: string | null;
+    created_at?: string;
 }
 
 interface MovieCardProps {

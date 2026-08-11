@@ -1,205 +1,250 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
+import {
+    buildSearchTitleVariants,
+    fallbackRazinflixCategory,
+    FilmEnrichmentError,
+    matchingAliases,
+    normalizeTitle,
+    resolveTmdbFilmWithFallback,
+    resolveTrailer,
+    verifyPosterUrl,
+    type FilmLookupInput,
+    type ResolvedFilm,
+} from '@/lib/razinflix/enrichment';
 
-const TMDB_GENRES: Record<number, string> = {
-  28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy",
-  80: "Crime", 99: "Documentary", 18: "Drama", 10751: "Family",
-  14: "Fantasy", 36: "History", 27: "Horror", 10402: "Music",
-  9648: "Mystery", 10749: "Romance", 878: "Science Fiction",
-  10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western"
-};
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
+
+const RAZINFLIX_CATEGORIES = [
+    'Critically-Acclaimed Mind-Bending Sci-Fi',
+    'Visually Striking Emotional Dramas',
+    'Gritty Heist & Crime Thrillers',
+    'Suspenseful Psychological Mysteries',
+    'Epic Historical Period Pieces',
+    'Heartfelt Coming-of-Age Tales',
+    'Surreal & Left-of-Center Cinema',
+    'Dark Comedies & Sharp Satire',
+    'Riveting Global Documentaries',
+    'Classic Masterpieces of World Cinema',
+    'Intense Action, War & Adventure',
+    'Prestige Television & Miniseries',
+    'Nostalgic Cult Classics',
+    'Japanese Anime',
+] as const;
+
+interface EditorialMetadata {
+    description: string;
+    category: string;
+}
+
+interface ExistingFilm {
+    id: number;
+    title: string;
+    year: string;
+}
+
+function extractJsonObject(value: string): Record<string, unknown> | null {
+    const cleaned = value
+        .trim()
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/, '');
+    const start = cleaned.indexOf('{');
+    const end = cleaned.lastIndexOf('}');
+    if (start === -1 || end <= start) return null;
+
+    try {
+        return JSON.parse(cleaned.slice(start, end + 1)) as Record<string, unknown>;
+    } catch {
+        return null;
+    }
+}
+
+async function generateEditorialMetadata(
+    film: ResolvedFilm,
+    geminiApiKey?: string,
+): Promise<EditorialMetadata> {
+    const fallbackCategory = fallbackRazinflixCategory(film);
+    const fallbackDescription = film.overview || 'No verified synopsis is currently available.';
+
+    // Japanese animation is deterministic from TMDB country and genre metadata.
+    const categoryMustRemainJapaneseAnime = fallbackCategory === 'Japanese Anime';
+    if (!geminiApiKey) {
+        return { description: fallbackDescription, category: fallbackCategory };
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(geminiApiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const prompt = `You are formatting verified TMDB metadata for RazinFlix.
+
+Film: ${film.title} (${film.year})
+Original title: ${film.originalTitle}
+Directors: ${film.directors.join(', ') || 'Not listed'}
+Genres: ${film.genres.join(', ') || 'Not listed'}
+Countries: ${film.originCountries.join(', ') || 'Not listed'}
+Verified overview: ${film.overview || 'No overview supplied'}
+
+Return one JSON object with exactly these keys:
+- "description": Rewrite the verified overview into 2 concise, atmospheric sentences. Do not add characters, events, settings, awards, or claims absent from the overview. If no overview was supplied, return "No verified synopsis is currently available."
+- "category": Select exactly one string from this list:
+${RAZINFLIX_CATEGORIES.map(category => `  - ${category}`).join('\n')}
+
+Return JSON only.`;
+
+        const result = await model.generateContent(prompt);
+        const parsed = extractJsonObject(result.response.text());
+        const proposedDescription = typeof parsed?.description === 'string'
+            ? parsed.description.trim().replace(/\*\*/g, '')
+            : '';
+        const proposedCategory = typeof parsed?.category === 'string'
+            ? parsed.category.trim()
+            : '';
+
+        return {
+            description: proposedDescription.length >= 20 && proposedDescription.length <= 900
+                ? proposedDescription
+                : fallbackDescription,
+            category: categoryMustRemainJapaneseAnime
+                ? 'Japanese Anime'
+                : RAZINFLIX_CATEGORIES.includes(proposedCategory as typeof RAZINFLIX_CATEGORIES[number])
+                    ? proposedCategory
+                    : fallbackCategory,
+        };
+    } catch (error) {
+        console.error('Gemini editorial metadata failed:', error);
+        return { description: fallbackDescription, category: fallbackCategory };
+    }
+}
+
+function rowTitleAliases(title: string): Set<string> {
+    const aliases = new Set<string>([normalizeTitle(title)]);
+    for (const variant of buildSearchTitleVariants(title)) aliases.add(normalizeTitle(variant));
+    aliases.delete('');
+    return aliases;
+}
 
 export async function POST(request: Request) {
     try {
-        const GOOGLE_API_KEY = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-        const { title, year } = await request.json();
-
-        if (!title) {
-            return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+        let input: FilmLookupInput;
+        try {
+            input = await request.json() as FilmLookupInput;
+        } catch {
+            throw new FilmEnrichmentError('INVALID_REQUEST', 'Enter a film title.', 400);
         }
 
-        // 1. Fetch from TMDB
-        let tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}`;
-        if (year) {
-            tmdbUrl += `&primary_release_year=${year}`;
-        }
-        
-        let tmdbData = await fetch(tmdbUrl).then(r => r.json());
-        
-        // Follow fallback heuristic if no results
-        if ((!tmdbData.results || tmdbData.results.length === 0) && year) {
-            let nextYear = parseInt(year) + 1;
-            tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}&primary_release_year=${nextYear}`;
-            tmdbData = await fetch(tmdbUrl).then(r => r.json());
-            
-            if (!tmdbData.results || tmdbData.results.length === 0) {
-                 nextYear = parseInt(year) - 1;
-                 tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(title)}&primary_release_year=${nextYear}`;
-                 tmdbData = await fetch(tmdbUrl).then(r => r.json());
-            }
+        if (!input.title || typeof input.title !== 'string') {
+            throw new FilmEnrichmentError('INVALID_TITLE', 'Enter a film title.', 400);
         }
 
-        let poster = '';
-        let rating = 'N/A';
-        let description = 'Anew cinematic journey added manually to the database.';
-        let fetchedYear = year || '';
-        let categories: string[] = ['Recently Added'];
+        const film = await resolveTmdbFilmWithFallback(input, [
+            process.env.TMDB_API_KEY,
+        ]);
+        await verifyPosterUrl(film.posterUrl);
+        const trailerResolution = await resolveTrailer(film, {
+            youtubeApiKey: process.env.YOUTUBE_API_KEY,
+            googleSearchApiKey: process.env.GOOGLE_SEARCH_API_KEY,
+            googleSearchEngineId: process.env.GOOGLE_SEARCH_ENGINE_ID,
+        });
 
-        if (tmdbData.results && tmdbData.results.length > 0) {
-            const film = tmdbData.results[0];
-            if (film.poster_path) {
-                poster = `https://image.tmdb.org/t/p/w500${film.poster_path}`;
-            }
-            if (film.vote_average) {
-                rating = film.vote_average === 0 ? 'N/A' : film.vote_average.toFixed(1) + '/10';
-            }
-            if (film.overview) {
-                description = film.overview;
-            }
-            if (film.release_date && !fetchedYear) {
-                fetchedYear = film.release_date.split('-')[0];
-            }
-        } else {
-             // Fallback for missing poster heuristic
-             poster = "https://via.placeholder.com/300x450?text=" + title.replace(/ /g, '+');
+        if (!trailerResolution.trailer) {
+            throw new FilmEnrichmentError(
+                'TRAILER_NOT_FOUND',
+                `RazinFlix matched “${film.title}” (${film.year}) and found its poster, but could not verify a playable trailer. Nothing was saved.`,
+                422,
+                {
+                    tmdbId: film.tmdbId,
+                    diagnostics: trailerResolution.diagnostics,
+                    suggestion: 'Configure YOUTUBE_API_KEY for the highest-coverage fallback search.',
+                },
+            );
         }
 
-        // 1.5 Generate Atmospheric Description using Gemini 2.5 Flash
-        if (GOOGLE_API_KEY) {
-            try {
-                const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-                const prompt = `Write a captivating, atmospheric, and emotionally resonant 2-3 sentence cinematic description for the film "${title}" (${fetchedYear}). Use this background context if helpful: "${description}". Do not include the title of the film or the year in your response, just the raw atmospheric description. Do not use quotes, bold text, or introductory text. Return only the description, nothing else.`;
-                const result = await model.generateContent(prompt);
-                let newDesc = result.response.text().trim();
-                if (newDesc.startsWith('"') && newDesc.endsWith('"')) {
-                    newDesc = newDesc.slice(1, -1);
-                }
-                newDesc = newDesc.replace(/\*\*/g, '');
-                if (newDesc.length > 10) {
-                    description = newDesc;
-                }
+        const editorial = await generateEditorialMetadata(
+            film,
+            process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+        );
 
-                // 1.6 Generate RazinFlix-Specific Category using Gemini 2.5 Flash
-                const CATEGORIES = [
-                    "Critically-Acclaimed Mind-Bending Sci-Fi", "Visually Striking Emotional Dramas",
-                    "Gritty Heist & Crime Thrillers", "Suspenseful Psychological Mysteries",
-                    "Epic Historical Period Pieces", "Heartfelt Coming-of-Age Tales",
-                    "Surreal & Left-of-Center Cinema", "Dark Comedies & Sharp Satire",
-                    "Riveting Global Documentaries", "Classic Masterpieces of World Cinema",
-                    "Intense Action, War & Adventure", "Prestige Television & Miniseries",
-                    "Nostalgic Cult Classics", "Japanese Anime"
-                ];
-
-                const catPrompt = `You are an expert film categorization engine bridging subjective aesthetics with cinematic genres.
-Select EXACTLY ONE category from the following strict list that best fits this film:
-${CATEGORIES.map(c => `- ${c}`).join('\n')}
-
-Film Title: "${title}"
-Year: ${fetchedYear}
-Description: ${description}
-
-Do not include quotes, brackets, or any conversational text. Return ONLY the exact string from the allowed list above.`;
-                
-                const catResult = await model.generateContent(catPrompt);
-                let newCategory = catResult.response.text().trim();
-                if (newCategory.startsWith('- ')) newCategory = newCategory.substring(2);
-                if (newCategory.startsWith('"') && newCategory.endsWith('"')) newCategory = newCategory.slice(1, -1);
-                
-                if (CATEGORIES.includes(newCategory)) {
-                    categories = [newCategory];
-                } else {
-                    const match = CATEGORIES.find(c => newCategory.includes(c) || c.includes(newCategory));
-                    if (match) categories = [match];
-                }
-            } catch (e) {
-                console.error("Gemini API Error:", e);
-            }
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseKey) {
+            throw new FilmEnrichmentError(
+                'DATABASE_NOT_CONFIGURED',
+                'The RazinFlix database is not configured.',
+                500,
+            );
         }
 
-        // 2. Fetch YouTube Trailer
-        let trailer_key = '';
-        if (GOOGLE_API_KEY) {
-            try {
-                const ytQuery = encodeURIComponent(`${title} ${fetchedYear} official trailer -review -reaction -full -gameplay`);
-                const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=1&q=${ytQuery}&key=${GOOGLE_API_KEY}`;
-                const ytData = await fetch(ytUrl).then(r => r.json());
-                if (ytData.items && ytData.items.length > 0) {
-                    trailer_key = ytData.items[0].id?.videoId || '';
-                }
-            } catch (e) {
-                console.error("YouTube API Error:", e);
-            }
-        }
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { data: existingRows, error: existingLookupError } = await supabase
+            .from('razinflix_films')
+            .select('id,title,year')
+            .eq('year', film.year);
+        if (existingLookupError) console.error('Existing film lookup failed:', existingLookupError);
 
-        // 3. Verify Poster with Google Vision API
-        let posterVerified = false;
-        let visionText = '';
-        if (poster && GOOGLE_API_KEY && !poster.includes('via.placeholder.com')) {
-            try {
-                const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
-                const visionPayload = {
-                    requests: [{
-                        image: { source: { imageUri: poster } },
-                        features: [{ type: "TEXT_DETECTION" }]
-                    }]
-                };
-                const visionRes = await fetch(visionUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(visionPayload)
-                });
-                const visionData = await visionRes.json();
-                
-                if (visionData.responses && visionData.responses[0]?.textAnnotations) {
-                    visionText = visionData.responses[0].textAnnotations[0]?.description?.toLowerCase() || '';
-                    const titleWords = title.toLowerCase().split(' ').filter((w: string) => w.length > 2);
-                    
-                    if (titleWords.length === 0) {
-                        posterVerified = visionText.includes(title.toLowerCase());
-                    } else {
-                        // If at least one distinct word from the title is physically rendered on the poster
-                        posterVerified = titleWords.some((w: string) => visionText.includes(w));
-                    }
-                }
-            } catch (e) {
-                console.error("Vision API Error:", e);
-            }
-        }
-
-        // 4. Initialize Supabase Client
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-        const newDbEntry = {
-            title: title,
-            year: fetchedYear || 'Unknown',
-            director: 'Unknown',
-            rating: rating,
-            poster: poster,
-            description: description,
-            trailer_key: trailer_key, 
-            categories: categories
+        const canonicalAliases = matchingAliases(film);
+        const existingFilm = ((existingRows ?? []) as ExistingFilm[]).find(row => {
+            const existingAliases = rowTitleAliases(row.title);
+            return [...existingAliases].some(alias => canonicalAliases.has(alias));
+        }) ?? null;
+        const databaseEntry = {
+            title: film.title,
+            year: film.year,
+            director: film.directors.join(', ') || 'Unknown',
+            rating: film.rating,
+            poster: film.posterUrl,
+            description: editorial.description,
+            trailer_key: trailerResolution.trailer.key,
+            categories: [editorial.category],
         };
 
-        const { data, error } = await supabase
-            .from('razinflix_films')
-            .insert(newDbEntry)
-            .select()
-            .single();
+        const query = existingFilm
+            ? supabase.from('razinflix_films').update(databaseEntry).eq('id', existingFilm.id)
+            : supabase.from('razinflix_films').insert(databaseEntry);
+        const { data, error } = await query.select().single();
 
         if (error) {
-            console.error('Supabase Error:', error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
+            console.error('Supabase film write failed:', error);
+            throw new FilmEnrichmentError(
+                'DATABASE_WRITE_FAILED',
+                'The film was matched correctly but could not be saved.',
+                500,
+            );
         }
 
-        return NextResponse.json({ ...data, _posterVerified: posterVerified });
-    } catch (e: any) {
-        console.error('Add Film API Error:', e);
-        return NextResponse.json({ error: e.message || 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({
+            ...data,
+            _posterVerified: true,
+            _operation: existingFilm ? 'updated' : 'inserted',
+            _match: {
+                tmdbId: film.tmdbId,
+                canonicalTitle: film.title,
+                confidence: film.matchConfidence,
+                matchedQuery: film.matchedQuery,
+                posterSource: 'tmdb',
+                trailerSource: trailerResolution.trailer.source,
+                trailerTitle: trailerResolution.trailer.title,
+                trailerConfidence: trailerResolution.trailer.confidence,
+            },
+        });
+    } catch (error) {
+        if (error instanceof FilmEnrichmentError) {
+            return NextResponse.json(
+                {
+                    error: error.message,
+                    code: error.code,
+                    ...(error.details ?? {}),
+                },
+                { status: error.status },
+            );
+        }
+
+        console.error('Add Film API Error:', error);
+        return NextResponse.json(
+            { error: 'RazinFlix could not complete the film lookup. Try again shortly.', code: 'INTERNAL_ERROR' },
+            { status: 500 },
+        );
     }
 }

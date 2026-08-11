@@ -1,14 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Terminal } from 'lucide-react';
+import type { Film } from './MovieCard';
+
+interface MatchCandidate {
+    title: string;
+    year?: string | null;
+}
+
+interface AddFilmApiResponse extends Partial<Film> {
+    error?: string;
+    suggestion?: string;
+    candidates?: MatchCandidate[];
+    _posterVerified?: boolean;
+    _operation?: 'inserted' | 'updated';
+    _match?: {
+        canonicalTitle?: string;
+        confidence?: number;
+        trailerTitle?: string;
+        trailerSource?: string;
+    };
+}
 
 interface AddFilmModalProps {
     onClose: () => void;
-    onFilmAdded: (newFilm: any) => void;
+    onFilmAdded: (newFilm: Film) => void;
 }
 
 export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps) {
     const [inputText, setInputText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);
     const [hasAttemptedCancel, setHasAttemptedCancel] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
@@ -33,26 +54,24 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
     const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
     const parseInput = (text: string) => {
-        // Handle comma or newline
-        const lines = text.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
-        return lines.map(line => {
-            const match = line.match(/^(.+?)(?:\s*\(?(\d{4})\)?)?$/);
-            if (match) {
-                return { title: match[1].trim(), year: match[2] ? match[2].trim() : '' };
-            }
-            return { title: line, year: '' };
-        });
+        // Preserve punctuation and numeric words in titles; the server evaluates year hypotheses.
+        return text
+            .split(/\n+/)
+            .map(title => ({ title: title.trim(), year: '' }))
+            .filter(film => Boolean(film.title));
     };
 
     const handleAdd = async () => {
         if (!inputText.trim()) return;
         
         setIsProcessing(true);
+        setIsFinished(false);
         setLogs([]);
         setHasAttemptedCancel(false);
         
         const films = parseInput(inputText);
         let addedCount = 0;
+        let failedCount = 0;
 
         await delay(300);
         addLog(`▶ SYSTEM: Initializing RazinFlix Intelligence Engine...`);
@@ -63,10 +82,9 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
             addLog(`▶ SYSTEM: Initiating search for "${film.title}" ${film.year ? `(${film.year})` : ''}`);
             await delay(400);
             
-            addLog(`▶ TMDB API: Scanning global movie database for official title...`);
+            addLog(`▶ TMDB: Resolving the canonical film, release year, poster, and credits...`);
             
             try {
-                // We don't await the full visual delay, we fire the API 
                 const apiPromise = fetch('/api/razinflix/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -74,61 +92,71 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                 });
 
                 await delay(600);
-                addLog(`▶ DATA: Cleaning up title formatting and organizing into genres...`);
+                addLog(`▶ MATCHING: Comparing alternate titles and rejecting ambiguous releases...`);
                 await delay(700);
-                addLog(`▶ GEMINI AI: Synthesizing a high-fidelity cinematic plot description...`);
+                addLog(`▶ TRAILER: Checking TMDB's linked YouTube trailers first...`);
                 await delay(700);
-                addLog(`▶ IMDB: Checking rating algorithms to verify audience scores...`);
+                addLog(`▶ FALLBACK: Ranking playable trailer candidates when required...`);
                 await delay(700);
-                addLog(`▶ YOUTUBE API: Searching for the highest quality official trailer...`);
-                await delay(800);
-                addLog(`▶ GOOGLE VISION API: Scanning the official movie poster using AI...`);
+                addLog(`▶ QUALITY GATE: Requiring both verified artwork and a playable trailer...`);
                 
                 const response = await apiPromise;
-                const data = await response.json();
+                const data = await response.json() as AddFilmApiResponse;
                 
                 if (response.ok) {
-                    addLog(`▶ SYSTEM: Film data successfully collected!`);
+                    const match = data._match;
+                    addLog(`▶ MATCH: "${match?.canonicalTitle || data.title}" resolved at ${match?.confidence ?? 'high'}% confidence.`);
                     
                     await delay(200);
-                    if (data.trailer_key) {
-                        addLog(`  ↳ Trailer Found: YouTube video safely linked.`);
-                    } else {
-                        addLog(`  ↳ Trailer Status: No official trailer detected right now.`);
-                    }
+                    addLog(`  ↳ Poster: Verified TMDB artwork selected.`);
 
                     await delay(300);
-                    if (data._posterVerified) {
-                        addLog(`  ↳ Poster Verified: AI successfully matched the film title on the artwork.`);
-                    } else {
-                        addLog(`  ↳ Poster Status: AI safely bypassed (text highly stylized or absent).`);
-                    }
+                    addLog(`  ↳ Trailer: "${match?.trailerTitle || 'Verified trailer'}" selected via ${match?.trailerSource || 'TMDB'}.`);
+
+                    await delay(200);
+                    addLog(`  ↳ Metadata: ${data.director || 'Director unavailable'} · ${data.rating || 'Unrated'} · ${data.categories?.[0] || 'Uncategorised'}.`);
 
                     await delay(400);
-                    addLog(`▶ SUPABASE: Securely saving film into the RazinFlix database...`);
+                    addLog(`▶ SUPABASE: ${data._operation === 'updated' ? 'Repairing the existing film record' : 'Saving the canonical film record'}...`);
                     await delay(300);
-                    addLog(`▶ SUCCESS: "${data.title}" is now live on RazinFlix!`);
+                    addLog(`▶ SUCCESS: "${data.title}" is complete and live on RazinFlix!`);
                     addedCount++;
                     
                     // Remove the backend-only flags before pushing to state
                     const cleanData = { ...data };
                     delete cleanData._posterVerified;
+                    delete cleanData._operation;
+                    delete cleanData._match;
                     
-                    onFilmAdded(cleanData);
+                    onFilmAdded(cleanData as Film);
                 } else {
+                    failedCount++;
                     addLog(`▶ ERROR: Could not add film. ${data.error || 'Validation failed.'}`);
+                    if (Array.isArray(data.candidates) && data.candidates.length > 0) {
+                        const candidateText = data.candidates
+                            .slice(0, 3)
+                            .map(candidate => `${candidate.title}${candidate.year ? ` (${candidate.year})` : ''}`)
+                            .join(', ');
+                        addLog(`  ↳ Possible matches: ${candidateText}`);
+                    }
+                    if (data.suggestion) addLog(`  ↳ ${data.suggestion}`);
                 }
-            } catch (err: any) {
-                addLog(`▶ CRITICAL FAILURE: ${err.message}`);
+            } catch (err: unknown) {
+                failedCount++;
+                const message = err instanceof Error ? err.message : 'Unexpected request failure.';
+                addLog(`▶ CRITICAL FAILURE: ${message}`);
             }
             
             await delay(1200);
         }
 
         addLog(`========================================`);
-        addLog(`▶ OPERATION COMPLETE: Successfully added ${addedCount} film(s).`);
-        await delay(1500);
-        onClose();
+        addLog(`▶ OPERATION COMPLETE: ${addedCount} complete, ${failedCount} rejected.`);
+        setIsFinished(true);
+        if (failedCount === 0) {
+            await delay(1500);
+            onClose();
+        }
     };
 
     const handleCancel = () => {
@@ -169,11 +197,11 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                         setInputText(e.target.value);
                                         setHasAttemptedCancel(false);
                                     }}
-                                    placeholder="e.g. The Matrix 1999, Avatar, Inception (2010)"
+                                    placeholder={'e.g. The Matrix (1999)\nAvatar\nInception (2010)'}
                                     className="w-full h-48 bg-[#0c0c0e] text-white border border-white/10 rounded-2xl p-4 resize-none focus:outline-none focus:border-[#007AFF] transition-colors leading-relaxed font-medium"
                                 />
                                 <p className="text-sm md:text-base text-gray-200 mt-3 px-2 leading-relaxed">
-                                    Type the name of the film and RazinFlix will figure out the rest - enter the year of the film if there might be a duplicate, for adding multiple films at once, separate the names and years and year by either a comma or linebreak.
+                                    Enter one film per line. Add the release year in parentheses when a title has remakes or multiple versions.
                                 </p>
                             </div>
 
@@ -195,8 +223,8 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                         </>
                     ) : (
                         <div className="flex-1 flex flex-col h-64 md:h-80 bg-black rounded-xl p-4 border border-[#007AFF]/30 font-mono text-xs md:text-sm text-green-400 overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] relative">
-                            <div className="absolute top-2 right-4 flex items-center gap-2 text-[#007AFF] text-xs font-bold animate-pulse opacity-70">
-                                <Terminal size={12} /> ACTIVE
+                            <div className={`absolute top-2 right-4 flex items-center gap-2 text-[#007AFF] text-xs font-bold opacity-70 ${isFinished ? '' : 'animate-pulse'}`}>
+                                <Terminal size={12} /> {isFinished ? 'COMPLETE' : 'ACTIVE'}
                             </div>
                             <div className="flex-1 overflow-y-auto space-y-1 pb-4 custom-scrollbar">
                                 {logs.map((log, i) => (
@@ -204,9 +232,29 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                 ))}
                                 <div ref={bottomRef} />
                             </div>
-                            <div className="h-1 w-full bg-[#007AFF]/20 mt-2 rounded overflow-hidden">
-                                <div className="h-full bg-[#007AFF] animate-[indeterminate_1.5s_infinite_ease-in-out] w-1/3" />
-                            </div>
+                            {!isFinished ? (
+                                <div className="h-1 w-full bg-[#007AFF]/20 mt-2 rounded overflow-hidden">
+                                    <div className="h-full bg-[#007AFF] animate-[indeterminate_1.5s_infinite_ease-in-out] w-1/3" />
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/10 font-sans">
+                                    <button
+                                        onClick={() => {
+                                            setIsProcessing(false);
+                                            setIsFinished(false);
+                                        }}
+                                        className="py-2.5 px-4 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors font-semibold"
+                                    >
+                                        Edit Input
+                                    </button>
+                                    <button
+                                        onClick={onClose}
+                                        className="py-2.5 px-4 rounded-lg bg-[#007AFF] text-white hover:bg-[#0066d6] transition-colors font-semibold"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
