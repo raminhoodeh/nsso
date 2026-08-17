@@ -12,6 +12,9 @@ import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 import Header from '@/components/layout/Header'
 import InrosProfileCanvas from '@/components/profile/InrosProfileCanvas'
+import MetaPixelConsent from '@/components/analytics/MetaPixelConsent'
+import { cookies } from 'next/headers'
+import { META_PIXEL_CONSENT_COOKIE, parseMetaPixelConsent } from '@/lib/analytics/metaPixel'
 
 interface PageProps {
     params: Promise<{ username: string }>
@@ -52,6 +55,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function PublicProfilePage({ params }: PageProps) {
     const { username } = await params
     const supabase = await createClient()
+    const isRaminProfile = username.toLowerCase() === 'ramin'
+    const pixelId = isRaminProfile ? process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() : undefined
+    const initialPixelConsent = isRaminProfile
+        ? parseMetaPixelConsent((await cookies()).get(META_PIXEL_CONSENT_COOKIE)?.value)
+        : 'unset'
 
     // Find user by username
     const { data: user, error: userError } = await supabase
@@ -152,7 +160,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
     }
 
     return (
-        <main className="min-h-screen pb-40" style={{ paddingTop: '128px' }}>
+        <>
+            {pixelId && (
+                <MetaPixelConsent pixelId={pixelId} initialConsent={initialPixelConsent} />
+            )}
+            <main className="min-h-screen pb-40" style={{ paddingTop: '128px' }}>
             {/* Navigation */}
             <div className={viewer ? "md:hidden" : ""}>
                 <Header
@@ -466,6 +478,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 </div>
             </div >
             )}
-        </main >
+            </main >
+        </>
     )
 }
