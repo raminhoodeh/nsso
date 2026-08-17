@@ -33,6 +33,10 @@ interface Contact {
     custom_method_name?: string
 }
 
+const CONTACT_DETAILS_HIDDEN_PRODUCT_IDS = new Set([
+    '50a34188-30dc-4fc0-82c4-721250250536',
+])
+
 export default function ProductSalesPage() {
     const params = useParams()
     const router = useRouter()
@@ -60,14 +64,18 @@ export default function ProductSalesPage() {
             if (productData) {
                 setProduct(productData)
 
-                // Fetch user contacts for contact details
-                const { data: contactsData } = await supabase
-                    .from('contacts')
-                    .select('method, value, custom_method_name')
-                    .eq('user_id', productData.user_id)
+                if (CONTACT_DETAILS_HIDDEN_PRODUCT_IDS.has(productId)) {
+                    setUserContacts([])
+                } else {
+                    // Fetch user contacts for contact details
+                    const { data: contactsData } = await supabase
+                        .from('contacts')
+                        .select('method, value, custom_method_name')
+                        .eq('user_id', productData.user_id)
 
-                if (contactsData) {
-                    setUserContacts(contactsData)
+                    if (contactsData) {
+                        setUserContacts(contactsData)
+                    }
                 }
 
                 // Fetch owner's username and email to check platform ownership
@@ -448,7 +456,7 @@ export default function ProductSalesPage() {
                         )}
 
                         {/* Contact Details */}
-                        {(ownerUsername || userContacts.length > 0) && (
+                        {!CONTACT_DETAILS_HIDDEN_PRODUCT_IDS.has(product.id) && (ownerUsername || userContacts.length > 0) && (
                             <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6">
                                 <h4 className="text-[15px] font-bold text-white mb-4 uppercase tracking-wider">
                                     Contact
