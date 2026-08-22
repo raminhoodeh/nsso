@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import GlassFilter from "@/components/GlassFilter";
 import { ToastProvider } from "@/components/ui/Toast";
 import { UIProvider } from "@/components/providers/UIProvider";
 import { UserProvider } from "@/components/providers/UserProvider";
@@ -42,8 +41,6 @@ export default function RootLayout({
             <UserProvider>
               <ProfileProvider>
                 <NSSOTahoeGlassEnvironment>
-                  {/* SVG Filter for Glass Effects */}
-                  <GlassFilter />
                   <ReferralTracker />
 
                   {/* Toast Notifications Provider */}
