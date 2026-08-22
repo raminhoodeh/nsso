@@ -360,9 +360,15 @@ export default function PreviewPage() {
                                             <div className="flex items-start justify-between gap-4 mb-2">
                                                 <h3 className="text-xl font-bold text-white">{product.name}</h3>
                                                 {product.price !== null && (
-                                                    <div className="text-white font-medium bg-white/10 px-3 py-1 rounded-full">
+                                                    <TahoeGlassSurface
+                                                        variant="pill"
+                                                        tone="light"
+                                                        semanticTint="dark"
+                                                        semanticTintOpacity={0.02}
+                                                        className="px-3 py-1 font-medium text-white"
+                                                    >
                                                         {product.price}
-                                                    </div>
+                                                    </TahoeGlassSurface>
                                                 )}
                                             </div>
                                             <p className="text-white/60 text-sm leading-relaxed mb-6">{product.description}</p>

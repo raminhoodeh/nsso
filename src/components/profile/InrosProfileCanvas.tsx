@@ -9,6 +9,7 @@ import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import AddToMyNssoButton from '@/components/ui/AddToMyNssoButton'
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 
 // INROS Lens Definitions
@@ -196,32 +197,23 @@ export default function InrosProfileCanvas({
                             {visibleLenses.map((lensId) => {
                                 const isActive = currentLens === lensId
                                 return (
-                                    <button
+                                    <TahoeGlassButton
                                         key={lensId}
                                         onClick={() => handleLensSwitch(lensId)}
                                         aria-pressed={isActive}
-                                        className="relative flex items-center justify-center px-4 py-1.5 rounded-full text-[13px] tracking-wide transition-all duration-200 ease-out select-none overflow-hidden"
+                                        radius={999}
+                                        tone="light"
+                                        semanticTint={isActive ? 'light' : 'none'}
+                                        semanticTintOpacity={isActive ? 0.1 : 0}
+                                        className="px-4 py-1.5 transition-all duration-200 ease-out"
+                                        contentClassName={`text-[13px] tracking-wide ${isActive ? 'text-white/96' : 'text-white/40'}`}
                                         style={{
-                                            background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
-                                            border: isActive ? '1px solid rgba(255,255,255,0.22)' : '1px solid rgba(255,255,255,0.08)',
-                                            backdropFilter: isActive ? 'blur(8px)' : 'none',
-                                            WebkitBackdropFilter: isActive ? 'blur(8px)' : 'none',
-                                            boxShadow: isActive ? 'inset 1px 1px 1px rgba(255,255,255,0.18), 0 2px 8px rgba(0,0,0,0.15)' : 'none',
-                                            color: isActive ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.4)',
                                             fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                             fontWeight: isActive ? 590 : 400,
                                         }}
                                     >
-                                        {/* Specular highlight on active chip */}
-                                        {isActive && (
-                                            <span
-                                                aria-hidden="true"
-                                                className="absolute inset-0 rounded-full pointer-events-none"
-                                                style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 60%)' }}
-                                            />
-                                        )}
-                                        <span className="relative z-10">{INROS_DATA[lensId].label}</span>
-                                    </button>
+                                        {INROS_DATA[lensId].label}
+                                    </TahoeGlassButton>
                                 )
                             })}
                         </div>
@@ -379,9 +371,15 @@ export default function InrosProfileCanvas({
                                         <div className="flex items-start justify-between gap-4 mb-2">
                                             <h3 className="text-xl font-bold text-white">{product.name}</h3>
                                             {product.price !== null && (
-                                                <div className="text-white font-medium bg-white/10 px-3 py-1 rounded-full">
+                                                <TahoeGlassSurface
+                                                    variant="pill"
+                                                    tone="light"
+                                                    semanticTint="dark"
+                                                    semanticTintOpacity={0.02}
+                                                    className="px-3 py-1 font-medium text-white"
+                                                >
                                                     {product.price}
-                                                </div>
+                                                </TahoeGlassSurface>
                                             )}
                                         </div>
                                         <p className="text-white/60 text-sm leading-relaxed mb-6">{product.description}</p>
