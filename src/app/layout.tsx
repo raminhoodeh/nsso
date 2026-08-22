@@ -1,14 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import VantaBackground from "@/components/VantaBackground";
 import GlassFilter from "@/components/GlassFilter";
 import { ToastProvider } from "@/components/ui/Toast";
 import { UIProvider } from "@/components/providers/UIProvider";
 import { UserProvider } from "@/components/providers/UserProvider";
 import { ProfileProvider } from "@/components/providers/ProfileProvider";
+import NSSOTahoeGlassEnvironment from "@/components/providers/NSSOTahoeGlassEnvironment";
 import Web3Provider from "@/components/providers/Web3Provider";
 
-import DimmingOverlay from "@/components/ui/DimmingOverlay";
 import ReferralTracker from "@/components/ReferralTracker";
 import ConditionalNSSOAgent from "@/components/agent/ConditionalNSSOAgent";
 
@@ -44,22 +43,20 @@ export default function RootLayout({
           <Web3Provider>
             <UserProvider>
               <ProfileProvider>
-                {/* SVG Filter for Glass Effects */}
-                <GlassFilter />
-                <ReferralTracker />
+                <NSSOTahoeGlassEnvironment>
+                  {/* SVG Filter for Glass Effects */}
+                  <GlassFilter />
+                  <ReferralTracker />
 
-                {/* Animated Cloud Background */}
-                <VantaBackground />
-                <DimmingOverlay />
-
-                {/* Toast Notifications Provider */}
-                <ToastProvider>
-                  <GlobalNavigation />
-                  <AuthenticatedLayoutWrapper>
-                    {children}
-                  </AuthenticatedLayoutWrapper>
-                  <ConditionalNSSOAgent />
-                </ToastProvider>
+                  {/* Toast Notifications Provider */}
+                  <ToastProvider>
+                    <GlobalNavigation />
+                    <AuthenticatedLayoutWrapper>
+                      {children}
+                    </AuthenticatedLayoutWrapper>
+                    <ConditionalNSSOAgent />
+                  </ToastProvider>
+                </NSSOTahoeGlassEnvironment>
               </ProfileProvider>
             </UserProvider>
           </Web3Provider>

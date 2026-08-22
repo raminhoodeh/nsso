@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { useTahoeGlassControls, useTahoeGlassDiagnostics } from '@/components/providers/TahoeGlassProvider'
 import { VantaPerformanceManager, BackgroundPhase } from '@/lib/vanta/VantaPerformanceManager'
 import { VantaVideoRecorder } from '@/lib/vanta/VantaVideoRecorder'
 
@@ -40,22 +41,21 @@ interface VantaConfig {
 interface VantaEffect {
     destroy: () => void
     resize?: () => void
+    afterRender?: () => void
+    getCanvasElement?: () => HTMLCanvasElement | undefined
     options?: any
     setOptions?: (options: Partial<VantaConfig>) => void
     renderer?: any
 }
 
-export default function VantaBackground() {
+interface VantaBackgroundProps {
+    onCanvasChange?: (canvas: HTMLCanvasElement | null) => void
+}
+
+export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps) {
     const pathname = usePathname()
-
-    // Hide background on specific pages
-    // Hide background on specific pages
-    // Hide background on specific pages
-    const hiddenPaths = ['/earnings', '/places']
-
-    // Also hiding on dashboard product creator pages specifically
-    const shouldHide = hiddenPaths.some(path => pathname?.startsWith(path)) ||
-        (pathname?.startsWith('/dashboard/products/') && pathname?.endsWith('/creator'))
+    const { backend } = useTahoeGlassDiagnostics()
+    const { renderNow, retryBackend } = useTahoeGlassControls()
 
     const vantaRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -63,8 +63,19 @@ export default function VantaBackground() {
     const vantaEffect = useRef<VantaEffect | null>(null)
     const performanceManager = useRef<VantaPerformanceManager | null>(null)
     const videoRecorder = useRef<VantaVideoRecorder | null>(null)
+    const backendRef = useRef(backend)
+    const renderNowRef = useRef(renderNow)
+    const retryBackendRef = useRef(retryBackend)
+    const onCanvasChangeRef = useRef(onCanvasChange)
 
-    const [currentPhase, setCurrentPhase] = useState<BackgroundPhase>('webgl')
+    useEffect(() => {
+        backendRef.current = backend
+        renderNowRef.current = renderNow
+        retryBackendRef.current = retryBackend
+        onCanvasChangeRef.current = onCanvasChange
+    }, [backend, onCanvasChange, renderNow, retryBackend])
+
+    const [, setCurrentPhase] = useState<BackgroundPhase>('webgl')
     const [isRollback, setIsRollback] = useState(false)
 
     // Check rollback mode on mount
@@ -83,19 +94,13 @@ export default function VantaBackground() {
 
     // Initialize Vanta
     useEffect(() => {
-        // If we should hide the background, do not initialize (cleanup will handle destroy if needed)
-        if (shouldHide) return
-
         // Skip if elements not ready
         if (!vantaRef.current) return
 
         const initVanta = () => {
-            // Double check if we should hide (in case it changed while loading)
-            if (shouldHide) return
-
             // Add a small delay to ensure DOM is ready and dimensions are calculated
             setTimeout(() => {
-                if (!vantaRef.current || shouldHide) return
+                if (!vantaRef.current) return
 
                 // If effect is already active, don't re-init
                 if (vantaEffect.current) return
@@ -108,7 +113,7 @@ export default function VantaBackground() {
 
                 if (window.VANTA && window.THREE) {
                     try {
-                        vantaEffect.current = window.VANTA.CLOUDS({
+                        const effect = window.VANTA.CLOUDS({
                             el: vantaRef.current,
                             mouseControls: true,
                             touchControls: true,
@@ -127,12 +132,27 @@ export default function VantaBackground() {
                             spacing: 20,
                             maxDistance: 15
                         })
+                        vantaEffect.current = effect
+
+                        effect.afterRender = () => {
+                            if (backendRef.current === 'webgl') {
+                                renderNowRef.current()
+                            }
+                        }
 
                         // PERF: Force 1:1 pixel ratio on High-DPI (Retina) screens.
                         // This reduces GPU load by 4x on MacBooks without visible quality loss for this specific effect.
-                        if (vantaEffect.current.renderer) {
-                            // @ts-ignore
-                            vantaEffect.current.renderer.setPixelRatio(1.0)
+                        if (effect.renderer) {
+                            effect.renderer.setPixelRatio(1.0)
+                        }
+
+                        const canvas = effect.getCanvasElement?.() ??
+                            effect.renderer?.domElement ??
+                            vantaRef.current.querySelector('canvas')
+                        if (canvas instanceof HTMLCanvasElement) {
+                            canvasRef.current = canvas
+                            onCanvasChangeRef.current?.(canvas)
+                            retryBackendRef.current()
                         }
 
                         console.log('[Vanta] Initialization success')
@@ -193,7 +213,10 @@ export default function VantaBackground() {
 
 
         return () => {
+            onCanvasChangeRef.current?.(null)
+            canvasRef.current = null
             if (vantaEffect.current) {
+                vantaEffect.current.afterRender = undefined
                 vantaEffect.current.destroy()
                 vantaEffect.current = null
             }
@@ -206,7 +229,7 @@ export default function VantaBackground() {
             // Cleanup scripts? Usually not necessary or safe as other components might need them, 
             // but in a SPA we usually leave them. Vanta destroy handles the canvas.
         }
-    }, [isRollback, shouldHide])
+    }, [isRollback])
 
     // Initialize optimization system
     function initializeOptimization() {
@@ -305,9 +328,6 @@ export default function VantaBackground() {
 
     // Handle visibility changes and resize when pathname changes
     useEffect(() => {
-        // If hidden, we don't care about resize as component effect is destroyed
-        if (shouldHide) return
-
         if (vantaEffect.current) {
             // Force resize when becoming visible
             setTimeout(() => {
@@ -318,7 +338,7 @@ export default function VantaBackground() {
                 window.dispatchEvent(new Event('resize'))
             }, 100)
         }
-    }, [pathname, shouldHide])
+    }, [pathname])
 
 
     // Always render static gradient as fallback (sits beneath everything)
@@ -328,7 +348,7 @@ export default function VantaBackground() {
             <div
                 className="fixed inset-0 bg-gradient-to-br from-[#586E91] via-[#adcdde] to-[#183550]"
                 style={{
-                    display: shouldHide ? 'none' : 'block',
+                    display: 'block',
                     zIndex: -2
                 }}
             />
@@ -338,7 +358,7 @@ export default function VantaBackground() {
                 ref={vantaRef}
                 id="vanta-bg"
                 style={{
-                    display: shouldHide ? 'none' : 'block',
+                    display: 'block',
                     position: 'fixed',
                     top: 0,
                     left: 0,
