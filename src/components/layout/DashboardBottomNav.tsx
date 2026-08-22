@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
-import GlassSurface from '@/components/ui/glass/GlassSurface'
 
 // Navigation Configuration
 const NAV_ITEMS = [
@@ -37,13 +36,7 @@ function BottomNavContent() {
     }
 
     return (
-        <GlassSurface
-            as="nav"
-            variant="nav"
-            tone="strong"
-            radius="0px"
-            className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-white/10 pb-safe"
-        >
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#1C1C1E]/60 backdrop-blur-xl border-t border-white/10 pb-safe">
             <div className="flex justify-between items-center px-8 h-[64px]">
                 {NAV_ITEMS.map((item) => {
                     const isActive = activeView === item.id && item.id !== 'deity' && item.id !== 'news'
@@ -83,7 +76,7 @@ function BottomNavContent() {
                     )
                 })}
             </div>
-        </GlassSurface>
+        </div>
     )
 }
 

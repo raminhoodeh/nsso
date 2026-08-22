@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import GlassButton from '@/components/ui/GlassButton'
-import GlassSurface from '@/components/ui/glass/GlassSurface'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { useState, useEffect } from 'react'
@@ -90,13 +89,13 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
     return (
         <header className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden", className)}>
-            {/* Shared navigation material samples the live scene behind it. */}
-            <GlassSurface
-                variant="nav"
-                radius="0px"
-                className="!absolute inset-0"
+            {/* Liquid Glass Overlay (System Integrated) */}
+            <div
+                className="!absolute inset-0 glass-style-navbar"
                 aria-hidden="true"
-            />
+            >
+                <div className="glass-specular" aria-hidden="true" />
+            </div>
 
             <nav className="relative z-[60] max-w-[1800px] mx-auto px-6 lg:px-10 h-[88px] flex items-center justify-between">
 
@@ -200,13 +199,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                             />
 
                             {/* Menu Panel */}
-                            <GlassSurface
-                                variant="nav"
-                                tone="strong"
-                                radius="32px 0 0 32px"
-                                className="fixed top-0 right-0 bottom-0 w-64 z-[5002] border-l border-white/10 animate-slide-in-right"
-                                contentClassName="h-full"
-                            >
+                            <div className="fixed top-0 right-0 bottom-0 w-64 bg-[#0a0f1a]/95 backdrop-blur-xl z-[5002] shadow-2xl border-l border-white/10 animate-slide-in-right">
                                 <div className="flex flex-col h-full">
                                     {/* Menu Header */}
                                     <div className="flex items-center justify-between p-6 border-b border-white/10">
@@ -293,7 +286,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                         </button>
                                     </div>
                                 </div>
-                            </GlassSurface>
+                            </div>
                         </>
                     )}
 

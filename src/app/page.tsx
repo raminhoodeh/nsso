@@ -129,7 +129,6 @@ export default function HomePage() {
           {/* Left Half - Text Card */}
           <div className="w-full lg:w-1/2">
             <CleanGlassCard
-              surface="lens"
               className="h-full flex flex-col justify-start relative group"
             >
               <div className="relative z-10 flex flex-col gap-4 h-full p-8 lg:p-10">
@@ -388,17 +387,34 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* The primary action is the compact interactive lens tier. */}
+            {/* Button - centered below */}
             <div className="flex justify-center">
-              <GlassButton
-                variant="primary"
-                size="sm"
-                radius="12px"
-                onClick={handleClaimIt}
-                className="h-[42px] w-[133px] px-0 py-0 text-[16px] tracking-wide"
+              <div
+                className="p-[0.75px] rounded-[12px]"
+                style={{
+                  background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+                }}
               >
-                CLAIM IT
-              </GlassButton>
+                <button
+                  onClick={handleClaimIt}
+                  className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
+                  <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
+                  <span
+                    className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
+                    style={{
+                      fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                      fontWeight: 590
+                    }}
+                  >
+                    CLAIM IT
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
