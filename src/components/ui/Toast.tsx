@@ -1,7 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import { TahoeGlassSurface, type TahoeGlassSemanticTint } from '@/components/ui/tahoe-glass'
 
 interface Toast {
@@ -17,42 +16,47 @@ interface ToastContextType {
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined)
+const IMPERATIVE_TOAST_EVENT = 'nsso:toast'
 
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([])
-    // Store the timeout ID to clear it when showing a new toast
-    const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null)
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const showToast = useCallback((message: string, type: Toast['type'] = 'info') => {
         const id = Math.random().toString(36).substring(7)
 
         // Clear existing timeout if any, to "refresh" the timer for the new toast
-        if (timerId) {
-            clearTimeout(timerId)
+        if (timerRef.current) {
+            clearTimeout(timerRef.current)
         }
 
         // Replace any existing toasts with the new one
         setToasts([{ id, message, type }])
 
         // Set a new timeout to auto dismiss
-        const newTimerId = setTimeout(() => {
+        timerRef.current = setTimeout(() => {
             setToasts([])
-            setTimerId(null)
+            timerRef.current = null
         }, 3000)
-
-        setTimerId(newTimerId)
-    }, [timerId])
+    }, [])
 
     const hideToast = useCallback((id: string) => {
         setToasts(prev => prev.filter(t => t.id !== id))
     }, [])
 
-    // Cleanup on unmount
     useEffect(() => {
-        return () => {
-            if (timerId) clearTimeout(timerId)
+        const receiveImperativeToast = (event: Event) => {
+            const detail = (event as CustomEvent<{ message?: unknown; type?: unknown }>).detail
+            if (!detail || typeof detail.message !== 'string') return
+            const type = detail.type === 'success' || detail.type === 'error' ? detail.type : 'info'
+            showToast(detail.message, type)
         }
-    }, [timerId])
+        window.addEventListener(IMPERATIVE_TOAST_EVENT, receiveImperativeToast)
+        return () => {
+            window.removeEventListener(IMPERATIVE_TOAST_EVENT, receiveImperativeToast)
+            if (timerRef.current) clearTimeout(timerRef.current)
+        }
+    }, [showToast])
 
     return (
         <ToastContext.Provider value={{ toasts, showToast, hideToast }}>
@@ -115,42 +119,8 @@ function ToastContainer({
 
 // Simple toast function for one-off usage
 export function toast(message: string, type: Toast['type'] = 'info') {
-    const container = document.getElementById('toast-container') || createToastContainer()
-    const host = document.createElement('div')
-    const root = createRoot(host)
-    let dismissed = false
-    const dismiss = () => {
-        if (dismissed) return
-        dismissed = true
-        root.unmount()
-        host.remove()
-    }
-    const semanticTint = type === 'success' ? 'light' : type === 'error' ? 'dark' : 'none'
-
-    container.appendChild(host)
-    root.render(
-        <TahoeGlassSurface
-            variant="popover"
-            radius={12}
-            tone="light"
-            semanticTint={semanticTint}
-            semanticTintOpacity={0.1}
-            role={type === 'error' ? 'alert' : 'status'}
-            className="animate-slide-up cursor-pointer px-6 py-3 text-[15px] font-medium"
-            contentClassName={type === 'success' ? 'text-emerald-100' : type === 'error' ? 'text-red-100' : 'text-white'}
-            onClick={dismiss}
-        >
-            {message}
-        </TahoeGlassSurface>
-    )
-
-    setTimeout(dismiss, 3000)
-}
-
-function createToastContainer() {
-    const container = document.createElement('div')
-    container.id = 'toast-container'
-    container.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2'
-    document.body.appendChild(container)
-    return container
+    if (typeof window === 'undefined') return
+    window.dispatchEvent(new CustomEvent(IMPERATIVE_TOAST_EVENT, {
+        detail: { message, type }
+    }))
 }
