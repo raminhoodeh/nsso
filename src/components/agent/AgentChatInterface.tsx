@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Send, Sparkles, User, Bot, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
+import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
 import { splitActionPayload, type DeityAction } from '@/lib/deity/actionParser';
 
 interface Message {
@@ -69,13 +69,18 @@ import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/components/providers/UserProvider';
 import { useProfile } from '@/components/providers/ProfileProvider';
 import { useToast } from '@/components/ui/Toast';
+import {
+    TahoeGlassButton,
+    TahoeGlassField,
+    TahoeGlassSurface,
+} from '@/components/ui/tahoe-glass';
 
 export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage }: AgentChatInterfaceProps) {
     const { user, loading } = useUser();
-    const { profile, updateField, addLink, updateLink, removeLink, reorderLinks, addExperience, addProject, addQualification, addProduct, undo, canUndo, fastMode, setFastMode } = useProfile();
+    const { updateField, addLink, updateLink, removeLink, reorderLinks, addExperience, addProject, addQualification, addProduct, undo, canUndo, fastMode, setFastMode } = useProfile();
     const { showToast } = useToast();
     const [messages, setMessages] = useState<Message[]>([]);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     const [hasInitialized, setHasInitialized] = useState(false);
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -183,7 +188,7 @@ Check out some of the areas I can help you with below.`;
         };
 
         fetchProfileAndSetIntro();
-    }, [isFullScreen, user, loading, hasInitialized]);
+    }, [isFullScreen, user, loading, hasInitialized, supabase]);
 
     // Rotate placeholder text every 3 seconds
     useEffect(() => {
@@ -198,6 +203,9 @@ Check out some of the areas I can help you with below.`;
         if (initialMessage && hasInitialized) {
             handleSendMessage(initialMessage);
         }
+        // The send callback is intentionally excluded so one initial message
+        // cannot be replayed as chat state changes during streaming.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialMessage, hasInitialized]);
 
     const [inputValue, setInputValue] = useState('');
@@ -209,11 +217,6 @@ Check out some of the areas I can help you with below.`;
     };
 
     const renderMessage = (content: string) => {
-        // Regex to match markdown links: [text](url)
-        // AND raw URLs that aren't part of a markdown link
-        const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-
         // Strip JSON action blocks from display
         const cleanContent = content.replace(/```json\s*\n{[\s\S]*?}\s*\n```/g, '').trim();
 
@@ -299,7 +302,7 @@ Check out some of the areas I can help you with below.`;
     const executeAction = async (action: DeityAction): Promise<boolean> => {
         console.log('⚡ executing action:', action);
         if (action.action === 'UPDATE_FIELD' && action.target && action.value) {
-            const targetField = action.target.toLowerCase() as keyof typeof profile;
+            const targetField = action.target.toLowerCase() as keyof ReturnType<typeof useProfile>['profile'];
             console.log('📝 Update Field:', targetField, action.value);
             setIsTyping(true);
 
@@ -716,115 +719,172 @@ Check out some of the areas I can help you with below.`;
     };
 
     return (
-        <div className={`flex flex-col h-dvh bg-black/40 backdrop-blur-xl transition-all duration-500 
-            ${isFullScreen
-                ? 'w-full rounded-none border-none shadow-none'
-                : 'border border-white/10 rounded-none md:rounded-l-[32px] md:rounded-r-none overflow-hidden shadow-2xl'
-            }`}
+        <TahoeGlassSurface
+            as="section"
+            variant="panel"
+            radius={isFullScreen ? 0 : '32px 0 0 32px'}
+            tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.04}
+            aria-label="Deity assistant"
+            className={`h-dvh transition-all duration-500 ${isFullScreen
+                ? 'w-full border-none'
+                : 'w-full overflow-hidden border border-white/10'
+                }`}
+            contentClassName="flex h-full min-h-0 flex-col"
         >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
+            <header className="flex items-center justify-between border-b border-white/10 p-6">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center border border-white/20 overflow-hidden backdrop-blur-sm">
+                    <TahoeGlassSurface
+                        variant="mediaFrame"
+                        radius={9999}
+                        tone="light"
+                        className="h-10 w-10 overflow-hidden border border-white/20"
+                        contentClassName="h-full w-full"
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/nsso-agent-avatar.png"
                             alt="Deity Avatar"
-                            className="w-full h-full object-cover opacity-90"
+                            className="h-full w-full object-cover opacity-90"
                         />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <a
-                                href="https://drive.google.com/file/d/1fRA7_xIrCw0XtOORljA3crcdSOCdFx3M/view?usp=sharing"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:opacity-80 transition-opacity"
-                            >
-                                <img
-                                    src="/deity logo white.png"
-                                    alt="Deity"
-                                    className="h-8 w-auto object-contain translate-y-1"
-                                />
-                            </a>
-                        </div>
-                    </div>
+                    </TahoeGlassSurface>
+                    <a
+                        href="https://drive.google.com/file/d/1fRA7_xIrCw0XtOORljA3crcdSOCdFx3M/view?usp=sharing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition-opacity hover:opacity-80"
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src="/deity logo white.png"
+                            alt="Deity"
+                            className="h-8 w-auto translate-y-1 object-contain"
+                        />
+                    </a>
                 </div>
                 <div className="flex items-center gap-2">
                     {!isFullScreen && onMaximize && (
-                        <button onClick={onMaximize} className="hidden md:block p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-colors">
+                        <TahoeGlassButton
+                            onClick={onMaximize}
+                            aria-label="Expand Deity chat"
+                            title="Expand chat"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.035}
+                            className="hidden p-2 md:inline-flex"
+                            contentClassName="text-white/60 hover:text-white"
+                        >
                             <Maximize2 size={18} />
-                        </button>
+                        </TahoeGlassButton>
                     )}
                     {isFullScreen && onMinimize && (
-                        <button onClick={onMinimize} className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-colors">
+                        <TahoeGlassButton
+                            onClick={onMinimize}
+                            aria-label="Minimize Deity chat"
+                            title="Minimize chat"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.035}
+                            className="p-2"
+                            contentClassName="text-white/60 hover:text-white"
+                        >
                             <Minimize2 size={18} />
-                        </button>
+                        </TahoeGlassButton>
                     )}
 
-                    {/* Undo Button */}
                     {canUndo && (
-                        <button
+                        <TahoeGlassButton
                             onClick={handleUndo}
-                            className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-colors"
+                            aria-label="Undo last profile change"
                             title="Undo last change"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.035}
+                            className="p-2"
+                            contentClassName="text-white/60 hover:text-white"
                         >
                             <RotateCcw size={18} />
-                        </button>
+                        </TahoeGlassButton>
                     )}
 
-                    {/* Fast Mode Toggle */}
-                    <button
+                    <TahoeGlassButton
                         onClick={toggleFastMode}
-                        className={`p-2 hover:bg-white/10 rounded-full transition-colors ${fastMode ? 'text-cyan-400' : 'text-white/60 hover:text-white'
-                            }`}
+                        aria-label={`Fast mode ${fastMode ? 'on' : 'off'}`}
+                        aria-pressed={fastMode}
                         title={`Fast Mode: ${fastMode ? 'ON' : 'OFF'}`}
+                        tone="light"
+                        semanticTint={fastMode ? 'light' : 'dark'}
+                        semanticTintOpacity={fastMode ? 0.07 : 0.035}
+                        className="p-2"
+                        contentClassName={fastMode ? 'text-cyan-300' : 'text-white/60 hover:text-white'}
                     >
                         <Zap size={18} className={fastMode ? 'fill-cyan-400' : ''} />
-                    </button>
+                    </TahoeGlassButton>
 
                     {onClose && (
-                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-white/60 hover:text-white transition-colors">
+                        <TahoeGlassButton
+                            onClick={onClose}
+                            aria-label="Close Deity chat"
+                            title="Close chat"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.035}
+                            className="p-2"
+                            contentClassName="text-white/60 hover:text-white"
+                        >
                             <X size={18} />
-                        </button>
+                        </TahoeGlassButton>
                     )}
                 </div>
-            </div>
+            </header>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
                 {messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col gap-2">
                         <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.content.trim() && (
-                                <div className={`max-w-[85%] rounded-2xl p-4 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap ${msg.role === 'user'
-                                    ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white rounded-tr-none'
-                                    : 'bg-white/10 text-white/90 rounded-tl-none border border-white/5'
-                                    }`}>
+                                <TahoeGlassSurface
+                                    as="article"
+                                    variant="popover"
+                                    radius={msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px'}
+                                    tone="light"
+                                    semanticTint={msg.role === 'user' ? 'light' : 'dark'}
+                                    semanticTintOpacity={msg.role === 'user' ? 0.07 : 0.045}
+                                    aria-label={`${msg.role === 'user' ? 'Your' : 'Deity'} message`}
+                                    className={`max-w-[85%] border p-4 text-[15px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user'
+                                        ? 'border-cyan-300/25 text-white'
+                                        : 'border-white/10 text-white/90'
+                                        }`}
+                                >
                                     {renderMessage(msg.content)}
-                                </div>
+                                </TahoeGlassSurface>
                             )}
                         </div>
 
-                        {/* Action Buttons (only for model messages with actions) */}
                         {msg.role === 'model' && msg.actions && msg.actions.length > 0 && (
                             <div className="flex justify-start">
-                                <div className="max-w-[85%] flex flex-wrap gap-2">
+                                <div className="flex max-w-[85%] flex-wrap gap-2">
                                     {msg.actions.map((action, idx) => (
-                                        <div
+                                        <TahoeGlassSurface
                                             key={idx}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition-all duration-300
-                                                ${action.status === 'applied' ? 'bg-green-500/10 border-green-500/30' :
-                                                    action.status === 'rejected' ? 'bg-red-500/5 border-red-500/20 opacity-60' :
-                                                        'border-white/20 bg-white/5'}`}
-                                            style={{
-                                                backdropFilter: 'blur(8px)'
-                                            }}
+                                            variant="recessed"
+                                            tone="light"
+                                            semanticTint="dark"
+                                            semanticTintOpacity={0.045}
+                                            className={`border px-3 py-2 text-sm transition-all duration-300 ${action.status === 'applied'
+                                                ? 'border-green-500/30'
+                                                : action.status === 'rejected'
+                                                    ? 'border-red-500/20 opacity-60'
+                                                    : 'border-white/20'
+                                                }`}
+                                            contentClassName="flex items-center gap-2"
                                         >
                                             <span className={`text-xs ${action.status === 'applied' ? 'text-green-200' : action.status === 'rejected' ? 'text-red-200/70' : 'text-white/60'}`}>
                                                 {action.action === 'UPDATE_FIELD' && `Update ${action.target}`}
                                                 {action.action === 'ADD_LINK' && `Add link: ${action.name}`}
                                                 {action.action === 'UPDATE_LINK' && `Rename to: ${action.name || 'update URL'}`}
-                                                {action.action === 'REMOVE_LINK' && `Remove link`}
+                                                {action.action === 'REMOVE_LINK' && 'Remove link'}
                                                 {action.action === 'REORDER_LINKS' && `Reorder ${action.order?.length} links`}
                                                 {action.action === 'ADD_EXPERIENCE' && `Add experience: ${action.company}`}
                                                 {action.action === 'ADD_PROJECT' && `Add project: ${action.project_name}`}
@@ -833,35 +893,45 @@ Check out some of the areas I can help you with below.`;
                                             </span>
 
                                             {action.status === 'applied' ? (
-                                                <div className="flex items-center gap-1 px-2 py-1 text-green-400 text-xs font-medium">
+                                                <div role="status" className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-400">
                                                     <Check size={14} />
                                                     <span>Done, profile updated!</span>
                                                 </div>
                                             ) : action.status === 'rejected' ? (
-                                                <div className="flex items-center gap-1 px-2 py-1 text-red-400/70 text-xs font-medium">
+                                                <div role="status" className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-400/70">
                                                     <XCircle size={14} />
                                                     <span>Rejected</span>
                                                 </div>
                                             ) : (
                                                 <>
-                                                    <button
+                                                    <TahoeGlassButton
                                                         onClick={() => handleApplyAction(msg.id, idx, action)}
                                                         disabled={isTyping}
-                                                        className="flex items-center gap-1 px-3 py-1 rounded-md bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-medium transition-colors disabled:opacity-50"
+                                                        aria-label="Apply suggested profile change"
+                                                        tone="light"
+                                                        semanticTint="light"
+                                                        semanticTintOpacity={0.055}
+                                                        className="border border-cyan-400/25 px-3 py-1"
+                                                        contentClassName="text-xs font-medium text-cyan-300"
                                                     >
                                                         <Check size={14} />
                                                         Apply
-                                                    </button>
-                                                    <button
+                                                    </TahoeGlassButton>
+                                                    <TahoeGlassButton
                                                         onClick={() => handleRejectAction(msg.id, idx)}
-                                                        className="flex items-center gap-1 px-3 py-1 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-colors"
+                                                        aria-label="Reject suggested profile change"
+                                                        tone="light"
+                                                        semanticTint="dark"
+                                                        semanticTintOpacity={0.055}
+                                                        className="border border-red-400/25 px-3 py-1"
+                                                        contentClassName="text-xs font-medium text-red-300"
                                                     >
                                                         <XCircle size={14} />
                                                         Reject
-                                                    </button>
+                                                    </TahoeGlassButton>
                                                 </>
                                             )}
-                                        </div>
+                                        </TahoeGlassSurface>
                                     ))}
                                 </div>
                             </div>
@@ -870,101 +940,154 @@ Check out some of the areas I can help you with below.`;
                 ))}
                 {isLoading && (
                     <div className="flex justify-start">
-                        <div className="bg-white/10 rounded-2xl rounded-tl-none p-4 flex gap-1.5 shadow-sm border border-white/5">
-                            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                        </div>
+                        <TahoeGlassSurface
+                            variant="popover"
+                            radius="16px 16px 16px 4px"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.045}
+                            role="status"
+                            aria-label="Deity is responding"
+                            className="border border-white/10 p-4"
+                            contentClassName="flex gap-1.5"
+                        >
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400" style={{ animationDelay: '0ms' }} />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400" style={{ animationDelay: '150ms' }} />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400" style={{ animationDelay: '300ms' }} />
+                        </TahoeGlassSurface>
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Persistent Content Area (Categories + Input) */}
-            <div className="bg-black/20 backdrop-blur-md border-t border-white/10">
-
-                {/* Categories */}
-                <div className="px-6 pt-4 pb-2 transition-all duration-300">
-                    <div className="flex flex-col items-center gap-2 mb-3">
-                        <button
+            <TahoeGlassSurface
+                variant="menu"
+                radius={0}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.035}
+                className="w-full border-t border-white/10"
+                contentClassName="w-full"
+            >
+                <div className="px-6 pb-2 pt-4 transition-all duration-300">
+                    <div className="mb-3 flex flex-col items-center gap-2">
+                        <TahoeGlassButton
                             onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
-                            className="flex items-center gap-2 text-white/40 text-xs font-medium uppercase tracking-wider hover:text-white/70 transition-colors group"
+                            aria-expanded={isCategoriesExpanded}
+                            aria-controls="deity-category-options"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.03}
+                            className="px-4 py-2"
+                            contentClassName="text-xs font-medium uppercase tracking-wider text-white/55"
                         >
                             What you can ask me about
-                            {isCategoriesExpanded ? (
-                                <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
-                            ) : (
-                                <ChevronUp size={14} className="group-hover:-translate-y-0.5 transition-transform" />
-                            )}
-                        </button>
+                            {isCategoriesExpanded ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                        </TahoeGlassButton>
                     </div>
                 </div>
 
-                {/* Collapsible Area */}
-                <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isCategoriesExpanded ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="flex flex-wrap gap-2 justify-center overflow-y-auto scrollbar-none pb-2 px-4">
+                <div
+                    id="deity-category-options"
+                    aria-hidden={!isCategoriesExpanded}
+                    inert={!isCategoriesExpanded}
+                    className={`overflow-hidden transition-all duration-500 ease-in-out ${isCategoriesExpanded ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}
+                >
+                    <div className="flex flex-wrap justify-center gap-2 overflow-y-auto px-4 pb-2 scrollbar-none">
                         {Object.keys(CATEGORY_QUESTIONS).map(cat => (
-                            <button
+                            <TahoeGlassSurface
+                                as="button"
+                                variant="pill"
+                                tone="light"
+                                semanticTint={activeCategory === cat ? 'light' : 'dark'}
+                                semanticTintOpacity={activeCategory === cat ? 0.065 : 0.03}
                                 key={cat}
                                 onClick={() => handleCategoryClick(cat)}
-                                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all shadow-sm mb-1 
-                                        ${activeCategory === cat
-                                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
-                                        : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-cyan-500/50 hover:text-cyan-300'
+                                aria-pressed={activeCategory === cat}
+                                className={`mb-1 border px-3 py-1.5 text-xs font-medium transition-all ${activeCategory === cat
+                                    ? 'border-cyan-500 text-cyan-300'
+                                    : 'border-white/10 text-white/70 hover:border-cyan-500/50 hover:text-cyan-300'
                                     }`}
                             >
                                 {cat}
-                            </button>
+                            </TahoeGlassSurface>
                         ))}
-                        {/* NSSO Database Trigger */}
-                        <button
-                            className="px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 text-xs font-bold tracking-wide transition-all shadow-sm mb-1 hover:bg-cyan-500/20 hover:border-cyan-500"
+                        <TahoeGlassSurface
+                            as="button"
+                            variant="pill"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.035}
+                            className="mb-1 border border-cyan-500/30 px-3 py-1.5 text-xs font-bold tracking-wide text-cyan-300 transition-all hover:border-cyan-500"
                             onMouseEnter={() => setShowVennDiagram(true)}
                             onMouseLeave={() => setShowVennDiagram(false)}
+                            onFocus={() => setShowVennDiagram(true)}
+                            onBlur={() => setShowVennDiagram(false)}
+                            aria-describedby={showVennDiagram ? 'deity-database-tooltip' : undefined}
                         >
                             NSSO DATABASE
-                        </button>
+                        </TahoeGlassSurface>
                     </div>
                 </div>
+            </TahoeGlassSurface>
 
-                {/* Venn Diagram Tooltip Portal */}
-                {showVennDiagram && createPortal(
-                    <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 9999 }}>
-                        <img
-                            src="/nsso-venn-diagram.jpg"
-                            alt="NSSO Agent vs ChatGPT Venn Diagram"
-                            className="max-w-[90vw] max-h-[90vh] rounded-2xl shadow-2xl border-4 border-cyan-500/50 block"
-                        />
-                    </div>,
-                    document.body
-                )}
+            {showVennDiagram && createPortal(
+                <TahoeGlassSurface
+                    id="deity-database-tooltip"
+                    variant="mediaFrame"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.035}
+                    role="tooltip"
+                    className="pointer-events-none fixed left-1/2 top-1/2 z-[9999] max-h-[90vh] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 border border-cyan-500/50 p-2"
+                    contentClassName="overflow-hidden rounded-[inherit]"
+                >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src="/nsso-venn-diagram.jpg"
+                        alt="NSSO Agent vs ChatGPT Venn Diagram"
+                        className="block max-h-[calc(90vh-1rem)] max-w-[calc(90vw-1rem)] rounded-[inherit] object-contain"
+                    />
+                </TahoeGlassSurface>,
+                document.body
+            )}
 
-                {/* Mobile Only: Why not just use chat gpt? (Below categories) */}
-
-            </div>
-
-            {/* Input */}
             <div className="p-6 pt-2">
                 <form
                     onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputValue); }}
-                    className="relative group"
+                    className="group relative"
                 >
-                    <input
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder={placeholders[placeholderIndex]}
-                        className="w-full bg-black/40 border border-white/10 rounded-full pl-5 pr-12 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-500/30 focus:bg-black/60 focus:ring-1 focus:ring-cyan-500/20 transition-all shadow-inner text-base"
-                    />
-                    <button
+                    <TahoeGlassField
+                        label="Message Deity"
+                        visuallyHideLabel
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.05}
+                        surfaceClassName="border border-white/10 px-0 py-0"
+                        controlClassName="px-5 py-4 pr-14 text-base text-white placeholder:text-white/30"
+                    >
+                        <input
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder={placeholders[placeholderIndex]}
+                            autoComplete="off"
+                        />
+                    </TahoeGlassField>
+                    <TahoeGlassButton
                         type="submit"
                         disabled={!inputValue.trim() || isLoading}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/10 text-white rounded-full hover:bg-cyan-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md"
+                        aria-label="Send message"
+                        tone="light"
+                        semanticTint="light"
+                        semanticTintOpacity={0.06}
+                        className="absolute right-2 top-1/2 z-30 -translate-y-1/2 p-2"
+                        contentClassName="text-white"
                     >
                         <Send size={18} />
-                    </button>
+                    </TahoeGlassButton>
                 </form>
             </div>
-        </div>
+        </TahoeGlassSurface>
     );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface ProfileQRCodeToggleProps {
     profilePicUrl: string
@@ -25,11 +26,27 @@ export default function ProfileQRCodeToggle({
     // we can use window.location.origin if available, or fallback.
     // Better yet, just use `https://nsso.me/${username}` as per requirement.
     const profileUrl = `https://nsso.me/${username}`
+    const toggleFlipped = () => setIsFlipped((flipped) => !flipped)
 
     return (
-        <div
-            className={`relative w-full max-w-[200px] aspect-square mx-auto lg:mx-0 cursor-pointer group perspective-1000 ${className}`}
-            onClick={() => setIsFlipped(!isFlipped)}
+        <TahoeGlassSurface
+            variant="mediaFrame"
+            radius={24}
+            tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.03}
+            role="button"
+            tabIndex={0}
+            aria-label={isFlipped ? `Show ${fullName}'s profile photo` : `Show ${fullName}'s QR code`}
+            aria-pressed={isFlipped}
+            className={`relative w-full max-w-[200px] aspect-square mx-auto lg:mx-0 cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 ${className}`}
+            contentClassName="h-full w-full [perspective:1000px]"
+            onClick={toggleFlipped}
+            onKeyDown={(event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return
+                event.preventDefault()
+                toggleFlipped()
+            }}
             title="Click to toggle QR Code"
         >
             <div
@@ -41,6 +58,7 @@ export default function ProfileQRCodeToggle({
                     className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-xl"
                     style={{ backfaceVisibility: 'hidden' }}
                 >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src={profilePicUrl}
                         alt={fullName}
@@ -48,42 +66,29 @@ export default function ProfileQRCodeToggle({
                     />
 
                     {/* Hover Hint */}
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white font-medium text-sm px-3 py-1 bg-white/20 backdrop-blur-md rounded-full">
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity flex items-center justify-center">
+                        <TahoeGlassSurface
+                            variant="pill"
+                            tone="light"
+                            semanticTint="light"
+                            semanticTintOpacity={0.06}
+                            className="border border-white/20 px-3 py-1 text-sm font-medium text-white"
+                        >
                             Show QR
-                        </span>
+                        </TahoeGlassSurface>
                     </div>
                 </div>
 
 
                 {/* Back: QR Code */}
-                {/* Back: QR Code (Shiny Glass Effect) */}
                 <div
                     className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] rotate-y-180 flex flex-col items-center justify-center p-4 border border-white/50"
                     style={{
                         backfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)',
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        backdropFilter: 'blur(12px)',
                     }}
                 >
-                    {/* Lighten layer */}
-                    <div
-                        className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(255,255,255,0.06)] mix-blend-lighten"
-                        aria-hidden="true"
-                    />
-
-                    {/* Color dodge layer */}
-                    <div
-                        className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(94,94,94,0.18)] mix-blend-color-dodge"
-                        aria-hidden="true"
-                    />
-
-                    {/* Shimmer Effect */}
-                    <div className="absolute inset-0 z-0 overflow-hidden rounded-[inherit] pointer-events-none">
-                        <div className="absolute top-0 left-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
-                    </div>
-
+                    {/* The white QR plate stays opaque for scanner contrast. */}
                     <div className="bg-white p-2 rounded-xl shadow-inner relative z-10">
                         <QRCodeSVG
                             value={profileUrl}
@@ -99,9 +104,6 @@ export default function ProfileQRCodeToggle({
 
             {/* Inline Styles for Tailwind utilities that might be missing or custom */}
             <style jsx>{`
-                .perspective-1000 {
-                    perspective: 1000px;
-                }
                 .preserve-3d {
                     transform-style: preserve-3d;
                 }
@@ -112,6 +114,6 @@ export default function ProfileQRCodeToggle({
                     transform: rotateY(180deg);
                 }
             `}</style>
-        </div>
+        </TahoeGlassSurface>
     )
 }

@@ -1,11 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Bot, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 import { useUI } from '@/components/providers/UIProvider';
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass';
 
 // Lazy load the heavy chat interface
 const AgentChatInterface = dynamic(
@@ -25,6 +26,9 @@ export default function NSSOAgent() {
     const [hasOpened, setHasOpened] = useState(false);
     const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
     const { isBackgroundDimmed } = useUI();
+    const launcherRef = useRef<HTMLElement>(null);
+    const chatWindowRef = useRef<HTMLDivElement>(null);
+    const restoreLauncherFocusRef = useRef(false);
 
     // Listen for custom event to open chat
     useEffect(() => {
@@ -42,68 +46,115 @@ export default function NSSOAgent() {
         };
     }, []);
 
-    // Pop-up mode logic. Full screen opens new tab.
-    const handleExpand = () => {
-        window.open('/deity', '_blank');
-    };
-
     const handleOpen = () => {
+        restoreLauncherFocusRef.current = true;
         setIsOpen(true);
         setHasOpened(true);
     }
+
+    const handleClose = () => {
+        setIsOpen(false);
+    }
+
+    useEffect(() => {
+        if (!isOpen) {
+            if (restoreLauncherFocusRef.current) {
+                const frame = window.requestAnimationFrame(() => launcherRef.current?.focus());
+                restoreLauncherFocusRef.current = false;
+                return () => window.cancelAnimationFrame(frame);
+            }
+            return;
+        }
+
+        const frame = window.requestAnimationFrame(() => chatWindowRef.current?.focus({ preventScroll: true }));
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setIsOpen(false);
+                return;
+            }
+            if (event.key !== 'Tab' || !chatWindowRef.current) return;
+
+            const focusable = [...chatWindowRef.current.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )].filter((element) => element.getClientRects().length > 0);
+            if (focusable.length === 0) {
+                event.preventDefault();
+                chatWindowRef.current.focus({ preventScroll: true });
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && (document.activeElement === first || document.activeElement === chatWindowRef.current)) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.cancelAnimationFrame(frame);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOpen]);
 
     return (
         <>
             {/* Persistent Entry Point (Pill) */}
             {!isOpen && (
-                <button
+                <TahoeGlassSurface
+                    ref={launcherRef}
+                    as="button"
+                    variant="pill"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.04}
                     onClick={handleOpen}
-                    className="fixed bottom-6 right-6 z-[6000] group hover:scale-105 transition-all duration-500 hidden md:block"
+                    aria-label="Open Deity assistant"
+                    aria-haspopup="dialog"
+                    className="group fixed bottom-6 right-6 z-[6000] hidden h-[56px] border border-white/20 pl-2 pr-6 transition-all duration-500 hover:scale-105 md:inline-flex"
+                    contentClassName="flex items-center"
                 >
-                    {/* Outer Glow/Blur Layer */}
-                    <div className="absolute -inset-1 bg-white/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-
-                    {/* Main Container - Notification Style */}
-                    <div className="relative flex items-center h-[56px] pl-2 pr-6 bg-black/40 backdrop-blur-[34px] border border-white/20 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.2)] overflow-hidden">
-                        {/* Inner Gradient Overlays for "Liquid" feel */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50 pointer-events-none" />
-
-                        {/* Avatar Image */}
-                        <div className="relative w-[42px] h-[42px] rounded-full flex items-center justify-center bg-transparent mr-3 shadow-inner border border-white/50 overflow-hidden">
-                            <img
-                                src="/nsso-agent-avatar.png"
-                                alt="Agent Avatar"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-
-                        {/* Text Section */}
-                        <div className="flex flex-col items-start justify-center">
-                            <div className="flex items-center gap-1.5">
-                                <img
-                                    src="/deity logo white.png"
-                                    alt="Deity"
-                                    className="h-7 w-auto object-contain translate-y-[2px]"
-                                />
-
-                            </div>
-                        </div>
-                    </div>
-                </button>
+                    <span className="mr-3 flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full border border-white/50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src="/nsso-agent-avatar.png"
+                            alt=""
+                            className="h-full w-full object-cover"
+                        />
+                    </span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src="/deity logo white.png"
+                        alt="Deity"
+                        className="h-7 w-auto translate-y-[2px] object-contain"
+                    />
+                </TahoeGlassSurface>
             )}
 
             {/* Pop-up Mode - ALWAYS RENDERED but HIDDEN when closed to persist state */}
             <>
                 {/* Dimming Overlay */}
                 <div
-                    className={`fixed inset-0 backdrop-blur-[2px] z-40 transition-all duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    className={`fixed inset-0 z-40 transition-all duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                         } ${isBackgroundDimmed ? 'bg-black/0' : 'bg-black/60'
                         }`}
-                    onClick={() => setIsOpen(false)}
+                    aria-hidden="true"
+                    onClick={handleClose}
                 />
 
                 {/* Chat Window */}
                 <div
+                    ref={chatWindowRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Deity assistant"
+                    aria-hidden={!isOpen}
+                    inert={!isOpen}
+                    tabIndex={-1}
                     className={`fixed z-[6000] w-full h-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
                         /* Mobile Styles (Default) */
                         inset-0 
@@ -120,13 +171,10 @@ export default function NSSOAgent() {
                         }
                     `}
                 >
-                    {/* Glow Effect - Adjusted for Sidebar */}
-                    <div className="hidden md:block absolute inset-y-0 -left-20 w-40 bg-gradient-to-r from-cyan-500/10 to-transparent blur-3xl -z-10 pointer-events-none opacity-50"></div>
-
                     {hasOpened && (
                         <AgentChatInterface
                             isFullScreen={false}
-                            onClose={() => setIsOpen(false)}
+                            onClose={handleClose}
                             onMaximize={undefined} // Disable maximize on desktop as it's already full height
                             initialMessage={initialMessage}
                         />

@@ -1,10 +1,13 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Cropper from 'react-easy-crop'
-import { X, Check, ZoomIn } from 'lucide-react'
-import GlassCard from '@/components/ui/GlassCard'
-import GlassButton from '@/components/ui/GlassButton'
+import { X, ZoomIn } from 'lucide-react'
+import {
+    TahoeGlassButton,
+    TahoeGlassDialog,
+    TahoeGlassField,
+} from '@/components/ui/tahoe-glass'
 import getCroppedImg from '@/lib/canvasUtils'
 
 interface ImageCropperModalProps {
@@ -56,75 +59,102 @@ export default function ImageCropperModal({
         }
     }
 
-    if (!isOpen) return null
+    const handleOpenChange = useCallback((open: boolean) => {
+        if (!open) onClose()
+    }, [onClose])
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <GlassCard className="w-full max-w-xl flex flex-col max-h-[90vh]">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/10">
-                    <h3 className="text-xl font-bold text-white">Crop Image</h3>
-                    <button
-                        onClick={onClose}
-                        className="text-white/50 hover:text-white transition-colors"
+        <TahoeGlassDialog
+            open={isOpen}
+            onOpenChange={handleOpenChange}
+            closeOnPointerDownOutside={false}
+            aria-labelledby="image-cropper-title"
+            tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.055}
+            overlayClassName="z-[9999] animate-in fade-in duration-200"
+            backdropClassName="bg-black/60"
+            className="max-w-xl overflow-hidden border border-white/10 p-0"
+        >
+            <header className="flex items-center justify-between border-b border-white/10 p-6">
+                <h2 id="image-cropper-title" className="text-xl font-bold text-white">Crop Image</h2>
+                <TahoeGlassButton
+                    onClick={onClose}
+                    aria-label="Close image cropper"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.04}
+                    className="p-2"
+                    contentClassName="text-white/60 hover:text-white"
+                >
+                    <X size={24} />
+                </TahoeGlassButton>
+            </header>
+
+            {/* The crop stage intentionally stays opaque so image bounds are legible. */}
+            <div className="relative h-[400px] w-full overflow-hidden bg-black/50">
+                <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={aspectRatio}
+                    onCropChange={onCropChange}
+                    onCropComplete={onCropCompleteHandler}
+                    onZoomChange={onZoomChange}
+                    classes={{
+                        containerClassName: 'bg-transparent'
+                    }}
+                />
+            </div>
+
+            <div className="space-y-6 p-6">
+                <div className="flex items-center gap-4">
+                    <ZoomIn aria-hidden="true" size={20} className="text-white/50" />
+                    <TahoeGlassField
+                        label="Zoom"
+                        visuallyHideLabel
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.04}
+                        className="flex-1"
+                        surfaceClassName="px-3 py-3"
+                        controlClassName="h-1 cursor-pointer appearance-none rounded-lg bg-white/20 active:bg-white/40"
                     >
-                        <X size={24} />
-                    </button>
-                </div>
-
-                {/* Cropper Container */}
-                <div className="relative w-full h-[400px] bg-black/50 overflow-hidden">
-                    <Cropper
-                        image={imageSrc}
-                        crop={crop}
-                        zoom={zoom}
-                        aspect={aspectRatio}
-                        onCropChange={onCropChange}
-                        onCropComplete={onCropCompleteHandler}
-                        onZoomChange={onZoomChange}
-                        classes={{
-                            containerClassName: 'bg-transparent'
-                        }}
-                    />
-                </div>
-
-                {/* Controls */}
-                <div className="p-6 space-y-6">
-                    {/* Zoom Slider */}
-                    <div className="flex items-center gap-4">
-                        <ZoomIn size={20} className="text-white/50" />
                         <input
                             type="range"
                             value={zoom}
                             min={1}
                             max={3}
                             step={0.1}
-                            aria-labelledby="Zoom"
                             onChange={(e) => setZoom(Number(e.target.value))}
-                            className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer range-sm active:bg-white/40"
                         />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-4">
-                        <GlassButton
-                            variant="secondary"
-                            onClick={onClose}
-                            className="flex-1"
-                        >
-                            Cancel
-                        </GlassButton>
-                        <GlassButton
-                            variant="primary"
-                            onClick={handleSave}
-                            disabled={processing || loading}
-                            className="flex-1"
-                        >
-                            {processing || loading ? 'Processing...' : 'Apply Crop'}
-                        </GlassButton>
-                    </div>
+                    </TahoeGlassField>
                 </div>
-            </GlassCard>
-        </div>
+
+                <div className="flex gap-4">
+                    <TahoeGlassButton
+                        onClick={onClose}
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.04}
+                        className="flex-1 border border-white/15 px-5 py-3"
+                        contentClassName="text-white/80"
+                    >
+                        Cancel
+                    </TahoeGlassButton>
+                    <TahoeGlassButton
+                        onClick={handleSave}
+                        disabled={processing || loading}
+                        tone="light"
+                        semanticTint="light"
+                        semanticTintOpacity={0.07}
+                        className="flex-1 border border-white/20 px-5 py-3"
+                        contentClassName="text-white"
+                    >
+                        {processing || loading ? 'Processing...' : 'Apply Crop'}
+                    </TahoeGlassButton>
+                </div>
+            </div>
+        </TahoeGlassDialog>
     )
 }
