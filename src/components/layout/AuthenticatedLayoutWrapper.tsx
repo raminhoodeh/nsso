@@ -19,11 +19,12 @@ export default function AuthenticatedLayoutWrapper({
 
     // Check if user is logged in
     const isLoggedIn = !!user;
+    const ownsViewport = pathname.startsWith('/places');
 
     return (
         <div className={cn(
             "relative w-full transition-all duration-300",
-            isLoggedIn ? "lg:pl-[280px] pb-[100px] lg:pb-0" : ""
+            isLoggedIn && !ownsViewport ? "lg:pl-[280px] pb-[100px] lg:pb-0" : ""
         )}>
             {children}
         </div>

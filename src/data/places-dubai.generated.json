@@ -1,0 +1,3260 @@
+{
+  "meta": {
+    "title": "Places to go in the UAE",
+    "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
+    "sourceRecordCount": 77,
+    "placeCount": 71,
+    "generatedAt": "2026-08-22T13:04:30.926Z",
+    "expiresAt": "2026-09-21T13:04:30.926Z",
+    "cacheMisses": 0,
+    "geocoder": "google-places-new",
+    "attribution": "Place IDs and current location data supplied by Google Maps Platform."
+  },
+  "places": [
+    {
+      "id": "al-ain-oasis",
+      "name": "Al Ain Oasis",
+      "aliases": [],
+      "description": "The UAE's first UNESCO World Heritage site: a 1,200-hectare working oasis in the heart of Al Ain with around 147,000 date palms across hundreds of farms, watered by the traditional falaj irrigation system. Shaded pathways can be explored on foot, by rented bicycle or electric buggy, and the free Eco-Centre explains the oasis's history and sustainability. Open daily 9am–7pm.",
+      "sourceUrls": [
+        "https://visitabudhabi.ae/en/things-to-do/nature-and-wildlife/natural-wonders/al-ain-oasis"
+      ],
+      "sourceRows": [
+        4
+      ],
+      "locationHint": "Al Ain, UAE",
+      "emirate": "Abu Dhabi",
+      "address": "Al Ain Oasis - Central District - Abu Dhabi",
+      "coordinates": {
+        "lat": 24.2169951,
+        "lng": 55.7703457
+      },
+      "placeId": "ChIJ1e5yrtq2ij4R5-eMJu3WtAs",
+      "googleTypes": [
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "natural_feature",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife",
+          "arts-culture-heritage",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.899Z",
+        "osm": null,
+        "matchedName": "Al Ain Oasis",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Ain%20Oasis%2C%20Al%20Ain%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dalma-island",
+      "name": "Dalma Island",
+      "aliases": [],
+      "description": "One of the UAE's oldest continuously inhabited places, an island roughly 42 km off the Al Dhafra coast reached by ferry from Jebel Dhanna port or light aircraft from Abu Dhabi. Once at the heart of the Gulf pearl trade, it offers pearl-diving heritage, archaeological sites with Ubaid-era pottery, historic mosques and the Dalma Museum, along with quiet virgin beaches where hawksbill and green turtles sometimes nest.",
+      "sourceUrls": [
+        "https://dalmaisland.com/"
+      ],
+      "sourceRows": [
+        7
+      ],
+      "locationHint": "Al Dhafra, Abu Dhabi, UAE",
+      "emirate": "Abu Dhabi",
+      "address": "Dalma Island - Delma - Abu Dhabi",
+      "coordinates": {
+        "lat": 24.5009972,
+        "lng": 52.308134599999995
+      },
+      "placeId": "ChIJB2N5mA9pQz4Ru8khEYXMmJA",
+      "googleTypes": [
+        "island",
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "island",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "mountain-hiking",
+          "arts-culture-heritage",
+          "creative-workshop"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.899Z",
+        "osm": null,
+        "matchedName": "Dalma Island",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dalma%20Island%2C%20Al%20Dhafra%2C%20Abu%20Dhabi%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "emirates-bio-farm",
+      "name": "Emirates Bio Farm",
+      "aliases": [],
+      "description": "Emirates Bio Farm is the UAE's largest private organic farm, dedicated to producing certified organic vegetables, fruits, and eggs through sustainable farming practices. It serves as an educational and recreational destination, offering farm tours, a visitor center, and a farm-to-table restaurant for an immersive agricultural experience.",
+      "sourceUrls": [
+        "https://emiratesbiofarm.com/collections/tickets"
+      ],
+      "sourceRows": [
+        5
+      ],
+      "locationHint": "Al Ain, UAE",
+      "emirate": "Abu Dhabi",
+      "address": "24°41'03.3\"N 55°44'32. - 8th St - الشويب - شعبية الشويب - أبو ظبي",
+      "coordinates": {
+        "lat": 24.6834587,
+        "lng": 55.7417156
+      },
+      "placeId": "ChIJgUppIJFp9T4R__Kh-GFs6Cc",
+      "googleTypes": [
+        "farm",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "farm",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife",
+          "shows-immersive",
+          "food-drink",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.899Z",
+        "osm": null,
+        "matchedName": "Emirates Bio Farm مزرعة الامارات البيولوجية",
+        "websiteUri": "http://emiratesbiofarm.com/",
+        "businessStatus": "CLOSED_TEMPORARILY"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Emirates%20Bio%20Farm%2C%20Al%20Ain%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "jubail-mangrove-park",
+      "name": "Jubail Mangrove Park",
+      "aliases": [],
+      "description": "The first self-contained educational nature and leisure destination of its kind in Abu Dhabi, opened in 2020 on Jubail Island. An elevated boardwalk winds through pristine mangroves where herons, gazelles and marine life can be spotted, with guided walks and kayak experiences through the intertidal channels. Open daily from 7am, last entry 8pm.",
+      "sourceUrls": [
+        "https://jubailisland.ae/jubail-mangrove-park/"
+      ],
+      "sourceRows": [
+        63
+      ],
+      "locationHint": "Jubail Island, Abu Dhabi, UAE",
+      "emirate": "Abu Dhabi",
+      "address": "Al Jubail Island - JN - Abu Dhabi",
+      "coordinates": {
+        "lat": 24.5451825,
+        "lng": 54.4854061
+      },
+      "placeId": "ChIJ1bW8pOpdXj4RTNQKoi2_7FY",
+      "googleTypes": [
+        "nature_preserve",
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "nature_preserve",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Jubail Mangrove Park",
+        "websiteUri": "https://www.jubailmangrovepark.ae/en/shop",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Jubail%20Mangrove%20Park%2C%20Jubail%20Island%2C%20Abu%20Dhabi%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "shuweihat-island",
+      "name": "Shuweihat Island",
+      "aliases": [],
+      "description": "Shuweihat Island is a remote natural escape known for its striking orange sandstone cliffs, unique rock formations, and pristine white sand beaches. It offers visitors a tranquil setting for photography, beach relaxation, and camping, far from urban crowds. The island features clear, shallow waters and dramatic landscapes, making it a distinctive destination in the UAE.",
+      "sourceUrls": [
+        "https://adventurefaktory.com/shuweihat-island/"
+      ],
+      "sourceRows": [
+        2
+      ],
+      "locationHint": "Abu Dhabi, UAE",
+      "emirate": "Abu Dhabi",
+      "address": "Shuweihat Island - Al Shuwaihat - Abu Dhabi",
+      "coordinates": {
+        "lat": 24.111984399999997,
+        "lng": 52.438554599999996
+      },
+      "placeId": "ChIJfUjq7s4gQz4RSEqgzkgz9ug",
+      "googleTypes": [
+        "island",
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "island",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "nature-wildlife"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.891Z",
+        "osm": null,
+        "matchedName": "Shuweihat Island",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Shuweihat%20Island%2C%20Abu%20Dhabi%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "al-zorah-nature-reserve",
+      "name": "Al Zorah Nature Reserve",
+      "aliases": [],
+      "description": "A protected coastal reserve in Ajman with around one million square metres of natural mangrove forest, lagoons and sandy beaches. Home to some 58 species of migratory birds — including resident pink flamingos — it is one of the UAE's best places to kayak through mangrove channels, birdwatch and explore a living coastal ecosystem, only around 35 minutes from Sharjah and 50 from Dubai.",
+      "sourceUrls": [
+        "https://www.alzorahcity.com/mangrove-natural-reserve"
+      ],
+      "sourceRows": [
+        3
+      ],
+      "locationHint": "Ajman, UAE",
+      "emirate": "Ajman",
+      "address": "The Pavilion Al Zorah, Al Ittihad Road, Opp. Union Coop Jerf 1 - Al Zorah - Ajman",
+      "coordinates": {
+        "lat": 25.4263738,
+        "lng": 55.4991327
+      },
+      "placeId": "ChIJ9w1y9AP49T4RkHOMQFV8FqM",
+      "googleTypes": [
+        "tourist_attraction",
+        "national_park",
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "national_park",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.898Z",
+        "osm": null,
+        "matchedName": "Al Zorah Natural Reserve",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Zorah%20Nature%20Reserve%2C%20Ajman%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "bkd-by-gemini",
+      "name": "BKD. BY Gemini",
+      "aliases": [],
+      "description": "Aesthetic bakery & specialty coffee house tucked inside Al Safiya Park (Al Zorah), Ajman. Zodiac-themed — you're asked your star sign when ordering. Known for pastries, maple salted latte, garden vibes. Open 7 AM–11 PM weekdays, 7 AM–12 AM weekends.",
+      "sourceUrls": [
+        "https://www.google.com/maps/search/?api=1&query=CF8M%2BQRR+Al+Safiya+Park+Ajman+UAE"
+      ],
+      "sourceRows": [
+        11
+      ],
+      "locationHint": "Al Zorah, Ajman, UAE",
+      "emirate": "Ajman",
+      "address": "CF8M+QRR Walk Al Safiya Walkways and Park Al Qurm - شارع الصفية - الصفيا - عجمان",
+      "coordinates": {
+        "lat": 25.416661,
+        "lng": 55.483961799999996
+      },
+      "placeId": "ChIJO3LIBQBZXz4RGrp_UExXjLg",
+      "googleTypes": [
+        "bakery",
+        "food_store",
+        "food",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "bakery",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "nature-wildlife",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "BKD. BY GEMINI",
+        "websiteUri": "https://www.instagram.com/bkdbygemini",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=BKD%20by%20Gemini%2C%20Al%20Safiya%20Park%2C%20Al%20Zorah%2C%20Ajman%2C%20UAE"
+    },
+    {
+      "id": "al-seef",
+      "name": "Al Seef",
+      "aliases": [
+        "Souk Al Seef"
+      ],
+      "description": "A rustic-contemporary waterfront destination along Dubai Creek that blends Dubai's heritage with modern living. Its heritage district and souk are lined with cafés and restaurants serving traditional Emirati treats and international cuisine, including spots like Al Fanar Seafood, alongside shops and scenic creekside strolls.",
+      "sourceUrls": [
+        "https://soukalseef.ae/en/discover/dine",
+        "https://soukalseef.ae/en"
+      ],
+      "sourceRows": [
+        30,
+        48
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Al Seef St - Dubai",
+      "coordinates": {
+        "lat": 25.2634611,
+        "lng": 55.3046727
+      },
+      "placeId": "ChIJibdruDFDXz4R-QD8K2d2QK8",
+      "googleTypes": [
+        "route"
+      ],
+      "primaryGoogleType": null,
+      "taxonomy": {
+        "primary": "shopping-stroll",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Al Seef Street",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Seef%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "amongst-few-cafe",
+      "name": "Amongst Few Café",
+      "aliases": [],
+      "description": "A design-led café in Umm Suqeim (Al Wasl Road) from the amongst few brand, known for premium organic fair-trade coffee sourced from Ethiopia and roasted locally. The industrial-meets-organic space features cement and breeze-block walls, wood accents, bi-folding windows and a quiet outdoor area. Open 9am–9pm daily.",
+      "sourceUrls": [
+        "https://www.amongstfew.com/pages/cafe"
+      ],
+      "sourceRows": [
+        37
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Bahwan Complex - Villa #3 - 966 شارع الوصل - أم سقيم الأولى - ام سقيم 1 - دبي",
+      "coordinates": {
+        "lat": 25.1605195,
+        "lng": 55.2200772
+      },
+      "placeId": "ChIJrV4bhjxrXz4R9y2G-FG0SPY",
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "amongst few café",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Amongst%20Few%20Caf%C3%A9%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "apricot",
+      "name": "Apricot",
+      "aliases": [],
+      "description": "A casual European-Mediterranean eatery and café in Souk Al Manzil, Downtown Dubai, serving generous all-day breakfast, deli signatures, café classics and gourmet-to-go items. Open 7:30am–10pm daily with a relaxed garden setting near the Dubai skyline.",
+      "sourceUrls": [
+        "https://apricotdubai.com/"
+      ],
+      "sourceRows": [
+        34
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Al Manzil, Old Town - برج خليفة - وسط مدينة دبي - دبي",
+      "coordinates": {
+        "lat": 25.1912059,
+        "lng": 55.2783819
+      },
+      "placeId": "ChIJgR5Dmw5pXz4RtC16DhAPkHk",
+      "googleTypes": [
+        "cafe",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "nature-wildlife",
+          "arts-culture-heritage",
+          "food-drink",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Apricot Dubai, Downtown Dubai",
+        "websiteUri": "https://apricotdubai.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Apricot%20restaurant%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "aquaventure-waterpark",
+      "name": "Aquaventure Waterpark",
+      "aliases": [],
+      "description": "Aquaventure Waterpark, located at Atlantis, The Palm, is recognized as the world's largest waterpark, featuring over 105 record-breaking slides and attractions. This award-winning destination offers thrilling rides, unique marine animal encounters, and a serene private beach for all visitors.",
+      "sourceUrls": [
+        "https://www.visitdubai.com/en/places-to-visit/aquaventure"
+      ],
+      "sourceRows": [
+        54
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Atlantis The Palm - Crescent Rd - Nakhlat Jumeira - Dubai",
+      "coordinates": {
+        "lat": 25.1324245,
+        "lng": 55.1183099
+      },
+      "placeId": "ChIJRcbZaklDXz4RXfL8v3kej7c",
+      "googleTypes": [
+        "water_park",
+        "tourist_attraction",
+        "amusement_park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "water_park",
+      "taxonomy": {
+        "primary": "sport-active",
+        "tags": [
+          "beach-water",
+          "sport-active",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Aquaventure World",
+        "websiteUri": "https://www.aquaventureworld.com/?utm_source=googleplaces&utm_medium=location&utm_campaign=mwp&utm_content=listing",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Aquaventure%20Waterpark%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "arte-museum-dubai",
+      "name": "Arte Museum Dubai",
+      "aliases": [
+        "Arte Museum"
+      ],
+      "description": "\"Eternal Nature\" immersive digital art museum on Level 2 of The Dubai Mall (opposite Galeries Lafayette), pairing large-scale projections with enveloping soundscapes and bespoke fragrances. Exhibitions include Aurora Beach, Whale, Wormhole, and Garden, plus a Musée d'Orsay collaboration reimagining Monet and Van Gogh. Open daily 10am–12am (last admission 11pm); summer tickets 50% off.",
+      "sourceUrls": [
+        "https://dubai.artemuseum.com/"
+      ],
+      "sourceRows": [
+        27,
+        42
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "The Dubai Mall - Level 2 Financial Ctr St - opposite Galeries Lafayette - Road - Downtown Dubai - Dubai",
+      "coordinates": {
+        "lat": 25.1975373,
+        "lng": 55.2789742
+      },
+      "placeId": "ChIJP1M4VDppXz4RI5Rn_qqRhG4",
+      "googleTypes": [
+        "museum",
+        "art_museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "arts-culture-heritage",
+          "shows-immersive"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "ARTE MUSEUM DUBAI",
+        "websiteUri": "https://dubai.artemuseum.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Arte%20Museum%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "at-mosphere",
+      "name": "At.mosphere",
+      "aliases": [],
+      "description": "The world's highest restaurant from ground level, on Level 122 of the Burj Khalifa (442 metres up). An award-winning fine-dining restaurant and lounge serving refined French-inspired cuisine amid French art deco design, with floor-to-ceiling windows and breathtaking views of the Arabian Gulf and Dubai skyline.",
+      "sourceUrls": [
+        "https://www.atmosphereburjkhalifa.com/"
+      ],
+      "sourceRows": [
+        33
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "57XF+J8R Burj khalifa - 122nd Floor - Burj Khalifa - Downtown Dubai - Dubai",
+      "coordinates": {
+        "lat": 25.1971699,
+        "lng": 55.2745865
+      },
+      "placeId": "ChIJ4TyFlYFCXz4RNMf0stgxhLc",
+      "googleTypes": [
+        "restaurant",
+        "lounge_bar",
+        "bar",
+        "night_club",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Atmosphere Burj Khalifa",
+        "websiteUri": "https://www.atmosphereburjkhalifa.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=At.mosphere%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "bait-al-ahlam",
+      "name": "Bait Al Ahlam",
+      "aliases": [],
+      "description": "Bait Al Ahlam is a premium international restaurant designed for connoisseurs of fine dining, bringing together the finest dishes from around the globe. From exquisite flavors to an elegant ambiance, every detail is curated to create an unforgettable culinary experience in a luxurious setting.",
+      "sourceUrls": [
+        "https://baitahlam.com/"
+      ],
+      "sourceRows": [
+        51
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Al Wasl Rd - Jumeirah - Jumeirah 3 - Dubai",
+      "coordinates": {
+        "lat": 25.174160999999998,
+        "lng": 55.2304294
+      },
+      "placeId": "ChIJrwQoUQVpXz4R7i-r95lVHdE",
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Bait AL Ahlam Restaurant",
+        "websiteUri": "https://baitahlam.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Bait%20Al%20Ahlam%20cafe%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "barbari",
+      "name": "Barbari",
+      "aliases": [],
+      "description": "A no-frills Persian spot on Al Wasl Road in Jumeirah 3, famous for its authentic Iranian breakfast and freshly baked Barbari bread (there's often a queue outside). Also serves Arabic and Iranian pizzas and sandwiches; standout is the Keymak & Honey. Dubai's first dedicated Barbari bakery.",
+      "sourceUrls": [
+        "https://www.instagram.com/barbari.ae/"
+      ],
+      "sourceRows": [
+        29
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Umm Suqeim Second - Jumeirah 3 - Dubai",
+      "coordinates": {
+        "lat": 25.1546853,
+        "lng": 55.2035784
+      },
+      "placeId": "ChIJ_UUTcgtrXz4RU_PIyYcwmBI",
+      "googleTypes": [
+        "breakfast_restaurant",
+        "pizza_restaurant",
+        "bakery",
+        "food_store",
+        "store",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "breakfast_restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "barbari",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Barbari%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "cabinet-of-curiosity",
+      "name": "Cabinet of Curiosity",
+      "aliases": [],
+      "description": "Cabinet of Curiosity is a hidden gem in the Goshi Warehouses of Al Quoz 3, billed as the UAE's most curious antique collection. It's a one-stop destination for around 1,500 carefully curated pieces — unique antiques, eclectic furniture, art, and decorative objects — and also hosts rotating art exhibitions and cultural talks.",
+      "sourceUrls": [
+        "https://cabinetofcuriosity.me/"
+      ],
+      "sourceRows": [
+        47
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Goshi Warehouses Village, Warehouse #18 - 20 22nd St - Al Qouz Ind.third - Al Quoz - Dubai",
+      "coordinates": {
+        "lat": 25.1301371,
+        "lng": 55.226001999999994
+      },
+      "placeId": "ChIJTRRv8d1rXz4RYOp5SgWgZic",
+      "googleTypes": [
+        "home_goods_store",
+        "store",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "home_goods_store",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Cabinet of Curiosity",
+        "websiteUri": "https://cabinetofcuriosity.me/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Cabinet%20of%20Curiosity%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "cat-cafe-vibrissae-dubai-creek-harbour",
+      "name": "Cat Cafe Vibrissae - Dubai Creek Harbour",
+      "aliases": [
+        "Cat Cafe Vibrissae"
+      ],
+      "description": "",
+      "sourceUrls": [],
+      "sourceRows": [
+        40,
+        41
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Creek Rise 1 - Al Kheeran First - Dubai Creek Harbour - Dubai",
+      "coordinates": {
+        "lat": 25.2088611,
+        "lng": 55.3461833
+      },
+      "placeId": "ChIJ44SpI3pnXz4R9kHKwINzcEg",
+      "googleTypes": [
+        "cat_cafe",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cat_cafe",
+      "taxonomy": {
+        "primary": "family-animals",
+        "tags": [
+          "food-drink",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Cat Cafe Vibrissae - Dubai Creek Harbour",
+        "websiteUri": "http://www.vibrissaecafe.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Cat%20Cafe%20Vibrissae%20-%20Dubai%20Creek%20Harbour%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "cherryhouse",
+      "name": "CherryHouse",
+      "aliases": [],
+      "description": "Coffee destination in Al Safa with an in-house roastery, bakery, and espresso bar.",
+      "sourceUrls": [],
+      "sourceRows": [
+        22
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Matloob Bldg - 2A St - Al Safa First - Al Safa - Dubai",
+      "coordinates": {
+        "lat": 25.178293099999998,
+        "lng": 55.2464392
+      },
+      "placeId": "ChIJLxnK6AhpXz4Ry7rXrWgEZ0I",
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Cherryhouse Dubai",
+        "websiteUri": "https://thecherryhouse.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=CherryHouse%20restaurant%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "city-walk",
+      "name": "City Walk",
+      "aliases": [],
+      "description": "High-end outdoor retail and dining district blending London-style streetscapes with Middle Eastern design elements.",
+      "sourceUrls": [],
+      "sourceRows": [
+        15
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Al Safa St - Al Wasl - Dubai",
+      "coordinates": {
+        "lat": 25.207489499999998,
+        "lng": 55.2625253
+      },
+      "placeId": "ChIJ51MbN2RCXz4RrTyRq6PN1os",
+      "googleTypes": [
+        "apartment_building",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "apartment_building",
+      "taxonomy": {
+        "primary": "shopping-stroll",
+        "tags": [
+          "food-drink",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "City Walk",
+        "websiteUri": "https://www.citywalk.ae/en",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=City%20Walk%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dalia-bagel-bar",
+      "name": "Dalia Bagel Bar",
+      "aliases": [],
+      "description": "Bagel shop at Lavender 1, Emirates Gardens, Al Barsha South Fourth, Dubai.",
+      "sourceUrls": [
+        "https://www.instagram.com/daliabagelbar/"
+      ],
+      "sourceRows": [
+        24
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Lavender 1 Emirates Gardens - Al Barsha South Fourth - Jumeirah Village Circle - Dubai shop no. R03 - البرشاء جنوب الرابعة - قرية جميرا الدائرية - دبي",
+      "coordinates": {
+        "lat": 25.052548299999998,
+        "lng": 55.2141678
+      },
+      "placeId": "ChIJS2TJztRtXz4Rchkn8c48jUY",
+      "googleTypes": [
+        "bagel_shop",
+        "coffee_shop",
+        "cafe",
+        "bakery",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "bagel_shop",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "nature-wildlife",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Dalia Bagel Bar + Coffee",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dalia%20Bagel%20Bar%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "delano-dubai",
+      "name": "Delano Dubai",
+      "aliases": [],
+      "description": "Beachfront luxury resort on Bluewaters Dubai with 250m of private beach, the famed Delano Pool (Roman bath-inspired), and a lineup of restaurants and bars. Rooms, suites, and a five-bedroom penthouse; minutes from Dubai Marina and Palm Jumeirah.",
+      "sourceUrls": [
+        "https://delanohotels.com/dubai/"
+      ],
+      "sourceRows": [
+        25
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Dubai Marina - Bluewaters Island - Dubai",
+      "coordinates": {
+        "lat": 25.0825015,
+        "lng": 55.122267799999996
+      },
+      "placeId": "ChIJZRQMCwAVXz4R_VZHe_SGPOs",
+      "googleTypes": [
+        "hotel",
+        "resort_hotel",
+        "wedding_venue",
+        "lounge_bar",
+        "beauty_salon",
+        "swimming_pool",
+        "spa",
+        "lodging",
+        "sports_activity_location",
+        "night_club",
+        "bar",
+        "restaurant",
+        "food",
+        "service",
+        "event_venue",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "hotel",
+      "taxonomy": {
+        "primary": "resort-beach-club",
+        "tags": [
+          "beach-water",
+          "resort-beach-club",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Delano Dubai",
+        "websiteUri": "https://delanohotels.com/dubai/?utm_source=google&utm_medium=organic&utm_campaign=gmb-website&utm_content=website_button",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Delano%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dubai-pottery-studio",
+      "name": "Dubai Pottery Studio",
+      "aliases": [],
+      "description": "Dubai Pottery Studio is a creative ceramics space in JLT (Cluster N, The Dome Tower, 13th floor) with panoramic city views — billed as the highest, most Instagrammable pottery studio in Dubai. It offers wheel-throwing, hand-building, and ceramic painting classes for adults and kids, plus private candle-lit couples' sessions for anniversaries, birthdays, and date nights.",
+      "sourceUrls": [
+        "https://potterydubai.ae/"
+      ],
+      "sourceRows": [
+        43
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "The Dome Tower - 1301 Cluster N - Al Thanyah Fifth - Jumeirah Lakes Towers - Dubai",
+      "coordinates": {
+        "lat": 25.0629897,
+        "lng": 55.1375931
+      },
+      "placeId": "ChIJwQldEydtXz4RM0tw7vsHi9E",
+      "googleTypes": [
+        "sculpture",
+        "art_studio",
+        "art_gallery",
+        "manufacturer",
+        "educational_institution",
+        "store",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "educational_institution",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "arts-culture-heritage",
+          "creative-workshop"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Dubai Pottery Studio",
+        "websiteUri": "https://potterydubai.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Pottery%20Studio%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "fairmont-the-palm",
+      "name": "Fairmont The Palm",
+      "aliases": [],
+      "description": "A five-star luxury beachfront resort at the heart of Palm Jumeirah, with 391 rooms and suites overlooking the Arabian Gulf, a private white-sand beach, four temperature-controlled pools, a full-service spa and health club, and ten restaurants and bars.",
+      "sourceUrls": [
+        "https://www.fairmont.com/en/hotels/dubai/fairmont-the-palm.html"
+      ],
+      "sourceRows": [
+        36
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Palm Jumeirah - Nakhlat Jumeira - Dubai",
+      "coordinates": {
+        "lat": 25.110074599999997,
+        "lng": 55.141002699999994
+      },
+      "placeId": "ChIJI2DBjy1rXz4RNMB3Vz6-KeI",
+      "googleTypes": [
+        "hotel",
+        "lodging",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "hotel",
+      "taxonomy": {
+        "primary": "resort-beach-club",
+        "tags": [
+          "beach-water",
+          "wellness",
+          "resort-beach-club",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Fairmont The Palm",
+        "websiteUri": "https://www.fairmont.com/palm-dubai/?goto=fiche_hotel&code_hotel=A5F1&merchantid=seo-maps-AE-A5F1&sourceid=aw-cen&utm_medium=seo%20maps&utm_source=google%20Maps&utm_campaign=seo%20maps",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Fairmont%20The%20Palm%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "founder-sports-club",
+      "name": "Founder Sports Club",
+      "aliases": [],
+      "description": "Founder Sports Club by Art of Mondays is an international community of young founders and business owners, live in 80+ cities including Dubai. On the 1st of each month you get matched with a small group of 3 other active founders in your city, then meet on the second Sunday at 10am to walk, run, play padel and connect over sport, movement and real conversation. Paid membership (cancel anytime); more info at https://www.artofmondays.com/founder-sports-club.",
+      "sourceUrls": [
+        "https://fsc.artofmondays.com/paywall?link=https%3A%2F%2Fcheckout.stripe.com%2Fc%2Fpay%2Fcs_live_b1x4YMTnxmaG6VopkZdN7ZsAevmF9jRhddmMrcQIusSyi5PZqCutUo6958"
+      ],
+      "sourceRows": [
+        10
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Dubai meetup location shared after matching",
+      "coordinates": {
+        "lat": 25.2048,
+        "lng": 55.2708
+      },
+      "placeId": null,
+      "googleTypes": [],
+      "primaryGoogleType": null,
+      "taxonomy": {
+        "primary": "sport-active",
+        "tags": [
+          "arts-culture-heritage",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "non-fixed",
+        "source": "source-description",
+        "matchedAt": "2026-08-22T13:04:30.899Z",
+        "osm": null,
+        "matchedName": "Founder Sports Club by Art of Mondays",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Founder%20Sports%20Club%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "gooder",
+      "name": "Gooder",
+      "aliases": [],
+      "description": "Indoor skatepark at Alserkal Avenue featuring ramps, events, and a local skating community.",
+      "sourceUrls": [],
+      "sourceRows": [
+        18
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Alserkal Avenue - Warehouse 08 - Al Qouz Ind.first - Al Quoz - Dubai",
+      "coordinates": {
+        "lat": 25.1417568,
+        "lng": 55.2267161
+      },
+      "placeId": "ChIJDf8AOQBpXz4R_v89QRy0rus",
+      "googleTypes": [
+        "skateboard_park",
+        "pizza_restaurant",
+        "sporting_goods_store",
+        "coffee_shop",
+        "cafe",
+        "sports_complex",
+        "food_store",
+        "sports_activity_location",
+        "store",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "skateboard_park",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "gooder",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Gooder%20restaurant%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "hatta-dam",
+      "name": "Hatta Dam",
+      "aliases": [],
+      "description": "A turquoise mountain reservoir in Dubai's Hatta exclave, about 90 minutes from the city, framed by the grey granite of the Hajar Mountains. Rent kayaks, water bikes and pedal boats from Hatta Kayak (daily 7am–9pm), or combine the dam with nearby Hatta Wadi Hub hiking and mountain-biking trails for a full outdoor day — one of the most photogenic scenes in the UAE.",
+      "sourceUrls": [
+        "https://www.visithatta.com/en/play/hatta-kayak"
+      ],
+      "sourceRows": [
+        61
+      ],
+      "locationHint": "Hatta, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Hatta Dam - Hatta - Dubai",
+      "coordinates": {
+        "lat": 24.784687899999998,
+        "lng": 56.1133535
+      },
+      "placeId": "ChIJq6qqqtoe9T4RYDKvG-Z_8EM",
+      "googleTypes": [
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Hatta Dam",
+        "websiteUri": "http://www.hattakayak.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Hatta%20Dam%2C%20Hatta%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "kite-beach",
+      "name": "Kite Beach",
+      "aliases": [],
+      "description": "Popular public beach for kitesurfing, paddleboarding, wakeboarding, beach volleyball, and jogging. It also has a skate park, SALT Burger, food trucks, and beachfront cafés, making it a strong sunset picnic spot with views of the Burj Al Arab.",
+      "sourceUrls": [
+        "https://kitebeach.ae/"
+      ],
+      "sourceRows": [
+        57
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Kite Beach - Kite beach - Dubai",
+      "coordinates": {
+        "lat": 25.1647598,
+        "lng": 55.207624599999995
+      },
+      "placeId": "ChIJu0nLx_9BXz4RC0A74hRtff0",
+      "googleTypes": [
+        "beach",
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "beach",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Kite Beach",
+        "websiteUri": "http://www.kitebeach.ae/?utm_source=google&utm_campaign=local_search&utm_medium=organic&utm_content=KiteBeach",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kite%20Beach%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "la-mer-beach",
+      "name": "La Mer Beach",
+      "aliases": [],
+      "description": "Relaxed, artsy beachfront known for graffiti art, hammocks, and seaside walking. Check current access before visiting, as the original La Mer area may have changed.",
+      "sourceUrls": [],
+      "sourceRows": [
+        14
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "La mer beach - Jumeira First - Jumeirah 1 - Dubai",
+      "coordinates": {
+        "lat": 25.2266634,
+        "lng": 55.255700499999996
+      },
+      "placeId": "ChIJf8ZVAPhDXz4RXrmASakMieI",
+      "googleTypes": [
+        "beach",
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "beach",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "arts-culture-heritage"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "La mer beach",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=La%20Mer%20Beach%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "maison-terrae",
+      "name": "Maison Terraē",
+      "aliases": [],
+      "description": "Maison Terraē is a contemporary ceramic studio in Dubai offering hands-on creative experiences — hand-building and wheel-throwing workshops, signature editions like Candlelight and Pilates x Pottery, and private events for birthdays, baby showers, and bridal showers. A calm, artful space to slow down over coffee and clay.",
+      "sourceUrls": [
+        "https://maisonterrae.com/"
+      ],
+      "sourceRows": [
+        46
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Goshi warehouse city, Al Quoz 3, warehouse 128 - القوز الصناعية الثالثة - القوز - دبي",
+      "coordinates": {
+        "lat": 25.1220335,
+        "lng": 55.2186763
+      },
+      "placeId": "ChIJC3UOLlprXz4RH7OX46dbiMI",
+      "googleTypes": [
+        "art_studio",
+        "event_venue",
+        "educational_institution",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "educational_institution",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "nature-wildlife",
+          "arts-culture-heritage",
+          "creative-workshop",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Maison Terraē",
+        "websiteUri": "https://maisonterrae.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Maison%20Terra%C4%93%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "marsa-al-arab-boulevard",
+      "name": "Marsa Al Arab Boulevard",
+      "aliases": [],
+      "description": "Luxury waterfront walking area beside the Burj Al Arab, within a modern development of hotels, residences, and marinas.",
+      "sourceUrls": [],
+      "sourceRows": [
+        13
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "45VR+PMJ - Al Darmeet St - Umm Suqeim Third - Umm Suqeim - Dubai",
+      "coordinates": {
+        "lat": 25.144755399999998,
+        "lng": 55.191648199999996
+      },
+      "placeId": "ChIJzx46HwBrXz4Rf0j8XY6H6kI",
+      "googleTypes": [
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "taxonomy": {
+        "primary": "shopping-stroll",
+        "tags": [
+          "resort-beach-club",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Marsa Al Arab walk",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Marsa%20Al%20Arab%20Boulevard%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "mazmi-coffee-more",
+      "name": "Mazmi Coffee & More",
+      "aliases": [
+        "Mazmi Cafe"
+      ],
+      "description": "A charming boutique café set in an authentic old Dubai house in the Textile Souk, Bur Dubai, right on the Creek waterside near the souks. Run by Italian-Emirati couple Ilaria Paci and Mohamed Al Mazmi, it serves good coffee, fresh cakes, gelato and light bites with romantic creek views. Open 8am–8pm.",
+      "sourceUrls": [
+        "https://mazmi.me/",
+        "https://www.instagram.com/reel/DaXvvh-Kl0C/"
+      ],
+      "sourceRows": [
+        31,
+        39,
+        56
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Creekside, Behind Dubai Museum - Bur Dubai - Al Souq Al Kabeer - Al Fahidi - Dubai",
+      "coordinates": {
+        "lat": 25.265229299999998,
+        "lng": 55.296395
+      },
+      "placeId": "ChIJWd3Ul0BDXz4R7vJsr_tevo8",
+      "googleTypes": [
+        "cafe",
+        "ice_cream_shop",
+        "dessert_shop",
+        "confectionery",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "MAZMi Coffee & More (Old Souq)",
+        "websiteUri": "http://mazmi.me/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mazmi%20Coffee%20%26%20More%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "mohammed-bin-rashid-library",
+      "name": "Mohammed Bin Rashid Library",
+      "aliases": [],
+      "description": "Iconic library in Al Jaddaf along Dubai Creek, near Al Khail Road and the Obeid Juma Bin Suloom Shipyard. A major Emirati cultural and knowledge landmark with membership, exhibitions, events, and a virtual tour; its striking building is also bookable as a filming location.",
+      "sourceUrls": [
+        "https://www.mbrl.ae/homepage"
+      ],
+      "sourceRows": [
+        23
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "89 - 90 Al Khail Rd - near Obeid Juma Bin Suloom Shipyard - Al Jadaf - Dubai",
+      "coordinates": {
+        "lat": 25.2208674,
+        "lng": 55.343871
+      },
+      "placeId": "ChIJEScpbmRdXz4RxPoH33nklIc",
+      "googleTypes": [
+        "library",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "library",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Mohammed bin Rashid Library",
+        "websiteUri": "https://www.mbrl.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mohammed%20Bin%20Rashid%20Library%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "ona",
+      "name": "ONA",
+      "aliases": [],
+      "description": "Australian café in Jumeirah 1 offering breakfast and specialty coffee.",
+      "sourceUrls": [],
+      "sourceRows": [
+        17
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "1 41A St - Jumeirah - Jumeirah 1 - Dubai",
+      "coordinates": {
+        "lat": 25.2264354,
+        "lng": 55.2597891
+      },
+      "placeId": "ChIJm-LzOgBDXz4RW4Rh-4epWNg",
+      "googleTypes": [
+        "coffee_roastery",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_roastery",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Ona Coffee",
+        "websiteUri": "https://www.instagram.com/ona.dubai?igsh=aW40YjdwNzh5YTB0",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=ONA%20restaurant%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "port-de-la-mer",
+      "name": "Port de La Mer",
+      "aliases": [],
+      "description": "Mediterranean-inspired waterfront destination with pastel buildings, palm-lined streets, yacht marinas, and a relaxed coastal atmosphere.",
+      "sourceUrls": [],
+      "sourceRows": [
+        12
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "307, La Rive B3, Port de La Mer - Jumeira First - جميرا ١ - دبي",
+      "coordinates": {
+        "lat": 25.2396355,
+        "lng": 55.252801299999994
+      },
+      "placeId": "ChIJgebNptFDXz4Rz6Dbu0inRRQ",
+      "googleTypes": [
+        "condominium_complex",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "condominium_complex",
+      "taxonomy": {
+        "primary": "shopping-stroll",
+        "tags": [
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Port de La Mer",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Port%20de%20La%20Mer%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "puppy-yoga-at-herinox-studios",
+      "name": "Puppy Yoga at Herinox Studios",
+      "aliases": [],
+      "description": "A feel-good puppy yoga experience hosted at Herinox Studios in Dubai — gentle all-levels yoga flows followed by playtime and cuddles with adorable puppies. A relaxing, joyful weekend-morning activity that blends wellness with plenty of smiles.",
+      "sourceUrls": [
+        "https://herinox.ae/"
+      ],
+      "sourceRows": [
+        45
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Rashid Bin Dari warehouse compound - Warehouse number 2 - 1 شارع الخيل الأول - القوز الصناعية الأولى - القوز - دبي",
+      "coordinates": {
+        "lat": 25.145424199999997,
+        "lng": 55.2311589
+      },
+      "placeId": "ChIJ96OLNrJrXz4RO1pT6TOJ-N8",
+      "googleTypes": [
+        "sports_school",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "sports_school",
+      "taxonomy": {
+        "primary": "wellness",
+        "tags": [
+          "creative-workshop",
+          "wellness",
+          "sport-active",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Herinox Studios",
+        "websiteUri": "https://www.herinox.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Herinox%20Studios%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "ramen-hisa",
+      "name": "Ramen Hisa",
+      "aliases": [],
+      "description": "Japanese restaurant at Dubai Opera serving house-made noodles and ramen prepared from scratch.",
+      "sourceUrls": [],
+      "sourceRows": [
+        21
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Dubai Opera House - Plaza Level - Unit 6 - برج خليفة - وسط مدينة دبي - دبي",
+      "coordinates": {
+        "lat": 25.195905699999997,
+        "lng": 55.270559
+      },
+      "placeId": "ChIJIbVGUndDXz4R0tVlvJGKY_0",
+      "googleTypes": [
+        "ramen_restaurant",
+        "noodle_shop",
+        "japanese_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "ramen_restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Ramen Hisa",
+        "websiteUri": "https://ramenhisa.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Ramen%20Hisa%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "saltzen-spa",
+      "name": "SaltZen Spa",
+      "aliases": [],
+      "description": "A boutique halotherapy (salt therapy) spa at City Walk, combining ancient salt healing with modern wellness. Treatment rooms are lined with natural salt for respiratory benefits, and services include massage therapy, detox and slimming, facial care, sauna and more. 5-star rated and built by women, for women.",
+      "sourceUrls": [
+        "https://saltzenspa.com/"
+      ],
+      "sourceRows": [
+        35
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Plaza Zone, City Walk 2 - Al Wasl - Dubai",
+      "coordinates": {
+        "lat": 25.206775900000004,
+        "lng": 55.2618231
+      },
+      "placeId": "ChIJhQOSaZVDXz4R9-Dllew-A2E",
+      "googleTypes": [
+        "spa",
+        "massage_spa",
+        "massage",
+        "beauty_salon",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "spa",
+      "taxonomy": {
+        "primary": "wellness",
+        "tags": [
+          "wellness",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "SaltZen Spa",
+        "websiteUri": "https://www.saltzenspa.com/?utm_source=google&utm_medium=organic&utm_campaign=gbp",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=SaltZen%20Spa%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "samadhi-wellness",
+      "name": "Samadhi Wellness",
+      "aliases": [],
+      "description": "Samadhi Wellness is a serene wellness destination in the heart of Jumeirah 3, Dubai. It offers best-in-class yoga classes in heated and movement studios, plus a sauna, ice bath, private pool, hair therapy treatments, a café, and a range of self-care experiences designed as a sacred 'third place' to slow down and reconnect.",
+      "sourceUrls": [
+        "https://samadhi-wellness.com/"
+      ],
+      "sourceRows": [
+        50
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "491b Jumeira St - Jumeirah - جميراJumeirah 3 - Dubai",
+      "coordinates": {
+        "lat": 25.1800895,
+        "lng": 55.224279499999994
+      },
+      "placeId": "ChIJ4-pqjClDXz4RunXhCITwra0",
+      "googleTypes": [
+        "yoga_studio",
+        "fitness_center",
+        "gym",
+        "sports_complex",
+        "sports_school",
+        "sports_activity_location",
+        "health",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "yoga_studio",
+      "taxonomy": {
+        "primary": "wellness",
+        "tags": [
+          "creative-workshop",
+          "wellness",
+          "sport-active",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Samadhi || Yoga Center || Wellness",
+        "websiteUri": "https://samadhi-wellness.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Samadhi%20Wellness%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "serpenti-beach-club",
+      "name": "Serpenti Beach Club",
+      "aliases": [],
+      "description": "Beach club inspired by Bvlgari's Italian design language and seaside lifestyle.",
+      "sourceUrls": [
+        "https://www.bulgarihotels.com/en_US/dubai/the-resort/serpenti-beach-club"
+      ],
+      "sourceRows": [
+        19
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Jumeirah Bay Island - جميرا باي - جميرا ٢ - دبي",
+      "coordinates": {
+        "lat": 25.210697000000003,
+        "lng": 55.236428
+      },
+      "placeId": "ChIJ8-LpJSNCXz4RSYU8D8qlVl4",
+      "googleTypes": [
+        "hotel",
+        "wedding_venue",
+        "event_venue",
+        "lodging",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "hotel",
+      "taxonomy": {
+        "primary": "resort-beach-club",
+        "tags": [
+          "beach-water",
+          "resort-beach-club"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Bvlgari Resort Dubai",
+        "websiteUri": "https://www.bulgarihotels.com/en_US/dubai?scid=f2ae0541-1279-4f24-b197-a979c79310b0",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Bvlgari%20Resort%20Dubai%2C%20Jumeira%20Bay%20Island%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "seva-experience",
+      "name": "Seva Experience",
+      "aliases": [],
+      "description": "Seva Experience is the Middle East's leading holistic wellness center, offering a diverse range of yoga, meditation, sound healing, and other wellness classes, workshops, and private treatments. It also features Seva Table, the region's first 100% plant-based, gluten-free, and cane sugar-free cafe. This sanctuary in Dubai is dedicated to fostering personal growth and a conscious lifestyle through its community-focused offerings.",
+      "sourceUrls": [
+        "https://www.sevaexperience.com/"
+      ],
+      "sourceRows": [
+        53
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Postcode: 413752 - Jumeirah Beach Road - Villa 5/1B 27B St - Jumeira First - جميرا ١ - دبي",
+      "coordinates": {
+        "lat": 25.230750099999998,
+        "lng": 55.2634336
+      },
+      "placeId": "ChIJG1R26VNCXz4RZ_pfWFgjfms",
+      "googleTypes": [
+        "yoga_studio",
+        "fitness_center",
+        "vegan_restaurant",
+        "vegetarian_restaurant",
+        "wellness_center",
+        "gym",
+        "sports_complex",
+        "supplier",
+        "sports_school",
+        "sports_activity_location",
+        "clothing_store",
+        "store",
+        "medical_clinic",
+        "health",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "yoga_studio",
+      "taxonomy": {
+        "primary": "wellness",
+        "tags": [
+          "creative-workshop",
+          "wellness",
+          "sport-active",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "SEVA Experience",
+        "websiteUri": "https://www.sevaexperience.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Seva%20Experience%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "souk-murjan",
+      "name": "Souk Murjan",
+      "aliases": [],
+      "description": "Indoor souk in Wafi City known for ancient Egyptian-inspired architecture and photogenic interiors.",
+      "sourceUrls": [],
+      "sourceRows": [
+        16
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Wafi City - Oud Metha Rd - Umm Hurair Second - Dubai",
+      "coordinates": {
+        "lat": 25.2295458,
+        "lng": 55.31962660000001
+      },
+      "placeId": "ChIJn03KCEpdXz4RtjYu0Z1ht1s",
+      "googleTypes": [
+        "middle_eastern_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "middle_eastern_restaurant",
+      "taxonomy": {
+        "primary": "shopping-stroll",
+        "tags": [
+          "arts-culture-heritage",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Khan Murjan",
+        "websiteUri": "https://khanmurjan.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Souk%20Murjan%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "soul-senses-spa-wellness",
+      "name": "Soul Senses Spa & Wellness",
+      "aliases": [],
+      "description": "An award-winning luxury wellness spa (since 2012) located on the third floor of Oasis Mall, Sheikh Zayed Road. Highly rated on Tripadvisor, it offers massage therapy, hot stone and deep-tissue treatments, aromatherapy, Moroccan baths, facials and more, with a serene relaxation lounge. Open 10am–midnight daily.",
+      "sourceUrls": [
+        "https://soulsensesspa.ae/"
+      ],
+      "sourceRows": [
+        32
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Oasis Mall - 3rd floor - Sheikh Zayed Rd - Al Qouz First - Al Quoz - Dubai",
+      "coordinates": {
+        "lat": 25.169850699999998,
+        "lng": 55.241366199999995
+      },
+      "placeId": "ChIJDft_hVZpXz4RLeuWY55OBxc",
+      "googleTypes": [
+        "massage_spa",
+        "massage",
+        "spa",
+        "beauty_salon",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "spa",
+      "taxonomy": {
+        "primary": "wellness",
+        "tags": [
+          "nature-wildlife",
+          "wellness"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Soul Senses Spa & Wellness - Oasis Mall, Sheikh Zayed Road",
+        "websiteUri": "http://www.soulsensesspa.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Soul%20Senses%20Spa%20%26%20Wellness%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "subko",
+      "name": "Subko",
+      "aliases": [],
+      "description": "Subko is a Mumbai-born specialty coffee roastery, craft sourdough and croissant bakehouse, pod-to-bar chocolate maker and design-driven creative studio, now open at Warehouse 15 in Alserkal Avenue, Al Quoz. Its first international flagship keeps the brand's calm, craft-focused identity intact in Dubai's creative hub.",
+      "sourceUrls": [
+        "https://alserkal.online/community/subko/"
+      ],
+      "sourceRows": [
+        38
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Alserkal Avenue - Warehouse 15 - Al Qouz Ind.first - Al Quoz - Dubai",
+      "coordinates": {
+        "lat": 25.1408867,
+        "lng": 55.226269699999996
+      },
+      "placeId": "ChIJr-KQtqBpXz4Rwxlgdzbh-4g",
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "creative-workshop",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Subko Specialty Coffee Roasters and Bakehouse",
+        "websiteUri": "http://subko.coffee/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Subko%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "sunset-beach",
+      "name": "Sunset Beach",
+      "aliases": [],
+      "description": "Sunset Beach, also known as Umm Suqeim Beach, is a public beach with views of the Burj Al Arab. Smart lighting and lifeguard supervision support night swimming, while the promenade is also suited to walking, jogging, and surfing.",
+      "sourceUrls": [
+        "https://www.visitdubai.com/en/places-to-visit/sunset-beach"
+      ],
+      "sourceRows": [
+        52
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Sunset Beach (Umm Suqeim Beach), Umm Suqeim 3, Dubai",
+      "coordinates": {
+        "lat": 25.1483286,
+        "lng": 55.1945091
+      },
+      "placeId": "ChIJYfzDwERqXz4RPyIbM0jlWx8",
+      "googleTypes": [
+        "beach",
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "beach",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Sunset Beach / Umm Suqeim Beach",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Umm%20Suqeim%20Sunset%20Beach%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "the-courtyard-playhouse",
+      "name": "The Courtyard Playhouse",
+      "aliases": [],
+      "description": "Founded in 2013, the UAE's first and only dedicated improv theatre and KHDA-licensed performing arts training centre, nestled among galleries and cafés in Al Quoz. It offers weekly improv nights, acting and improv workshops for adults and kids, children's theatre, National Theatre Live screenings and corporate training, across a 60-seat auditorium and a 30-seat studio theatre.",
+      "sourceUrls": [
+        "https://courtyardplayhouse.com/"
+      ],
+      "sourceRows": [
+        28
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "The Courtyard - 4B St - Al Qouz Ind.first - Al Quoz - Dubai",
+      "coordinates": {
+        "lat": 25.1434386,
+        "lng": 55.223119499999996
+      },
+      "placeId": "ChIJsdslHytqXz4RO2HSZtFRPkg",
+      "googleTypes": [
+        "performing_arts_theater",
+        "comedy_club",
+        "event_venue",
+        "school",
+        "educational_institution",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "performing_arts_theater",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": [
+          "arts-culture-heritage",
+          "shows-immersive",
+          "creative-workshop",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Courtyard Playhouse Dubai",
+        "websiteUri": "https://courtyardplayhouse.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The%20Courtyard%20Playhouse%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "the-jury-experience-the-deadly-boat-ride",
+      "name": "The Jury Experience: The Deadly Boat Ride",
+      "aliases": [],
+      "description": "Immersive live courtroom drama at the Dubai Knowledge Park Conference Centre Auditorium (Block 2B, King Salman Bin Abdulaziz Al Saud St) where the audience serves as the jury: hear testimonies, weigh evidence, vote at key moments, and decide the verdict. Runs ~60 minutes, ages 12+, in English.",
+      "sourceUrls": [
+        "https://feverup.com/m/652029"
+      ],
+      "sourceRows": [
+        26
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Block # 2B King Salman Bin Abdulaziz Al Saud St - Al Safouh Second - Al SufouhDubai Knowledge Park - Dubai",
+      "coordinates": {
+        "lat": 25.1035431,
+        "lng": 55.162034999999996
+      },
+      "placeId": "ChIJsSTisVlrXz4RrETTl0yIx74",
+      "googleTypes": [
+        "university",
+        "educational_institution",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "university",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": [
+          "shows-immersive"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Dubai Knowledge Park Conference Centre/Auditorium",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Knowledge%20Park%20Conference%20Centre%20Auditorium%2C%20Block%202B%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "treasure-pots",
+      "name": "Treasure Pots",
+      "aliases": [],
+      "description": "Treasure Pots is a creative pottery studio in Al Quoz 2 Industrial Area, Dubai, offering pottery classes and workshops for adults and kids — wheel-throwing, hand-building, and painting. It also hosts private sessions and events like birthday parties and romantic couples' workshops. Their motto: 'Sculpt the Moment, Keep the Memories.'",
+      "sourceUrls": [
+        "https://treasurepots.ae/"
+      ],
+      "sourceRows": [
+        44
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Unit 20, ABA Avenue, 96, 26th St - 2 - القوز الصناعية الثانية - القوز - دبي",
+      "coordinates": {
+        "lat": 25.124215799999998,
+        "lng": 55.243009300000004
+      },
+      "placeId": "ChIJHcwiOd5pXz4RIYo8Sq3NWlE",
+      "googleTypes": [
+        "educational_institution",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "educational_institution",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "arts-culture-heritage",
+          "creative-workshop"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Treasure Pots",
+        "websiteUri": "https://treasurepots.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Treasure%20Pots%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "wawa-dining",
+      "name": "Wawa Dining",
+      "aliases": [],
+      "description": "WAWA Dining is a contemporary Japanese izakaya with Korean influences located on the ground floor of the Golden Tulip Hotel in Al Barsha 1, Dubai. It blends traditional Japanese artistry with modern flavors, and is well known for dishes like salmon carpaccio and sushi rolls in a lively, highly-rated setting.",
+      "sourceUrls": [
+        "https://wawa-dining.co/"
+      ],
+      "sourceRows": [
+        49
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Orchid Hotel - G floor - Al Barsha First - Al Barsha - Dubai",
+      "coordinates": {
+        "lat": 25.112965,
+        "lng": 55.189879
+      },
+      "placeId": "ChIJgzdYlXVrXz4RLKHGJOmXSIY",
+      "googleTypes": [
+        "japanese_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "japanese_restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "resort-beach-club",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "WAWA Dining",
+        "websiteUri": "https://wawa-dining.co/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Wawa%20Dining%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "wild-wadi-water-park",
+      "name": "Wild Wadi Water Park",
+      "aliases": [],
+      "description": "Wild Wadi Water Park is an Arabian-themed outdoor water park located in Dubai, adjacent to the iconic Burj Al Arab Jumeirah. It features over 30 exhilarating rides and attractions, including the Jumeirah Sceirah plunge slide, the extensive Juha's Journey lazy river, and Breaker's Bay, one of the Middle East's largest wave pools. The park offers diverse entertainment for all ages, including a dedicated children's area, ensuring a thrilling and memorable experience for visitors.",
+      "sourceUrls": [
+        "https://www.wildwadi.com/en"
+      ],
+      "sourceRows": [
+        55
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Jumeira St - opp. Burj Al Arab - Umm Suqeim Third - Umm Suqeim 3 - Dubai",
+      "coordinates": {
+        "lat": 25.139409,
+        "lng": 55.188843999999996
+      },
+      "placeId": "ChIJh7LUHlFqXz4RbIRg-g5fo-E",
+      "googleTypes": [
+        "water_park",
+        "tourist_attraction",
+        "amusement_park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "water_park",
+      "taxonomy": {
+        "primary": "sport-active",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Wild Wadi Waterpark Jumeirah",
+        "websiteUri": "https://wildwadi.com/",
+        "businessStatus": "CLOSED_TEMPORARILY"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Wild%20Wadi%20Water%20Park%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "yaazar-cafe",
+      "name": "Yaazar Cafe",
+      "aliases": [],
+      "description": "Yaazar Cafe is a charming and unique dining spot located in Hatta, Dubai, offering patrons a distinctive blend of specialty coffee and an immersive equestrian experience. Guests can enjoy horse riding, relax on a terrace overlooking the paddock, and take in scenic views of the Hajar Mountains.",
+      "sourceUrls": [
+        "https://www.visitdubai.com/en/restaurants/yaazar-cafe"
+      ],
+      "sourceRows": [
+        62
+      ],
+      "locationHint": "Hatta, UAE",
+      "emirate": "Dubai",
+      "address": "R47V+J2 - Hatta - Dubai",
+      "coordinates": {
+        "lat": 24.8146874,
+        "lng": 56.1431277
+      },
+      "placeId": "ChIJubnpUncf9T4RXZCLBNRsgKw",
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "food",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "nature-wildlife",
+          "mountain-hiking",
+          "shows-immersive",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Yaazar cafe يازار كافي",
+        "websiteUri": "https://www.instagram.com/yaazar.ae?igsh=b2d4d252aXhvdDF1",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Yaazar%20Cafe%2C%20Hatta%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "yesterday",
+      "name": "Yesterday",
+      "aliases": [],
+      "description": "Pizzeria combining vinyl records, hi-fi sound, and creative Neapolitan-style pizza.",
+      "sourceUrls": [],
+      "sourceRows": [
+        20
+      ],
+      "locationHint": "Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Middle Parking Area - Avenue Mall - Ground Floor - ند الشبا - ند الشبا الثانية - دبي",
+      "coordinates": {
+        "lat": 25.143877399999997,
+        "lng": 55.3470407
+      },
+      "placeId": "ChIJD-FOflhnXz4RKM8cCZpXoi0",
+      "googleTypes": [
+        "pizza_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "pizza_restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.900Z",
+        "osm": null,
+        "matchedName": "Yesterday - Listening Pizzeria",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Yesterday%20restaurant%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "al-dahir-trail",
+      "name": "Al Dahir Trail",
+      "aliases": [],
+      "description": "Also known as the Wadi Dahir or Sulphur Pools hike, a roughly 8 km loop through the Hajar foothills near Al Dahir village, about 30 km from Fujairah city. The trail passes mountain farms, greenery and freshwater landscapes before reaching striking turquoise sulphur pools; beginner-plus difficulty, around 4 hours.",
+      "sourceUrls": [
+        "https://www.dubaihiking.org/trails/wadi-al-dahir-sulphur-pools.html"
+      ],
+      "sourceRows": [
+        59
+      ],
+      "locationHint": "Fujairah, UAE",
+      "emirate": "Fujairah",
+      "address": "Wadi Al Fay - Fujairah",
+      "coordinates": {
+        "lat": 25.542022799999998,
+        "lng": 56.1590433
+      },
+      "placeId": "ChIJHZzK_ZHN9T4RqJb11yC5CfQ",
+      "googleTypes": [
+        "hiking_area",
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "hiking_area",
+      "taxonomy": {
+        "primary": "mountain-hiking",
+        "tags": [
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Wadi Al Dhahir - Natural \"Sulphur\" pools",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Dahir%20Trail%2C%20Fujairah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "snoopy-island",
+      "name": "Snoopy Island",
+      "aliases": [],
+      "description": "A small rocky island off Al Aqah beach on Fujairah's Gulf of Oman coast, named for its resemblance to Snoopy lying on his back. Surrounded by coral reef and calm, clear water with easy shore access, it is one of the UAE's favourite snorkelling and diving spots — expect turtles, rays, reef fish and the occasional reef shark — with kayaking and paddleboarding also popular.",
+      "sourceUrls": [
+        "https://en.wikipedia.org/wiki/Snoopy_Island"
+      ],
+      "sourceRows": [
+        6
+      ],
+      "locationHint": "Al Aqah, Fujairah, UAE",
+      "emirate": "Fujairah",
+      "address": "Al Aqah Beach - Al ʻIqqah - Fujairah",
+      "coordinates": {
+        "lat": 25.513969099999997,
+        "lng": 56.3663374
+      },
+      "placeId": "ChIJFaErsJA39D4RBOt2JXtGDcY",
+      "googleTypes": [
+        "beach",
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "beach",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.899Z",
+        "osm": null,
+        "matchedName": "Al Aqah Beach",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Snoopy%20Island%2C%20Al%20Aqah%2C%20Fujairah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "wadi-abadilah",
+      "name": "Wadi Abadilah",
+      "aliases": [],
+      "description": "A popular wadi near Masafi in Fujairah, running northeast towards the coast at Dibba and considered one of the oldest areas in the UAE. An easy-to-moderate trail leads past natural springs, water pools and working farms, with a staircase from the roadside parking descending to the pools; busiest and most beautiful in winter.",
+      "sourceUrls": [
+        "https://en.wikipedia.org/wiki/Wadi_Abadilah"
+      ],
+      "sourceRows": [
+        58
+      ],
+      "locationHint": "Fujairah, UAE",
+      "emirate": "Fujairah",
+      "address": "Abadilah - Wadi Al ‘Abadlah - Fujairah",
+      "coordinates": {
+        "lat": 25.4425334,
+        "lng": 56.193765899999995
+      },
+      "placeId": "ChIJ3QPOgqjK9T4R3KMk0f9ucsg",
+      "googleTypes": [
+        "locality",
+        "political"
+      ],
+      "primaryGoogleType": null,
+      "taxonomy": {
+        "primary": "mountain-hiking",
+        "tags": [
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Abadilah",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Wadi%20Abadilah%2C%20Fujairah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "wadi-al-milh",
+      "name": "Wadi Al Milh",
+      "aliases": [],
+      "description": "A beautiful wadi trekking spot near Masafi in Fujairah's Hajar Mountains, around 1.5 hours from Dubai. An easy ~5 km trail with roughly 100m of elevation gain winds past striking rock formations, greenery and serene water streams, with inviting ponds ideal for a refreshing swim — suitable even for hikers with little experience.",
+      "sourceUrls": [
+        "https://www.wikiloc.com/hiking-trails/wadi-al-milh-trail-fujairah-uae-200035336"
+      ],
+      "sourceRows": [
+        60
+      ],
+      "locationHint": "Fujairah, UAE",
+      "emirate": "Fujairah",
+      "address": "95JQ+MJ - Al Khlaibiyyah - Fujairah",
+      "coordinates": {
+        "lat": 25.381630899999998,
+        "lng": 56.1890223
+      },
+      "placeId": "ChIJf-bJXQC19T4RC7gAe8OHLt4",
+      "googleTypes": [
+        "hiking_area",
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "hiking_area",
+      "taxonomy": {
+        "primary": "mountain-hiking",
+        "tags": [
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Wadi Al Milh",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Wadi%20Al%20Milh%2C%20Fujairah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "al-ghadf-garden",
+      "name": "Al Ghadf Garden",
+      "aliases": [],
+      "description": "A hidden-gem natural garden in the Ghadf area of Ras Al Khaimah, off Al Sagel Road. Reached by a short walk from the parking area, it is a quiet green pocket that has become a favourite with hikers and explorers — search 'Al Gadf Garden' on Google Maps to find the trailhead.",
+      "sourceUrls": [
+        "https://maps.yango.com/en-ae/org/195896876552/"
+      ],
+      "sourceRows": [
+        70
+      ],
+      "locationHint": "Ras Al Khaimah, UAE",
+      "emirate": "Ras Al Khaimah",
+      "address": "Al Sagel Road, 8 District, Ras Al Khaimah",
+      "coordinates": {
+        "lat": 25.283293,
+        "lng": 56.174277
+      },
+      "placeId": null,
+      "googleTypes": [],
+      "primaryGoogleType": null,
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "source-yango-2gis-crosscheck",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Al Gadf Garden",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Ghadf%20Garden%2C%20Ras%20Al%20Khaimah%2C%20UAE"
+    },
+    {
+      "id": "jebel-jais",
+      "name": "Jebel Jais",
+      "aliases": [],
+      "description": "Jebel Jais is the highest mountain peak in the UAE, located in Ras Al Khaimah, offering a dramatic landscape within the Hajar Mountains. It is a premier adventure tourism destination, home to the world's longest zipline, Jais Flight, as well as extensive hiking trails and the Jais Sledder mountain coaster. The mountain provides breathtaking panoramic views and a cooler climate, making it an ideal escape for outdoor enthusiasts and thrill-seekers.",
+      "sourceUrls": [
+        "https://visitjebeljais.com/"
+      ],
+      "sourceRows": [
+        74
+      ],
+      "locationHint": "Ras Al Khaimah, UAE",
+      "emirate": "Ras Al Khaimah",
+      "address": "Wadi Shehah - Ras Al Khaimah",
+      "coordinates": {
+        "lat": 25.9436748,
+        "lng": 56.1424297
+      },
+      "placeId": "ChIJ96_xQD5j9j4RId7hqxDC1Uo",
+      "googleTypes": [
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "taxonomy": {
+        "primary": "mountain-hiking",
+        "tags": [
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Jebel Jais",
+        "websiteUri": "https://visitjebeljais.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Jebel%20Jais%2C%20Ras%20Al%20Khaimah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "mekong",
+      "name": "Mekong",
+      "aliases": [],
+      "description": "The signature Asian restaurant at Anantara Mina Al Arab Ras Al Khaimah Resort, serving Thai, Chinese and Vietnamese dishes reimagined for the modern palate. Perched at the water's edge with an open kitchen and outdoor seating on platforms surrounded by water, reached via stepping stones.",
+      "sourceUrls": [
+        "https://www.anantara.com/en/mina-al-arab-ras-al-khaimah/restaurants/mekong"
+      ],
+      "sourceRows": [
+        72
+      ],
+      "locationHint": "Ras Al Khaimah, UAE",
+      "emirate": "Ras Al Khaimah",
+      "address": "Mina Al Arab - Ras Al Khaimah",
+      "coordinates": {
+        "lat": 25.723333699999998,
+        "lng": 55.8507069
+      },
+      "placeId": "ChIJp0fiZgB19j4RQj89L_NaDwI",
+      "googleTypes": [
+        "asian_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "asian_restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "nature-wildlife",
+          "resort-beach-club",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Mekong at Anantara Mina Resort",
+        "websiteUri": "https://www.anantara.com/en/mina-al-arab-ras-al-khaimah/restaurants/mekong",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mekong%20Anantara%20Mina%20Al%20Arab%2C%20Ras%20Al%20Khaimah%2C%20UAE"
+    },
+    {
+      "id": "movenpick-resort-al-marjan-island",
+      "name": "Mövenpick Resort Al Marjan Island",
+      "aliases": [],
+      "description": "A five-star family-friendly beachfront resort on Al Marjan Island with 418 rooms and suites along 300 metres of sandy beach. Features include six restaurants and bars, three outdoor pools, a floating waterpark, wellness hub and spa, Kids Club, and beachfront dining spots like Ula.",
+      "sourceUrls": [
+        "https://movenpick.accor.com/en/middle-east/uae/ras-al-khaimah/resort-al-marjan-island.html"
+      ],
+      "sourceRows": [
+        71
+      ],
+      "locationHint": "Ras Al Khaimah, UAE",
+      "emirate": "Ras Al Khaimah",
+      "address": "Al Marjan Is Blvd - Jazeerat Al Marjan - Ras Al Khaimah",
+      "coordinates": {
+        "lat": 25.671474,
+        "lng": 55.743437
+      },
+      "placeId": "ChIJV59VproJ9j4Rios_qcXt4es",
+      "googleTypes": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "hotel",
+      "taxonomy": {
+        "primary": "resort-beach-club",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "wellness",
+          "resort-beach-club",
+          "sport-active",
+          "food-drink",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Mövenpick Resort Al Marjan Island",
+        "websiteUri": "https://movenpick.accor.com/en/middle-east/uae/ras-al-khaimah/resort-al-marjan-island.html?merchantid=seo-maps-AE-B4W0&sourceid=aw-cen&utm_medium=seo+maps&utm_source=google+Maps&utm_campaign=seo+maps&utm_content=Marjan-Island",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=M%C3%B6venpick%20Resort%20Al%20Marjan%20Island%2C%20Ras%20Al%20Khaimah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "suwaidi-pearls",
+      "name": "Suwaidi Pearls",
+      "aliases": [],
+      "description": "The Arabian Gulf's only traditional pearl farm, founded in 2004 by pearl diver Abdulla Al Suwaidi in the tranquil fishing village of Al Rams at the foot of the Hajar Mountains. Tours board a traditional pearling boat from Al Rams marina out to the floating farm house, with live oyster-opening demonstrations and views of mangroves, flamingos and mountains along the way.",
+      "sourceUrls": [
+        "https://suwaidipearls.ae/"
+      ],
+      "sourceRows": [
+        9
+      ],
+      "locationHint": "Al Rams, Ras Al Khaimah, UAE",
+      "emirate": "Ras Al Khaimah",
+      "address": "Ras Al-Khaimah - Al Rams - Ras Al Khaimah",
+      "coordinates": {
+        "lat": 25.8824105,
+        "lng": 56.025692
+      },
+      "placeId": "ChIJ9dxvlQdw9j4RYMuwhRMKwWA",
+      "googleTypes": [
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "mountain-hiking",
+          "arts-culture-heritage",
+          "family-animals"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.899Z",
+        "osm": null,
+        "matchedName": "Suwaidi Pearls",
+        "websiteUri": "http://www.suwaidipearls.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Suwaidi%20Pearls%2C%20Al%20Rams%2C%20Ras%20Al%20Khaimah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "ula",
+      "name": "Ula",
+      "aliases": [],
+      "description": "A beachfront day-to-night restaurant, bar and beach club on the golden sands of Mövenpick Resort Al Marjan Island. Ranked among the top restaurants in RAK, it offers an all-day holiday vibe with live DJs and musicians, a pool, and breathtaking Arabian Gulf views.",
+      "sourceUrls": [
+        "https://ularasalkhaimah.com/"
+      ],
+      "sourceRows": [
+        73
+      ],
+      "locationHint": "Ras Al Khaimah, UAE",
+      "emirate": "Ras Al Khaimah",
+      "address": "Al Marjan Is Blvd - Jazeerat Al Marjan - Ras Al Khaimah",
+      "coordinates": {
+        "lat": 25.669954399999998,
+        "lng": 55.743349099999996
+      },
+      "placeId": "ChIJS9en3rsJ9j4Ralu30lKrua8",
+      "googleTypes": [
+        "bar",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "bar",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "resort-beach-club",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "ULA",
+        "websiteUri": "https://movenpick.accor.com/en/middle-east/uae/ras-al-khaimah/resort-al-marjan-island/restaurants/ula.html?utm_source=google+Maps&utm_medium=seo+maps&utm_content=restaurant-B4W0-ula&utm_campaign=seo+maps",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Ula%20beach%20restaurant%2C%20Ras%20Al%20Khaimah%2C%20UAE"
+    },
+    {
+      "id": "al-madam-ghost-village",
+      "name": "Al Madam Ghost Village",
+      "aliases": [],
+      "description": "Abandoned desert settlement in Sharjah that is gradually being reclaimed by sand.",
+      "sourceUrls": [],
+      "sourceRows": [
+        8
+      ],
+      "locationHint": "Al Madam, Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "Refada - Sharjah",
+      "coordinates": {
+        "lat": 24.890580999999997,
+        "lng": 55.7681049
+      },
+      "placeId": "ChIJW9o8_-Nz9T4RDPN1tESi-a0",
+      "googleTypes": [
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "arts-culture-heritage"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.899Z",
+        "osm": null,
+        "matchedName": "Al Madam - Buried \"Ghost Village\"",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Madam%20Ghost%20Village%2C%20Al%20Madam%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "al-noor-island",
+      "name": "Al Noor Island",
+      "aliases": [],
+      "description": "A landscaped lagoon island in the heart of Sharjah City combining nature, art and light. Its Butterfly House shelters over 500 butterflies from 20+ exotic species, alongside sculpture installations, a literature pavilion, playground and café; after sunset the island transforms with glowing light displays. Open 9am–11pm.",
+      "sourceUrls": [
+        "https://alnoorisland.ae/"
+      ],
+      "sourceRows": [
+        76
+      ],
+      "locationHint": "Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "Al Noor Island - Sharjah",
+      "coordinates": {
+        "lat": 25.334438499999997,
+        "lng": 55.384707299999995
+      },
+      "placeId": "ChIJ9z8bNMFbXz4RpoGRKclnMCg",
+      "googleTypes": [
+        "island",
+        "natural_feature",
+        "establishment"
+      ],
+      "primaryGoogleType": "island",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "arts-culture-heritage",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Al Noor Island",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Noor%20Island%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "al-rafisah-dam",
+      "name": "Al Rafisah Dam",
+      "aliases": [],
+      "description": "A scenic reservoir tucked into the Hajar Mountains on the Sharjah–Khorfakkan road. Originally built in the 1980s and redeveloped with a visitor centre, it offers kayaking and pedal boats on the lake, a 730m lakeside walkway, children's play areas, a restaurant and mini mart, plus more strenuous hiking routes up to Al Rabi Tower and the Al Suhub Rest House with panoramic views over Khorfakkan.",
+      "sourceUrls": [
+        "https://www.visitsharjah.com/al-rafisah-dam/"
+      ],
+      "sourceRows": [
+        68
+      ],
+      "locationHint": "Khorfakkan, Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "88X6+GFX - Wadi Weshee - Sharjah",
+      "coordinates": {
+        "lat": 25.348861,
+        "lng": 56.3112372
+      },
+      "placeId": "ChIJoRiR9ItO9D4RUjaT6vJeRJY",
+      "googleTypes": [
+        "tourist_attraction",
+        "nature_preserve",
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Al Rafisah Dam",
+        "websiteUri": "https://www.visitsharjah.com/en/activities/nature/al-rafisah-dam/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Rafisah%20Dam%2C%20Khorfakkan%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "hanging-gardens-in-kalba",
+      "name": "Hanging Gardens in Kalba",
+      "aliases": [
+        "Hanging Gardens, Kalba"
+      ],
+      "description": "A mountainside park and hiking destination on the Sharjah–Kalba road, named for the greenery clinging to its slopes. A roughly 6 km trail journeys through Sharjah's geological history with steep sections suited to intermediate hikers, while the garden below offers a 760m jogging track, playgrounds, restaurants with panoramic views and vistas towards Al Hefaiyah Lake. Open 24/7 with a small AED 5 entry fee.",
+      "sourceUrls": [
+        "https://www.visitsharjah.com/activities/family/hanging-gardens-in-kalba/"
+      ],
+      "sourceRows": [
+        65,
+        66
+      ],
+      "locationHint": "Kalba, Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "E102 - Alhafyah - Sharjah",
+      "coordinates": {
+        "lat": 24.9882992,
+        "lng": 56.299390499999994
+      },
+      "placeId": "ChIJq12BDRT79D4R3hgphgwfaho",
+      "googleTypes": [
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "park",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife",
+          "mountain-hiking",
+          "sport-active",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Hanging Garden Kalba",
+        "websiteUri": "https://www.hanginggardenkalba.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Hanging%20Gardens%20in%20Kalba%2C%20Kalba%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "khor-kalba-mangrove-centre",
+      "name": "Khor Kalba Mangrove Centre",
+      "aliases": [],
+      "description": "A conservation and education centre run by Sharjah's Environment and Protected Areas Authority in one of the oldest mangrove forests in the UAE at Khor Kalba. Its pod-like buildings inspired by sea urchins house exhibits, aquariums and a turtle sanctuary, while the surrounding reserve offers kayaking and birdwatching — including the rare Kalba collared kingfisher. Adult entry around AED 15.",
+      "sourceUrls": [
+        "https://www.visitsharjah.com/activities/nature-and-wildlife/khor-kalba-mangrove-centre/"
+      ],
+      "sourceRows": [
+        64
+      ],
+      "locationHint": "Kalba, Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "Algurm - Sharjah",
+      "coordinates": {
+        "lat": 25.015072,
+        "lng": 56.3604832
+      },
+      "placeId": "ChIJnRhd2_v79D4RsM97VWsnoyw",
+      "googleTypes": [
+        "tourist_attraction",
+        "nature_preserve",
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Khor Kalba Mangrove Nature Park | منتزه خور كلباء لأشجار القرم",
+        "websiteUri": "https://epaashj.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Khor%20Kalba%20Mangrove%20Centre%2C%20Kalba%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "khorfakkan-beach",
+      "name": "Khorfakkan Beach",
+      "aliases": [],
+      "description": "A 3 km ribbon of pristine white sand and a sparkling bay on the Gulf of Oman, nestled at the foot of the Hajar Mountains in Sharjah's east coast town of Khorfakkan, 137 km east of the city. The redeveloped corniche offers swimming, snorkelling and water sports, with the Khorfakkan Waterfall, amphitheatre and Al Rafisah Dam all close by.",
+      "sourceUrls": [
+        "https://www.visitsharjah.com/activities/beaches/khorfakkan-beach"
+      ],
+      "sourceRows": [
+        67
+      ],
+      "locationHint": "Khorfakkan, Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "9923+QWJ - Hay Al Gharb - Sharjah",
+      "coordinates": {
+        "lat": 25.3519676,
+        "lng": 56.354779199999996
+      },
+      "placeId": "ChIJlS6i1LxP9D4RPxr5eDUWXbw",
+      "googleTypes": [
+        "tourist_attraction",
+        "scenic_spot",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "mountain-hiking",
+          "arts-culture-heritage",
+          "shows-immersive"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Khorfakkan Beach",
+        "websiteUri": "https://instagram.com/khorfakkanbeach?igshid=14z2s7phx1svl",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Khorfakkan%20Beach%2C%20Khorfakkan%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "mleiha-archaeological-centre",
+      "name": "Mleiha Archaeological Centre",
+      "aliases": [],
+      "description": "Sharjah destination combining archaeology, desert scenery, and modern architecture.",
+      "sourceUrls": [],
+      "sourceRows": [
+        69
+      ],
+      "locationHint": "Mleiha, Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "Archeological Centre - Al Khatim - Sharjah",
+      "coordinates": {
+        "lat": 25.125876899999998,
+        "lng": 55.859334999999994
+      },
+      "placeId": "ChIJ8Ue_mG2i9T4R11O7jMY1xlk",
+      "googleTypes": [
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "nature-wildlife",
+          "arts-culture-heritage"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Mleiha Archaeological Centre",
+        "websiteUri": "http://discovermleiha.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mleiha%20Archaeological%20Centre%2C%20Mleiha%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "wasit-wetland-centre",
+      "name": "Wasit Wetland Centre",
+      "aliases": [],
+      "description": "An 86-hectare protected wetland and Ramsar site on Sharjah's border with Ajman, transformed from a former dump into a thriving bird sanctuary run by the Environment and Protected Areas Authority. The Aga Khan Award-winning visitor centre features a soundproofed viewing gallery, bird hides and buggy tours around lagoons and salt flats hosting 60+ bird species, including flamingos.",
+      "sourceUrls": [
+        "https://en.wikipedia.org/wiki/Wasit_Wetland_Centre"
+      ],
+      "sourceRows": [
+        75
+      ],
+      "locationHint": "Sharjah, UAE",
+      "emirate": "Sharjah",
+      "address": "Sheikh Salem Bin Sultan Al Qasimi St - Wasit Suburb - Sharjah",
+      "coordinates": {
+        "lat": 25.3622646,
+        "lng": 55.4722368
+      },
+      "placeId": "ChIJYRdFpJJYXz4RrrdplVQZIM8",
+      "googleTypes": [
+        "wildlife_park",
+        "tourist_attraction",
+        "zoo",
+        "non_profit_organization",
+        "park",
+        "association_or_organization",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "wildlife_park",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Wasit Wetland Nature Park | منتزه واسط للأراضي الرطبة",
+        "websiteUri": "https://epaashj.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Wasit%20Wetland%20Centre%2C%20Sharjah%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "casa-mikoko",
+      "name": "Casa Mikoko",
+      "aliases": [],
+      "description": "Casa Mikoko is a luxurious, eco-friendly resort featuring African-inspired bungalows, some with private pools, nestled within serene mangrove forests in Umm Al Quwain. It offers a peaceful escape with breathtaking views of the Arabian Gulf, an on-site restaurant, and various water activities like kayaking and paddleboarding.",
+      "sourceUrls": [
+        "https://casamikoko.ae/"
+      ],
+      "sourceRows": [
+        78
+      ],
+      "locationHint": "Umm Al Quwain, UAE",
+      "emirate": "Umm Al Quwain",
+      "address": "https://wa.me/p/5318295098223223/971527293060 - Khor Al Yeefrah - Emirate of Umm Al Quwain",
+      "coordinates": {
+        "lat": 25.539206099999998,
+        "lng": 55.62863850000001
+      },
+      "placeId": "ChIJgVkFz5z79T4RnB8Ox8YVweQ",
+      "googleTypes": [
+        "hotel",
+        "cafe",
+        "lodging",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "hotel",
+      "taxonomy": {
+        "primary": "resort-beach-club",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "resort-beach-club",
+          "sport-active",
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "CASA MIKOKO",
+        "websiteUri": "https://www.casamikoko.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Casa%20Mikoko%2C%20Umm%20Al%20Quwain%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "mangrove-beach",
+      "name": "Mangrove Beach",
+      "aliases": [],
+      "description": "A natural headland beach extending about 2 km along Khor Al Beidah in Umm Al Quwain, part of one of the largest intact mangrove lagoon systems in the UAE. A quiet, largely undeveloped spot for picnics, birdwatching and sunrise/sunset kayaking or paddleboarding among the mangrove islands — come for scenery rather than resort facilities.",
+      "sourceUrls": [
+        "https://worldscoolestwinter.ae/en/attractions/%20mangrove-beach/"
+      ],
+      "sourceRows": [
+        77
+      ],
+      "locationHint": "Umm Al Quwain, UAE",
+      "emirate": "Umm Al Quwain",
+      "address": "Mangrove beach - Emirate of Umm Al Quwain",
+      "coordinates": {
+        "lat": 25.5252024,
+        "lng": 55.5874037
+      },
+      "placeId": "EkBNYW5ncm92ZSBiZWFjaCAtIEVtaXJhdGUgb2YgVW1tIEFsIFF1d2FpbiAtIFVuaXRlZCBBcmFiIEVtaXJhdGVzIi4qLAoUChIJcYpjnIn79T4RANa0Rr1cVPASFAoSCV2SK_-m_vU-EROGxZKbWAJK",
+      "googleTypes": [
+        "route"
+      ],
+      "primaryGoogleType": null,
+      "taxonomy": {
+        "primary": "beach-water",
+        "tags": [
+          "beach-water",
+          "nature-wildlife",
+          "resort-beach-club",
+          "sport-active"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-22T13:04:30.901Z",
+        "osm": null,
+        "matchedName": "Mangrove beach",
+        "websiteUri": null,
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mangrove%20Beach%2C%20Umm%20Al%20Quwain%2C%20United%20Arab%20Emirates"
+    }
+  ]
+}

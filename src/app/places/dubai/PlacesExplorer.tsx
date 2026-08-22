@@ -1,0 +1,647 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowUpRight,
+  Compass,
+  ExternalLink,
+  Heart,
+  LocateFixed,
+  MapPin,
+  Search,
+  Shuffle,
+  SlidersHorizontal,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { DubaiPlace, PlaceCategory, PlacesPayload } from "@/data/places-dubai";
+import styles from "./places.module.css";
+
+type CategoryMeta = {
+  label: string;
+  shortLabel: string;
+  color: string;
+};
+
+type PhotoCredit = {
+  displayName: string;
+  uri: string | null;
+};
+
+type LiveDetails = {
+  address: string;
+  mapsUri: string;
+  placeId: string | null;
+  photoUrl: string | null;
+  photoCredits: PhotoCredit[];
+};
+
+const CATEGORY_META: Record<PlaceCategory, CategoryMeta> = {
+  "food-drink": { label: "Food & drink", shortLabel: "Eat", color: "#d46643" },
+  "nature-wildlife": { label: "Nature & wildlife", shortLabel: "Nature", color: "#4f7955" },
+  "beach-water": { label: "Beach & water", shortLabel: "Water", color: "#2f7f92" },
+  "mountain-hiking": { label: "Mountains & hiking", shortLabel: "Hike", color: "#706957" },
+  "arts-culture-heritage": { label: "Arts & culture", shortLabel: "Culture", color: "#865b8e" },
+  "shows-immersive": { label: "Shows & immersive", shortLabel: "Shows", color: "#b85270" },
+  "creative-workshop": { label: "Creative workshops", shortLabel: "Make", color: "#b97a36" },
+  wellness: { label: "Wellness", shortLabel: "Reset", color: "#668078" },
+  "resort-beach-club": { label: "Resorts & beach clubs", shortLabel: "Stay", color: "#456080" },
+  "sport-active": { label: "Sport & active", shortLabel: "Move", color: "#c45d3c" },
+  "shopping-stroll": { label: "Strolls & shopping", shortLabel: "Stroll", color: "#9a7048" },
+  "family-animals": { label: "Animals & family", shortLabel: "Play", color: "#58877a" },
+  "date-ideas": { label: "Other date ideas", shortLabel: "More", color: "#747871" },
+};
+
+const DEFAULT_CENTER = { lat: 24.6537, lng: 54.918 };
+const UAE_BOUNDS = {
+  north: 26.3,
+  south: 22.6,
+  east: 56.6,
+  west: 51.5,
+};
+const STORAGE_KEY = "nsso-uae-place-favourites";
+let mapsConfigured = false;
+
+function categoryFor(place: DubaiPlace) {
+  return CATEGORY_META[place.taxonomy.primary] || CATEGORY_META["date-ideas"];
+}
+
+function haversineKm(
+  pointA: { lat: number; lng: number },
+  pointB: { lat: number; lng: number },
+) {
+  const radians = (degrees: number) => (degrees * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const latitudeDelta = radians(pointB.lat - pointA.lat);
+  const longitudeDelta = radians(pointB.lng - pointA.lng);
+  const value =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(radians(pointA.lat)) *
+      Math.cos(radians(pointB.lat)) *
+      Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
+}
+
+function directionsUrl(place: DubaiPlace, placeId: string | null) {
+  const params = new URLSearchParams({
+    api: "1",
+    destination: `${place.coordinates.lat},${place.coordinates.lng}`,
+  });
+  if (placeId) params.set("destination_place_id", placeId);
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function markerNode(place: DubaiPlace, selected: boolean) {
+  const node = document.createElement("button");
+  const category = categoryFor(place);
+  node.type = "button";
+  node.className = `${styles.mapMarker}${selected ? ` ${styles.mapMarkerSelected}` : ""}`;
+  node.style.setProperty("--marker-color", category.color);
+  node.setAttribute("aria-label", `Open ${place.name}`);
+  node.innerHTML = `<span></span>`;
+  return node;
+}
+
+export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
+  const mapElementRef = useRef<HTMLDivElement>(null);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const userMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const liveDetailsCache = useRef(new Map<string, LiveDetails>());
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<PlaceCategory | "all">("all");
+  const [emirate, setEmirate] = useState("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [favourites, setFavourites] = useState<Set<string>>(new Set());
+  const [favouritesOnly, setFavouritesOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const [liveDetails, setLiveDetails] = useState<LiveDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [photoUnavailable, setPhotoUnavailable] = useState(false);
+
+  const places = payload.places;
+  const selectedPlace = selectedId ? places.find((place) => place.id === selectedId) || null : null;
+  const emirates = useMemo(
+    () => [...new Set(places.map((place) => place.emirate))].sort(),
+    [places],
+  );
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<PlaceCategory, number>();
+    places.forEach((place) => {
+      counts.set(place.taxonomy.primary, (counts.get(place.taxonomy.primary) || 0) + 1);
+    });
+    return counts;
+  }, [places]);
+
+  const visibleCategories = useMemo(
+    () =>
+      (Object.entries(CATEGORY_META) as [PlaceCategory, CategoryMeta][])
+        .filter(([key]) => categoryCounts.has(key))
+        .sort((a, b) => (categoryCounts.get(b[0]) || 0) - (categoryCounts.get(a[0]) || 0)),
+    [categoryCounts],
+  );
+
+  const filteredPlaces = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const next = places.filter((place) => {
+      if (category !== "all" && !place.taxonomy.tags.includes(category)) return false;
+      if (emirate !== "all" && place.emirate !== emirate) return false;
+      if (favouritesOnly && !favourites.has(place.id)) return false;
+      if (!normalizedQuery) return true;
+      return [
+        place.name,
+        place.aliases.join(" "),
+        place.address,
+        place.locationHint,
+        place.description,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    });
+
+    if (userLocation) {
+      return [...next].sort(
+        (a, b) => haversineKm(userLocation, a.coordinates) - haversineKm(userLocation, b.coordinates),
+      );
+    }
+    return next;
+  }, [category, emirate, favourites, favouritesOnly, places, query, userLocation]);
+
+  const filterSignature = useMemo(
+    () => filteredPlaces.map((place) => place.id).join("|"),
+    [filteredPlaces],
+  );
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as string[];
+      setFavourites(new Set(stored));
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!apiKey) {
+      setMapError("The map key has not been configured yet.");
+      return;
+    }
+
+    let active = true;
+    const initializeMap = async () => {
+      try {
+        if (!mapsConfigured) {
+          setOptions({
+            key: apiKey,
+            v: "weekly",
+            language: "en",
+            region: "AE",
+            authReferrerPolicy: "origin",
+            mapIds: [mapId],
+          });
+          mapsConfigured = true;
+        }
+        const { Map: GoogleMap } = await importLibrary("maps");
+        await importLibrary("marker");
+        if (!active || !mapElementRef.current) return;
+        const instance = new GoogleMap(mapElementRef.current, {
+          center: DEFAULT_CENTER,
+          zoom: 7,
+          minZoom: 6,
+          maxZoom: 19,
+          mapId,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          cameraControl: false,
+          clickableIcons: false,
+          gestureHandling: "greedy",
+          restriction: { latLngBounds: UAE_BOUNDS, strictBounds: false },
+        });
+        setMap(instance);
+      } catch (error) {
+        console.error("Unable to initialize Google Maps", error);
+        if (active) setMapError("Google Maps could not load. The place list still works.");
+      }
+    };
+
+    void initializeMap();
+    return () => {
+      active = false;
+    };
+  }, [apiKey, mapId]);
+
+  useEffect(() => {
+    if (!map) return;
+    let cancelled = false;
+
+    const renderMarkers = async () => {
+      const { AdvancedMarkerElement } = await importLibrary("marker");
+      if (cancelled) return;
+      markersRef.current.forEach((marker) => {
+        marker.map = null;
+      });
+      markersRef.current = filteredPlaces.map((place) => {
+        const marker = new AdvancedMarkerElement({
+          map,
+          position: place.coordinates,
+          title: place.name,
+          content: markerNode(place, place.id === selectedId),
+          gmpClickable: true,
+          zIndex: place.id === selectedId ? 1000 : 1,
+        });
+        marker.addListener("click", () => setSelectedId(place.id));
+        return marker;
+      });
+    };
+
+    void renderMarkers();
+    return () => {
+      cancelled = true;
+    };
+  }, [filteredPlaces, map, selectedId]);
+
+  useEffect(() => {
+    if (!map || !filteredPlaces.length) return;
+    const bounds = new google.maps.LatLngBounds();
+    filteredPlaces.forEach((place) => bounds.extend(place.coordinates));
+    map.fitBounds(bounds, { top: 100, right: 80, bottom: 100, left: 80 });
+    if (filteredPlaces.length === 1) {
+      google.maps.event.addListenerOnce(map, "idle", () => {
+        if ((map.getZoom() || 0) > 14) map.setZoom(14);
+      });
+    }
+  }, [filterSignature, filteredPlaces, map]);
+
+  useEffect(() => {
+    if (!map || !selectedPlace) return;
+    map.panTo(selectedPlace.coordinates);
+    if ((map.getZoom() || 0) < 12) map.setZoom(12);
+  }, [map, selectedPlace]);
+
+  useEffect(() => {
+    if (!selectedPlace) {
+      setLiveDetails(null);
+      return;
+    }
+
+    setPhotoUnavailable(false);
+    const cached = liveDetailsCache.current.get(selectedPlace.id);
+    if (cached) {
+      setLiveDetails(cached);
+      return;
+    }
+
+    let active = true;
+    const loadDetails = async () => {
+      setDetailsLoading(true);
+      setLiveDetails(null);
+      try {
+        const { Place } = await importLibrary("places");
+        let place: google.maps.places.Place | undefined;
+        if (selectedPlace.placeId) {
+          place = new Place({
+            id: selectedPlace.placeId,
+            requestedLanguage: "en",
+            requestedRegion: "AE",
+          });
+        } else {
+          const result = await Place.searchByText({
+            fields: ["id"],
+            textQuery: `${selectedPlace.name}, ${selectedPlace.locationHint}`,
+            locationBias: selectedPlace.coordinates,
+            maxResultCount: 1,
+            region: "AE",
+          });
+          place = result.places[0];
+        }
+        if (!place) throw new Error("No matching Google place was found");
+        await place.fetchFields({ fields: ["formattedAddress", "photos", "googleMapsURI"] });
+        const photo = place.photos?.[0];
+        const details: LiveDetails = {
+          address: place.formattedAddress || selectedPlace.address,
+          mapsUri: place.googleMapsURI || selectedPlace.googleMapsSearchUri,
+          placeId: place.id || selectedPlace.placeId,
+          photoUrl: photo?.getURI({ maxWidth: 960, maxHeight: 720 }) || null,
+          photoCredits:
+            photo?.authorAttributions.map((credit) => ({
+              displayName: credit.displayName,
+              uri: credit.uri,
+            })) || [],
+        };
+        liveDetailsCache.current.set(selectedPlace.id, details);
+        if (active) setLiveDetails(details);
+      } catch (error) {
+        console.warn(`Unable to load live details for ${selectedPlace.name}`, error);
+        if (active) {
+          setLiveDetails({
+            address: selectedPlace.address,
+            mapsUri: selectedPlace.googleMapsSearchUri,
+            placeId: selectedPlace.placeId,
+            photoUrl: null,
+            photoCredits: [],
+          });
+        }
+      } finally {
+        if (active) setDetailsLoading(false);
+      }
+    };
+
+    void loadDetails();
+    return () => {
+      active = false;
+    };
+  }, [selectedPlace]);
+
+  const toggleFavourite = useCallback((placeId: string) => {
+    setFavourites((current) => {
+      const next = new Set(current);
+      if (next.has(placeId)) next.delete(placeId);
+      else next.add(placeId);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
+  const surpriseMe = () => {
+    if (!filteredPlaces.length) return;
+    const options = selectedId
+      ? filteredPlaces.filter((place) => place.id !== selectedId)
+      : filteredPlaces;
+    const pool = options.length ? options : filteredPlaces;
+    setSelectedId(pool[Math.floor(Math.random() * pool.length)].id);
+  };
+
+  const locateMe = () => {
+    if (!navigator.geolocation) {
+      setLocationMessage("Location is not available in this browser.");
+      return;
+    }
+    setLocationMessage("Finding you…");
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const location = { lat: coords.latitude, lng: coords.longitude };
+        setUserLocation(location);
+        setLocationMessage("Sorted by distance from you");
+        if (map) {
+          const { AdvancedMarkerElement } = await importLibrary("marker");
+          if (userMarkerRef.current) userMarkerRef.current.map = null;
+          const node = document.createElement("div");
+          node.className = styles.userMarker;
+          node.innerHTML = "<span></span>";
+          userMarkerRef.current = new AdvancedMarkerElement({ map, position: location, content: node, zIndex: 2000 });
+          map.panTo(location);
+          map.setZoom(11);
+        }
+      },
+      () => setLocationMessage("Location access was not granted."),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    );
+  };
+
+  const clearFilters = () => {
+    setQuery("");
+    setCategory("all");
+    setEmirate("all");
+    setFavouritesOnly(false);
+  };
+
+  return (
+    <main className={styles.shell}>
+      <div ref={mapElementRef} className={styles.map} aria-label="Map of places to go in the UAE" />
+      {mapError && (
+        <div className={styles.mapError} role="status">
+          <Compass size={18} />
+          <span>{mapError}</span>
+        </div>
+      )}
+
+      <section className={styles.rail} aria-label="Place finder">
+        <header className={styles.header}>
+          <div className={styles.brandRow}>
+            <Link className={styles.brand} href="/" aria-label="Back to nsso.me">
+              <span className={styles.logoWrap}>
+                <Image src="/assets/nsso-logo.png" alt="" width={26} height={26} />
+              </span>
+              <span>nsso field notes</span>
+            </Link>
+            <button className={styles.surpriseButton} type="button" onClick={surpriseMe} disabled={!filteredPlaces.length}>
+              <Shuffle size={15} />
+              Surprise us
+            </button>
+          </div>
+          <p className={styles.eyebrow}>UAE date map</p>
+          <h1>Where should we go?</h1>
+          <p className={styles.intro}>Cafés, coastlines, culture and good excuses to leave the house.</p>
+        </header>
+
+        <div className={styles.controls}>
+          <label className={styles.searchBox}>
+            <Search size={17} aria-hidden="true" />
+            <span className={styles.srOnly}>Search places</span>
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search a place, area or mood…"
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} aria-label="Clear search">
+                <X size={15} />
+              </button>
+            )}
+          </label>
+
+          <div className={styles.filterRow}>
+            <label className={styles.selectWrap}>
+              <SlidersHorizontal size={15} aria-hidden="true" />
+              <span className={styles.srOnly}>Filter by emirate</span>
+              <select value={emirate} onChange={(event) => setEmirate(event.target.value)}>
+                <option value="all">All Emirates</option>
+                {emirates.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              className={`${styles.favouriteFilter}${favouritesOnly ? ` ${styles.favouriteFilterActive}` : ""}`}
+              type="button"
+              onClick={() => setFavouritesOnly((value) => !value)}
+              aria-pressed={favouritesOnly}
+            >
+              <Heart size={15} fill={favouritesOnly ? "currentColor" : "none"} />
+              Saved {favourites.size ? `(${favourites.size})` : ""}
+            </button>
+            <button className={styles.locateButton} type="button" onClick={locateMe} aria-label="Sort places near me">
+              <LocateFixed size={16} />
+            </button>
+          </div>
+          {locationMessage && <p className={styles.locationMessage}>{locationMessage}</p>}
+
+          <div className={styles.categoryScroller} aria-label="Filter by category">
+            <button
+              type="button"
+              className={`${styles.categoryPill}${category === "all" ? ` ${styles.categoryPillActive}` : ""}`}
+              onClick={() => setCategory("all")}
+              aria-pressed={category === "all"}
+            >
+              All <span>{places.length}</span>
+            </button>
+            {visibleCategories.map(([key, meta]) => (
+              <button
+                key={key}
+                type="button"
+                className={`${styles.categoryPill}${category === key ? ` ${styles.categoryPillActive}` : ""}`}
+                onClick={() => setCategory(key)}
+                aria-pressed={category === key}
+                style={{ "--pill-color": meta.color } as React.CSSProperties}
+              >
+                <i /> {meta.shortLabel} <span>{categoryCounts.get(key)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.listHeader}>
+          <span>{filteredPlaces.length} {filteredPlaces.length === 1 ? "place" : "places"}</span>
+          {userLocation ? <span>nearest first</span> : <span>across the UAE</span>}
+        </div>
+
+        <div className={styles.placeList}>
+          {filteredPlaces.map((place) => {
+            const meta = categoryFor(place);
+            const isFavourite = favourites.has(place.id);
+            const distance = userLocation ? haversineKm(userLocation, place.coordinates) : null;
+            return (
+              <article
+                key={place.id}
+                className={`${styles.placeCard}${selectedId === place.id ? ` ${styles.placeCardSelected}` : ""}`}
+                style={{ "--category-color": meta.color } as React.CSSProperties}
+              >
+                <button className={styles.placeMain} type="button" onClick={() => setSelectedId(place.id)}>
+                  <span className={styles.placeIndex}><i /></span>
+                  <span className={styles.placeCopy}>
+                    <span className={styles.placeMeta}>
+                      <span>{meta.label}</span>
+                      <span>·</span>
+                      <span>{place.emirate}</span>
+                    </span>
+                    <strong>{place.name}</strong>
+                    <span className={styles.placeAddress}>{place.address}</span>
+                  </span>
+                  {distance !== null && <span className={styles.distance}>{Math.round(distance)} km</span>}
+                </button>
+                <button
+                  className={`${styles.heartButton}${isFavourite ? ` ${styles.heartButtonActive}` : ""}`}
+                  type="button"
+                  onClick={() => toggleFavourite(place.id)}
+                  aria-label={isFavourite ? `Remove ${place.name} from saved places` : `Save ${place.name}`}
+                >
+                  <Heart size={16} fill={isFavourite ? "currentColor" : "none"} />
+                </button>
+              </article>
+            );
+          })}
+
+          {!filteredPlaces.length && (
+            <div className={styles.emptyState}>
+              <Sparkles size={24} />
+              <strong>No places match that combination.</strong>
+              <button type="button" onClick={clearFilters}>Clear the filters</button>
+            </div>
+          )}
+          <footer className={styles.attribution}>
+            <span>Built from {payload.meta.sourceRecordCount} saved UAE ideas.</span>
+            <a
+              href={payload.meta.geocoder === "google-places-new" ? "https://maps.google.com" : "https://www.openstreetmap.org/copyright"}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {payload.meta.geocoder === "google-places-new" ? "Google Maps" : "© OpenStreetMap"}
+            </a>
+          </footer>
+        </div>
+      </section>
+
+      {selectedPlace && (
+        <aside className={styles.detailCard} aria-label={`Details for ${selectedPlace.name}`}>
+          <button className={styles.closeButton} type="button" onClick={() => setSelectedId(null)} aria-label="Close place details">
+            <X size={18} />
+          </button>
+          <button
+            className={`${styles.detailHeart}${favourites.has(selectedPlace.id) ? ` ${styles.detailHeartActive}` : ""}`}
+            type="button"
+            onClick={() => toggleFavourite(selectedPlace.id)}
+            aria-label={favourites.has(selectedPlace.id) ? "Remove from saved places" : "Save this place"}
+          >
+            <Heart size={18} fill={favourites.has(selectedPlace.id) ? "currentColor" : "none"} />
+          </button>
+
+          <div
+            className={`${styles.detailHero}${!liveDetails?.photoUrl || photoUnavailable ? ` ${styles.detailHeroFallback}` : ""}`}
+            style={{ "--detail-color": categoryFor(selectedPlace).color } as React.CSSProperties}
+          >
+            {liveDetails?.photoUrl && !photoUnavailable ? (
+              // Google photo URLs are transient and intentionally rendered without Next image caching.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={liveDetails.photoUrl} alt={`A view of ${selectedPlace.name}`} onError={() => setPhotoUnavailable(true)} />
+            ) : (
+              <div className={styles.fallbackArt} aria-hidden="true">
+                <span /><span /><span />
+                {detailsLoading ? <em>Finding a photo…</em> : <em>{categoryFor(selectedPlace).shortLabel}</em>}
+              </div>
+            )}
+            {liveDetails?.photoCredits.length ? (
+              <div className={styles.photoCredit}>
+                Photo by{" "}
+                {liveDetails.photoCredits.map((credit, index) => (
+                  <span key={`${credit.displayName}-${index}`}>
+                    {index > 0 ? ", " : ""}
+                    {credit.uri ? <a href={credit.uri} target="_blank" rel="noreferrer">{credit.displayName}</a> : credit.displayName}
+                  </span>
+                ))}
+                {" · Google Maps"}
+              </div>
+            ) : null}
+          </div>
+
+          <div className={styles.detailBody}>
+            <div className={styles.detailMeta}>
+              <span style={{ "--detail-color": categoryFor(selectedPlace).color } as React.CSSProperties}>
+                <i /> {categoryFor(selectedPlace).label}
+              </span>
+              <span>{selectedPlace.emirate}</span>
+            </div>
+            <h2>{selectedPlace.name}</h2>
+            <p className={styles.detailAddress}>
+              <MapPin size={15} />
+              <span>{liveDetails?.address || selectedPlace.address}</span>
+            </p>
+            <p className={styles.detailDescription}>{selectedPlace.description || "A saved place to explore together."}</p>
+            <div className={styles.detailActions}>
+              <a href={directionsUrl(selectedPlace, liveDetails?.placeId || selectedPlace.placeId)} target="_blank" rel="noreferrer">
+                <ArrowUpRight size={17} /> Get directions
+              </a>
+              <a href={liveDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">
+                Google Maps <ExternalLink size={14} />
+              </a>
+            </div>
+            {selectedPlace.sourceUrls[0] && (
+              <a className={styles.sourceLink} href={selectedPlace.sourceUrls[0]} target="_blank" rel="noreferrer">
+                Visit the original place link <ExternalLink size={13} />
+              </a>
+            )}
+          </div>
+        </aside>
+      )}
+    </main>
+  );
+}

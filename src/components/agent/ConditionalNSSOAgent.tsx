@@ -8,7 +8,7 @@ export default function ConditionalNSSOAgent() {
 
     // Don't show agent pill on these pages
     const hideOnPaths = ['/sign-in', '/sign-up', '/deity']
-    const shouldHide = hideOnPaths.some(path => pathname === path)
+    const shouldHide = hideOnPaths.some(path => pathname === path) || pathname.startsWith('/places')
 
     if (shouldHide) return null
 

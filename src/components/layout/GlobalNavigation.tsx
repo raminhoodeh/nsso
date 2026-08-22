@@ -4,13 +4,18 @@ import { useUser } from '@/components/providers/UserProvider';
 import DashboardSidebar from '@/components/layout/DashboardSidebar';
 import DashboardBottomNav from '@/components/layout/DashboardBottomNav';
 import { Suspense } from 'react';
+import { usePathname } from 'next/navigation';
 
 
 function GlobalNavigationContent() {
     const { user, loading } = useUser();
+    const pathname = usePathname();
 
     // Don't show anything while loading to prevent flicker
     if (loading) return null;
+
+    // Public map experiences own the full viewport and provide their own navigation.
+    if (pathname.startsWith('/places')) return null;
 
     // If not logged in, don't show navigation
     if (!user) return null;
