@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Playfair_Display, Inter } from 'next/font/google'
+import {
+    TahoeGlassButton,
+    TahoeGlassField,
+    TahoeGlassSurface,
+} from '@/components/ui/tahoe-glass'
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600'], style: ['normal', 'italic'] })
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600'] })
@@ -336,28 +341,57 @@ export default function DreamseaPromptsPage() {
     // Auth Screen
     if (!isAuthorized) {
         return (
-            <div className={`fixed inset-0 z-50 flex items-center justify-center bg-[#050810]/95 backdrop-blur-2xl ${inter.className}`}>
-                <div className="w-full max-w-[360px] p-10 text-center animate-in fade-in zoom-in duration-500 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl">
+            <div className={`fixed inset-0 z-50 flex items-center justify-center p-6 ${inter.className}`}>
+                <TahoeGlassSurface
+                    variant="dialog"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.08}
+                    className="w-full max-w-[360px] p-10 text-center animate-in fade-in zoom-in duration-500 border border-white/10"
+                >
                     <span className="block mb-4 text-5xl animate-bounce">🌙</span>
                     <h2 className={`text-2xl mb-2 text-[#C1DCED] ${playfair.className}`}>Dream Prompts</h2>
                     <p className="mb-7 text-sm text-[#8A9AB0]">Enter your passphrase to continue</p>
                     <form onSubmit={handlePasswordSubmit}>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full p-4 mb-4 text-center bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-[#C1DCED]/40 transition-all tracking-[0.2em]"
-                            placeholder="· · · · · · · ·"
-                            autoFocus
-                        />
-                        <button type="submit" className="w-full p-4 bg-[#213E60] border border-[#C1DCED]/20 rounded-xl text-[#C1DCED] font-medium hover:opacity-80 transition-all active:scale-95">
+                        <TahoeGlassField
+                            label="Passphrase"
+                            visuallyHideLabel
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.05}
+                            className="mb-4"
+                            surfaceClassName="border border-white/10"
+                            controlClassName="text-center text-white tracking-[0.2em]"
+                        >
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="· · · · · · · ·"
+                                aria-invalid={Boolean(error)}
+                                aria-describedby="dreamsea-auth-error"
+                                autoFocus
+                            />
+                        </TahoeGlassField>
+                        <TahoeGlassButton
+                            type="submit"
+                            tone="light"
+                            semanticTint="light"
+                            semanticTintOpacity={0.06}
+                            className="w-full border border-[#C1DCED]/20"
+                            contentClassName="text-[#C1DCED] font-medium"
+                        >
                             Enter the Dream ✦
-                        </button>
+                        </TahoeGlassButton>
                     </form>
-                    <p className={`mt-3 text-sm text-[#ff8fa3] transition-opacity duration-300 ${error ? 'opacity-100' : 'opacity-0'}`}>
+                    <p
+                        id="dreamsea-auth-error"
+                        role="alert"
+                        className={`mt-3 text-sm text-[#ff8fa3] transition-opacity duration-300 ${error ? 'opacity-100' : 'opacity-0'}`}
+                    >
                         {error}
                     </p>
-                </div>
+                </TahoeGlassSurface>
             </div>
         )
     }
@@ -367,63 +401,161 @@ export default function DreamseaPromptsPage() {
         <main className={`relative z-10 max-w-[1360px] mx-auto pt-24 pb-20 px-6 ${inter.className}`}>
             
             {/* Header */}
-            <header className="text-center mb-10 p-10 bg-[#0f2648] border border-white/10 rounded-[40px] shadow-2xl backdrop-blur-md">
+            <TahoeGlassSurface
+                as="header"
+                variant="panel"
+                radius={40}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.07}
+                className="text-center mb-10 p-10 border border-white/10"
+            >
                 <span className="block mb-3 text-6xl animate-pulse cursor-default">🌙</span>
                 <h1 className={`text-4xl md:text-5xl font-semibold text-[#C1DCED] mb-6 tracking-tight ${playfair.className}`}>Dreamsea · Dream Prompts</h1>
-                <div className="inline-block py-4 px-10 bg-[#050810]/40 border border-white/10 rounded-full backdrop-blur-xl">
+                <TahoeGlassSurface
+                    variant="pill"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.04}
+                    className="inline-block py-4 px-10 border border-white/10"
+                >
                     <p className={`text-lg italic text-[#C1DCED]/80 ${playfair.className}`}>"A dream is an unopened letter from the divine."</p>
-                </div>
-            </header>
+                </TahoeGlassSurface>
+            </TahoeGlassSurface>
 
             <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-[#C1DCED]/30 to-transparent mx-auto mb-10" />
 
             {/* Tabs */}
-            <div className="flex gap-1.5 p-2 mb-10 bg-[#0f2648] border border-white/10 rounded-2xl shadow-xl">
-                <button
+            <TahoeGlassSurface
+                variant="menu"
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.05}
+                role="tablist"
+                aria-label="Dreamsea editor sections"
+                className="mb-10 p-2 border border-white/10"
+                contentClassName="flex w-full gap-1.5"
+            >
+                <TahoeGlassSurface
+                    as="button"
+                    variant="button"
+                    tone="light"
+                    semanticTint={activeSection === 'prompts' ? 'light' : 'none'}
+                    semanticTintOpacity={0.07}
                     onClick={() => setActiveSection('prompts')}
-                    className={`flex-1 py-3.5 rounded-xl font-semibold transition-all ${activeSection === 'prompts' ? 'bg-[#213E60] border border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
+                    role="tab"
+                    id="dreamsea-prompts-tab"
+                    aria-selected={activeSection === 'prompts'}
+                    aria-controls="dreamsea-prompts-panel"
+                    className={`flex-1 px-5 py-3.5 font-semibold transition-all ${activeSection === 'prompts' ? 'border border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
                 >
                     ✦ AI Prompts
-                </button>
-                <button
+                </TahoeGlassSurface>
+                <TahoeGlassSurface
+                    as="button"
+                    variant="button"
+                    tone="light"
+                    semanticTint={activeSection === 'wiki' ? 'light' : 'none'}
+                    semanticTintOpacity={0.07}
                     onClick={() => setActiveSection('wiki')}
-                    className={`flex-1 py-3.5 rounded-xl font-semibold transition-all ${activeSection === 'wiki' ? 'bg-[#213E60] border border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
+                    role="tab"
+                    id="dreamsea-wiki-tab"
+                    aria-selected={activeSection === 'wiki'}
+                    aria-controls="dreamsea-wiki-panel"
+                    className={`flex-1 px-5 py-3.5 font-semibold transition-all ${activeSection === 'wiki' ? 'border border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
                 >
                     📖 Dream Wiki
-                </button>
-            </div>
+                </TahoeGlassSurface>
+            </TahoeGlassSurface>
+
+            {isLoading && (
+                <TahoeGlassSurface
+                    variant="pill"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.05}
+                    role="status"
+                    aria-live="polite"
+                    className="mx-auto mb-8 w-fit border border-white/10 px-5 py-2.5"
+                    contentClassName="flex items-center gap-2 text-sm text-[#C1DCED]/80"
+                >
+                    <span className="h-3.5 w-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                    Loading saved Dreamsea content…
+                </TahoeGlassSurface>
+            )}
 
             {/* SECTION: AI PROMPTS */}
             {activeSection === 'prompts' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="mb-10 p-6 bg-[#0f2648] border border-white/10 rounded-2xl shadow-lg">
+                <div
+                    id="dreamsea-prompts-panel"
+                    role="tabpanel"
+                    aria-labelledby="dreamsea-prompts-tab"
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+                >
+                    <TahoeGlassSurface
+                        variant="card"
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.05}
+                        className="mb-10 p-6 border border-white/10"
+                    >
                         <p className="text-center text-sm text-[#C1DCED]/90 leading-relaxed">
                             These are the eight voices that interpret every dream.<br />
                             Edit them thoughtfully — your words will reach every dreamer. ✦<br /><br />
                             Where you see <strong className="text-[#C1DCED] font-bold">{"{TRANSCRIPT}"}</strong> below, the actual dream recording will appear.
                         </p>
-                    </div>
+                    </TahoeGlassSurface>
 
                     {/* Anatomy Guide */}
                     <div className="mb-12">
-                        <button 
+                        <TahoeGlassSurface
+                            as="button"
+                            variant="menu"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.05}
                             onClick={() => setIsAnatomyOpen(!isAnatomyOpen)}
-                            className="w-full p-6 bg-[#0f2648] border border-white/10 rounded-2xl flex items-center justify-between group hover:border-[#C1DCED]/30 transition-all shadow-lg"
+                            aria-expanded={isAnatomyOpen}
+                            aria-controls="dreamsea-prompt-anatomy"
+                            className="w-full p-6 border border-white/10 flex items-center justify-between group hover:border-[#C1DCED]/30 transition-all"
                         >
                             <span className={`text-xl font-semibold text-[#C1DCED] shadow-sm ${playfair.className}`}>✦ How to write a beautiful prompt</span>
-                            <div className="flex items-center gap-3">
-                                <span className="text-[11px] font-bold text-[#C1DCED] px-4 py-1.5 bg-white/5 border border-white/10 rounded-full tracking-wider">A GUIDE FOR AZIN</span>
+                            <span className="flex items-center gap-3">
+                                <span className="text-[11px] font-bold text-[#C1DCED] px-4 py-1.5 border border-white/10 rounded-full tracking-wider">A GUIDE FOR AZIN</span>
                                 <span className={`text-[#C1DCED] transition-transform duration-300 ${isAnatomyOpen ? 'rotate-180' : ''}`}>▼</span>
-                            </div>
-                        </button>
+                            </span>
+                        </TahoeGlassSurface>
                         
-                        <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isAnatomyOpen ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div
+                            id="dreamsea-prompt-anatomy"
+                            className={`overflow-hidden transition-all duration-500 ease-in-out ${isAnatomyOpen ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'}`}
+                        >
                             <div className="pt-4 px-1">
-                                <div className="p-8 bg-[#0f2648] border border-white/10 rounded-3xl shadow-xl">
-                                    <p className="p-6 bg-[#213E60]/40 border border-white/10 rounded-2xl text-sm leading-relaxed text-[#C1DCED]/90 mb-6">
+                                <TahoeGlassSurface
+                                    variant="panel"
+                                    tone="light"
+                                    semanticTint="dark"
+                                    semanticTintOpacity={0.05}
+                                    className="p-8 border border-white/10"
+                                >
+                                    <TahoeGlassSurface
+                                        variant="card"
+                                        tone="light"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.04}
+                                        className="p-6 border border-white/10 text-sm leading-relaxed text-[#C1DCED]/90 mb-6"
+                                    >
+                                      <p>
                                         Every prompt you write is a conversation with an ancient intelligence. The clearer your instructions, the more poetic and precise the response. A great prompt has four parts — think of them as layers of a dream: the deeper you go, the richer the meaning.
-                                    </p>
-                                    <div className="p-6 bg-[#0a1e3a]/60 border border-[#C1DCED]/15 rounded-2xl mb-6">
+                                      </p>
+                                    </TahoeGlassSurface>
+                                    <TahoeGlassSurface
+                                        variant="card"
+                                        tone="light"
+                                        semanticTint="dark"
+                                        semanticTintOpacity={0.05}
+                                        className="p-6 border border-[#C1DCED]/15 mb-6"
+                                    >
                                         <div className="flex items-center gap-2 mb-3">
                                             <span className="text-lg">🪄</span>
                                             <span className={`text-base font-semibold text-[#C1DCED] ${playfair.className}`}>Automatic Dream Wiki Integration</span>
@@ -431,7 +563,7 @@ export default function DreamseaPromptsPage() {
                                         <p className="text-[13px] text-[#C1DCED]/80 leading-relaxed">
                                             <strong className="text-[#C1DCED]">You don&apos;t need to copy anything from the Dream Wiki into your prompts.</strong> Dreamsea does this automatically. When a dream is interpreted, the app pulls the matching philosophy&apos;s Wiki content (e.g. the Jungian Wiki for the Jungian interpretation) and feeds it to the AI behind the scenes. So if you update the Dream Wiki text, those changes will automatically shape future dream interpretations — no extra steps needed.
                                         </p>
-                                    </div>
+                                    </TahoeGlassSurface>
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
                                         {[
                                             { n: 1, t: 'Persona', d: 'Who is the AI speaking as? Give it an identity grounded in a tradition, role, or archetype.', e: '"You are a Sufi dream scholar who has studied the dream interpretations of Ibn Arabi for forty years..."'},
@@ -439,20 +571,39 @@ export default function DreamseaPromptsPage() {
                                             { n: 3, t: 'Context & Goal', d: 'What are the deeper rules? What should it include, avoid, or pay special attention to?', e: '"Focus on symbols of water, animals, and thresholds. Avoid clinical language. Reference the soul\'s longing for wholeness."'},
                                             { n: 4, t: 'Writing Style', d: 'How should it sound? Warm or ceremonial? Poetic or psychological? This shapes the texture.', e: '"Write 2–3 paragraphs in a tone that is intimate and compassionate. Speak directly to the dreamer in second person."'}
                                         ].map(b => (
-                                            <div key={b.n} className="p-6 bg-[#050810]/50 border border-white/10 rounded-2xl hover:border-[#C1DCED]/20 transition-all group">
+                                            <TahoeGlassSurface
+                                                key={b.n}
+                                                variant="card"
+                                                tone="light"
+                                                semanticTint="dark"
+                                                semanticTintOpacity={0.04}
+                                                className="p-6 border border-white/10 hover:border-[#C1DCED]/20 transition-all group"
+                                            >
                                                 <div className="flex items-center gap-2 mb-3">
-                                                    <div className="w-[26px] h-[26px] rounded-full bg-[#213E60] border border-[#C1DCED]/20 flex items-center justify-center text-[11px] font-bold text-[#C1DCED]">{b.n}</div>
+                                                    <div className="w-[26px] h-[26px] rounded-full border border-[#C1DCED]/20 flex items-center justify-center text-[11px] font-bold text-[#C1DCED]">{b.n}</div>
                                                     <span className={`text-base font-semibold text-[#C1DCED] ${playfair.className}`}>{b.t}</span>
                                                 </div>
                                                 <p className="text-[13px] text-[#C1DCED]/70 leading-relaxed mb-4">{b.d}</p>
-                                                <div className="p-4 bg-white/5 border-l-2 border-[#C1DCED]/30 rounded-r-xl text-[12px] italic text-[#C1DCED]/90 leading-relaxed">
+                                                <TahoeGlassSurface
+                                                    variant="recessed"
+                                                    tone="light"
+                                                    semanticTint="light"
+                                                    semanticTintOpacity={0.035}
+                                                    className="p-4 border-l-2 border-[#C1DCED]/30 text-[12px] italic text-[#C1DCED]/90 leading-relaxed"
+                                                >
                                                     <span className="block text-[9px] uppercase tracking-widest text-[#C1DCED] font-bold mb-2 opacity-60">Example</span>
                                                     {b.e}
-                                                </div>
-                                            </div>
+                                                </TahoeGlassSurface>
+                                            </TahoeGlassSurface>
                                         ))}
                                     </div>
-                                    <div className="p-7 bg-[#050810]/80 border border-[#C1DCED]/20 rounded-2xl">
+                                    <TahoeGlassSurface
+                                        variant="recessed"
+                                        tone="light"
+                                        semanticTint="dark"
+                                        semanticTintOpacity={0.08}
+                                        className="p-7 border border-[#C1DCED]/20"
+                                    >
                                         <h4 className="text-[10px] font-bold text-[#C1DCED]/80 uppercase tracking-widest mb-4 flex items-center gap-2">
                                             <span className="w-1 h-1 bg-[#C1DCED] rounded-full animate-pulse"></span>
                                             ✦ THE FINAL ASSEMBLY
@@ -461,80 +612,123 @@ export default function DreamseaPromptsPage() {
                                             <span className="text-blue-200">You are a Sufi dream scholar, versed in the oneiric philosophy of Ibn Arabi and the mystical poetry of Rumi.</span> <span className="text-indigo-200">Interpret the following dream through the Sufi lens: identify the symbols of divine longing, the stations of the soul (maqamat), and what the heart's unconscious is drawing toward.</span> <span className="text-sky-200">Focus especially on symbols of light, water, and beloved figures. Do not mention Dreamsea. Avoid clinical or psychological language.</span> <span className="text-purple-200">Write 2–3 paragraphs in a tone that is reverent, warm, and slightly poetic. Speak directly to the dreamer.</span>
                                             {'\n\n'}Dream transcript:{'\n'}{"{TRANSCRIPT}"}
                                         </p>
-                                    </div>
-                                </div>
+                                    </TahoeGlassSurface>
+                                </TahoeGlassSurface>
                             </div>
                         </div>
                     </div>
 
                     {/* Prompt Cards */}
                     <div className="space-y-6">
-                        {PROMPT_DEFS.map((def, idx) => {
+                        {PROMPT_DEFS.map((def) => {
                             const dbRow = prompts.find(p => p.key === def.key)
                             const content = dbRow ? dbRow.content : def.content
                             return (
-                                <div key={def.key} className="bg-[#0f2648] border border-white/10 rounded-[32px] p-8 pt-7 backdrop-blur-md group hover:border-white/20 transition-all shadow-xl">
+                                <TahoeGlassSurface
+                                    key={def.key}
+                                    variant="panel"
+                                    tone="light"
+                                    semanticTint="dark"
+                                    semanticTintOpacity={0.06}
+                                    className="border border-white/10 p-8 pt-7 group hover:border-white/20 transition-all"
+                                >
                                     <div className="flex items-center gap-3 mb-3">
                                         <span className="text-3xl">{def.emoji}</span>
                                         <span className={`text-2xl font-semibold text-[#C1DCED] ${playfair.className}`}>{def.name}</span>
                                     </div>
                                     <p className="text-sm text-[#C1DCED]/70 leading-relaxed mb-6 pl-2">{def.description}</p>
-                                    <textarea
-                                        id={`textarea-${def.key}`}
-                                        defaultValue={content}
-                                        className="w-full min-h-[180px] p-6 bg-[#050810]/70 border border-white/10 rounded-2xl text-white/95 text-[15px] leading-relaxed outline-none focus:border-[#C1DCED]/40 transition-all font-mono shadow-inner"
-                                        placeholder="Write your beautiful prompt here..."
-                                    />
+                                    <TahoeGlassField
+                                        label={`${def.name} prompt`}
+                                        visuallyHideLabel
+                                        tone="light"
+                                        semanticTint="dark"
+                                        semanticTintOpacity={0.065}
+                                        surfaceClassName="border border-white/10 p-6"
+                                        controlClassName="min-h-[180px] resize-y text-white/95 text-[15px] leading-relaxed font-mono"
+                                    >
+                                        <textarea
+                                            id={`textarea-${def.key}`}
+                                            defaultValue={content}
+                                            placeholder="Write your beautiful prompt here..."
+                                        />
+                                    </TahoeGlassField>
                                     <div className="flex justify-between items-center mt-4 text-[12px] text-[#C1DCED]/50 px-2 font-medium">
                                         <span>
                                             {def.key !== 'monthly_theme' ? <>{'Variable: '}<code>{"{TRANSCRIPT}"}</code></> : 'Context is automated.'}
                                         </span>
                                         <span id={`count-${def.key}`} className="tracking-wide">{content.length} characters</span>
                                     </div>
-                                </div>
+                                </TahoeGlassSurface>
                             )
                         })}
                     </div>
 
                     <div className="text-center mt-14 mb-20">
-                        <button
+                        <TahoeGlassButton
                             onClick={savePrompts}
                             disabled={isSaving}
-                            className="inline-flex items-center gap-3 py-4.5 px-14 bg-[#213E60] border border-[#C1DCED]/30 rounded-full text-[#C1DCED] font-bold text-lg hover:bg-[#2a4e76] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-2xl"
+                            tone="light"
+                            semanticTint="light"
+                            semanticTintOpacity={0.065}
+                            className="border border-[#C1DCED]/30"
+                            contentClassName="text-[#C1DCED] font-bold text-lg"
                         >
-                            {isSaving && <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
+                            {isSaving && <span className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
                             <span>{isSaving ? 'Saving...' : 'Save All Changes ✦'}</span>
-                        </button>
+                        </TahoeGlassButton>
                     </div>
                 </div>
             )}
 
             {/* SECTION: DREAM WIKI */}
             {activeSection === 'wiki' && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="mb-10 p-6 bg-[#0f2648] border border-white/10 rounded-2xl shadow-lg">
+                <div
+                    id="dreamsea-wiki-panel"
+                    role="tabpanel"
+                    aria-labelledby="dreamsea-wiki-tab"
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+                >
+                    <TahoeGlassSurface
+                        variant="card"
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.05}
+                        className="mb-10 p-6 border border-white/10"
+                    >
                         <p className="text-center text-sm text-[#C1DCED]/90 leading-relaxed">
                             These are the four Dream Philosophy pages that users explore in the app.<br />
                             Section headings are fixed — only the body text beneath each can be changed. ✦
                         </p>
-                        <div className="mt-5 p-5 bg-[#0a1e3a]/60 border border-[#C1DCED]/15 rounded-xl">
+                        <TahoeGlassSurface
+                            variant="recessed"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.045}
+                            className="mt-5 p-5 border border-[#C1DCED]/15"
+                        >
                             <p className="text-center text-[13px] text-[#C1DCED]/80 leading-relaxed">
                                 🪄 <strong className="text-[#C1DCED]">These Wiki pages do double duty.</strong> Users read them in the app as educational content,
                                 and Dreamsea also feeds them to the AI automatically when interpreting dreams. So when you update the text here,
                                 you&apos;re also shaping how the AI understands and interprets dreams through each philosophy — no extra work required.
                             </p>
-                        </div>
-                    </div>
+                        </TahoeGlassSurface>
+                    </TahoeGlassSurface>
 
                     <div className="flex flex-wrap gap-3 justify-center mb-10">
                         {PHILOSOPHY_DEFS.map(p => (
-                            <button
+                            <TahoeGlassSurface
+                                as="button"
+                                variant="pill"
+                                tone="light"
+                                semanticTint={currentPhilosophy === p.key ? 'light' : 'dark'}
+                                semanticTintOpacity={currentPhilosophy === p.key ? 0.07 : 0.035}
                                 key={p.key}
                                 onClick={() => setCurrentPhilosophy(p.key)}
-                                className={`px-7 py-3 rounded-full border text-[15px] font-bold transition-all backdrop-blur-md shadow-sm ${currentPhilosophy === p.key ? 'bg-[#213E60] border-[#C1DCED]/40 text-[#C1DCED]' : 'bg-[#050810]/60 border-white/10 text-[#C1DCED]/60 hover:text-white'}`}
+                                aria-pressed={currentPhilosophy === p.key}
+                                className={`px-7 py-3 border text-[15px] font-bold transition-all ${currentPhilosophy === p.key ? 'border-[#C1DCED]/40 text-[#C1DCED]' : 'border-white/10 text-[#C1DCED]/60 hover:text-white'}`}
                             >
                                 {p.emoji} {p.name}
-                            </button>
+                            </TahoeGlassSurface>
                         ))}
                     </div>
 
@@ -546,34 +740,54 @@ export default function DreamseaPromptsPage() {
                             const content = dbRow ? dbRow.body : phil?.defaults[idx] || ''
                             
                             return (
-                                <div key={idx} className="bg-[#0f2648] border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all shadow-xl backdrop-blur-md">
+                                <TahoeGlassSurface
+                                    key={idx}
+                                    variant="card"
+                                    tone="light"
+                                    semanticTint="dark"
+                                    semanticTintOpacity={0.06}
+                                    className="border border-white/10 p-8 hover:border-white/20 transition-all"
+                                >
                                     <div className="text-[10px] font-black text-[#C1DCED]/40 uppercase tracking-[0.2em] mb-2">SECTION {idx + 1} OF 5</div>
                                     <div className={`text-2xl font-semibold text-[#C1DCED] mb-2 ${playfair.className}`}>{title}</div>
                                     <div className="text-[11px] font-medium text-[#C1DCED]/40 mb-5 flex items-center gap-1.5 italic">🔒 Heading is locked · Edit body text below</div>
-                                    <textarea
-                                        id={`wiki-textarea-${currentPhilosophy}-${idx}`}
-                                        defaultValue={content}
-                                        className="w-full min-h-[160px] p-6 bg-[#050810]/70 border border-white/10 rounded-2xl text-white/95 text-[15px] leading-relaxed outline-none focus:border-[#C1DCED]/40 transition-all shadow-inner"
-                                        placeholder="Write flowing prose here..."
-                                    />
+                                    <TahoeGlassField
+                                        label={`${title} body`}
+                                        visuallyHideLabel
+                                        tone="light"
+                                        semanticTint="dark"
+                                        semanticTintOpacity={0.065}
+                                        surfaceClassName="border border-white/10 p-6"
+                                        controlClassName="min-h-[160px] resize-y text-white/95 text-[15px] leading-relaxed"
+                                    >
+                                        <textarea
+                                            id={`wiki-textarea-${currentPhilosophy}-${idx}`}
+                                            defaultValue={content}
+                                            placeholder="Write flowing prose here..."
+                                        />
+                                    </TahoeGlassField>
                                     <div className="flex justify-between items-center mt-4 text-[12px] text-[#C1DCED]/40 px-2 font-medium">
                                         <span>Write in beautiful, accessible prose. 4–6 sentences.</span>
                                         <span className="tracking-widest">{content.length} characters</span>
                                     </div>
-                                </div>
+                                </TahoeGlassSurface>
                             )
                         })}
                     </div>
 
                     <div className="text-center mt-14 mb-20">
-                        <button
+                        <TahoeGlassButton
                             onClick={saveWiki}
                             disabled={isSaving}
-                            className="inline-flex items-center gap-3 py-4.5 px-14 bg-[#213E60] border border-[#C1DCED]/30 rounded-full text-[#C1DCED] font-bold text-lg hover:bg-[#2a4e76] hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-2xl"
+                            tone="light"
+                            semanticTint="light"
+                            semanticTintOpacity={0.065}
+                            className="border border-[#C1DCED]/30"
+                            contentClassName="text-[#C1DCED] font-bold text-lg"
                         >
-                            {isSaving && <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
+                            {isSaving && <span className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />}
                             <span>{isSaving ? 'Saving...' : 'Save Wiki Changes ✦'}</span>
-                        </button>
+                        </TahoeGlassButton>
                     </div>
                 </div>
             )}
@@ -588,9 +802,17 @@ export default function DreamseaPromptsPage() {
 
             {/* Toast Notification */}
             {toast && (
-                <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] px-8 py-3.5 rounded-full backdrop-blur-3xl border animate-in slide-in-from-bottom-10 duration-500 scale-100 ${toast.type === 'success' ? 'bg-[#213E60]/80 border-green-400/30 text-green-300' : 'bg-red-950/80 border-red-500/30 text-red-300'}`}>
+                <TahoeGlassSurface
+                    variant="pill"
+                    tone="light"
+                    semanticTint={toast.type === 'success' ? 'light' : 'dark'}
+                    semanticTintOpacity={0.08}
+                    role={toast.type === 'error' ? 'alert' : 'status'}
+                    aria-live="polite"
+                    className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] px-8 py-3.5 border animate-in slide-in-from-bottom-10 duration-500 scale-100 ${toast.type === 'success' ? 'border-green-400/30 text-green-300' : 'border-red-500/30 text-red-300'}`}
+                >
                     <p className="text-sm font-medium tracking-wide">{toast.message}</p>
-                </div>
+                </TahoeGlassSurface>
             )}
 
             {/* Mobile Nav Spacer */}

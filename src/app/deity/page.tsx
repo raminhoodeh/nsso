@@ -4,6 +4,7 @@
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import AgentChatInterface from "@/components/agent/AgentChatInterface";
+import { TahoeGlassSurface } from "@/components/ui/tahoe-glass";
 
 export default function AgentPage() {
     const router = useRouter();
@@ -20,19 +21,23 @@ export default function AgentPage() {
     };
 
     return (
-        <div className="w-full h-screen relative flex flex-col items-center justify-center">
-            {/* Header / Navbar */}
-            <div className="absolute top-0 left-0 w-full z-20">
-                <Header />
-            </div>
+        <main className="relative flex h-dvh w-full flex-col items-center justify-center overflow-hidden">
+            <Header />
 
-            {/* Dimming Overlay for the Vanta Background */}
-            <div className="absolute inset-0 z-0 bg-black/60 pointer-events-none"></div>
-
-            {/* Full Screen Content (Below Header) */}
-            <div className="w-full h-full pt-16 relative z-10">
-                <AgentChatInterface isFullScreen={true} onClose={handleClose} />
+            <div className="relative z-10 h-full w-full px-3 pb-3 pt-[100px]">
+                <TahoeGlassSurface
+                    as="section"
+                    variant="panel"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.045}
+                    aria-label="Deity chat"
+                    className="h-full w-full overflow-hidden border border-white/10"
+                    contentClassName="h-full w-full overflow-hidden [&>div]:!h-full [&>div]:!bg-transparent [&>div]:!backdrop-blur-none"
+                >
+                    <AgentChatInterface isFullScreen={true} onClose={handleClose} />
+                </TahoeGlassSurface>
             </div>
-        </div>
+        </main>
     );
 }
