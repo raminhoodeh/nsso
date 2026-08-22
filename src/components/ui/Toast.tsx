@@ -102,20 +102,26 @@ function ToastContainer({
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2">
             {toasts.map(toast => (
-                <TahoeGlassSurface
-                    key={toast.id}
-                    variant="popover"
-                    radius={12}
-                    tone="light"
-                    semanticTint={semanticTint(toast.type)}
-                    semanticTintOpacity={0.1}
-                    role={toast.type === 'error' ? 'alert' : 'status'}
-                    className="animate-slide-up cursor-pointer px-6 py-3 text-[15px] font-medium"
-                    contentClassName={contentClassName(toast.type)}
-                    onClick={() => onDismiss(toast.id)}
-                >
-                    {toast.message}
-                </TahoeGlassSurface>
+                <div key={toast.id}>
+                    <span className="sr-only" role={toast.type === 'error' ? 'alert' : 'status'}>
+                        {toast.message}
+                    </span>
+                    <TahoeGlassSurface
+                        as="button"
+                        type="button"
+                        variant="popover"
+                        radius={12}
+                        tone="light"
+                        semanticTint={semanticTint(toast.type)}
+                        semanticTintOpacity={0.1}
+                        aria-label={`Dismiss notification: ${toast.message}`}
+                        className="animate-slide-up cursor-pointer px-6 py-3 text-[15px] font-medium"
+                        contentClassName={contentClassName(toast.type)}
+                        onClick={() => onDismiss(toast.id)}
+                    >
+                        {toast.message}
+                    </TahoeGlassSurface>
+                </div>
             ))}
         </div>
     )

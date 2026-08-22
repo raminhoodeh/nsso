@@ -19,8 +19,10 @@ export {
   TahoeGlassDialogDescription,
   TahoeGlassDialogTitle,
   TahoeGlassPopover,
+  useTahoeModalAccessibility,
   type TahoeGlassDialogProps,
   type TahoeGlassPopoverProps,
+  type TahoeModalAccessibilityOptions,
 } from "./TahoeGlassOverlays";
 
 export {

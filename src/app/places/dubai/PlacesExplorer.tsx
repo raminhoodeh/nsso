@@ -27,6 +27,7 @@ import {
   TahoeGlassButton,
   TahoeGlassProvider,
   TahoeGlassSurface,
+  useTahoeModalAccessibility,
   type TahoeGlassWebGLSource,
 } from "@/components/ui/tahoe-glass";
 import { ToastViewport } from "@/components/ui/Toast";
@@ -235,6 +236,17 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [failedPhotoUrls, setFailedPhotoUrls] = useState<Set<string>>(new Set());
+
+  useTahoeModalAccessibility({
+    open: galleryOpen,
+    panelRef: lightboxRef,
+    initialFocusRef: lightboxCloseRef,
+    modal: true,
+    closeOnEscape: true,
+    restoreFocus: true,
+    hideBackground: false,
+    onOpenChange: setGalleryOpen,
+  });
 
   const places = payload.places;
   const selectedPlace = selectedId ? places.find((place) => place.id === selectedId) || null : null;
@@ -553,15 +565,6 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   };
 
   useEffect(() => {
-    if (!galleryOpen) return;
-    const galleryTrigger = galleryTriggerRef.current;
-    lightboxCloseRef.current?.focus();
-    return () => {
-      galleryTrigger?.focus();
-    };
-  }, [galleryOpen]);
-
-  useEffect(() => {
     if (!selectedPlace) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
@@ -572,25 +575,6 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       ) {
         return;
       }
-      if (galleryOpen && event.key === "Tab") {
-        const focusable = Array.from(
-          lightboxRef.current?.querySelectorAll<HTMLElement>(
-            'button:not([disabled]):not([tabindex="-1"]), a[href]',
-          ) || [],
-        );
-        if (!focusable.length) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-        return;
-      }
-
       const galleryHasFocus =
         galleryOpen || (target instanceof Node && galleryRegionRef.current?.contains(target));
       if (galleryHasFocus && event.key === "ArrowLeft" && photos.length > 1) {
@@ -599,10 +583,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       } else if (galleryHasFocus && event.key === "ArrowRight" && photos.length > 1) {
         event.preventDefault();
         movePhoto(1);
-      } else if (event.key === "Escape") {
+      } else if (!galleryOpen && event.key === "Escape") {
         event.preventDefault();
-        if (galleryOpen) setGalleryOpen(false);
-        else setSelectedId(null);
+        setSelectedId(null);
       }
     };
     document.addEventListener("keydown", handleKeyDown);
@@ -672,7 +655,15 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   return (
     <main className={styles.shell}>
       <TahoeGlassProvider
-        scene={<div ref={mapElementRef} className={styles.map} aria-label="Map of places to go in the UAE" />}
+        scene={(
+          <div
+            ref={mapElementRef}
+            className={styles.map}
+            aria-label="Map of places to go in the UAE"
+            aria-hidden={galleryOpen}
+            inert={galleryOpen}
+          />
+        )}
         sourceLabel="places-map"
         sceneInteractive
         preferredBackend="auto"
