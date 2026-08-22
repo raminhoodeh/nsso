@@ -962,7 +962,7 @@ Check out some of the areas I can help you with below.`;
 
             <TahoeGlassSurface
                 variant="menu"
-                radius={0}
+                radius="24px 24px 0 0"
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={0.035}

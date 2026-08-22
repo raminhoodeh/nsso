@@ -318,7 +318,7 @@ export default function RazinFlixPage() {
             <TahoeGlassSurface
                 as="nav"
                 variant="menu"
-                radius={0}
+                radius="0 0 24px 24px"
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={scrolled ? 0.08 : 0.025}

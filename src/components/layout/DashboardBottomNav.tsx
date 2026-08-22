@@ -40,7 +40,7 @@ function BottomNavContent() {
         <TahoeGlassSurface
             as="nav"
             variant="menu"
-            radius={0}
+            radius="24px 24px 0 0"
             aria-label="Dashboard"
             className="fixed bottom-0 left-0 right-0 z-50 pb-safe md:hidden"
             contentClassName="w-full"

@@ -91,7 +91,7 @@ export default function PreviewPage() {
             <TahoeGlassSurface
                 as="nav"
                 variant="menu"
-                radius={0}
+                radius="0 0 24px 24px"
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={0.025}

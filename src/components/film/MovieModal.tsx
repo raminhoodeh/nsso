@@ -457,7 +457,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                         {isEditing ? (
                                 <TahoeGlassSurface
                                     variant="panel"
-                                    radius={0}
+                                    radius={24}
                                     tone="light"
                                     semanticTint="dark"
                                     semanticTintOpacity={0.08}

@@ -1190,7 +1190,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           <TahoeGlassSurface
             as="header"
             variant="menu"
-            radius={0}
+            radius="0 0 24px 24px"
             tone="light"
             semanticTint="dark"
             semanticTintOpacity={0.03}
@@ -1266,7 +1266,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           <TahoeGlassSurface
             as="footer"
             variant="menu"
-            radius={0}
+            radius="24px 24px 0 0"
             tone="light"
             semanticTint="dark"
             semanticTintOpacity={0.03}

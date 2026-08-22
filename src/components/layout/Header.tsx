@@ -91,7 +91,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
         <TahoeGlassSurface
             as="header"
             variant="menu"
-            radius={0}
+            radius="0 0 24px 24px"
             className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden", className)}
             contentClassName="h-full w-full"
         >
@@ -202,7 +202,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         id="mobile-admin-menu"
                         open={mobileMenuOpen}
                         onOpenChange={setMobileMenuOpen}
-                        radius={0}
+                        radius="32px 0 0 32px"
                         tone="light"
                         aria-label="Menu"
                         overlayClassName="z-[5001] items-stretch justify-end p-0"

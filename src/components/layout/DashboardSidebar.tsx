@@ -87,7 +87,7 @@ function DashboardSidebarContent() {
         <TahoeGlassSurface
             as="aside"
             variant="panel"
-            radius={0}
+            radius="0 28px 28px 0"
             className="fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] transition-colors duration-300 lg:block"
             contentClassName="flex h-full flex-col"
             tone="light"
@@ -227,7 +227,7 @@ export default function DashboardSidebar() {
             <TahoeGlassSurface
                 as="aside"
                 variant="panel"
-                radius={0}
+                radius="0 28px 28px 0"
                 aria-hidden="true"
                 className="fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] lg:block"
             />
