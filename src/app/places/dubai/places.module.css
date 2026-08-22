@@ -13,6 +13,11 @@
   font-family: var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+.explorerSurface {
+  position: absolute;
+  inset: 0;
+}
+
 .map {
   position: absolute;
   inset: 0;
@@ -599,13 +604,95 @@
   overflow: hidden;
   border-radius: 23px 23px 14px 14px;
   background: #dadcd4;
+  touch-action: pan-y;
 }
 
-.detailHero img {
+.heroImageButton {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: white;
+  cursor: zoom-in;
+}
+
+.heroImageButton img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   animation: imageIn 260ms ease;
+}
+
+.heroImageButton:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.9);
+  outline-offset: -5px;
+}
+
+.expandHint,
+.galleryCount {
+  position: absolute;
+  top: 14px;
+  z-index: 3;
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(24, 31, 26, 0.58);
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+}
+
+.galleryCount { left: 14px; }
+.expandHint { left: 86px; }
+
+.galleryArrow,
+.lightboxArrow {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  background: rgba(25, 32, 27, 0.56);
+  color: white;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  transition: 150ms ease;
+}
+
+.galleryArrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  transform: translateY(-50%);
+}
+
+.galleryArrowPrevious { left: 12px; }
+.galleryArrowNext { right: 12px; }
+
+.galleryArrow:hover,
+.lightboxArrow:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(25, 32, 27, 0.78);
+}
+
+.galleryArrow:focus-visible,
+.lightboxArrow:focus-visible,
+.lightboxClose:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 3px;
 }
 
 @keyframes imageIn {
@@ -655,19 +742,68 @@
 
 .photoCredit {
   position: absolute;
-  right: 12px;
-  bottom: 9px;
-  z-index: 2;
-  max-width: calc(100% - 24px);
-  overflow: hidden;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 8px;
-  text-overflow: ellipsis;
+  right: 14px;
+  bottom: 10px;
+  left: 14px;
+  z-index: 3;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 10px;
+  line-height: 1.35;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
-  white-space: nowrap;
 }
 
 .photoCredit a { color: inherit; }
+
+.galleryPager,
+.lightboxPager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.galleryPager {
+  min-height: 28px;
+  gap: 1px;
+  padding: 3px 16px 0;
+}
+
+.galleryPager button,
+.lightboxPager button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.galleryPager button {
+  width: 20px;
+  height: 20px;
+}
+
+.galleryPager button::after,
+.lightboxPager button::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(60, 70, 62, 0.28);
+  transition: 150ms ease;
+}
+
+.galleryPager .galleryPagerActive::after {
+  width: 17px;
+  background: #58675b;
+}
+
+.galleryPager button:focus-visible {
+  outline: 2px solid rgba(56, 73, 60, 0.7);
+  outline-offset: 0;
+  border-radius: 999px;
+}
 
 .detailBody {
   padding: 20px 21px 21px;
@@ -772,6 +908,197 @@
   text-underline-offset: 3px;
 }
 
+.dataAttribution {
+  margin: 9px 0 0;
+  color: #92978f;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.dataAttribution a {
+  color: inherit;
+  text-underline-offset: 2px;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  width: 100vw;
+  height: 100dvh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  color: white;
+}
+
+.lightboxBackdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgba(13, 17, 14, 0.94);
+  cursor: zoom-out;
+  backdrop-filter: blur(24px) saturate(85%);
+}
+
+.lightboxHeader,
+.lightboxStage,
+.lightboxFooter {
+  position: relative;
+  z-index: 1;
+}
+
+.lightboxHeader {
+  display: grid;
+  min-height: 84px;
+  grid-template-columns: minmax(0, 1fr) auto 48px;
+  align-items: center;
+  gap: 20px;
+  padding: max(18px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 14px max(24px, env(safe-area-inset-left));
+}
+
+.lightboxHeader div {
+  min-width: 0;
+}
+
+.lightboxHeader span,
+.lightboxHeader strong {
+  display: block;
+}
+
+.lightboxHeader div span {
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 9px;
+  font-weight: 760;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lightboxHeader strong {
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lightboxCount {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 680;
+  white-space: nowrap;
+}
+
+.lightboxClose {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.09);
+  color: white;
+  cursor: pointer;
+}
+
+.lightboxStage {
+  display: grid;
+  min-height: 0;
+  place-items: center;
+  padding: 8px 88px;
+  pointer-events: none;
+  touch-action: pan-y;
+}
+
+.lightboxStage img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  border-radius: 12px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.4);
+  object-fit: contain;
+  pointer-events: auto;
+  animation: imageIn 220ms ease;
+}
+
+.lightboxArrow {
+  position: absolute;
+  top: 50%;
+  width: 52px;
+  height: 52px;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.lightboxArrowPrevious { left: 22px; }
+.lightboxArrowNext { right: 22px; }
+
+.lightboxFallback {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+}
+
+.lightboxFooter {
+  display: grid;
+  min-height: 86px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 14px max(24px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+}
+
+.lightboxCredit {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.lightboxCredit a {
+  color: rgba(255, 255, 255, 0.88);
+  text-underline-offset: 2px;
+}
+
+.lightboxPager {
+  gap: 3px;
+}
+
+.lightboxPager button {
+  width: 22px;
+  height: 24px;
+}
+
+.lightboxPager button::after {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.lightboxPager .lightboxPagerActive::after {
+  width: 18px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.lightboxPager button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.88);
+  border-radius: 999px;
+}
+
+.lightboxHint {
+  justify-self: end;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
 .mapMarker {
   --marker-color: #657168;
   all: unset;
@@ -869,6 +1196,14 @@
 
   .detailHero { height: min(35vh, 270px); }
   .mapError { top: 12px; right: 12px; left: 12px; max-width: none; }
+
+  .lightboxStage { padding-right: 68px; padding-left: 68px; }
+  .lightboxArrowPrevious { left: 10px; }
+  .lightboxArrowNext { right: 10px; }
+  .lightboxFooter {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .lightboxHint { display: none; }
 }
 
 @media (max-width: 560px) {
@@ -896,6 +1231,45 @@
   .detailBody { padding: 17px; }
   .detailBody h2 { font-size: 27px; }
   .detailDescription { -webkit-line-clamp: 4; }
+
+  .closeButton,
+  .detailHeart {
+    width: 44px;
+    height: 44px;
+  }
+  .closeButton { right: 10px; }
+  .detailHeart { right: 61px; }
+  .galleryArrow { width: 44px; height: 44px; }
+  .galleryArrowPrevious { left: 8px; }
+  .galleryArrowNext { right: 8px; }
+  .photoCredit { font-size: 9px; }
+
+  .lightboxHeader {
+    min-height: 76px;
+    grid-template-columns: minmax(0, 1fr) auto 46px;
+    gap: 10px;
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-left: max(14px, env(safe-area-inset-left));
+  }
+  .lightboxHeader strong { font-size: 18px; }
+  .lightboxClose { width: 46px; height: 46px; }
+  .lightboxStage { padding: 4px 54px; }
+  .lightboxArrow { width: 46px; height: 46px; }
+  .lightboxArrowPrevious { left: 4px; }
+  .lightboxArrowNext { right: 4px; }
+  .lightboxFooter {
+    display: flex;
+    min-height: 100px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    padding-top: 10px;
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-left: max(14px, env(safe-area-inset-left));
+    text-align: center;
+  }
+  .lightboxCredit { font-size: 10px; }
 }
 
 @media (max-height: 720px) and (min-width: 901px) {
@@ -910,14 +1284,19 @@
 
 @media (prefers-reduced-motion: reduce) {
   .detailCard,
-  .detailHero img {
+  .detailHero img,
+  .lightboxStage img {
     animation: none;
   }
 
   .placeCard,
   .categoryPill,
   .mapMarker,
-  .surpriseButton {
+  .surpriseButton,
+  .galleryArrow,
+  .lightboxArrow,
+  .galleryPager button::after,
+  .lightboxPager button::after {
     transition: none;
   }
 }

@@ -1,14 +1,19 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Google Places photo URLs are transient. */
 
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
   Compass,
   ExternalLink,
   Heart,
+  Images,
   LocateFixed,
   MapPin,
+  Maximize2,
   Search,
   Shuffle,
   SlidersHorizontal,
@@ -31,12 +36,25 @@ type PhotoCredit = {
   uri: string | null;
 };
 
+type DataAttribution = {
+  provider: string;
+  uri: string | null;
+};
+
+type PlacePhoto = {
+  url: string;
+  credits: PhotoCredit[];
+  googleMapsUri: string | null;
+  flagContentUri: string | null;
+};
+
 type LiveDetails = {
+  selectionId: string;
   address: string;
   mapsUri: string;
   placeId: string | null;
-  photoUrl: string | null;
-  photoCredits: PhotoCredit[];
+  photos: PlacePhoto[];
+  dataAttributions: DataAttribution[];
 };
 
 const CATEGORY_META: Record<PlaceCategory, CategoryMeta> = {
@@ -111,7 +129,12 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const mapElementRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const userMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
-  const liveDetailsCache = useRef(new Map<string, LiveDetails>());
+  const touchStartXRef = useRef<number | null>(null);
+  const suppressGalleryClickRef = useRef(false);
+  const galleryRegionRef = useRef<HTMLDivElement>(null);
+  const galleryTriggerRef = useRef<HTMLButtonElement>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  const lightboxCloseRef = useRef<HTMLButtonElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -124,10 +147,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const [liveDetails, setLiveDetails] = useState<LiveDetails | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [photoUnavailable, setPhotoUnavailable] = useState(false);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [failedPhotoUrls, setFailedPhotoUrls] = useState<Set<string>>(new Set());
 
   const places = payload.places;
   const selectedPlace = selectedId ? places.find((place) => place.id === selectedId) || null : null;
+  const currentDetails = liveDetails?.selectionId === selectedPlace?.id ? liveDetails : null;
+  const photos = currentDetails?.photos || [];
+  const activePhoto = photos[activePhotoIndex] || null;
+  const activePhotoUnavailable = activePhoto ? failedPhotoUrls.has(activePhoto.url) : false;
   const emirates = useMemo(
     () => [...new Set(places.map((place) => place.emirate))].sort(),
     [places],
@@ -291,64 +320,71 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   useEffect(() => {
     if (!selectedPlace) {
       setLiveDetails(null);
+      setGalleryOpen(false);
       return;
     }
 
-    setPhotoUnavailable(false);
-    const cached = liveDetailsCache.current.get(selectedPlace.id);
-    if (cached) {
-      setLiveDetails(cached);
-      return;
-    }
+    setActivePhotoIndex(0);
+    setGalleryOpen(false);
+    setFailedPhotoUrls(new Set());
 
     let active = true;
     const loadDetails = async () => {
       setDetailsLoading(true);
       setLiveDetails(null);
       try {
-        const { Place } = await importLibrary("places");
-        let place: google.maps.places.Place | undefined;
-        if (selectedPlace.placeId) {
-          place = new Place({
-            id: selectedPlace.placeId,
-            requestedLanguage: "en",
-            requestedRegion: "AE",
+        if (!selectedPlace.placeId) {
+          setLiveDetails({
+            selectionId: selectedPlace.id,
+            address: selectedPlace.address,
+            mapsUri: selectedPlace.googleMapsSearchUri,
+            placeId: null,
+            photos: [],
+            dataAttributions: [],
           });
-        } else {
-          const result = await Place.searchByText({
-            fields: ["id"],
-            textQuery: `${selectedPlace.name}, ${selectedPlace.locationHint}`,
-            locationBias: selectedPlace.coordinates,
-            maxResultCount: 1,
-            region: "AE",
-          });
-          place = result.places[0];
+          return;
         }
-        if (!place) throw new Error("No matching Google place was found");
+        const { Place } = await importLibrary("places");
+        const place = new Place({
+          id: selectedPlace.placeId,
+          requestedLanguage: "en",
+          requestedRegion: "AE",
+        });
         await place.fetchFields({ fields: ["formattedAddress", "photos", "googleMapsURI"] });
-        const photo = place.photos?.[0];
         const details: LiveDetails = {
+          selectionId: selectedPlace.id,
           address: place.formattedAddress || selectedPlace.address,
           mapsUri: place.googleMapsURI || selectedPlace.googleMapsSearchUri,
           placeId: place.id || selectedPlace.placeId,
-          photoUrl: photo?.getURI({ maxWidth: 960, maxHeight: 720 }) || null,
-          photoCredits:
-            photo?.authorAttributions.map((credit) => ({
-              displayName: credit.displayName,
-              uri: credit.uri,
+          photos:
+            place.photos?.slice(0, 10).map((photo) => ({
+              // Google photo URLs are transient. Keep them in memory only and request
+              // the actual image when a visitor advances through the gallery.
+              url: photo.getURI({ maxWidth: 1440, maxHeight: 1080 }),
+              credits: photo.authorAttributions.map((credit) => ({
+                displayName: credit.displayName,
+                uri: credit.uri,
+              })),
+              googleMapsUri: photo.googleMapsURI,
+              flagContentUri: photo.flagContentURI,
+            })) || [],
+          dataAttributions:
+            place.attributions?.map((attribution) => ({
+              provider: attribution.provider || "data provider",
+              uri: attribution.providerURI,
             })) || [],
         };
-        liveDetailsCache.current.set(selectedPlace.id, details);
         if (active) setLiveDetails(details);
       } catch (error) {
         console.warn(`Unable to load live details for ${selectedPlace.name}`, error);
         if (active) {
           setLiveDetails({
+            selectionId: selectedPlace.id,
             address: selectedPlace.address,
             mapsUri: selectedPlace.googleMapsSearchUri,
             placeId: selectedPlace.placeId,
-            photoUrl: null,
-            photoCredits: [],
+            photos: [],
+            dataAttributions: [],
           });
         }
       } finally {
@@ -361,6 +397,101 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       active = false;
     };
   }, [selectedPlace]);
+
+  const movePhoto = useCallback(
+    (direction: -1 | 1) => {
+      if (photos.length < 2) return;
+      setActivePhotoIndex((current) => (current + direction + photos.length) % photos.length);
+    },
+    [photos.length],
+  );
+
+  const markPhotoUnavailable = useCallback((url: string) => {
+    setFailedPhotoUrls((current) => {
+      const next = new Set(current);
+      next.add(url);
+      return next;
+    });
+  }, []);
+
+  const handleTouchStart = (event: React.TouchEvent) => {
+    touchStartXRef.current = event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    if (touchStartXRef.current === null) return;
+    const distance = (event.changedTouches[0]?.clientX ?? touchStartXRef.current) - touchStartXRef.current;
+    touchStartXRef.current = null;
+    if (Math.abs(distance) < 45) return;
+    event.preventDefault();
+    suppressGalleryClickRef.current = true;
+    window.setTimeout(() => {
+      suppressGalleryClickRef.current = false;
+    }, 350);
+    movePhoto(distance > 0 ? -1 : 1);
+  };
+
+  const openGallery = () => {
+    if (suppressGalleryClickRef.current) return;
+    setGalleryOpen(true);
+  };
+
+  useEffect(() => {
+    if (!galleryOpen) return;
+    const galleryTrigger = galleryTriggerRef.current;
+    lightboxCloseRef.current?.focus();
+    return () => {
+      galleryTrigger?.focus();
+    };
+  }, [galleryOpen]);
+
+  useEffect(() => {
+    if (!selectedPlace) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLSelectElement ||
+        target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+      if (galleryOpen && event.key === "Tab") {
+        const focusable = Array.from(
+          lightboxRef.current?.querySelectorAll<HTMLElement>(
+            'button:not([disabled]):not([tabindex="-1"]), a[href]',
+          ) || [],
+        );
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+
+      const galleryHasFocus =
+        galleryOpen || (target instanceof Node && galleryRegionRef.current?.contains(target));
+      if (galleryHasFocus && event.key === "ArrowLeft" && photos.length > 1) {
+        event.preventDefault();
+        movePhoto(-1);
+      } else if (galleryHasFocus && event.key === "ArrowRight" && photos.length > 1) {
+        event.preventDefault();
+        movePhoto(1);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        if (galleryOpen) setGalleryOpen(false);
+        else setSelectedId(null);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [galleryOpen, movePhoto, photos.length, selectedPlace]);
 
   const toggleFavourite = useCallback((placeId: string) => {
     setFavourites((current) => {
@@ -417,15 +548,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
 
   return (
     <main className={styles.shell}>
-      <div ref={mapElementRef} className={styles.map} aria-label="Map of places to go in the UAE" />
-      {mapError && (
-        <div className={styles.mapError} role="status">
-          <Compass size={18} />
-          <span>{mapError}</span>
-        </div>
-      )}
+      <div className={styles.explorerSurface} inert={galleryOpen} aria-hidden={galleryOpen}>
+        <div ref={mapElementRef} className={styles.map} aria-label="Map of places to go in the UAE" />
+        {mapError && (
+          <div className={styles.mapError} role="status">
+            <Compass size={18} />
+            <span>{mapError}</span>
+          </div>
+        )}
 
-      <section className={styles.rail} aria-label="Place finder">
+        <section className={styles.rail} aria-label="Place finder">
         <header className={styles.header}>
           <div className={styles.brandRow}>
             <Link className={styles.brand} href="/" aria-label="Back to nsso.me">
@@ -569,10 +701,10 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             </a>
           </footer>
         </div>
-      </section>
+        </section>
 
-      {selectedPlace && (
-        <aside className={styles.detailCard} aria-label={`Details for ${selectedPlace.name}`}>
+        {selectedPlace && (
+          <aside className={styles.detailCard} aria-label={`Details for ${selectedPlace.name}`}>
           <button className={styles.closeButton} type="button" onClick={() => setSelectedId(null)} aria-label="Close place details">
             <X size={18} />
           </button>
@@ -586,32 +718,98 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           </button>
 
           <div
-            className={`${styles.detailHero}${!liveDetails?.photoUrl || photoUnavailable ? ` ${styles.detailHeroFallback}` : ""}`}
+            ref={galleryRegionRef}
+            className={`${styles.detailHero}${!activePhoto || activePhotoUnavailable ? ` ${styles.detailHeroFallback}` : ""}`}
             style={{ "--detail-color": categoryFor(selectedPlace).color } as React.CSSProperties}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
-            {liveDetails?.photoUrl && !photoUnavailable ? (
-              // Google photo URLs are transient and intentionally rendered without Next image caching.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={liveDetails.photoUrl} alt={`A view of ${selectedPlace.name}`} onError={() => setPhotoUnavailable(true)} />
+            {activePhoto && !activePhotoUnavailable ? (
+              <button
+                ref={galleryTriggerRef}
+                className={styles.heroImageButton}
+                type="button"
+                onClick={openGallery}
+                aria-label={`Open full-screen photo ${activePhotoIndex + 1} of ${photos.length} for ${selectedPlace.name}`}
+              >
+                <img
+                  key={activePhoto.url}
+                  src={activePhoto.url}
+                  alt={`${selectedPlace.name}, photo ${activePhotoIndex + 1} of ${photos.length}`}
+                  onError={() => markPhotoUnavailable(activePhoto.url)}
+                />
+                <span className={styles.expandHint}><Maximize2 size={13} /> Expand</span>
+              </button>
             ) : (
               <div className={styles.fallbackArt} aria-hidden="true">
                 <span /><span /><span />
-                {detailsLoading ? <em>Finding a photo…</em> : <em>{categoryFor(selectedPlace).shortLabel}</em>}
+                {detailsLoading ? (
+                  <em>Finding photos…</em>
+                ) : activePhotoUnavailable ? (
+                  <em>Photo unavailable</em>
+                ) : (
+                  <em>{categoryFor(selectedPlace).shortLabel}</em>
+                )}
               </div>
             )}
-            {liveDetails?.photoCredits.length ? (
+            {photos.length ? (
+              <div className={styles.galleryCount} aria-live="polite">
+                <Images size={13} /> {activePhotoIndex + 1} / {photos.length}
+              </div>
+            ) : null}
+            {photos.length > 1 ? (
+              <>
+                <button
+                  className={`${styles.galleryArrow} ${styles.galleryArrowPrevious}`}
+                  type="button"
+                  onClick={() => movePhoto(-1)}
+                  aria-label={`Previous photo of ${selectedPlace.name}`}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  className={`${styles.galleryArrow} ${styles.galleryArrowNext}`}
+                  type="button"
+                  onClick={() => movePhoto(1)}
+                  aria-label={`Next photo of ${selectedPlace.name}`}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            ) : null}
+            {activePhoto && !activePhotoUnavailable ? (
               <div className={styles.photoCredit}>
-                Photo by{" "}
-                {liveDetails.photoCredits.map((credit, index) => (
-                  <span key={`${credit.displayName}-${index}`}>
-                    {index > 0 ? ", " : ""}
-                    {credit.uri ? <a href={credit.uri} target="_blank" rel="noreferrer">{credit.displayName}</a> : credit.displayName}
-                  </span>
-                ))}
-                {" · Google Maps"}
+                {activePhoto.credits.length ? (
+                  <>
+                    Photo by{" "}
+                    {activePhoto.credits.map((credit, index) => (
+                      <span key={`${credit.displayName}-${index}`}>
+                        {index > 0 ? ", " : ""}
+                        {credit.uri ? <a href={credit.uri} target="_blank" rel="noreferrer">{credit.displayName}</a> : credit.displayName}
+                      </span>
+                    ))}
+                    {" · "}
+                  </>
+                ) : null}
+                <a href={activePhoto.googleMapsUri || currentDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">Google Maps photo</a>
               </div>
             ) : null}
           </div>
+
+          {photos.length > 1 ? (
+            <div className={styles.galleryPager} aria-label={`${photos.length} photos of ${selectedPlace.name}`}>
+              {photos.map((photo, index) => (
+                <button
+                  key={`${photo.url}-${index}`}
+                  className={index === activePhotoIndex ? styles.galleryPagerActive : undefined}
+                  type="button"
+                  onClick={() => setActivePhotoIndex(index)}
+                  aria-label={`Show photo ${index + 1} of ${photos.length}`}
+                  aria-pressed={index === activePhotoIndex}
+                />
+              ))}
+            </div>
+          ) : null}
 
           <div className={styles.detailBody}>
             <div className={styles.detailMeta}>
@@ -623,14 +821,14 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <h2>{selectedPlace.name}</h2>
             <p className={styles.detailAddress}>
               <MapPin size={15} />
-              <span>{liveDetails?.address || selectedPlace.address}</span>
+              <span>{currentDetails?.address || selectedPlace.address}</span>
             </p>
             <p className={styles.detailDescription}>{selectedPlace.description || "A saved place to explore together."}</p>
             <div className={styles.detailActions}>
-              <a href={directionsUrl(selectedPlace, liveDetails?.placeId || selectedPlace.placeId)} target="_blank" rel="noreferrer">
+              <a href={directionsUrl(selectedPlace, currentDetails?.placeId || selectedPlace.placeId)} target="_blank" rel="noreferrer">
                 <ArrowUpRight size={17} /> Get directions
               </a>
-              <a href={liveDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">
+              <a href={currentDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">
                 Google Maps <ExternalLink size={14} />
               </a>
             </div>
@@ -639,8 +837,148 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 Visit the original place link <ExternalLink size={13} />
               </a>
             )}
+            {currentDetails?.dataAttributions.length ? (
+              <p className={styles.dataAttribution}>
+                Place data by{" "}
+                {currentDetails.dataAttributions.map((attribution, index) => (
+                  <span key={`${attribution.provider}-${index}`}>
+                    {index > 0 ? ", " : ""}
+                    {attribution.uri ? (
+                      <a href={attribution.uri} target="_blank" rel="noreferrer">{attribution.provider}</a>
+                    ) : attribution.provider}
+                  </span>
+                ))}
+              </p>
+            ) : null}
           </div>
-        </aside>
+          </aside>
+        )}
+      </div>
+
+      {galleryOpen && selectedPlace && activePhoto && (
+        <div
+          ref={lightboxRef}
+          className={styles.lightbox}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Photo gallery for ${selectedPlace.name}`}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <button
+            className={styles.lightboxBackdrop}
+            type="button"
+            tabIndex={-1}
+            onClick={() => {
+              if (!suppressGalleryClickRef.current) setGalleryOpen(false);
+            }}
+            aria-label="Close full-screen gallery"
+          />
+          <header className={styles.lightboxHeader}>
+            <div>
+              <span>{selectedPlace.emirate}</span>
+              <strong>{selectedPlace.name}</strong>
+            </div>
+            <span className={styles.lightboxCount} aria-live="polite" aria-atomic="true">
+              {activePhotoIndex + 1} of {photos.length}
+            </span>
+            <button
+              ref={lightboxCloseRef}
+              className={styles.lightboxClose}
+              type="button"
+              onClick={() => setGalleryOpen(false)}
+              aria-label="Close full-screen gallery"
+            >
+              <X size={22} />
+            </button>
+          </header>
+
+          <div className={styles.lightboxStage}>
+            {activePhoto && !activePhotoUnavailable ? (
+              <img
+                key={activePhoto.url}
+                src={activePhoto.url}
+                alt={`${selectedPlace.name}, photo ${activePhotoIndex + 1} of ${photos.length}`}
+                onError={() => markPhotoUnavailable(activePhoto.url)}
+              />
+            ) : (
+              <div className={styles.lightboxFallback}>
+                <Images size={34} />
+                <span>This photo is unavailable.</span>
+              </div>
+            )}
+            {photos.length > 1 ? (
+              <>
+                <button
+                  className={`${styles.lightboxArrow} ${styles.lightboxArrowPrevious}`}
+                  type="button"
+                  onClick={() => movePhoto(-1)}
+                  aria-label={`Previous photo of ${selectedPlace.name}`}
+                >
+                  <ChevronLeft size={30} />
+                </button>
+                <button
+                  className={`${styles.lightboxArrow} ${styles.lightboxArrowNext}`}
+                  type="button"
+                  onClick={() => movePhoto(1)}
+                  aria-label={`Next photo of ${selectedPlace.name}`}
+                >
+                  <ChevronRight size={30} />
+                </button>
+              </>
+            ) : null}
+          </div>
+
+          <footer className={styles.lightboxFooter}>
+            <div className={styles.lightboxCredit}>
+              {activePhoto && !activePhotoUnavailable ? (
+                <>
+                  {activePhoto.credits.length ? (
+                    <>
+                      Photo by{" "}
+                      {activePhoto.credits.map((credit, index) => (
+                        <span key={`${credit.displayName}-${index}`}>
+                          {index > 0 ? ", " : ""}
+                          {credit.uri ? <a href={credit.uri} target="_blank" rel="noreferrer">{credit.displayName}</a> : credit.displayName}
+                        </span>
+                      ))}
+                      {" · "}
+                    </>
+                  ) : null}
+                  <a href={activePhoto.googleMapsUri || currentDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">Google Maps photo</a>
+                  {activePhoto.flagContentUri ? (
+                    <>{" · "}<a href={activePhoto.flagContentUri} target="_blank" rel="noreferrer">Report photo</a></>
+                  ) : null}
+                  {currentDetails?.dataAttributions.map((attribution, index) => (
+                    <span key={`${attribution.provider}-${index}`}>
+                      {" · Data by "}
+                      {attribution.uri ? (
+                        <a href={attribution.uri} target="_blank" rel="noreferrer">{attribution.provider}</a>
+                      ) : attribution.provider}
+                    </span>
+                  ))}
+                </>
+              ) : (
+                <a href={currentDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">View on Google Maps</a>
+              )}
+            </div>
+            {photos.length > 1 ? (
+              <div className={styles.lightboxPager} aria-label={`${photos.length} photos of ${selectedPlace.name}`}>
+                {photos.map((photo, index) => (
+                  <button
+                    key={`${photo.url}-${index}`}
+                    className={index === activePhotoIndex ? styles.lightboxPagerActive : undefined}
+                    type="button"
+                    onClick={() => setActivePhotoIndex(index)}
+                    aria-label={`Show photo ${index + 1} of ${photos.length}`}
+                    aria-pressed={index === activePhotoIndex}
+                  />
+                ))}
+              </div>
+            ) : null}
+            <span className={styles.lightboxHint}>Swipe or use arrow keys</span>
+          </footer>
+        </div>
       )}
     </main>
   );
