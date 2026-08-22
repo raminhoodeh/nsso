@@ -1,50 +1,36 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { type CSSProperties, type ReactNode } from 'react'
+import GlassSurface from '@/components/ui/glass/GlassSurface'
+import { cn } from '@/lib/utils'
 
 interface CleanGlassCardProps {
     children: ReactNode
     className?: string
-    style?: React.CSSProperties
+    style?: CSSProperties
+    surface?: 'panel' | 'lens'
 }
 
 /**
- * CleanGlassCard - Rebuilt for maximum reliability and visual fidelity.
- * Uses the global SVG-based Liquid Glass distortion system.
+ * Homepage-compatible adapter. Panel is the quiet default; lens is reserved
+ * for the single high-salience hero surface.
  */
 export default function CleanGlassCard({
     children,
-    className = '',
-    style: customStyle
+    className,
+    style,
+    surface = 'panel'
 }: CleanGlassCardProps) {
     return (
-        <div
-            className={`
-                relative 
-                overflow-hidden 
-                rounded-[40px] 
-                bg-black/20 
-                border-x border-b border-white/10 
-                shadow-2xl 
-                glass-style-card 
-                glass-distortion-active 
-                group
-                ${className}
-            `}
-            style={{
-                isolation: 'isolate',
-                ['--glass-buffer' as any]: '-60px',
-                ...customStyle
-            }}
+        <GlassSurface
+            variant={surface}
+            tone="regular"
+            radius="40px"
+            distortionScale={22}
+            className={cn('overflow-hidden border-x border-b border-white/10 group', className)}
+            style={style}
         >
-            {/* 1. Specular highlight (Design System) */}
-            <div className="glass-specular opacity-40 group-hover:opacity-60 transition-opacity" aria-hidden="true" />
-
-            {/* 2. Content Container */}
-            <div className="relative z-10 h-full w-full">
-                {children}
-            </div>
-
-        </div>
+            {children}
+        </GlassSurface>
     )
 }

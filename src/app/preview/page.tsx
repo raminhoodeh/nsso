@@ -9,6 +9,7 @@ import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { createClient } from '@/lib/supabase/client'
 import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
+import GlassSurface from '@/components/ui/glass/GlassSurface'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
 import { useToast } from '@/components/ui/Toast'
@@ -87,7 +88,12 @@ export default function PreviewPage() {
     return (
         <main className="min-h-screen">
             {/* Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md md:hidden">
+            <GlassSurface
+                as="nav"
+                variant="nav"
+                radius="0px"
+                className="fixed top-0 left-0 right-0 z-50 md:hidden"
+            >
                 <div className="max-w-[1800px] mx-auto px-6 lg:px-10 h-[72px] flex items-center justify-between">
                     <GlassButton
                         variant="ghost"
@@ -104,7 +110,7 @@ export default function PreviewPage() {
                         Copy page URL
                     </GlassButton>
                 </div>
-            </nav>
+            </GlassSurface>
 
             {/* Profile Content */}
             <div className="pt-[120px] pb-40 px-6 lg:px-10 max-w-[1800px] mx-auto">

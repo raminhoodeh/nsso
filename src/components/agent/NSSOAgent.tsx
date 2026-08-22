@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import GlassSurface from '@/components/ui/glass/GlassSurface';
 
 import { useUI } from '@/components/providers/UIProvider';
 
@@ -63,8 +64,15 @@ export default function NSSOAgent() {
                     {/* Outer Glow/Blur Layer */}
                     <div className="absolute -inset-1 bg-white/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-                    {/* Main Container - Notification Style */}
-                    <div className="relative flex items-center h-[56px] pl-2 pr-6 bg-black/40 backdrop-blur-[34px] border border-white/20 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.2)] overflow-hidden">
+                    {/* Main Container - compact, high-salience lens tier */}
+                    <GlassSurface
+                        variant="lens"
+                        interactive
+                        distortionScale={14}
+                        radius="999px"
+                        className="relative h-[56px] pl-2 pr-6 border border-white/20 overflow-hidden"
+                        contentClassName="flex h-full items-center"
+                    >
                         {/* Inner Gradient Overlays for "Liquid" feel */}
                         <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-50 pointer-events-none" />
 
@@ -88,7 +96,7 @@ export default function NSSOAgent() {
 
                             </div>
                         </div>
-                    </div>
+                    </GlassSurface>
                 </button>
             )}
 

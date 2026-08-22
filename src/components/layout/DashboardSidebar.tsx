@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, type CSSProperties } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { useUser } from '@/components/providers/UserProvider';
 import Link from 'next/link';
+import GlassSurface from '@/components/ui/glass/GlassSurface';
 
 // Define interface for navigation items
 interface NavItem {
@@ -87,12 +88,18 @@ function DashboardSidebarContent() {
     };
 
     return (
-        <aside className={cn(
-            "hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 border-r transition-colors duration-300",
-            isCreatorPage
-                ? "bg-[#43628c] border-[#5475a4]" // Match creator page blue
-                : "glass-panel border-white/10" // Default glass
-        )}>
+        <GlassSurface
+            as="aside"
+            variant="nav"
+            tone={isCreatorPage ? 'strong' : 'regular'}
+            radius="0px"
+            contentClassName="flex h-full flex-col"
+            style={isCreatorPage ? ({ '--glass-tint': 'rgba(67, 98, 140, 0.82)' } as CSSProperties) : undefined}
+            className={cn(
+                "hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 border-r transition-colors duration-300",
+                isCreatorPage ? "bg-[#43628c]/40 border-[#5475a4]" : "border-white/10"
+            )}
+        >
             {/* Logo Area */}
             <div className="px-8 py-8">
                 <div
@@ -194,15 +201,21 @@ function DashboardSidebarContent() {
                     <span className="font-medium text-[14px]">Sign Out</span>
                 </button>
             </div>
-        </aside>
+        </GlassSurface>
     );
 }
 
 export default function DashboardSidebar() {
     return (
-        <Suspense fallback={<aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 glass-panel border-r border-white/10" />}>
+        <Suspense fallback={(
+            <GlassSurface
+                as="aside"
+                variant="nav"
+                radius="0px"
+                className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 border-r border-white/10"
+            />
+        )}>
             <DashboardSidebarContent />
         </Suspense>
     );
 }
-

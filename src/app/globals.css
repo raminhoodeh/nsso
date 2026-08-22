@@ -16,12 +16,14 @@
   --nsso-text-secondary: rgba(255, 255, 255, 0.7);
   --nsso-text-muted: rgba(255, 255, 255, 0.5);
 
-  /* Glass Effect Variables */
-  --glass-blur: 7px;
-  --glass-bg: rgba(255, 255, 255, 0);
-  --glass-highlight: rgba(255, 255, 255, 0);
-  --glass-saturate: 120%;
-  --glass-brightness: 1;
+  /* Tahoe V2 Glass Material */
+  --glass-panel-tint: rgba(7, 12, 21, 0.24);
+  --glass-panel-tint-strong: rgba(4, 8, 15, 0.38);
+  --glass-panel-tint-subtle: rgba(255, 255, 255, 0.035);
+  --glass-nav-tint: rgba(10, 15, 24, 0.34);
+  --glass-recessed-tint: rgba(4, 8, 15, 0.42);
+  --glass-edge: rgba(255, 255, 255, 0.24);
+  --glass-edge-soft: rgba(255, 255, 255, 0.10);
 
   /* Vanta Cloud Colors (as hex for JS) */
   --vanta-bg: #586E91;
@@ -83,170 +85,307 @@ body {
 }
 
 /* ============================================
-   Liquid Glass Distortion System
-   From custom-code:glass-effect.html
+   Tahoe V2 Liquid Glass Architecture
+   One live Vanta scene, local lenses, CSS-first fallbacks
    ============================================ */
-/* ============================================
-   Liquid Glass Distortion System
-   From custom-code:glass-effect.html
-   ============================================ */
-[class*="glass-style-"] {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
+@layer components {
+  .glass-surface {
+    --glass-radius: 40px;
+    --glass-blur: 36px;
+    --glass-saturate: 145%;
+    --glass-brightness: 1.08;
+    --glass-tint: var(--glass-panel-tint);
+    --glass-rim-opacity: 0.62;
+    --glass-light-angle: 315deg;
+    --glass-light-local-x: 30%;
+    --glass-light-local-y: 0%;
+    --glass-rim-x: -1px;
+    --glass-rim-y: -2px;
+    --glass-shadow-x: 6px;
+    --glass-shadow-y: 10px;
+
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--glass-radius);
+    color: inherit;
+    box-shadow:
+      var(--glass-shadow-x) var(--glass-shadow-y) 34px rgba(0, 0, 0, 0.22),
+      0 18px 54px rgba(0, 0, 0, 0.16);
+  }
+
+  .glass-surface__filter-definitions {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .glass-surface__backdrop,
+  .glass-surface__refraction,
+  .glass-surface__tint,
+  .glass-surface__specular,
+  .glass-surface__rim {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    clip-path: inset(0 round var(--glass-radius));
+    pointer-events: none;
+  }
+
+  .glass-surface__backdrop {
+    z-index: 0;
+    background: rgba(255, 255, 255, 0.001);
+    backdrop-filter:
+      blur(var(--glass-blur))
+      saturate(var(--glass-saturate))
+      brightness(var(--glass-brightness));
+    -webkit-backdrop-filter:
+      blur(var(--glass-blur))
+      saturate(var(--glass-saturate))
+      brightness(var(--glass-brightness));
+  }
+
+  .glass-surface__refraction {
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.008);
+    backdrop-filter: blur(2px) saturate(190%) brightness(1.08);
+    -webkit-backdrop-filter: blur(2px) saturate(190%) brightness(1.08);
+    opacity: 0.82;
+    transform: translateZ(0);
+    will-change: filter;
+  }
+
+  .glass-surface__tint {
+    z-index: 2;
+    background: var(--glass-bg, var(--glass-tint));
+  }
+
+  .glass-surface__specular {
+    z-index: 3;
+    background:
+      radial-gradient(
+        circle at var(--glass-light-local-x) var(--glass-light-local-y),
+        rgba(255, 255, 255, 0.28) 0%,
+        rgba(255, 255, 255, 0.09) 22%,
+        transparent 58%
+      ),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 36%, rgba(255, 255, 255, 0.025) 74%);
+    mix-blend-mode: screen;
+    opacity: 0.72;
+    box-shadow:
+      inset var(--glass-rim-x) var(--glass-rim-y) 1px rgba(255, 255, 255, 0.38),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.14);
+  }
+
+  .glass-surface__rim {
+    z-index: 4;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    opacity: var(--glass-rim-opacity);
+  }
+
+  @supports ((-webkit-mask-composite: xor) or (mask-composite: exclude)) {
+    .glass-surface__rim {
+      padding: 1px;
+      border: 0;
+      background: conic-gradient(
+        from var(--glass-light-angle) at 50% 50%,
+        rgba(255, 255, 255, 0.82) 0deg,
+        rgba(255, 255, 255, 0.14) 58deg,
+        rgba(255, 255, 255, 0.04) 145deg,
+        rgba(255, 255, 255, 0.20) 232deg,
+        rgba(255, 255, 255, 0.66) 330deg,
+        rgba(255, 255, 255, 0.82) 360deg
+      );
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+    }
+  }
+
+  .glass-surface__content {
+    position: relative;
+    z-index: 5;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  button.glass-surface > .glass-surface__content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .glass-surface--lens {
+    --glass-blur: 15px;
+    --glass-saturate: 185%;
+    --glass-brightness: 1.08;
+    --glass-tint: rgba(5, 10, 18, 0.18);
+    --glass-rim-opacity: 0.74;
+    box-shadow:
+      var(--glass-shadow-x) var(--glass-shadow-y) 32px rgba(0, 0, 0, 0.22),
+      0 24px 68px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-surface--panel {
+    --glass-blur: 38px;
+    --glass-saturate: 150%;
+    --glass-brightness: 1.06;
+    --glass-tint: var(--glass-panel-tint);
+  }
+
+  .glass-surface--nav {
+    --glass-blur: 26px;
+    --glass-saturate: 170%;
+    --glass-brightness: 1.05;
+    --glass-tint: var(--glass-nav-tint);
+    --glass-rim-opacity: 0.44;
+    box-shadow: 0 8px 34px rgba(0, 0, 0, 0.18);
+  }
+
+  .glass-surface--recessed {
+    --glass-blur: 15px;
+    --glass-saturate: 130%;
+    --glass-brightness: 0.96;
+    --glass-tint: var(--glass-recessed-tint);
+    --glass-rim-opacity: 0.34;
+    box-shadow:
+      inset 0 1px 2px rgba(0, 0, 0, 0.24),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-surface[data-glass-tone="subtle"] {
+    --glass-tint: var(--glass-panel-tint-subtle);
+    --glass-rim-opacity: 0.42;
+    --glass-brightness: 1.12;
+  }
+
+  .glass-surface[data-glass-tone="strong"] {
+    --glass-tint: var(--glass-panel-tint-strong);
+    --glass-rim-opacity: 0.72;
+    --glass-brightness: 1.01;
+  }
+
+  .glass-surface--interactive {
+    transform: translateZ(0);
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), filter 180ms ease;
+  }
+
+  .glass-surface--interactive:hover:not(:disabled) {
+    transform: translateY(-1px) scale(1.015);
+  }
+
+  .glass-surface--interactive:active:not(:disabled) {
+    transform: scale(0.975);
+  }
+
+  button.glass-surface:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.92);
+    outline-offset: 3px;
+  }
+
+  button.glass-surface:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    filter: saturate(0.65);
+  }
+
+  .glass-surface.glass-button--primary,
+  .glass-surface.glass-button--shiny {
+    --glass-tint: rgba(255, 255, 255, 0.12);
+    --glass-blur: 8px;
+    --glass-rim-opacity: 0.78;
+  }
+
+  .glass-surface.glass-button--secondary {
+    --glass-tint: rgba(28, 34, 45, 0.30);
+    --glass-rim-opacity: 0.62;
+  }
+
+  .glass-surface.glass-button--ghost {
+    --glass-tint: rgba(255, 255, 255, 0.025);
+    --glass-rim-opacity: 0.22;
+    box-shadow: none;
+  }
+
+  /* CSS-only compatibility for the few branded legacy surfaces. */
+  [class*="glass-style-"],
+  .glass-panel {
+    position: relative;
+    isolation: isolate;
+    background: var(--glass-bg, var(--glass-panel-tint));
+    border: 1px solid var(--glass-edge-soft);
+    backdrop-filter: blur(var(--glass-blur, 32px)) saturate(var(--glass-saturate, 150%)) brightness(var(--glass-brightness, 1.05));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 32px)) saturate(var(--glass-saturate, 150%)) brightness(var(--glass-brightness, 1.05));
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-style-navbar,
+  .glass-panel {
+    --glass-blur: 26px;
+    --glass-saturate: 170%;
+    --glass-bg: var(--glass-nav-tint);
+  }
 }
 
-[class*="glass-style-"]::before {
-  content: '';
-  position: absolute;
-  inset: var(--glass-buffer, 0);
-  border-radius: inherit;
-  backdrop-filter: blur(var(--glass-blur, 7px));
-  /* Restore Liquid Glass Distortion */
-  filter: url(#glass-distortion) saturate(var(--glass-saturate, 120%)) brightness(var(--glass-brightness, 1.13));
-  z-index: 1;
-  pointer-events: none;
-  transform: translateZ(0);
+html[data-glass-quality="frosted"] .glass-surface__refraction,
+html[data-glass-quality="solid"] .glass-surface__refraction {
+  display: none;
 }
 
-[class*="glass-style-"]::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--glass-bg, rgba(255, 255, 255, 0.25));
-  border-radius: inherit;
-  z-index: 2;
-  pointer-events: none;
+html[data-glass-quality="solid"] .glass-surface__backdrop {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-[class*="glass-style-"]>* {
-  position: relative;
-  z-index: 4;
+html[data-glass-quality="solid"] .glass-surface__tint {
+  background: rgba(10, 15, 24, 0.94);
 }
 
-/* === Optional Inner Shine Layer (if added) === */
-[class*="glass-style-"] .glass-specular {
-  position: absolute;
-  inset: 0;
-  box-shadow: inset 1px 1px 1px var(--glass-highlight, rgba(255, 255, 255, 0.75));
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 3;
-  transform: translateZ(0);
+@media (prefers-reduced-motion: reduce) {
+  .glass-surface--interactive,
+  .glass-surface--interactive:hover,
+  .glass-surface--interactive:active {
+    transition: none;
+    transform: none;
+  }
+
+  .glass-button__shimmer {
+    animation: none !important;
+    display: none;
+  }
 }
 
-/* === Presets === */
-/* Glass Style 1 - Default Glass */
-.glass-style-1 {
-  --glass-blur: 7px;
-  --glass-bg: rgba(0, 0, 0, 0.2);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
-  --glass-saturate: 120%;
-  --glass-brightness: 1.15;
+@media (prefers-reduced-transparency: reduce) {
+  .glass-surface__backdrop,
+  .glass-surface__refraction {
+    display: none;
+  }
+
+  .glass-surface__tint {
+    background: rgba(10, 15, 24, 0.94);
+  }
 }
 
-/* Glass Style 2 - Frosted Ice */
-.glass-style-2 {
-  --glass-blur: 10px;
-  --glass-bg: rgba(0, 0, 0, 0.2);
-  --glass-highlight: rgba(255, 255, 255, 0.15);
-  --glass-saturate: 150%;
-  --glass-brightness: 1.25;
-}
+@media (forced-colors: active) {
+  .glass-surface {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
 
-/* Glass Style 3 - Soft Dark Glass */
-.glass-style-3 {
-  --glass-blur: 1px;
-  --glass-bg: rgba(0, 0, 0, 0);
-  --glass-highlight: rgba(255, 255, 255, 0);
-  --glass-saturate: 100%;
-  --glass-brightness: 1;
-}
+  .glass-surface__backdrop,
+  .glass-surface__refraction,
+  .glass-surface__specular,
+  .glass-surface__rim {
+    display: none;
+  }
 
-.glass-style-card {
-  --glass-blur: 40px;
-  --glass-bg: rgba(128, 128, 128, 0.2);
-  --glass-highlight: rgba(255, 255, 255, 0.05);
-  --glass-saturate: 100%;
-  --glass-brightness: 1.2;
-}
-
-/* === Optimization: Selective Distortion === */
-.glass-distortion-active {
-  isolation: isolate;
-  overflow: hidden;
-  will-change: transform;
-  /* Hint for compositor promotion */
-}
-
-/* === Glass Style Navbar (System Integrated) === */
-.glass-style-navbar {
-  /* Inherits base properties from [class*="glass-style-"] */
-  --glass-blur: 25px;
-  --glass-bg: rgba(20, 20, 20, 0.2);
-  --glass-highlight: rgba(255, 255, 255, 0.1);
-  --glass-saturate: 180%;
-  --glass-brightness: 1.1;
-
-  /* Navbar specific overrides */
-  border-bottom: 1px solid var(--glass-highlight);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  z-index: 50;
-}
-
-/* Specific styling to override the global SVG filter for the navbar only */
-.glass-style-navbar::before {
-  /* Disable SVG filter to prevent artifacts on thin element */
-  filter: saturate(var(--glass-saturate)) brightness(var(--glass-brightness)) !important;
-  /* Ensure backdrop blur is applied */
-  backdrop-filter: blur(var(--glass-blur)) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
-  backdrop-filter: blur(var(--glass-blur)) !important;
-  -webkit-backdrop-filter: blur(var(--glass-blur)) !important;
-}
-
-/* === Utility: Clean Glass (No Distortion) === */
-.glass-clean::before {
-  display: none !important;
-}
-
-/* ============================================
-   Glass Card Component Styles
-   ============================================ */
-.glass-card {
-  position: relative;
-  border-radius: 24px;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.glass-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  backdrop-filter: blur(40px);
-  background: rgba(128, 128, 128, 0.25);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.glass-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow:
-    inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.3),
-    inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.25),
-    inset 1px 1.5px 4px 0px rgba(0, 0, 0, 0.08);
-  z-index: 2;
-  pointer-events: none;
-}
-
-.glass-card>* {
-  position: relative;
-  z-index: 3;
+  .glass-surface__tint {
+    background: Canvas;
+  }
 }
 
 /* ============================================

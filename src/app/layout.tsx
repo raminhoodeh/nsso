@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import VantaBackground from "@/components/VantaBackground";
-import GlassFilter from "@/components/GlassFilter";
 import { ToastProvider } from "@/components/ui/Toast";
 import { UIProvider } from "@/components/providers/UIProvider";
 import { UserProvider } from "@/components/providers/UserProvider";
 import { ProfileProvider } from "@/components/providers/ProfileProvider";
 import Web3Provider from "@/components/providers/Web3Provider";
+import { GlassEnvironmentProvider } from "@/components/providers/GlassEnvironmentProvider";
 
 import DimmingOverlay from "@/components/ui/DimmingOverlay";
 import ReferralTracker from "@/components/ReferralTracker";
@@ -37,29 +37,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-glass-engine="tahoe-v2" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
         {/* UI State Provider */}
         <UIProvider>
           <Web3Provider>
             <UserProvider>
               <ProfileProvider>
-                {/* SVG Filter for Glass Effects */}
-                <GlassFilter />
-                <ReferralTracker />
+                <GlassEnvironmentProvider>
+                  <ReferralTracker />
 
-                {/* Animated Cloud Background */}
-                <VantaBackground />
-                <DimmingOverlay />
+                  {/* Animated Cloud Background remains the single scene source. */}
+                  <VantaBackground />
+                  <DimmingOverlay />
 
-                {/* Toast Notifications Provider */}
-                <ToastProvider>
-                  <GlobalNavigation />
-                  <AuthenticatedLayoutWrapper>
-                    {children}
-                  </AuthenticatedLayoutWrapper>
-                  <ConditionalNSSOAgent />
-                </ToastProvider>
+                  {/* Toast Notifications Provider */}
+                  <ToastProvider>
+                    <GlobalNavigation />
+                    <AuthenticatedLayoutWrapper>
+                      {children}
+                    </AuthenticatedLayoutWrapper>
+                    <ConditionalNSSOAgent />
+                  </ToastProvider>
+                </GlassEnvironmentProvider>
               </ProfileProvider>
             </UserProvider>
           </Web3Provider>
