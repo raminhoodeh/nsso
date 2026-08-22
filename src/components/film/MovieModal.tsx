@@ -8,6 +8,31 @@ import {
     TahoeGlassSurface,
 } from '@/components/ui/tahoe-glass';
 
+const FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'button:not([disabled])',
+    'iframe',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[contenteditable="true"]',
+    '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+    return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => (
+        !element.hasAttribute('disabled')
+        && element.getAttribute('aria-hidden') !== 'true'
+        && !element.closest('[inert]')
+        && element.getClientRects().length > 0
+    ));
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    return target.isContentEditable || ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName);
+}
+
 interface Film {
     id: number;
     title: string;
@@ -34,11 +59,56 @@ interface MovieModalProps {
 
 const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onDelete, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLElement | null>(null);
     const touchStartXModal = useRef(0);
+    const dialogTitleId = React.useId();
 
     useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = 'auto'; };
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
+        triggerRef.current = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        const previousBodyOverflow = document.body.style.getPropertyValue('overflow');
+        const previousBodyOverflowPriority = document.body.style.getPropertyPriority('overflow');
+        const backgroundStates: Array<{ element: HTMLElement; inert: boolean }> = [];
+
+        document.body.style.setProperty('overflow', 'hidden');
+
+        let activeBranch: HTMLElement = dialog;
+        while (activeBranch.parentElement) {
+            const parent = activeBranch.parentElement;
+            Array.from(parent.children).forEach((sibling) => {
+                if (sibling === activeBranch || !(sibling instanceof HTMLElement)) return;
+                backgroundStates.push({ element: sibling, inert: sibling.inert });
+                sibling.inert = true;
+            });
+            if (parent === document.body) break;
+            activeBranch = parent;
+        }
+
+        const focusFrame = window.requestAnimationFrame(() => {
+            dialogRef.current?.focus({ preventScroll: true });
+        });
+
+        return () => {
+            window.cancelAnimationFrame(focusFrame);
+            if (previousBodyOverflow) {
+                document.body.style.setProperty('overflow', previousBodyOverflow, previousBodyOverflowPriority);
+            } else {
+                document.body.style.removeProperty('overflow');
+            }
+            backgroundStates.reverse().forEach(({ element, inert }) => {
+                if (element.isConnected) element.inert = inert;
+            });
+
+            const trigger = triggerRef.current;
+            if (trigger?.isConnected && trigger !== document.body) {
+                trigger.focus({ preventScroll: true });
+            }
+        };
     }, []);
 
     // Edit State
@@ -194,16 +264,79 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         setSimilarFilms(recommendations);
     }, [film, filmList]);
 
-    // Keyboard navigation
+    const nestedDialogOpen = isEditAuthOpen || isDeleteConfirmOpen || Boolean(operationError);
+
+    // Modal keyboard navigation and focus containment. Nested Tahoe dialogs own
+    // focus and Escape while open, including when portaled outside this subtree.
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && !isEditAuthOpen && !isDeleteConfirmOpen && !operationError) onClose();
-            if (e.key === 'ArrowLeft') onPrev();
-            if (e.key === 'ArrowRight') onNext();
+            const dialog = dialogRef.current;
+            const eventTarget = e.target instanceof Element ? e.target : document.activeElement;
+            const eventBelongsToNestedDialog = eventTarget instanceof Element
+                && Boolean(eventTarget.closest('[data-tahoe-glass-dialog-overlay="true"]'));
+            if (!dialog || nestedDialogOpen || eventBelongsToNestedDialog) return;
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                const focusable = getFocusableElements(dialog);
+                const activeElement = document.activeElement;
+                const focusIsOutside = !(activeElement instanceof Node) || !dialog.contains(activeElement);
+
+                if (focusable.length === 0) {
+                    e.preventDefault();
+                    dialog.focus({ preventScroll: true });
+                    return;
+                }
+
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (focusIsOutside || activeElement === dialog) {
+                    e.preventDefault();
+                    (e.shiftKey ? last : first).focus({ preventScroll: true });
+                } else if (e.shiftKey && activeElement === first) {
+                    e.preventDefault();
+                    last.focus({ preventScroll: true });
+                } else if (!e.shiftKey && activeElement === last) {
+                    e.preventDefault();
+                    first.focus({ preventScroll: true });
+                }
+                return;
+            }
+
+            if (isEditableTarget(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                onPrev();
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                onNext();
+            }
         };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isDeleteConfirmOpen, isEditAuthOpen, onClose, onNext, onPrev, operationError]);
+
+        const handleFocusIn = (event: FocusEvent) => {
+            const dialog = dialogRef.current;
+            const target = event.target;
+            if (!dialog || nestedDialogOpen || !(target instanceof HTMLElement) || dialog.contains(target)) return;
+            if (target.closest('[data-tahoe-glass-dialog-overlay="true"]')) return;
+
+            const first = getFocusableElements(dialog)[0];
+            (first || dialog).focus({ preventScroll: true });
+        };
+
+        document.addEventListener('keydown', handleKeyDown, true);
+        document.addEventListener('focusin', handleFocusIn, true);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown, true);
+            document.removeEventListener('focusin', handleFocusIn, true);
+        };
+    }, [nestedDialogOpen, onClose, onNext, onPrev]);
 
     // Scroll carousel to active item
     useEffect(() => {
@@ -216,8 +349,16 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     }, [film]);
 
     return (
-        <div className="fixed top-0 left-0 w-[100dvw] h-[100dvh] z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] bg-transparent overscroll-none">
-            <div className="absolute inset-0" onClick={onClose} />
+        <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={dialogTitleId}
+            tabIndex={-1}
+            className="fixed top-0 left-0 w-[100dvw] h-[100dvh] z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] bg-transparent overscroll-none outline-none"
+        >
+            <h2 id={dialogTitleId} className="sr-only">Film details: {film.title}</h2>
+            <div aria-hidden="true" className="absolute inset-0" onClick={onClose} />
             {/* Back Button (Top Left) */}
             <TahoeGlassButton
                 onClick={onClose}
@@ -616,18 +757,21 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 <div className="w-full h-auto min-h-[25%] md:min-h-[40%] px-0 md:px-12 flex flex-col justify-center mt-6 md:mt-0 mb-6 md:mb-0">
                     <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-6 md:pl-4 mb-3">Similar Films</h3>
                     <div className="w-full overflow-x-auto flex gap-4 px-6 md:p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
-                        {similarFilms.map((f, idx) => (
+                        {similarFilms.map((f) => (
                             <TahoeGlassSurface
-                                key={idx}
+                                as="button"
+                                type="button"
+                                key={f.id}
                                 data-title={f.title}
                                 onClick={(e) => { e.stopPropagation(); onSelect(f); }}
+                                aria-label={`View details for ${f.title}`}
                                 variant="mediaFrame"
                                 radius={12}
                                 tone="light"
                                 semanticTint="dark"
                                 semanticTintOpacity={0.02}
-                                className="flex-shrink-0 cursor-pointer transition-all duration-300 relative p-[2px] w-28 h-40 md:w-40 md:h-56 opacity-75 hover:opacity-100 hover:scale-105"
-                                contentClassName="relative h-full w-full overflow-hidden rounded-[10px]"
+                                className="flex-shrink-0 cursor-pointer transition-all duration-300 relative p-[2px] w-28 h-40 md:w-40 md:h-56 opacity-75 hover:opacity-100 hover:scale-105 focus-visible:opacity-100 focus-visible:scale-105"
+                                contentClassName="relative block h-full w-full overflow-hidden rounded-[10px]"
                             >
                                 <Image src={f.poster} alt={f.title} fill className="object-cover" unoptimized={true} />
                             </TahoeGlassSurface>

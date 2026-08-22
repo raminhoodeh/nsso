@@ -40,11 +40,19 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
 
     return (
         <div
-            className={`relative transition-transform duration-300 transform cursor-pointer hover:scale-110 hover:z-50 group origin-center ${isGrid ? 'w-full' : 'flex-none w-48'}`}
-            onClick={() => onClick(film)}
+            className={`relative transition-transform duration-300 transform hover:scale-110 hover:z-50 group origin-center ${isGrid ? 'w-full' : 'flex-none w-48'}`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
+            <button
+                type="button"
+                aria-label={`Open details for ${film.title}`}
+                onClick={() => onClick(film)}
+                onPointerDown={(event) => event.currentTarget.focus({ preventScroll: true })}
+                onFocus={handleMouseEnter}
+                onBlur={handleMouseLeave}
+                className="absolute inset-0 z-[60] cursor-pointer rounded-3xl border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            />
             <TahoeGlassSurface
                 variant="mediaFrame"
                 radius={24}
@@ -58,6 +66,8 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
                     <div className="absolute inset-0 z-20 w-full h-full scale-[1.35] pointer-events-none">
                         <iframe
                             src={`https://www.youtube.com/embed/${film.trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${film.trailer_key}`}
+                            title={`${film.title} trailer preview`}
+                            tabIndex={-1}
                             frameBorder="0"
                             allow="autoplay"
                             className="w-full h-full object-cover pointer-events-none"
