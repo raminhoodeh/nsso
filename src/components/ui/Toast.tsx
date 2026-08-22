@@ -61,7 +61,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     return (
         <ToastContext.Provider value={{ toasts, showToast, hideToast }}>
             {children}
-            <ToastContainer toasts={toasts} onDismiss={hideToast} />
         </ToastContext.Provider>
     )
 }
@@ -72,6 +71,11 @@ export function useToast() {
         throw new Error('useToast must be used within a ToastProvider')
     }
     return context
+}
+
+export function ToastViewport() {
+    const { toasts, hideToast } = useToast()
+    return <ToastContainer toasts={toasts} onDismiss={hideToast} />
 }
 
 function ToastContainer({

@@ -29,6 +29,7 @@ import {
   TahoeGlassSurface,
   type TahoeGlassWebGLSource,
 } from "@/components/ui/tahoe-glass";
+import { ToastViewport } from "@/components/ui/Toast";
 import styles from "./places.module.css";
 
 type CategoryMeta = {
@@ -1332,6 +1333,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         </div>
         </TahoeGlassProvider>
       )}
+      <ToastViewport />
       </TahoeGlassProvider>
     </main>
   );

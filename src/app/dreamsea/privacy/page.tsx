@@ -5,6 +5,9 @@ import {
   TahoeGlassSurface,
   type TahoeGlassWebGLSource,
 } from '@/components/ui/tahoe-glass'
+import GlobalNavigation from '@/components/layout/GlobalNavigation'
+import ConditionalNSSOAgent from '@/components/agent/ConditionalNSSOAgent'
+import { ToastViewport } from '@/components/ui/Toast'
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600'], style: ['normal', 'italic'] })
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500'] })
@@ -95,6 +98,7 @@ export default function DreamseaPrivacyPage() {
       className={`${inter.className} min-h-screen`}
       contentClassName="min-h-screen px-6 pb-24 pt-20"
     >
+      <GlobalNavigation />
       <main className="relative z-10 mx-auto w-full max-w-[680px]">
         <header className="mb-12 text-center">
           <span className="mb-4 block text-[3.5rem]">🌙</span>
@@ -220,6 +224,8 @@ export default function DreamseaPrivacyPage() {
           © {new Date().getFullYear()} Dreamsea · Made with ✦ by Ramin
         </p>
       </main>
+      <ConditionalNSSOAgent />
+      <ToastViewport />
     </TahoeGlassProvider>
   )
 }

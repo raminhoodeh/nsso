@@ -7,13 +7,7 @@ import VantaBackground from "@/components/VantaBackground";
 import { TahoeGlassProvider } from "@/components/providers/TahoeGlassProvider";
 import DimmingOverlay from "@/components/ui/DimmingOverlay";
 import type { TahoeGlassWebGLSource } from "@/lib/tahoe-glass/types";
-
-const ROUTE_OWNED_SCENES = [
-  "/film/razinflix",
-  "/places",
-  "/glass-reference",
-  "/dreamsea/privacy",
-] as const;
+import { routeOwnsTahoeScene } from "@/lib/tahoe-glass/route-boundaries";
 
 const SIRI_IMAGE_SOURCE = {
   kind: "image",
@@ -28,12 +22,6 @@ const SIRI_SCENE = (
     style={{ backgroundImage: "url('/siri-gradient.png')" }}
   />
 );
-
-function routeOwnsScene(pathname: string): boolean {
-  return ROUTE_OWNED_SCENES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
-}
 
 function routeUsesSiriScene(pathname: string): boolean {
   return (
@@ -68,7 +56,7 @@ export default function NSSOTahoeGlassEnvironment({
     [],
   );
 
-  if (routeOwnsScene(pathname)) {
+  if (routeOwnsTahoeScene(pathname)) {
     return <>{children}</>;
   }
 

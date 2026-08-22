@@ -15,6 +15,9 @@ import {
     TahoeGlassSurface,
     type TahoeGlassWebGLSource,
 } from '@/components/ui/tahoe-glass';
+import GlobalNavigation from '@/components/layout/GlobalNavigation';
+import ConditionalNSSOAgent from '@/components/agent/ConditionalNSSOAgent';
+import { ToastViewport } from '@/components/ui/Toast';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
 
@@ -308,6 +311,7 @@ export default function RazinFlixPage() {
             className="min-h-screen bg-black text-white font-sans"
             contentClassName="min-h-screen"
         >
+        <GlobalNavigation />
         <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans relative">
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.5)_65%,rgba(0,0,0,0.78))]" />
             {/* Navbar */}
@@ -649,6 +653,8 @@ export default function RazinFlixPage() {
                 />
             )}
         </div>
+        <ConditionalNSSOAgent />
+        <ToastViewport />
         </TahoeGlassProvider>
     );
 }

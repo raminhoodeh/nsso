@@ -9,8 +9,6 @@ import NSSOTahoeGlassEnvironment from "@/components/providers/NSSOTahoeGlassEnvi
 import Web3Provider from "@/components/providers/Web3Provider";
 
 import ReferralTracker from "@/components/ReferralTracker";
-import ConditionalNSSOAgent from "@/components/agent/ConditionalNSSOAgent";
-
 export const metadata: Metadata = {
   title: "nsso - Future-Proof Yourself",
   description: "The most beautiful way to present yourself online. Unify your personal and professional identity.",
@@ -27,8 +25,8 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
-import GlobalNavigation from "@/components/layout/GlobalNavigation";
 import AuthenticatedLayoutWrapper from "@/components/layout/AuthenticatedLayoutWrapper";
+import GlobalTahoeSurfaceBoundary from "@/components/layout/GlobalTahoeSurfaceBoundary";
 
 export default function RootLayout({
   children,
@@ -50,11 +48,11 @@ export default function RootLayout({
 
                   {/* Toast Notifications Provider */}
                   <ToastProvider>
-                    <GlobalNavigation />
-                    <AuthenticatedLayoutWrapper>
-                      {children}
-                    </AuthenticatedLayoutWrapper>
-                    <ConditionalNSSOAgent />
+                    <GlobalTahoeSurfaceBoundary>
+                      <AuthenticatedLayoutWrapper>
+                        {children}
+                      </AuthenticatedLayoutWrapper>
+                    </GlobalTahoeSurfaceBoundary>
                   </ToastProvider>
                 </NSSOTahoeGlassEnvironment>
               </ProfileProvider>
