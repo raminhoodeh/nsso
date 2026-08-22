@@ -12,11 +12,15 @@ export default function CreateProfileButton({ className = '' }: CreateProfileBut
             href="/sign-in"
             className={`
                 relative group flex items-center justify-center px-6 py-2 rounded-full overflow-hidden transition-all duration-300
-                backdrop-blur-xl bg-black/60 hover:bg-black/70
+                backdrop-blur-xl bg-black/40 hover:bg-black/60
                 border border-white/10 hover:border-white/20
                 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95
                 ${className}
             `}
+            data-glass-auto="true"
+            data-glass-variant="lens"
+            data-glass-radius="999"
+            data-glass-distortion="12"
         >
             {/* Inner Gradient/Sheen Effect for Depth */}
             <div

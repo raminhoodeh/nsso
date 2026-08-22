@@ -518,7 +518,12 @@ export default function SalesPageCreator() {
                     </div>
 
                     {/* Info Box */}
-                    <div className="mb-12 p-6 rounded-[18px] bg-white/5 border border-white/10">
+                    <div
+                        className="mb-12 p-6 rounded-[18px] bg-white/5 border border-white/10"
+                        data-glass-auto="true"
+                        data-glass-variant="panel"
+                        data-glass-radius="18"
+                    >
                         <h2 className="text-[17px] font-bold text-white mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                             AI-Assisted Creator
                         </h2>

@@ -134,6 +134,7 @@ export default function NSSOAgent() {
                     {hasOpened && (
                         <AgentChatInterface
                             isFullScreen={false}
+                            glassActive={isOpen}
                             onClose={() => setIsOpen(false)}
                             onMaximize={undefined} // Disable maximize on desktop as it's already full height
                             initialMessage={initialMessage}

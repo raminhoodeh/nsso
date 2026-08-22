@@ -46,7 +46,7 @@
   padding: 12px 15px;
   border: 1px solid rgba(72, 80, 72, 0.18);
   border-radius: 14px;
-  background: rgba(250, 247, 238, 0.94);
+  background: rgba(250, 247, 238, 0.64);
   box-shadow: 0 12px 35px rgba(34, 42, 35, 0.12);
   color: #4f5a51;
   font-size: 13px;
@@ -66,8 +66,8 @@
   border: 1px solid rgba(44, 52, 45, 0.16);
   border-radius: 25px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.55), transparent 42%),
-    rgba(246, 242, 232, 0.96);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.46), transparent 42%),
+    rgba(246, 242, 232, 0.62);
   box-shadow:
     0 28px 80px rgba(29, 38, 31, 0.2),
     0 2px 6px rgba(29, 38, 31, 0.08);
@@ -392,7 +392,7 @@
 .placeCard:hover,
 .placeCardSelected {
   border-color: rgba(54, 64, 56, 0.14);
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.48);
   box-shadow: 0 8px 24px rgba(41, 50, 43, 0.07);
   transform: translateY(-1px);
 }
@@ -563,12 +563,40 @@
   overflow: auto;
   border: 1px solid rgba(39, 49, 41, 0.16);
   border-radius: 24px;
-  background: rgba(249, 246, 237, 0.96);
+  background: rgba(249, 246, 237, 0.64);
   box-shadow:
     0 28px 80px rgba(25, 35, 28, 0.22),
     0 3px 8px rgba(25, 35, 28, 0.1);
   animation: detailIn 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
   backdrop-filter: blur(25px) saturate(110%);
+}
+
+/* When the vector basemap supplies true lens pixels, keep the DOM material
+   transparent enough for the shader result to remain visible. */
+:global(html[data-glass-map-renderer="shared-webgl"]) .mapError {
+  background: rgba(250, 247, 238, 0.32);
+  backdrop-filter: blur(1.5px) saturate(120%);
+}
+
+:global(html[data-glass-map-renderer="shared-webgl"]) .rail {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.22), transparent 42%),
+    rgba(246, 242, 232, 0.25);
+  backdrop-filter: blur(1.5px) saturate(120%);
+}
+
+:global(html[data-glass-map-renderer="shared-webgl"]) .placeCard {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global(html[data-glass-map-renderer="shared-webgl"]) .placeCard:hover,
+:global(html[data-glass-map-renderer="shared-webgl"]) .placeCardSelected {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+:global(html[data-glass-map-renderer="shared-webgl"]) .detailCard {
+  background: rgba(249, 246, 237, 0.28);
+  backdrop-filter: blur(1.5px) saturate(120%);
 }
 
 @keyframes detailIn {
@@ -958,6 +986,9 @@
   align-items: center;
   gap: 20px;
   padding: max(18px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) 14px max(24px, env(safe-area-inset-left));
+  background: rgba(13, 17, 14, 0.34);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(22px) saturate(130%);
 }
 
 .lightboxHeader div {
@@ -1056,6 +1087,9 @@
   align-items: center;
   gap: 24px;
   padding: 14px max(24px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  background: rgba(13, 17, 14, 0.34);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(22px) saturate(130%);
 }
 
 .lightboxCredit {

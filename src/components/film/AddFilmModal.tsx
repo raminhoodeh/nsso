@@ -169,10 +169,10 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
 
     return (
         <div className="fixed inset-0 z-[200] flex flex-col md:items-center md:justify-center bg-black/60 backdrop-blur-2xl">
-            <div className="flex flex-col w-full h-full md:h-auto md:max-w-2xl bg-[#1c1c1e] md:rounded-[32px] overflow-hidden shadow-2xl border border-white/10 md:border-white/20 relative">
+            <div className="flex flex-col w-full h-full md:h-auto md:max-w-2xl bg-[#1c1c1e]/58 md:rounded-[32px] overflow-hidden shadow-2xl border border-white/10 md:border-white/20 relative" data-glass-auto="true" data-glass-variant="panel" data-glass-radius="32" data-glass-distortion="14">
                 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#2c2c2e]/50">
+                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#2c2c2e]/35" data-glass-auto="true" data-glass-variant="nav" data-glass-radius="0">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                         <Plus className="text-[#007AFF]" /> Add Film to Database
                     </h2>

@@ -14,6 +14,10 @@ export default function ShinyLink({ href, children, className = '', ...props }: 
             rel="noopener noreferrer"
             {...props}
             className={`group block relative w-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] glass-style-1 rounded-[100px] ${className}`}
+            data-glass-auto="true"
+            data-glass-variant="lens"
+            data-glass-radius="999"
+            data-glass-distortion="13"
             style={{
                 '--glass-bg': 'rgba(0, 0, 0, 0.4)',
                 '--glass-border': 'rgba(255, 255, 255, 0.1)'

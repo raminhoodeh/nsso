@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { VantaPerformanceManager, BackgroundPhase } from '@/lib/vanta/VantaPerformanceManager'
 import { VantaVideoRecorder } from '@/lib/vanta/VantaVideoRecorder'
+import { useGlassEnvironment } from '@/components/providers/GlassEnvironmentProvider'
 
 // Vanta.js type declarations
 declare global {
@@ -42,16 +43,16 @@ interface VantaEffect {
     resize?: () => void
     options?: any
     setOptions?: (options: Partial<VantaConfig>) => void
+    afterRender?: () => void
     renderer?: any
 }
 
 export default function VantaBackground() {
     const pathname = usePathname()
+    const { setSceneCanvas, renderSceneFrame } = useGlassEnvironment()
 
-    // Hide background on specific pages
-    // Hide background on specific pages
-    // Hide background on specific pages
-    const hiddenPaths = ['/earnings', '/places']
+    // Places owns a vector-map scene; Razinflix owns a same-origin hero scene.
+    const hiddenPaths = ['/places', '/film/razinflix']
 
     // Also hiding on dashboard product creator pages specifically
     const shouldHide = hiddenPaths.some(path => pathname?.startsWith(path)) ||
@@ -63,6 +64,7 @@ export default function VantaBackground() {
     const vantaEffect = useRef<VantaEffect | null>(null)
     const performanceManager = useRef<VantaPerformanceManager | null>(null)
     const videoRecorder = useRef<VantaVideoRecorder | null>(null)
+    const unregisterSceneSource = useRef<(() => void) | null>(null)
 
     const [currentPhase, setCurrentPhase] = useState<BackgroundPhase>('webgl')
     const [isRollback, setIsRollback] = useState(false)
@@ -135,6 +137,15 @@ export default function VantaBackground() {
                             vantaEffect.current.renderer.setPixelRatio(1.0)
                         }
 
+                        const sceneCanvas = vantaRef.current?.querySelector('canvas') as HTMLCanvasElement | null
+                        if (sceneCanvas && vantaEffect.current) {
+                            canvasRef.current = sceneCanvas
+                            unregisterSceneSource.current?.()
+                            unregisterSceneSource.current = setSceneCanvas(sceneCanvas)
+                            vantaEffect.current.afterRender = renderSceneFrame
+                            renderSceneFrame()
+                        }
+
                         console.log('[Vanta] Initialization success')
                     } catch (error) {
                         console.error('[Vanta] Initialization failed:', error)
@@ -193,7 +204,10 @@ export default function VantaBackground() {
 
 
         return () => {
+            unregisterSceneSource.current?.()
+            unregisterSceneSource.current = null
             if (vantaEffect.current) {
+                vantaEffect.current.afterRender = undefined
                 vantaEffect.current.destroy()
                 vantaEffect.current = null
             }
@@ -206,7 +220,7 @@ export default function VantaBackground() {
             // Cleanup scripts? Usually not necessary or safe as other components might need them, 
             // but in a SPA we usually leave them. Vanta destroy handles the canvas.
         }
-    }, [isRollback, shouldHide])
+    }, [isRollback, shouldHide, setSceneCanvas, renderSceneFrame])
 
     // Initialize optimization system
     function initializeOptimization() {

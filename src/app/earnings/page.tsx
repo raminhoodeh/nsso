@@ -143,7 +143,7 @@ export default function EarningsPage() {
 
 
     return (
-        <main className="min-h-screen bg-[#43628c]">
+        <main className="min-h-screen bg-[#43628c]/70">
             <Header />
 
             {/* Section 1: Intro & Acquisition */}
@@ -255,7 +255,13 @@ export default function EarningsPage() {
                 </h3>
 
                 {/* Calculator Component */}
-                <div className="w-full max-w-[800px] bg-[#6ca5d8]/20 backdrop-blur-xl border border-white/10 rounded-[40px] p-4 lg:p-6 mb-12 shadow-2xl relative">
+                <div
+                    className="w-full max-w-[800px] bg-[#6ca5d8]/20 backdrop-blur-xl border border-white/10 rounded-[40px] p-4 lg:p-6 mb-12 shadow-2xl relative"
+                    data-glass-auto="true"
+                    data-glass-variant="panel"
+                    data-glass-radius="40"
+                    data-glass-distortion="12"
+                >
                     <div className="flex items-center justify-between text-white font-bold px-4 mb-2 select-none">
                         <div className="w-32 text-left">
                             <div className="text-sm opacity-60">Subscribers</div>

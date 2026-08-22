@@ -23,6 +23,7 @@ import {
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DubaiPlace, PlaceCategory, PlacesPayload } from "@/data/places-dubai";
+import { attachGoogleMapsRefraction } from "@/lib/glass/google-maps-refraction";
 import styles from "./places.module.css";
 
 type CategoryMeta = {
@@ -294,12 +295,17 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   }, []);
 
   useEffect(() => {
+    document.documentElement.dataset.glassMapRenderer = "native-fallback";
     if (!apiKey) {
       setMapError("The map key has not been configured yet.");
-      return;
+      return () => {
+        delete document.documentElement.dataset.glassMapRenderer;
+      };
     }
 
     let active = true;
+    let detachRefraction: (() => void) | null = null;
+    let capabilityListener: google.maps.MapsEventListener | null = null;
     const initializeMap = async () => {
       try {
         if (!mapsConfigured) {
@@ -314,13 +320,17 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         }
         const { Map: GoogleMap, RenderingType } = await importLibrary("maps");
         if (!active || !mapElementRef.current) return;
+        const configuredMapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID?.trim();
+        const mapId = configuredMapId || (
+          process.env.NODE_ENV === "development" ? GoogleMap.DEMO_MAP_ID : undefined
+        );
         const instance = new GoogleMap(mapElementRef.current, {
           center: DEFAULT_CENTER,
           zoom: 7,
           minZoom: 6,
           maxZoom: 19,
-          renderingType: RenderingType.RASTER,
-          styles: DATABASE_ONLY_MAP_STYLES,
+          renderingType: RenderingType.VECTOR,
+          ...(mapId ? { mapId } : { styles: DATABASE_ONLY_MAP_STYLES }),
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
@@ -330,6 +340,25 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           restriction: { latLngBounds: UAE_BOUNDS, strictBounds: false },
         });
         setMap(instance);
+
+        const attachWhenAvailable = () => {
+          if (!active || detachRefraction || !mapElementRef.current) return;
+          const capabilities = instance.getMapCapabilities?.();
+          if (!mapId || !capabilities?.isWebGLOverlayViewAvailable) {
+            document.documentElement.dataset.glassMapRenderer = "native-fallback";
+            return;
+          }
+
+          try {
+            detachRefraction = attachGoogleMapsRefraction(instance, mapElementRef.current);
+          } catch (error) {
+            console.warn("Map refraction unavailable; retaining frosted glass fallback", error);
+            document.documentElement.dataset.glassMapRenderer = "native-fallback";
+          }
+        };
+
+        attachWhenAvailable();
+        capabilityListener = instance.addListener("mapcapabilities_changed", attachWhenAvailable);
       } catch (error) {
         console.error("Unable to initialize Google Maps", error);
         if (active) setMapError("Google Maps could not load. The place list still works.");
@@ -339,6 +368,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     void initializeMap();
     return () => {
       active = false;
+      capabilityListener?.remove();
+      detachRefraction?.();
+      delete document.documentElement.dataset.glassMapRenderer;
     };
   }, [apiKey]);
 
@@ -651,13 +683,13 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       <div className={styles.explorerSurface} inert={galleryOpen} aria-hidden={galleryOpen}>
         <div ref={mapElementRef} className={styles.map} aria-label="Map of places to go in the UAE" />
         {mapError && (
-          <div className={styles.mapError} role="status">
+          <div className={styles.mapError} role="status" data-glass-auto="true" data-glass-backend="places-map" data-glass-variant="panel" data-glass-radius="14">
             <Compass size={18} />
             <span>{mapError}</span>
           </div>
         )}
 
-        <section className={styles.rail} aria-label="Place finder">
+        <section className={styles.rail} aria-label="Place finder" data-glass-auto="true" data-glass-backend="places-map" data-glass-variant="panel" data-glass-radius="25" data-glass-distortion="13">
         <header className={styles.header}>
           <div className={styles.brandRow}>
             <Link className={styles.brand} href="/" aria-label="Back to nsso.me">
@@ -677,7 +709,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         </header>
 
         <div className={styles.controls}>
-          <label className={styles.searchBox}>
+          <label className={styles.searchBox} data-glass-auto="true" data-glass-backend="places-map" data-glass-variant="recessed" data-glass-radius="14">
             <Search size={17} aria-hidden="true" />
             <span className={styles.srOnly}>Search places</span>
             <input
@@ -757,6 +789,11 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 key={place.id}
                 className={`${styles.placeCard}${selectedId === place.id ? ` ${styles.placeCardSelected}` : ""}`}
                 style={{ "--category-color": meta.color } as React.CSSProperties}
+                data-glass-auto="true"
+                data-glass-backend="places-map"
+                data-glass-variant="panel"
+                data-glass-radius="15"
+                data-glass-distortion="7"
               >
                 <button className={styles.placeMain} type="button" onClick={() => setSelectedId(place.id)}>
                   <span className={styles.placeIndex}><i /></span>
@@ -804,7 +841,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         </section>
 
         {selectedPlace && (
-          <aside className={styles.detailCard} aria-label={`Details for ${selectedPlace.name}`}>
+          <aside className={styles.detailCard} aria-label={`Details for ${selectedPlace.name}`} data-glass-auto="true" data-glass-backend="places-map" data-glass-variant="panel" data-glass-radius="24" data-glass-distortion="14">
           <button className={styles.closeButton} type="button" onClick={() => setSelectedId(null)} aria-label="Close place details">
             <X size={18} />
           </button>
@@ -974,7 +1011,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             }}
             aria-label="Close full-screen gallery"
           />
-          <header className={styles.lightboxHeader}>
+          <header className={styles.lightboxHeader} data-glass-auto="true" data-glass-variant="nav" data-glass-radius="0">
             <div>
               <span>{selectedPlace.emirate}</span>
               <strong>{selectedPlace.name}</strong>
@@ -1029,7 +1066,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             ) : null}
           </div>
 
-          <footer className={styles.lightboxFooter}>
+          <footer className={styles.lightboxFooter} data-glass-auto="true" data-glass-variant="nav" data-glass-radius="0">
             <div className={styles.lightboxCredit}>
               {activePhoto && !activePhotoUnavailable ? (
                 <>

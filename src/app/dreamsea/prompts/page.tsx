@@ -336,8 +336,14 @@ export default function DreamseaPromptsPage() {
     // Auth Screen
     if (!isAuthorized) {
         return (
-            <div className={`fixed inset-0 z-50 flex items-center justify-center bg-[#050810]/95 backdrop-blur-2xl ${inter.className}`}>
-                <div className="w-full max-w-[360px] p-10 text-center animate-in fade-in zoom-in duration-500 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl">
+            <div className={`fixed inset-0 z-50 flex items-center justify-center bg-[#050810]/80 backdrop-blur-2xl ${inter.className}`}>
+                <div
+                    className="w-full max-w-[360px] p-10 text-center animate-in fade-in zoom-in duration-500 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-3xl"
+                    data-glass-auto="true"
+                    data-glass-variant="panel"
+                    data-glass-radius="24"
+                    data-glass-distortion="13"
+                >
                     <span className="block mb-4 text-5xl animate-bounce">🌙</span>
                     <h2 className={`text-2xl mb-2 text-[#C1DCED] ${playfair.className}`}>Dream Prompts</h2>
                     <p className="mb-7 text-sm text-[#8A9AB0]">Enter your passphrase to continue</p>
@@ -367,10 +373,16 @@ export default function DreamseaPromptsPage() {
         <main className={`relative z-10 max-w-[1360px] mx-auto pt-24 pb-20 px-6 ${inter.className}`}>
             
             {/* Header */}
-            <header className="text-center mb-10 p-10 bg-[#0f2648] border border-white/10 rounded-[40px] shadow-2xl backdrop-blur-md">
+            <header
+                className="text-center mb-10 p-10 bg-[#0f2648]/60 border border-white/10 rounded-[40px] shadow-2xl backdrop-blur-md"
+                data-glass-auto="true"
+                data-glass-variant="panel"
+                data-glass-radius="40"
+                data-glass-distortion="12"
+            >
                 <span className="block mb-3 text-6xl animate-pulse cursor-default">🌙</span>
                 <h1 className={`text-4xl md:text-5xl font-semibold text-[#C1DCED] mb-6 tracking-tight ${playfair.className}`}>Dreamsea · Dream Prompts</h1>
-                <div className="inline-block py-4 px-10 bg-[#050810]/40 border border-white/10 rounded-full backdrop-blur-xl">
+                <div className="inline-block py-4 px-10 bg-[#050810]/40 border border-white/10 rounded-full backdrop-blur-xl" data-glass-auto="true" data-glass-variant="recessed" data-glass-radius="999">
                     <p className={`text-lg italic text-[#C1DCED]/80 ${playfair.className}`}>"A dream is an unopened letter from the divine."</p>
                 </div>
             </header>
@@ -378,7 +390,7 @@ export default function DreamseaPromptsPage() {
             <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-[#C1DCED]/30 to-transparent mx-auto mb-10" />
 
             {/* Tabs */}
-            <div className="flex gap-1.5 p-2 mb-10 bg-[#0f2648] border border-white/10 rounded-2xl shadow-xl">
+            <div className="flex gap-1.5 p-2 mb-10 bg-[#0f2648]/60 border border-white/10 rounded-2xl shadow-xl" data-glass-auto="true" data-glass-variant="nav" data-glass-radius="16">
                 <button
                     onClick={() => setActiveSection('prompts')}
                     className={`flex-1 py-3.5 rounded-xl font-semibold transition-all ${activeSection === 'prompts' ? 'bg-[#213E60] border border-[#C1DCED]/20 text-[#C1DCED]' : 'text-[#8A9AB0] hover:text-white'} ${playfair.className}`}
@@ -396,7 +408,7 @@ export default function DreamseaPromptsPage() {
             {/* SECTION: AI PROMPTS */}
             {activeSection === 'prompts' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="mb-10 p-6 bg-[#0f2648] border border-white/10 rounded-2xl shadow-lg">
+                    <div className="mb-10 p-6 bg-[#0f2648]/60 border border-white/10 rounded-2xl shadow-lg" data-glass-auto="true" data-glass-variant="panel" data-glass-radius="16">
                         <p className="text-center text-sm text-[#C1DCED]/90 leading-relaxed">
                             These are the eight voices that interpret every dream.<br />
                             Edit them thoughtfully — your words will reach every dreamer. ✦<br /><br />
@@ -408,7 +420,10 @@ export default function DreamseaPromptsPage() {
                     <div className="mb-12">
                         <button 
                             onClick={() => setIsAnatomyOpen(!isAnatomyOpen)}
-                            className="w-full p-6 bg-[#0f2648] border border-white/10 rounded-2xl flex items-center justify-between group hover:border-[#C1DCED]/30 transition-all shadow-lg"
+                            className="w-full p-6 bg-[#0f2648]/60 border border-white/10 rounded-2xl flex items-center justify-between group hover:border-[#C1DCED]/30 transition-all shadow-lg"
+                            data-glass-auto="true"
+                            data-glass-variant="panel"
+                            data-glass-radius="16"
                         >
                             <span className={`text-xl font-semibold text-[#C1DCED] shadow-sm ${playfair.className}`}>✦ How to write a beautiful prompt</span>
                             <div className="flex items-center gap-3">
@@ -419,7 +434,7 @@ export default function DreamseaPromptsPage() {
                         
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isAnatomyOpen ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                             <div className="pt-4 px-1">
-                                <div className="p-8 bg-[#0f2648] border border-white/10 rounded-3xl shadow-xl">
+                                <div className="p-8 bg-[#0f2648]/60 border border-white/10 rounded-3xl shadow-xl" data-glass-auto="true" data-glass-variant="panel" data-glass-radius="24">
                                     <p className="p-6 bg-[#213E60]/40 border border-white/10 rounded-2xl text-sm leading-relaxed text-[#C1DCED]/90 mb-6">
                                         Every prompt you write is a conversation with an ancient intelligence. The clearer your instructions, the more poetic and precise the response. A great prompt has four parts — think of them as layers of a dream: the deeper you go, the richer the meaning.
                                     </p>
@@ -473,7 +488,13 @@ export default function DreamseaPromptsPage() {
                             const dbRow = prompts.find(p => p.key === def.key)
                             const content = dbRow ? dbRow.content : def.content
                             return (
-                                <div key={def.key} className="bg-[#0f2648] border border-white/10 rounded-[32px] p-8 pt-7 backdrop-blur-md group hover:border-white/20 transition-all shadow-xl">
+                                <div
+                                    key={def.key}
+                                    className="bg-[#0f2648]/60 border border-white/10 rounded-[32px] p-8 pt-7 backdrop-blur-md group hover:border-white/20 transition-all shadow-xl"
+                                    data-glass-auto="true"
+                                    data-glass-variant="panel"
+                                    data-glass-radius="32"
+                                >
                                     <div className="flex items-center gap-3 mb-3">
                                         <span className="text-3xl">{def.emoji}</span>
                                         <span className={`text-2xl font-semibold text-[#C1DCED] ${playfair.className}`}>{def.name}</span>
@@ -512,7 +533,7 @@ export default function DreamseaPromptsPage() {
             {/* SECTION: DREAM WIKI */}
             {activeSection === 'wiki' && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="mb-10 p-6 bg-[#0f2648] border border-white/10 rounded-2xl shadow-lg">
+                    <div className="mb-10 p-6 bg-[#0f2648]/60 border border-white/10 rounded-2xl shadow-lg" data-glass-auto="true" data-glass-variant="panel" data-glass-radius="16">
                         <p className="text-center text-sm text-[#C1DCED]/90 leading-relaxed">
                             These are the four Dream Philosophy pages that users explore in the app.<br />
                             Section headings are fixed — only the body text beneath each can be changed. ✦
@@ -531,7 +552,10 @@ export default function DreamseaPromptsPage() {
                             <button
                                 key={p.key}
                                 onClick={() => setCurrentPhilosophy(p.key)}
-                                className={`px-7 py-3 rounded-full border text-[15px] font-bold transition-all backdrop-blur-md shadow-sm ${currentPhilosophy === p.key ? 'bg-[#213E60] border-[#C1DCED]/40 text-[#C1DCED]' : 'bg-[#050810]/60 border-white/10 text-[#C1DCED]/60 hover:text-white'}`}
+                                className={`px-7 py-3 rounded-full border text-[15px] font-bold transition-all backdrop-blur-md shadow-sm ${currentPhilosophy === p.key ? 'bg-[#213E60]/70 border-[#C1DCED]/40 text-[#C1DCED]' : 'bg-[#050810]/50 border-white/10 text-[#C1DCED]/60 hover:text-white'}`}
+                                data-glass-auto="true"
+                                data-glass-variant="recessed"
+                                data-glass-radius="999"
                             >
                                 {p.emoji} {p.name}
                             </button>
@@ -546,7 +570,13 @@ export default function DreamseaPromptsPage() {
                             const content = dbRow ? dbRow.body : phil?.defaults[idx] || ''
                             
                             return (
-                                <div key={idx} className="bg-[#0f2648] border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all shadow-xl backdrop-blur-md">
+                                <div
+                                    key={idx}
+                                    className="bg-[#0f2648]/60 border border-white/10 rounded-3xl p-8 hover:border-white/20 transition-all shadow-xl backdrop-blur-md"
+                                    data-glass-auto="true"
+                                    data-glass-variant="panel"
+                                    data-glass-radius="24"
+                                >
                                     <div className="text-[10px] font-black text-[#C1DCED]/40 uppercase tracking-[0.2em] mb-2">SECTION {idx + 1} OF 5</div>
                                     <div className={`text-2xl font-semibold text-[#C1DCED] mb-2 ${playfair.className}`}>{title}</div>
                                     <div className="text-[11px] font-medium text-[#C1DCED]/40 mb-5 flex items-center gap-1.5 italic">🔒 Heading is locked · Edit body text below</div>
@@ -588,7 +618,13 @@ export default function DreamseaPromptsPage() {
 
             {/* Toast Notification */}
             {toast && (
-                <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] px-8 py-3.5 rounded-full backdrop-blur-3xl border animate-in slide-in-from-bottom-10 duration-500 scale-100 ${toast.type === 'success' ? 'bg-[#213E60]/80 border-green-400/30 text-green-300' : 'bg-red-950/80 border-red-500/30 text-red-300'}`}>
+                <div
+                    className={`fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] px-8 py-3.5 rounded-full backdrop-blur-3xl border animate-in slide-in-from-bottom-10 duration-500 scale-100 ${toast.type === 'success' ? 'bg-[#213E60]/60 border-green-400/30 text-green-300' : 'bg-red-950/60 border-red-500/30 text-red-300'}`}
+                    data-glass-auto="true"
+                    data-glass-variant="lens"
+                    data-glass-radius="999"
+                    data-glass-distortion="10"
+                >
                     <p className="text-sm font-medium tracking-wide">{toast.message}</p>
                 </div>
             )}

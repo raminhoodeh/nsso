@@ -154,7 +154,7 @@ export default function ProductSalesPage() {
     const youtubeId = product.video_url ? extractYouTubeId(product.video_url) : null
 
     return (
-        <div className="min-h-screen bg-[#43628c] p-4 md:p-8">
+        <div className="min-h-screen bg-[#43628c]/70 p-4 md:p-8">
             <div className="max-w-[1400px] mx-auto">
                 {/* Golden Ratio Grid: 1.618fr 1fr */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
@@ -179,6 +179,10 @@ export default function ProductSalesPage() {
                                 }}
                                 className="relative rounded-full overflow-hidden isolate px-4 py-2 text-[15px] font-semibold text-white text-center transition-all duration-200 ease-out bg-transparent hover:bg-[rgba(255,255,255,0.1)]"
                                 style={{ backdropFilter: 'blur(10px)' }}
+                                data-glass-auto="true"
+                                data-glass-variant="lens"
+                                data-glass-radius="999"
+                                data-glass-distortion="12"
                             >
                                 {/* Lighten layer */}
                                 <div className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(255,255,255,0.06)] mix-blend-lighten" aria-hidden="true" />
@@ -210,7 +214,13 @@ export default function ProductSalesPage() {
                         </p>
 
                         {/* Mobile-only Product Card — shown early so users see the product before the bullet list */}
-                        <div className="lg:hidden relative rounded-[20px] overflow-hidden bg-white shadow-lg border border-slate-200 p-6 w-full flex flex-col items-center">
+                        <div
+                            className="lg:hidden relative rounded-[20px] overflow-hidden bg-white/70 shadow-lg border border-slate-200/70 p-6 w-full flex flex-col items-center"
+                            data-glass-auto="true"
+                            data-glass-variant="panel"
+                            data-glass-radius="20"
+                            data-glass-distortion="10"
+                        >
                             {/* Product Image */}
                             {product.image_url && (
                                 <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
@@ -300,7 +310,12 @@ export default function ProductSalesPage() {
                         )}
 
                         {/* Guarantee Card */}
-                        <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6">
+                        <div
+                            className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6"
+                            data-glass-auto="true"
+                            data-glass-variant="panel"
+                            data-glass-radius="20"
+                        >
                             <div className="grid grid-cols-[17.5%_82.5%] gap-6 items-center">
                                 <div className="relative w-full aspect-square">
                                     <Image
@@ -318,7 +333,12 @@ export default function ProductSalesPage() {
 
                         {/* Testimonial Carousel */}
                         {product.testimonials && product.testimonials.length > 0 && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-3 md:p-8">
+                            <div
+                                className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-3 md:p-8"
+                                data-glass-auto="true"
+                                data-glass-variant="panel"
+                                data-glass-radius="20"
+                            >
                                 <div className="flex items-center gap-2 md:gap-4">
                                     {product.testimonials.length > 1 && (
                                         <button
@@ -364,7 +384,13 @@ export default function ProductSalesPage() {
                     {/* RIGHT COLUMN - Conversion & Context */}
                     <div className="space-y-6">
                         {/* Product Card */}
-                        <div className="relative rounded-[20px] overflow-hidden bg-white shadow-lg border border-slate-200 p-6 w-full flex flex-col items-center">
+                        <div
+                            className="relative rounded-[20px] overflow-hidden bg-white/70 shadow-lg border border-slate-200/70 p-6 w-full flex flex-col items-center"
+                            data-glass-auto="true"
+                            data-glass-variant="panel"
+                            data-glass-radius="20"
+                            data-glass-distortion="10"
+                        >
                             {/* Product Image */}
                             {product.image_url && (
                                 <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
@@ -442,7 +468,12 @@ export default function ProductSalesPage() {
 
                         {/* YouTube Video Embed */}
                         {youtubeId && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-4">
+                            <div
+                                className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-4"
+                                data-glass-auto="true"
+                                data-glass-variant="panel"
+                                data-glass-radius="20"
+                            >
                                 <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                                     <iframe
                                         className="absolute inset-0 w-full h-full rounded-[12px]"
@@ -457,7 +488,12 @@ export default function ProductSalesPage() {
 
                         {/* Contact Details */}
                         {!CONTACT_DETAILS_HIDDEN_PRODUCT_IDS.has(product.id) && (ownerUsername || userContacts.length > 0) && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6">
+                            <div
+                                className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6"
+                                data-glass-auto="true"
+                                data-glass-variant="panel"
+                                data-glass-radius="20"
+                            >
                                 <h4 className="text-[15px] font-bold text-white mb-4 uppercase tracking-wider">
                                     Contact
                                 </h4>

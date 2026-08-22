@@ -1109,7 +1109,13 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 {deleteConfirmation.isOpen && (
                     <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })} />
-                        <div className="relative bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div
+                            className="relative bg-[#1c1c1e]/70 border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200"
+                            data-glass-auto="true"
+                            data-glass-variant="panel"
+                            data-glass-radius="16"
+                            data-glass-distortion="12"
+                        >
                             <h3 className="text-xl font-bold text-white mb-2">Are you sure?</h3>
                             <p className="text-white/70 text-sm mb-6 leading-relaxed">
                                 You cannot restore your Product after it has been deleted. This action is permanent.

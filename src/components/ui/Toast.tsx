@@ -82,13 +82,17 @@ function ToastContainer({
             {toasts.map(toast => (
                 <div
                     key={toast.id}
+                    data-glass-auto="true"
+                    data-glass-variant="lens"
+                    data-glass-radius="12"
+                    data-glass-distortion="9"
                     className={`
             px-6 py-3 rounded-xl backdrop-blur-md
             text-white text-[15px] font-medium
             animate-slide-up cursor-pointer
-            ${toast.type === 'success' ? 'bg-green-500/80' : ''}
-            ${toast.type === 'error' ? 'bg-red-500/80' : ''}
-            ${toast.type === 'info' ? 'bg-black/80' : ''}
+            ${toast.type === 'success' ? 'bg-green-500/60' : ''}
+            ${toast.type === 'error' ? 'bg-red-500/60' : ''}
+            ${toast.type === 'info' ? 'bg-black/60' : ''}
           `}
                     onClick={() => onDismiss(toast.id)}
                 >
@@ -105,13 +109,17 @@ export function toast(message: string, type: Toast['type'] = 'info') {
     const container = document.getElementById('toast-container') || createToastContainer()
 
     const toastEl = document.createElement('div')
+    toastEl.dataset.glassAuto = 'true'
+    toastEl.dataset.glassVariant = 'lens'
+    toastEl.dataset.glassRadius = '12'
+    toastEl.dataset.glassDistortion = '9'
     toastEl.className = `
     px-6 py-3 rounded-xl backdrop-blur-md
     text-white text-[15px] font-medium
     animate-slide-up cursor-pointer
-    ${type === 'success' ? 'bg-green-500/80' : ''}
-    ${type === 'error' ? 'bg-red-500/80' : ''}
-    ${type === 'info' ? 'bg-black/80' : ''}
+    ${type === 'success' ? 'bg-green-500/60' : ''}
+    ${type === 'error' ? 'bg-red-500/60' : ''}
+    ${type === 'info' ? 'bg-black/60' : ''}
   `
     toastEl.textContent = message
     toastEl.style.backdropFilter = 'blur(10px)'

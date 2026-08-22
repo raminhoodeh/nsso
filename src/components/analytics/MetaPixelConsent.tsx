@@ -137,7 +137,11 @@ export default function MetaPixelConsent({
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="meta-privacy-title"
-                    className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-2xl border border-white/20 bg-black/95 p-5 text-white shadow-2xl backdrop-blur-xl sm:p-6"
+                    className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-2xl border border-white/20 bg-black/70 p-5 text-white shadow-2xl backdrop-blur-xl sm:p-6"
+                    data-glass-auto="true"
+                    data-glass-variant="panel"
+                    data-glass-radius="0"
+                    data-glass-distortion="12"
                 >
                     <div className="flex items-start gap-4">
                         <Cookie aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-white/70" />
@@ -177,7 +181,11 @@ export default function MetaPixelConsent({
                 <button
                     type="button"
                     onClick={() => setPreferencesOpen(true)}
-                    className="fixed bottom-4 left-4 z-[90] flex min-h-10 items-center gap-2 border border-white/20 bg-black/80 px-3 text-xs font-medium text-white/80 shadow-lg backdrop-blur-xl transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="fixed bottom-4 left-4 z-[90] flex min-h-10 items-center gap-2 border border-white/20 bg-black/50 px-3 text-xs font-medium text-white/80 shadow-lg backdrop-blur-xl transition-colors hover:bg-black/75 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    data-glass-auto="true"
+                    data-glass-variant="lens"
+                    data-glass-radius="0"
+                    data-glass-distortion="10"
                 >
                     <Cookie aria-hidden="true" className="h-4 w-4" />
                     Privacy choices

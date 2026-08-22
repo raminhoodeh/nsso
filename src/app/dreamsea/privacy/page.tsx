@@ -43,7 +43,7 @@ export default function DreamseaPrivacyPage() {
       className={inter.className}
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(160deg, #050810 0%, #0a1628 45%, #050810 100%)',
+        background: 'linear-gradient(160deg, rgba(5,8,16,0.82) 0%, rgba(10,22,40,0.78) 45%, rgba(5,8,16,0.82) 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -108,8 +108,12 @@ export default function DreamseaPrivacyPage() {
 
         {/* Card */}
         <div
+          data-glass-auto="true"
+          data-glass-variant="panel"
+          data-glass-radius="32"
+          data-glass-distortion="12"
           style={{
-            background: 'rgba(15,38,72,0.75)',
+            background: 'rgba(15,38,72,0.56)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 32,
             padding: 'clamp(2rem, 6vw, 3rem)',
@@ -189,10 +193,13 @@ export default function DreamseaPrivacyPage() {
 
           {/* Footer note */}
           <div
+            data-glass-auto="true"
+            data-glass-variant="recessed"
+            data-glass-radius="16"
             style={{
               marginTop: '2.75rem',
               padding: '1.25rem 1.5rem',
-              background: 'rgba(5,8,16,0.5)',
+              background: 'rgba(5,8,16,0.38)',
               border: '1px solid rgba(193,220,237,0.1)',
               borderRadius: 16,
             }}

@@ -517,6 +517,10 @@ function DashboardContent() {
                 {profileCompleteness < 20 && (
                     <div
                         className="relative rounded-[20px] overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
+                        data-glass-auto="true"
+                        data-glass-variant="panel"
+                        data-glass-radius="20"
+                        data-glass-distortion="12"
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "What is missing from my profile?" }
                         }))}
