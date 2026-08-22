@@ -959,11 +959,6 @@
   color: white;
 }
 
-.lightboxScene {
-  filter: saturate(0.82) brightness(0.58);
-  transform: scale(1.03);
-}
-
 .lightboxBackdrop {
   position: absolute;
   inset: 0;

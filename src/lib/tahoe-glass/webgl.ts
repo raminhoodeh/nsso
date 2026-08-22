@@ -78,6 +78,16 @@ interface Locations {
   fit: WebGLUniformLocation | null;
 }
 
+function assertWebGLSuccess(
+  gl: WebGLRenderingContext,
+  stage: string,
+): void {
+  const error = gl.getError();
+  if (error !== gl.NO_ERROR) {
+    throw new Error(`${stage}-webgl-error-${error}`);
+  }
+}
+
 function compileShader(
   gl: WebGLRenderingContext,
   type: number,
@@ -115,6 +125,7 @@ function createTexture(gl: WebGLRenderingContext, unit: number): WebGLTexture {
     gl.UNSIGNED_BYTE,
     new Uint8Array([128, 128, 128, 0]),
   );
+  assertWebGLSuccess(gl, "texture-initialization");
   return texture;
 }
 
@@ -179,6 +190,7 @@ export class TahoeWebGLRenderer {
   readonly gl: WebGLRenderingContext;
   readonly dynamic: boolean;
   readonly requiresSynchronousRefresh: boolean;
+  readonly maxTextureSize: number;
 
   private readonly program: WebGLProgram;
   private readonly buffer: WebGLBuffer;
@@ -209,6 +221,9 @@ export class TahoeWebGLRenderer {
     });
     if (!context) throw new Error("webgl-context-unavailable");
     this.gl = context;
+    this.maxTextureSize = context.getParameter(
+      context.MAX_TEXTURE_SIZE,
+    ) as number;
     this.sourceConfig = sourceConfig;
     this.dynamic =
       sourceConfig.kind === "video" ||
@@ -286,9 +301,13 @@ export class TahoeWebGLRenderer {
   resize(cssWidth: number, cssHeight: number, dpr: number): void {
     const width = Math.max(1, Math.round(cssWidth * dpr));
     const height = Math.max(1, Math.round(cssHeight * dpr));
+    if (width > this.maxTextureSize || height > this.maxTextureSize) {
+      throw new Error("webgl-viewport-exceeds-max-texture-size");
+    }
     if (this.canvas.width !== width) this.canvas.width = width;
     if (this.canvas.height !== height) this.canvas.height = height;
     this.gl.viewport(0, 0, width, height);
+    assertWebGLSuccess(this.gl, "viewport-resize");
   }
 
   uploadDisplacement(canvas: HTMLCanvasElement): void {
@@ -326,7 +345,7 @@ export class TahoeWebGLRenderer {
     gl.uniform2f(this.locations.position, position[0], 1 - position[1]);
     gl.uniform1f(
       this.locations.scale,
-      TAHOE_DISPLACEMENT_SCALE * Math.max(1, dpr),
+      TAHOE_DISPLACEMENT_SCALE * Math.max(0.25, dpr),
     );
     const fit = this.sourceConfig.fit ??
       (this.sourceConfig.kind === "image" ? "cover" : "stretch");
@@ -335,6 +354,7 @@ export class TahoeWebGLRenderer {
       fit === "stretch" ? 0 : fit === "cover" ? 1 : 2,
     );
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    assertWebGLSuccess(gl, "scene-draw");
   }
 
   dispose(): void {
@@ -431,6 +451,12 @@ export class TahoeWebGLRenderer {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
     const nextSize = sourceDimensions(source);
+    if (
+      nextSize[0] > this.maxTextureSize ||
+      nextSize[1] > this.maxTextureSize
+    ) {
+      throw new Error("webgl-source-exceeds-max-texture-size");
+    }
     const currentSize = this.textureSizes.get(texture);
     if (
       currentSize &&
@@ -457,6 +483,7 @@ export class TahoeWebGLRenderer {
       );
       this.textureSizes.set(texture, nextSize);
     }
+    assertWebGLSuccess(gl, "texture-upload");
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);

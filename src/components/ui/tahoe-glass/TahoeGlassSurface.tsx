@@ -48,6 +48,8 @@ export interface TahoeGlassSurfaceProps
   semanticTintOpacity?: number;
   /** Enable while a surface is animated or follows the pointer. */
   tracking?: "static" | "continuous";
+  /** Explicit optical stacking override for portals and top-level overlays. */
+  opticalPriority?: number;
   href?: string;
   target?: string;
   rel?: string;
@@ -95,6 +97,7 @@ export const TahoeGlassSurface = React.forwardRef<
     variant = "card",
     radius,
     tracking = "static",
+    opticalPriority,
     className,
     contentClassName,
     tone = "inherit",
@@ -114,6 +117,7 @@ export const TahoeGlassSurface = React.forwardRef<
   const context = React.useContext(TahoeGlassEngineContext);
   const registerSurface = context?.registerSurface;
   const unregisterSurface = context?.unregisterSurface;
+  const requestRender = context?.requestRender;
   const diagnostics = useTahoeGlassDiagnostics();
   const internalRef = React.useRef<HTMLElement | null>(null);
   const id = React.useId();
@@ -132,13 +136,22 @@ export const TahoeGlassSurface = React.forwardRef<
     if (!registerSurface || !unregisterSurface || !element) return;
     registerSurface(id, element, {
       continuous: tracking === "continuous",
+      priority: opticalPriority,
     });
     return () => unregisterSurface(id);
-  }, [id, registerSurface, tracking, unregisterSurface]);
+  }, [
+    id,
+    opticalPriority,
+    registerSurface,
+    tracking,
+    unregisterSurface,
+    variant,
+  ]);
 
   React.useLayoutEffect(() => {
     if (internalRef.current) enforceClearOpticalRoot(internalRef.current);
-  }, [className, style]);
+    requestRender?.("surface-props-change");
+  }, [className, requestRender, style]);
 
   const activeWebGL =
     diagnostics.status === "active" && diagnostics.backend === "webgl";

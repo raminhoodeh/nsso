@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTahoeGlassControls, useTahoeGlassDiagnostics } from '@/components/providers/TahoeGlassProvider'
 import { VantaPerformanceManager, BackgroundPhase } from '@/lib/vanta/VantaPerformanceManager'
@@ -45,6 +45,9 @@ interface VantaEffect {
     getCanvasElement?: () => HTMLCanvasElement | undefined
     options?: any
     setOptions?: (options: Partial<VantaConfig>) => void
+    animationLoop?: () => number
+    prevNow?: number
+    req?: number
     renderer?: any
 }
 
@@ -54,8 +57,13 @@ interface VantaBackgroundProps {
 
 export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps) {
     const pathname = usePathname()
-    const { backend } = useTahoeGlassDiagnostics()
-    const { renderNow, retryBackend } = useTahoeGlassControls()
+    const { backend, status, reducedMotion } = useTahoeGlassDiagnostics()
+    const {
+        consumeSceneFrameRequest,
+        renderNow,
+        retryBackend,
+        subscribeSceneFrameRequests,
+    } = useTahoeGlassControls()
 
     const vantaRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -64,16 +72,39 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
     const performanceManager = useRef<VantaPerformanceManager | null>(null)
     const videoRecorder = useRef<VantaVideoRecorder | null>(null)
     const backendRef = useRef(backend)
+    const statusRef = useRef(status)
+    const reducedMotionRef = useRef(reducedMotion)
+    const consumeSceneFrameRequestRef = useRef(consumeSceneFrameRequest)
     const renderNowRef = useRef(renderNow)
     const retryBackendRef = useRef(retryBackend)
     const onCanvasChangeRef = useRef(onCanvasChange)
+    const pausedForReducedMotionRef = useRef(false)
 
     useEffect(() => {
         backendRef.current = backend
+        statusRef.current = status
+        reducedMotionRef.current = reducedMotion
+        consumeSceneFrameRequestRef.current = consumeSceneFrameRequest
         renderNowRef.current = renderNow
         retryBackendRef.current = retryBackend
         onCanvasChangeRef.current = onCanvasChange
-    }, [backend, onCanvasChange, renderNow, retryBackend])
+    }, [backend, consumeSceneFrameRequest, onCanvasChange, reducedMotion, renderNow, retryBackend, status])
+
+    const resumeVanta = useCallback(() => {
+        const effect = vantaEffect.current
+        if (!effect?.animationLoop || !pausedForReducedMotionRef.current) return
+        pausedForReducedMotionRef.current = false
+        // Clearing prevNow makes Vanta's next loop render the existing scene
+        // without advancing either of its animation clocks.
+        effect.prevNow = undefined
+        effect.animationLoop()
+    }, [])
+
+    useEffect(() => subscribeSceneFrameRequests(() => {
+        if (reducedMotionRef.current && backendRef.current === 'webgl') {
+            resumeVanta()
+        }
+    }), [resumeVanta, subscribeSceneFrameRequests])
 
     const [, setCurrentPhase] = useState<BackgroundPhase>('webgl')
     const [isRollback, setIsRollback] = useState(false)
@@ -96,10 +127,22 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
     useEffect(() => {
         // Skip if elements not ready
         if (!vantaRef.current) return
+        let initTimer: number | null = null
+        const loadListeners: Array<{
+            script: HTMLScriptElement
+            listener: () => void
+        }> = []
+
+        const listenForScript = (script: HTMLScriptElement, listener: () => void) => {
+            script.addEventListener('load', listener, { once: true })
+            loadListeners.push({ script, listener })
+        }
 
         const initVanta = () => {
+            if (initTimer !== null) return
             // Add a small delay to ensure DOM is ready and dimensions are calculated
-            setTimeout(() => {
+            initTimer = window.setTimeout(() => {
+                initTimer = null
                 if (!vantaRef.current) return
 
                 // If effect is already active, don't re-init
@@ -115,8 +158,8 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                     try {
                         const effect = window.VANTA.CLOUDS({
                             el: vantaRef.current,
-                            mouseControls: true,
-                            touchControls: true,
+                            mouseControls: !reducedMotionRef.current,
+                            touchControls: !reducedMotionRef.current,
                             gyroControls: false,
                             minHeight: window.innerHeight * 0.75,
                             minWidth: window.innerWidth * 0.75,
@@ -136,7 +179,26 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
 
                         effect.afterRender = () => {
                             if (backendRef.current === 'webgl') {
-                                renderNowRef.current()
+                                const frameRequested = consumeSceneFrameRequestRef.current()
+                                if (
+                                    !reducedMotionRef.current ||
+                                    frameRequested ||
+                                    statusRef.current !== 'active'
+                                ) {
+                                    renderNowRef.current()
+                                }
+                            }
+                            if (reducedMotionRef.current) {
+                                queueMicrotask(() => {
+                                    if (
+                                        reducedMotionRef.current &&
+                                        vantaEffect.current === effect &&
+                                        typeof effect.req === 'number'
+                                    ) {
+                                        window.cancelAnimationFrame(effect.req)
+                                        pausedForReducedMotionRef.current = true
+                                    }
+                                })
                             }
                         }
 
@@ -175,17 +237,17 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
 
             // Check if script is already loading
             const existingScript = document.querySelector('script[src*="vanta.clouds.min.js"]')
-            if (existingScript) {
+            if (existingScript instanceof HTMLScriptElement) {
                 // If script exists but VANTA is missing, it might be loading or failed.
                 // We'll attach a listener just in case it's still loading.
-                existingScript.addEventListener('load', initVanta)
+                listenForScript(existingScript, initVanta)
                 return
             }
 
             const vantaScript = document.createElement('script')
-            vantaScript.src = 'https://cdn.jsdelivr.net/npm/vanta/dist/vanta.clouds.min.js'
+            vantaScript.src = 'https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.clouds.min.js'
             vantaScript.async = true
-            vantaScript.onload = initVanta
+            listenForScript(vantaScript, initVanta)
             document.body.appendChild(vantaScript)
         }
 
@@ -197,15 +259,15 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
 
             // Check if script is already loading
             const existingScript = document.querySelector('script[src*="three.min.js"]')
-            if (existingScript) {
-                existingScript.addEventListener('load', loadVantaScript)
+            if (existingScript instanceof HTMLScriptElement) {
+                listenForScript(existingScript, loadVantaScript)
                 return
             }
 
             const threeScript = document.createElement('script')
             threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js'
             threeScript.async = true
-            threeScript.onload = loadVantaScript
+            listenForScript(threeScript, loadVantaScript)
             document.body.appendChild(threeScript)
         }
 
@@ -213,7 +275,12 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
 
 
         return () => {
+            if (initTimer !== null) window.clearTimeout(initTimer)
+            for (const { script, listener } of loadListeners) {
+                script.removeEventListener('load', listener)
+            }
             onCanvasChangeRef.current?.(null)
+            pausedForReducedMotionRef.current = false
             canvasRef.current = null
             if (vantaEffect.current) {
                 vantaEffect.current.afterRender = undefined
@@ -229,7 +296,9 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             // Cleanup scripts? Usually not necessary or safe as other components might need them, 
             // but in a SPA we usually leave them. Vanta destroy handles the canvas.
         }
-    }, [isRollback])
+    // Recreate rather than setOptions when reduced-motion changes: Vanta only
+    // attaches pointer/touch listeners during construction.
+    }, [isRollback, reducedMotion])
 
     // Initialize optimization system
     function initializeOptimization() {
