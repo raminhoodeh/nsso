@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
@@ -16,7 +16,7 @@ import ComingSoonBadge from '@/components/ui/ComingSoonBadge';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { useUser } from '@/components/providers/UserProvider';
-import Link from 'next/link';
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass';
 
 // Define interface for navigation items
 interface NavItem {
@@ -54,15 +54,12 @@ const NAV_ITEMS: NavItem[] = [
 function DashboardSidebarContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const pathname = usePathname();
     const supabase = createClient();
     const { showToast } = useToast();
     const { user } = useUser();
     const isAdmin = user?.user_type === 'admin';
 
     const currentView = searchParams.get('view') || 'profile';
-    const isCreatorPage = pathname?.includes('/creator');
-
     const handleNavClick = (view: string, comingSoon?: boolean) => {
         if (comingSoon) {
             showToast('News Feed coming soon', 'success');
@@ -87,12 +84,14 @@ function DashboardSidebarContent() {
     };
 
     return (
-        <aside className={cn(
-            "hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 border-r transition-colors duration-300",
-            isCreatorPage
-                ? "bg-[#43628c] border-[#5475a4]" // Match creator page blue
-                : "glass-panel border-white/10" // Default glass
-        )}>
+        <TahoeGlassSurface
+            as="aside"
+            variant="panel"
+            radius={0}
+            className="fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] transition-colors duration-300 lg:block"
+            contentClassName="flex h-full flex-col"
+            tone="light"
+        >
             {/* Logo Area */}
             <div className="px-8 py-8">
                 <div
@@ -117,20 +116,29 @@ function DashboardSidebarContent() {
                     const Icon = item.icon;
 
                     return (
-                        <button
+                        <TahoeGlassButton
                             key={item.id}
                             onClick={() => handleNavClick(item.view, item.comingSoon)}
+                            radius={12}
+                            semanticTint={isActive ? 'light' : 'none'}
+                            semanticTintOpacity={0.08}
+                            tone="light"
                             className={cn(
-                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
+                                "group relative w-full px-4 py-3 transition-all duration-200",
                                 isActive
-                                    ? "bg-white/10 text-white shadow-lg shadow-black/5"
-                                    : "text-white/60 hover:text-white hover:bg-white/5",
+                                    ? "text-white"
+                                    : "text-white/60 hover:text-white",
                                 item.comingSoon && "cursor-pointer"
                             )}
+                            contentClassName="w-full justify-start gap-3 text-inherit"
+                            aria-current={isActive ? 'page' : undefined}
                         >
                             {/* Active Indicator */}
                             {isActive && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white/80 rounded-r-full blur-[2px]" />
+                                <span
+                                    aria-hidden="true"
+                                    className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-white/80 blur-[2px]"
+                                />
                             )}
 
                             <Icon
@@ -145,11 +153,11 @@ function DashboardSidebarContent() {
                             </span>
 
                             {item.badge && (
-                                <div className="ml-auto transform scale-90 origin-right">
+                                <span className="ml-auto origin-right scale-90 transform">
                                     {item.badge}
-                                </div>
+                                </span>
                             )}
-                        </button>
+                        </TahoeGlassButton>
                     );
                 })}
             </nav>
@@ -157,52 +165,74 @@ function DashboardSidebarContent() {
             {/* Footer Actions */}
             <div className="p-4 mt-auto border-t border-white/5 space-y-2">
                 {isAdmin && (
-                    <Link href="/admin" className="w-full mb-3 block">
-                        <button
-                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
-                        >
+                    <TahoeGlassSurface
+                        as="a"
+                        variant="button"
+                        radius={12}
+                        href="/admin"
+                        tone="light"
+                        className="group mb-3 block w-full px-4 py-3 text-left text-white/80 transition-all hover:text-white"
+                        contentClassName="flex w-full items-center gap-3 text-left"
+                    >
                             <LayoutDashboard size={18} className="group-hover:text-white transition-colors" />
                             <span className="font-medium text-[14px]">Admin</span>
-                        </button>
-                    </Link>
+                    </TahoeGlassSurface>
                 )}
 
                 {/* Preview Profile */}
-                <button
+                <TahoeGlassButton
                     onClick={() => router.push('/preview')}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
+                    radius={12}
+                    tone="light"
+                    className="group w-full px-4 py-3 text-left text-white/80 transition-all hover:text-white"
+                    contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <Eye size={18} className="group-hover:text-white transition-colors" />
                     <span className="font-medium text-[14px]">Preview Profile</span>
-                </button>
+                </TahoeGlassButton>
 
                 {/* Copy URL */}
-                <button
+                <TahoeGlassButton
                     onClick={copyProfileUrl}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
+                    radius={12}
+                    tone="light"
+                    className="group w-full px-4 py-3 text-left text-white/80 transition-all hover:text-white"
+                    contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <LinkIcon size={18} className="group-hover:text-white transition-colors" />
                     <span className="font-medium text-[14px]">Copy profile link</span>
-                </button>
+                </TahoeGlassButton>
 
                 {/* Sign Out */}
-                <button
+                <TahoeGlassButton
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black/40 text-red-400/90 hover:text-red-300 hover:bg-black/60 transition-all text-left group backdrop-blur-sm"
+                    radius={12}
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.1}
+                    className="group w-full px-4 py-3 text-left text-red-400/90 transition-all hover:text-red-300"
+                    contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <LogOut size={18} className="group-hover:text-red-300 transition-colors" />
                     <span className="font-medium text-[14px]">Sign Out</span>
-                </button>
+                </TahoeGlassButton>
             </div>
-        </aside>
+        </TahoeGlassSurface>
     );
 }
 
 export default function DashboardSidebar() {
     return (
-        <Suspense fallback={<aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-[280px] z-50 glass-panel border-r border-white/10" />}>
+        <Suspense fallback={(
+            <TahoeGlassSurface
+                as="aside"
+                variant="panel"
+                radius={0}
+                aria-hidden="true"
+                className="fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] lg:block"
+            />
+        )}>
             <DashboardSidebarContent />
         </Suspense>
     );
 }
-

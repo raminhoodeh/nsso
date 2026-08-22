@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface ShinyLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
     href: string
@@ -7,32 +7,38 @@ interface ShinyLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
 }
 
 export default function ShinyLink({ href, children, className = '', ...props }: ShinyLinkProps) {
-    return (
-        <Link
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            {...props}
-            className={`group block relative w-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] glass-style-1 rounded-[100px] ${className}`}
-            style={{
-                '--glass-bg': 'rgba(0, 0, 0, 0.4)',
-                '--glass-border': 'rgba(255, 255, 255, 0.1)'
-            } as React.CSSProperties}
-        >
-            {/* Inner specular highlight for liquid effect */}
-            <div className="glass-specular" aria-hidden="true" />
+    const {
+        target = '_blank',
+        rel = 'noopener noreferrer',
+        type: anchorType,
+        ...anchorProps
+    } = props
 
-            <div className="relative z-10 flex items-center justify-center p-4">
-                <span
-                    className="text-[16px] font-semibold text-white/96 tracking-wide"
-                    style={{
-                        fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                        fontWeight: 590
-                    }}
-                >
-                    {children}
-                </span>
-            </div>
-        </Link>
+    return (
+        <TahoeGlassSurface
+            as="a"
+            variant="pill"
+            radius="100px"
+            href={href}
+            target={target}
+            rel={rel}
+            ref={(element) => {
+                if (anchorType) element?.setAttribute('type', anchorType)
+            }}
+            tone="light"
+            {...anchorProps}
+            className={`group block w-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${className}`}
+            contentClassName="flex items-center justify-center p-4"
+        >
+            <span
+                className="text-[16px] font-semibold tracking-wide text-white/96"
+                style={{
+                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                    fontWeight: 590
+                }}
+            >
+                {children}
+            </span>
+        </TahoeGlassSurface>
     )
 }

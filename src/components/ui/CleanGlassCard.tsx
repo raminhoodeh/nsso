@@ -1,6 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface CleanGlassCardProps {
     children: ReactNode
@@ -8,43 +9,21 @@ interface CleanGlassCardProps {
     style?: React.CSSProperties
 }
 
-/**
- * CleanGlassCard - Rebuilt for maximum reliability and visual fidelity.
- * Uses the global SVG-based Liquid Glass distortion system.
- */
+/** Backwards-compatible clear card backed by the shared Tahoe refraction engine. */
 export default function CleanGlassCard({
     children,
     className = '',
-    style: customStyle
+    style
 }: CleanGlassCardProps) {
     return (
-        <div
-            className={`
-                relative 
-                overflow-hidden 
-                rounded-[40px] 
-                bg-black/20 
-                border-x border-b border-white/10 
-                shadow-2xl 
-                glass-style-card 
-                glass-distortion-active 
-                group
-                ${className}
-            `}
-            style={{
-                isolation: 'isolate',
-                ['--glass-buffer' as any]: '-60px',
-                ...customStyle
-            }}
+        <TahoeGlassSurface
+            variant="card"
+            radius={40}
+            className={`group overflow-hidden ${className}`}
+            contentClassName="h-full w-full"
+            style={{ isolation: 'isolate', ...style }}
         >
-            {/* 1. Specular highlight (Design System) */}
-            <div className="glass-specular opacity-40 group-hover:opacity-60 transition-opacity" aria-hidden="true" />
-
-            {/* 2. Content Container */}
-            <div className="relative z-10 h-full w-full">
-                {children}
-            </div>
-
-        </div>
+            {children}
+        </TahoeGlassSurface>
     )
 }

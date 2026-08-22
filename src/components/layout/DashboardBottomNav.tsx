@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 // Navigation Configuration
 const NAV_ITEMS = [
@@ -36,23 +37,38 @@ function BottomNavContent() {
     }
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#1C1C1E]/60 backdrop-blur-xl border-t border-white/10 pb-safe">
+        <TahoeGlassSurface
+            as="nav"
+            variant="menu"
+            radius={0}
+            aria-label="Dashboard"
+            className="fixed bottom-0 left-0 right-0 z-50 pb-safe md:hidden"
+            contentClassName="w-full"
+            tone="light"
+        >
             <div className="flex justify-between items-center px-8 h-[64px]">
                 {NAV_ITEMS.map((item) => {
                     const isActive = activeView === item.id && item.id !== 'deity' && item.id !== 'news'
 
                     return (
-                        <button
+                        <TahoeGlassButton
                             key={item.id}
                             onClick={() => handleItemClick(item.id)}
-                            className="flex flex-col items-center justify-center gap-1 min-w-[64px]"
+                            radius={14}
+                            tone="light"
+                            semanticTint={isActive ? 'light' : 'none'}
+                            semanticTintOpacity={0.08}
+                            className="min-w-[64px] px-3 py-2"
+                            contentClassName="flex-col gap-1 text-inherit"
+                            aria-label={item.label}
+                            aria-current={isActive ? 'page' : undefined}
                         >
-                            <div className={cn(
-                                "transition-all duration-300 relative",
+                            <span className={cn(
+                                "relative block transition-all duration-300",
                                 isActive || item.id === 'deity' ? "opacity-100 scale-100" : "opacity-40 hover:opacity-80"
                             )}>
                                 {item.id === 'deity' ? (
-                                    <div className="w-[32px] h-[32px] rounded-full overflow-hidden border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                                    <span className="block h-[32px] w-[32px] overflow-hidden rounded-full">
                                         <Image
                                             src={item.icon}
                                             alt={item.label}
@@ -60,23 +76,23 @@ function BottomNavContent() {
                                             height={32}
                                             className="object-cover"
                                         />
-                                    </div>
+                                    </span>
                                 ) : (
-                                    <div className="relative w-[24px] h-[24px]">
+                                    <span className="relative block h-[24px] w-[24px]">
                                         <Image
                                             src={item.icon}
                                             alt={item.label}
                                             fill
                                             className="object-contain"
                                         />
-                                    </div>
+                                    </span>
                                 )}
-                            </div>
-                        </button>
+                            </span>
+                        </TahoeGlassButton>
                     )
                 })}
             </div>
-        </div>
+        </TahoeGlassSurface>
     )
 }
 

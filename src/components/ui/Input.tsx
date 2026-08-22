@@ -1,4 +1,5 @@
 import { InputHTMLAttributes, forwardRef } from 'react'
+import { TahoeGlassField } from '@/components/ui/tahoe-glass'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string
@@ -6,10 +7,28 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     error?: string
 }
 
-/**
- * Recessed input field matching NSSO Figma design
- * Supports optional prefix (e.g., "nsso.me/") and labels
- */
+interface InputControlProps extends InputHTMLAttributes<HTMLInputElement> {
+    prefix?: string
+}
+
+const InputControl = forwardRef<HTMLInputElement, InputControlProps>(({
+    prefix,
+    className = '',
+    ...props
+}, ref) => (
+    <span className="flex w-full items-center">
+        {prefix && (
+            <span className="relative z-10 whitespace-nowrap pl-0.5 text-[17px] font-medium text-white">
+                {prefix}
+            </span>
+        )}
+        <input ref={ref} className={className} {...props} />
+    </span>
+))
+
+InputControl.displayName = 'InputControl'
+
+/** Recessed input field backed by the shared Tahoe field primitive. */
 const Input = forwardRef<HTMLInputElement, InputProps>(({
     label,
     prefix,
@@ -18,68 +37,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     ...props
 }, ref) => {
     return (
-        <div className="w-full">
-            {label && (
-                <label className="block text-white/70 text-[13px] font-medium mb-2">
-                    {label}
-                </label>
-            )}
-
-            <div
-                className={`
-          relative flex items-center rounded-[12px] overflow-hidden
-          ${error ? 'ring-2 ring-red-400' : ''}
-          ${className}
-        `}
-            >
-                {/* Recessed background layers */}
-                <div
-                    className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none"
-                    aria-hidden="true"
-                />
-                <div
-                    className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none"
-                    aria-hidden="true"
-                />
-
-                {/* Inner shadow */}
-                <div
-                    className="absolute inset-0 pointer-events-none rounded-[12px]"
-                    style={{
-                        boxShadow: `
-              inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.3),
-              inset 0px -0.5px 1px 0px rgba(255, 255, 255, 0.25),
-              inset 1px 1.5px 4px 0px rgba(0, 0, 0, 0.08),
-              inset 1px 1.5px 4px 0px rgba(0, 0, 0, 0.1)
-            `
-                    }}
-                    aria-hidden="true"
-                />
-
-                {/* Prefix */}
-                {prefix && (
-                    <span className="relative z-10 pl-4 text-white text-[17px] font-medium whitespace-nowrap">
-                        {prefix}
-                    </span>
-                )}
-
-                {/* Input field */}
-                <input
-                    ref={ref}
-                    className={`
-            relative z-10 flex-1 bg-transparent border-none outline-none
-            text-white text-[17px] font-medium leading-[22px]
-            py-3 ${prefix ? 'pl-1 pr-4' : 'px-4'}
-            placeholder:text-white/50
-          `}
-                    {...props}
-                />
-            </div>
-
-            {error && (
-                <p className="mt-1 text-red-400 text-[13px]">{error}</p>
-            )}
-        </div>
+        <TahoeGlassField
+            className="w-full [&>p[role=alert]]:mt-1 [&>p[role=alert]]:text-[13px] [&>p[role=alert]]:text-red-400"
+            label={label || undefined}
+            labelClassName="mb-2 text-[13px] font-medium text-white/70"
+            error={error || undefined}
+            tone="light"
+            surfaceClassName={`${error ? 'ring-2 ring-red-400' : ''} ${className}`}
+            controlClassName={`
+                flex-1 border-none py-0 text-[17px] font-medium leading-[22px]
+                placeholder:text-white/50
+                ${prefix ? 'pl-1 pr-0.5' : 'px-0.5'}
+            `}
+        >
+            <InputControl ref={ref} prefix={prefix} {...props} />
+        </TahoeGlassField>
     )
 })
 

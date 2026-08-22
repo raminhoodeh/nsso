@@ -1,6 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { TahoeGlassSurface, type TahoeGlassSemanticTint } from '@/components/ui/tahoe-glass'
 
 interface Toast {
     id: string
@@ -77,23 +79,35 @@ function ToastContainer({
 }) {
     if (toasts.length === 0) return null
 
+    const semanticTint = (type: Toast['type']): TahoeGlassSemanticTint => {
+        if (type === 'success') return 'light'
+        if (type === 'error') return 'dark'
+        return 'none'
+    }
+
+    const contentClassName = (type: Toast['type']): string => {
+        if (type === 'success') return 'text-emerald-100'
+        if (type === 'error') return 'text-red-100'
+        return 'text-white'
+    }
+
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2">
             {toasts.map(toast => (
-                <div
+                <TahoeGlassSurface
                     key={toast.id}
-                    className={`
-            px-6 py-3 rounded-xl backdrop-blur-md
-            text-white text-[15px] font-medium
-            animate-slide-up cursor-pointer
-            ${toast.type === 'success' ? 'bg-green-500/80' : ''}
-            ${toast.type === 'error' ? 'bg-red-500/80' : ''}
-            ${toast.type === 'info' ? 'bg-black/80' : ''}
-          `}
+                    variant="popover"
+                    radius={12}
+                    tone="light"
+                    semanticTint={semanticTint(toast.type)}
+                    semanticTintOpacity={0.1}
+                    role={toast.type === 'error' ? 'alert' : 'status'}
+                    className="animate-slide-up cursor-pointer px-6 py-3 text-[15px] font-medium"
+                    contentClassName={contentClassName(toast.type)}
                     onClick={() => onDismiss(toast.id)}
                 >
                     {toast.message}
-                </div>
+                </TahoeGlassSurface>
             ))}
         </div>
     )
@@ -101,25 +115,36 @@ function ToastContainer({
 
 // Simple toast function for one-off usage
 export function toast(message: string, type: Toast['type'] = 'info') {
-    // Create and append toast element directly to DOM for simple usage
     const container = document.getElementById('toast-container') || createToastContainer()
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    let dismissed = false
+    const dismiss = () => {
+        if (dismissed) return
+        dismissed = true
+        root.unmount()
+        host.remove()
+    }
+    const semanticTint = type === 'success' ? 'light' : type === 'error' ? 'dark' : 'none'
 
-    const toastEl = document.createElement('div')
-    toastEl.className = `
-    px-6 py-3 rounded-xl backdrop-blur-md
-    text-white text-[15px] font-medium
-    animate-slide-up cursor-pointer
-    ${type === 'success' ? 'bg-green-500/80' : ''}
-    ${type === 'error' ? 'bg-red-500/80' : ''}
-    ${type === 'info' ? 'bg-black/80' : ''}
-  `
-    toastEl.textContent = message
-    toastEl.style.backdropFilter = 'blur(10px)'
+    container.appendChild(host)
+    root.render(
+        <TahoeGlassSurface
+            variant="popover"
+            radius={12}
+            tone="light"
+            semanticTint={semanticTint}
+            semanticTintOpacity={0.1}
+            role={type === 'error' ? 'alert' : 'status'}
+            className="animate-slide-up cursor-pointer px-6 py-3 text-[15px] font-medium"
+            contentClassName={type === 'success' ? 'text-emerald-100' : type === 'error' ? 'text-red-100' : 'text-white'}
+            onClick={dismiss}
+        >
+            {message}
+        </TahoeGlassSurface>
+    )
 
-    toastEl.onclick = () => toastEl.remove()
-    container.appendChild(toastEl)
-
-    setTimeout(() => toastEl.remove(), 3000)
+    setTimeout(dismiss, 3000)
 }
 
 function createToastContainer() {
