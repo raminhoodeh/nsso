@@ -32,10 +32,21 @@ interface VantaConfig {
     sunGlareColor: number
     sunlightColor: number
     speed: number
+    scale: number
+    scaleMobile: number
     // Performance optimizations (approach #1)
     points?: number
     spacing?: number
     maxDistance?: number
+}
+
+interface VantaShaderMaterial {
+    fragmentShader?: string
+    needsUpdate?: boolean
+}
+
+interface VantaSceneNode {
+    material?: VantaShaderMaterial | VantaShaderMaterial[]
 }
 
 interface VantaEffect {
@@ -49,6 +60,46 @@ interface VantaEffect {
     prevNow?: number
     req?: number
     renderer?: any
+    scene?: {
+        children?: VantaSceneNode[]
+    }
+}
+
+const VANTA_HORIZON_OFFSET = 0.60
+const VANTA_HORIZON_PATCH = `p.y += ${VANTA_HORIZON_OFFSET.toFixed(2)};`
+const VANTA_SCREEN_COORDINATE_PATTERN =
+    /vec2\s+p\s*=\s*\(-iResolution\.xy\s*\+\s*2\.0\s*\*\s*gl_FragCoord\.xy\)\s*\/\s*iResolution\.y\s*;/
+
+/**
+ * Vanta CLOUDS 0.5.24 has no public horizon control. Patch its pinned shader
+ * coordinate once so the cloud bank begins near the middle of the viewport.
+ * The canvas remains the single source for both SVG and WebGL refraction.
+ */
+function lowerVantaCloudHorizon(effect: VantaEffect): boolean {
+    for (const child of effect.scene?.children ?? []) {
+        const materials = Array.isArray(child.material)
+            ? child.material
+            : child.material
+                ? [child.material]
+                : []
+
+        for (const material of materials) {
+            const shader = material.fragmentShader
+            if (!shader) continue
+            if (shader.includes(VANTA_HORIZON_PATCH)) return true
+            if (!VANTA_SCREEN_COORDINATE_PATTERN.test(shader)) continue
+
+            material.fragmentShader = shader.replace(
+                VANTA_SCREEN_COORDINATE_PATTERN,
+                (coordinateDeclaration) =>
+                    `${coordinateDeclaration}\n    ${VANTA_HORIZON_PATCH}`,
+            )
+            material.needsUpdate = true
+            return true
+        }
+    }
+
+    return false
 }
 
 interface VantaBackgroundProps {
@@ -158,8 +209,10 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                     try {
                         const effect = window.VANTA.CLOUDS({
                             el: vantaRef.current,
-                            mouseControls: !reducedMotionRef.current,
-                            touchControls: !reducedMotionRef.current,
+                            // Keep the art-directed horizon stable. The shader's
+                            // native time-based horizontal drift still animates.
+                            mouseControls: false,
+                            touchControls: false,
                             gyroControls: false,
                             minHeight: window.innerHeight * 0.75,
                             minWidth: window.innerWidth * 0.75,
@@ -171,10 +224,21 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                             sunGlareColor: 0xff6633,
                             sunlightColor: 0xff9933,
                             speed: 0.5,
+                            // The host already renders at 75% and scales to the
+                            // viewport. Matching shader scale to the forced 1x
+                            // drawing buffer keeps gl_FragCoord/iResolution exact.
+                            scale: 1,
+                            scaleMobile: 1,
                             points: 3,
                             spacing: 20,
                             maxDistance: 15
                         })
+
+                        if (!lowerVantaCloudHorizon(effect)) {
+                            console.warn(
+                                '[Vanta] The pinned CLOUDS shader horizon patch did not match',
+                            )
+                        }
                         vantaEffect.current = effect
 
                         effect.afterRender = () => {
@@ -202,10 +266,18 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                             }
                         }
 
-                        // PERF: Force 1:1 pixel ratio on High-DPI (Retina) screens.
-                        // This reduces GPU load by 4x on MacBooks without visible quality loss for this specific effect.
-                        if (effect.renderer) {
-                            effect.renderer.setPixelRatio(1.0)
+                        // Keep a 1:1 drawing buffer on every Vanta resize. Vanta's
+                        // stock resize path otherwise restores devicePixelRatio,
+                        // which would desynchronize gl_FragCoord from iResolution
+                        // and move the art-directed horizon on Retina displays.
+                        if (
+                            effect.renderer &&
+                            typeof effect.renderer.setPixelRatio === 'function'
+                        ) {
+                            const setPixelRatio =
+                                effect.renderer.setPixelRatio.bind(effect.renderer)
+                            effect.renderer.setPixelRatio = () => setPixelRatio(1)
+                            effect.renderer.setPixelRatio(1)
                         }
 
                         const canvas = effect.getCanvasElement?.() ??
@@ -296,8 +368,8 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             // Cleanup scripts? Usually not necessary or safe as other components might need them, 
             // but in a SPA we usually leave them. Vanta destroy handles the canvas.
         }
-    // Recreate rather than setOptions when reduced-motion changes: Vanta only
-    // attaches pointer/touch listeners during construction.
+    // Recreate when reduced-motion changes so its RAF lifecycle is restarted
+    // from a clean, deterministic frame.
     }, [isRollback, reducedMotion])
 
     // Initialize optimization system
@@ -434,7 +506,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                     // Approach #4: Render at 75%, scale to 100%
                     width: '75vw',
                     height: '75vh',
-                    transform: 'scale(1.33)',
+                    transform: 'scale(1.3333333333)',
                     transformOrigin: 'top left',
                     // Approach #5: GPU acceleration hints
                     willChange: 'transform',

@@ -153,10 +153,11 @@ export const TahoeGlassSurface = React.forwardRef<
     requestRender?.("surface-props-change");
   }, [className, requestRender, style]);
 
-  const activeWebGL =
-    diagnostics.status === "active" && diagnostics.backend === "webgl";
+  const activeOptics =
+    diagnostics.status === "active" &&
+    (diagnostics.backend === "svg" || diagnostics.backend === "webgl");
   const solidMaterial = diagnostics.backend === "solid";
-  const translucentMaterial = !activeWebGL && !solidMaterial;
+  const fallbackFrost = !activeOptics && !solidMaterial;
   const resolvedRadius =
     typeof radius === "number"
       ? `${radius}px`
@@ -219,18 +220,18 @@ export const TahoeGlassSurface = React.forwardRef<
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 rounded-[inherit]"
         style={{
-          background: activeWebGL
+          background: activeOptics
             ? "transparent"
             : solidMaterial
               ? "Canvas"
               : "color-mix(in srgb, white 25%, transparent)",
-          backdropFilter: translucentMaterial
+          backdropFilter: fallbackFrost
             ? "blur(2px) saturate(180%) brightness(1.05)"
             : "none",
-          WebkitBackdropFilter: translucentMaterial
+          WebkitBackdropFilter: fallbackFrost
             ? "blur(1px) saturate(180%) brightness(1.05)"
             : "none",
-          backgroundImage: translucentMaterial
+          backgroundImage: fallbackFrost
             ? "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)"
             : "none",
           boxShadow: TAHOE_SPECULAR_SHADOW,

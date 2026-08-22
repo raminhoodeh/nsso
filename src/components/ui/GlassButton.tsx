@@ -1,11 +1,15 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react'
-import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
+import {
+    TahoeGlassButton,
+    type TahoeGlassContentTone,
+} from '@/components/ui/tahoe-glass'
 
 interface GlassButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     children: ReactNode
     variant?: 'primary' | 'secondary' | 'ghost' | 'shiny'
     size?: 'sm' | 'md' | 'lg'
     fullWidth?: boolean
+    tone?: TahoeGlassContentTone
 }
 
 /** Backwards-compatible button API backed by the shared Tahoe lens. */
@@ -14,6 +18,7 @@ export default function GlassButton({
     variant = 'primary',
     size = 'md',
     fullWidth = false,
+    tone = 'light',
     className = '',
     disabled = false,
     ...props
@@ -31,6 +36,12 @@ export default function GlassButton({
         shiny: 'font-bold tracking-wide'
     }
 
+    const toneStyles = {
+        inherit: 'text-inherit',
+        light: 'text-white',
+        dark: 'text-slate-950'
+    }
+
     return (
         <TahoeGlassButton
             className={`
@@ -41,8 +52,8 @@ export default function GlassButton({
                 ${fullWidth ? 'w-full' : ''}
                 ${className}
             `}
-            contentClassName="flex items-center justify-center gap-2 text-inherit text-[inherit] font-[inherit] tracking-[inherit]"
-            tone="light"
+            contentClassName={`flex items-center justify-center gap-2 text-[inherit] font-[inherit] tracking-[inherit] ${toneStyles[tone]}`}
+            tone={tone}
             disabled={disabled}
             {...props}
         >

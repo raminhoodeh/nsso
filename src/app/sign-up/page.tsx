@@ -83,7 +83,12 @@ function SignUpForm() {
 
     return (
         <main className="min-h-screen flex items-center justify-center px-6 py-12 relative overflow-hidden">
-            <GlassCard className="w-full max-w-[440px] p-8 lg:p-12 relative z-10">
+            <GlassCard
+                className="w-full max-w-[440px] p-8 lg:p-12 relative z-10"
+                tone="dark"
+                semanticTint="light"
+                semanticTintOpacity={0.07}
+            >
                 {/* Logo */}
                 <div className="text-center mb-8">
                     <Link href="/" className="inline-block">
@@ -92,17 +97,17 @@ function SignUpForm() {
                             alt="nsso"
                             width={100}
                             height={40}
-                            className="h-10 w-auto mx-auto"
+                            className="h-10 w-auto mx-auto brightness-0 opacity-80"
                         />
                     </Link>
                 </div>
 
                 {/* Title */}
                 <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-white mb-2">
+                    <h1 className="text-2xl font-bold text-slate-950 mb-2">
                         Create your nsso profile
                     </h1>
-                    <p className="text-white/70">
+                    <p className="text-slate-950/80">
                         Evolve your identity with the world.
                     </p>
                 </div>
@@ -112,13 +117,11 @@ function SignUpForm() {
                     <TahoeGlassSurface
                         variant="recessed"
                         radius={8}
-                        tone="light"
-                        semanticTint="light"
-                        semanticTintOpacity={0.07}
+                        tone="dark"
                         className="mb-6 px-4 py-3 text-center"
                     >
-                        <p className="text-white/70 text-sm">Reserving:</p>
-                        <p className="text-white font-semibold">nsso.me/{reservedName}</p>
+                        <p className="text-slate-950/80 text-sm">Reserving:</p>
+                        <p className="text-slate-950 font-semibold">nsso.me/{reservedName}</p>
                     </TahoeGlassSurface>
                 )}
 
@@ -130,6 +133,7 @@ function SignUpForm() {
                             variant="secondary"
                             fullWidth
                             onClick={() => handleSSOSignUp(provider.name)}
+                            tone="dark"
                             className="justify-center"
                         >
                             Continue with {provider.label}
@@ -137,14 +141,14 @@ function SignUpForm() {
                     ))}
 
                     {/* Wallet Login */}
-                    <WalletLogin />
+                    <WalletLogin tone="dark" />
                 </div>
 
                 {/* Separator */}
                 <div className="flex items-center gap-4 my-6">
-                    <div className="flex-1 h-px bg-white/20" />
-                    <span className="text-white/50 text-sm">or</span>
-                    <div className="flex-1 h-px bg-white/20" />
+                    <div className="flex-1 h-px bg-black/15" />
+                    <span className="text-slate-950/80 text-sm">or</span>
+                    <div className="flex-1 h-px bg-black/15" />
                 </div>
 
                 {/* Email Form */}
@@ -154,6 +158,7 @@ function SignUpForm() {
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        tone="dark"
                         required
                     />
 
@@ -162,6 +167,7 @@ function SignUpForm() {
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        tone="dark"
                         required
                     />
 
@@ -170,11 +176,12 @@ function SignUpForm() {
                         placeholder="Confirm Password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
+                        tone="dark"
                         required
                     />
 
                     {error && (
-                        <p className="text-red-400 text-sm text-center">{error}</p>
+                        <p className="text-rose-950 font-medium text-sm text-center">{error}</p>
                     )}
 
                     <GlassButton
@@ -182,17 +189,18 @@ function SignUpForm() {
                         variant="shiny"
                         fullWidth
                         disabled={loading}
+                        tone="dark"
                     >
                         {loading ? 'Creating account...' : 'Create Account'}
                     </GlassButton>
                 </form>
 
                 {/* Sign In Link */}
-                <div className="text-center mt-6 pt-6 border-t border-white/10">
-                    <span className="text-white/70">Already have an account? </span>
+                <div className="text-center mt-6 pt-6 border-t border-black/10">
+                    <span className="text-slate-950/80">Already have an account? </span>
                     <Link
                         href="/sign-in"
-                        className="text-white font-semibold hover:underline"
+                        className="text-slate-950 font-semibold hover:underline"
                     >
                         Sign In
                     </Link>
@@ -206,7 +214,7 @@ export default function SignUpPage() {
     return (
         <Suspense fallback={
             <main className="min-h-screen flex items-center justify-center">
-                <div className="text-white">Loading...</div>
+                <div className="text-slate-950">Loading...</div>
             </main>
         }>
             <SignUpForm />
