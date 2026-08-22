@@ -1,15 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { type ReactNode, useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Product } from '@/lib/types'
 import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2, ShieldCheck, ShieldAlert, Lock } from 'lucide-react'
 import GlassCard from '@/components/ui/GlassCard'
 import { useToast } from '@/components/ui/Toast'
-import Header from '@/components/layout/Header'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import DOMPurify from 'dompurify'
+import {
+    TahoeGlassButton,
+    TahoeGlassField,
+    TahoeGlassSurface,
+} from '@/components/ui/tahoe-glass'
+
+function CreatorRouteContent({ children }: { children: ReactNode }) {
+    return <>{children}</>
+}
 
 // AI Prompt Constants
 const PROMPTS = {
@@ -294,40 +302,47 @@ export default function SalesPageCreator() {
 
     if (loading) {
         return (
-            <main className="min-h-screen flex items-center justify-center">
-                <div className="text-white text-xl text-center">
-                    Loading...
-                </div>
-            </main>
+            <CreatorRouteContent>
+                <main className="relative z-[1] flex min-h-screen items-center justify-center">
+                    <TahoeGlassSurface variant="pill" tone="light" contentClassName="px-6 py-3 text-center text-xl">
+                        Loading...
+                    </TahoeGlassSurface>
+                </main>
+            </CreatorRouteContent>
         )
     }
 
     if (!product) {
         return (
-            <main className="min-h-screen flex items-center justify-center">
-                <div className="text-white text-xl text-center">
-                    Product not found.
-                </div>
-            </main>
+            <CreatorRouteContent>
+                <main className="relative z-[1] flex min-h-screen items-center justify-center">
+                    <TahoeGlassSurface variant="card" tone="light" contentClassName="px-8 py-6 text-center text-xl">
+                        Product not found.
+                    </TahoeGlassSurface>
+                </main>
+            </CreatorRouteContent>
         )
     }
 
     return (
-        <main className="min-h-screen pb-32 md:pb-12 bg-[#43628c]">
+        <CreatorRouteContent>
+        <main className="relative z-[1] min-h-screen pb-32 md:pb-12">
             {/* Header Removed to avoid duplicate logo */}
 
             <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto">
 
                 <GlassCard className="p-8 lg:p-12">
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-white/10 gap-4">
+                    <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">
-                            <button
+                            <TahoeGlassButton
                                 onClick={() => router.push('/dashboard')}
-                                className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
+                                aria-label="Back to dashboard"
+                                className="-ml-2 h-10 w-10 px-0 py-0"
+                                contentClassName="!text-white"
                             >
-                                <ChevronLeft className="text-white" size={24} />
-                            </button>
+                                <ChevronLeft size={24} />
+                            </TahoeGlassButton>
                             <div>
                                 <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     Sales Page Creator
@@ -337,7 +352,7 @@ export default function SalesPageCreator() {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <div className="text-[13px] font-medium text-white/60 flex items-center gap-2">
+                            <TahoeGlassSurface variant="pill" tone="light" contentClassName="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-white/70">
                                 {saving ? (
                                     <>
                                         <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
@@ -349,15 +364,16 @@ export default function SalesPageCreator() {
                                         Saved
                                     </>
                                 )}
-                            </div>
-                            <button
+                            </TahoeGlassSurface>
+                            <TahoeGlassButton
                                 onClick={() => router.push(`/products/${productId}?source=creator`)}
-                                className="md:h-[32px] h-[48px] md:w-auto w-full px-4 rounded-full bg-white text-black text-[13px] font-bold hover:bg-white/90 transition-colors"
+                                className="h-[48px] w-full px-4 py-0 md:h-[32px] md:w-auto"
+                                contentClassName="text-[13px] font-bold !text-white"
                             >
                                 Preview Page
-                            </button>
+                            </TahoeGlassButton>
                         </div>
-                    </div>
+                    </TahoeGlassSurface>
 
                     {/* Standard Product Fields */}
                     <div className="mb-8">
@@ -369,51 +385,57 @@ export default function SalesPageCreator() {
                             {/* Left Column */}
                             <div className="space-y-6">
                                 {/* Product Name */}
-                                <div>
-                                    <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Name</label>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
-                                        <input
-                                            type="text"
-                                            value={product.name}
-                                            onChange={(e) => updateProduct({ name: e.target.value })}
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)]"
-                                        />
-                                    </div>
-                                </div>
+                                <TahoeGlassField
+                                    label="Product Name"
+                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                    tone="dark"
+                                    semanticTint="light"
+                                    semanticTintOpacity={0.16}
+                                    surfaceClassName="px-4 py-4"
+                                    controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                >
+                                    <input
+                                        type="text"
+                                        value={product.name}
+                                        onChange={(e) => updateProduct({ name: e.target.value })}
+                                    />
+                                </TahoeGlassField>
 
                                 {/* Price */}
-                                <div>
-                                    <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Price (Include Currency)</label>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
-                                        <input
-                                            type="text"
-                                            value={product.price || ''}
-                                            onChange={(e) => updateProduct({ price: e.target.value })}
-                                            placeholder="e.g. £12"
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)]"
-                                        />
-                                    </div>
-                                </div>
+                                <TahoeGlassField
+                                    label="Price (Include Currency)"
+                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                    tone="dark"
+                                    semanticTint="light"
+                                    semanticTintOpacity={0.16}
+                                    surfaceClassName="px-4 py-4"
+                                    controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                >
+                                    <input
+                                        type="text"
+                                        value={product.price || ''}
+                                        onChange={(e) => updateProduct({ price: e.target.value })}
+                                        placeholder="e.g. £12"
+                                    />
+                                </TahoeGlassField>
 
                                 {/* Description */}
-                                <div>
-                                    <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Description</label>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
-                                        <textarea
-                                            value={product.description || ''}
-                                            onChange={(e) => updateProduct({ description: e.target.value })}
-                                            placeholder="Describe your offering..."
-                                            rows={4}
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)] resize-none"
-                                        />
-                                    </div>
-                                </div>
+                                <TahoeGlassField
+                                    label="Description"
+                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                    tone="dark"
+                                    semanticTint="light"
+                                    semanticTintOpacity={0.16}
+                                    surfaceClassName="px-4 py-4"
+                                    controlClassName="resize-none text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                >
+                                    <textarea
+                                        value={product.description || ''}
+                                        onChange={(e) => updateProduct({ description: e.target.value })}
+                                        placeholder="Describe your offering..."
+                                        rows={4}
+                                    />
+                                </TahoeGlassField>
                             </div>
 
                             {/* Right Column */}
@@ -423,22 +445,26 @@ export default function SalesPageCreator() {
                                     <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Image</label>
                                     <div className="flex items-center gap-4">
                                         {product.image_url && (
-                                            <div className="w-16 h-16 rounded-lg bg-white/5 bg-cover bg-center border border-white/10" style={{ backgroundImage: `url(${product.image_url})` }} />
+                                            <TahoeGlassSurface variant="mediaFrame" radius={8} className="h-16 w-16" contentClassName="h-full w-full p-1">
+                                                <div className="h-full w-full rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${product.image_url})` }} />
+                                            </TahoeGlassSurface>
                                         )}
-                                        <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10">
-                                            {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
-                                            <span className="text-sm text-white/70">{product.image_url ? 'Change Image' : 'Upload Image'}</span>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0]
-                                                    if (file) handleImageSelect(file)
-                                                    e.target.value = ''
-                                                }}
-                                            />
-                                        </label>
+                                        <TahoeGlassSurface variant="button" radius={12} tone="light">
+                                            <label className="flex cursor-pointer items-center gap-2 px-4 py-2">
+                                                {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
+                                                <span className="text-sm text-white/70">{product.image_url ? 'Change Image' : 'Upload Image'}</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (file) handleImageSelect(file)
+                                                        e.target.value = ''
+                                                    }}
+                                                />
+                                            </label>
+                                        </TahoeGlassSurface>
                                     </div>
                                 </div>
                                 {/* Cropper Modal */}
@@ -454,35 +480,45 @@ export default function SalesPageCreator() {
                                 )}
 
                                 {/* Purchase Link */}
-                                <div>
-                                    <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Purchase Link</label>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
-                                        <input
-                                            type="text"
-                                            value={product.purchase_link || ''}
-                                            onChange={(e) => updateProduct({ purchase_link: e.target.value })}
-                                            placeholder="https://..."
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)]"
-                                        />
-                                    </div>
-                                </div>
+                                <TahoeGlassField
+                                    label="Purchase Link"
+                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                    tone="dark"
+                                    semanticTint="light"
+                                    semanticTintOpacity={0.16}
+                                    surfaceClassName="px-4 py-4"
+                                    controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                >
+                                    <input
+                                        type="text"
+                                        value={product.purchase_link || ''}
+                                        onChange={(e) => updateProduct({ purchase_link: e.target.value })}
+                                        placeholder="https://..."
+                                    />
+                                </TahoeGlassField>
 
                                 {/* PayPal HTML */}
                                 <div>
-                                    <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">PayPal Button Code</label>
-                                    <textarea
-                                        value={product.paypal_html || ''}
-                                        onChange={(e) => updateProduct({ paypal_html: e.target.value })}
-                                        placeholder="<form action=...>"
-                                        rows={4}
-                                        className={`w-full bg-black/20 rounded-lg p-4 text-white/80 text-[13px] font-mono focus:outline-none border transition-colors ${verificationStatus === 'scanning' ? 'border-yellow-500/50' :
-                                            verificationStatus === 'secure' ? 'border-green-500/50' :
-                                                verificationStatus === 'unsafe' ? 'border-red-500/50' :
-                                                    'border-white/10'
-                                            } resize-none`}
-                                    />
+                                    <TahoeGlassField
+                                        label="PayPal Button Code"
+                                        labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                        tone="light"
+                                        semanticTint="dark"
+                                        semanticTintOpacity={0.12}
+                                        surfaceClassName={`px-4 py-4 ring-1 ${verificationStatus === 'scanning' ? 'ring-yellow-500/50' :
+                                            verificationStatus === 'secure' ? 'ring-green-500/50' :
+                                                verificationStatus === 'unsafe' ? 'ring-red-500/50' :
+                                                    'ring-white/10'
+                                            }`}
+                                        controlClassName="resize-none font-mono text-[13px] text-white/80 placeholder:text-white/45"
+                                    >
+                                        <textarea
+                                            value={product.paypal_html || ''}
+                                            onChange={(e) => updateProduct({ paypal_html: e.target.value })}
+                                            placeholder="<form action=...>"
+                                            rows={4}
+                                        />
+                                    </TahoeGlassField>
                                     {/* Security Status Indicator */}
                                     {product.paypal_html && (
                                         <div className="mt-2 flex items-center justify-between animate-in fade-in duration-300">
@@ -518,14 +554,14 @@ export default function SalesPageCreator() {
                     </div>
 
                     {/* Info Box */}
-                    <div className="mb-12 p-6 rounded-[18px] bg-white/5 border border-white/10">
+                    <TahoeGlassSurface variant="card" radius={18} tone="light" className="mb-12" contentClassName="p-6">
                         <h2 className="text-[17px] font-bold text-white mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                             AI-Assisted Creator
                         </h2>
                         <p className="text-[15px] leading-[20px] text-white/80">
                             Each field for your Product Sales Page contains an AI prompt to help you write the required copy for the page. Simply click on each field label to copy the preset prompt to your clipboard, and paste it into your preferred AI tool (ChatGPT, Claude, Gemini etc.) Feel free to edit as you wish, and use the content of the prompt to help you understand the copy that's required for each section of your Product Sales Page.
                         </p>
-                    </div>
+                    </TahoeGlassSurface>
 
                     {/* Form Content */}
                     <div className="max-w-3xl space-y-12">
@@ -543,24 +579,29 @@ export default function SalesPageCreator() {
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Headline Hook
                                         </label>
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={() => copyPrompt('headline')}
-                                            className="text-[13px] text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                                            className="px-3 py-1.5"
+                                            contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
                                         >
                                             {copiedField === 'headline' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                        </button>
+                                        </TahoeGlassButton>
                                     </div>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                    <TahoeGlassField
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.16}
+                                        surfaceClassName="px-4 py-4"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    >
                                         <input
                                             type="text"
                                             value={product.headline || ''}
                                             onChange={(e) => updateProduct({ headline: e.target.value })}
                                             placeholder="e.g. Master Design Systems in 30 Days"
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)]"
+                                            aria-label="Headline hook"
                                         />
-                                    </div>
+                                    </TahoeGlassField>
                                 </div>
 
                                 {/* Tagline */}
@@ -569,24 +610,29 @@ export default function SalesPageCreator() {
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Tagline
                                         </label>
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={() => copyPrompt('tagline')}
-                                            className="text-[13px] text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                                            className="px-3 py-1.5"
+                                            contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
                                         >
                                             {copiedField === 'tagline' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                        </button>
+                                        </TahoeGlassButton>
                                     </div>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                    <TahoeGlassField
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.16}
+                                        surfaceClassName="px-4 py-4"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    >
                                         <input
                                             type="text"
                                             value={product.tagline || ''}
                                             onChange={(e) => updateProduct({ tagline: e.target.value })}
                                             placeholder="e.g. The comprehensive guide for modern frontend developers"
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)]"
+                                            aria-label="Tagline"
                                         />
-                                    </div>
+                                    </TahoeGlassField>
                                 </div>
                             </div>
                         </section>
@@ -604,24 +650,29 @@ export default function SalesPageCreator() {
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Introduction / Problem
                                         </label>
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={() => copyPrompt('intro')}
-                                            className="text-[13px] text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                                            className="px-3 py-1.5"
+                                            contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
                                         >
                                             {copiedField === 'intro' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                        </button>
+                                        </TahoeGlassButton>
                                     </div>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                    <TahoeGlassField
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.16}
+                                        surfaceClassName="px-4 py-4"
+                                        controlClassName="resize-none text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    >
                                         <textarea
                                             value={product.intro_text || ''}
                                             onChange={(e) => updateProduct({ intro_text: e.target.value })}
                                             placeholder="Describe the problem your user faces and how this product solves it..."
                                             rows={6}
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)] resize-none"
+                                            aria-label="Introduction or problem"
                                         />
-                                    </div>
+                                    </TahoeGlassField>
                                 </div>
                             </div>
                         </section>
@@ -632,21 +683,27 @@ export default function SalesPageCreator() {
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     03 — Benefits
                                 </h3>
-                                <button
+                                <TahoeGlassButton
                                     onClick={() => copyPrompt('benefits')}
-                                    className="text-[13px] text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                                    className="px-3 py-1.5"
+                                    contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
                                 >
                                     {copiedField === 'benefits' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                </button>
+                                </TahoeGlassButton>
                             </div>
 
                             <div className="space-y-3">
                                 {(product.benefits || []).map((benefit, index) => (
                                     <div key={index} className="flex items-center gap-3 group relative">
                                         <List size={20} className="text-white/20 flex-shrink-0" />
-                                        <div className="flex-1 relative rounded-[12px] overflow-hidden">
-                                            <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                            <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                        <TahoeGlassField
+                                            className="flex-1"
+                                            tone="dark"
+                                            semanticTint="light"
+                                            semanticTintOpacity={0.16}
+                                            surfaceClassName="px-3 py-3 pr-12"
+                                            controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                        >
                                             <input
                                                 type="text"
                                                 value={benefit}
@@ -656,28 +713,33 @@ export default function SalesPageCreator() {
                                                     updateProduct({ benefits: newBenefits })
                                                 }}
                                                 placeholder="Start with a verb (e.g. 'Automate your workflow...')"
-                                                className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-3 pr-12 placeholder:text-[rgba(84,84,84,0.5)]"
+                                                aria-label={`Benefit ${index + 1}`}
                                             />
-                                        </div>
-                                        <button
+                                        </TahoeGlassField>
+                                        <TahoeGlassButton
                                             onClick={() => {
                                                 const newBenefits = (product.benefits || []).filter((_, i) => i !== index)
                                                 updateProduct({ benefits: newBenefits })
                                             }}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-all opacity-0 group-hover:opacity-100 z-20"
+                                            aria-label={`Remove benefit ${index + 1}`}
+                                            semanticTint="dark"
+                                            className="absolute right-3 top-1/2 z-20 h-8 w-8 -translate-y-1/2 px-0 py-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+                                            contentClassName="!text-red-200"
                                         >
                                             <X size={16} />
-                                        </button>
+                                        </TahoeGlassButton>
                                     </div>
                                 ))}
 
                                 {(!product.benefits || product.benefits.length < 9) && (
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => updateProduct({ benefits: [...(product.benefits || []), ''] })}
-                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                        aria-label="Add benefit"
+                                        className="h-8 w-8 px-0 py-0"
+                                        contentClassName="!text-white"
                                     >
                                         <Plus size={16} />
-                                    </button>
+                                    </TahoeGlassButton>
                                 )}
                             </div>
                         </section>
@@ -688,26 +750,31 @@ export default function SalesPageCreator() {
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     04 — Core Value Proposition
                                 </h3>
-                                <button
+                                <TahoeGlassButton
                                     onClick={() => copyPrompt('value_proposition')}
-                                    className="text-[13px] text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
+                                    className="px-3 py-1.5"
+                                    contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
                                 >
                                     {copiedField === 'value_proposition' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                </button>
+                                </TahoeGlassButton>
                             </div>
 
                             <div>
-                                <div className="relative rounded-[12px] overflow-hidden">
-                                    <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                    <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                <TahoeGlassField
+                                    tone="dark"
+                                    semanticTint="light"
+                                    semanticTintOpacity={0.16}
+                                    surfaceClassName="px-4 py-4"
+                                    controlClassName="resize-none text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                >
                                     <textarea
                                         value={product.value_proposition || ''}
                                         onChange={(e) => updateProduct({ value_proposition: e.target.value })}
                                         placeholder="The one main reason they should buy..."
                                         rows={4}
-                                        className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[17px] font-medium leading-[22px] p-4 placeholder:text-[rgba(84,84,84,0.5)] resize-none"
+                                        aria-label="Core value proposition"
                                     />
-                                </div>
+                                </TahoeGlassField>
                             </div>
                         </section>
 
@@ -718,21 +785,22 @@ export default function SalesPageCreator() {
                             </h3>
 
                             <div>
-                                <label className="block text-white/50 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
-                                    <Video size={14} />
-                                    YouTube URL
-                                </label>
-                                <div className="relative rounded-[12px] overflow-hidden">
-                                    <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                    <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                <TahoeGlassField
+                                    label={<><Video size={14} /> YouTube URL</>}
+                                    labelClassName="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white/50"
+                                    tone="light"
+                                    semanticTint="dark"
+                                    semanticTintOpacity={0.08}
+                                    surfaceClassName="px-4 py-4"
+                                    controlClassName="text-[17px] font-medium leading-[22px] text-white placeholder:text-white/50"
+                                >
                                     <input
                                         type="text"
                                         value={product.video_url || ''}
                                         onChange={(e) => updateProduct({ video_url: e.target.value })}
                                         placeholder="https://youtube.com/watch?v=..."
-                                        className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[17px] font-medium leading-[22px] p-4 placeholder:text-white/50"
                                     />
-                                </div>
+                                </TahoeGlassField>
                             </div>
                         </section >
 
@@ -744,21 +812,27 @@ export default function SalesPageCreator() {
 
                             <div className="space-y-4">
                                 {(product.testimonials || []).map((t, index) => (
-                                    <div key={index} className="relative group p-4 rounded-[14px] bg-white/5 border border-white/5">
-                                        <button
+                                    <TahoeGlassSurface key={index} variant="card" radius={14} tone="light" className="group" contentClassName="relative p-4">
+                                        <TahoeGlassButton
                                             onClick={() => {
                                                 const newTestimonials = (product.testimonials || []).filter((_, i) => i !== index)
                                                 updateProduct({ testimonials: newTestimonials })
                                             }}
-                                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all shadow-md opacity-0 group-hover:opacity-100"
+                                            aria-label={`Remove testimonial ${index + 1}`}
+                                            className="absolute -right-2 -top-2 h-6 w-6 px-0 py-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+                                            contentClassName="!text-white"
                                         >
-                                            <X size={14} className="text-white font-bold" strokeWidth={3} />
-                                        </button>
+                                            <X size={14} strokeWidth={3} />
+                                        </TahoeGlassButton>
 
                                         <div className="space-y-4">
-                                            <div className="relative rounded-[12px] overflow-hidden">
-                                                <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                                <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                            <TahoeGlassField
+                                                tone="dark"
+                                                semanticTint="light"
+                                                semanticTintOpacity={0.16}
+                                                surfaceClassName="px-3 py-3"
+                                                controlClassName="resize-none text-[15px] font-medium leading-[20px] text-[#545454] placeholder:text-[#545454]/50"
+                                            >
                                                 <textarea
                                                     value={t.text}
                                                     onChange={(e) => {
@@ -768,13 +842,17 @@ export default function SalesPageCreator() {
                                                     }}
                                                     placeholder="&quot;This changed my life...&quot;"
                                                     rows={3}
-                                                    className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[15px] font-medium leading-[20px] p-3 placeholder:text-[rgba(84,84,84,0.5)] resize-none"
+                                                    aria-label={`Testimonial ${index + 1} text`}
                                                 />
-                                            </div>
+                                            </TahoeGlassField>
 
-                                            <div className="relative rounded-[12px] overflow-hidden">
-                                                <div className="absolute inset-0 bg-[rgba(255,255,255,0.85)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                                <div className="absolute inset-0 bg-[rgba(0,0,0,0.05)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                            <TahoeGlassField
+                                                tone="dark"
+                                                semanticTint="light"
+                                                semanticTintOpacity={0.16}
+                                                surfaceClassName="px-3 py-3"
+                                                controlClassName="text-[15px] font-medium leading-[20px] text-[#545454] placeholder:text-[#545454]/50"
+                                            >
                                                 <input
                                                     type="text"
                                                     value={t.name}
@@ -784,43 +862,48 @@ export default function SalesPageCreator() {
                                                         updateProduct({ testimonials: newTestimonials })
                                                     }}
                                                     placeholder="Reviewer Full Name"
-                                                    className="relative z-10 w-full bg-transparent border-none outline-none text-[#545454] text-[15px] font-medium leading-[20px] p-3 placeholder:text-[rgba(84,84,84,0.5)]"
+                                                    aria-label={`Testimonial ${index + 1} reviewer name`}
                                                 />
-                                            </div>
+                                            </TahoeGlassField>
                                         </div>
-                                    </div>
+                                    </TahoeGlassSurface>
                                 ))}
 
                                 {(!product.testimonials || product.testimonials.length < 5) && (
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => updateProduct({ testimonials: [...(product.testimonials || []), { name: '', text: '' }] })}
-                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                                        aria-label="Add testimonial"
+                                        className="h-8 w-8 px-0 py-0"
+                                        contentClassName="!text-white"
                                     >
                                         <Plus size={16} />
-                                    </button>
+                                    </TahoeGlassButton>
                                 )}
                             </div>
                         </section >
 
                         {/* Bottom Actions */}
                         <div className="flex flex-col md:flex-row gap-4 pt-8 border-t border-white/10">
-                            <button
+                            <TahoeGlassButton
                                 onClick={() => router.push('/dashboard')}
-                                className="flex-1 md:h-[44px] min-h-[54px] md:min-h-0 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold transition-colors"
+                                className="min-h-[54px] flex-1 px-6 py-0 md:h-[44px] md:min-h-0"
+                                contentClassName="font-semibold !text-white"
                             >
                                 Edit Profile
-                            </button>
-                            <button
+                            </TahoeGlassButton>
+                            <TahoeGlassButton
                                 onClick={() => router.push(`/products/${productId}?source=creator`)}
-                                className="flex-1 md:h-[44px] min-h-[54px] md:min-h-0 rounded-full bg-white text-black font-bold hover:bg-white/90 transition-colors"
+                                className="min-h-[54px] flex-1 px-6 py-0 md:h-[44px] md:min-h-0"
+                                contentClassName="font-bold !text-white"
                             >
                                 Preview Sales Page
-                            </button>
+                            </TahoeGlassButton>
                         </div >
 
                     </div >
                 </GlassCard >
             </div >
         </main >
+        </CreatorRouteContent>
     )
 }

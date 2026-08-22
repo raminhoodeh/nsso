@@ -1,12 +1,38 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import {
+    TahoeGlassButton,
+    TahoeGlassSurface,
+} from '@/components/ui/tahoe-glass'
+
+function ProductRouteContent({ children }: { children: ReactNode }) {
+    return <>{children}</>
+}
+
+function PurchaseLink({ href }: { href: string }) {
+    return (
+        <TahoeGlassSurface
+            as="a"
+            variant="button"
+            radius={12}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            tone="light"
+            className="h-[44px] w-full transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            contentClassName="flex h-full w-full items-center justify-center px-4 text-[16px] font-semibold tracking-wide"
+        >
+            Link to Purchase
+        </TahoeGlassSurface>
+    )
+}
 
 interface Product {
     id: string
@@ -137,24 +163,33 @@ export default function ProductSalesPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-white/60">Loading...</div>
-            </div>
+            <ProductRouteContent>
+                <div className="relative z-[1] flex min-h-screen items-center justify-center">
+                    <TahoeGlassSurface variant="pill" tone="light" contentClassName="px-6 py-3 text-white/80">
+                        Loading...
+                    </TahoeGlassSurface>
+                </div>
+            </ProductRouteContent>
         )
     }
 
     if (!product) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-white/60">Product not found</div>
-            </div>
+            <ProductRouteContent>
+                <div className="relative z-[1] flex min-h-screen items-center justify-center">
+                    <TahoeGlassSurface variant="card" tone="light" contentClassName="px-8 py-6 text-white/80">
+                        Product not found
+                    </TahoeGlassSurface>
+                </div>
+            </ProductRouteContent>
         )
     }
 
     const youtubeId = product.video_url ? extractYouTubeId(product.video_url) : null
 
     return (
-        <div className="min-h-screen bg-[#43628c] p-4 md:p-8">
+        <ProductRouteContent>
+        <main className="relative z-[1] min-h-screen p-4 md:p-8">
             <div className="max-w-[1400px] mx-auto">
                 {/* Golden Ratio Grid: 1.618fr 1fr */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
@@ -163,7 +198,7 @@ export default function ProductSalesPage() {
                     <div className="space-y-8 px-3 md:px-16">
                         {/* Back Button */}
                         <div className="mb-8">
-                            <button
+                            <TahoeGlassButton
                                 onClick={() => {
                                     if (isOwner) {
                                         if (searchParams.get('source') === 'creator') {
@@ -177,21 +212,14 @@ export default function ProductSalesPage() {
                                         router.back()
                                     }
                                 }}
-                                className="relative rounded-full overflow-hidden isolate px-4 py-2 text-[15px] font-semibold text-white text-center transition-all duration-200 ease-out bg-transparent hover:bg-[rgba(255,255,255,0.1)]"
-                                style={{ backdropFilter: 'blur(10px)' }}
+                                className="px-4 py-2"
+                                contentClassName="gap-2 text-[15px] font-semibold !text-white"
                             >
-                                {/* Lighten layer */}
-                                <div className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(255,255,255,0.06)] mix-blend-lighten" aria-hidden="true" />
-                                {/* Color dodge layer */}
-                                <div className="absolute inset-0 pointer-events-none rounded-[inherit] bg-[rgba(94,94,94,0.18)] mix-blend-color-dodge" aria-hidden="true" />
-                                {/* Content */}
-                                <span className="relative z-10 flex items-center justify-center gap-2">
-                                    <ChevronLeft size={16} />
-                                    {isOwner && searchParams.get('source') === 'creator'
-                                        ? 'Back to Sales Page Creator'
-                                        : 'Back to Profile'}
-                                </span>
-                            </button>
+                                <ChevronLeft size={16} />
+                                {isOwner && searchParams.get('source') === 'creator'
+                                    ? 'Back to Sales Page Creator'
+                                    : 'Back to Profile'}
+                            </TahoeGlassButton>
                         </div>
 
                         {/* Headline Hook */}
@@ -210,7 +238,15 @@ export default function ProductSalesPage() {
                         </p>
 
                         {/* Mobile-only Product Card — shown early so users see the product before the bullet list */}
-                        <div className="lg:hidden relative rounded-[20px] overflow-hidden bg-white shadow-lg border border-slate-200 p-6 w-full flex flex-col items-center">
+                        <TahoeGlassSurface
+                            variant="panel"
+                            radius={20}
+                            tone="dark"
+                            semanticTint="light"
+                            semanticTintOpacity={0.16}
+                            className="w-full lg:hidden"
+                            contentClassName="flex w-full flex-col items-center p-6"
+                        >
                             {/* Product Image */}
                             {product.image_url && (
                                 <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
@@ -236,32 +272,7 @@ export default function ProductSalesPage() {
                             {/* Purchase Link Button */}
                             {product.purchase_link && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    <div
-                                        className="p-[0.75px] rounded-[12px]"
-                                        style={{
-                                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 100%)'
-                                        }}
-                                    >
-                                        <a
-                                            href={product.purchase_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="relative h-[44px] w-full rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98] bg-slate-900"
-                                            style={{
-                                                boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                                            }}
-                                        >
-                                            <span
-                                                className="relative z-10 text-[16px] font-semibold text-white tracking-wide"
-                                                style={{
-                                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                    fontWeight: 590
-                                                }}
-                                            >
-                                                Link to Purchase
-                                            </span>
-                                        </a>
-                                    </div>
+                                    <PurchaseLink href={product.purchase_link} />
                                 </div>
                             )}
 
@@ -277,7 +288,7 @@ export default function ProductSalesPage() {
                                     />
                                 </div>
                             )}
-                        </div>
+                        </TahoeGlassSurface>
 
                         {/* Benefits */}
                         {product.benefits && product.benefits.length > 0 && (
@@ -300,8 +311,8 @@ export default function ProductSalesPage() {
                         )}
 
                         {/* Guarantee Card */}
-                        <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6">
-                            <div className="grid grid-cols-[17.5%_82.5%] gap-6 items-center">
+                        <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-6">
+                            <div className="grid grid-cols-[17.5%_82.5%] items-center gap-6">
                                 <div className="relative w-full aspect-square">
                                     <Image
                                         src="/guaranteed-logo.png"
@@ -314,19 +325,21 @@ export default function ProductSalesPage() {
                                     100% Guaranteed Satisfaction! If the {product.name} is not for you, I'll refund you – no questions asked.
                                 </p>
                             </div>
-                        </div>
+                        </TahoeGlassSurface>
 
                         {/* Testimonial Carousel */}
                         {product.testimonials && product.testimonials.length > 0 && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-3 md:p-8">
+                            <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-3 md:p-8">
                                 <div className="flex items-center gap-2 md:gap-4">
                                     {product.testimonials.length > 1 && (
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={prevTestimonial}
-                                            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
+                                            aria-label="Previous testimonial"
+                                            className="h-8 w-8 shrink-0 px-0 py-0 md:h-10 md:w-10"
+                                            contentClassName="!text-white"
                                         >
-                                            <ChevronLeft size={18} className="text-white" />
-                                        </button>
+                                            <ChevronLeft size={18} />
+                                        </TahoeGlassButton>
                                     )}
 
                                     <div className="flex-1 space-y-4">
@@ -339,15 +352,17 @@ export default function ProductSalesPage() {
                                     </div>
 
                                     {product.testimonials.length > 1 && (
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={nextTestimonial}
-                                            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
+                                            aria-label="Next testimonial"
+                                            className="h-8 w-8 shrink-0 px-0 py-0 md:h-10 md:w-10"
+                                            contentClassName="!text-white"
                                         >
-                                            <ChevronRight size={18} className="text-white" />
-                                        </button>
+                                            <ChevronRight size={18} />
+                                        </TahoeGlassButton>
                                     )}
                                 </div>
-                            </div>
+                            </TahoeGlassSurface>
                         )}
 
                         {/* Footer Attribution */}
@@ -364,7 +379,15 @@ export default function ProductSalesPage() {
                     {/* RIGHT COLUMN - Conversion & Context */}
                     <div className="space-y-6">
                         {/* Product Card */}
-                        <div className="relative rounded-[20px] overflow-hidden bg-white shadow-lg border border-slate-200 p-6 w-full flex flex-col items-center">
+                        <TahoeGlassSurface
+                            variant="panel"
+                            radius={20}
+                            tone="dark"
+                            semanticTint="light"
+                            semanticTintOpacity={0.16}
+                            className="w-full"
+                            contentClassName="flex w-full flex-col items-center p-6"
+                        >
                             {/* Product Image */}
                             {product.image_url && (
                                 <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
@@ -390,32 +413,7 @@ export default function ProductSalesPage() {
                             {/* Purchase Link Button */}
                             {product.purchase_link && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    <div
-                                        className="p-[0.75px] rounded-[12px]"
-                                        style={{
-                                            background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 100%)'
-                                        }}
-                                    >
-                                        <a
-                                            href={product.purchase_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="relative h-[44px] w-full rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98] bg-slate-900"
-                                            style={{
-                                                boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                                            }}
-                                        >
-                                            <span
-                                                className="relative z-10 text-[16px] font-semibold text-white tracking-wide"
-                                                style={{
-                                                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                    fontWeight: 590
-                                                }}
-                                            >
-                                                Link to Purchase
-                                            </span>
-                                        </a>
-                                    </div>
+                                    <PurchaseLink href={product.purchase_link} />
                                 </div>
                             )}
 
@@ -438,11 +436,11 @@ export default function ProductSalesPage() {
                                     {product.value_proposition}
                                 </p>
                             )}
-                        </div>
+                        </TahoeGlassSurface>
 
                         {/* YouTube Video Embed */}
                         {youtubeId && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-4">
+                            <TahoeGlassSurface variant="mediaFrame" radius={20} tone="light" contentClassName="p-4">
                                 <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                                     <iframe
                                         className="absolute inset-0 w-full h-full rounded-[12px]"
@@ -452,12 +450,12 @@ export default function ProductSalesPage() {
                                         allowFullScreen
                                     />
                                 </div>
-                            </div>
+                            </TahoeGlassSurface>
                         )}
 
                         {/* Contact Details */}
                         {!CONTACT_DETAILS_HIDDEN_PRODUCT_IDS.has(product.id) && (ownerUsername || userContacts.length > 0) && (
-                            <div className="relative rounded-[20px] overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 p-6">
+                            <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-6">
                                 <h4 className="text-[15px] font-bold text-white mb-4 uppercase tracking-wider">
                                     Contact
                                 </h4>
@@ -475,11 +473,12 @@ export default function ProductSalesPage() {
                                         </p>
                                     ))}
                                 </div>
-                            </div>
+                            </TahoeGlassSurface>
                         )}
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+        </ProductRouteContent>
     )
 }

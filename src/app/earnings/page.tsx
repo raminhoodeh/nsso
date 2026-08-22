@@ -5,6 +5,78 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import GlassCard from '@/components/ui/GlassCard'
 import { useUser } from '@/components/providers/UserProvider'
+import {
+    TahoeGlassButton,
+    TahoeGlassSurface,
+} from '@/components/ui/tahoe-glass'
+
+interface ReservationControlProps {
+    value: string
+    onValueChange: (value: string) => void
+    onClaim: () => void
+    breakpoint: '400' | '821'
+}
+
+function ReservationControl({ value, onValueChange, onClaim, breakpoint }: ReservationControlProps) {
+    const desktopClassName = breakpoint === '821' ? 'hidden min-[821px]:block' : 'hidden min-[400px]:block'
+    const mobileClassName = breakpoint === '821' ? 'min-[821px]:hidden flex flex-col gap-3' : 'min-[400px]:hidden flex flex-col gap-3'
+
+    const field = (compact: boolean) => (
+        <TahoeGlassSurface
+            variant="recessed"
+            radius={12}
+            tone="light"
+            className="h-[54px] w-full"
+            contentClassName="flex h-full w-full items-center"
+        >
+            <span
+                className={`${compact ? 'pl-3 text-[20px]' : 'pl-4 text-[22px]'} shrink-0 font-medium text-white/96`}
+                style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}
+            >
+                nsso.me/
+            </span>
+            <input
+                type="text"
+                value={value}
+                onChange={(event) => onValueChange(event.target.value)}
+                onKeyDown={(event) => event.key === 'Enter' && onClaim()}
+                placeholder="yourname"
+                aria-label="Reserve your nsso profile name"
+                className={`${compact ? 'pr-3 text-[20px]' : 'text-[22px]'} min-w-0 flex-1 border-none bg-transparent font-medium text-white outline-none placeholder:text-white`}
+                style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}
+            />
+            {!compact && (
+                <TahoeGlassButton
+                    onClick={onClaim}
+                    radius={12}
+                    className="mr-1.5 h-[42px] w-[133px] shrink-0 px-0 py-0"
+                    contentClassName="text-[16px] font-semibold tracking-wide !text-white"
+                >
+                    CLAIM IT
+                </TahoeGlassButton>
+            )}
+        </TahoeGlassSurface>
+    )
+
+    return (
+        <>
+            <div className={desktopClassName}>{field(false)}</div>
+            <div className={mobileClassName}>
+                {field(true)}
+                <div className="flex justify-center">
+                    <TahoeGlassButton
+                        onClick={onClaim}
+                        radius={12}
+                        className="h-[42px] w-[133px] px-0 py-0"
+                        contentClassName="text-[16px] font-semibold tracking-wide !text-white"
+                    >
+                        CLAIM IT
+                    </TahoeGlassButton>
+                </div>
+            </div>
+        </>
+    )
+}
 
 export default function EarningsPage() {
     const router = useRouter()
@@ -143,7 +215,7 @@ export default function EarningsPage() {
 
 
     return (
-        <main className="min-h-screen bg-[#43628c]">
+        <main className="relative z-[1] min-h-screen">
             <Header />
 
             {/* Section 1: Intro & Acquisition */}
@@ -161,21 +233,21 @@ export default function EarningsPage() {
                         {/* Process List */}
                         <div className="space-y-6">
                             <div className="flex items-center gap-6">
-                                <div className="w-[50px] h-[50px] rounded-full bg-linear-to-b from-[#5676a2] to-[#6888b3] flex items-center justify-center shadow-lg border border-white/10 text-white font-bold text-lg">
+                                <TahoeGlassSurface variant="pill" tone="light" className="h-[50px] w-[50px]" contentClassName="flex h-full w-full items-center justify-center text-lg font-bold">
                                     1
-                                </div>
+                                </TahoeGlassSurface>
                                 <span className="text-white text-2xl font-bold tracking-tight">Sign up</span>
                             </div>
                             <div className="flex items-center gap-6">
-                                <div className="w-[50px] h-[50px] rounded-full bg-linear-to-b from-[#5676a2] to-[#6888b3] flex items-center justify-center shadow-lg border border-white/10 text-white font-bold text-lg">
+                                <TahoeGlassSurface variant="pill" tone="light" className="h-[50px] w-[50px]" contentClassName="flex h-full w-full items-center justify-center text-lg font-bold">
                                     2
-                                </div>
+                                </TahoeGlassSurface>
                                 <span className="text-white text-2xl font-bold tracking-tight">Get your friends to sign up</span>
                             </div>
                             <div className="flex items-center gap-6">
-                                <div className="w-[50px] h-[50px] rounded-full bg-linear-to-b from-[#5676a2] to-[#6888b3] flex items-center justify-center shadow-lg border border-white/10 text-white font-bold text-lg">
+                                <TahoeGlassSurface variant="pill" tone="light" className="h-[50px] w-[50px]" contentClassName="flex h-full w-full items-center justify-center text-lg font-bold">
                                     3
-                                </div>
+                                </TahoeGlassSurface>
                                 <span className="text-white text-2xl font-bold tracking-tight">Earn money</span>
                             </div>
                         </div>
@@ -186,36 +258,7 @@ export default function EarningsPage() {
 
                         {/* Acquisition Component (Homepage Style) */}
                         <div className="relative w-full max-w-[522px] mt-4">
-                            {/* Horizontal layout for larger screens (> 820px) */}
-                            <div className="hidden min-[821px]:block">
-                                <div className="relative w-full h-[54px]">
-                                    <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
-                                        <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px]" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px]" />
-                                        <div className="absolute inset-0 bg-[rgba(94,92,230,0.18)] rounded-[12px]" />
-                                        <div className="absolute inset-0 opacity-40 rounded-[12px]" style={{ backgroundImage: 'url(/siri-gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                                        <span className="relative z-10 text-[22px] font-medium text-white/96 shrink-0 pl-4" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>nsso.me/</span>
-                                        <input type="text" value={reservedName} onChange={(e) => setReservedName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()} placeholder="yourname" className="relative z-10 flex-1 bg-transparent border-none outline-none text-[22px] font-medium text-white placeholder:text-white placeholder:opacity-100 min-w-0" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }} />
-                                        <div className="relative z-10 mr-1.5 shrink-0"><div className="p-[0.75px] rounded-[12px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}><button onClick={handleClaimIt} className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}><div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" /><div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" /><span className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>CLAIM IT</span></button></div></div>
-                                        <div className="absolute inset-0 pointer-events-none rounded-[12px]" style={{ boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)' }} />
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Stacked layout for small screens (≤ 820px) */}
-                            <div className="min-[821px]:hidden flex flex-col gap-3">
-                                <div className="relative w-full h-[54px]">
-                                    <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
-                                        <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px]" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px]" />
-                                        <div className="absolute inset-0 bg-[rgba(94,92,230,0.18)] rounded-[12px]" />
-                                        <div className="absolute inset-0 opacity-40 rounded-[12px]" style={{ backgroundImage: 'url(/siri-gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                                        <span className="relative z-10 text-[20px] font-medium text-white/96 shrink-0 pl-3" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>nsso.me/</span>
-                                        <input type="text" value={reservedName} onChange={(e) => setReservedName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()} placeholder="yourname" className="relative z-10 flex-1 bg-transparent border-none outline-none text-[20px] font-medium text-white placeholder:text-white placeholder:opacity-100 min-w-0 pr-3" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }} />
-                                        <div className="absolute inset-0 pointer-events-none rounded-[12px]" style={{ boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)' }} />
-                                    </div>
-                                </div>
-                                <div className="flex justify-center"><div className="p-[0.75px] rounded-[12px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}><button onClick={handleClaimIt} className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}><div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" /><div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" /><span className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>CLAIM IT</span></button></div></div>
-                            </div>
+                            <ReservationControl value={reservedName} onValueChange={setReservedName} onClaim={handleClaimIt} breakpoint="821" />
                         </div>
                     </div>
 
@@ -255,7 +298,7 @@ export default function EarningsPage() {
                 </h3>
 
                 {/* Calculator Component */}
-                <div className="w-full max-w-[800px] bg-[#6ca5d8]/20 backdrop-blur-xl border border-white/10 rounded-[40px] p-4 lg:p-6 mb-12 shadow-2xl relative">
+                <TahoeGlassSurface variant="panel" radius={40} tone="light" className="mb-12 w-full max-w-[800px]" contentClassName="p-4 lg:p-6">
                     <div className="flex items-center justify-between text-white font-bold px-4 mb-2 select-none">
                         <div className="w-32 text-left">
                             <div className="text-sm opacity-60">Subscribers</div>
@@ -268,9 +311,13 @@ export default function EarningsPage() {
                     </div>
 
                     {/* Slider Track */}
-                    <div
+                    <TahoeGlassSurface
+                        variant="recessed"
+                        radius="9999px"
+                        tone="light"
                         ref={sliderRef}
-                        className={`h-[44px] bg-transparent rounded-full relative overflow-hidden outline-none focus:ring-2 focus:ring-white/30 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                        className={`h-[44px] w-full overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                        contentClassName="relative h-full w-full"
                         onMouseDown={handleMouseDown}
                         onTouchStart={handleTouchStart}
                         onKeyDown={handleKeyDown}
@@ -281,25 +328,14 @@ export default function EarningsPage() {
                         aria-valuenow={users}
                         aria-label="Adjust number of subscribers"
                     >
-                        {/* Track Background with Recessed Effect */}
-                        <div className="absolute inset-0 rounded-full">
-                            <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-full" />
-                            <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-full" />
-                        </div>
-
                         {/* Filled Track */}
                         <div
-                            className="absolute top-0 bottom-0 left-0 bg-[rgba(255,255,255,0.6)] rounded-full"
+                            className="absolute bottom-0 left-0 top-0 rounded-full bg-white/45"
                             style={{
                                 width: `${sliderValue}%`,
                                 boxShadow: '5px 0px 4px 0px rgba(0,0,0,0.18)'
                             }}
                         />
-
-                        {/* Track Inner Shadow */}
-                        <div className="absolute inset-0 pointer-events-none rounded-full" style={{
-                            boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)'
-                        }} />
 
                         {/* Knob with Glow */}
                         <div
@@ -328,8 +364,8 @@ export default function EarningsPage() {
                                 }}
                             />
                         </div>
-                    </div>
-                </div>
+                    </TahoeGlassSurface>
+                </TahoeGlassSurface>
 
                 <p className="text-white/60 text-lg max-w-2xl mx-auto leading-relaxed">
                     You no longer need a paid community to earn money from your following. Simply showcase the personal or professional benefits of the nsso link-in-bio tool you use and point them to sign up with your link.
@@ -355,24 +391,28 @@ export default function EarningsPage() {
                     <GlassCard className="p-10 flex flex-col justify-between min-h-[500px]">
 
                         {/* Calendar UI */}
-                        <div className="w-full bg-white/5 rounded-2xl p-8 border border-white/10 backdrop-blur-sm">
+                        <TahoeGlassSurface variant="card" radius={16} tone="light" className="w-full" contentClassName="p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <span className="text-white font-bold bg-white/10 px-3 py-1 rounded-full text-sm">
+                                <TahoeGlassSurface as="div" variant="pill" tone="light" contentClassName="px-3 py-1 text-sm font-bold">
                                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                                </span>
+                                </TahoeGlassSurface>
                                 <div className="flex gap-2">
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => navigateMonth(-1)}
-                                        className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20 transition-colors cursor-pointer"
+                                        aria-label="Previous month"
+                                        className="h-8 w-8 px-0 py-0"
+                                        contentClassName="!text-white/80"
                                     >
                                         {'<'}
-                                    </button>
-                                    <button
+                                    </TahoeGlassButton>
+                                    <TahoeGlassButton
                                         onClick={() => navigateMonth(1)}
-                                        className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20 transition-colors cursor-pointer"
+                                        aria-label="Next month"
+                                        className="h-8 w-8 px-0 py-0"
+                                        contentClassName="!text-white/80"
                                     >
                                         {'>'}
-                                    </button>
+                                    </TahoeGlassButton>
                                 </div>
                             </div>
                             <div className="grid grid-cols-7 gap-2 text-center mb-2">
@@ -394,22 +434,29 @@ export default function EarningsPage() {
                                     for (let day = 1; day <= daysInMonth; day++) {
                                         const isToday = isCurrentMonth && day === today.getDate()
                                         const isPaymentDay = day === 21
-                                        days.push(
-                                            <div
-                                                key={day}
-                                                className={`w-8 h-8 flex items-center justify-center rounded-full ${isToday ? 'bg-white text-black font-bold' :
-                                                    isPaymentDay ? 'bg-white/20' : ''
-                                                    }`}
-                                            >
-                                                {day}
-                                            </div>
-                                        )
+                                        if (isToday || isPaymentDay) {
+                                            days.push(
+                                                <TahoeGlassSurface
+                                                    key={day}
+                                                    variant="pill"
+                                                    tone={isToday ? 'dark' : 'light'}
+                                                    semanticTint={isToday ? 'light' : 'none'}
+                                                    semanticTintOpacity={isToday ? 0.16 : undefined}
+                                                    className="h-8 w-8"
+                                                    contentClassName={`flex h-full w-full items-center justify-center ${isToday ? 'font-bold' : ''}`}
+                                                >
+                                                    {day}
+                                                </TahoeGlassSurface>
+                                            )
+                                        } else {
+                                            days.push(<div key={day} className="flex h-8 w-8 items-center justify-center">{day}</div>)
+                                        }
                                     }
 
                                     return days
                                 })()}
                             </div>
-                        </div>
+                        </TahoeGlassSurface>
 
                         <div className="mt-8 text-center">
                             <h3 className="text-2xl font-bold text-white mb-2">Payments handled for you</h3>
@@ -437,7 +484,7 @@ export default function EarningsPage() {
                                 { icon: '/assets/earnings/icon-3.png', user: 'nsso.me/sahar' },
                                 { icon: '/assets/earnings/icon-anas.png', user: 'nsso.me/anas' },
                             ].map((n, i) => (
-                                <div key={i} className="flex items-center gap-4 bg-white/10 border border-white/10 p-3 rounded-full backdrop-blur-md shadow-lg transform transition-transform hover:scale-105">
+                                <TahoeGlassSurface key={i} variant="pill" tone="light" className="transition-transform hover:scale-105" contentClassName="flex items-center gap-4 p-3">
                                     <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                                         <img src={n.icon} alt="User" className="w-full h-full object-cover" />
                                     </div>
@@ -445,7 +492,7 @@ export default function EarningsPage() {
                                         <div className="text-white font-bold text-sm">You gained a new user!</div>
                                         <div className="text-[#a0e0ff] text-xs">{n.user} has used your code.</div>
                                     </div>
-                                </div>
+                                </TahoeGlassSurface>
                             ))}
                         </div>
 
@@ -464,31 +511,7 @@ export default function EarningsPage() {
 
                 {/* Acquisition Component (Repeated) */}
                 <div className="relative w-full max-w-[522px] mx-auto mb-12">
-                    {/* Horizontal layout for larger screens (> 400px) */}
-                    <div className="hidden min-[400px]:block"><div className="relative w-full h-[54px]">
-                        <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
-                            <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px]" />
-                            <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px]" />
-                            <div className="absolute inset-0 bg-[rgba(94,92,230,0.18)] rounded-[12px]" />
-                            <div className="absolute inset-0 opacity-40 rounded-[12px]" style={{ backgroundImage: 'url(/siri-gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                            <span className="relative z-10 text-[22px] font-medium text-white/96 shrink-0 pl-4" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>nsso.me/</span>
-                            <input type="text" value={reservedName} onChange={(e) => setReservedName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()} placeholder="yourname" className="relative z-10 flex-1 bg-transparent border-none outline-none text-[22px] font-medium text-white placeholder:text-white placeholder:opacity-100 min-w-0" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }} />
-                            <div className="relative z-10 mr-1.5 shrink-0"><div className="p-[0.75px] rounded-[12px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}><button onClick={handleClaimIt} className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}><div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" /><div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" /><span className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>CLAIM IT</span></button></div></div>
-                            <div className="absolute inset-0 pointer-events-none rounded-[12px]" style={{ boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)' }} />
-                        </div></div></div>
-                    {/* Stacked layout for small screens (≤ 400px) */}
-                    <div className="min-[400px]:hidden flex flex-col gap-3">
-                        <div className="relative w-full h-[54px]"><div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
-                            <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px]" />
-                            <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px]" />
-                            <div className="absolute inset-0 bg-[rgba(94,92,230,0.18)] rounded-[12px]" />
-                            <div className="absolute inset-0 opacity-40 rounded-[12px]" style={{ backgroundImage: 'url(/siri-gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                            <span className="relative z-10 text-[20px] font-medium text-white/96 shrink-0 pl-3" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>nsso.me/</span>
-                            <input type="text" value={reservedName} onChange={(e) => setReservedName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()} placeholder="yourname" className="relative z-10 flex-1 bg-transparent border-none outline-none text-[20px] font-medium text-white placeholder:text-white placeholder:opacity-100 min-w-0 pr-3" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }} />
-                            <div className="absolute inset-0 pointer-events-none rounded-[12px]" style={{ boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)' }} />
-                        </div></div>
-                        <div className="flex justify-center"><div className="p-[0.75px] rounded-[12px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}><button onClick={handleClaimIt} className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]" style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}><div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" /><div className="absolute inset-0 bg-[rgba(128,128,255,0.3)] mix-blend-color-dodge rounded-[12px]" /><span className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>CLAIM IT</span></button></div></div>
-                    </div>
+                    <ReservationControl value={reservedName} onValueChange={setReservedName} onClaim={handleClaimIt} breakpoint="400" />
                 </div>
 
                 <div className="text-center text-white/70 italic text-sm">
