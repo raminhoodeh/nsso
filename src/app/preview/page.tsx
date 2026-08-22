@@ -12,6 +12,7 @@ import GlassButton from '@/components/ui/GlassButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
 import { useToast } from '@/components/ui/Toast'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import type { User, Profile, Link as LinkItem, Contact } from '@/lib/types'
 
 export default function PreviewPage() {
@@ -87,8 +88,16 @@ export default function PreviewPage() {
     return (
         <main className="min-h-screen">
             {/* Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md md:hidden">
-                <div className="max-w-[1800px] mx-auto px-6 lg:px-10 h-[72px] flex items-center justify-between">
+            <TahoeGlassSurface
+                as="nav"
+                variant="menu"
+                radius={0}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.025}
+                className="fixed top-0 left-0 right-0 z-50 px-6 lg:px-10 md:hidden"
+                contentClassName="mx-auto flex h-[72px] max-w-[1800px] items-center justify-between"
+            >
                     <GlassButton
                         variant="ghost"
                         size="sm"
@@ -103,8 +112,7 @@ export default function PreviewPage() {
                     >
                         Copy page URL
                     </GlassButton>
-                </div>
-            </nav>
+            </TahoeGlassSurface>
 
             {/* Profile Content */}
             <div className="pt-[120px] pb-40 px-6 lg:px-10 max-w-[1800px] mx-auto">
