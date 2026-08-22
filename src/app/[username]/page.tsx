@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import GlassCard from '@/components/ui/GlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
@@ -427,9 +428,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                 <div className="flex items-start justify-between gap-4 mb-2">
                                                     <h3 className="text-xl font-bold text-white">{product.name}</h3>
                                                     {product.price !== null && (
-                                                        <div className="text-white font-medium bg-white/10 px-3 py-1 rounded-full">
+                                                        <TahoeGlassSurface
+                                                            variant="pill"
+                                                            tone="light"
+                                                            semanticTint="dark"
+                                                            semanticTintOpacity={0.02}
+                                                            className="px-3 py-1 font-medium text-white"
+                                                        >
                                                             {product.price}
-                                                        </div>
+                                                        </TahoeGlassSurface>
                                                     )}
                                                 </div>
                                                 <p className="text-white/60 text-sm leading-relaxed mb-6">{product.description}</p>
