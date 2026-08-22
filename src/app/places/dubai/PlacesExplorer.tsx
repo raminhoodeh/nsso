@@ -80,6 +80,38 @@ const UAE_BOUNDS = {
   east: 56.6,
   west: 51.5,
 };
+const DATABASE_ONLY_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  {
+    featureType: "poi",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "transit",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "administrative.neighborhood",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "administrative.locality",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "administrative.land_parcel",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "landscape.man_made",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+];
 const STORAGE_KEY = "nsso-uae-place-favourites";
 let mapsConfigured = false;
 
@@ -119,16 +151,56 @@ function markerNode(place: DubaiPlace, selected: boolean) {
   node.className = `${styles.mapMarker}${selected ? ` ${styles.mapMarkerSelected}` : ""}`;
   node.style.setProperty("--marker-color", category.color);
   node.setAttribute("aria-label", `Open ${place.name}`);
+  node.title = place.name;
   node.innerHTML = `<span></span>`;
   return node;
 }
 
+function createMapOverlay(
+  OverlayView: typeof google.maps.OverlayView,
+  options: {
+    map: google.maps.Map;
+    position: google.maps.LatLngLiteral;
+    node: HTMLElement;
+    zIndex: number;
+    centered?: boolean;
+    interactive?: boolean;
+  },
+) {
+  const overlay = new OverlayView();
+  const container = document.createElement("div");
+  const position = new google.maps.LatLng(options.position);
+  container.className = `${styles.mapMarkerOverlay}${options.centered ? ` ${styles.mapMarkerOverlayCentered}` : ""}`;
+  container.style.zIndex = String(options.zIndex);
+  container.appendChild(options.node);
+
+  overlay.onAdd = () => {
+    const panes = overlay.getPanes();
+    const pane = options.interactive === false ? panes?.markerLayer : panes?.overlayMouseTarget;
+    pane?.appendChild(container);
+    if (options.interactive !== false) {
+      OverlayView.preventMapHitsFrom(container);
+    }
+  };
+  overlay.draw = () => {
+    const point = overlay.getProjection().fromLatLngToDivPixel(position);
+    if (!point) return;
+    container.style.left = `${Math.round(point.x)}px`;
+    container.style.top = `${Math.round(point.y)}px`;
+  };
+  overlay.onRemove = () => container.remove();
+  overlay.setMap(options.map);
+  return { overlay, container, node: options.node };
+}
+
+type MapOverlayHandle = ReturnType<typeof createMapOverlay>;
+type PlaceMarkerHandle = MapOverlayHandle & { placeId: string };
+
 export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || "DEMO_MAP_ID";
   const mapElementRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const userMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const markersRef = useRef<PlaceMarkerHandle[]>([]);
+  const userMarkerRef = useRef<MapOverlayHandle | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const suppressGalleryClickRef = useRef(false);
   const galleryRegionRef = useRef<HTMLDivElement>(null);
@@ -141,6 +213,8 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const [category, setCategory] = useState<PlaceCategory | "all">("all");
   const [emirate, setEmirate] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
   const [favourites, setFavourites] = useState<Set<string>>(new Set());
   const [favouritesOnly, setFavouritesOnly] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -235,19 +309,18 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             language: "en",
             region: "AE",
             authReferrerPolicy: "origin",
-            mapIds: [mapId],
           });
           mapsConfigured = true;
         }
-        const { Map: GoogleMap } = await importLibrary("maps");
-        await importLibrary("marker");
+        const { Map: GoogleMap, RenderingType } = await importLibrary("maps");
         if (!active || !mapElementRef.current) return;
         const instance = new GoogleMap(mapElementRef.current, {
           center: DEFAULT_CENTER,
           zoom: 7,
           minZoom: 6,
           maxZoom: 19,
-          mapId,
+          renderingType: RenderingType.RASTER,
+          styles: DATABASE_ONLY_MAP_STYLES,
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
@@ -267,37 +340,57 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     return () => {
       active = false;
     };
-  }, [apiKey, mapId]);
+  }, [apiKey]);
 
   useEffect(() => {
     if (!map) return;
     let cancelled = false;
 
     const renderMarkers = async () => {
-      const { AdvancedMarkerElement } = await importLibrary("marker");
+      const { OverlayView } = await importLibrary("maps");
       if (cancelled) return;
       markersRef.current.forEach((marker) => {
-        marker.map = null;
+        marker.overlay.setMap(null);
       });
       markersRef.current = filteredPlaces.map((place) => {
-        const marker = new AdvancedMarkerElement({
-          map,
-          position: place.coordinates,
-          title: place.name,
-          content: markerNode(place, place.id === selectedId),
-          gmpClickable: true,
-          zIndex: place.id === selectedId ? 1000 : 1,
-        });
-        marker.addListener("click", () => setSelectedId(place.id));
-        return marker;
+        const selected = place.id === selectedIdRef.current;
+        const node = markerNode(place, selected);
+        node.addEventListener("click", () => setSelectedId(place.id));
+        return {
+          ...createMapOverlay(OverlayView, {
+            map,
+            position: place.coordinates,
+            node,
+            zIndex: selected ? 1000 : 1,
+          }),
+          placeId: place.id,
+        };
       });
     };
 
     void renderMarkers();
     return () => {
       cancelled = true;
+      markersRef.current.forEach((marker) => marker.overlay.setMap(null));
+      markersRef.current = [];
     };
-  }, [filteredPlaces, map, selectedId]);
+  }, [filteredPlaces, map]);
+
+  useEffect(() => {
+    markersRef.current.forEach((marker) => {
+      const selected = marker.placeId === selectedId;
+      marker.node.classList.toggle(styles.mapMarkerSelected, selected);
+      marker.container.style.zIndex = selected ? "1000" : "1";
+    });
+  }, [selectedId]);
+
+  useEffect(
+    () => () => {
+      userMarkerRef.current?.overlay.setMap(null);
+      userMarkerRef.current = null;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!map || !filteredPlaces.length) return;
@@ -524,12 +617,19 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         setUserLocation(location);
         setLocationMessage("Sorted by distance from you");
         if (map) {
-          const { AdvancedMarkerElement } = await importLibrary("marker");
-          if (userMarkerRef.current) userMarkerRef.current.map = null;
+          const { OverlayView } = await importLibrary("maps");
+          userMarkerRef.current?.overlay.setMap(null);
           const node = document.createElement("div");
           node.className = styles.userMarker;
           node.innerHTML = "<span></span>";
-          userMarkerRef.current = new AdvancedMarkerElement({ map, position: location, content: node, zIndex: 2000 });
+          userMarkerRef.current = createMapOverlay(OverlayView, {
+            map,
+            position: location,
+            node,
+            zIndex: 2000,
+            centered: true,
+            interactive: false,
+          });
           map.panTo(location);
           map.setZoom(11);
         }

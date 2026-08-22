@@ -1099,6 +1099,22 @@
   white-space: nowrap;
 }
 
+.mapMarkerOverlay {
+  position: absolute;
+  display: inline-block;
+  line-height: 0;
+  transform: translate(0, -100%);
+}
+
+.mapMarkerOverlay:hover,
+.mapMarkerOverlay:focus-within {
+  z-index: 2000 !important;
+}
+
+.mapMarkerOverlayCentered {
+  transform: translate(-50%, -50%);
+}
+
 .mapMarker {
   --marker-color: #657168;
   all: unset;
@@ -1113,6 +1129,7 @@
   box-shadow: 0 4px 12px rgba(28, 38, 31, 0.32);
   cursor: pointer;
   transform: rotate(-45deg);
+  transform-origin: left bottom;
   transition: 150ms ease;
 }
 
