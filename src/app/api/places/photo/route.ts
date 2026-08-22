@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const MAX_URL_LENGTH = 8_192;
 const MAX_REDIRECTS = 4;
-const MAX_RESPONSE_BYTES = 12 * 1024 * 1024;
+const MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
+const FETCH_TIMEOUT_MS = 12_000;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const RASTER_CONTENT_TYPES = new Map([
   ["image/avif", "avif"],
@@ -61,7 +62,7 @@ function photoError(message: string, status: number) {
   );
 }
 
-async function fetchWithValidatedRedirects(source: URL) {
+async function fetchWithValidatedRedirects(source: URL, signal: AbortSignal) {
   let current = source;
 
   for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
@@ -73,6 +74,7 @@ async function fetchWithValidatedRedirects(source: URL) {
       redirect: "manual",
       credentials: "omit",
       referrerPolicy: "no-referrer",
+      signal,
       headers: {
         Accept: "image/avif,image/webp,image/png,image/jpeg,image/gif",
       },
@@ -147,7 +149,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetchWithValidatedRedirects(source);
+    const response = await fetchWithValidatedRedirects(
+      source,
+      AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    );
     const contentType = rasterContentType(response.headers.get("content-type"));
     if (!response.ok || !contentType) {
       await response.body?.cancel();
