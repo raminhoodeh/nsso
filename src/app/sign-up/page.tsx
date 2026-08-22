@@ -10,6 +10,7 @@ import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import WalletLogin from '@/components/auth/WalletLogin'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 const providers = [
     { name: 'google', label: 'Google' },
@@ -108,10 +109,17 @@ function SignUpForm() {
 
                 {/* Reserved name indicator */}
                 {reservedName && (
-                    <div className="bg-white/10 rounded-lg px-4 py-3 mb-6 text-center">
+                    <TahoeGlassSurface
+                        variant="recessed"
+                        radius={8}
+                        tone="light"
+                        semanticTint="light"
+                        semanticTintOpacity={0.07}
+                        className="mb-6 px-4 py-3 text-center"
+                    >
                         <p className="text-white/70 text-sm">Reserving:</p>
                         <p className="text-white font-semibold">nsso.me/{reservedName}</p>
-                    </div>
+                    </TahoeGlassSurface>
                 )}
 
                 {/* SSO Buttons */}

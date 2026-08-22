@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Script from 'next/script'
 import { Cookie } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { TahoeGlassButton, TahoeGlassDialog } from '@/components/ui/tahoe-glass'
 
 import {
     META_PIXEL_CONSENT_COOKIE,
@@ -133,11 +134,16 @@ export default function MetaPixelConsent({
             )}
 
             {preferencesOpen ? (
-                <div
-                    role="dialog"
-                    aria-modal="true"
+                <TahoeGlassDialog
+                    open={preferencesOpen}
+                    onOpenChange={setPreferencesOpen}
                     aria-labelledby="meta-privacy-title"
-                    className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-2xl border border-white/20 bg-black/95 p-5 text-white shadow-2xl backdrop-blur-xl sm:p-6"
+                    closeOnEscape={false}
+                    closeOnPointerDownOutside={false}
+                    radius={24}
+                    tone="light"
+                    overlayClassName="z-[100] items-end justify-center p-4"
+                    className="max-w-2xl p-5 text-white sm:p-6"
                 >
                     <div className="flex items-start gap-4">
                         <Cookie aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-white/70" />
@@ -157,31 +163,44 @@ export default function MetaPixelConsent({
                         </div>
                     </div>
                     <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                        <button
+                        <TahoeGlassButton
                             type="button"
                             onClick={() => chooseConsent('denied')}
-                            className="min-h-11 border border-white/25 px-5 text-sm font-medium text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                            radius={12}
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.08}
+                            className="min-h-11 px-5 py-2.5 text-sm font-medium text-white transition-colors"
+                            contentClassName="text-inherit"
                         >
                             Decline
-                        </button>
-                        <button
+                        </TahoeGlassButton>
+                        <TahoeGlassButton
                             type="button"
                             onClick={() => chooseConsent('granted')}
-                            className="min-h-11 bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                            radius={12}
+                            tone="light"
+                            semanticTint="light"
+                            semanticTintOpacity={0.12}
+                            className="min-h-11 px-5 py-2.5 text-sm font-semibold text-white transition-colors"
+                            contentClassName="text-inherit"
                         >
                             Allow
-                        </button>
+                        </TahoeGlassButton>
                     </div>
-                </div>
+                </TahoeGlassDialog>
             ) : (
-                <button
+                <TahoeGlassButton
                     type="button"
                     onClick={() => setPreferencesOpen(true)}
-                    className="fixed bottom-4 left-4 z-[90] flex min-h-10 items-center gap-2 border border-white/20 bg-black/80 px-3 text-xs font-medium text-white/80 shadow-lg backdrop-blur-xl transition-colors hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    radius={12}
+                    tone="light"
+                    className="fixed bottom-4 left-4 z-[90] min-h-10 px-3 py-2 text-xs font-medium text-white/80 transition-colors hover:text-white"
+                    contentClassName="flex items-center gap-2 text-inherit"
                 >
                     <Cookie aria-hidden="true" className="h-4 w-4" />
                     Privacy choices
-                </button>
+                </TahoeGlassButton>
             )}
         </>
     )

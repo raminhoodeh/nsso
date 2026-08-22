@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useConnect, useSignMessage, useAccount } from 'wagmi'
+import { useConnect } from 'wagmi'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletName } from '@solana/wallet-adapter-base'
-import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/Toast'
 import GlassButton from '@/components/ui/GlassButton'
 

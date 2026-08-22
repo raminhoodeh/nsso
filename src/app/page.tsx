@@ -1,37 +1,81 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import CleanGlassCard from '@/components/ui/CleanGlassCard'
-import GlassButton from '@/components/ui/GlassButton'
-import Input from '@/components/ui/Input'
 import Link from 'next/link'
 import { useUser } from '@/components/providers/UserProvider'
-import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import ComingSoonBadge from '@/components/ui/ComingSoonBadge'
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 
 
-// Animated words for hero section
-const animatedWords = ['Clarify', 'Organise', 'Future-Proof', 'Present']
+interface FeatureTeaserProps {
+  label: string
+  tooltip: string
+  status: 'live' | 'soon'
+  stackClassName: string
+}
+
+function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaserProps) {
+  const tooltipId = useId()
+
+  return (
+    <div className={`group/feature relative ${stackClassName}`}>
+      <TahoeGlassSurface
+        variant="menu"
+        radius={12}
+        tabIndex={0}
+        aria-describedby={tooltipId}
+        tone="light"
+        className="w-full cursor-help px-4 py-3 text-left outline-none transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        contentClassName="flex items-center justify-between gap-3"
+      >
+        <span className="text-[15px] text-white/90">{label}</span>
+        {status === 'live' ? (
+          <TahoeGlassSurface
+            variant="pill"
+            radius={200}
+            semanticTint="light"
+            semanticTintOpacity={0.1}
+            tone="light"
+            className="flex select-none items-center justify-center overflow-hidden px-[10px] py-[3px]"
+          >
+            <span
+              className="whitespace-nowrap text-[10px] font-semibold leading-[14px] text-emerald-100"
+              style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 600 }}
+            >
+              Now live
+            </span>
+          </TahoeGlassSurface>
+        ) : (
+          <ComingSoonBadge />
+        )}
+      </TahoeGlassSurface>
+
+      <TahoeGlassSurface
+        id={tooltipId}
+        role="tooltip"
+        variant="popover"
+        radius={12}
+        tone="light"
+        className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 text-xs leading-relaxed text-white/80 opacity-0 transition-all duration-200 group-hover/feature:visible group-hover/feature:opacity-100 group-focus-within/feature:visible group-focus-within/feature:opacity-100"
+      >
+        {tooltip}
+      </TahoeGlassSurface>
+    </div>
+  )
+}
 
 export default function HomePage() {
   const router = useRouter()
   const { user } = useUser()
   const [reservedName, setReservedName] = useState('')
-  const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const supabase = createClient()
   const videoRef = useRef<HTMLVideoElement>(null)
-
-  // Animate through words
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prev) => (prev + 1) % animatedWords.length)
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [])
 
   // Redirect authenticated users to dashboard (unless they clicked the logo)
   useEffect(() => {
@@ -149,66 +193,24 @@ export default function HomePage() {
 
                 {/* Coming Soon Features - Visual Filter for Whitespace */}
                 <div className="flex flex-col gap-3 mt-12 w-full max-w-sm mx-auto lg:mx-0">
-                  {/* AI Assisted Profile Creation - Now Live */}
-                  <div className="relative group/ai z-[30] hover:z-30">
-                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
-                      <span className="text-white/90 text-[15px]">AI-assisted profile creation</span>
-                      <div className="relative border-[0.75px] border-emerald-500/30 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                        <span className="relative z-10 font-medium text-[10px] text-emerald-100 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 600 }}>
-                          Now live
-                        </span>
-                      </div>
-                    </div>
-                    {/* Tooltip */}
-                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/ai:visible opacity-0 group-hover/ai:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl">
-                      Ask Deity to create your profile for you, gain suggested business and profile ideas based on your profile content
-                    </div>
-                  </div>
-                  {/* Web3 Coming Soon Teaser */}
-                  <div className="relative group/web3 z-[20] hover:z-20">
-                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
-                      <span className="text-white/90 text-[15px]">Integrate web3 wallet</span>
-                      <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
-                        <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                        <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                        <img
-                          alt=""
-                          src="/assets/premium-bezel.png"
-                          className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                        />
-                        <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                          Coming soon
-                        </span>
-                      </div>
-                    </div>
-                    {/* Tooltip */}
-                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/web3:visible opacity-0 group-hover/web3:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl">
-                      Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
-                    </div>
-                  </div>
-
-                  {/* Facebook Pixel Coming Soon Teaser */}
-                  <div className="relative group/pixel z-[10] hover:z-10">
-                    <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
-                      <span className="text-white/90 text-[15px]">Connect Facebook Pixel</span>
-                      <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
-                        <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                        <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                        <img
-                          alt=""
-                          src="/assets/premium-bezel.png"
-                          className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                        />
-                        <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                          Coming soon
-                        </span>
-                      </div>
-                    </div>
-                    {/* Tooltip */}
-                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/pixel:visible opacity-0 group-hover/pixel:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl">
-                      Track conversions and optimize your ads with Facebook Pixel integration.
-                    </div>
-                  </div>
+                  <FeatureTeaser
+                    label="AI-assisted profile creation"
+                    status="live"
+                    stackClassName="z-[30] hover:z-30"
+                    tooltip="Ask Deity to create your profile for you, gain suggested business and profile ideas based on your profile content"
+                  />
+                  <FeatureTeaser
+                    label="Integrate web3 wallet"
+                    status="soon"
+                    stackClassName="z-[20] hover:z-20"
+                    tooltip="Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals"
+                  />
+                  <FeatureTeaser
+                    label="Connect Facebook Pixel"
+                    status="soon"
+                    stackClassName="z-[10] hover:z-10"
+                    tooltip="Track conversions and optimize your ads with Facebook Pixel integration."
+                  />
                 </div>
               </div>
             </CleanGlassCard>
@@ -245,176 +247,91 @@ export default function HomePage() {
         <div className="relative w-full max-w-[522px] mx-auto mb-12">
           {/* Horizontal layout for larger screens (> 400px) */}
           <div className="hidden min-[400px]:block">
-            <div className="relative w-full h-[54px]">
-              {/* Base container with all layers */}
-              <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
-                {/* Glassmorphic background layers */}
-                <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px]" />
-                <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px]" />
-
-                {/* Purple gradient layer */}
-                <div className="absolute inset-0 bg-[rgba(94,92,230,0.18)] rounded-[12px]" />
-
-                {/* Siri gradient background image */}
-                <div
-                  className="absolute inset-0 opacity-40 rounded-[12px]"
-                  style={{
-                    backgroundImage: 'url(/siri-gradient.png)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-
-                {/* Prefix text - nsso.me/ */}
-                <span
-                  className="relative z-10 text-[22px] font-medium text-white/96 shrink-0 pl-4"
-                  style={{
-                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                    fontWeight: 510
-                  }}
-                >
-                  nsso.me/
-                </span>
-
-                {/* Input field */}
-                <input
-                  type="text"
-                  value={reservedName}
-                  onChange={(e) => setReservedName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
-                  placeholder="yourname"
-                  className="relative z-10 flex-1 bg-transparent border-none outline-none text-[22px] font-medium text-white placeholder:text-white placeholder:opacity-100 min-w-0"
-                  style={{
-                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                    fontWeight: 510
-                  }}
-                />
-
-                {/* Shiny CLAIM IT Button - Figma Exact Design */}
-                <div className="relative z-10 mr-1.5 shrink-0">
-                  {/* Gradient border wrapper */}
-                  <div
-                    className="p-[0.75px] rounded-[12px]"
-                    style={{
-                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
-                    }}
-                  >
-                    <button
-                      onClick={handleClaimIt}
-                      className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      style={{
-                        boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                      }}
-                    >
-                      {/* Shiny button background layers */}
-                      <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                      <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
-
-                      <span
-                        className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
-                        style={{
-                          fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                          fontWeight: 590
-                        }}
-                      >
-                        CLAIM IT
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Inset shadow overlay */}
-                <div
-                  className="absolute inset-0 pointer-events-none rounded-[12px]"
-                  style={{
-                    boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)'
-                  }}
-                />
-              </div>
-            </div>
+            <TahoeGlassSurface
+              variant="recessed"
+              radius={12}
+              tone="light"
+              className="h-[54px] w-full overflow-hidden"
+              contentClassName="flex h-full w-full items-center"
+            >
+              <span
+                className="shrink-0 pl-4 text-[22px] font-medium text-white/96"
+                style={{
+                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                  fontWeight: 510
+                }}
+              >
+                nsso.me/
+              </span>
+              <input
+                aria-label="Profile name"
+                type="text"
+                value={reservedName}
+                onChange={(e) => setReservedName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
+                placeholder="yourname"
+                className="min-w-0 flex-1 border-none bg-transparent text-[22px] font-medium text-white outline-none placeholder:text-white placeholder:opacity-100"
+                style={{
+                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                  fontWeight: 510
+                }}
+              />
+              <TahoeGlassButton
+                onClick={handleClaimIt}
+                radius={12}
+                tone="light"
+                className="mr-1.5 h-[42px] w-[133px] shrink-0 px-4 py-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                contentClassName="text-[16px] font-semibold tracking-wide text-white/96"
+              >
+                CLAIM IT
+              </TahoeGlassButton>
+            </TahoeGlassSurface>
           </div>
 
           {/* Stacked layout for small screens (≤ 400px) */}
           <div className="min-[400px]:hidden flex flex-col gap-3">
-            {/* Input field */}
-            <div className="relative w-full h-[54px]">
-              <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
-                {/* Glassmorphic background layers */}
-                <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px]" />
-                <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px]" />
-                <div className="absolute inset-0 bg-[rgba(94,92,230,0.18)] rounded-[12px]" />
-                <div
-                  className="absolute inset-0 opacity-40 rounded-[12px]"
-                  style={{
-                    backgroundImage: 'url(/siri-gradient.png)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-
-                {/* Prefix text */}
-                <span
-                  className="relative z-10 text-[20px] font-medium text-white/96 shrink-0 pl-3"
-                  style={{
-                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                    fontWeight: 510
-                  }}
-                >
-                  nsso.me/
-                </span>
-
-                {/* Input field - full width */}
-                <input
-                  type="text"
-                  value={reservedName}
-                  onChange={(e) => setReservedName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
-                  placeholder="yourname"
-                  className="relative z-10 flex-1 bg-transparent border-none outline-none text-[20px] font-medium text-white placeholder:text-white placeholder:opacity-100 min-w-0 pr-3"
-                  style={{
-                    fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                    fontWeight: 510
-                  }}
-                />
-
-                {/* Inset shadow overlay */}
-                <div
-                  className="absolute inset-0 pointer-events-none rounded-[12px]"
-                  style={{
-                    boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)'
-                  }}
-                />
-              </div>
-            </div>
+            <TahoeGlassSurface
+              variant="recessed"
+              radius={12}
+              tone="light"
+              className="h-[54px] w-full overflow-hidden"
+              contentClassName="flex h-full w-full items-center"
+            >
+              <span
+                className="shrink-0 pl-3 text-[20px] font-medium text-white/96"
+                style={{
+                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                  fontWeight: 510
+                }}
+              >
+                nsso.me/
+              </span>
+              <input
+                aria-label="Profile name"
+                type="text"
+                value={reservedName}
+                onChange={(e) => setReservedName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
+                placeholder="yourname"
+                className="min-w-0 flex-1 border-none bg-transparent pr-3 text-[20px] font-medium text-white outline-none placeholder:text-white placeholder:opacity-100"
+                style={{
+                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+                  fontWeight: 510
+                }}
+              />
+            </TahoeGlassSurface>
 
             {/* Button - centered below */}
             <div className="flex justify-center">
-              <div
-                className="p-[0.75px] rounded-[12px]"
-                style={{
-                  background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
-                }}
+              <TahoeGlassButton
+                onClick={handleClaimIt}
+                radius={12}
+                tone="light"
+                className="h-[42px] w-[133px] px-4 py-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                contentClassName="text-[16px] font-semibold tracking-wide text-white/96"
               >
-                <button
-                  onClick={handleClaimIt}
-                  className="relative h-[42px] w-[133px] rounded-[12px] flex items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{
-                    boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                  }}
-                >
-                  <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[12px]" />
-                  <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[12px]" />
-                  <span
-                    className="relative z-10 text-[16px] font-semibold text-white/96 tracking-wide"
-                    style={{
-                      fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                      fontWeight: 590
-                    }}
-                  >
-                    CLAIM IT
-                  </span>
-                </button>
-              </div>
+                CLAIM IT
+              </TahoeGlassButton>
             </div>
           </div>
         </div>
@@ -465,7 +382,7 @@ export default function HomePage() {
       </section >
 
       {/* Video Feature Section */}
-      <section className="w-full lg:min-h-screen flex flex-col items-center justify-center lg:bg-black pt-12 pb-24 lg:py-0 gap-12">
+      <section className="w-full lg:min-h-screen flex flex-col items-center justify-center pt-12 pb-24 lg:py-0 gap-12">
         <div className="w-full h-full max-w-[1470px] aspect-video">
           <iframe
             width="100%"
@@ -481,7 +398,18 @@ export default function HomePage() {
 
         {/* Create Profile Button - Mobile Only */}
         <div className="lg:hidden">
-          <CreateProfileButton />
+          <TahoeGlassSurface
+            as="a"
+            variant="button"
+            href="/sign-in"
+            tone="light"
+            className="group flex items-center justify-center overflow-hidden px-6 py-2 transition-all duration-300 hover:scale-105 active:scale-95"
+            contentClassName="flex flex-col items-center justify-center"
+          >
+            <span className="whitespace-nowrap text-center text-[14px] font-semibold leading-normal tracking-wide text-[#5ac8f5] drop-shadow-sm">
+              Create your nsso profile
+            </span>
+          </TahoeGlassSurface>
         </div>
       </section>
     </main >

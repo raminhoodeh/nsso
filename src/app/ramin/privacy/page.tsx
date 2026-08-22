@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, Cookie } from 'lucide-react'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 export const metadata: Metadata = {
     title: 'Privacy and Tracking | Ramin on nsso',
@@ -55,12 +56,16 @@ export default function RaminTrackingPrivacyPage() {
                     <p className="mt-3 leading-7 text-white/70">
                         Meta Pixel remains off until you select Allow. Your choice is stored for 180 days in the <code className="text-white">nsso_meta_marketing_consent</code> cookie. You can change it at any time using Privacy choices on Ramin&apos;s profile.
                     </p>
-                    <Link
+                    <TahoeGlassSurface
+                        as="a"
+                        variant="button"
                         href="/ramin#privacy-choices"
-                        className="mt-5 inline-flex min-h-11 items-center border border-white/25 px-4 text-sm font-medium transition-colors hover:bg-white/10"
+                        radius={12}
+                        tone="light"
+                        className="mt-5 inline-flex min-h-11 items-center px-4 text-sm font-medium transition-colors"
                     >
                         Manage tracking choices
-                    </Link>
+                    </TahoeGlassSurface>
                 </section>
 
                 <section className="mt-10 border-t border-white/15 pt-8">
@@ -78,4 +83,3 @@ export default function RaminTrackingPrivacyPage() {
         </main>
     )
 }
-
