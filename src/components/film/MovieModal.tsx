@@ -692,12 +692,14 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                             />
                                         </TahoeGlassField>
                                     ) : (
-                                        <span 
-                                            className="text-white text-sm hover:underline cursor-pointer transition-colors hover:text-red-400"
-                                            onClick={() => onSearch && onSearch(film.director)}
+                                        <button
+                                            type="button"
+                                            className="text-left text-sm text-white transition-colors hover:text-red-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                                            onClick={() => onSearch?.(film.director)}
+                                            aria-label={`Search for films directed by ${film.director}`}
                                         >
                                             {film.director}
-                                        </span>
+                                        </button>
                                     )}
                                 </div>
                                 <div className="hidden md:block">
