@@ -25,7 +25,14 @@ export type TahoeGlassSurfaceVariant =
   | "menu"
   | "panel"
   | "button"
-  | "pill";
+  | "pill"
+  | "recessed"
+  | "dialog"
+  | "popover"
+  | "mediaFrame";
+
+export type TahoeGlassContentTone = "inherit" | "light" | "dark";
+export type TahoeGlassSemanticTint = "none" | "light" | "dark";
 
 export interface TahoeGlassSurfaceProps
   extends Omit<React.HTMLAttributes<HTMLElement>, "children"> {
@@ -34,6 +41,11 @@ export interface TahoeGlassSurfaceProps
   radius?: number | string;
   children?: React.ReactNode;
   contentClassName?: string;
+  /** Changes content contrast only; it never tints the optical body. */
+  tone?: TahoeGlassContentTone;
+  /** Optional semantic wash rendered as its own layer, never as shell fill. */
+  semanticTint?: TahoeGlassSemanticTint;
+  semanticTintOpacity?: number;
   /** Enable while a surface is animated or follows the pointer. */
   tracking?: "static" | "continuous";
   href?: string;
@@ -49,7 +61,25 @@ const VARIANT_RADIUS: Record<TahoeGlassSurfaceVariant, string> = {
   panel: "32px",
   button: "9999px",
   pill: "9999px",
+  recessed: "12px",
+  dialog: "32px",
+  popover: "22px",
+  mediaFrame: "20px",
 };
+
+const TONE_CLASS: Record<TahoeGlassContentTone, string> = {
+  inherit: "text-inherit",
+  light: "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]",
+  dark: "text-black/90 [text-shadow:0_1px_1px_rgba(255,255,255,0.35)]",
+};
+
+function enforceClearOpticalRoot(element: HTMLElement): void {
+  element.style.setProperty("background", "transparent", "important");
+  element.style.setProperty("background-color", "transparent", "important");
+  element.style.setProperty("background-image", "none", "important");
+  element.style.setProperty("backdrop-filter", "none", "important");
+  element.style.setProperty("-webkit-backdrop-filter", "none", "important");
+}
 
 function assignRef<T>(ref: React.ForwardedRef<T>, value: T | null): void {
   if (typeof ref === "function") ref(value);
@@ -67,6 +97,9 @@ export const TahoeGlassSurface = React.forwardRef<
     tracking = "static",
     className,
     contentClassName,
+    tone = "inherit",
+    semanticTint = "none",
+    semanticTintOpacity = 0.07,
     children,
     style,
     href,
@@ -88,6 +121,7 @@ export const TahoeGlassSurface = React.forwardRef<
   const setRef = React.useCallback(
     (element: HTMLElement | null) => {
       internalRef.current = element;
+      if (element) enforceClearOpticalRoot(element);
       assignRef(forwardedRef, element);
     },
     [forwardedRef],
@@ -101,6 +135,10 @@ export const TahoeGlassSurface = React.forwardRef<
     });
     return () => unregisterSurface(id);
   }, [id, registerSurface, tracking, unregisterSurface]);
+
+  React.useLayoutEffect(() => {
+    if (internalRef.current) enforceClearOpticalRoot(internalRef.current);
+  }, [className, style]);
 
   const activeWebGL =
     diagnostics.status === "active" && diagnostics.backend === "webgl";
@@ -127,11 +165,11 @@ export const TahoeGlassSurface = React.forwardRef<
     <Component
       ref={setRef}
       className={cn(
-        "relative z-[1] isolate border-0 bg-transparent",
+        "pointer-events-auto relative z-[1] isolate border-0 !bg-transparent !backdrop-blur-none",
         (variant === "button" || variant === "pill") && "select-none",
         as === "button" &&
           "pointer-events-auto inline-flex cursor-pointer items-center justify-center outline-none origin-center transition-transform duration-[400ms] ease-[cubic-bezier(0.4,1.5,0.3,1)] active:scale-[0.96] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:pointer-events-none disabled:opacity-50",
-        as === "a" &&
+        as === "a" && href &&
           "pointer-events-auto cursor-pointer outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
         diagnostics.reducedMotion && "transition-none active:scale-100",
         className,
@@ -145,15 +183,24 @@ export const TahoeGlassSurface = React.forwardRef<
           "--rim-gradient": "none",
           borderRadius: resolvedRadius,
           ...style,
+          background: "transparent",
+          backgroundColor: "transparent",
+          backgroundImage: "none",
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
         } as React.CSSProperties
       }
-      data-tahoe-glass-surface={variant}
-      data-tahoe-glass-state={diagnostics.status}
-      data-tahoe-glass-backend={diagnostics.backend}
-      data-tahoe-glass-source={diagnostics.source}
-      data-tahoe-glass-fallback-reason={diagnostics.reason || undefined}
       {...nativeProps}
       {...props}
+      data-tahoe-glass-surface={variant}
+      data-tahoe-glass-tone={tone}
+      data-tahoe-glass-tint={semanticTint}
+      data-tahoe-glass-state={context ? undefined : diagnostics.status}
+      data-tahoe-glass-backend={context ? undefined : diagnostics.backend}
+      data-tahoe-glass-source={context ? undefined : diagnostics.source}
+      data-tahoe-glass-fallback-reason={
+        context ? undefined : diagnostics.reason || undefined
+      }
     >
       <span
         aria-hidden="true"
@@ -177,6 +224,18 @@ export const TahoeGlassSurface = React.forwardRef<
         }}
       />
 
+      {semanticTint !== "none" && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[1] rounded-[inherit]"
+          style={{
+            backgroundColor:
+              semanticTint === "light" ? "white" : "rgb(8, 12, 20)",
+            opacity: Math.max(0, Math.min(0.16, semanticTintOpacity)),
+          }}
+        />
+      )}
+
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-10 rounded-[inherit] p-px"
@@ -191,7 +250,9 @@ export const TahoeGlassSurface = React.forwardRef<
         }}
       />
 
-      <Content className={cn("relative z-20", contentClassName)}>
+      <Content
+        className={cn("relative z-20", TONE_CLASS[tone], contentClassName)}
+      >
         {children}
       </Content>
     </Component>

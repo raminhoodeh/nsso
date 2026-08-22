@@ -19,6 +19,10 @@ import type {
   TahoeGlassWebGLSource,
 } from "@/lib/tahoe-glass/types";
 import { TahoeWebGLRenderer } from "@/lib/tahoe-glass/webgl";
+import {
+  TahoeGlassDebugOverlay,
+  type TahoeGlassDebugSurface,
+} from "@/components/ui/tahoe-glass/TahoeGlassDebugOverlay";
 
 interface SurfaceRuntime {
   id: string;
@@ -81,6 +85,10 @@ export interface TahoeGlassProviderProps
   children?: React.ReactNode;
   sceneClassName?: string;
   sceneStyle?: React.CSSProperties;
+  /** Diagnostic name for the owned DOM/SVG scene (for example vanta-clouds). */
+  sourceLabel?: string;
+  /** Allows pointer and accessibility interaction with an owned map scene. */
+  sceneInteractive?: boolean;
   preferredBackend?: TahoeGlassPreferredBackend;
   fallback?: TahoeGlassFallback;
   /** Required for an honest WebGL path; arbitrary DOM cannot be sampled. */
@@ -91,12 +99,30 @@ export interface TahoeGlassProviderProps
   viewportMode?: "fixed" | "contained";
   contentClassName?: string;
   contentStyle?: React.CSSProperties;
+  /** Query string `?glassDebug=1` also enables this overlay. */
+  debug?: boolean;
   onDiagnosticsChange?: (diagnostics: TahoeGlassDiagnostics) => void;
 }
 
-function sourceLabel(source?: TahoeGlassWebGLSource): string {
-  if (!source) return "dom-scene";
-  return source.label || (source.kind === "image" ? source.src : source.kind);
+function webglSourceLabel(
+  source: TahoeGlassWebGLSource | undefined,
+  domSourceLabel: string,
+): string {
+  if (!source) return domSourceLabel;
+  return source.label || domSourceLabel;
+}
+
+function subscribeGlassDebug(onStoreChange: () => void): () => void {
+  window.addEventListener("popstate", onStoreChange);
+  window.addEventListener("hashchange", onStoreChange);
+  return () => {
+    window.removeEventListener("popstate", onStoreChange);
+    window.removeEventListener("hashchange", onStoreChange);
+  };
+}
+
+function glassDebugQueryEnabled(): boolean {
+  return new URLSearchParams(window.location.search).get("glassDebug") === "1";
 }
 
 function fallbackBackend(fallback: TahoeGlassFallback): TahoeGlassBackend {
@@ -194,6 +220,8 @@ export function TahoeGlassProvider({
   className,
   sceneClassName,
   sceneStyle,
+  sourceLabel: domSourceLabel = "dom-scene",
+  sceneInteractive = false,
   preferredBackend = "auto",
   fallback = "webgl",
   webglSource,
@@ -203,6 +231,7 @@ export function TahoeGlassProvider({
   viewportMode = "fixed",
   contentClassName,
   contentStyle,
+  debug = false,
   onDiagnosticsChange,
   style,
   ...props
@@ -218,6 +247,7 @@ export function TahoeGlassProvider({
   const intersectionObserverRef = React.useRef<IntersectionObserver | null>(null);
   const rendererRef = React.useRef<TahoeWebGLRenderer | null>(null);
   const compositeCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const lastDebugFrameRef = React.useRef(0);
   const activeFilterRef = React.useRef<0 | 1>(0);
   const frameRef = React.useRef<number | null>(null);
   const renderFrameRef = React.useRef<(refreshSource?: boolean) => void>(
@@ -225,12 +255,22 @@ export function TahoeGlassProvider({
   );
   const mountedRef = React.useRef(false);
   const [environmentRevision, setEnvironmentRevision] = React.useState(0);
+  const [debugSurfaces, setDebugSurfaces] = React.useState<
+    TahoeGlassDebugSurface[]
+  >([]);
+  const queryDebugEnabled = React.useSyncExternalStore(
+    subscribeGlassDebug,
+    glassDebugQueryEnabled,
+    () => false,
+  );
+  const debugEnabled = debug || queryDebugEnabled;
 
   const filterId0 = `${React.useId().replace(/:/g, "-")}-tahoe-0`;
   const filterId1 = `${React.useId().replace(/:/g, "-")}-tahoe-1`;
 
-  const [diagnostics, setDiagnostics] =
-    React.useState<TahoeGlassDiagnostics>(INITIAL_DIAGNOSTICS);
+  const [diagnostics, setDiagnostics] = React.useState<TahoeGlassDiagnostics>(
+    () => ({ ...INITIAL_DIAGNOSTICS, source: domSourceLabel }),
+  );
   const diagnosticsRef = React.useRef(diagnostics);
   const onDiagnosticsChangeRef = React.useRef(onDiagnosticsChange);
 
@@ -386,24 +426,30 @@ export function TahoeGlassProvider({
     });
     surfaceResizeObserverRef.current = surfaceObserver;
 
-    const intersectionObserver = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        for (const runtime of registryRef.current.values()) {
-          if (runtime.element === entry.target) {
-            runtime.visible = entry.isIntersecting;
-            runtime.fieldKey = "";
-            if (!entry.isIntersecting) {
-              runtime.field = null;
-              runtime.drawn = false;
+    const intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          for (const runtime of registryRef.current.values()) {
+            if (runtime.element === entry.target) {
+              runtime.visible = entry.isIntersecting;
+              runtime.fieldKey = "";
+              if (!entry.isIntersecting) {
+                runtime.field = null;
+                runtime.drawn = false;
+              }
+              writeSurfaceDiagnostics(runtime, diagnosticsRef.current);
+              break;
             }
-            writeSurfaceDiagnostics(runtime, diagnosticsRef.current);
-            break;
           }
         }
-      }
-      refreshCounts();
-      requestRender("surface-visibility");
-    }, { root: viewportMode === "contained" ? viewport : null });
+        refreshCounts();
+        requestRender("surface-visibility");
+      },
+      {
+        root:
+          viewportMode === "contained" ? containerRef.current : null,
+      },
+    );
     intersectionObserverRef.current = intersectionObserver;
 
     for (const runtime of registryRef.current.values()) {
@@ -491,7 +537,7 @@ export function TahoeGlassProvider({
         ...base,
         status: "fallback",
         backend: "solid",
-        source: "dom-scene",
+        source: domSourceLabel,
         reason: capabilities.forcedColors
           ? "forced-colors-active"
           : "reduced-transparency-requested",
@@ -511,7 +557,7 @@ export function TahoeGlassProvider({
         ...base,
         status: "initializing",
         backend: "svg",
-        source: "dom-scene",
+        source: domSourceLabel,
         reason: "awaiting-first-displaced-frame",
       });
       requestRender("svg-ready");
@@ -530,7 +576,7 @@ export function TahoeGlassProvider({
         ...base,
         status: "initializing",
         backend: "webgl",
-        source: sourceLabel(webglSource),
+        source: webglSourceLabel(webglSource, domSourceLabel),
         reason: "awaiting-webgl-scene-source",
       });
       void TahoeWebGLRenderer.create(canvas, webglSource, sourceAbort.signal)
@@ -545,7 +591,7 @@ export function TahoeGlassProvider({
             ...current,
             status: "initializing",
             backend: "webgl",
-            source: sourceLabel(webglSource),
+            source: webglSourceLabel(webglSource, domSourceLabel),
             reason: renderer.requiresSynchronousRefresh
               ? "awaiting-scene-after-render"
               : "awaiting-first-displaced-frame",
@@ -560,7 +606,7 @@ export function TahoeGlassProvider({
             ...base,
             status: "fallback",
             backend: fallback === "solid" ? "solid" : "css-blur",
-            source: "dom-scene",
+            source: domSourceLabel,
             reason: message,
           });
           requestRender("webgl-failed");
@@ -585,7 +631,7 @@ export function TahoeGlassProvider({
       ...base,
       status: "fallback",
       backend: requestedFallback === "webgl" ? "css-blur" : requestedFallback,
-      source: "dom-scene",
+      source: domSourceLabel,
       reason,
     });
     requestRender("backend-fallback");
@@ -603,6 +649,7 @@ export function TahoeGlassProvider({
     requestRender,
     respectReducedMotion,
     respectReducedTransparency,
+    domSourceLabel,
     webglSource,
   ]);
 
@@ -631,7 +678,7 @@ export function TahoeGlassProvider({
         ...current,
         status: "failed",
         backend: "solid",
-        source: "dom-scene",
+        source: domSourceLabel,
         reason: "displacement-map-context-unavailable",
       });
       return;
@@ -719,6 +766,48 @@ export function TahoeGlassProvider({
       writeSurfaceDiagnostics(runtime, current);
     }
 
+    if (
+      debugEnabled &&
+      performance.now() - lastDebugFrameRef.current >= 80
+    ) {
+      lastDebugFrameRef.current = performance.now();
+      setDebugSurfaces(
+        [...registryRef.current.values()].map((runtime) => {
+          const rect = runtime.element.getBoundingClientRect();
+          const status =
+            (runtime.element.getAttribute(
+              "data-tahoe-glass-state",
+            ) as TahoeGlassStatus | null) || current.status;
+          const backend =
+            (runtime.element.getAttribute(
+              "data-tahoe-glass-backend",
+            ) as TahoeGlassBackend | null) || current.backend;
+          return {
+            id: runtime.id,
+            variant:
+              runtime.element.getAttribute("data-tahoe-glass-surface") ||
+              "surface",
+            status,
+            backend,
+            source:
+              runtime.element.getAttribute("data-tahoe-glass-source") ||
+              current.source,
+            reason: runtime.element.getAttribute(
+              "data-tahoe-glass-fallback-reason",
+            ),
+            visible: runtime.visible,
+            measured: runtime.measured,
+            rect: {
+              left: rect.left,
+              top: rect.top,
+              width: rect.width,
+              height: rect.height,
+            },
+          };
+        }),
+      );
+    }
+
     const frameDiagnostics = { ...current, visibleSurfaceCount };
 
     if (
@@ -750,7 +839,7 @@ export function TahoeGlassProvider({
             ...frameDiagnostics,
             status: "failed",
             backend: "solid",
-            source: "dom-scene",
+            source: domSourceLabel,
             reason:
               error instanceof Error
                 ? error.message
@@ -795,7 +884,7 @@ export function TahoeGlassProvider({
             ...frameDiagnostics,
             status: "fallback",
             backend: fallback === "solid" ? "solid" : "css-blur",
-            source: "dom-scene",
+            source: domSourceLabel,
             reason:
               error instanceof Error ? error.message : "webgl-render-failed",
           });
@@ -819,12 +908,24 @@ export function TahoeGlassProvider({
     ) {
       requestRender("continuous-surface-tracking");
     }
-  }, [commitDiagnostics, fallback, filterId0, filterId1, requestRender]);
+  }, [
+    commitDiagnostics,
+    debugEnabled,
+    domSourceLabel,
+    fallback,
+    filterId0,
+    filterId1,
+    requestRender,
+  ]);
 
   React.useLayoutEffect(() => {
     renderFrameRef.current = renderFrame;
     requestRender("react-commit");
   }, [renderFrame, requestRender]);
+
+  React.useEffect(() => {
+    if (debugEnabled) requestRender("debug-diagnostics-change");
+  }, [debugEnabled, diagnostics, requestRender]);
 
   React.useEffect(
     () => () => {
@@ -863,17 +964,17 @@ export function TahoeGlassProvider({
         ref={containerRef}
         className={cn("relative isolate", className)}
         style={style}
+        {...props}
         data-tahoe-glass-provider="true"
         data-tahoe-glass-state={diagnostics.status}
         data-tahoe-glass-backend={diagnostics.backend}
         data-tahoe-glass-source={diagnostics.source}
         data-tahoe-glass-fallback-reason={diagnostics.reason || undefined}
         data-tahoe-glass-displacement={TAHOE_DISPLACEMENT_SCALE}
-        {...props}
       >
         <div
           ref={viewportRef}
-          aria-hidden="true"
+          aria-hidden={sceneInteractive ? undefined : true}
           className={cn(
             "pointer-events-none inset-0 z-0 h-full w-full overflow-hidden",
             viewportMode === "fixed" ? "fixed" : "absolute",
@@ -883,7 +984,8 @@ export function TahoeGlassProvider({
           <div
             ref={sceneRef}
             className={cn(
-              "pointer-events-none absolute inset-0 z-0 h-full w-full [transform:translateZ(0)] will-change-[filter]",
+              "absolute inset-0 z-0 h-full w-full [transform:translateZ(0)] will-change-[filter]",
+              sceneInteractive ? "pointer-events-auto" : "pointer-events-none",
               sceneClassName,
             )}
             style={{
@@ -900,11 +1002,13 @@ export function TahoeGlassProvider({
 
           <canvas
             ref={canvasRef}
+            aria-hidden="true"
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
             style={{ opacity: webglActive ? 1 : 0 }}
           />
 
           <svg
+            aria-hidden="true"
             className="pointer-events-none absolute h-0 w-0 overflow-hidden"
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -974,12 +1078,25 @@ export function TahoeGlassProvider({
         </div>
 
         <div
-          className={cn("relative z-[1]", contentClassName)}
-          style={contentStyle}
+          className={cn(
+            "relative z-[1]",
+            sceneInteractive && "pointer-events-none",
+            contentClassName,
+          )}
+          style={{
+            ...contentStyle,
+            pointerEvents: sceneInteractive ? "none" : contentStyle?.pointerEvents,
+          }}
           data-tahoe-glass-content="true"
         >
           {children}
         </div>
+        {debugEnabled && (
+          <TahoeGlassDebugOverlay
+            diagnostics={diagnostics}
+            surfaces={debugSurfaces}
+          />
+        )}
       </div>
     </TahoeGlassEngineContext.Provider>
   );
