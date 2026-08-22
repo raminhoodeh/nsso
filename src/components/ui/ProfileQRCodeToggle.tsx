@@ -60,14 +60,10 @@ export default function ProfileQRCodeToggle({
                 {/* Back: QR Code (Shiny Glass Effect) */}
                 <div
                     className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] rotate-y-180 flex flex-col items-center justify-center p-4 border border-white/50"
-                    data-glass-auto="true"
-                    data-glass-variant="panel"
-                    data-glass-radius="24"
-                    data-glass-distortion="11"
                     style={{
                         backfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)',
-                        background: 'rgba(255, 255, 255, 0.14)',
+                        background: 'rgba(255, 255, 255, 0.2)',
                         backdropFilter: 'blur(12px)',
                     }}
                 >

@@ -44,13 +44,7 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <div
-                className="aspect-[2/3] glass-style-card rounded-[24px] overflow-hidden shadow-2xl relative border border-white/10 group-hover:border-white/40 transition-colors bg-black/20"
-                data-glass-auto="true"
-                data-glass-variant="panel"
-                data-glass-radius="24"
-                data-glass-distortion="9"
-            >
+            <div className="aspect-[2/3] glass-style-card rounded-[24px] overflow-hidden shadow-2xl relative border border-white/10 group-hover:border-white/40 transition-colors bg-black">
                 {isHoverPlaying && film.trailer_key ? (
                     <div className="absolute inset-0 z-20 w-full h-full scale-[1.35] pointer-events-none">
                         <iframe

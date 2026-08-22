@@ -22,7 +22,6 @@ export default function HomePage() {
   const { user } = useUser()
   const [reservedName, setReservedName] = useState('')
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
-  const [activeFeatureTooltip, setActiveFeatureTooltip] = useState<'ai' | 'web3' | 'pixel' | null>(null)
   const supabase = createClient()
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -152,7 +151,7 @@ export default function HomePage() {
                 {/* Coming Soon Features - Visual Filter for Whitespace */}
                 <div className="flex flex-col gap-3 mt-12 w-full max-w-sm mx-auto lg:mx-0">
                   {/* AI Assisted Profile Creation - Now Live */}
-                  <div className="relative group/ai z-[30] hover:z-30" onMouseEnter={() => setActiveFeatureTooltip('ai')} onMouseLeave={() => setActiveFeatureTooltip(null)}>
+                  <div className="relative group/ai z-[30] hover:z-30">
                     <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
                       <span className="text-white/90 text-[15px]">AI-assisted profile creation</span>
                       <div className="relative border-[0.75px] border-emerald-500/30 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
@@ -162,12 +161,12 @@ export default function HomePage() {
                       </div>
                     </div>
                     {/* Tooltip */}
-                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/60 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/ai:visible opacity-0 group-hover/ai:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl" data-glass-auto={activeFeatureTooltip === 'ai' ? 'true' : undefined} data-glass-variant="panel" data-glass-radius="12">
+                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/ai:visible opacity-0 group-hover/ai:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl">
                       Ask Deity to create your profile for you, gain suggested business and profile ideas based on your profile content
                     </div>
                   </div>
                   {/* Web3 Coming Soon Teaser */}
-                  <div className="relative group/web3 z-[20] hover:z-20" onMouseEnter={() => setActiveFeatureTooltip('web3')} onMouseLeave={() => setActiveFeatureTooltip(null)}>
+                  <div className="relative group/web3 z-[20] hover:z-20">
                     <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
                       <span className="text-white/90 text-[15px]">Integrate web3 wallet</span>
                       <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
@@ -184,13 +183,13 @@ export default function HomePage() {
                       </div>
                     </div>
                     {/* Tooltip */}
-                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/60 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/web3:visible opacity-0 group-hover/web3:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl" data-glass-auto={activeFeatureTooltip === 'web3' ? 'true' : undefined} data-glass-variant="panel" data-glass-radius="12">
+                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/web3:visible opacity-0 group-hover/web3:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl">
                       Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
                     </div>
                   </div>
 
                   {/* Facebook Pixel Coming Soon Teaser */}
-                  <div className="relative group/pixel z-[10] hover:z-10" onMouseEnter={() => setActiveFeatureTooltip('pixel')} onMouseLeave={() => setActiveFeatureTooltip(null)}>
+                  <div className="relative group/pixel z-[10] hover:z-10">
                     <div className="w-full text-left px-4 py-3 rounded-xl bg-white/15 border border-white/5 flex items-center justify-between cursor-help hover:bg-white/20 transition-all">
                       <span className="text-white/90 text-[15px]">Connect Facebook Pixel</span>
                       <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
@@ -207,7 +206,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     {/* Tooltip */}
-                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/60 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/pixel:visible opacity-0 group-hover/pixel:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl" data-glass-auto={activeFeatureTooltip === 'pixel' ? 'true' : undefined} data-glass-variant="panel" data-glass-radius="12">
+                    <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover/pixel:visible opacity-0 group-hover/pixel:opacity-100 transition-all duration-200 backdrop-blur-xl shadow-xl">
                       Track conversions and optimize your ads with Facebook Pixel integration.
                     </div>
                   </div>

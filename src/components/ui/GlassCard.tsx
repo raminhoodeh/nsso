@@ -28,8 +28,8 @@ const CARD_RECIPES: Record<NonNullable<GlassCardProps['variant']>, CardRecipe> =
 }
 
 /**
- * Backwards-compatible card adapter for the Tahoe V3 material system.
- * Every recipe uses the shared material; Apple and Ultimate use the stronger lens profile.
+ * Backwards-compatible card adapter for the Tahoe V2 material system.
+ * Ordinary cards stay CSS-only; Apple and Ultimate are explicit local lenses.
  */
 export default function GlassCard({
     children,

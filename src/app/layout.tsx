@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-glass-engine="tahoe-v3" suppressHydrationWarning>
+    <html lang="en" data-glass-engine="tahoe-v2" suppressHydrationWarning>
       <body className="antialiased min-h-screen" suppressHydrationWarning>
         {/* UI State Provider */}
         <UIProvider>
@@ -47,7 +47,7 @@ export default function RootLayout({
                 <GlassEnvironmentProvider>
                   <ReferralTracker />
 
-                  {/* The cloud canvas feeds the shared refraction compositor. */}
+                  {/* Animated Cloud Background remains the single scene source. */}
                   <VantaBackground />
                   <DimmingOverlay />
 

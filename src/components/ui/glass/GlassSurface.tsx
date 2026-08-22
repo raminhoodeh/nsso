@@ -4,8 +4,9 @@ import {
     forwardRef,
     useCallback,
     useEffect,
-    useMemo,
+    useId,
     useRef,
+    useState,
     type ButtonHTMLAttributes,
     type CSSProperties,
     type HTMLAttributes,
@@ -15,15 +16,10 @@ import {
 } from 'react'
 import { cn } from '@/lib/utils'
 import { setGlassLight, useGlassEnvironment } from '@/components/providers/GlassEnvironmentProvider'
-import {
-    registerGlassSurface,
-    type GlassBackendId,
-    type GlassSurfaceMaterial
-} from '@/lib/glass/surface-registry'
+import { createLensDisplacementMap, type LensDisplacementMap } from './lens-map'
 
 export type GlassSurfaceVariant = 'lens' | 'panel' | 'recessed' | 'nav'
 export type GlassSurfaceTone = 'subtle' | 'regular' | 'strong'
-export type GlassSurfacePalette = 'dark' | 'light'
 export type GlassSurfaceElement = 'div' | 'section' | 'article' | 'aside' | 'nav' | 'header' | 'footer' | 'button'
 
 type NativeButtonProps = Pick<
@@ -35,8 +31,6 @@ export interface GlassSurfaceProps extends HTMLAttributes<HTMLElement>, NativeBu
     as?: GlassSurfaceElement
     variant?: GlassSurfaceVariant
     tone?: GlassSurfaceTone
-    palette?: GlassSurfacePalette
-    backendId?: GlassBackendId
     interactive?: boolean
     distortionScale?: number
     radius?: string
@@ -46,47 +40,73 @@ export interface GlassSurfaceProps extends HTMLAttributes<HTMLElement>, NativeBu
 
 type GlassStyle = CSSProperties & Record<`--glass-${string}`, string | number | undefined>
 
+interface SurfaceSize {
+    width: number
+    height: number
+}
+
 function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
-    if (typeof ref === 'function') ref(value)
-    else if (ref) ref.current = value
-}
-
-function parseRadius(radius: string) {
-    const parsed = Number.parseFloat(radius)
-    return Number.isFinite(parsed) ? parsed : 40
-}
-
-function materialFor(
-    variant: GlassSurfaceVariant,
-    backendId: GlassBackendId,
-    radius: string,
-    distortionScale?: number
-): GlassSurfaceMaterial {
-    const recipe = {
-        lens: { distortion: 22, dispersion: 0.075, blur: 3.5 },
-        panel: { distortion: 10, dispersion: 0.035, blur: 11 },
-        nav: { distortion: 7, dispersion: 0.025, blur: 8 },
-        recessed: { distortion: 4, dispersion: 0.018, blur: 5 }
-    }[variant]
-
-    return {
-        backendId,
-        variant,
-        radius: parseRadius(radius),
-        distortion: distortionScale ?? recipe.distortion,
-        dispersion: recipe.dispersion,
-        blur: recipe.blur
+    if (typeof ref === 'function') {
+        ref(value)
+    } else if (ref) {
+        ref.current = value
     }
+}
+
+function useLensMap(
+    elementRef: React.RefObject<HTMLElement | null>,
+    enabled: boolean
+) {
+    const [lensMap, setLensMap] = useState<LensDisplacementMap | null>(null)
+    const [surfaceSize, setSurfaceSize] = useState<SurfaceSize>({ width: 0, height: 0 })
+    const lastSizeKeyRef = useRef('')
+
+    useEffect(() => {
+        const element = elementRef.current
+        if (!element || !enabled) return
+
+        let frame: number | null = null
+
+        const measure = () => {
+            frame = null
+            const rect = element.getBoundingClientRect()
+            const width = Math.max(0, Math.round(rect.width))
+            const height = Math.max(0, Math.round(rect.height))
+            if (width === 0 || height === 0) return
+
+            const sizeKey = `${Math.round(width / 8)}x${Math.round(height / 8)}`
+            if (sizeKey === lastSizeKeyRef.current) return
+            lastSizeKeyRef.current = sizeKey
+            setSurfaceSize({ width, height })
+            setLensMap(createLensDisplacementMap(width, height))
+        }
+
+        const scheduleMeasure = () => {
+            if (frame !== null) return
+            frame = window.requestAnimationFrame(measure)
+        }
+
+        scheduleMeasure()
+        const observer = 'ResizeObserver' in window
+            ? new ResizeObserver(scheduleMeasure)
+            : null
+        observer?.observe(element)
+
+        return () => {
+            observer?.disconnect()
+            if (frame !== null) window.cancelAnimationFrame(frame)
+        }
+    }, [elementRef, enabled])
+
+    return { lensMap, surfaceSize }
 }
 
 const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function GlassSurface({
     as = 'div',
     variant = 'panel',
     tone = 'regular',
-    palette = 'dark',
-    backendId = 'app',
     interactive = false,
-    distortionScale,
+    distortionScale = 20,
     radius,
     contentClassName,
     className,
@@ -97,15 +117,13 @@ const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function GlassSu
     ...props
 }, forwardedRef) {
     const elementRef = useRef<HTMLElement | null>(null)
-    const { quality, rendererStatus, reducedMotion, registerLight, requestMeasure } = useGlassEnvironment()
+    const { quality, reducedMotion, registerLens, requestMeasure } = useGlassEnvironment()
+    const filterId = `glass-lens-${useId().replace(/:/g, '-')}`
+    const isLens = variant === 'lens'
+    const refractionEnabled = isLens && quality === 'refractive'
+    const { lensMap, surfaceSize } = useLensMap(elementRef, refractionEnabled)
     const Component = as
     const ContentElement = as === 'button' ? 'span' : 'div'
-    const defaultRadius = variant === 'recessed' ? '20px' : variant === 'nav' ? '0px' : '40px'
-    const resolvedRadius = radius ?? defaultRadius
-    const material = useMemo(
-        () => materialFor(variant, backendId, resolvedRadius, distortionScale),
-        [variant, backendId, resolvedRadius, distortionScale]
-    )
 
     const setElementRef = useCallback((element: HTMLElement | null) => {
         elementRef.current = element
@@ -114,36 +132,30 @@ const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function GlassSu
 
     useEffect(() => {
         const element = elementRef.current
-        if (!element) return
-        const unregisterSurface = registerGlassSurface(element, material)
-        const unregisterLight = registerLight(element)
-        return () => {
-            unregisterSurface()
-            unregisterLight()
-        }
-    }, [registerLight, material])
+        if (!element || !isLens) return
+        return registerLens(element)
+    }, [isLens, registerLens])
 
     const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
-        if (interactive && !reducedMotion) {
+        if (isLens && interactive && !reducedMotion) {
             setGlassLight(event.currentTarget, event.clientX, event.clientY)
         }
-        requestMeasure()
         onPointerMove?.(event)
     }
 
     const handlePointerLeave = (event: ReactPointerEvent<HTMLElement>) => {
-        requestMeasure()
+        if (isLens && interactive) requestMeasure()
         onPointerLeave?.(event)
     }
 
+    const defaultRadius = variant === 'recessed' ? '20px' : variant === 'nav' ? '0px' : '40px'
+    const overscan = Math.max(8, Math.ceil(distortionScale * 1.25))
+    const canRenderFilter = Boolean(lensMap && surfaceSize.width > 0 && surfaceSize.height > 0)
     const mergedStyle: GlassStyle = {
-        '--glass-radius': resolvedRadius,
+        '--glass-radius': radius ?? defaultRadius,
+        '--glass-rim-opacity': lensMap?.rimOpacity ?? 0.62,
         ...style
     }
-
-    const refractionActive = quality === 'refractive' && (
-        backendId === 'places-map' || rendererStatus === 'shared-webgl'
-    )
 
     return (
         <Component
@@ -154,19 +166,63 @@ const GlassSurface = forwardRef<HTMLElement, GlassSurfaceProps>(function GlassSu
                 interactive && 'glass-surface--interactive',
                 className
             )}
-            data-glass-surface="tahoe-v3"
+            data-glass-surface="tahoe-v2"
             data-glass-variant={variant}
             data-glass-tone={tone}
-            data-glass-palette={palette}
-            data-glass-backend={backendId}
-            data-glass-refraction={refractionActive ? 'active' : 'fallback'}
+            data-glass-refraction={canRenderFilter ? 'active' : 'fallback'}
             style={mergedStyle}
             onPointerMove={handlePointerMove as never}
             onPointerLeave={handlePointerLeave as never}
             {...props}
         >
+            {canRenderFilter && (
+                <svg
+                    className="glass-surface__filter-definitions"
+                    width="0"
+                    height="0"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <defs>
+                        <filter
+                            id={filterId}
+                            x={-overscan}
+                            y={-overscan}
+                            width={surfaceSize.width + overscan * 2}
+                            height={surfaceSize.height + overscan * 2}
+                            filterUnits="userSpaceOnUse"
+                            primitiveUnits="userSpaceOnUse"
+                            colorInterpolationFilters="sRGB"
+                        >
+                            <feImage
+                                href={lensMap?.url}
+                                x="0"
+                                y="0"
+                                width={surfaceSize.width}
+                                height={surfaceSize.height}
+                                preserveAspectRatio="none"
+                                result="lens-map"
+                            />
+                            <feDisplacementMap
+                                in="SourceGraphic"
+                                in2="lens-map"
+                                scale={distortionScale}
+                                xChannelSelector="R"
+                                yChannelSelector="G"
+                            />
+                        </filter>
+                    </defs>
+                </svg>
+            )}
+
             <span className="glass-surface__backdrop" aria-hidden="true" />
-            <span className="glass-surface__refraction" aria-hidden="true" />
+            {canRenderFilter && (
+                <span
+                    className="glass-surface__refraction"
+                    style={{ filter: `url(#${filterId})` }}
+                    aria-hidden="true"
+                />
+            )}
             <span className="glass-surface__tint" aria-hidden="true" />
             <span className="glass-surface__specular" aria-hidden="true" />
             <span className="glass-surface__rim" aria-hidden="true" />

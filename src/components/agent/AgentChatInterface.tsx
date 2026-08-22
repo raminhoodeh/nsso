@@ -15,7 +15,6 @@ interface Message {
 
 interface AgentChatInterfaceProps {
     isFullScreen?: boolean;
-    glassActive?: boolean;
     onMaximize?: () => void;
     onMinimize?: () => void;
     onClose?: () => void;
@@ -71,7 +70,7 @@ import { useUser } from '@/components/providers/UserProvider';
 import { useProfile } from '@/components/providers/ProfileProvider';
 import { useToast } from '@/components/ui/Toast';
 
-export default function AgentChatInterface({ isFullScreen, glassActive = true, onMaximize, onMinimize, onClose, initialMessage }: AgentChatInterfaceProps) {
+export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage }: AgentChatInterfaceProps) {
     const { user, loading } = useUser();
     const { profile, updateField, addLink, updateLink, removeLink, reorderLinks, addExperience, addProject, addQualification, addProduct, undo, canUndo, fastMode, setFastMode } = useProfile();
     const { showToast } = useToast();
@@ -717,15 +716,11 @@ Check out some of the areas I can help you with below.`;
     };
 
     return (
-        <div className={`relative isolate flex flex-col h-dvh bg-black/40 backdrop-blur-xl transition-all duration-500
+        <div className={`glass-panel flex flex-col h-dvh bg-black/40 backdrop-blur-xl transition-all duration-500
             ${isFullScreen
                 ? 'w-full rounded-none border-none shadow-none'
                 : 'border border-white/10 rounded-none md:rounded-l-[32px] md:rounded-r-none overflow-hidden shadow-2xl'
             }`}
-            data-glass-auto={glassActive ? 'true' : undefined}
-            data-glass-variant="panel"
-            data-glass-radius={isFullScreen ? '0' : '32'}
-            data-glass-distortion="12"
         >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10">
@@ -886,12 +881,7 @@ Check out some of the areas I can help you with below.`;
             </div>
 
             {/* Persistent Content Area (Categories + Input) */}
-            <div
-                className="bg-black/20 backdrop-blur-md border-t border-white/10"
-                data-glass-auto={glassActive ? 'true' : undefined}
-                data-glass-variant="recessed"
-                data-glass-radius="0"
-            >
+            <div className="bg-black/20 backdrop-blur-md border-t border-white/10">
 
                 {/* Categories */}
                 <div className="px-6 pt-4 pb-2 transition-all duration-300">

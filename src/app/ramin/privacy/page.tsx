@@ -10,13 +10,7 @@ export const metadata: Metadata = {
 export default function RaminTrackingPrivacyPage() {
     return (
         <main className="relative z-10 min-h-screen px-6 pb-24 pt-32 text-white sm:px-10">
-            <article
-                className="mx-auto max-w-3xl rounded-[28px] border border-white/10 bg-black/20 p-6 shadow-2xl backdrop-blur-xl sm:p-10"
-                data-glass-auto="true"
-                data-glass-variant="panel"
-                data-glass-radius="28"
-                data-glass-distortion="10"
-            >
+            <article className="mx-auto max-w-3xl">
                 <Link
                     href="/ramin"
                     className="inline-flex items-center gap-2 text-sm text-white/70 transition-colors hover:text-white"
@@ -84,3 +78,4 @@ export default function RaminTrackingPrivacyPage() {
         </main>
     )
 }
+

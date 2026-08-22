@@ -217,15 +217,11 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             </button>
 
             <div
-                className="relative w-full max-w-[100vw] md:max-w-[1600px] flex-1 md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] bg-[#141414]/65 md:bg-transparent rounded-t-[32px] md:rounded-none overflow-hidden mt-auto"
+                className="relative w-full max-w-[100vw] md:max-w-[1600px] flex-1 md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] bg-[#141414] md:bg-transparent rounded-t-[32px] md:rounded-none overflow-hidden mt-auto"
                 onClick={e => e.stopPropagation()}
-                data-glass-auto="true"
-                data-glass-variant="panel"
-                data-glass-radius="32"
-                data-glass-distortion="12"
             >
                 {/* Native Apple Close Header (Mobile) */}
-                <div className="md:hidden flex-none relative w-full bg-[#1c1c1e]/55 text-white/90 font-bold text-[15px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors" data-glass-auto="true" data-glass-variant="nav" data-glass-radius="0">
+                <div className="md:hidden flex-none relative w-full bg-[#1c1c1e] text-white/90 font-bold text-[15px] border-b border-white/10 shadow-2xl z-[130] flex items-center justify-center transition-colors">
                     <button onClick={onClose} className="w-full py-4 text-center active:bg-[#2c2c2e] rounded-t-[32px]">
                         Back
                     </button>
@@ -261,10 +257,6 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                         }
                     }}
                     className="relative w-full flex-1 md:h-[50%] md:flex-none glass-style-card md:rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden md:border border-white/10 mb-0 md:mb-6 bg-black/20"
-                    data-glass-auto="true"
-                    data-glass-variant="panel"
-                    data-glass-radius="32"
-                    data-glass-distortion="13"
                 >
 
                     {/* Left Column: Media (75%) */}
