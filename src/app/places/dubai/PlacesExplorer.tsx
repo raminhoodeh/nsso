@@ -23,6 +23,12 @@ import {
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DubaiPlace, PlaceCategory, PlacesPayload } from "@/data/places-dubai";
+import {
+  TahoeGlassButton,
+  TahoeGlassProvider,
+  TahoeGlassSurface,
+  type TahoeGlassWebGLSource,
+} from "@/components/ui/tahoe-glass";
 import styles from "./places.module.css";
 
 type CategoryMeta = {
@@ -114,6 +120,10 @@ const DATABASE_ONLY_MAP_STYLES: google.maps.MapTypeStyle[] = [
 ];
 const STORAGE_KEY = "nsso-uae-place-favourites";
 let mapsConfigured = false;
+
+function proxiedPlacePhoto(url: string) {
+  return `/api/places/photo?url=${encodeURIComponent(url)}`;
+}
 
 function categoryFor(place: DubaiPlace) {
   return CATEGORY_META[place.taxonomy.primary] || CATEGORY_META["date-ideas"];
@@ -231,6 +241,18 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const photos = currentDetails?.photos || [];
   const activePhoto = photos[activePhotoIndex] || null;
   const activePhotoUnavailable = activePhoto ? failedPhotoUrls.has(activePhoto.url) : false;
+  const activePhotoSceneUrl = activePhoto ? proxiedPlacePhoto(activePhoto.url) : null;
+  const activePhotoWebglSource = useMemo<TahoeGlassWebGLSource | undefined>(
+    () => activePhotoSceneUrl
+      ? {
+          kind: "image",
+          src: activePhotoSceneUrl,
+          fit: "cover",
+          label: "place-photo",
+        }
+      : undefined,
+    [activePhotoSceneUrl],
+  );
   const emirates = useMemo(
     () => [...new Set(places.map((place) => place.emirate))].sort(),
     [places],
@@ -648,16 +670,44 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
 
   return (
     <main className={styles.shell}>
+      <TahoeGlassProvider
+        scene={<div ref={mapElementRef} className={styles.map} aria-label="Map of places to go in the UAE" />}
+        sourceLabel="places-map"
+        sceneInteractive
+        preferredBackend="auto"
+        fallback="blur"
+        viewportMode="contained"
+        className={styles.explorerSurface}
+        contentClassName={styles.explorerSurface}
+      >
       <div className={styles.explorerSurface} inert={galleryOpen} aria-hidden={galleryOpen}>
-        <div ref={mapElementRef} className={styles.map} aria-label="Map of places to go in the UAE" />
         {mapError && (
-          <div className={styles.mapError} role="status">
+          <TahoeGlassSurface
+            variant="popover"
+            radius={14}
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.04}
+            className={styles.mapError}
+            contentClassName="flex items-center gap-2"
+            role="status"
+          >
             <Compass size={18} />
             <span>{mapError}</span>
-          </div>
+          </TahoeGlassSurface>
         )}
 
-        <section className={styles.rail} aria-label="Place finder">
+        <TahoeGlassSurface
+          as="section"
+          variant="panel"
+          radius={25}
+          tone="dark"
+          semanticTint="light"
+          semanticTintOpacity={0.035}
+          className={styles.rail}
+          contentClassName="flex h-full min-h-0 flex-col"
+          aria-label="Place finder"
+        >
         <header className={styles.header}>
           <div className={styles.brandRow}>
             <Link className={styles.brand} href="/" aria-label="Back to nsso.me">
@@ -666,10 +716,21 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               </span>
               <span>nsso field notes</span>
             </Link>
-            <button className={styles.surpriseButton} type="button" onClick={surpriseMe} disabled={!filteredPlaces.length}>
+            <TahoeGlassSurface
+              as="button"
+              variant="pill"
+              tone="dark"
+              semanticTint="light"
+              semanticTintOpacity={0.025}
+              className={styles.surpriseButton}
+              contentClassName="flex items-center gap-2"
+              type="button"
+              onClick={surpriseMe}
+              disabled={!filteredPlaces.length}
+            >
               <Shuffle size={15} />
               Surprise us
-            </button>
+            </TahoeGlassSurface>
           </div>
           <p className={styles.eyebrow}>UAE date map</p>
           <h1>Where should we go?</h1>
@@ -677,10 +738,18 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         </header>
 
         <div className={styles.controls}>
-          <label className={styles.searchBox}>
+          <TahoeGlassSurface
+            variant="recessed"
+            radius={13}
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.025}
+            className={styles.searchBox}
+            contentClassName="flex w-full items-center gap-2.5"
+          >
             <Search size={17} aria-hidden="true" />
-            <span className={styles.srOnly}>Search places</span>
             <input
+              aria-label="Search places"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search a place, area or mood…"
@@ -688,22 +757,34 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             {query && (
               <button type="button" onClick={() => setQuery("")} aria-label="Clear search">
                 <X size={15} />
-              </button>
-            )}
-          </label>
+                </button>
+              )}
+          </TahoeGlassSurface>
 
           <div className={styles.filterRow}>
-            <label className={styles.selectWrap}>
+            <TahoeGlassSurface
+              variant="recessed"
+              radius={11}
+              tone="dark"
+              semanticTint="light"
+              semanticTintOpacity={0.02}
+              className={styles.selectWrap}
+              contentClassName="flex w-full items-center gap-2"
+            >
               <SlidersHorizontal size={15} aria-hidden="true" />
-              <span className={styles.srOnly}>Filter by emirate</span>
-              <select value={emirate} onChange={(event) => setEmirate(event.target.value)}>
+              <select aria-label="Filter by emirate" value={emirate} onChange={(event) => setEmirate(event.target.value)}>
                 <option value="all">All Emirates</option>
                 {emirates.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
-            </label>
-            <button
+            </TahoeGlassSurface>
+            <TahoeGlassSurface
+              as="button"
+              variant="pill"
+              tone="dark"
+              semanticTint={favouritesOnly ? "light" : "none"}
+              semanticTintOpacity={0.035}
               className={`${styles.favouriteFilter}${favouritesOnly ? ` ${styles.favouriteFilterActive}` : ""}`}
               type="button"
               onClick={() => setFavouritesOnly((value) => !value)}
@@ -711,24 +792,42 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             >
               <Heart size={15} fill={favouritesOnly ? "currentColor" : "none"} />
               Saved {favourites.size ? `(${favourites.size})` : ""}
-            </button>
-            <button className={styles.locateButton} type="button" onClick={locateMe} aria-label="Sort places near me">
+            </TahoeGlassSurface>
+            <TahoeGlassSurface
+              as="button"
+              variant="pill"
+              tone="dark"
+              className={styles.locateButton}
+              type="button"
+              onClick={locateMe}
+              aria-label="Sort places near me"
+            >
               <LocateFixed size={16} />
-            </button>
+            </TahoeGlassSurface>
           </div>
           {locationMessage && <p className={styles.locationMessage}>{locationMessage}</p>}
 
           <div className={styles.categoryScroller} aria-label="Filter by category">
-            <button
+            <TahoeGlassSurface
+              as="button"
+              variant="pill"
+              tone="dark"
+              semanticTint={category === "all" ? "light" : "none"}
+              semanticTintOpacity={0.035}
               type="button"
               className={`${styles.categoryPill}${category === "all" ? ` ${styles.categoryPillActive}` : ""}`}
               onClick={() => setCategory("all")}
               aria-pressed={category === "all"}
             >
               All <span>{places.length}</span>
-            </button>
+            </TahoeGlassSurface>
             {visibleCategories.map(([key, meta]) => (
-              <button
+              <TahoeGlassSurface
+                as="button"
+                variant="pill"
+                tone="dark"
+                semanticTint={category === key ? "light" : "none"}
+                semanticTintOpacity={0.035}
                 key={key}
                 type="button"
                 className={`${styles.categoryPill}${category === key ? ` ${styles.categoryPillActive}` : ""}`}
@@ -737,7 +836,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 style={{ "--pill-color": meta.color } as React.CSSProperties}
               >
                 <i /> {meta.shortLabel} <span>{categoryCounts.get(key)}</span>
-              </button>
+              </TahoeGlassSurface>
             ))}
           </div>
         </div>
@@ -753,9 +852,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             const isFavourite = favourites.has(place.id);
             const distance = userLocation ? haversineKm(userLocation, place.coordinates) : null;
             return (
-              <article
+              <TahoeGlassSurface
+                as="article"
+                variant="card"
+                radius={15}
+                tone="dark"
+                semanticTint="light"
+                semanticTintOpacity={selectedId === place.id ? 0.045 : 0.018}
                 key={place.id}
                 className={`${styles.placeCard}${selectedId === place.id ? ` ${styles.placeCardSelected}` : ""}`}
+                contentClassName="relative flex min-h-[78px] w-full"
                 style={{ "--category-color": meta.color } as React.CSSProperties}
               >
                 <button className={styles.placeMain} type="button" onClick={() => setSelectedId(place.id)}>
@@ -771,15 +877,21 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                   </span>
                   {distance !== null && <span className={styles.distance}>{Math.round(distance)} km</span>}
                 </button>
-                <button
+                <TahoeGlassSurface
+                  as="button"
+                  variant="pill"
+                  radius={9}
+                  tone="dark"
+                  semanticTint={isFavourite ? "light" : "none"}
+                  semanticTintOpacity={0.035}
                   className={`${styles.heartButton}${isFavourite ? ` ${styles.heartButtonActive}` : ""}`}
                   type="button"
                   onClick={() => toggleFavourite(place.id)}
                   aria-label={isFavourite ? `Remove ${place.name} from saved places` : `Save ${place.name}`}
                 >
                   <Heart size={16} fill={isFavourite ? "currentColor" : "none"} />
-                </button>
-              </article>
+                </TahoeGlassSurface>
+              </TahoeGlassSurface>
             );
           })}
 
@@ -801,21 +913,44 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             </a>
           </footer>
         </div>
-        </section>
+        </TahoeGlassSurface>
 
         {selectedPlace && (
-          <aside className={styles.detailCard} aria-label={`Details for ${selectedPlace.name}`}>
-          <button className={styles.closeButton} type="button" onClick={() => setSelectedId(null)} aria-label="Close place details">
+          <TahoeGlassSurface
+            as="aside"
+            variant="panel"
+            radius={24}
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.035}
+            className={styles.detailCard}
+            contentClassName="relative"
+            aria-label={`Details for ${selectedPlace.name}`}
+          >
+          <TahoeGlassButton
+            className={styles.closeButton}
+            contentClassName="text-white"
+            tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.035}
+            type="button"
+            onClick={() => setSelectedId(null)}
+            aria-label="Close place details"
+          >
             <X size={18} />
-          </button>
-          <button
+          </TahoeGlassButton>
+          <TahoeGlassButton
             className={`${styles.detailHeart}${favourites.has(selectedPlace.id) ? ` ${styles.detailHeartActive}` : ""}`}
+            contentClassName="text-white"
+            tone="light"
+            semanticTint={favourites.has(selectedPlace.id) ? "dark" : "none"}
+            semanticTintOpacity={0.06}
             type="button"
             onClick={() => toggleFavourite(selectedPlace.id)}
             aria-label={favourites.has(selectedPlace.id) ? "Remove from saved places" : "Save this place"}
           >
             <Heart size={18} fill={favourites.has(selectedPlace.id) ? "currentColor" : "none"} />
-          </button>
+          </TahoeGlassButton>
 
           <div
             ref={galleryRegionRef}
@@ -824,6 +959,25 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
+            <TahoeGlassProvider
+              scene={activePhotoSceneUrl && !activePhotoUnavailable ? (
+                <img
+                  className={styles.photoScene}
+                  src={activePhotoSceneUrl}
+                  alt=""
+                  onError={() => activePhoto && markPhotoUnavailable(activePhoto.url)}
+                />
+              ) : (
+                <div className={styles.photoSceneFallback} />
+              )}
+              sourceLabel={activePhotoSceneUrl ? "place-photo" : "place-photo-fallback"}
+              webglSource={activePhotoUnavailable ? undefined : activePhotoWebglSource}
+              preferredBackend="auto"
+              fallback="blur"
+              viewportMode="contained"
+              className="absolute inset-0"
+              contentClassName="h-full"
+            >
             {activePhoto && !activePhotoUnavailable ? (
               <button
                 ref={galleryTriggerRef}
@@ -832,13 +986,17 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 onClick={openGallery}
                 aria-label={`Open full-screen photo ${activePhotoIndex + 1} of ${photos.length} for ${selectedPlace.name}`}
               >
-                <img
-                  key={activePhoto.url}
-                  src={activePhoto.url}
-                  alt={`${selectedPlace.name}, photo ${activePhotoIndex + 1} of ${photos.length}`}
-                  onError={() => markPhotoUnavailable(activePhoto.url)}
-                />
-                <span className={styles.expandHint}><Maximize2 size={13} /> Expand</span>
+                <span className={styles.srOnly}>{selectedPlace.name}, photo {activePhotoIndex + 1} of {photos.length}</span>
+                <TahoeGlassSurface
+                  variant="pill"
+                  tone="light"
+                  semanticTint="dark"
+                  semanticTintOpacity={0.03}
+                  className={styles.expandHint}
+                  contentClassName="flex items-center gap-1.5"
+                >
+                  <Maximize2 size={13} /> Expand
+                </TahoeGlassSurface>
               </button>
             ) : (
               <div className={styles.fallbackArt} aria-hidden="true">
@@ -853,32 +1011,55 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               </div>
             )}
             {photos.length ? (
-              <div className={styles.galleryCount} aria-live="polite">
+              <TahoeGlassSurface
+                variant="pill"
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.03}
+                className={styles.galleryCount}
+                contentClassName="flex items-center gap-1.5"
+                aria-live="polite"
+              >
                 <Images size={13} /> {activePhotoIndex + 1} / {photos.length}
-              </div>
+              </TahoeGlassSurface>
             ) : null}
             {photos.length > 1 ? (
               <>
-                <button
+                <TahoeGlassButton
                   className={`${styles.galleryArrow} ${styles.galleryArrowPrevious}`}
+                  contentClassName="text-white"
+                  tone="light"
+                  semanticTint="dark"
+                  semanticTintOpacity={0.03}
                   type="button"
                   onClick={() => movePhoto(-1)}
                   aria-label={`Previous photo of ${selectedPlace.name}`}
                 >
                   <ChevronLeft size={20} />
-                </button>
-                <button
+                </TahoeGlassButton>
+                <TahoeGlassButton
                   className={`${styles.galleryArrow} ${styles.galleryArrowNext}`}
+                  contentClassName="text-white"
+                  tone="light"
+                  semanticTint="dark"
+                  semanticTintOpacity={0.03}
                   type="button"
                   onClick={() => movePhoto(1)}
                   aria-label={`Next photo of ${selectedPlace.name}`}
                 >
                   <ChevronRight size={20} />
-                </button>
+                </TahoeGlassButton>
               </>
             ) : null}
             {activePhoto && !activePhotoUnavailable ? (
-              <div className={styles.photoCredit}>
+              <TahoeGlassSurface
+                variant="popover"
+                radius={10}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.035}
+                className={`${styles.photoCredit} px-2 py-1.5`}
+              >
                 {activePhoto.credits.length ? (
                   <>
                     Photo by{" "}
@@ -892,8 +1073,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                   </>
                 ) : null}
                 <a href={activePhoto.googleMapsUri || currentDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">Google Maps photo</a>
-              </div>
+              </TahoeGlassSurface>
             ) : null}
+            </TahoeGlassProvider>
           </div>
 
           {photos.length > 1 ? (
@@ -925,12 +1107,34 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             </p>
             <p className={styles.detailDescription}>{selectedPlace.description || "A saved place to explore together."}</p>
             <div className={styles.detailActions}>
-              <a href={directionsUrl(selectedPlace, currentDetails?.placeId || selectedPlace.placeId)} target="_blank" rel="noreferrer">
+              <TahoeGlassSurface
+                as="a"
+                variant="button"
+                radius={12}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.055}
+                contentClassName="flex items-center justify-center gap-2 text-white"
+                href={directionsUrl(selectedPlace, currentDetails?.placeId || selectedPlace.placeId)}
+                target="_blank"
+                rel="noreferrer"
+              >
                 <ArrowUpRight size={17} /> Get directions
-              </a>
-              <a href={currentDetails?.mapsUri || selectedPlace.googleMapsSearchUri} target="_blank" rel="noreferrer">
+              </TahoeGlassSurface>
+              <TahoeGlassSurface
+                as="a"
+                variant="button"
+                radius={12}
+                tone="dark"
+                semanticTint="light"
+                semanticTintOpacity={0.025}
+                contentClassName="flex items-center justify-center gap-2"
+                href={currentDetails?.mapsUri || selectedPlace.googleMapsSearchUri}
+                target="_blank"
+                rel="noreferrer"
+              >
                 Google Maps <ExternalLink size={14} />
-              </a>
+              </TahoeGlassSurface>
             </div>
             {selectedPlace.sourceUrls[0] && (
               <a className={styles.sourceLink} href={selectedPlace.sourceUrls[0]} target="_blank" rel="noreferrer">
@@ -951,14 +1155,31 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               </p>
             ) : null}
           </div>
-          </aside>
+          </TahoeGlassSurface>
         )}
       </div>
 
       {galleryOpen && selectedPlace && activePhoto && (
+        <TahoeGlassProvider
+          scene={(
+            <img
+              className={styles.lightboxScene}
+              src={activePhotoSceneUrl || proxiedPlacePhoto(activePhoto.url)}
+              alt=""
+              onError={() => markPhotoUnavailable(activePhoto.url)}
+            />
+          )}
+          sourceLabel="place-photo"
+          webglSource={activePhotoWebglSource}
+          preferredBackend="auto"
+          fallback="blur"
+          viewportMode="contained"
+          className={`${styles.lightbox} pointer-events-auto`}
+          contentClassName="h-full w-full"
+        >
         <div
           ref={lightboxRef}
-          className={styles.lightbox}
+          className={styles.lightboxLayout}
           role="dialog"
           aria-modal="true"
           aria-label={`Photo gallery for ${selectedPlace.name}`}
@@ -974,7 +1195,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             }}
             aria-label="Close full-screen gallery"
           />
-          <header className={styles.lightboxHeader}>
+          <TahoeGlassSurface
+            as="header"
+            variant="menu"
+            radius={0}
+            tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.03}
+            className={styles.lightboxHeader}
+            contentClassName="grid h-full grid-cols-[minmax(0,1fr)_auto_48px] items-center gap-5"
+          >
             <div>
               <span>{selectedPlace.emirate}</span>
               <strong>{selectedPlace.name}</strong>
@@ -982,22 +1212,26 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <span className={styles.lightboxCount} aria-live="polite" aria-atomic="true">
               {activePhotoIndex + 1} of {photos.length}
             </span>
-            <button
+            <TahoeGlassButton
               ref={lightboxCloseRef}
               className={styles.lightboxClose}
+              contentClassName="text-white"
+              tone="light"
+              semanticTint="dark"
+              semanticTintOpacity={0.025}
               type="button"
               onClick={() => setGalleryOpen(false)}
               aria-label="Close full-screen gallery"
             >
               <X size={22} />
-            </button>
-          </header>
+            </TahoeGlassButton>
+          </TahoeGlassSurface>
 
           <div className={styles.lightboxStage}>
             {activePhoto && !activePhotoUnavailable ? (
               <img
                 key={activePhoto.url}
-                src={activePhoto.url}
+                src={activePhotoSceneUrl || proxiedPlacePhoto(activePhoto.url)}
                 alt={`${selectedPlace.name}, photo ${activePhotoIndex + 1} of ${photos.length}`}
                 onError={() => markPhotoUnavailable(activePhoto.url)}
               />
@@ -1009,27 +1243,44 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             )}
             {photos.length > 1 ? (
               <>
-                <button
+                <TahoeGlassButton
                   className={`${styles.lightboxArrow} ${styles.lightboxArrowPrevious}`}
+                  contentClassName="text-white"
+                  tone="light"
+                  semanticTint="dark"
+                  semanticTintOpacity={0.025}
                   type="button"
                   onClick={() => movePhoto(-1)}
                   aria-label={`Previous photo of ${selectedPlace.name}`}
                 >
                   <ChevronLeft size={30} />
-                </button>
-                <button
+                </TahoeGlassButton>
+                <TahoeGlassButton
                   className={`${styles.lightboxArrow} ${styles.lightboxArrowNext}`}
+                  contentClassName="text-white"
+                  tone="light"
+                  semanticTint="dark"
+                  semanticTintOpacity={0.025}
                   type="button"
                   onClick={() => movePhoto(1)}
                   aria-label={`Next photo of ${selectedPlace.name}`}
                 >
                   <ChevronRight size={30} />
-                </button>
+                </TahoeGlassButton>
               </>
             ) : null}
           </div>
 
-          <footer className={styles.lightboxFooter}>
+          <TahoeGlassSurface
+            as="footer"
+            variant="menu"
+            radius={0}
+            tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.03}
+            className={styles.lightboxFooter}
+            contentClassName="grid h-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-6"
+          >
             <div className={styles.lightboxCredit}>
               {activePhoto && !activePhotoUnavailable ? (
                 <>
@@ -1077,9 +1328,11 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               </div>
             ) : null}
             <span className={styles.lightboxHint}>Swipe or use arrow keys</span>
-          </footer>
+          </TahoeGlassSurface>
         </div>
+        </TahoeGlassProvider>
       )}
+      </TahoeGlassProvider>
     </main>
   );
 }

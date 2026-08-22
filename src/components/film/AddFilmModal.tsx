@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Terminal } from 'lucide-react';
 import type { Film } from './MovieCard';
+import {
+    TahoeGlassButton,
+    TahoeGlassDialog,
+    TahoeGlassField,
+    TahoeGlassSurface,
+} from '@/components/ui/tahoe-glass';
 
 interface MatchCandidate {
     title: string;
@@ -168,29 +174,64 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex flex-col md:items-center md:justify-center bg-black/60 backdrop-blur-2xl">
-            <div className="flex flex-col w-full h-full md:h-auto md:max-w-2xl bg-[#1c1c1e] md:rounded-[32px] overflow-hidden shadow-2xl border border-white/10 md:border-white/20 relative">
+        <TahoeGlassDialog
+            open
+            onOpenChange={(open) => {
+                if (!open && !isProcessing) handleCancel();
+            }}
+            closeOnEscape={!isProcessing}
+            closeOnPointerDownOutside={!isProcessing}
+            aria-label="Add film to database"
+            tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.045}
+            radius={32}
+            className="h-[calc(100dvh-2rem)] max-w-2xl overflow-hidden p-0 md:h-auto"
+            contentClassName="flex h-full flex-col"
+            overlayClassName="z-[200]"
+        >
                 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#2c2c2e]/50">
+                <TahoeGlassSurface
+                    as="header"
+                    variant="menu"
+                    radius="32px 32px 0 0"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.035}
+                    className="flex-none px-6 py-5"
+                    contentClassName="flex items-center justify-between"
+                >
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                         <Plus className="text-[#007AFF]" /> Add Film to Database
                     </h2>
                     {!isProcessing && (
-                        <button onClick={handleCancel} className="p-2 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors">
+                        <TahoeGlassButton
+                            onClick={handleCancel}
+                            aria-label="Close add film dialog"
+                            tone="light"
+                            className="p-2 text-white/65 hover:text-white"
+                            contentClassName="text-white"
+                        >
                             <X size={20} />
-                        </button>
+                        </TahoeGlassButton>
                     )}
-                </div>
+                </TahoeGlassSurface>
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 relative">
                     {!isProcessing ? (
                         <>
-                            <div className="flex flex-col gap-2">
-                                <label className="text-sm font-semibold text-gray-400 uppercase tracking-widest pl-1">
-                                    Film Intel Input
-                                </label>
+                            <TahoeGlassField
+                                label="Film Intel Input"
+                                labelClassName="pl-1 text-sm font-semibold uppercase tracking-widest text-gray-300"
+                                description="Enter one film per line. Add the release year in parentheses when a title has remakes or multiple versions."
+                                tone="light"
+                                semanticTint="dark"
+                                semanticTintOpacity={0.03}
+                                surfaceClassName="p-0"
+                                controlClassName="h-48 resize-none p-4 font-medium leading-relaxed text-white"
+                            >
                                 <textarea
                                     value={inputText}
                                     onChange={(e) => {
@@ -198,31 +239,46 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                         setHasAttemptedCancel(false);
                                     }}
                                     placeholder={'e.g. The Matrix (1999)\nAvatar\nInception (2010)'}
-                                    className="w-full h-48 bg-[#0c0c0e] text-white border border-white/10 rounded-2xl p-4 resize-none focus:outline-none focus:border-[#007AFF] transition-colors leading-relaxed font-medium"
                                 />
-                                <p className="text-sm md:text-base text-gray-200 mt-3 px-2 leading-relaxed">
-                                    Enter one film per line. Add the release year in parentheses when a title has remakes or multiple versions.
-                                </p>
-                            </div>
+                            </TahoeGlassField>
 
                             {hasAttemptedCancel && (
-                                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm font-medium animate-pulse">
+                                <TahoeGlassSurface
+                                    variant="panel"
+                                    radius={12}
+                                    tone="light"
+                                    semanticTint="dark"
+                                    semanticTintOpacity={0.04}
+                                    className="p-4 text-sm font-medium text-red-300 animate-pulse"
+                                >
                                     Warning: You have unsubmitted text. Tap Cancel again to discard and close.
-                                </div>
+                                </TahoeGlassSurface>
                             )}
 
                             <div className="mt-auto md:mt-4">
-                                <button
+                                <TahoeGlassButton
                                     onClick={handleAdd}
                                     disabled={!inputText.trim()}
-                                    className="w-full py-4 bg-[#007AFF] hover:bg-[#0066d6] active:bg-[#005bb5] disabled:bg-[#007AFF]/30 disabled:text-white/30 text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#007AFF]/20 text-lg flex items-center justify-center gap-2"
+                                    tone="dark"
+                                    semanticTint="light"
+                                    semanticTintOpacity={0.08}
+                                    className="w-full py-4"
+                                    contentClassName="flex items-center justify-center gap-2 text-lg font-bold text-black/90"
                                 >
                                     <Plus size={20} /> Add Film
-                                </button>
+                                </TahoeGlassButton>
                             </div>
                         </>
                     ) : (
-                        <div className="flex-1 flex flex-col h-64 md:h-80 bg-black rounded-xl p-4 border border-[#007AFF]/30 font-mono text-xs md:text-sm text-green-400 overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] relative">
+                        <TahoeGlassSurface
+                            variant="recessed"
+                            radius={12}
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.055}
+                            className="flex-1 h-64 md:h-80 p-4 overflow-hidden"
+                            contentClassName="relative flex h-full flex-col font-mono text-xs text-green-300 md:text-sm"
+                        >
                             <div className={`absolute top-2 right-4 flex items-center gap-2 text-[#007AFF] text-xs font-bold opacity-70 ${isFinished ? '' : 'animate-pulse'}`}>
                                 <Terminal size={12} /> {isFinished ? 'COMPLETE' : 'ACTIVE'}
                             </div>
@@ -238,34 +294,38 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/10 font-sans">
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => {
                                             setIsProcessing(false);
                                             setIsFinished(false);
                                         }}
-                                        className="py-2.5 px-4 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors font-semibold"
+                                        tone="light"
+                                        className="py-2.5 px-4"
+                                        contentClassName="font-semibold text-white"
                                     >
                                         Edit Input
-                                    </button>
-                                    <button
+                                    </TahoeGlassButton>
+                                    <TahoeGlassButton
                                         onClick={onClose}
-                                        className="py-2.5 px-4 rounded-lg bg-[#007AFF] text-white hover:bg-[#0066d6] transition-colors font-semibold"
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.08}
+                                        className="py-2.5 px-4"
+                                        contentClassName="font-semibold text-black/90"
                                     >
                                         Close
-                                    </button>
+                                    </TahoeGlassButton>
                                 </div>
                             )}
-                        </div>
+                        </TahoeGlassSurface>
                     )}
                 </div>
-
-            </div>
             <style dangerouslySetInnerHTML={{__html: `
                 @keyframes indeterminate {
                     0% { transform: translateX(-100%); }
                     100% { transform: translateX(300%); }
                 }
             `}} />
-        </div>
+        </TahoeGlassDialog>
     );
 }

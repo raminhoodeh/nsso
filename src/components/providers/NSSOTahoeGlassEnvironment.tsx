@@ -53,6 +53,7 @@ export default function NSSOTahoeGlassEnvironment({
       className="min-h-screen"
       contentClassName="min-h-screen"
       scene={<VantaBackground onCanvasChange={exposeVantaCanvas} />}
+      sourceLabel="vanta-clouds"
       preferredBackend="auto"
       fallback="webgl"
       webglSource={webglSource}

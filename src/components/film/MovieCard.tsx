@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass';
 
 export interface Film {
     id: number;
@@ -44,7 +45,15 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <div className="aspect-[2/3] glass-style-card rounded-[24px] overflow-hidden shadow-2xl relative border border-white/10 group-hover:border-white/40 transition-colors bg-black">
+            <TahoeGlassSurface
+                variant="mediaFrame"
+                radius={24}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.02}
+                className="aspect-[2/3] p-[2px] shadow-2xl"
+                contentClassName="relative h-full w-full overflow-hidden rounded-[22px]"
+            >
                 {isHoverPlaying && film.trailer_key ? (
                     <div className="absolute inset-0 z-20 w-full h-full scale-[1.35] pointer-events-none">
                         <iframe
@@ -76,7 +85,7 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
                         )}
                     </div>
                 </div>
-            </div>
+            </TahoeGlassSurface>
         </div>
     );
 };

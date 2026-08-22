@@ -5,11 +5,18 @@ import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard, { type Film } from '@/components/film/MovieCard';
 import AddFilmModal from '@/components/film/AddFilmModal';
-import { Search, Loader2, ChevronLeft, ChevronRight, Volume2, VolumeX, Plus } from 'lucide-react';
+import { Search, Loader2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import {
+    TahoeGlassButton,
+    TahoeGlassDialog,
+    TahoeGlassField,
+    TahoeGlassProvider,
+    TahoeGlassSurface,
+    type TahoeGlassWebGLSource,
+} from '@/components/ui/tahoe-glass';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
-import { useUI } from '@/components/providers/UIProvider';
 
 export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,10 +31,11 @@ export default function RazinFlixPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [brokenPosters, setBrokenPosters] = useState<Set<number>>(new Set());
     const [isCheckingPosters, setIsCheckingPosters] = useState(false);
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+    const [adminPassword, setAdminPassword] = useState('');
+    const [passwordError, setPasswordError] = useState<string | null>(null);
 
-    const { setBackgroundDimmed } = useUI();
     const touchStartX = useRef(0);
-    const [isHeroMuted, setIsHeroMuted] = useState(true);
 
     useEffect(() => {
         if (viewMode === 'update_mode' && !isCheckingPosters && films.length > 0) {
@@ -83,11 +91,6 @@ export default function RazinFlixPage() {
     }, [viewMode, films, isCheckingPosters]);
 
     useEffect(() => {
-        setBackgroundDimmed(true);
-        return () => setBackgroundDimmed(false);
-    }, [setBackgroundDimmed]);
-
-    useEffect(() => {
         const fetchFilms = async () => {
             try {
                 const supabase = createClient(
@@ -118,6 +121,37 @@ export default function RazinFlixPage() {
         };
         fetchFilms();
     }, []);
+
+    const featuredFilm = featuredFilms[featuredIndex];
+    const heroSceneUrl = featuredFilm?.trailer_key
+        ? `/api/razinflix/hero/${encodeURIComponent(featuredFilm.trailer_key)}`
+        : '/siri-gradient.png';
+    const heroWebglSource = useMemo<TahoeGlassWebGLSource>(
+        () => ({
+            kind: 'image',
+            src: heroSceneUrl,
+            fit: 'cover',
+            label: 'razinflix-featured',
+        }),
+        [heroSceneUrl],
+    );
+
+    const requestAddFilmAccess = () => {
+        setAdminPassword('');
+        setPasswordError(null);
+        setIsPasswordDialogOpen(true);
+    };
+
+    const confirmAddFilmAccess = () => {
+        if (adminPassword.trim().toLowerCase() !== 'azinam') {
+            setPasswordError('Incorrect password.');
+            return;
+        }
+        setIsPasswordDialogOpen(false);
+        setAdminPassword('');
+        setPasswordError(null);
+        setIsAddModalOpen(true);
+    };
 
     const handleFilmClick = (film: Film, list: Film[]) => {
         setSelectedFilm(film);
@@ -260,75 +294,113 @@ export default function RazinFlixPage() {
     }, []);
 
     return (
+        <TahoeGlassProvider
+            scene={(
+                <div
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                    style={{ backgroundImage: `url(${JSON.stringify(heroSceneUrl)})` }}
+                />
+            )}
+            sourceLabel="razinflix-featured"
+            webglSource={heroWebglSource}
+            preferredBackend="auto"
+            fallback="webgl"
+            className="min-h-screen bg-black text-white font-sans"
+            contentClassName="min-h-screen"
+        >
         <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans relative">
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.5)_65%,rgba(0,0,0,0.78))]" />
             {/* Navbar */}
-            <nav className={`fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-0 ${scrolled ? 'glass-style-navbar' : 'bg-transparent'}`}>
+            <TahoeGlassSurface
+                as="nav"
+                variant="menu"
+                radius={0}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={scrolled ? 0.08 : 0.025}
+                className="fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4"
+                contentClassName="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-0"
+            >
                 
                 {/* Desktop Add Button (Absolute Left) */}
                 <div className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2">
-                    <button onClick={() => {
-                        const pwd = window.prompt("Enter password:");
-                        if (pwd?.toLowerCase() === "azinam") setIsAddModalOpen(true);
-                        else if (pwd !== null) alert("Incorrect password.");
-                    }} className="bg-[#007AFF] hover:bg-[#0066d6] text-white px-4 py-2 flex items-center justify-center gap-1 rounded-full shadow-lg transition-all font-semibold border border-white/10 text-sm hover:scale-105">
+                    <TahoeGlassButton
+                        onClick={requestAddFilmAccess}
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.04}
+                        className="px-4 py-2 hover:scale-105"
+                        contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
+                    >
                         <Plus size={16} /> Add Film
-                    </button>
+                    </TahoeGlassButton>
                 </div>
 
                 {/* Desktop Right Side Navigation */}
                 <div className="flex w-full md:w-auto items-center justify-between md:justify-end gap-2 md:ml-auto">
-                    <button 
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsHeroMuted(!isHeroMuted); }}
-                        className="hidden md:flex p-2 rounded-full bg-black/80 hover:bg-black border border-gray-600 text-white transition-colors items-center justify-center"
-                        title={isHeroMuted ? "Unmute Trailer" : "Mute Trailer"}
+                    <TahoeGlassSurface
+                        variant="recessed"
+                        radius={12}
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.035}
+                        className="relative flex-1 md:w-96 px-3 py-2"
+                        contentClassName="flex items-center gap-2"
                     >
-                        {isHeroMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                    </button>
-                    <div className="relative flex-1 md:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
                             placeholder="Titles, people, genres"
-                            className="bg-black/80 border border-gray-600 text-white text-sm rounded-none pl-10 pr-4 py-2 w-full focus:outline-none focus:border-white transition-all shadow-sm"
+                            aria-label="Search films"
+                            className="w-full bg-transparent pl-7 pr-1 text-sm text-white outline-none placeholder:text-white/55"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                    </div>
-                    <select
-                        value={viewMode}
-                        onChange={(e) => setViewMode(e.target.value as ViewMode)}
-                        className="bg-black/80 border border-gray-600 text-white text-sm rounded-none px-4 py-2 flex-1 md:w-56 overflow-hidden text-ellipsis focus:outline-none focus:border-white transition-all shadow-sm cursor-pointer"
+                    </TahoeGlassSurface>
+                    <TahoeGlassField
+                        visuallyHideLabel
+                        label="Film view"
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.035}
+                        className="flex-1 md:w-56"
+                        surfaceClassName="px-4 py-2"
+                        controlClassName="cursor-pointer overflow-hidden text-ellipsis text-sm text-white"
                     >
-                        <option value="category">Category View</option>
-                        <option value="alpha">Alphabetical (A-Z)</option>
-                        <option value="date_desc">Release Date (Newest)</option>
-                        <option value="rating_desc">IMDb Rating (Highest)</option>
-                        <option value="rating_asc">IMDb Rating (Lowest)</option>
-                        <option value="update_mode">Update Mode</option>
-                    </select>
+                        <select
+                            value={viewMode}
+                            onChange={(e) => setViewMode(e.target.value as ViewMode)}
+                        >
+                            <option value="category">Category View</option>
+                            <option value="alpha">Alphabetical (A-Z)</option>
+                            <option value="date_desc">Release Date (Newest)</option>
+                            <option value="rating_desc">IMDb Rating (Highest)</option>
+                            <option value="rating_asc">IMDb Rating (Lowest)</option>
+                            <option value="update_mode">Update Mode</option>
+                        </select>
+                    </TahoeGlassField>
                 </div>
 
                 {/* Mobile Add Button Row (Under Search) */}
                 <div className="md:hidden w-full flex justify-end">
-                    <button onClick={() => {
-                        const pwd = window.prompt("Enter password:");
-                        if (pwd?.toLowerCase() === "azinam") setIsAddModalOpen(true);
-                        else if (pwd !== null) alert("Incorrect password.");
-                    }} className="w-full bg-[#007AFF] text-white px-4 py-2.5 flex items-center justify-center gap-1 rounded-full shadow-lg transition-colors font-semibold border border-[#007AFF]/50 text-sm">
+                    <TahoeGlassButton
+                        onClick={requestAddFilmAccess}
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.04}
+                        className="w-full px-4 py-2.5"
+                        contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
+                    >
                         <Plus size={16} /> Add Film
-                    </button>
+                    </TahoeGlassButton>
                 </div>
-            </nav>
+            </TahoeGlassSurface>
 
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
             {!searchTerm && viewMode === 'category' && featuredFilms.length > 0 && (
                 <div 
                     onClick={() => {
-                        if (window.innerWidth >= 768) {
-                            setIsHeroMuted(!isHeroMuted);
-                        } else {
-                            handleFilmClick(featuredFilms[featuredIndex], films);
-                        }
+                        handleFilmClick(featuredFilms[featuredIndex], films);
                     }}
                     onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
                     onTouchEnd={(e) => {
@@ -339,7 +411,7 @@ export default function RazinFlixPage() {
                             else setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
                         }
                     }}
-                    className="relative h-[75vh] md:h-[85vh] w-full overflow-hidden bg-black group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
+                    className="relative z-10 h-[75vh] md:h-[85vh] w-full overflow-hidden group cursor-pointer pt-[calc(max(env(safe-area-inset-top),_8rem))]"
                 >
                     <style>{`
                         @keyframes slideInX { 
@@ -356,33 +428,33 @@ export default function RazinFlixPage() {
                         className="w-full h-full absolute inset-0 flex items-end justify-start pb-4 md:pb-24 px-6 md:px-24"
                         style={{ animation: 'nativeFade 0.6s ease-out forwards' }}
                     >
-                        {/* Background Autoplay Trailer */}
-                        <div className="absolute inset-0 z-0">
-                            <iframe
-                                 src={`https://www.youtube.com/embed/${featuredFilms[featuredIndex].trailer_key}?autoplay=1&mute=${isHeroMuted ? 1 : 0}&start=10&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${featuredFilms[featuredIndex].trailer_key}&disablekb=1`}
-                                 frameBorder="0"
-                                 allow="autoplay"
-                                 className="w-full h-full object-cover scale-[1.35] opacity-60 pointer-events-none"
-                            ></iframe>
-                        </div>
-
                         {/* Gradient Fade Overlays */}
                         <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-black/90 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
                         <div className="absolute inset-y-0 left-0 w-[80%] md:w-[50%] bg-gradient-to-r from-black/80 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
 
                         {/* Desktop Hero Controls */}
-                        <button
+                        <TahoeGlassButton
                             onClick={(e) => { e.stopPropagation(); setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length); }}
-                            className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 hover:bg-black/60 text-white/50 hover:text-white backdrop-blur transition-all"
+                            aria-label="Previous featured film"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.03}
+                            className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-50 p-4 text-white/70 hover:text-white"
+                            contentClassName="flex items-center justify-center text-white"
                         >
                             <ChevronLeft size={36} />
-                        </button>
-                        <button
+                        </TahoeGlassButton>
+                        <TahoeGlassButton
                             onClick={(e) => { e.stopPropagation(); setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length); }}
-                            className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-50 p-4 rounded-full bg-black/20 hover:bg-black/60 text-white/50 hover:text-white backdrop-blur transition-all"
+                            aria-label="Next featured film"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.03}
+                            className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-50 p-4 text-white/70 hover:text-white"
+                            contentClassName="flex items-center justify-center text-white"
                         >
                             <ChevronRight size={36} />
-                        </button>
+                        </TahoeGlassButton>
 
                         {/* Billboard Content (Typography Slides In) */}
                         <div className="relative z-20 max-w-3xl space-y-4 md:space-y-6" style={{ animation: 'slideInX 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
@@ -394,49 +466,36 @@ export default function RazinFlixPage() {
                         </p>
                         
                         <div className="flex gap-3 pt-6">
-                            <button 
+                            <TahoeGlassButton
                                 onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
-                                className="px-5 py-2.5 bg-white text-black font-bold rounded flex items-center gap-2 text-sm md:text-base hover:bg-gray-200 transition-all shadow-lg hover:scale-105 whitespace-nowrap"
+                                tone="dark"
+                                semanticTint="light"
+                                semanticTintOpacity={0.08}
+                                className="px-5 py-2.5 hover:scale-105 whitespace-nowrap"
+                                contentClassName="flex items-center gap-2 text-sm md:text-base font-bold text-black/90"
                             >
                                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                                 Play Trailer
-                            </button>
-                            <button 
+                            </TahoeGlassButton>
+                            <TahoeGlassButton
                                 onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
-                                className="px-5 py-2.5 bg-gray-500/50 text-white font-medium rounded flex items-center gap-2 text-sm md:text-base hover:bg-gray-500/80 transition-all backdrop-blur shadow-lg hover:scale-105 whitespace-nowrap"
+                                tone="light"
+                                semanticTint="dark"
+                                semanticTintOpacity={0.035}
+                                className="px-5 py-2.5 hover:scale-105 whitespace-nowrap"
+                                contentClassName="flex items-center gap-2 text-sm md:text-base font-medium text-white"
                             >
                                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                                 More Info
-                            </button>
+                            </TahoeGlassButton>
                         </div>
                     </div>
                 </div>
-
-                {/* Navigation Arrows (Massive Hitboxes) */}
-                    <div 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length);
-                        }}
-                        className="absolute left-0 top-0 bottom-0 w-24 z-30 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:flex"
-                    >
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
-                    </div>
-                    
-                    <div 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
-                        }}
-                        className="absolute right-0 top-0 bottom-0 w-24 z-30 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 hidden md:flex"
-                    >
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
-                    </div>
                 </div>
             )}
 
             {/* Content Feed */}
-            <div className={`space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-44 md:pt-24'}`}>
+            <div className={`relative z-10 space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-44 md:pt-24'}`}>
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
                         <Loader2 className="animate-spin mb-4" size={48} />
@@ -484,9 +543,72 @@ export default function RazinFlixPage() {
             </div>
 
             {/* Footer */}
-            <div className="text-center pb-6 pt-8 text-sm text-gray-500">
+            <div className="relative z-10 text-center pb-6 pt-8 text-sm text-gray-400">
                 © 2026 RazinFlix.
             </div>
+
+            <TahoeGlassDialog
+                open={isPasswordDialogOpen}
+                onOpenChange={(open) => {
+                    setIsPasswordDialogOpen(open);
+                    if (!open) {
+                        setAdminPassword('');
+                        setPasswordError(null);
+                    }
+                }}
+                title="Add a film"
+                description="Enter the RazinFlix administrator password to continue."
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.04}
+                className="max-w-md"
+            >
+                <form
+                    className="mt-5 space-y-4"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        confirmAddFilmAccess();
+                    }}
+                >
+                    <TahoeGlassField
+                        label="Password"
+                        error={passwordError}
+                        tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.025}
+                    >
+                        <input
+                            type="password"
+                            autoComplete="current-password"
+                            value={adminPassword}
+                            onChange={(event) => {
+                                setAdminPassword(event.target.value);
+                                setPasswordError(null);
+                            }}
+                        />
+                    </TahoeGlassField>
+                    <div className="flex justify-end gap-3">
+                        <TahoeGlassButton
+                            onClick={() => setIsPasswordDialogOpen(false)}
+                            tone="light"
+                            className="px-5 py-2.5"
+                            contentClassName="text-white"
+                        >
+                            Cancel
+                        </TahoeGlassButton>
+                        <TahoeGlassButton
+                            type="submit"
+                            tone="dark"
+                            semanticTint="light"
+                            semanticTintOpacity={0.08}
+                            className="px-5 py-2.5"
+                            contentClassName="text-black/90"
+                        >
+                            Continue
+                        </TahoeGlassButton>
+                    </div>
+                </form>
+            </TahoeGlassDialog>
 
             {/* Modal */}
             {
@@ -526,6 +648,7 @@ export default function RazinFlixPage() {
                     }} 
                 />
             )}
-        </div >
+        </div>
+        </TahoeGlassProvider>
     );
 }

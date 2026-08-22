@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import MovieCard from './MovieCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Film } from './MovieCard'; // Import interface, need to export it from MovieCard or common type
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass';
 
 interface CategoryRowProps {
     title: string;
@@ -28,13 +28,17 @@ const CategoryRow = ({ title, films, onFilmClick }: CategoryRowProps) => {
             </h2>
 
             <div className="relative -mx-4 px-4 md:-mx-12 md:px-12">
-                <button
-                    className="absolute left-0 top-0 bottom-0 z-30 w-16 bg-gradient-to-r from-black/60 via-black/20 to-transparent flex items-center justify-start pl-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 disabled:opacity-0 cursor-pointer"
+                <TahoeGlassButton
+                    className="absolute left-2 top-1/2 z-30 -translate-y-1/2 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    contentClassName="text-white"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.025}
                     onClick={() => scroll(-500)}
                     aria-label="Scroll left"
                 >
                     <ChevronLeft size={40} className="text-white drop-shadow-lg" />
-                </button>
+                </TahoeGlassButton>
 
                 <div
                     ref={rowRef}
@@ -51,13 +55,17 @@ const CategoryRow = ({ title, films, onFilmClick }: CategoryRowProps) => {
                     `}</style>
                 </div>
 
-                <button
-                    className="absolute right-0 top-0 bottom-0 z-30 w-16 bg-gradient-to-l from-black/60 via-black/20 to-transparent flex items-center justify-end pr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                <TahoeGlassButton
+                    className="absolute right-2 top-1/2 z-30 -translate-y-1/2 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    contentClassName="text-white"
+                    tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.025}
                     onClick={() => scroll(500)}
                     aria-label="Scroll right"
                 >
                     <ChevronRight size={40} className="text-white drop-shadow-lg" />
-                </button>
+                </TahoeGlassButton>
             </div>
         </div>
     );
