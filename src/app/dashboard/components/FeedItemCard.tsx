@@ -3,6 +3,7 @@ import Image from 'next/image'
 import GlassCard from '@/components/ui/GlassCard'
 import { useState } from 'react'
 import Link from 'next/link'
+import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface FeedPost {
     id: string
@@ -140,7 +141,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                 return (
                     <div className="mt-2 space-y-3">
                         {post.metadata.qualifications?.length > 0 && (
-                            <div className="bg-white/5 rounded-xl border border-white/10 p-3">
+                            <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-3">
                                 <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">Qualifications</h5>
                                 <div className="space-y-2">
                                     {post.metadata.qualifications.map((q: any, i: number) => (
@@ -153,33 +154,33 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </TahoeGlassSurface>
                         )}
 
                         {post.metadata.projects?.length > 0 && (
-                            <div className="bg-white/5 rounded-xl border border-white/10 p-3">
+                            <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-3">
                                 <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">New Projects</h5>
                                 <div className="grid grid-cols-2 gap-2">
                                     {post.metadata.projects.map((p: any, i: number) => (
-                                        <div key={i} className="bg-black/20 rounded-lg p-2">
+                                        <TahoeGlassSurface key={i} variant="recessed" radius={8} tone="light" className="p-2">
                                             {p.project_photo_url && (
                                                 <div className="relative w-full h-20 rounded-md overflow-hidden mb-2">
                                                     <Image src={p.project_photo_url} alt={p.project_name} fill className="object-cover" unoptimized />
                                                 </div>
                                             )}
                                             <div className="text-white font-medium text-sm truncate">{p.project_name}</div>
-                                        </div>
+                                        </TahoeGlassSurface>
                                     ))}
                                 </div>
-                            </div>
+                            </TahoeGlassSurface>
                         )}
 
                         {post.metadata.products?.length > 0 && (
-                            <div className="bg-white/5 rounded-xl border border-white/10 p-3">
+                            <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-3">
                                 <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">New Products</h5>
                                 <div className="space-y-2">
                                     {post.metadata.products.map((p: any, i: number) => (
-                                        <div key={i} className="flex gap-3 items-center bg-black/20 p-2 rounded-lg">
+                                        <TahoeGlassSurface key={i} variant="recessed" radius={8} tone="light" className="p-2" contentClassName="flex gap-3 items-center">
                                             {p.image_url && (
                                                 <div className="relative w-10 h-10 rounded overflow-hidden shrink-0">
                                                     <Image src={p.image_url} alt={p.name} fill className="object-cover" unoptimized />
@@ -189,35 +190,35 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                                 <div className="text-white font-medium text-sm">{p.name}</div>
                                                 <div className="text-emerald-400 text-xs">{p.price}</div>
                                             </div>
-                                        </div>
+                                        </TahoeGlassSurface>
                                     ))}
                                 </div>
-                            </div>
+                            </TahoeGlassSurface>
                         )}
                     </div>
                 )
 
             case 'qualification_added':
                 return (
-                    <div className="mt-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="mt-2 p-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <TahoeGlassSurface variant="pill" radius={8} tone="light" className="p-2">
                                 <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path d="M12 14l9-5-9-5-9 5 9 5z" />
                                     <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                                 </svg>
-                            </div>
+                            </TahoeGlassSurface>
                             <div>
                                 <p className="text-sm text-white/60">New Qualification</p>
                                 <h4 className="text-white font-semibold">{post.metadata.qualification_name}</h4>
                                 <p className="text-sm text-white/40">{post.metadata.institution}</p>
                             </div>
                         </div>
-                    </div>
+                    </TahoeGlassSurface>
                 )
             case 'project_added':
                 return (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                    <TahoeGlassSurface variant="mediaFrame" radius={12} tone="light" className="mt-2 overflow-hidden">
                         {post.metadata.project_photo_url && (
                             <div className="relative h-48 w-full">
                                 <Image
@@ -234,11 +235,11 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                             <h4 className="text-white font-bold text-lg">{post.metadata.project_name}</h4>
                             <p className="text-white/80 mt-1 line-clamp-3">{post.metadata.description}</p>
                         </div>
-                    </div>
+                    </TahoeGlassSurface>
                 )
             case 'product_added':
                 return (
-                    <div className="mt-2 flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="mt-2 p-4" contentClassName="flex gap-4">
                         {post.metadata.image_url && (
                             <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                 <Image
@@ -257,7 +258,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                 <p className="text-emerald-400 font-medium">{post.metadata.price}</p>
                             )}
                         </div>
-                    </div>
+                    </TahoeGlassSurface>
                 )
             default:
                 return <p className="text-white/90 whitespace-pre-wrap">{post.content}</p>
@@ -265,7 +266,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
     }
 
     return (
-        <GlassCard className="p-4 hover:bg-white/5 transition-colors">
+        <GlassCard className="p-4">
             {/* Header */}
             <div className="flex items-center gap-3 mb-3">
                 <Link href={`/${username}`} className="relative w-10 h-10 rounded-full overflow-hidden bg-white/10 shrink-0 hover:ring-2 ring-white/20 transition-all">
@@ -308,10 +309,12 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
 
             {/* Actions */}
             <div className="flex items-center gap-6 pt-3 border-t border-white/10">
-                <button
+                <TahoeGlassButton
                     onClick={handleLike}
-                    className={`flex items-center gap-2 text-sm transition-colors ${liked ? 'text-pink-500' : 'text-white/40 hover:text-white/60'
-                        }`}
+                    className="px-3 py-2"
+                    contentClassName={`text-sm ${liked ? 'text-pink-400' : 'text-white/55'}`}
+                    aria-pressed={liked}
+                    aria-label={liked ? 'Unlike post' : 'Like post'}
                 >
                     <svg
                         className={`w-5 h-5 ${liked ? 'fill-current' : 'none'}`}
@@ -323,17 +326,19 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                     <span>{likeCount > 0 ? likeCount : 'Love'}</span>
-                </button>
+                </TahoeGlassButton>
 
-                <button
+                <TahoeGlassButton
                     onClick={toggleComments}
-                    className={`flex items-center gap-2 text-sm transition-colors ${showComments ? 'text-white' : 'text-white/40 hover:text-white/60'}`}
+                    className="px-3 py-2"
+                    contentClassName={`text-sm ${showComments ? 'text-white' : 'text-white/55'}`}
+                    aria-expanded={showComments}
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                     <span>{commentCount > 0 ? commentCount : 'Comment'}</span>
-                </button>
+                </TahoeGlassButton>
             </div>
 
             {/* Comments Section */}
@@ -363,7 +368,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                         )}
                                     </div>
                                     <div className="flex-1">
-                                        <div className="bg-white/5 rounded-2xl rounded-tl-none p-3 border border-white/5">
+                                        <TahoeGlassSurface variant="card" radius={16} tone="light" className="p-3" style={{ borderTopLeftRadius: 0 }}>
                                             <div className="flex justify-between items-baseline mb-1">
                                                 <span className="text-sm font-semibold text-white/90">
                                                     {comment.user.full_name || comment.user.username}
@@ -373,27 +378,30 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                                 </span>
                                             </div>
                                             <p className="text-sm text-white/80">{comment.content}</p>
-                                        </div>
+                                        </TahoeGlassSurface>
                                     </div>
                                 </div>
                             ))}
 
                             {/* Add Comment Input */}
                             <form onSubmit={handlePostComment} className="flex gap-3 mt-4">
-                                <input
-                                    type="text"
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    placeholder="Let's collaborate on this"
-                                    className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 focus:bg-white/10 transition-colors"
-                                />
-                                <button
+                                <TahoeGlassField label="Comment" visuallyHideLabel tone="light" className="flex-1" surfaceClassName="rounded-full px-4 py-2">
+                                    <input
+                                        type="text"
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Let's collaborate on this"
+                                        className="text-sm text-white placeholder:text-white/30"
+                                    />
+                                </TahoeGlassField>
+                                <TahoeGlassButton
                                     type="submit"
                                     disabled={!newComment.trim() || submittingComment}
-                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-full text-sm font-medium text-white transition-colors"
+                                    className="px-4 py-2"
+                                    contentClassName="text-sm font-medium text-white"
                                 >
                                     Post
-                                </button>
+                                </TahoeGlassButton>
                             </form>
                         </div>
                     )}

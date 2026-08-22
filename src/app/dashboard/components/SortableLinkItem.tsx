@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { GripVertical } from 'lucide-react'
 import Input from '@/components/ui/Input'
 import { Link } from '@/lib/types'
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface Props {
     link: Link
@@ -31,11 +32,15 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
     }
 
     return (
-        <div
+        <TahoeGlassSurface
             ref={setNodeRef}
             style={style}
-            className={`flex flex-col md:flex-row gap-4 items-stretch md:items-center p-4 rounded-xl border transition-colors ${isDragging ? 'bg-white/10 border-white/30 shadow-xl' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'
-                }`}
+            variant="card"
+            radius={12}
+            tone="light"
+            tracking={isDragging ? 'continuous' : 'static'}
+            className={isDragging ? 'ring-1 ring-white/30 shadow-xl' : ''}
+            contentClassName="flex flex-col md:flex-row gap-4 items-stretch md:items-center p-4"
         >
             {/* Drag Handle */}
             <div
@@ -50,7 +55,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
             <div
                 {...attributes}
                 {...listeners}
-                className="flex md:hidden items-center justify-center cursor-move text-white/30 hover:text-white/70 transition-colors py-1 -mx-4 -mt-4 mb-2 bg-white/5 border-b border-white/5 touch-none select-none"
+                className="flex md:hidden items-center justify-center cursor-move text-white/30 hover:text-white/70 transition-colors py-1 -mx-4 -mt-4 mb-2 border-b border-white/10 touch-none select-none"
             >
                 <GripVertical size={16} />
             </div>
@@ -60,7 +65,6 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
                     value={link.link_name}
                     onChange={(e) => updateLink(link.id, 'link_name', e.target.value)}
                     placeholder="Link name (e.g. Portfolio)"
-                    className="bg-black/20 border-white/10 focus:border-white/30"
                 />
             </div>
             <div className="flex w-full md:flex-1 gap-4 items-center">
@@ -79,16 +83,17 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
                         value={link.link_url}
                         onChange={(e) => updateLink(link.id, 'link_url', e.target.value)}
                         placeholder="https://..."
-                        className="bg-black/20 border-white/10 focus:border-white/30"
                     />
                 </div>
-                <button
+                <TahoeGlassButton
                     onClick={() => removeLink(link.id)}
-                    className="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors shrink-0 border border-red-500/20"
+                    className="w-10 h-10 p-0 shrink-0"
+                    contentClassName="text-red-200 text-xl"
+                    aria-label={`Remove ${link.link_name || 'link'}`}
                 >
                     ×
-                </button>
+                </TahoeGlassButton>
             </div>
-        </div>
+        </TahoeGlassSurface>
     )
 }

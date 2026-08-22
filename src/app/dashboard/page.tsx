@@ -8,11 +8,16 @@ import { createClient } from '@/lib/supabase/client'
 import Header from '@/components/layout/Header'
 import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
+import {
+    TahoeGlassButton,
+    TahoeGlassDialog,
+    TahoeGlassField,
+    TahoeGlassSurface
+} from '@/components/ui/tahoe-glass'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { SortableContactItem } from './components/SortableContactItem'
 import Input from '@/components/ui/Input'
 import { Plus, X, Upload, Loader2, CreditCard, Copy, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import AdvancedModeCard from '@/app/dashboard/components/AdvancedModeCard'
 import EarningsTab from '@/app/dashboard/components/EarningsTab'
 
@@ -515,40 +520,27 @@ function DashboardContent() {
 
                 {/* Profile Completeness Banner */}
                 {profileCompleteness < 20 && (
-                    <div
-                        className="relative rounded-[20px] overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
+                    <TahoeGlassSurface
+                        as="button"
+                        type="button"
+                        variant="card"
+                        radius={20}
+                        tone="light"
+                        className="w-full overflow-hidden text-left hover:scale-[1.01]"
+                        contentClassName="p-6 flex items-center gap-4"
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "What is missing from my profile?" }
                         }))}
-                        style={{
-                            border: '1.4px solid rgba(255, 255, 255, 0.4)',
-                            backdropFilter: 'blur(50px)'
-                        }}
+                        aria-label="Ask Deity what is missing from my profile"
                     >
-                        {/* Background layers */}
-                        <div className="absolute inset-0 pointer-events-none">
-                            <div className="absolute bg-[rgba(255,255,255,0.1)] inset-0 mix-blend-luminosity" />
-                            <div
-                                className="absolute inset-0 opacity-30"
-                                style={{
-                                    backgroundImage: 'url(/siri-gradient.png)',
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: '50% 50%'
-                                }}
-                            />
-                        </div>
-
-                        {/* Content */}
-                        <div className="relative p-6 flex items-center gap-4">
-                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                            <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full ring-1 ring-white/25">
                                 <Sparkles className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-white font-semibold text-lg mb-1">Let Deity help you build your profile</h3>
-                                <p className="text-white/60 text-sm">Your profile is {profileCompleteness}% complete. Click here for personalized assistance.</p>
-                            </div>
-                        </div>
-                    </div>
+                            </span>
+                            <span className="flex-1">
+                                <span className="mb-1 block text-lg font-semibold text-white">Let Deity help you build your profile</span>
+                                <span className="block text-sm text-white/60">Your profile is {profileCompleteness}% complete. Click here for personalized assistance.</span>
+                            </span>
+                    </TahoeGlassSurface>
                 )}
 
                 {/* Your Profile Tab Content */}
@@ -561,27 +553,31 @@ function DashboardContent() {
                             </h2>
 
                             {/* Ask Deity Button */}
-                            <button
+                            <TahoeGlassButton
                                 onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                     detail: { initialMessage: "How can you help me improve my profile?" }
                                 }))}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all"
-                                style={{
-                                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                                }}
+                                className="px-4 py-2"
+                                contentClassName="text-white/90"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 <span className="text-sm font-medium">Ask Deity to help</span>
-                            </button>
+                            </TahoeGlassButton>
                         </div>
 
                         {/* Profile Content */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             {/* Profile Picture */}
                             <div className="flex flex-col items-center">
-                                <div
-                                    className="w-40 h-40 rounded-3xl bg-white/10 overflow-hidden cursor-pointer hover:ring-4 ring-white/30 transition-all"
+                                <TahoeGlassSurface
+                                    as="button"
+                                    type="button"
+                                    variant="mediaFrame"
+                                    radius={24}
+                                    className="h-40 w-40 overflow-hidden hover:ring-4 ring-white/30"
+                                    contentClassName="block h-full w-full"
                                     onClick={() => fileInputRef.current?.click()}
+                                    aria-label="Upload profile picture"
                                 >
                                     {profilePicUrl ? (
                                         <img
@@ -590,11 +586,11 @@ function DashboardContent() {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-white/50">
+                                        <span className="w-full h-full flex items-center justify-center text-white/50">
                                             <span className="text-4xl">+</span>
-                                        </div>
+                                        </span>
                                     )}
-                                </div>
+                                </TahoeGlassSurface>
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -640,15 +636,16 @@ function DashboardContent() {
                                             <span className="text-white/40 text-[10px] font-medium">
                                                 {headline.length}/120
                                             </span>
-                                            <button
+                                            <TahoeGlassButton
                                                 onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                     detail: { initialMessage: "Help me write a catchy headline..." }
                                                 }))}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs"
+                                                className="px-2 py-1"
+                                                contentClassName="gap-1 text-white/75"
                                             >
                                                 <Sparkles className="w-3 h-3" />
                                                 <span className="text-[10px] font-medium">Ask Deity</span>
-                                            </button>
+                                            </TahoeGlassButton>
                                         </div>
                                     </div>
                                     <Input
@@ -663,19 +660,18 @@ function DashboardContent() {
                                 <div>
                                     <div className="flex items-center justify-between mb-1 ml-1">
                                         <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">BIO</label>
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me write my bio..." }
                                             }))}
-                                            className="flex items-center gap-1 px-2 py-1 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-all text-xs"
+                                            className="px-2 py-1"
+                                            contentClassName="gap-1 text-white/75"
                                         >
                                             <Sparkles className="w-3 h-3" />
                                             <span className="text-[10px] font-medium">Ask Deity</span>
-                                        </button>
+                                        </TahoeGlassButton>
                                     </div>
-                                    <div className="relative rounded-[12px] overflow-hidden">
-                                        <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px] pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px] pointer-events-none" />
+                                    <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-4 text-[17px] font-medium leading-[22px] resize-none">
                                         <textarea
                                             value={bio}
                                             onChange={(e) => setBio(e.target.value)}
@@ -686,9 +682,9 @@ function DashboardContent() {
 
                                             placeholder="Need inspiration? Use this template: 'I am the [type of person] for [target customers] who want to [desired outcome]' and continue to elaborate on the experience of why you do this, how you do it, and what exactly is involved."
                                             rows={4}
-                                            className="relative z-10 w-full bg-transparent border-none outline-none text-white text-[17px] font-medium leading-[22px] p-4 placeholder:text-white/50 resize-none"
+                                            className="text-white placeholder:text-white/50"
                                         />
-                                    </div>
+                                    </TahoeGlassField>
                                 </div>
 
 
@@ -701,18 +697,11 @@ function DashboardContent() {
                             <div className="flex items-center gap-3 mb-4">
                                 <h3 className="text-xl font-bold text-white">Domain name</h3>
                                 {user?.is_premium && (
-                                    <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[12px] py-[4px] overflow-hidden flex items-center justify-center group select-none">
-                                        <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                                        <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                                        <img
-                                            alt=""
-                                            src="/assets/premium-bezel.png"
-                                            className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                                        />
-                                        <span className="relative z-10 font-medium text-[12px] text-white/96 leading-[16px]" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                    <TahoeGlassSurface variant="pill" tone="light" className="px-3 py-1" contentClassName="flex items-center justify-center">
+                                        <span className="font-medium text-[12px] text-white/96 leading-[16px]" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
                                             Premium
                                         </span>
-                                    </div>
+                                    </TahoeGlassSurface>
                                 )}
                             </div>
 
@@ -720,30 +709,10 @@ function DashboardContent() {
                                 {/* Flex container for Input + Quote */}
                                 <div className="flex flex-col lg:flex-row items-center gap-4 w-full">
                                     {/* Figma Domain Input with integrated CLAIM IT button */}
-                                    <div className="relative w-full lg:flex-1 h-[54px] flex items-center">
-                                        {/* Base container with all layers */}
-                                        <div className="absolute inset-0 flex items-center overflow-hidden rounded-[12px]">
-                                            {/* Glassmorphic background layers */}
-                                            <div className="absolute inset-0 bg-[rgba(208,208,208,0.5)] mix-blend-color-burn rounded-[12px]" />
-                                            <div className="absolute inset-0 bg-[rgba(0,0,0,0.1)] mix-blend-luminosity rounded-[12px]" />
-
-                                            {/* Purple gradient layer */}
-                                            <div className="absolute inset-0 bg-[rgba(94,92,230,0.18)] rounded-[12px]" />
-
-                                            {/* Siri gradient background image */}
-                                            <div
-                                                className="absolute inset-0 opacity-40 rounded-[12px]"
-                                                style={{
-                                                    backgroundImage: 'url(/siri-gradient.png)',
-                                                    backgroundSize: 'cover',
-                                                    backgroundPosition: 'center'
-                                                }}
-                                            />
-                                        </div>
-
+                                    <TahoeGlassSurface variant="recessed" radius={12} tone="light" className="w-full lg:flex-1 h-[54px]" contentClassName="flex h-full w-full items-center px-2">
                                         {/* Prefix text - nsso.me/ */}
                                         <span
-                                            className="relative z-10 text-[22px] font-medium text-white/96 shrink-0 pl-4"
+                                            className="text-[22px] font-medium text-white/96 shrink-0 pl-2"
                                             style={{
                                                 fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                                 fontWeight: 510
@@ -764,7 +733,7 @@ function DashboardContent() {
                                                 }
                                             }}
                                             placeholder="yourname"
-                                            className="relative z-10 flex-1 bg-transparent border-none outline-none text-[22px] font-medium text-[#545454] placeholder:text-[#545454]/50 min-w-0"
+                                            className="flex-1 min-w-0 bg-transparent border-none outline-none text-[22px] font-medium text-white placeholder:text-white/50"
                                             style={{
                                                 fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                                 fontWeight: 510
@@ -772,24 +741,20 @@ function DashboardContent() {
                                         />
 
                                         {/* Copy Button */}
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={handleCopyUrl}
-                                            className="relative z-10 p-2 mr-1 text-white/50 hover:text-white transition-colors"
+                                            className="p-2 mr-1"
+                                            contentClassName="text-white/70"
                                             title="Copy URL"
+                                            aria-label="Copy profile URL"
                                         >
                                             {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
-                                        </button>
+                                        </TahoeGlassButton>
 
                                         {/* Actions Section inside Input - Desktop Only */}
                                         <div className="relative z-10 hidden md:flex items-center gap-2 mr-1.5 shrink-0">
                                             {/* Always show button, content changes based on state */}
-                                            <div
-                                                className="p-[0.75px] rounded-[100px]"
-                                                style={{
-                                                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
-                                                }}
-                                            >
-                                                <button
+                                                <TahoeGlassButton
                                                     onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
                                                     disabled={
                                                         (!user?.is_premium && !usernameAvailable) ||
@@ -798,19 +763,9 @@ function DashboardContent() {
                                                         (user?.is_premium && customDomain === user?.username) ||
                                                         (!user?.is_premium && !desiredUsername)
                                                     }
-                                                    className={cn(
-                                                        "relative h-[42px] px-6 rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]",
-                                                        (user?.is_premium ? customDomain !== user?.username : usernameAvailable) ? "bg-white/10 text-white" : "bg-transparent text-white/50"
-                                                    )}
-                                                    style={{
-                                                        boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                                                    }}
+                                                    className="h-[42px] px-6"
+                                                    contentClassName="text-white/95"
                                                 >
-                                                    <div className="absolute inset-0 rounded-[100px] bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
-                                                    <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
-                                                    <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
-
-                                                    <div className="relative z-10 flex items-center gap-2">
                                                         {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
                                                         <span
                                                             className="text-[16px] font-semibold text-white/96 tracking-wide"
@@ -824,20 +779,11 @@ function DashboardContent() {
                                                                 : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
                                                             }
                                                         </span>
-                                                    </div>
-                                                </button>
-                                            </div>
+                                                </TahoeGlassButton>
 
                                         </div>
 
-                                        {/* Inset shadow overlay */}
-                                        <div
-                                            className="absolute inset-0 pointer-events-none rounded-[12px]"
-                                            style={{
-                                                boxShadow: 'inset 0px -0.5px 1px 0px rgba(255,255,255,0.3), inset 0px -0.5px 1px 0px rgba(255,255,255,0.25), inset 1px 1.5px 4px 0px rgba(0,0,0,0.08), inset 1px 1.5px 4px 0px rgba(0,0,0,0.1)'
-                                            }}
-                                        />
-                                    </div>
+                                    </TahoeGlassSurface>
 
                                     {/* Quote Section - Now sitting to the right */}
                                     <div className="hidden lg:flex items-center h-[54px] shrink-0">
@@ -851,13 +797,7 @@ function DashboardContent() {
                                 <div className="flex md:hidden items-center gap-3 w-full">
                                     {/* Primary Action Button (Mobile) */}
                                     {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) && (
-                                        <div
-                                            className="p-[0.75px] rounded-[100px] flex-1"
-                                            style={{
-                                                background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
-                                            }}
-                                        >
-                                            <button
+                                            <TahoeGlassButton
                                                 onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
                                                 disabled={
                                                     (!user?.is_premium && !usernameAvailable) ||
@@ -865,14 +805,9 @@ function DashboardContent() {
                                                     (user?.is_premium && !customDomain) ||
                                                     (!user?.is_premium && !desiredUsername)
                                                 }
-                                                className="relative h-[42px] w-full rounded-[100px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
-                                                style={{
-                                                    boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)'
-                                                }}
+                                                className="h-[42px] flex-1 px-6"
+                                                contentClassName="text-white/95"
                                             >
-                                                <div className="absolute inset-0 bg-[rgba(255,255,255,0.06)] mix-blend-luminosity rounded-[100px]" />
-                                                <div className="absolute inset-0 bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge rounded-[100px]" />
-                                                <div className="relative z-10 flex items-center gap-2">
                                                     {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
                                                     <span
                                                         className="text-[16px] font-semibold text-white/96 tracking-wide"
@@ -886,9 +821,7 @@ function DashboardContent() {
                                                             : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
                                                         }
                                                     </span>
-                                                </div>
-                                            </button>
-                                        </div>
+                                            </TahoeGlassButton>
                                     )}
                                 </div>
                             </div>
@@ -935,24 +868,24 @@ function DashboardContent() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {/* Ask Deity Button */}
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me find links to add to my profile..." }
                                             }))}
-                                            className="flex items-center gap-2 px-3 py-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all"
-                                            style={{
-                                                border: '1px solid rgba(255, 255, 255, 0.2)'
-                                            }}
+                                            className="px-3 py-2"
+                                            contentClassName="text-white/90"
                                         >
                                             <Sparkles className="w-4 h-4" />
                                             <span className="text-xs font-medium hidden sm:inline">Ask Deity</span>
-                                        </button>
-                                        <button
+                                        </TahoeGlassButton>
+                                        <TahoeGlassButton
                                             onClick={() => addLink('', '')}
-                                            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl transition-colors shrink-0"
+                                            className="w-10 h-10 p-0 shrink-0"
+                                            contentClassName="text-white text-2xl"
+                                            aria-label="Add link"
                                         >
                                             +
-                                        </button>
+                                        </TahoeGlassButton>
                                     </div>
                                 </div>
 
@@ -992,12 +925,14 @@ function DashboardContent() {
                                         <h2 className="text-2xl font-bold text-white mb-2">Contact</h2>
                                         <p className="text-white/50 text-sm">Add your contact methods and social profiles.</p>
                                     </div>
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => addContact()}
-                                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                                        className="w-10 h-10 p-0"
+                                        contentClassName="text-white text-xl"
+                                        aria-label="Add contact method"
                                     >
                                         +
-                                    </button>
+                                    </TahoeGlassButton>
                                 </div>
                                 <div className="space-y-4">
                                     <DndContext
@@ -1035,14 +970,15 @@ function DashboardContent() {
                 }
             </div >
 
-            {/* Downgrade Confirmation Modal */}
-            {
-                showDowngradeModal && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-                        <GlassCard className="w-full max-w-md p-8">
-                            <h2 className="text-2xl font-bold text-white mb-4 text-center">
-                                Cancel Subscription?
-                            </h2>
+            <TahoeGlassDialog
+                open={showDowngradeModal}
+                onOpenChange={setShowDowngradeModal}
+                portal={false}
+                title="Cancel Subscription?"
+                titleClassName="text-2xl font-bold text-white text-center"
+                tone="light"
+                className="max-w-md p-8"
+            >
                             <div className="text-center mb-6">
                                 <div className="text-5xl mb-4">⚠️</div>
                                 <p className="text-white/70 mb-4">
@@ -1069,17 +1005,14 @@ function DashboardContent() {
                                     {processingDowngrade ? 'Processing...' : 'Cancel Subscription'}
                                 </GlassButton>
                             </div>
-                        </GlassCard>
-                    </div>
-                )
-            }
+            </TahoeGlassDialog>
         </main >
     )
 }
 
 export default function DashboardPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white text-xl">Loading...</div></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><TahoeGlassSurface variant="pill" tone="light" className="px-6 py-3" contentClassName="text-xl">Loading...</TahoeGlassSurface></div>}>
             <DashboardContent />
         </Suspense>
     )

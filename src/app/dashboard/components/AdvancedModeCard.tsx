@@ -12,6 +12,7 @@ import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import { useUI } from '@/components/providers/UIProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
+import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface AdvancedModeCardProps {
     userId: string
@@ -33,9 +34,9 @@ function SortableItem({ id, children, className }: { id: string; children: (list
     }
 
     return (
-        <div ref={setNodeRef} style={style} className={className} {...attributes}>
+        <TahoeGlassSurface ref={setNodeRef} style={style} variant="card" radius={16} tone="light" tracking={isDragging ? 'continuous' : 'static'} className={className} {...attributes}>
             {children(listeners)}
-        </div>
+        </TahoeGlassSurface>
     )
 }
 
@@ -370,26 +371,25 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     // Collapsed View
     if (!isExpanded) {
         return (
-            <div
+            <TahoeGlassSurface
+                as="button"
+                type="button"
+                variant="card"
+                radius={24}
+                tone="light"
                 onClick={() => setIsExpanded(true)}
-                className="w-full relative overflow-hidden rounded-[24px]"
+                className="w-full overflow-hidden text-left group"
+                contentClassName="p-6 flex items-center justify-between w-full h-full"
+                aria-expanded={false}
             >
-                <GlassCard
-                    className="cursor-pointer group relative z-10"
-                    style={{ '--glass-bg': 'rgba(0, 0, 0, 0.2)' } as React.CSSProperties}
-                >
-                    <div className="p-6 hover:bg-white/5 transition-colors flex items-center justify-between w-full h-full">
-                        <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none z-0" style={{ backgroundImage: 'url(/siri-gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                        <div className="flex items-center gap-4 relative z-10">
-                            <div>
-                                <h3 className="text-white font-bold text-2xl">Advanced Mode</h3>
-                                <p className="text-white/60 text-sm">Add Experiences, Projects, and Products</p>
-                            </div>
-                        </div>
-                        <ChevronDown className="text-white/50 group-hover:text-white transition-colors relative z-10" />
-                    </div>
-                </GlassCard>
-            </div>
+                        <span className="flex items-center gap-4">
+                            <span>
+                                <span className="block text-2xl font-bold text-white">Advanced Mode</span>
+                                <span className="block text-sm text-white/60">Add Experiences, Projects, and Products</span>
+                            </span>
+                        </span>
+                        <ChevronDown className="text-white/50 group-hover:text-white transition-colors" />
+            </TahoeGlassSurface>
         )
     }
 
@@ -400,19 +400,20 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <h4 className="text-white font-semibold text-lg">Job titles</h4>
-                    <button
+                    <TahoeGlassButton
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my work experience..." }
                         }))}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 transition-all group"
+                        className="px-3 py-1 group"
+                        contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
                         <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
-                    </button>
+                    </TahoeGlassButton>
                 </div>
-                <button onClick={addExperience} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                <TahoeGlassButton onClick={addExperience} className="w-8 h-8 p-0" contentClassName="text-white" aria-label="Add experience">
                     <Plus size={16} />
-                </button>
+                </TahoeGlassButton>
             </div>
 
             {/* List */}
@@ -420,7 +421,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 <SortableContext items={experiences.map(e => e.id)} strategy={verticalListSortingStrategy}>
                     <div className="flex flex-col gap-4">
                         {experiences.map((exp) => (
-                            <SortableItem key={exp.id} id={exp.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                            <SortableItem key={exp.id} id={exp.id} className="relative group p-4">
                                 {(listeners) => (
                                     <>
                                         <div
@@ -429,53 +430,40 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         >
                                             <GripVertical size={16} />
                                         </div>
-                                        <button
+                                        <TahoeGlassButton
                                             onClick={() => deleteExperience(exp.id)}
-                                            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-20"
+                                            className="absolute top-4 right-4 w-10 h-10 p-0 z-20"
+                                            contentClassName="text-red-200"
+                                            aria-label="Delete experience"
                                         >
                                             <X size={18} />
-                                        </button>
+                                        </TahoeGlassButton>
 
                                         <div className="grid gap-4 pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
-                                                <input
-                                                    type="text"
-                                                    value={exp.company_name}
-                                                    onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })}
-                                                    placeholder="e.g. Google"
-                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <input type="text" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="text-white font-medium placeholder:text-white/40" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
-                                                <input
-                                                    type="text"
-                                                    value={exp.job_title}
-                                                    onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })}
-                                                    placeholder="e.g. Senior Product Designer"
-                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <input type="text" value={exp.job_title} onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })} placeholder="e.g. Senior Product Designer" className="text-white font-medium placeholder:text-white/40" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div className="flex gap-4">
                                                 <div className="flex-1">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
-                                                    <input
-                                                        type="number"
-                                                        value={exp.start_year}
-                                                        onChange={(e) => updateExperience(exp.id, { start_year: parseInt(e.target.value) })}
-                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                                    />
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                        <input type="number" value={exp.start_year} onChange={(e) => updateExperience(exp.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
+                                                    </TahoeGlassField>
                                                 </div>
                                                 <div className="flex-1">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
-                                                    <input
-                                                        type="number"
-                                                        value={exp.end_year || ''}
-                                                        placeholder="Present"
-                                                        onChange={(e) => updateExperience(exp.id, { end_year: e.target.value ? parseInt(e.target.value) : null })}
-                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                                    />
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                        <input type="number" value={exp.end_year || ''} placeholder="Present" onChange={(e) => updateExperience(exp.id, { end_year: e.target.value ? parseInt(e.target.value) : null })} className="text-white/80" />
+                                                    </TahoeGlassField>
                                                 </div>
                                             </div>
                                         </div>
@@ -496,26 +484,27 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <h4 className="text-white font-semibold text-lg">Qualifications</h4>
-                    <button
+                    <TahoeGlassButton
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my qualifications..." }
                         }))}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 transition-all group"
+                        className="px-3 py-1 group"
+                        contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
                         <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
-                    </button>
+                    </TahoeGlassButton>
                 </div>
-                <button onClick={addQualification} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                <TahoeGlassButton onClick={addQualification} className="w-8 h-8 p-0" contentClassName="text-white" aria-label="Add qualification">
                     <Plus size={16} />
-                </button>
+                </TahoeGlassButton>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'qualifications')}>
                 <SortableContext items={qualifications.map(q => q.id)} strategy={verticalListSortingStrategy}>
                     <div className="flex flex-col gap-4">
                         {qualifications.map((qual) => (
-                            <SortableItem key={qual.id} id={qual.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                            <SortableItem key={qual.id} id={qual.id} className="relative group p-4">
                                 {(listeners) => (
                                     <>
                                         <div
@@ -524,49 +513,35 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         >
                                             <GripVertical size={16} />
                                         </div>
-                                        <button onClick={() => deleteQualification(qual.id)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-20">
+                                        <TahoeGlassButton onClick={() => deleteQualification(qual.id)} className="absolute top-4 right-4 w-10 h-10 p-0 z-20" contentClassName="text-red-200" aria-label="Delete qualification">
                                             <X size={18} />
-                                        </button>
+                                        </TahoeGlassButton>
 
                                         <div className="grid gap-4 pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
-                                                <input
-                                                    type="text"
-                                                    value={qual.institution}
-                                                    onChange={(e) => updateQualification(qual.id, { institution: e.target.value })}
-                                                    placeholder="e.g. Stanford University"
-                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <input type="text" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="text-white font-medium placeholder:text-white/40" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
-                                                <input
-                                                    type="text"
-                                                    value={qual.qualification_name}
-                                                    onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })}
-                                                    placeholder="e.g. MSc Computer Science"
-                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <input type="text" value={qual.qualification_name} onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })} placeholder="e.g. MSc Computer Science" className="text-white font-medium placeholder:text-white/40" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div className="flex gap-4">
                                                 <div className="flex-1">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
-                                                    <input
-                                                        type="number"
-                                                        value={qual.start_year}
-                                                        onChange={(e) => updateQualification(qual.id, { start_year: parseInt(e.target.value) })}
-                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                                    />
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                        <input type="number" value={qual.start_year} onChange={(e) => updateQualification(qual.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
+                                                    </TahoeGlassField>
                                                 </div>
                                                 <div className="flex-1">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
-                                                    <input
-                                                        type="number"
-                                                        value={qual.end_year}
-                                                        onChange={(e) => updateQualification(qual.id, { end_year: parseInt(e.target.value) })}
-                                                        className="w-full bg-transparent text-white/80 focus:outline-none"
-                                                    />
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                        <input type="number" value={qual.end_year} onChange={(e) => updateQualification(qual.id, { end_year: parseInt(e.target.value) })} className="text-white/80" />
+                                                    </TahoeGlassField>
                                                 </div>
                                             </div>
                                         </div>
@@ -587,26 +562,27 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <h4 className="text-white font-semibold text-lg">Projects</h4>
-                    <button
+                    <TahoeGlassButton
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add a project..." }
                         }))}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 border border-cyan-500/30 transition-all group"
+                        className="px-3 py-1 group"
+                        contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
                         <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
-                    </button>
+                    </TahoeGlassButton>
                 </div>
-                <button onClick={addProject} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                <TahoeGlassButton onClick={addProject} className="w-8 h-8 p-0" contentClassName="text-white" aria-label="Add project">
                     <Plus size={16} />
-                </button>
+                </TahoeGlassButton>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'projects')}>
                 <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
                     <div className="flex flex-col gap-4">
                         {projects.map((proj) => (
-                            <SortableItem key={proj.id} id={proj.id} className="relative group bg-white/5 rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                            <SortableItem key={proj.id} id={proj.id} className="relative group p-4">
                                 {(listeners) => (
                                     <>
                                         <div
@@ -615,72 +591,54 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         >
                                             <GripVertical size={16} />
                                         </div>
-                                        <button onClick={() => deleteProject(proj.id)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-20">
+                                        <TahoeGlassButton onClick={() => deleteProject(proj.id)} className="absolute top-4 right-4 w-10 h-10 p-0 z-20" contentClassName="text-red-200" aria-label="Delete project">
                                             <X size={18} />
-                                        </button>
+                                        </TahoeGlassButton>
 
                                         <div className="grid gap-4 pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={proj.project_name}
-                                                    onChange={(e) => updateProject(proj.id, { project_name: e.target.value })}
-                                                    placeholder="e.g. Neo-Bank Mobile App"
-                                                    className="w-full bg-transparent text-white font-medium placeholder-white/40 focus:outline-none focus:border-b border-white/10 pb-1"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <input type="text" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="text-white font-medium placeholder:text-white/40" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
-                                                <input
-                                                    type="text"
-                                                    value={proj.contribution}
-                                                    onChange={(e) => updateProject(proj.id, { contribution: e.target.value })}
-                                                    placeholder="e.g. Lead UI/UX Designer"
-                                                    className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <input type="text" value={proj.contribution} onChange={(e) => updateProject(proj.id, { contribution: e.target.value })} placeholder="e.g. Lead UI/UX Designer" className="text-white/80 placeholder:text-white/20" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project URL (Optional)</label>
-                                                <input
-                                                    type="url"
-                                                    value={proj.project_url || ''}
-                                                    onChange={(e) => updateProject(proj.id, { project_url: e.target.value })}
-                                                    placeholder="e.g. https://example.com"
-                                                    className="w-full bg-transparent text-white/80 placeholder-white/20 focus:outline-none focus:border-b border-white/10 pb-1"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <input type="url" value={proj.project_url || ''} onChange={(e) => updateProject(proj.id, { project_url: e.target.value })} placeholder="e.g. https://example.com" className="text-white/80 placeholder:text-white/20" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Description</label>
-                                                <textarea
-                                                    value={proj.description || ''}
-                                                    onChange={(e) => updateProject(proj.id, { description: e.target.value })}
-                                                    placeholder="Describe the project..."
-                                                    className="w-full bg-transparent text-white/70 text-sm placeholder-white/20 focus:outline-none border-b border-white/10 pb-2 min-h-[60px]"
-                                                />
+                                                <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-3 min-h-[60px] resize-none">
+                                                    <textarea value={proj.description || ''} onChange={(e) => updateProject(proj.id, { description: e.target.value })} placeholder="Describe the project..." className="text-white/70 text-sm placeholder:text-white/20" />
+                                                </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Project Photo</label>
                                                 <div className="flex items-center gap-4">
                                                     {proj.project_photo_url && (
-                                                        <div className="w-16 h-16 rounded-lg bg-white/5 bg-cover bg-center border border-white/10" style={{ backgroundImage: `url(${proj.project_photo_url})` }} />
+                                                        <TahoeGlassSurface variant="mediaFrame" radius={8} className="h-16 w-16 overflow-hidden" contentClassName="h-full w-full">
+                                                            <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${proj.project_photo_url})` }} />
+                                                        </TahoeGlassSurface>
                                                     )}
-                                                    <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10">
-                                                        {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
-                                                        <span className="text-sm text-white/70">{proj.project_photo_url ? 'Change Photo' : 'Upload Photo'}</span>
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            className="hidden"
-                                                            onChange={(e) => {
+                                                    <TahoeGlassSurface variant="button" radius={12} tone="light" className="px-4 py-2" contentClassName="flex items-center gap-2">
+                                                        <label className="cursor-pointer flex items-center gap-2">
+                                                            {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
+                                                            <span className="text-sm text-white/70">{proj.project_photo_url ? 'Change Photo' : 'Upload Photo'}</span>
+                                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                                                                 const file = e.target.files?.[0]
-                                                                if (file) {
-                                                                    handleImageSelect(file, 'project', proj.id)
-                                                                }
+                                                                if (file) handleImageSelect(file, 'project', proj.id)
                                                                 e.target.value = ''
-                                                            }}
-                                                        />
-                                                    </label>
+                                                            }} />
+                                                        </label>
+                                                    </TahoeGlassSurface>
                                                 </div>
                                             </div>
                                         </div>
@@ -717,33 +675,28 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         // Edit Product Form
         return (
             <div className="flex flex-col gap-6 animate-fadeIn pt-6 relative">
-                <button
+                <TahoeGlassButton
                     onClick={() => confirmDeleteProduct(selectedProduct.id)}
-                    className="absolute top-[27px] right-0 w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center text-white transition-colors z-10"
+                    className="absolute top-[27px] right-0 w-10 h-10 p-0 z-10"
+                    contentClassName="text-red-200"
+                    aria-label="Delete product"
                 >
                     <X size={18} />
-                </button>
+                </TahoeGlassButton>
 
                 <div className="grid gap-6">
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Product Name</label>
-                        <input
-                            type="text"
-                            value={selectedProduct.name}
-                            onChange={(e) => updateProduct(selectedProduct.id, { name: e.target.value })}
-                            className="w-full bg-transparent text-2xl font-bold text-white placeholder-white/20 focus:outline-none pr-12"
-                        />
+                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2 pr-12">
+                            <input type="text" value={selectedProduct.name} onChange={(e) => updateProduct(selectedProduct.id, { name: e.target.value })} className="text-2xl font-bold text-white placeholder:text-white/20" />
+                        </TahoeGlassField>
                     </div>
 
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Price (include the currency)</label>
-                        <input
-                            type="text"
-                            value={selectedProduct.price || ''}
-                            onChange={(e) => updateProduct(selectedProduct.id, { price: e.target.value })}
-                            placeholder="e.g. $50 or Free"
-                            className="w-full bg-transparent text-xl font-medium text-white placeholder-white/20 focus:outline-none"
-                        />
+                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                            <input type="text" value={selectedProduct.price || ''} onChange={(e) => updateProduct(selectedProduct.id, { price: e.target.value })} placeholder="e.g. $50 or Free" className="text-xl font-medium text-white placeholder:text-white/20" />
+                        </TahoeGlassField>
                     </div>
 
                     {/* Product Image & Sales Page - Side by Side */}
@@ -753,24 +706,21 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Image</label>
                             <div className="flex items-center gap-4 min-h-[64px]">
                                 {selectedProduct.image_url && (
-                                    <div className="w-16 h-16 rounded-lg bg-white/5 bg-cover bg-center border border-white/10" style={{ backgroundImage: `url(${selectedProduct.image_url})` }} />
+                                    <TahoeGlassSurface variant="mediaFrame" radius={8} className="h-16 w-16 overflow-hidden" contentClassName="h-full w-full">
+                                        <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${selectedProduct.image_url})` }} />
+                                    </TahoeGlassSurface>
                                 )}
-                                <label className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10">
-                                    {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
-                                    <span className="text-sm text-white/70">{selectedProduct.image_url ? 'Change Image' : 'Upload Image'}</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => {
+                                <TahoeGlassSurface variant="button" radius={12} tone="light" className="px-4 py-2" contentClassName="flex items-center gap-2">
+                                    <label className="cursor-pointer flex items-center gap-2">
+                                        {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
+                                        <span className="text-sm text-white/70">{selectedProduct.image_url ? 'Change Image' : 'Upload Image'}</span>
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                                             const file = e.target.files?.[0]
-                                            if (file) {
-                                                handleImageSelect(file, 'product', selectedProduct.id)
-                                            }
+                                            if (file) handleImageSelect(file, 'product', selectedProduct.id)
                                             e.target.value = ''
-                                        }}
-                                    />
-                                </label>
+                                        }} />
+                                    </label>
+                                </TahoeGlassSurface>
                             </div>
                         </div>
 
@@ -778,20 +728,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <div>
                             <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Sales Page</label>
                             <div className="flex items-center gap-4 min-h-[64px]">
-                                <button
+                                <TahoeGlassButton
                                     onClick={() => updateProduct(selectedProduct.id, { sales_page_active: !selectedProduct.sales_page_active })}
-                                    className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${selectedProduct.sales_page_active ? 'bg-green-500' : 'bg-white/20'}`}
+                                    role="switch"
+                                    aria-checked={selectedProduct.sales_page_active}
+                                    aria-label="Enable product sales page"
+                                    semanticTint={selectedProduct.sales_page_active ? 'light' : 'dark'}
+                                    className="w-11 h-6 p-0 flex-shrink-0"
+                                    contentClassName="relative block h-full w-full"
                                 >
-                                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${selectedProduct.sales_page_active ? 'left-6' : 'left-1'}`} />
-                                </button>
+                                    <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.sales_page_active ? 'left-6' : 'left-1'}`} />
+                                </TahoeGlassButton>
                                 {selectedProduct.sales_page_active && (
-                                    <label
+                                    <TahoeGlassButton
                                         onClick={() => window.open(`/dashboard/products/${selectedProduct.id}/creator`, '_blank')}
-                                        className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-white/10"
+                                        className="px-4 py-2"
+                                        contentClassName="text-white/70"
                                     >
                                         <Layout size={16} className="text-white/70" />
                                         <span className="text-sm text-white/70">Open Sales Page Creator</span>
-                                    </label>
+                                    </TahoeGlassButton>
                                 )}
                             </div>
                         </div>
@@ -799,66 +755,71 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Description</label>
-                        <textarea
-                            value={selectedProduct.description || ''}
-                            onChange={(e) => updateProduct(selectedProduct.id, { description: e.target.value })}
-                            className="w-full bg-white/5 rounded-xl p-4 text-white/80 text-sm border border-white/5 focus:border-white/20 focus:outline-none min-h-[100px]"
-                            placeholder="Describe your offering..."
-                        />
+                        <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-4 min-h-[100px] resize-none">
+                            <textarea value={selectedProduct.description || ''} onChange={(e) => updateProduct(selectedProduct.id, { description: e.target.value })} className="text-white/80 text-sm" placeholder="Describe your offering..." />
+                        </TahoeGlassField>
                     </div>
 
                     {/* Purchase Link Toggle */}
-                    <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4">
                         <div className="flex items-center justify-between mb-4">
                             <label className="text-sm font-medium text-white">Purchase Link</label>
-                            <button
+                            <TahoeGlassButton
                                 onClick={() => updateProduct(selectedProduct.id, { purchase_link_active: !selectedProduct.purchase_link_active })}
-                                className={`w-10 h-5 rounded-full transition-colors relative ${selectedProduct.purchase_link_active ? 'bg-green-500' : 'bg-white/20'}`}
+                                role="switch"
+                                aria-checked={selectedProduct.purchase_link_active}
+                                aria-label="Enable purchase link"
+                                semanticTint={selectedProduct.purchase_link_active ? 'light' : 'dark'}
+                                className="w-11 h-6 p-0"
+                                contentClassName="relative block h-full w-full"
                             >
-                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${selectedProduct.purchase_link_active ? 'left-6' : 'left-1'}`} />
-                            </button>
+                                <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.purchase_link_active ? 'left-6' : 'left-1'}`} />
+                            </TahoeGlassButton>
                         </div>
                         {selectedProduct.purchase_link_active && (
-                            <input
-                                type="text"
-                                value={selectedProduct.purchase_link || ''}
-                                onChange={(e) => updateProduct(selectedProduct.id, { purchase_link: e.target.value })}
-                                placeholder="https://..."
-                                className="w-full bg-black/20 rounded-lg p-2 text-white/80 text-sm focus:outline-none border border-white/10"
-                            />
+                            <TahoeGlassField tone="light" surfaceClassName="p-2">
+                                <input type="url" value={selectedProduct.purchase_link || ''} onChange={(e) => updateProduct(selectedProduct.id, { purchase_link: e.target.value })} placeholder="https://..." className="text-white/80 text-sm" />
+                            </TahoeGlassField>
                         )}
-                    </div>
+                    </TahoeGlassSurface>
 
                     {/* PayPal HTML Toggle */}
-                    <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-2 pt-0.5">
                                 <label className="text-sm font-medium text-white">PayPal Button Code</label>
                                 <div className="group relative hidden min-[391px]:block">
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => setShowGuide(!showGuide)}
-                                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                                        className="px-2 py-0.5"
+                                        contentClassName="gap-1.5 text-white/60"
                                     >
                                         <Info size={12} className="text-white/60" />
                                         <span className="text-[10px] font-medium text-white/60">Where is this?</span>
-                                    </button>
+                                    </TahoeGlassButton>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-2">
-                                <button
+                                <TahoeGlassButton
                                     onClick={() => updateProduct(selectedProduct.id, { paypal_active: !selectedProduct.paypal_active })}
-                                    className={`w-10 h-5 rounded-full transition-colors relative ${selectedProduct.paypal_active ? 'bg-green-500' : 'bg-white/20'}`}
+                                    role="switch"
+                                    aria-checked={selectedProduct.paypal_active}
+                                    aria-label="Enable PayPal button code"
+                                    semanticTint={selectedProduct.paypal_active ? 'light' : 'dark'}
+                                    className="w-11 h-6 p-0"
+                                    contentClassName="relative block h-full w-full"
                                 >
-                                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${selectedProduct.paypal_active ? 'left-6' : 'left-1'}`} />
-                                </button>
+                                    <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.paypal_active ? 'left-6' : 'left-1'}`} />
+                                </TahoeGlassButton>
                                 <div className="group relative block min-[391px]:hidden">
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => setShowGuide(!showGuide)}
-                                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                                        className="px-2 py-0.5"
+                                        contentClassName="gap-1.5 text-white/60"
                                     >
                                         <Info size={12} className="text-white/60" />
                                         <span className="text-[10px] font-medium text-white/60">Where is this?</span>
-                                    </button>
+                                    </TahoeGlassButton>
                                 </div>
                             </div>
                         </div>
@@ -866,24 +827,24 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <div className="relative space-y-3">
                                 {/* Guide Image Accordion */}
                                 {showGuide && (
-                                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/40 animate-in slide-in-from-top-2 duration-200">
-                                        <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/5">
+                                    <TahoeGlassSurface variant="popover" radius={12} tone="light" className="overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                                        <div className="p-3 border-b border-white/10 flex justify-between items-center">
                                             <span className="text-xs font-medium text-white/80">PayPal Dashboard &gt; Copy Code</span>
-                                            <button onClick={() => setShowGuide(false)} className="text-white/40 hover:text-white">
+                                            <TahoeGlassButton onClick={() => setShowGuide(false)} className="h-7 w-7 p-0" contentClassName="text-white/60" aria-label="Close PayPal guide">
                                                 <X size={14} />
-                                            </button>
+                                            </TahoeGlassButton>
                                         </div>
-                                        <div className="p-4 flex justify-center bg-white/5">
+                                        <div className="p-4 flex justify-center">
                                             <a
                                                 href="https://youtu.be/9KihkWujsaI?si=hwAHbrQDLvOog6U8&t=28"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="relative group block max-w-full cursor-pointer"
                                             >
-                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center pointer-events-none">
-                                                    <span className="opacity-0 group-hover:opacity-100 bg-black/80 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-200">
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    <TahoeGlassSurface variant="pill" tone="light" className="opacity-0 group-hover:opacity-100 px-3 py-1.5 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-200" contentClassName="text-white text-xs font-medium">
                                                         Watch Video Tutorial ↗
-                                                    </span>
+                                                    </TahoeGlassSurface>
                                                 </div>
                                                 <img
                                                     src="/guide-paypal.png"
@@ -892,19 +853,16 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                                 />
                                             </a>
                                         </div>
-                                    </div>
+                                    </TahoeGlassSurface>
                                 )}
 
-                                <textarea
-                                    value={selectedProduct.paypal_html || ''}
-                                    onChange={(e) => updateProduct(selectedProduct.id, { paypal_html: e.target.value })}
-                                    placeholder="<form action=...>"
-                                    className={`w-full bg-black/20 rounded-lg p-2 text-white/80 text-xs font-mono focus:outline-none border min-h-[80px] transition-colors ${verificationStatus === 'scanning' ? 'border-yellow-500/50' :
-                                        verificationStatus === 'secure' ? 'border-green-500/50' :
-                                            verificationStatus === 'unsafe' ? 'border-red-500/50' :
-                                                'border-white/10'
-                                        }`}
-                                />
+                                <TahoeGlassField
+                                    tone="light"
+                                    surfaceClassName={`p-0 ring-1 ${verificationStatus === 'scanning' ? 'ring-yellow-500/50' : verificationStatus === 'secure' ? 'ring-green-500/50' : verificationStatus === 'unsafe' ? 'ring-red-500/50' : 'ring-white/10'}`}
+                                    controlClassName="p-2 min-h-[80px] text-xs font-mono resize-none"
+                                >
+                                    <textarea value={selectedProduct.paypal_html || ''} onChange={(e) => updateProduct(selectedProduct.id, { paypal_html: e.target.value })} placeholder="<form action=...>" className="text-white/80" />
+                                </TahoeGlassField>
                                 {/* Security Status Indicator Overlay */}
                                 {selectedProduct.paypal_html && (
                                     <div className="mt-2 flex items-center justify-between animate-in fade-in duration-300">
@@ -936,7 +894,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 )}
                             </div>
                         )}
-                    </div>
+                    </TahoeGlassSurface>
 
 
 
@@ -951,43 +909,51 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     return (
         <GlassCard
             className="w-full min-h-[600px] rounded-[40px] relative"
-            style={{ '--glass-bg': 'rgba(0, 0, 0, 0.2)' } as React.CSSProperties}
         >
             <div className="flex flex-col md:flex-row w-full h-full">
 
                 {/* Collapse Button */}
-                <div
+                <TahoeGlassButton
                     onClick={() => setIsExpanded(false)}
-                    className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white cursor-pointer transition-colors"
+                    className="absolute top-4 right-4 z-50 h-9 w-9 p-0"
+                    contentClassName="text-white/65"
+                    aria-label="Collapse advanced mode"
+                    aria-expanded={true}
                 >
                     <ChevronUp size={20} />
-                </div>
+                </TahoeGlassButton>
 
                 {/* LEFT COLUMN: Sidebar Navigation */}
-                <div className="w-full md:w-[300px] border-r border-white/10 p-6 flex flex-col gap-8 bg-black/20">
+                <TahoeGlassSurface as="aside" variant="menu" tone="light" className="w-full md:w-[300px] border-r border-white/10" contentClassName="p-6 flex flex-col gap-8">
 
                     {/* Experiences Section */}
                     <div>
                         <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold mb-4">Experiences</h3>
                         <div className="flex flex-col gap-2">
-                            <button
+                            <TahoeGlassButton
                                 onClick={() => { setActiveSection('experiences'); setSelectedProduct(null); }}
-                                className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'experiences' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                                semanticTint={activeSection === 'experiences' ? 'light' : 'dark'}
+                                className="w-full px-4 py-3"
+                                contentClassName="w-full justify-start text-left text-white/90"
                             >
                                 Job Titles
-                            </button>
-                            <button
+                            </TahoeGlassButton>
+                            <TahoeGlassButton
                                 onClick={() => { setActiveSection('qualifications'); setSelectedProduct(null); }}
-                                className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'qualifications' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                                semanticTint={activeSection === 'qualifications' ? 'light' : 'dark'}
+                                className="w-full px-4 py-3"
+                                contentClassName="w-full justify-start text-left text-white/90"
                             >
                                 Qualifications
-                            </button>
-                            <button
+                            </TahoeGlassButton>
+                            <TahoeGlassButton
                                 onClick={() => { setActiveSection('projects'); setSelectedProduct(null); }}
-                                className={`text-left px-4 py-3 rounded-xl transition-all ${activeSection === 'projects' ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                                semanticTint={activeSection === 'projects' ? 'light' : 'dark'}
+                                className="w-full px-4 py-3"
+                                contentClassName="w-full justify-start text-left text-white/90"
                             >
                                 Projects
-                            </button>
+                            </TahoeGlassButton>
                         </div>
                     </div>
 
@@ -996,87 +962,80 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold">Products & Services</h3>
                             <div className="flex items-center gap-2">
-                                <button
+                                <TahoeGlassButton
                                     onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                         detail: { initialMessage: "I want to add a product or service..." }
                                     }))}
-                                    className="w-6 h-6 flex items-center justify-center rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-colors"
+                                    className="w-7 h-7 p-0"
+                                    contentClassName="text-cyan-300"
                                     title="Ask Deity"
                                 >
                                     <Sparkles size={12} />
-                                </button>
-                                <button
+                                </TahoeGlassButton>
+                                <TahoeGlassButton
                                     onClick={addProduct}
-                                    className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                                    className="w-7 h-7 p-0"
+                                    contentClassName="text-white"
+                                    aria-label="Add product"
                                 >
                                     <Plus size={12} />
-                                </button>
+                                </TahoeGlassButton>
                             </div>
                         </div>
 
                         {/* Web3 Coming Soon Teaser */}
                         <div className="relative group mb-4">
-                            <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                            <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 hover:opacity-100 transition-opacity" contentClassName="flex items-center justify-between px-4 py-3 text-left">
                                 <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
-                                <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
-                                    <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                                    <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                                    <img
-                                        alt=""
-                                        src="/assets/premium-bezel.png"
-                                        className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                                    />
-                                    <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
+                                    <span className="font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
                                         Coming soon
                                     </span>
-                                </div>
-                            </div>
+                                </TahoeGlassSurface>
+                            </TahoeGlassSurface>
 
                             {/* Tooltip */}
-                            <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
+                            <TahoeGlassSurface variant="popover" radius={12} tone="light" className="absolute left-0 -bottom-2 translate-y-full w-full p-3 z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-xl" contentClassName="text-white/80 text-xs leading-relaxed">
                                 Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
-                            </div>
+                            </TahoeGlassSurface>
                         </div>
 
                         {/* Facebook Pixel Coming Soon Teaser */}
                         <div className="relative group mb-4">
-                            <div className="w-full text-left px-4 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between cursor-help opacity-60 hover:opacity-100 transition-opacity">
+                            <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 hover:opacity-100 transition-opacity" contentClassName="flex items-center justify-between px-4 py-3 text-left">
                                 <span className="text-white/50 text-[15px]">Connect Facebook Pixel</span>
-                                <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
-                                    <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                                    <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                                    <img
-                                        alt=""
-                                        src="/assets/premium-bezel.png"
-                                        className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                                    />
-                                    <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
+                                    <span className="font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
                                         Coming soon
                                     </span>
-                                </div>
-                            </div>
+                                </TahoeGlassSurface>
+                            </TahoeGlassSurface>
 
                             {/* Tooltip */}
-                            <div className="absolute left-0 -bottom-2 translate-y-full w-full p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl">
+                            <TahoeGlassSurface variant="popover" radius={12} tone="light" className="absolute left-0 -bottom-2 translate-y-full w-full p-3 z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-xl" contentClassName="text-white/80 text-xs leading-relaxed">
                                 Track conversions and optimize your ads with Facebook Pixel integration.
-                            </div>
+                            </TahoeGlassSurface>
                         </div>
 
                         <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
                             {products.map(product => (
                                 <div key={product.id} className="relative group">
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => { setActiveSection('products'); setSelectedProduct(product); }}
-                                        className={`w-full text-left px-4 py-3 rounded-xl transition-all truncate pr-8 ${activeSection === 'products' && selectedProduct?.id === product.id ? 'bg-white/10 text-white' : 'text-white/80 hover:text-white hover:bg-white/5'}`}
+                                        semanticTint={activeSection === 'products' && selectedProduct?.id === product.id ? 'light' : 'dark'}
+                                        className="w-full px-4 py-3 pr-8"
+                                        contentClassName="w-full justify-start truncate text-left text-white/90"
                                     >
                                         {product.name || 'New Product'}
-                                    </button>
-                                    <button
+                                    </TahoeGlassButton>
+                                    <TahoeGlassButton
                                         onClick={(e) => { e.stopPropagation(); confirmDeleteProduct(product.id); }}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100"
+                                        contentClassName="text-red-300"
+                                        aria-label={`Delete ${product.name || 'product'}`}
                                     >
                                         <X size={12} />
-                                    </button>
+                                    </TahoeGlassButton>
                                 </div>
                             ))}
                             {products.length === 0 && (
@@ -1084,7 +1043,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             )}
                         </div>
                     </div>
-                </div>
+                </TahoeGlassSurface>
 
                 {/* RIGHT COLUMN: Content Editor */}
                 <div className="flex-1 p-6 md:p-10 overflow-y-auto max-h-[800px] relative">
@@ -1105,32 +1064,34 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         loading={isUploading}
                     />
                 )}
-                {/* Delete Confirmation Modal */}
-                {deleteConfirmation.isOpen && (
-                    <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })} />
-                        <div className="relative bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
-                            <h3 className="text-xl font-bold text-white mb-2">Are you sure?</h3>
-                            <p className="text-white/70 text-sm mb-6 leading-relaxed">
-                                You cannot restore your Product after it has been deleted. This action is permanent.
-                            </p>
+                <TahoeGlassDialog
+                    open={deleteConfirmation.isOpen}
+                    onOpenChange={(open) => { if (!open) setDeleteConfirmation({ isOpen: false, productId: null }) }}
+                    portal={false}
+                    tone="light"
+                    title="Are you sure?"
+                    description="You cannot restore your Product after it has been deleted. This action is permanent."
+                    titleClassName="text-xl font-bold text-white"
+                    descriptionClassName="text-white/70 leading-relaxed"
+                    className="max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200"
+                >
                             <div className="flex gap-3">
-                                <button
+                                <TahoeGlassButton
                                     onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })}
-                                    className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-colors"
+                                    className="flex-1 py-2.5"
+                                    contentClassName="text-white font-medium"
                                 >
                                     Cancel
-                                </button>
-                                <button
+                                </TahoeGlassButton>
+                                <TahoeGlassButton
                                     onClick={executeDeleteProduct}
-                                    className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                                    className="flex-1 py-2.5"
+                                    contentClassName="text-red-200 font-medium"
                                 >
                                     Delete
-                                </button>
+                                </TahoeGlassButton>
                             </div>
-                        </div>
-                    </div>
-                )}
+                </TahoeGlassDialog>
             </div>
         </GlassCard>
     )

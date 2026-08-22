@@ -7,6 +7,7 @@ import NetworkingTimeline from './NetworkingTimeline'
 import GlassCard from '@/components/ui/GlassCard'
 import { useToast } from '@/components/ui/Toast'
 import { useUI } from '@/components/providers/UIProvider'
+import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface MyNssoTabProps {
     initialData?: {
@@ -98,9 +99,9 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-white text-xl text-center">
+                <TahoeGlassSurface variant="pill" tone="light" className="px-6 py-3" contentClassName="text-xl text-center">
                     All of you...<br />all in one place
-                </div>
+                </TahoeGlassSurface>
             </div>
         )
     }
@@ -118,26 +119,19 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
                 </div>
 
                 {/* Coming Soon: Discover nsso users */}
-                <div className="absolute top-8 right-8 hidden md:flex items-center gap-4 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 cursor-help opacity-60 hover:opacity-100 transition-opacity group">
+                <TahoeGlassSurface variant="panel" radius={12} tone="light" className="absolute top-8 right-8 hidden md:block cursor-help opacity-60 hover:opacity-100 transition-opacity group" contentClassName="flex items-center gap-4 px-4 py-2.5">
                     <span className="text-white/50 text-[15px]">Discover nsso users</span>
-                    <div className="relative border-[0.75px] border-white/45 rounded-[200px] px-[10px] py-[3px] overflow-hidden flex items-center justify-center select-none">
-                        <div className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity rounded-[200px]" />
-                        <div className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge rounded-[200px]" />
-                        <img
-                            alt=""
-                            src="/assets/premium-bezel.png"
-                            className="absolute inset-0 w-full h-full object-cover backdrop-blur-[68px]"
-                        />
-                        <span className="relative z-10 font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                    <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]" contentClassName="flex items-center justify-center">
+                        <span className="font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
                             Coming soon
                         </span>
-                    </div>
+                    </TahoeGlassSurface>
 
                     {/* Tooltip */}
-                    <div className="absolute right-0 top-full mt-2 w-64 p-3 rounded-xl bg-black/90 border border-white/10 text-white/80 text-xs leading-relaxed z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none backdrop-blur-xl shadow-xl text-right">
+                    <TahoeGlassSurface variant="popover" radius={12} tone="light" className="absolute right-0 top-full mt-2 w-64 p-3 z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-xl" contentClassName="text-white/80 text-xs leading-relaxed text-right">
                         Find and follow other users to grow your network.
-                    </div>
-                </div>
+                    </TahoeGlassSurface>
+                </TahoeGlassSurface>
 
                 {/* Top Section: Table View */}
                 <div className="space-y-4 mb-12">
@@ -214,49 +208,52 @@ function NotesModal({ isOpen, onClose, connection, onSave }: NotesModalProps) {
     const [content, setContent] = useState(connection.notes || '')
     const [saving, setSaving] = useState(false)
 
-    if (!isOpen) return null
-
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative z-10 w-full max-w-lg">
-                <GlassCard className="p-6">
+        <TahoeGlassDialog
+            open={isOpen}
+            onOpenChange={(open) => { if (!open) onClose() }}
+            portal={false}
+            tone="light"
+            aria-label={`Notes for ${connection.fullName}`}
+            className="max-w-lg p-6"
+        >
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold text-white">
                             Notes for {connection.fullName}
                         </h3>
-                        <button onClick={onClose} className="text-white/50 hover:text-white">
+                        <TahoeGlassButton onClick={onClose} className="h-9 w-9 p-0" contentClassName="text-white/70" aria-label="Close notes dialog">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M18 6L6 18M6 6l12 12" />
                             </svg>
-                        </button>
+                        </TahoeGlassButton>
                     </div>
 
-                    <textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        maxLength={3333}
-                        rows={8}
-                        placeholder="Add notes about your meeting, context, or follow-ups..."
-                        className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 resize-none custom-scrollbar mb-2"
-                    />
+                    <TahoeGlassField tone="light" surfaceClassName="p-0 mb-2" controlClassName="p-4 resize-none custom-scrollbar">
+                        <textarea
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            maxLength={3333}
+                            rows={8}
+                            placeholder="Add notes about your meeting, context, or follow-ups..."
+                            className="text-white placeholder:text-white/30"
+                        />
+                    </TahoeGlassField>
 
                     <div className="flex justify-between items-center text-xs text-white/40">
                         <span>{content.length} / 3333 characters</span>
-                        <button
+                        <TahoeGlassButton
                             onClick={async () => {
                                 setSaving(true)
                                 await onSave(connection.id, content)
                                 setSaving(false)
                             }}
                             disabled={saving}
-                            className="px-4 py-2 bg-white text-black font-semibold rounded-lg hover:bg-white/90 disabled:opacity-50 transition-colors"
+                            className="px-4 py-2"
+                            contentClassName="text-white font-semibold"
                         >
                             {saving ? 'Saving...' : 'Save Notes'}
-                        </button>
+                        </TahoeGlassButton>
                     </div>
-                </GlassCard>
-            </div>
-        </div>
+        </TahoeGlassDialog>
     )
 }

@@ -4,6 +4,7 @@ import { MyNssoConnection } from '@/lib/types'
 import { MapPin, Calendar, Clock, NotebookPen } from 'lucide-react'
 import Link from 'next/link'
 import GlassCard from '@/components/ui/GlassCard'
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface NetworkingTimelineProps {
     connections: MyNssoConnection[]
@@ -14,9 +15,9 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
     if (connections.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-70">
-                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                <TahoeGlassSurface variant="pill" tone="light" className="h-16 w-16 mb-6" contentClassName="flex h-full items-center justify-center">
                     <Clock className="text-white/40" size={32} />
-                </div>
+                </TahoeGlassSurface>
                 <h3 className="text-xl font-bold text-white mb-2">Your timeline starts here</h3>
                 <p className="text-white/50 max-w-sm">
                     Scan a QR code to make your first memory. Your journey will appear here chronologically.
@@ -59,9 +60,9 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                     <div key={month} className="relative">
                         {/* Month Header */}
                         <div className="flex justify-center mb-8 relative z-10">
-                            <span className="px-4 py-1.5 rounded-full bg-black/40 border border-white/10 text-xs font-bold uppercase tracking-widest text-white/70 backdrop-blur-md">
+                            <TahoeGlassSurface variant="pill" tone="light" className="px-4 py-1.5" contentClassName="text-xs font-bold uppercase tracking-widest text-white/70">
                                 {month}
-                            </span>
+                            </TahoeGlassSurface>
                         </div>
 
                         {/* Cards */}
@@ -84,7 +85,7 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
 
                                         {/* Card Container - Left Side */}
                                         <div className={`md:w-[45%] ${isRight ? 'md:order-2 md:ml-auto' : 'md:order-1 md:mr-auto'}`}>
-                                            <GlassCard className="p-5 hover:bg-white/10 transition-colors duration-300 relative overflow-hidden group/card">
+                                            <GlassCard className="p-5 relative overflow-hidden group/card">
 
                                                 {/* Header: Contextual Stamp */}
                                                 <div className="flex items-center gap-2 text-[11px] font-bold text-white/40 uppercase tracking-wider mb-3">
@@ -131,13 +132,15 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                                             </Link>
 
                                                             {/* Add Note Mini Button */}
-                                                            <button
+                                                            <TahoeGlassButton
                                                                 onClick={() => onOpenNotes(conn)}
-                                                                className={`p-1.5 rounded-md transition-colors ${conn.notes ? 'text-white bg-white/10' : 'text-white/30 hover:text-white hover:bg-white/10'}`}
+                                                                className="p-1.5"
+                                                                contentClassName={conn.notes ? 'text-white' : 'text-white/45'}
                                                                 title="Notes"
+                                                                aria-label={`Edit notes for ${conn.fullName}`}
                                                             >
                                                                 <NotebookPen size={14} />
-                                                            </button>
+                                                            </TahoeGlassButton>
                                                         </div>
 
                                                         {conn.headline && (
@@ -148,9 +151,9 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
 
                                                         {/* Note Snippet */}
                                                         {conn.notes ? (
-                                                            <div className="mt-3 p-2.5 rounded-lg bg-black/20 text-xs text-white/70 italic border-l-2 border-white/20 line-clamp-2">
+                                                            <TahoeGlassSurface variant="recessed" radius={8} tone="light" className="mt-3 p-2.5" contentClassName="text-xs text-white/70 italic border-l-2 border-white/20 line-clamp-2">
                                                                 &quot;{conn.notes}&quot;
-                                                            </div>
+                                                            </TahoeGlassSurface>
                                                         ) : (
                                                             <div className="mt-2 text-[11px] text-white/20 italic group-hover/card:text-white/40 transition-colors">
                                                                 No notes added yet

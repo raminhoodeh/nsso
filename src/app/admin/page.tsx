@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import GlassCard from '@/components/ui/GlassCard'
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { useToast } from '@/components/ui/Toast'
 import type { User } from '@/lib/types'
 
@@ -102,9 +103,9 @@ export default function AdminPage() {
     if (loading) {
         return (
             <main className="min-h-screen flex items-center justify-center">
-                <div className="text-white text-xl text-center">
+                <TahoeGlassSurface variant="pill" tone="light" className="px-6 py-3" contentClassName="text-xl text-center">
                     All of you...<br />all in one place
-                </div>
+                </TahoeGlassSurface>
             </main>
         )
     }
@@ -119,28 +120,28 @@ export default function AdminPage() {
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
                             <div className="text-3xl font-bold text-white">{users.length}</div>
                             <div className="text-white/50 text-sm">Total Users</div>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                        </TahoeGlassSurface>
+                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
                             <div className="text-3xl font-bold text-white">
                                 {users.filter(u => u.is_premium).length}
                             </div>
                             <div className="text-white/50 text-sm">Premium</div>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                        </TahoeGlassSurface>
+                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
                             <div className="text-3xl font-bold text-white">
                                 {users.filter(u => u.user_type === 'admin').length}
                             </div>
                             <div className="text-white/50 text-sm">Admins</div>
-                        </div>
-                        <div className="bg-white/10 rounded-xl p-4 text-center">
+                        </TahoeGlassSurface>
+                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
                             <div className="text-3xl font-bold text-white">
                                 {users.filter(u => !u.is_premium).length}
                             </div>
                             <div className="text-white/50 text-sm">Free Users</div>
-                        </div>
+                        </TahoeGlassSurface>
                     </div>
 
                     {/* User Table */}
@@ -170,68 +171,62 @@ export default function AdminPage() {
                                         <td className="py-4 px-4">
                                             <div className="flex gap-2">
                                                 {user.user_type === 'admin' && (
-                                                    <span className="px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs">
+                                                    <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-purple-200 text-xs">
                                                         Admin
-                                                    </span>
+                                                    </TahoeGlassSurface>
                                                 )}
                                                 {user.is_premium ? (
-                                                    <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 text-xs">
+                                                    <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-yellow-200 text-xs">
                                                         Premium
-                                                    </span>
+                                                    </TahoeGlassSurface>
                                                 ) : (
-                                                    <span className="px-2 py-1 rounded-full bg-gray-500/20 text-gray-300 text-xs">
+                                                    <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-gray-200 text-xs">
                                                         Free
-                                                    </span>
+                                                    </TahoeGlassSurface>
                                                 )}
                                             </div>
                                         </td>
                                         <td className="py-4 px-4">
                                             <div className="flex justify-center">
-                                                <button
+                                                <TahoeGlassButton
                                                     onClick={() => toggleAdmin(user.id, user.user_type)}
                                                     disabled={user.id === currentUserId}
-                                                    className={`
-                            w-12 h-6 rounded-full transition-all
-                            ${user.user_type === 'admin'
-                                                            ? 'bg-purple-500'
-                                                            : 'bg-white/20'
-                                                        }
-                            ${user.id === currentUserId
-                                                            ? 'opacity-50 cursor-not-allowed'
-                                                            : 'cursor-pointer hover:opacity-80'
-                                                        }
-                            relative
-                          `}
+                                                    role="switch"
+                                                    aria-checked={user.user_type === 'admin'}
+                                                    aria-label={`Administrator access for ${user.email}`}
+                                                    semanticTint={user.user_type === 'admin' ? 'light' : 'dark'}
+                                                    className="h-7 w-14 p-0"
+                                                    contentClassName="relative block h-full w-full"
                                                 >
-                                                    <div
+                                                    <span
+                                                        aria-hidden="true"
                                                         className={`
-                              absolute top-1 w-4 h-4 rounded-full bg-white transition-all
-                              ${user.user_type === 'admin' ? 'left-7' : 'left-1'}
+                              absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all
+                              ${user.user_type === 'admin' ? 'left-8' : 'left-1'}
                             `}
                                                     />
-                                                </button>
+                                                </TahoeGlassButton>
                                             </div>
                                         </td>
                                         <td className="py-4 px-4">
                                             <div className="flex justify-center">
-                                                <button
+                                                <TahoeGlassButton
                                                     onClick={() => togglePremium(user.id, user.is_premium)}
-                                                    className={`
-                            w-12 h-6 rounded-full transition-all cursor-pointer hover:opacity-80
-                            ${user.is_premium
-                                                            ? 'bg-yellow-500'
-                                                            : 'bg-white/20'
-                                                        }
-                            relative
-                          `}
+                                                    role="switch"
+                                                    aria-checked={user.is_premium}
+                                                    aria-label={`Premium access for ${user.email}`}
+                                                    semanticTint={user.is_premium ? 'light' : 'dark'}
+                                                    className="h-7 w-14 p-0"
+                                                    contentClassName="relative block h-full w-full"
                                                 >
-                                                    <div
+                                                    <span
+                                                        aria-hidden="true"
                                                         className={`
-                              absolute top-1 w-4 h-4 rounded-full bg-white transition-all
-                              ${user.is_premium ? 'left-7' : 'left-1'}
+                              absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all
+                              ${user.is_premium ? 'left-8' : 'left-1'}
                             `}
                                                     />
-                                                </button>
+                                                </TahoeGlassButton>
                                             </div>
                                         </td>
                                     </tr>

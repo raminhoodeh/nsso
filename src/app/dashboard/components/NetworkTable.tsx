@@ -1,13 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { MyNssoConnection } from '@/lib/types'
-import { Search, ChevronDown, ChevronUp, MapPin, NotebookPen, ExternalLink } from 'lucide-react'
-import GlassCard from '@/components/ui/GlassCard'
-import Input from '@/components/ui/Input'
+import { Search, ChevronDown, ChevronUp, MapPin, NotebookPen } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
-import ShinyLink from '@/components/ui/ShinyLink'
 import Link from 'next/link'
+import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface NetworkTableProps {
     connections: MyNssoConnection[]
@@ -120,20 +118,22 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
         <div className="w-full space-y-4">
             {/* Search Bar */}
             <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-white/40">
+                <div className="absolute inset-y-0 left-0 z-30 pl-3 flex items-center pointer-events-none text-white/40">
                     <Search size={18} />
                 </div>
-                <input
-                    type="text"
-                    placeholder="Search connection..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:bg-white/10 transition-colors placeholder:text-white/30"
-                />
+                <TahoeGlassField label="Search connections" visuallyHideLabel tone="light" surfaceClassName="py-2.5 pl-10 pr-4">
+                    <input
+                        type="search"
+                        placeholder="Search connection..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="text-white text-sm placeholder:text-white/30"
+                    />
+                </TahoeGlassField>
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
+            <TahoeGlassSurface variant="card" radius={16} tone="light" className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-white/10 bg-white/5">
@@ -221,16 +221,18 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                                     <div className="flex items-center gap-1.5 text-sm">
                                         <MapPin size={12} className="text-white/40 flex-shrink-0" />
                                         {editingLocationId === conn.id ? (
-                                            <input
-                                                autoFocus
-                                                type="text"
-                                                value={locationValue}
-                                                onChange={(e) => setLocationValue(e.target.value)}
-                                                onBlur={() => saveLocation(conn.id)}
-                                                onKeyDown={(e) => e.key === 'Enter' && saveLocation(conn.id)}
-                                                className="bg-black/20 text-white rounded px-2 py-0.5 text-sm w-[200px] outline-none border border-white/20"
-                                                placeholder="Where did you meet?"
-                                            />
+                                            <TahoeGlassField label={`Location for ${conn.fullName}`} visuallyHideLabel tone="light" className="w-[200px]" surfaceClassName="px-2 py-1">
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    value={locationValue}
+                                                    onChange={(e) => setLocationValue(e.target.value)}
+                                                    onBlur={() => saveLocation(conn.id)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && saveLocation(conn.id)}
+                                                    className="text-white text-sm"
+                                                    placeholder="Where did you meet?"
+                                                />
+                                            </TahoeGlassField>
                                         ) : (
                                             <span
                                                 className={`cursor-pointer hover:text-white/80 transition-colors ${!conn.location ? 'text-white/30 italic decoration-dashed underline underline-offset-4 decoration-white/20' : 'text-white/70'}`}
@@ -252,59 +254,66 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
 
                                 {/* Notes Button */}
                                 <td className="p-4">
-                                    <button
+                                    <TahoeGlassButton
                                         onClick={() => openNotes(conn)}
-                                        className={`p-2 rounded-lg transition-colors ${conn.notes ? 'text-white/80 hover:bg-white/10 bg-white/5' : 'text-white/30 hover:bg-white/5 hover:text-white/50'}`}
+                                        className="p-2"
+                                        contentClassName={conn.notes ? 'text-white/80' : 'text-white/40'}
                                         title={conn.notes ? "Edit Notes" : "Add Note"}
+                                        aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}
                                     >
                                         <NotebookPen size={16} />
-                                    </button>
+                                    </TahoeGlassButton>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-            </div>
+            </TahoeGlassSurface>
 
             {/* Notes Modal */}
-            {isNotesOpen && selectedConnection && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsNotesOpen(false)} />
-                    <div className="relative z-10 w-full max-w-lg">
-                        <GlassCard className="p-6">
+            {selectedConnection && (
+                <TahoeGlassDialog
+                    open={isNotesOpen}
+                    onOpenChange={setIsNotesOpen}
+                    portal={false}
+                    tone="light"
+                    aria-label={`Notes for ${selectedConnection.fullName}`}
+                    className="max-w-lg p-6"
+                >
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-xl font-bold text-white">
                                     Notes for {selectedConnection.fullName}
                                 </h3>
-                                <button onClick={() => setIsNotesOpen(false)} className="text-white/50 hover:text-white">
+                                <TahoeGlassButton onClick={() => setIsNotesOpen(false)} className="h-9 w-9 p-0" contentClassName="text-white/70" aria-label="Close notes dialog">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M18 6L6 18M6 6l12 12" />
                                     </svg>
-                                </button>
+                                </TahoeGlassButton>
                             </div>
 
-                            <textarea
-                                value={noteContent}
-                                onChange={(e) => setNoteContent(e.target.value)}
-                                maxLength={3333}
-                                rows={8}
-                                placeholder="Add notes about your meeting, context, or follow-ups..."
-                                className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 resize-none custom-scrollbar mb-2"
-                            />
+                            <TahoeGlassField tone="light" surfaceClassName="p-0 mb-2" controlClassName="p-4 resize-none custom-scrollbar">
+                                <textarea
+                                    value={noteContent}
+                                    onChange={(e) => setNoteContent(e.target.value)}
+                                    maxLength={3333}
+                                    rows={8}
+                                    placeholder="Add notes about your meeting, context, or follow-ups..."
+                                    className="text-white placeholder:text-white/30"
+                                />
+                            </TahoeGlassField>
 
                             <div className="flex justify-between items-center text-xs text-white/40">
                                 <span>{noteContent.length} / 3333 characters</span>
-                                <button
+                                <TahoeGlassButton
                                     onClick={saveNotes}
                                     disabled={savingNote}
-                                    className="px-4 py-2 bg-white text-black font-semibold rounded-lg hover:bg-white/90 disabled:opacity-50 transition-colors"
+                                    className="px-4 py-2"
+                                    contentClassName="text-white font-semibold"
                                 >
                                     {savingNote ? 'Saving...' : 'Save Notes'}
-                                </button>
+                                </TahoeGlassButton>
                             </div>
-                        </GlassCard>
-                    </div>
-                </div>
+                </TahoeGlassDialog>
             )}
         </div>
     )

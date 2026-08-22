@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import GlassCard from '@/components/ui/GlassCard'
 import Link from 'next/link'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface ReferredUser {
     full_name: string | null
@@ -104,13 +105,13 @@ export default function ReferralsTable() {
                                 </td>
                                 <td className="py-4 px-4">
                                     {user.is_premium ? (
-                                        <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-300 text-xs font-medium">
+                                        <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-yellow-200 text-xs font-medium">
                                             Active
-                                        </span>
+                                        </TahoeGlassSurface>
                                     ) : (
-                                        <span className="px-2 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-medium">
+                                        <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-red-200 text-xs font-medium">
                                             Inactive
-                                        </span>
+                                        </TahoeGlassSurface>
                                     )}
                                 </td>
                                 <td className="py-4 px-4">

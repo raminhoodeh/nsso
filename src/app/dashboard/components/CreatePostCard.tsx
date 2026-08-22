@@ -5,6 +5,7 @@ import GlassCard from '@/components/ui/GlassCard'
 import { useUser } from '@/components/providers/UserProvider'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import Image from 'next/image'
+import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface CreatePostCardProps {
     onPostCreated: (post: any) => void
@@ -62,7 +63,7 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
     return (
         <GlassCard className="p-4 mb-6">
             <div className="flex gap-4">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                <TahoeGlassSurface variant="mediaFrame" radius={9999} className="relative h-10 w-10 overflow-hidden flex-shrink-0" contentClassName="block h-full w-full">
                     {avatarUrl ? (
                         <Image
                             src={avatarUrl}
@@ -75,39 +76,44 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
                             {displayName?.charAt(0)}
                         </div>
                     )}
-                </div>
+                </TahoeGlassSurface>
 
                 <div className="flex-1">
                     {!isExpanded ? (
-                        <button
+                        <TahoeGlassButton
                             onClick={() => setIsExpanded(true)}
-                            className="w-full text-left px-4 py-2.5 rounded-full bg-white/5 text-white/40 hover:bg-white/10 transition-colors text-sm"
+                            className="w-full px-4 py-2.5"
+                            contentClassName="w-full justify-start text-left text-white/55 text-sm font-normal"
                         >
                             Share a project idea or update...
-                        </button>
+                        </TahoeGlassButton>
                     ) : (
                         <div className="space-y-3">
-                            <textarea
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                autoFocus
-                                placeholder="What are you working on?"
-                                className="w-full bg-transparent border-none text-white placeholder:text-white/40 focus:ring-0 resize-none min-h-[100px] p-0 text-base"
-                            />
+                            <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="min-h-[100px] p-4 text-base resize-none">
+                                <textarea
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    autoFocus
+                                    placeholder="What are you working on?"
+                                    className="text-white placeholder:text-white/40"
+                                />
+                            </TahoeGlassField>
                             <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
-                                <button
+                                <TahoeGlassButton
                                     onClick={() => setIsExpanded(false)}
-                                    className="px-4 py-1.5 text-sm text-white/60 hover:text-white transition-colors"
+                                    className="px-4 py-1.5"
+                                    contentClassName="text-white/70"
                                 >
                                     Cancel
-                                </button>
-                                <button
+                                </TahoeGlassButton>
+                                <TahoeGlassButton
                                     onClick={handleSubmit}
                                     disabled={!content.trim() || loading}
-                                    className="px-6 py-1.5 bg-white text-black text-sm font-semibold rounded-full hover:bg-white/90 disabled:opacity-50 transition-colors"
+                                    className="px-6 py-1.5"
+                                    contentClassName="text-white font-semibold"
                                 >
                                     {loading ? 'Posting...' : 'Post'}
-                                </button>
+                                </TahoeGlassButton>
                             </div>
                         </div>
                     )}

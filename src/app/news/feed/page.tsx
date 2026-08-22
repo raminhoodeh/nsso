@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import Header from '@/components/layout/Header'
 import FeedTab from '@/app/dashboard/components/FeedTab'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +20,7 @@ function NewsFeedContent() {
 
 export default function NewsFeedPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-white text-xl">Loading...</div></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><TahoeGlassSurface variant="pill" tone="light" className="px-6 py-3" contentClassName="text-xl">Loading...</TahoeGlassSurface></div>}>
             <NewsFeedContent />
         </Suspense>
     )

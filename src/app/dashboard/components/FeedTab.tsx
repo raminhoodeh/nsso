@@ -7,6 +7,7 @@ import { useUser } from '@/components/providers/UserProvider'
 import GlassCard from '@/components/ui/GlassCard'
 import { useUI } from '@/components/providers/UIProvider'
 import Skeleton from '@/components/ui/Skeleton'
+import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface FeedTabProps {
     initialData?: {
@@ -113,21 +114,22 @@ export default function FeedTab({ initialData }: FeedTabProps) {
                     ))}
 
                     {posts.length === 0 && (
-                        <div className="text-center py-12 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                        <TahoeGlassSurface variant="card" radius={16} tone="light" className="py-12" contentClassName="text-center">
                             <p className="text-white/40">No updates yet. Be the first to share something!</p>
-                        </div>
+                        </TahoeGlassSurface>
                     )}
                 </div>
 
                 {/* Load More */}
                 {cursor && (
                     <div className="flex justify-center pt-8">
-                        <button
+                        <TahoeGlassButton
                             onClick={() => fetchFeed(cursor)}
-                            className="px-6 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-all text-sm"
+                            className="px-6 py-2"
+                            contentClassName="text-white/75"
                         >
                             Load more activity
-                        </button>
+                        </TahoeGlassButton>
                     </div>
                 )}
             </GlassCard>
