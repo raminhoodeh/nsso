@@ -5,9 +5,10 @@ import { restoreUser } from '@/lib/auth-helpers'
 // GET comments for a post
 export async function GET(
     request: Request,
-    { params }: { params: { postId: string } }
+    { params }: { params: Promise<{ postId: string }> }
 ) {
     try {
+        const { postId } = await params
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -23,7 +24,7 @@ export async function GET(
                 *,
                 user:users(username, first_name, last_name, avatar_url)
             `)
-            .eq('post_id', params.postId)
+            .eq('post_id', postId)
             .order('created_at', { ascending: true })
 
         if (error) throw error
@@ -48,9 +49,10 @@ export async function GET(
 // POST a new comment
 export async function POST(
     request: Request,
-    { params }: { params: { postId: string } }
+    { params }: { params: Promise<{ postId: string }> }
 ) {
     try {
+        const { postId } = await params
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -68,7 +70,7 @@ export async function POST(
         const { data: comment, error } = await supabase
             .from('feed_comments')
             .insert({
-                post_id: params.postId,
+                post_id: postId,
                 user_id: user.id,
                 content: content.trim()
             })
@@ -87,7 +89,7 @@ export async function POST(
                 const { data: retryComment, error: retryError } = await supabase
                     .from('feed_comments')
                     .insert({
-                        post_id: params.postId,
+                        post_id: postId,
                         user_id: user.id,
                         content: content.trim()
                     })

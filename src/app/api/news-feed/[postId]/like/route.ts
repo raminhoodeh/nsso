@@ -4,9 +4,10 @@ import { restoreUser } from '@/lib/auth-helpers'
 
 export async function POST(
     request: Request,
-    { params }: { params: { postId: string } }
+    { params }: { params: Promise<{ postId: string }> }
 ) {
     try {
+        const { postId } = await params
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -17,7 +18,7 @@ export async function POST(
         const { error } = await supabase
             .from('feed_likes')
             .insert({
-                post_id: params.postId,
+                post_id: postId,
                 user_id: user.id
             })
 
@@ -30,7 +31,7 @@ export async function POST(
                 const { error: retryError } = await supabase
                     .from('feed_likes')
                     .insert({
-                        post_id: params.postId,
+                        post_id: postId,
                         user_id: user.id
                     })
 
@@ -60,9 +61,10 @@ export async function POST(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { postId: string } }
+    { params }: { params: Promise<{ postId: string }> }
 ) {
     try {
+        const { postId } = await params
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -74,7 +76,7 @@ export async function DELETE(
             .from('feed_likes')
             .delete()
             .match({
-                post_id: params.postId,
+                post_id: postId,
                 user_id: user.id
             })
 

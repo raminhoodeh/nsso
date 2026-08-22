@@ -3,6 +3,13 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { EarningsStats } from '@/lib/earnings'
 
+interface EarningsStatsRow {
+    referral_code: string | null
+    active_referrals: string | number | null
+    expected_earnings: string | number | null
+    paypal_me_slug: string | null
+}
+
 export async function GET() {
     try {
         const cookieStore = await cookies()
@@ -49,11 +56,12 @@ export async function GET() {
         }
 
         // Transform to match EarningsStats interface
+        const row = data as EarningsStatsRow
         const stats: EarningsStats = {
-            referralCode: data.referral_code || '',
-            activeReferrals: parseInt(data.active_referrals) || 0,
-            expectedEarnings: parseFloat(data.expected_earnings) || 0,
-            paypalMeSlug: data.paypal_me_slug || null
+            referralCode: row.referral_code || '',
+            activeReferrals: Number.parseInt(String(row.active_referrals ?? 0), 10) || 0,
+            expectedEarnings: Number.parseFloat(String(row.expected_earnings ?? 0)) || 0,
+            paypalMeSlug: row.paypal_me_slug || null
         }
 
         return NextResponse.json(stats)
