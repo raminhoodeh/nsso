@@ -51,6 +51,16 @@ interface TahoeGlassEngineContextValue {
   renderNow: () => void;
   consumeSceneFrameRequest: () => boolean;
   subscribeSceneFrameRequests: (listener: () => void) => () => void;
+  /** Returns the provider's current owned canvas source, when it has one. */
+  getOwnedSceneCanvas: () => HTMLCanvasElement | null;
+  /**
+   * Runs listeners synchronously from the owned scene's afterRender callback.
+   * Consumers can copy the source while its framebuffer is still valid.
+   */
+  subscribeOwnedSceneAfterRender: (
+    listener: (canvas: HTMLCanvasElement) => void,
+  ) => () => void;
+  publishOwnedSceneAfterRender: () => void;
   retryBackend: () => void;
 }
 
@@ -396,6 +406,11 @@ export function useTahoeGlassControls(): {
   renderNow: () => void;
   consumeSceneFrameRequest: () => boolean;
   subscribeSceneFrameRequests: (listener: () => void) => () => void;
+  getOwnedSceneCanvas: () => HTMLCanvasElement | null;
+  subscribeOwnedSceneAfterRender: (
+    listener: (canvas: HTMLCanvasElement) => void,
+  ) => () => void;
+  publishOwnedSceneAfterRender: () => void;
   retryBackend: () => void;
 } {
   const context = React.useContext(TahoeGlassEngineContext);
@@ -407,13 +422,22 @@ export function useTahoeGlassControls(): {
         context?.consumeSceneFrameRequest ?? (() => false),
       subscribeSceneFrameRequests:
         context?.subscribeSceneFrameRequests ?? (() => () => undefined),
+      getOwnedSceneCanvas:
+        context?.getOwnedSceneCanvas ?? (() => null),
+      subscribeOwnedSceneAfterRender:
+        context?.subscribeOwnedSceneAfterRender ?? (() => () => undefined),
+      publishOwnedSceneAfterRender:
+        context?.publishOwnedSceneAfterRender ?? (() => undefined),
       retryBackend: context?.retryBackend ?? (() => undefined),
     }),
     [
       context?.consumeSceneFrameRequest,
+      context?.getOwnedSceneCanvas,
+      context?.publishOwnedSceneAfterRender,
       context?.renderNow,
       context?.requestRender,
       context?.retryBackend,
+      context?.subscribeOwnedSceneAfterRender,
       context?.subscribeSceneFrameRequests,
     ],
   );
@@ -466,6 +490,9 @@ export function TahoeGlassProvider({
   const webglUploadedRevisionRef = React.useRef(-1);
   const synchronousSceneFrameRequestedRef = React.useRef(true);
   const sceneFrameListenersRef = React.useRef(new Set<() => void>());
+  const ownedSceneAfterRenderListenersRef = React.useRef(
+    new Set<(canvas: HTMLCanvasElement) => void>(),
+  );
   const renderFrameRef = React.useRef<(refreshSource?: boolean) => void>(
     () => undefined,
   );
@@ -488,6 +515,8 @@ export function TahoeGlassProvider({
     () => ({ ...INITIAL_DIAGNOSTICS, source: domSourceLabel }),
   );
   const diagnosticsRef = React.useRef(diagnostics);
+  const [webglOutputReady, setWebglOutputReady] = React.useState(false);
+  const webglOutputReadyRef = React.useRef(false);
   const onDiagnosticsChangeRef = React.useRef(onDiagnosticsChange);
 
   React.useEffect(() => {
@@ -506,6 +535,12 @@ export function TahoeGlassProvider({
     },
     [],
   );
+
+  const commitWebglOutputReady = React.useCallback((ready: boolean) => {
+    if (webglOutputReadyRef.current === ready) return;
+    webglOutputReadyRef.current = ready;
+    if (mountedRef.current) setWebglOutputReady(ready);
+  }, []);
 
   const retryBackend = React.useCallback(() => {
     setEnvironmentRevision((revision) => revision + 1);
@@ -555,6 +590,37 @@ export function TahoeGlassProvider({
     },
     [],
   );
+
+  const getOwnedSceneCanvas = React.useCallback(() => {
+    if (
+      typeof HTMLCanvasElement === "undefined" ||
+      webglSource?.kind !== "canvas"
+    ) {
+      return null;
+    }
+    const source = webglSource.getElement();
+    return source instanceof HTMLCanvasElement ? source : null;
+  }, [webglSource]);
+
+  const subscribeOwnedSceneAfterRender = React.useCallback(
+    (listener: (canvas: HTMLCanvasElement) => void) => {
+      ownedSceneAfterRenderListenersRef.current.add(listener);
+      return () => ownedSceneAfterRenderListenersRef.current.delete(listener);
+    },
+    [],
+  );
+
+  const publishOwnedSceneAfterRender = React.useCallback(() => {
+    const canvas = getOwnedSceneCanvas();
+    if (!canvas) return;
+    for (const listener of [...ownedSceneAfterRenderListenersRef.current]) {
+      try {
+        listener(canvas);
+      } catch (error) {
+        console.error("[TahoeGlass] Owned scene frame listener failed", error);
+      }
+    }
+  }, [getOwnedSceneCanvas]);
 
   const refreshCounts = React.useCallback(() => {
     const current = diagnosticsRef.current;
@@ -627,9 +693,12 @@ export function TahoeGlassProvider({
   );
 
   React.useEffect(() => {
+    const ownedSceneAfterRenderListeners =
+      ownedSceneAfterRenderListenersRef.current;
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      ownedSceneAfterRenderListeners.clear();
     };
   }, []);
 
@@ -842,6 +911,7 @@ export function TahoeGlassProvider({
     const lost = (event: Event) => {
       event.preventDefault();
       rendererRef.current = null;
+      commitWebglOutputReady(false);
       const current = diagnosticsRef.current;
       commitDiagnostics({
         ...current,
@@ -858,7 +928,7 @@ export function TahoeGlassProvider({
       canvas.removeEventListener("webglcontextlost", lost);
       canvas.removeEventListener("webglcontextrestored", restored);
     };
-  }, [commitDiagnostics, fallback]);
+  }, [commitDiagnostics, commitWebglOutputReady, fallback]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -888,6 +958,7 @@ export function TahoeGlassProvider({
 
     rendererRef.current?.dispose();
     rendererRef.current = null;
+    commitWebglOutputReady(false);
     sceneRef.current?.style.removeProperty("--tahoe-scene-filter");
     geometryDirtyRef.current = true;
     svgAppliedRevisionRef.current = -1;
@@ -1013,6 +1084,7 @@ export function TahoeGlassProvider({
     };
   }, [
     commitDiagnostics,
+    commitWebglOutputReady,
     environmentRevision,
     fallback,
     maxDpr,
@@ -1284,6 +1356,8 @@ export function TahoeGlassProvider({
     const frameDiagnostics = { ...current, visibleSurfaceCount };
     const backendCanDraw =
       mapHasSurfaceRef.current || current.status === "active";
+    const webglCanDraw =
+      mapHasSurfaceRef.current && visibleSurfaceCount > 0;
 
     if (
       (current.status === "initializing" || current.status === "active") &&
@@ -1345,7 +1419,7 @@ export function TahoeGlassProvider({
     } else if (
       (current.status === "initializing" || current.status === "active") &&
       current.backend === "webgl" &&
-      backendCanDraw
+      webglCanDraw
     ) {
       const renderer = rendererRef.current;
       if (renderer) {
@@ -1363,6 +1437,7 @@ export function TahoeGlassProvider({
             return;
           }
           renderer.draw(dpr, refreshSource);
+          commitWebglOutputReady(true);
           if (current.status === "initializing" && mapHasSurfaceRef.current) {
             commitDiagnostics({
               ...frameDiagnostics,
@@ -1378,6 +1453,7 @@ export function TahoeGlassProvider({
             scheduleRender();
           }
         } catch (error: unknown) {
+          commitWebglOutputReady(false);
           renderer.dispose();
           if (rendererRef.current === renderer) rendererRef.current = null;
           webglUploadedRevisionRef.current = -1;
@@ -1391,6 +1467,15 @@ export function TahoeGlassProvider({
           });
         }
       }
+    } else if (
+      (current.status === "initializing" || current.status === "active") &&
+      current.backend === "webgl" &&
+      !webglCanDraw
+    ) {
+      // With no visible registered lens, the neutral WebGL pass is identical
+      // to the owned scene. Keep that original scene visible and avoid a
+      // full-viewport source upload/draw on every Vanta frame.
+      commitWebglOutputReady(false);
     }
 
     if (
@@ -1409,6 +1494,7 @@ export function TahoeGlassProvider({
     }
   }, [
     commitDiagnostics,
+    commitWebglOutputReady,
     debugEnabled,
     domSourceLabel,
     fallback,
@@ -1443,15 +1529,21 @@ export function TahoeGlassProvider({
       renderNow,
       consumeSceneFrameRequest,
       subscribeSceneFrameRequests,
+      getOwnedSceneCanvas,
+      subscribeOwnedSceneAfterRender,
+      publishOwnedSceneAfterRender,
       retryBackend,
     }),
     [
       diagnostics,
       consumeSceneFrameRequest,
+      getOwnedSceneCanvas,
+      publishOwnedSceneAfterRender,
       registerSurface,
       renderNow,
       requestRender,
       retryBackend,
+      subscribeOwnedSceneAfterRender,
       subscribeSceneFrameRequests,
       unregisterSurface,
     ],
@@ -1460,6 +1552,10 @@ export function TahoeGlassProvider({
   const svgActive = diagnostics.status === "active" && diagnostics.backend === "svg";
   const webglActive =
     diagnostics.status === "active" && diagnostics.backend === "webgl";
+  const webglPresenting =
+    webglActive &&
+    webglOutputReady &&
+    diagnostics.visibleSurfaceCount > 0;
 
   return (
     <TahoeGlassEngineContext.Provider value={contextValue}>
@@ -1497,7 +1593,7 @@ export function TahoeGlassProvider({
               WebkitFilter: svgActive
                 ? "var(--tahoe-scene-filter, none)"
                 : "none",
-              opacity: webglActive ? 0 : 1,
+              opacity: webglPresenting ? 0 : 1,
             }}
           >
             {scene}
@@ -1507,7 +1603,7 @@ export function TahoeGlassProvider({
             ref={canvasRef}
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-            style={{ opacity: webglActive ? 1 : 0 }}
+            style={{ opacity: webglPresenting ? 1 : 0 }}
           />
 
           <svg

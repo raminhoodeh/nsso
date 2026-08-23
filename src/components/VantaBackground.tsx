@@ -112,6 +112,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
     const { backend, status, reducedMotion } = useTahoeGlassDiagnostics()
     const {
         consumeSceneFrameRequest,
+        publishOwnedSceneAfterRender,
         renderNow,
         retryBackend,
         subscribeSceneFrameRequests,
@@ -127,20 +128,23 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
     const statusRef = useRef(status)
     const reducedMotionRef = useRef(reducedMotion)
     const consumeSceneFrameRequestRef = useRef(consumeSceneFrameRequest)
+    const publishOwnedSceneAfterRenderRef = useRef(publishOwnedSceneAfterRender)
     const renderNowRef = useRef(renderNow)
     const retryBackendRef = useRef(retryBackend)
     const onCanvasChangeRef = useRef(onCanvasChange)
     const pausedForReducedMotionRef = useRef(false)
+    const resumeAfterCurrentFrameRef = useRef(false)
 
     useEffect(() => {
         backendRef.current = backend
         statusRef.current = status
         reducedMotionRef.current = reducedMotion
         consumeSceneFrameRequestRef.current = consumeSceneFrameRequest
+        publishOwnedSceneAfterRenderRef.current = publishOwnedSceneAfterRender
         renderNowRef.current = renderNow
         retryBackendRef.current = retryBackend
         onCanvasChangeRef.current = onCanvasChange
-    }, [backend, consumeSceneFrameRequest, onCanvasChange, reducedMotion, renderNow, retryBackend, status])
+    }, [backend, consumeSceneFrameRequest, onCanvasChange, publishOwnedSceneAfterRender, reducedMotion, renderNow, retryBackend, status])
 
     const resumeVanta = useCallback(() => {
         const effect = vantaEffect.current
@@ -153,8 +157,11 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
     }, [])
 
     useEffect(() => subscribeSceneFrameRequests(() => {
-        if (reducedMotionRef.current && backendRef.current === 'webgl') {
-            resumeVanta()
+        // A nav-local owned-scene renderer can need a fresh source frame even
+        // when the provider itself is currently on SVG or CSS fallback.
+        if (reducedMotionRef.current) {
+            if (pausedForReducedMotionRef.current) resumeVanta()
+            else resumeAfterCurrentFrameRef.current = true
         }
     }), [resumeVanta, subscribeSceneFrameRequests])
 
@@ -244,6 +251,11 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                         vantaEffect.current = effect
 
                         effect.afterRender = () => {
+                            // Publish synchronously before any deferred work so
+                            // optical consumers can copy the live Vanta canvas
+                            // while its preserveDrawingBuffer=false framebuffer
+                            // is still valid.
+                            publishOwnedSceneAfterRenderRef.current()
                             if (backendRef.current === 'webgl') {
                                 const frameRequested = consumeSceneFrameRequestRef.current()
                                 if (
@@ -263,6 +275,10 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                                     ) {
                                         window.cancelAnimationFrame(effect.req)
                                         pausedForReducedMotionRef.current = true
+                                        if (resumeAfterCurrentFrameRef.current) {
+                                            resumeAfterCurrentFrameRef.current = false
+                                            resumeVanta()
+                                        }
                                     }
                                 })
                             }
@@ -364,6 +380,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             }
             onCanvasChangeRef.current?.(null)
             pausedForReducedMotionRef.current = false
+            resumeAfterCurrentFrameRef.current = false
             canvasRef.current = null
             if (vantaEffect.current) {
                 vantaEffect.current.afterRender = undefined
