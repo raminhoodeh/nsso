@@ -13,6 +13,8 @@ import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 import Header from '@/components/layout/Header'
 import InrosProfileCanvas from '@/components/profile/InrosProfileCanvas'
+import ExpandableBio from '@/components/profile/ExpandableBio'
+import { getProfileBioPreview } from '@/components/profile/profileBio'
 import {
     PROFILE_COLLECTION_GRID_CLASS,
     PROFILE_COLLECTION_SECTION_CLASS,
@@ -252,9 +254,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         {/* Bio Card */}
                         {profile?.bio && (
                             <GlassCard className="p-6 !mt-10">
-                                <p className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap">
-                                    {profile.bio}
-                                </p>
+                                <ExpandableBio
+                                    text={profile.bio}
+                                    collapsedText={getProfileBioPreview(username, profile.bio)}
+                                    className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap"
+                                />
                             </GlassCard>
                         )}
 

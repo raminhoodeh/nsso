@@ -19,6 +19,8 @@ import {
     PROFILE_COLLECTION_SECTION_CLASS,
     PROFILE_PAGE_CONTAINER_CLASS,
 } from '@/components/profile/profileLayout'
+import ExpandableBio from '@/components/profile/ExpandableBio'
+import { getProfileBioPreview } from '@/components/profile/profileBio'
 
 export default function PreviewPage() {
     const router = useRouter()
@@ -167,9 +169,11 @@ export default function PreviewPage() {
                         {/* Bio Card */}
                         {profile?.bio && (
                             <GlassCard className="p-6 !mt-10">
-                                <p className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap">
-                                    {profile.bio}
-                                </p>
+                                <ExpandableBio
+                                    text={profile.bio}
+                                    collapsedText={getProfileBioPreview(user?.username, profile.bio)}
+                                    className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap"
+                                />
                             </GlassCard>
                         )}
 
