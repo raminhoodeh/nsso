@@ -13,6 +13,11 @@ import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 import Header from '@/components/layout/Header'
 import InrosProfileCanvas from '@/components/profile/InrosProfileCanvas'
+import {
+    PROFILE_COLLECTION_GRID_CLASS,
+    PROFILE_COLLECTION_SECTION_CLASS,
+    PROFILE_PAGE_CONTAINER_CLASS,
+} from '@/components/profile/profileLayout'
 import MetaPixelConsent from '@/components/analytics/MetaPixelConsent'
 import { cookies } from 'next/headers'
 import { META_PIXEL_CONSENT_COOKIE, parseMetaPixelConsent } from '@/lib/analytics/metaPixel'
@@ -194,7 +199,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     isPlatformOwner={isPlatformOwner}
                 />
             ) : (
-            <div className="px-6 lg:px-10 max-w-[1800px] mx-auto space-y-12">
+            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} space-y-12 lg:space-y-20`}>
 
                 {/* 1. Identity & Resume Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -367,9 +372,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {/* 2. Visual Portfolio (Projects) */}
                 {
                     projects.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-8">Projects</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <section className={PROFILE_COLLECTION_SECTION_CLASS}>
+                            <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Projects</h2>
+                            <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {projects.map((project) => {
                                     const Wrapper = project.project_url ? 'a' : 'div'
                                     const wrapperProps = project.project_url ? {
@@ -381,7 +386,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
                                     return (
                                         <Wrapper key={project.id} {...wrapperProps}>
-                                            <GlassCard className="p-6 md:p-8 flex flex-col h-full hover:bg-white/10 transition-colors group">
+                                            <GlassCard className="p-6 md:p-7 flex flex-col h-full hover:bg-white/10 transition-colors group">
                                                 <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                                                     {project.project_name}
                                                     {project.project_url && <ExternalLink size={16} className="opacity-50" />}
@@ -405,9 +410,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {/* 3. Products & Services */}
                 {
                     products.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-8">Products & Services</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <section className={PROFILE_COLLECTION_SECTION_CLASS}>
+                            <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
+                            <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {products.map(product => {
                                     const ProductWrapper = product.sales_page_active ? Link : 'div'
                                     const wrapperProps = product.sales_page_active

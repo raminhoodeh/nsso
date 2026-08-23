@@ -10,6 +10,11 @@ import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import AddToMyNssoButton from '@/components/ui/AddToMyNssoButton'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import {
+    PROFILE_COLLECTION_GRID_CLASS,
+    PROFILE_COLLECTION_SECTION_CLASS,
+    PROFILE_PAGE_CONTAINER_CLASS,
+} from '@/components/profile/profileLayout'
 
 
 // INROS Lens Definitions
@@ -139,7 +144,7 @@ export default function InrosProfileCanvas({
     }
 
     return (
-        <div className="px-6 lg:px-10 max-w-[1800px] mx-auto flex flex-col gap-12">
+        <div className={`${PROFILE_PAGE_CONTAINER_CLASS} flex flex-col gap-12 lg:gap-20`}>
 
             {/* Top Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12" style={{ order: activeData.order.top }}>
@@ -314,9 +319,9 @@ export default function InrosProfileCanvas({
 
             {/* Projects Section */}
             {projects.length > 0 && (
-                <section className={getFocusStyles('section-projects')} style={{ order: activeData.order.projects }}>
-                    <h2 className="text-3xl font-bold text-white mb-8">Projects</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <section className={`${PROFILE_COLLECTION_SECTION_CLASS} ${getFocusStyles('section-projects')}`} style={{ order: activeData.order.projects }}>
+                    <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Projects</h2>
+                    <div className={PROFILE_COLLECTION_GRID_CLASS}>
                         {projects.map((project: any) => {
                             const Wrapper = project.project_url ? 'a' : 'div'
                             const wrapperProps = project.project_url ? {
@@ -328,7 +333,7 @@ export default function InrosProfileCanvas({
 
                             return (
                                 <Wrapper key={project.id} {...wrapperProps}>
-                                    <GlassCard className="p-6 md:p-8 flex flex-col h-full hover:bg-white/10 transition-colors group">
+                                    <GlassCard className="p-6 md:p-7 flex flex-col h-full hover:bg-white/10 transition-colors group">
                                         <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                                             {project.project_name}
                                             {project.project_url && <ExternalLink size={16} className="opacity-50" />}
@@ -350,9 +355,9 @@ export default function InrosProfileCanvas({
 
             {/* Products & Services Section */}
             {products.length > 0 && (
-                <section className={getFocusStyles('section-products')} style={{ order: activeData.order.products }}>
-                    <h2 className="text-3xl font-bold text-white mb-8">Products & Services</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <section className={`${PROFILE_COLLECTION_SECTION_CLASS} ${getFocusStyles('section-products')}`} style={{ order: activeData.order.products }}>
+                    <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
+                    <div className={PROFILE_COLLECTION_GRID_CLASS}>
                         {products.map((product: any) => {
                             const ProductWrapper = product.sales_page_active ? Link : 'div'
                             const wrapperProps = product.sales_page_active

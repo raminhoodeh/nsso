@@ -14,6 +14,11 @@ import ShinyLink from '@/components/ui/ShinyLink'
 import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import type { User, Profile, Link as LinkItem, Contact } from '@/lib/types'
+import {
+    PROFILE_COLLECTION_GRID_CLASS,
+    PROFILE_COLLECTION_SECTION_CLASS,
+    PROFILE_PAGE_CONTAINER_CLASS,
+} from '@/components/profile/profileLayout'
 
 export default function PreviewPage() {
     const router = useRouter()
@@ -115,7 +120,7 @@ export default function PreviewPage() {
             </TahoeGlassSurface>
 
             {/* Profile Content */}
-            <div className="pt-[120px] pb-40 px-6 lg:px-10 max-w-[1800px] mx-auto">
+            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[120px] pb-40`}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     {/* Left Column - Primary Identity */}
@@ -301,9 +306,9 @@ export default function PreviewPage() {
 
                 {/* 2. Visual Portfolio (Projects) */}
                 {projects.length > 0 && (
-                    <section className="mt-24">
-                        <h2 className="text-3xl font-bold text-white mb-8">Projects</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <section className={`${PROFILE_COLLECTION_SECTION_CLASS} mt-24`}>
+                        <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Projects</h2>
+                        <div className={PROFILE_COLLECTION_GRID_CLASS}>
                             {projects.map((project) => {
                                 const Wrapper = project.project_url ? 'a' : 'div'
                                 const wrapperProps = project.project_url ? {
@@ -315,7 +320,7 @@ export default function PreviewPage() {
 
                                 return (
                                     <Wrapper key={project.id} {...wrapperProps}>
-                                        <GlassCard className="p-6 md:p-8 flex flex-col h-full hover:bg-white/10 transition-colors group">
+                                        <GlassCard className="p-6 md:p-7 flex flex-col h-full hover:bg-white/10 transition-colors group">
                                             <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                                                 {project.project_name}
                                                 {project.project_url && <ExternalLink size={16} className="opacity-50" />}
@@ -337,9 +342,9 @@ export default function PreviewPage() {
 
                 {/* 3. Products & Services */}
                 {products.length > 0 && (
-                    <section className="mt-24">
-                        <h2 className="text-3xl font-bold text-white mb-8">Products & Services</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <section className={`${PROFILE_COLLECTION_SECTION_CLASS} mt-24`}>
+                        <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
+                        <div className={PROFILE_COLLECTION_GRID_CLASS}>
                             {products.map(product => {
                                 const ProductWrapper = product.sales_page_active ? Link : 'div'
                                 // Fix TS error by explicitly typing or checking
