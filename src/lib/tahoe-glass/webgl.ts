@@ -53,28 +53,18 @@ const FRAGMENT_SHADER = `
 
   void main() {
     vec4 displacement = texture2D(uDisplacement, vUv);
-    // This canvas is an optical overlay, not a replacement scene. Leaving
-    // pixels outside registered lenses transparent keeps the original live
-    // Vanta canvas as the source of truth and makes the displaced pixels
-    // spatially owned by the glass surfaces themselves.
-    if (displacement.a <= 0.01) {
-      gl_FragColor = vec4(0.0);
-      return;
+    vec2 sampleUv = vUv;
+    if (displacement.a > 0.01) {
+      vec2 bend = (displacement.rg - 0.5) * 2.0 * uScale;
+      sampleUv += vec2(bend.x / uResolution.x, -bend.y / uResolution.y);
     }
-
-    vec2 bend = (displacement.rg - 0.5) * 2.0 * uScale;
-    vec2 sampleUv = vUv + vec2(
-      bend.x / uResolution.x,
-      -bend.y / uResolution.y
-    );
 
     vec2 sourceUv = sceneUv(sampleUv);
     if (sourceUv.x < 0.0 || sourceUv.x > 1.0 || sourceUv.y < 0.0 || sourceUv.y > 1.0) {
       gl_FragColor = vec4(0.0);
       return;
     }
-    vec4 refracted = texture2D(uScene, sourceUv);
-    gl_FragColor = vec4(refracted.rgb, refracted.a * displacement.a);
+    gl_FragColor = texture2D(uScene, sourceUv);
   }
 `;
 
@@ -459,10 +449,7 @@ export class TahoeWebGLRenderer {
     gl.activeTexture(gl.TEXTURE0 + unit);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-    // Scene colors may be premultiplied, while the displacement texture uses
-    // alpha only as its lens mask. Premultiplying that map would corrupt its
-    // neutral 128 channels during surface opacity transitions.
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, unit === 0 ? 1 : 0);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
     const nextSize = sourceDimensions(source);
     if (
       nextSize[0] > this.maxTextureSize ||

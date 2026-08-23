@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "check:glass-contract": "node scripts/check-tahoe-glass-contract.mjs",
+    "prebuild": "npm run check:glass-contract",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

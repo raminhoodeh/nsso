@@ -9,7 +9,6 @@ import {
   calculateTahoeRim,
   createTahoeDisplacementField,
   type TahoeDisplacementField,
-  type TahoeDisplacementProfile,
 } from "@/lib/tahoe-glass/optics";
 import type {
   TahoeGlassBackend,
@@ -35,7 +34,6 @@ interface SurfaceRuntime {
   continuous: boolean;
   drawn: boolean;
   priority: number | null;
-  profile: TahoeDisplacementProfile;
   rect: DOMRectReadOnly | null;
   clipRect: DOMRectReadOnly | null;
   opacity: number;
@@ -46,11 +44,7 @@ interface TahoeGlassEngineContextValue {
   registerSurface: (
     id: string,
     element: HTMLElement,
-    options?: {
-      continuous?: boolean;
-      priority?: number;
-      profile?: TahoeDisplacementProfile;
-    },
+    options?: { continuous?: boolean; priority?: number },
   ) => void;
   unregisterSurface: (id: string) => void;
   requestRender: (reason?: string) => void;
@@ -582,11 +576,7 @@ export function TahoeGlassProvider({
     (
       id: string,
       element: HTMLElement,
-      options?: {
-        continuous?: boolean;
-        priority?: number;
-        profile?: TahoeDisplacementProfile;
-      },
+      options?: { continuous?: boolean; priority?: number },
     ) => {
       const existing = registryRef.current.get(id);
       if (existing?.element === element) return;
@@ -609,7 +599,6 @@ export function TahoeGlassProvider({
           Number.isFinite(options.priority)
             ? options.priority
             : null,
-        profile: options?.profile ?? "control",
         rect: null,
         clipRect: null,
         opacity: 0,
@@ -1158,10 +1147,11 @@ export function TahoeGlassProvider({
           return;
         }
 
-        // Keep the composite transparent outside registered surfaces. SVG adds
-        // its neutral field with feFlood/feComposite; WebGL uses this alpha as
-        // the exact lens mask and emits only genuinely displaced scene pixels.
         context.clearRect(0, 0, pixelWidth, pixelHeight);
+        // An opaque neutral base makes opacity fades attenuate the bend vector
+        // identically in SVG and WebGL without premultiplied-alpha artifacts.
+        context.fillStyle = "rgb(128, 128, 128)";
+        context.fillRect(0, 0, pixelWidth, pixelHeight);
 
         let mapHasSurface = false;
         for (const { runtime } of paintEntries) {
@@ -1185,7 +1175,7 @@ export function TahoeGlassProvider({
               Math.max(1, rect.width * rect.height),
           );
           const fieldDpr = Math.max(0.25, Math.min(dpr, memoryBoundDpr));
-          const fieldKey = `${rect.width.toFixed(2)}:${rect.height.toFixed(2)}:${fieldDpr.toFixed(3)}:${runtime.profile}`;
+          const fieldKey = `${rect.width.toFixed(2)}:${rect.height.toFixed(2)}:${fieldDpr.toFixed(3)}`;
           if (!runtime.field || runtime.fieldKey !== fieldKey) {
             runtime.drawn = false;
             runtime.field = createTahoeDisplacementField(
@@ -1193,7 +1183,6 @@ export function TahoeGlassProvider({
               rect.height,
               fieldDpr,
               0,
-              runtime.profile,
             );
             runtime.fieldKey = fieldKey;
           }
@@ -1509,10 +1498,7 @@ export function TahoeGlassProvider({
               WebkitFilter: svgActive
                 ? "var(--tahoe-scene-filter, none)"
                 : "none",
-              // WebGL is a transparent refraction overlay. The owned DOM scene
-              // remains visible beneath it instead of being replaced by a
-              // second opaque full-viewport rendering of the same pixels.
-              opacity: 1,
+              opacity: webglActive ? 0 : 1,
             }}
           >
             {scene}

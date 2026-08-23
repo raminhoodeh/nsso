@@ -42,8 +42,6 @@ export default function ResetPasswordPage() {
                 <GlassCard
                     className="w-full max-w-[440px] p-8 lg:p-12 relative z-10"
                     tone="dark"
-                    semanticTint="light"
-                    semanticTintOpacity={0.07}
                 >
                     {/* Logo */}
                     <div className="text-center mb-8">
@@ -83,8 +81,6 @@ export default function ResetPasswordPage() {
             <GlassCard
                 className="w-full max-w-[440px] p-8 lg:p-12 relative z-10"
                 tone="dark"
-                semanticTint="light"
-                semanticTintOpacity={0.07}
             >
                 {/* Logo */}
                 <div className="text-center mb-8">
