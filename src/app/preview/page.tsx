@@ -7,7 +7,7 @@ import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { createClient } from '@/lib/supabase/client'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/components/profile/ProfileGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
@@ -369,7 +369,7 @@ export default function PreviewPage() {
                                                         variant="pill"
                                                         tone="light"
                                                         semanticTint="dark"
-                                                        semanticTintOpacity={0.02}
+                                                        semanticTintOpacity={0.18}
                                                         className="px-3 py-1 font-medium text-white"
                                                     >
                                                         {product.price}

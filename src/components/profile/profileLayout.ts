@@ -1,5 +1,5 @@
 export const PROFILE_PAGE_CONTAINER_CLASS =
-    'mx-auto w-full max-w-[1800px] px-6 lg:px-16 xl:px-24 2xl:px-28'
+    'mx-auto w-full max-w-[1800px] px-6 [text-shadow:0_1px_3px_rgba(0,0,0,0.68)] lg:px-16 xl:px-24 2xl:px-28'
 
 export const PROFILE_COLLECTION_SECTION_CLASS =
     'w-full lg:mx-auto lg:max-w-[1360px]'

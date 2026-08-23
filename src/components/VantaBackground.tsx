@@ -65,15 +65,15 @@ interface VantaEffect {
     }
 }
 
-const VANTA_HORIZON_OFFSET = 1.50
+const VANTA_HORIZON_OFFSET = 1.25
 const VANTA_HORIZON_PATCH = `p.y += ${VANTA_HORIZON_OFFSET.toFixed(2)};`
 const VANTA_SCREEN_COORDINATE_PATTERN =
     /vec2\s+p\s*=\s*\(-iResolution\.xy\s*\+\s*2\.0\s*\*\s*gl_FragCoord\.xy\)\s*\/\s*iResolution\.y\s*;/
 
 /**
  * Vanta CLOUDS 0.5.24 has no public horizon control. Patch its pinned shader
- * coordinate once so the cloud bank stays near the bottom of the viewport
- * instead of washing out white profile text.
+ * coordinate once so the cloud bank stays low in the viewport without being
+ * pinned to the bottom edge or washing out profile text.
  * The canvas remains the single source for both SVG and WebGL refraction.
  */
 function lowerVantaCloudHorizon(effect: VantaEffect): boolean {

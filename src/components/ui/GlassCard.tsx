@@ -6,7 +6,7 @@ import {
     type TahoeGlassSurfaceVariant,
 } from '@/components/ui/tahoe-glass'
 
-interface GlassCardProps {
+export interface GlassCardProps {
     children: ReactNode
     className?: string
     variant?: 'default' | 'strong' | 'subtle' | 'apple' | 'ultimate'

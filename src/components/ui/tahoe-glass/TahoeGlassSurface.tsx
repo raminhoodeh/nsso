@@ -245,7 +245,7 @@ export const TahoeGlassSurface = React.forwardRef<
           style={{
             backgroundColor:
               semanticTint === "light" ? "white" : "rgb(8, 12, 20)",
-            opacity: Math.max(0, Math.min(0.16, semanticTintOpacity)),
+            opacity: Math.max(0, Math.min(0.42, semanticTintOpacity)),
           }}
         />
       )}

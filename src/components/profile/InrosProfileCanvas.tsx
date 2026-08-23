@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/components/profile/ProfileGlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
 import Link from 'next/link'
@@ -380,7 +380,7 @@ export default function InrosProfileCanvas({
                                                     variant="pill"
                                                     tone="light"
                                                     semanticTint="dark"
-                                                    semanticTintOpacity={0.02}
+                                                    semanticTintOpacity={0.18}
                                                     className="px-3 py-1 font-medium text-white"
                                                 >
                                                     {product.price}

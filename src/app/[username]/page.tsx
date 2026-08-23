@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/components/profile/ProfileGlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import ShinyLink from '@/components/ui/ShinyLink'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
@@ -437,7 +437,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                             variant="pill"
                                                             tone="light"
                                                             semanticTint="dark"
-                                                            semanticTintOpacity={0.02}
+                                                            semanticTintOpacity={0.18}
                                                             className="px-3 py-1 font-medium text-white"
                                                         >
                                                             {product.price}

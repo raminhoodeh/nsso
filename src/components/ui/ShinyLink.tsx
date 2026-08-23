@@ -28,6 +28,8 @@ export default function ShinyLink({ href, children, className = '', ...props }: 
                 if (anchorType) element?.setAttribute('type', anchorType)
             }}
             tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.32}
             {...anchorProps}
             className={`group block w-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${className}`}
             contentClassName="flex items-center justify-center p-4"
