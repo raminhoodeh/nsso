@@ -78,7 +78,7 @@ async function fetchWithValidatedRedirects(source: URL, signal: AbortSignal) {
       headers: {
         Accept: "image/avif,image/webp,image/png,image/jpeg,image/gif",
       },
-      next: { revalidate: 86_400 },
+      cache: "no-store",
     });
 
     if (!REDIRECT_STATUSES.has(response.status)) return response;
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
         "Content-Type": contentType,
         "Content-Length": String(body.byteLength),
         "Content-Disposition": `inline; filename="place-photo.${extension}"`,
-        "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+        "Cache-Control": "private, no-store",
         "Cross-Origin-Resource-Policy": "same-origin",
         "X-Content-Type-Options": "nosniff",
       },

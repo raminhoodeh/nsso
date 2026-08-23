@@ -2,10 +2,10 @@
   "meta": {
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
-    "sourceRecordCount": 77,
-    "placeCount": 71,
-    "generatedAt": "2026-08-22T13:04:30.926Z",
-    "expiresAt": "2026-09-21T13:04:30.926Z",
+    "sourceRecordCount": 83,
+    "placeCount": 77,
+    "generatedAt": "2026-08-23T07:11:58.823Z",
+    "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
     "attribution": "Place IDs and current location data supplied by Google Maps Platform."
@@ -325,6 +325,54 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=BKD%20by%20Gemini%2C%20Al%20Safiya%20Park%2C%20Al%20Zorah%2C%20Ajman%2C%20UAE"
+    },
+    {
+      "id": "african-queen",
+      "name": "African Queen",
+      "aliases": [],
+      "description": "The Dubai outpost of the Riviera restaurant, set on J1 Beach with French-Mediterranean cooking, sunset dining, a pool and a lively late-evening atmosphere. Pick it for a beachside date that can move from cocktails into dinner without changing venues.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DcUQWuSjuWT/",
+        "https://africanqueen-restaurant.com/dubai/"
+      ],
+      "sourceRows": [
+        80
+      ],
+      "locationHint": "J1 Beach, Jumeirah 1, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "J1 Beach - Jumeira First - Jumeirah 1 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2269988,
+        "lng": 55.257108499999994
+      },
+      "placeId": "ChIJNxOhXp9DXz4R7g6wKFRDvoU",
+      "googleTypes": [
+        "restaurant",
+        "swimming_pool",
+        "sports_activity_location",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "beach-water",
+          "resort-beach-club"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-23T07:05:23.949Z",
+        "osm": null,
+        "matchedName": "African Queen Dubaï",
+        "websiteUri": "https://africanqueen-restaurant.com/dubai/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=African%20Queen%2C%20J1%20Beach%2C%20Jumeirah%201%2C%20Dubai%2C%20UAE"
     },
     {
       "id": "al-seef",
@@ -648,6 +696,50 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Bait%20Al%20Ahlam%20cafe%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "bar-des-pres",
+      "name": "Bar des Prés",
+      "aliases": [],
+      "description": "A Franco-East Asian restaurant and cocktail bar by chef Cyril Lignac on the 51st floor of ICD Brookfield Place, pairing Parisian polish with Japanese-influenced plates and panoramic DIFC skyline views. A dressed-up dinner-and-drinks option with a lounge made for a longer evening.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DcUQWuSjuWT/",
+        "https://www.bardespres.com/dubai/"
+      ],
+      "sourceRows": [
+        79
+      ],
+      "locationHint": "ICD Brookfield Place, DIFC, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "ICD Brookfield Place - 51st Floor - Zaa'beel Second - DIFC - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.211409099999997,
+        "lng": 55.280071299999996
+      },
+      "placeId": "ChIJO99024RDXz4ROeOXlO9r1Nw",
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-23T07:05:23.479Z",
+        "osm": null,
+        "matchedName": "Bar des Prés",
+        "websiteUri": "https://www.bardespres.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Bar%20des%20Pres%2C%20ICD%20Brookfield%20Place%2C%20DIFC%2C%20Dubai%2C%20UAE"
+    },
+    {
       "id": "barbari",
       "name": "Barbari",
       "aliases": [],
@@ -694,6 +786,50 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Barbari%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "birch",
+      "name": "Birch",
+      "aliases": [],
+      "description": "Chef Arslan Berdiev's intimate gastronomic restaurant at The Ritz-Carlton DIFC, blending contemporary European and Asian techniques with Central Asian and Turkmen influences. The tasting-menu format and low-lit room make it a slower, special-occasion date rather than a quick dinner.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DcUQWuSjuWT/",
+        "https://birchrestaurants.com/"
+      ],
+      "sourceRows": [
+        83
+      ],
+      "locationHint": "The Ritz-Carlton DIFC, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "The Ritz-Carlton, Limestone House - 9 Al Sukook St - Zaa'beel Second - DIFC - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.212633,
+        "lng": 55.2787473
+      },
+      "placeId": "ChIJrYEcdixDXz4Rb2ixZc7wp18",
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-23T07:05:24.751Z",
+        "osm": null,
+        "matchedName": "Birch Restaurant",
+        "websiteUri": "http://birchrestaurants.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Birch%20Restaurant%2C%20The%20Ritz-Carlton%20DIFC%2C%20Dubai%2C%20UAE"
     },
     {
       "id": "cabinet-of-curiosity",
@@ -1289,6 +1425,51 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=La%20Mer%20Beach%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "maison-revka",
+      "name": "Maison Revka",
+      "aliases": [],
+      "description": "A French-Slavic restaurant at Delano Dubai on Bluewaters Island, known for caviar, seafood, ornate interiors and a poolside lounge. It combines a glamorous dinner room, cocktails and a daytime pool experience in one destination.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DcUQWuSjuWT/",
+        "https://maisonrevka.com/dubai/"
+      ],
+      "sourceRows": [
+        84
+      ],
+      "locationHint": "Delano Dubai, Bluewaters Island, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Delano Dubai - Dubai Marina - Bluewaters Island - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.0826276,
+        "lng": 55.1224925
+      },
+      "placeId": "ChIJWzLbKUEVXz4RLztzPfLDWjI",
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "resort-beach-club"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-23T07:05:24.935Z",
+        "osm": null,
+        "matchedName": "Maison Revka Dubai",
+        "websiteUri": "https://maisonrevka.com/dubai/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Maison%20Revka%2C%20Delano%20Dubai%2C%20Bluewaters%20Island%2C%20Dubai%2C%20UAE"
+    },
+    {
       "id": "maison-terrae",
       "name": "Maison Terraē",
       "aliases": [],
@@ -1647,6 +1828,52 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Ramen%20Hisa%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "sakhalin",
+      "name": "Sakhalin",
+      "aliases": [],
+      "description": "A seafood-led J1 Beach restaurant from White Rabbit Family, bringing Mediterranean and Asian influences to a refined beachfront dining room with an adjoining beach-club setting. Strong for sunset cocktails, seafood and a polished date night by the water.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DcUQWuSjuWT/",
+        "https://sakhalin.rest/dubai/en"
+      ],
+      "sourceRows": [
+        81
+      ],
+      "locationHint": "J1 Beach, Jumeirah 1, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Beach, J1 - 71A St - Jumeirah - Jumeirah 1 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2273011,
+        "lng": 55.257596899999996
+      },
+      "placeId": "ChIJT9GYCg5DXz4RKg24uryt96k",
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "beach-water",
+          "resort-beach-club"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-23T07:05:24.269Z",
+        "osm": null,
+        "matchedName": "Sakhalin Dubai",
+        "websiteUri": "https://sakhalin.rest/dubai/en",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Sakhalin%2C%20J1%20Beach%2C%20Jumeirah%201%2C%20Dubai%2C%20UAE"
+    },
+    {
       "id": "saltzen-spa",
       "name": "SaltZen Spa",
       "aliases": [],
@@ -1850,6 +2077,50 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Seva%20Experience%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "siena",
+      "name": "Siena",
+      "aliases": [],
+      "description": "A glamorous Italian restaurant in DIFC's Gate Village, styled like a Tuscan palazzo and designed to carry lunch or dinner into late cocktails. The menu leans on seasonal Italian ingredients, with a terrace and a livelier atmosphere as the evening develops.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DcUQWuSjuWT/",
+        "https://siena-restaurants.com/dubai/"
+      ],
+      "sourceRows": [
+        82
+      ],
+      "locationHint": "Gate Village Building 7, DIFC, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Gate Village - 7th St - Zaa'beel Second - DIFC - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2132629,
+        "lng": 55.282391700000005
+      },
+      "placeId": "ChIJ6erW87BDXz4RJse67LY6Qdw",
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-23T07:05:24.496Z",
+        "osm": null,
+        "matchedName": "Siena Restaurant Dubai",
+        "websiteUri": "https://siena-restaurants.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Siena%20Restaurant%2C%20Gate%20Village%20Building%207%2C%20DIFC%2C%20Dubai%2C%20UAE"
     },
     {
       "id": "souk-murjan",

@@ -28,6 +28,12 @@ const ALIAS_GROUPS = new Map([
 ]);
 
 const QUERY_OVERRIDES = {
+  "bar-des-pres": "Bar des Pres, ICD Brookfield Place, DIFC, Dubai, UAE",
+  "african-queen": "African Queen, J1 Beach, Jumeirah 1, Dubai, UAE",
+  "sakhalin": "Sakhalin, J1 Beach, Jumeirah 1, Dubai, UAE",
+  "siena": "Siena Restaurant, Gate Village Building 7, DIFC, Dubai, UAE",
+  "birch": "Birch Restaurant, The Ritz-Carlton DIFC, Dubai, UAE",
+  "maison-revka": "Maison Revka, Delano Dubai, Bluewaters Island, Dubai, UAE",
   "bkd-by-gemini": "BKD by Gemini, Al Safiya Park, Al Zorah, Ajman, UAE",
   "founder-sports-club": "Founder Sports Club, Dubai, UAE",
   "gooder": "Gooder restaurant, Dubai, UAE",
@@ -45,6 +51,15 @@ const QUERY_OVERRIDES = {
   "the-jury-experience-the-deadly-boat-ride": "Dubai Knowledge Park Conference Centre Auditorium, Block 2B, Dubai, UAE",
 };
 
+const PLACE_ID_OVERRIDES = {
+  "bar-des-pres": "ChIJO99024RDXz4ROeOXlO9r1Nw",
+  "african-queen": "ChIJNxOhXp9DXz4R7g6wKFRDvoU",
+  "sakhalin": "ChIJT9GYCg5DXz4RKg24uryt96k",
+  "siena": "ChIJ6erW87BDXz4RJse67LY6Qdw",
+  "birch": "ChIJrYEcdixDXz4Rb2ixZc7wp18",
+  "maison-revka": "ChIJWzLbKUEVXz4RLztzPfLDWjI",
+};
+
 const RESOLUTION_OVERRIDES = {
   "al-ghadf-garden": {
     address: "Al Sagel Road, 8 District, Ras Al Khaimah",
@@ -53,6 +68,7 @@ const RESOLUTION_OVERRIDES = {
     matchedName: "Al Gadf Garden",
     resolutionSource: "source-yango-2gis-crosscheck",
     resolutionStatus: "resolved",
+    fetchedAt: "2026-08-22T13:04:30.901Z",
   },
   "founder-sports-club": {
     address: "Dubai meetup location shared after matching",
@@ -61,10 +77,17 @@ const RESOLUTION_OVERRIDES = {
     matchedName: "Founder Sports Club by Art of Mondays",
     resolutionSource: "source-description",
     resolutionStatus: "non-fixed",
+    fetchedAt: "2026-08-22T13:04:30.899Z",
   },
 };
 
 const SOURCE_URL_OVERRIDES = {
+  "bar-des-pres": "https://www.bardespres.com/dubai/",
+  "african-queen": "https://africanqueen-restaurant.com/dubai/",
+  "sakhalin": "https://sakhalin.rest/dubai/en",
+  "siena": "https://siena-restaurants.com/dubai/",
+  "birch": "https://birchrestaurants.com/",
+  "maison-revka": "https://maisonrevka.com/dubai/",
   "serpenti-beach-club": "https://www.bulgarihotels.com/en_US/dubai/the-resort/serpenti-beach-club",
 };
 
@@ -86,6 +109,12 @@ const EMIRATE_CENTERS = {
 };
 
 const PRIMARY_OVERRIDES = {
+  "bar-des-pres": "food-drink",
+  "african-queen": "food-drink",
+  "sakhalin": "food-drink",
+  "siena": "food-drink",
+  "birch": "food-drink",
+  "maison-revka": "food-drink",
   "al-ain-oasis": "nature-wildlife",
   "dalma-island": "beach-water",
   "emirates-bio-farm": "nature-wildlife",
@@ -160,6 +189,15 @@ const PRIMARY_OVERRIDES = {
   "mangrove-beach": "beach-water",
 };
 
+const TAG_OVERRIDES = {
+  "bar-des-pres": ["food-drink"],
+  "african-queen": ["food-drink", "beach-water", "resort-beach-club"],
+  "sakhalin": ["food-drink", "beach-water", "resort-beach-club"],
+  "siena": ["food-drink"],
+  "birch": ["food-drink"],
+  "maison-revka": ["food-drink", "resort-beach-club"],
+};
+
 function normalize(value = "") {
   return value
     .normalize("NFKD")
@@ -229,6 +267,10 @@ function taxonomy(id, name, description) {
   ];
 
   const override = PRIMARY_OVERRIDES[id];
+  const tagOverride = TAG_OVERRIDES[id];
+  if (tagOverride) {
+    return { primary: override || tagOverride[0], tags: tagOverride };
+  }
   if (override) add(override);
   if (!tags.size) add("date-ideas");
   return { primary: override || primaryOrder.find((candidate) => tags.has(candidate)) || [...tags][0], tags: [...tags] };
@@ -248,6 +290,36 @@ async function loadCache() {
 
 async function saveCache(cache) {
   await fs.writeFile(cachePath, `${JSON.stringify(cache, null, 2)}\n`);
+}
+
+function normalizeGooglePlace(candidate) {
+  if (!candidate?.location) return null;
+  return {
+    address: candidate.formattedAddress,
+    coordinates: { lat: candidate.location.latitude, lng: candidate.location.longitude },
+    placeId: candidate.id,
+    matchedName: candidate.displayName?.text || null,
+    websiteUri: candidate.websiteUri || null,
+    businessStatus: candidate.businessStatus || null,
+    googleTypes: candidate.types || [],
+    primaryGoogleType: candidate.primaryType || null,
+    resolutionSource: "google-places-new",
+    resolutionStatus: "resolved",
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+async function getGooglePlace(placeId) {
+  const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
+    headers: {
+      "X-Goog-Api-Key": googleApiKey,
+      "X-Goog-FieldMask": "id,displayName,formattedAddress,location,types,primaryType,businessStatus,websiteUri",
+      Referer: process.env.GOOGLE_PLACES_REFERER || "http://localhost:3000/",
+    },
+  });
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error?.message || `Google Places returned ${response.status}`);
+  return normalizeGooglePlace(body);
 }
 
 async function searchGoogle(query) {
@@ -274,21 +346,7 @@ async function searchGoogle(query) {
   });
   const body = await response.json();
   if (!response.ok) throw new Error(body.error?.message || `Google Places returned ${response.status}`);
-  const candidate = body.places?.[0];
-  if (!candidate?.location) return null;
-  return {
-    address: candidate.formattedAddress,
-    coordinates: { lat: candidate.location.latitude, lng: candidate.location.longitude },
-    placeId: candidate.id,
-    matchedName: candidate.displayName?.text || null,
-    websiteUri: candidate.websiteUri || null,
-    businessStatus: candidate.businessStatus || null,
-    googleTypes: candidate.types || [],
-    primaryGoogleType: candidate.primaryType || null,
-    resolutionSource: "google-places-new",
-    resolutionStatus: "resolved",
-    fetchedAt: new Date().toISOString(),
-  };
+  return normalizeGooglePlace(body.places?.[0]);
 }
 
 async function searchNominatim(query) {
@@ -364,13 +422,19 @@ const provider = googleApiKey ? "google" : "nominatim";
 for (const entry of grouped.values()) {
   const emirate = inferEmirate(entry.locationHint, entry.name);
   const query = QUERY_OVERRIDES[entry.id] || `${entry.name}, ${entry.locationHint.replace(/UAE/gi, "United Arab Emirates")}`;
-  const cacheKey = `${provider}:${query}`;
-  let resolution = cache[cacheKey];
+  const placeIdOverride = PLACE_ID_OVERRIDES[entry.id];
+  const cacheKey = googleApiKey && placeIdOverride
+    ? `google-place-id:${placeIdOverride}`
+    : `${provider}:${query}`;
+  const hasResolutionOverride = Object.hasOwn(RESOLUTION_OVERRIDES, entry.id);
+  let resolution = hasResolutionOverride ? RESOLUTION_OVERRIDES[entry.id] : cache[cacheKey];
 
-  if (!Object.hasOwn(cache, cacheKey)) {
+  if (!hasResolutionOverride && !Object.hasOwn(cache, cacheKey)) {
     cacheMisses += 1;
     try {
-      resolution = googleApiKey ? await searchGoogle(query) : await searchNominatim(query);
+      resolution = googleApiKey
+        ? placeIdOverride ? await getGooglePlace(placeIdOverride) : await searchGoogle(query)
+        : await searchNominatim(query);
     } catch (error) {
       console.warn(`[warn] ${entry.name}: ${error.message}`);
       resolution = null;
@@ -425,6 +489,11 @@ for (const entry of grouped.values()) {
 
 places.sort((a, b) => a.emirate.localeCompare(b.emirate) || a.name.localeCompare(b.name));
 await saveCache(cache);
+const googleFetchedAt = places
+  .filter((place) => place.resolution.source === "google-places-new")
+  .map((place) => Date.parse(place.resolution.matchedAt))
+  .filter(Number.isFinite);
+const oldestGoogleFetch = googleFetchedAt.length ? Math.min(...googleFetchedAt) : null;
 const payload = {
   meta: {
     title: "Places to go in the UAE",
@@ -432,7 +501,9 @@ const payload = {
     sourceRecordCount: uaeRows.length,
     placeCount: places.length,
     generatedAt: new Date().toISOString(),
-    expiresAt: googleApiKey ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
+    expiresAt: oldestGoogleFetch === null
+      ? null
+      : new Date(oldestGoogleFetch + 30 * 24 * 60 * 60 * 1000).toISOString(),
     cacheMisses,
     geocoder: googleApiKey ? "google-places-new" : "openstreetmap-nominatim",
     attribution: googleApiKey
