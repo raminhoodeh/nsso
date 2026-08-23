@@ -198,18 +198,23 @@ export default function HomePage() {
               <div className="relative z-10 flex flex-col gap-4 h-full p-8 lg:p-10">
                 {/* Top Row: Body Text */}
                 <p className="text-white text-lg font-medium text-center lg:text-left">
-                  Your entire professional world.<br />One app.
+                  The most beautiful way to present yourself online
                 </p>
 
                 {/* Middle Row: Title Text */}
                 <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
-                  The only sovereign<br />networking super app.
+                  All of you. All in one place.
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
-                <p className="text-white text-lg leading-relaxed text-center lg:text-left">
-                  Stop sharing fragmented links. Start building a unified digital economy. nsso integrates your visual identity, global network, and instant marketplace into a single, high-performance ecosystem.
-                </p>
+                <div className="space-y-4 text-white text-lg leading-relaxed text-center lg:text-left">
+                  <p>
+                    nsso stands for "new sovereign self online". nsso embodies a vision to revolutionize how we present our multifaceted identities online. Inspired by the challenge of unifying fragmented digital personas, nsso offers a platform where personal and professional stories intertwine beautifully. At its heart, nsso is about celebrating individuality, empowering users to showcase their entire selves; work, passions, and aspirations - in one holistic place.
+                  </p>
+                  <p>
+                    Your nsso profile acts a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
+                  </p>
+                </div>
 
                 {/* Coming Soon Features - Visual Filter for Whitespace */}
                 <div className="flex flex-col gap-3 mt-12 w-full max-w-sm mx-auto lg:mx-0">
