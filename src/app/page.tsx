@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import ProfileGlassCard from '@/components/profile/ProfileGlassCard'
+import HomeVisionPlayer from '@/components/home/HomeVisionPlayer'
 import Link from 'next/link'
 import { useUser } from '@/components/providers/UserProvider'
 import { cn } from '@/lib/utils'
@@ -432,17 +433,8 @@ export default function HomePage() {
 
       {/* Video Feature Section */}
       <section className="w-full lg:min-h-screen flex flex-col items-center justify-center pt-12 pb-24 lg:py-0 gap-12">
-        <div className="w-full h-full max-w-[1470px] aspect-video">
-          <iframe
-            width="100%"
-            height="100%"
-            src="https://www.youtube.com/embed/n9-WjzJlq-Q?playsinline=1&controls=1"
-            title="YouTube video player"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allowFullScreen
-            className="w-full h-full lg:rounded-none"
-          ></iframe>
+        <div className="h-full w-full max-w-[1470px]">
+          <HomeVisionPlayer />
         </div>
 
         {/* Create Profile Button - Mobile Only */}
