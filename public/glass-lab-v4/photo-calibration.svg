@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5f82ac"/>
+      <stop offset="0.48" stop-color="#dfb5b2"/>
+      <stop offset="1" stop-color="#ffd49a"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#598b9d"/>
+      <stop offset="1" stop-color="#182d48"/>
+    </linearGradient>
+    <radialGradient id="sun">
+      <stop stop-color="#fffbd1" stop-opacity="1"/>
+      <stop offset="0.35" stop-color="#ffd26f" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#ff9b62" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="29"/>
+      <feColorMatrix values="0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 .07 0"/>
+      <feBlend in="SourceGraphic" mode="soft-light"/>
+    </filter>
+  </defs>
+  <g filter="url(#grain)">
+    <rect width="1600" height="610" fill="url(#sky)"/>
+    <circle cx="1210" cy="265" r="260" fill="url(#sun)"/>
+    <path d="M0 610L190 395L315 520L500 305L700 560L870 370L1060 560L1260 335L1600 610Z" fill="#31435d"/>
+    <path d="M0 610L250 455L490 610L760 445L1010 610L1320 430L1600 610Z" fill="#172a3e"/>
+    <rect y="610" width="1600" height="390" fill="url(#water)"/>
+    <path d="M0 654C270 620 420 700 660 654S1090 620 1600 670M0 760C240 720 450 805 720 758S1210 720 1600 780M0 870C280 830 460 925 780 870S1260 835 1600 900" fill="none" stroke="#d3f3ef" stroke-opacity="0.72" stroke-width="13"/>
+    <g fill="#111b29">
+      <rect x="210" y="500" width="88" height="270"/>
+      <rect x="325" y="445" width="125" height="325"/>
+      <rect x="480" y="545" width="95" height="225"/>
+      <rect x="1030" y="475" width="120" height="295"/>
+      <rect x="1180" y="535" width="90" height="235"/>
+    </g>
+    <g stroke="#ffd869" stroke-width="8" opacity="0.9">
+      <path d="M254 535V735M365 485V735M410 485V735M520 580V735M1070 510V735M1110 510V735M1225 570V735"/>
+    </g>
+  </g>
+</svg>

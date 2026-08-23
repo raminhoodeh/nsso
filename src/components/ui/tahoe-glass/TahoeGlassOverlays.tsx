@@ -4,9 +4,9 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import {
-  TahoeGlassSurface,
+  AdaptiveTahoeGlassSurface as TahoeGlassSurface,
   type TahoeGlassSurfaceProps,
-} from "./TahoeGlassSurface";
+} from "./AdaptiveTahoeGlassSurface";
 
 const FOCUSABLE_SELECTOR = [
   "[autofocus]",

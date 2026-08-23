@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" preserveAspectRatio="none">
+  <defs>
+    <pattern id="minor" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect width="40" height="40" fill="#2a3040"/>
+      <rect width="20" height="20" fill="#141821"/>
+      <rect x="20" y="20" width="20" height="20" fill="#141821"/>
+    </pattern>
+    <pattern id="major" width="200" height="200" patternUnits="userSpaceOnUse">
+      <rect width="200" height="200" fill="url(#minor)"/>
+      <path d="M0 0H200V200" fill="none" stroke="#525b70" stroke-width="3"/>
+      <path d="M0 200L200 0" fill="none" stroke="#646d82" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#major)"/>
+  <g fill="none">
+    <path d="M0 40H1600" stroke="#00ff70" stroke-width="9"/>
+    <path d="M0 200H1600" stroke="#ffec00" stroke-width="9"/>
+    <path d="M0 350H1600" stroke="#ff28ba" stroke-width="9"/>
+    <path d="M0 650H1600" stroke="#55f6ff" stroke-width="9"/>
+    <path d="M0 800H1600" stroke="#a98bff" stroke-width="9"/>
+    <path d="M0 960H1600" stroke="#7f00ff" stroke-width="9"/>
+    <path d="M64 0V1000" stroke="#ff315d" stroke-width="9"/>
+    <path d="M320 0V1000" stroke="#ff4d34" stroke-width="9"/>
+    <path d="M560 0V1000" stroke="#ff8c00" stroke-width="9"/>
+    <path d="M1040 0V1000" stroke="#45ff74" stroke-width="9"/>
+    <path d="M1280 0V1000" stroke="#00b4ff" stroke-width="9"/>
+    <path d="M1536 0V1000" stroke="#14ffe9" stroke-width="9"/>
+    <path d="M0 0L1600 1000M0 1000L1600 0" stroke="#45ff74" stroke-width="7"/>
+    <circle cx="800" cy="500" r="180" stroke="#ff3131" stroke-width="12"/>
+    <circle cx="800" cy="500" r="300" stroke="#55f6ff" stroke-width="8"/>
+  </g>
+</svg>

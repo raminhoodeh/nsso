@@ -1,13 +1,13 @@
 export {
-  TahoeGlassButton,
-  TahoeGlassSurface,
+  AdaptiveTahoeGlassButton as TahoeGlassButton,
+  AdaptiveTahoeGlassSurface as TahoeGlassSurface,
   type TahoeGlassButtonProps,
   type TahoeGlassContentTone,
   type TahoeGlassSemanticTint,
   type TahoeGlassSurfaceElement,
   type TahoeGlassSurfaceProps,
   type TahoeGlassSurfaceVariant,
-} from "./TahoeGlassSurface";
+} from "./AdaptiveTahoeGlassSurface";
 
 export {
   TahoeGlassField,
@@ -26,10 +26,13 @@ export {
 } from "./TahoeGlassOverlays";
 
 export {
-  TahoeGlassProvider,
+  AdaptiveTahoeGlassProvider as TahoeGlassProvider,
+  type AdaptiveTahoeGlassProviderProps as TahoeGlassProviderProps,
+} from "@/components/providers/AdaptiveTahoeGlassProvider";
+
+export {
   useTahoeGlassControls,
   useTahoeGlassDiagnostics,
-  type TahoeGlassProviderProps,
 } from "@/components/providers/TahoeGlassProvider";
 
 export type {

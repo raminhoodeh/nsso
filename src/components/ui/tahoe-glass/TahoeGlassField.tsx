@@ -3,10 +3,10 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import {
-  TahoeGlassSurface,
+  AdaptiveTahoeGlassSurface as TahoeGlassSurface,
   type TahoeGlassContentTone,
   type TahoeGlassSemanticTint,
-} from "./TahoeGlassSurface";
+} from "./AdaptiveTahoeGlassSurface";
 
 type TahoeFieldControlProps =
   | React.InputHTMLAttributes<HTMLInputElement>
