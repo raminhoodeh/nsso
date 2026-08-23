@@ -8,7 +8,6 @@ import Link from 'next/link'
 import { useUser } from '@/components/providers/UserProvider'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import ComingSoonBadge from '@/components/ui/ComingSoonBadge'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 
@@ -25,24 +24,15 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
 
   return (
     <div className={`group/feature relative ${stackClassName}`}>
-      <TahoeGlassSurface
-        variant="menu"
-        radius={12}
+      <div
         tabIndex={0}
         aria-describedby={tooltipId}
-        tone="light"
-        className="w-full cursor-help px-4 py-3 text-left outline-none transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        contentClassName="flex items-center justify-between gap-3"
+        className="flex w-full cursor-help items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/15 px-4 py-3 text-left outline-none transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <span className="text-[15px] text-white/90">{label}</span>
         {status === 'live' ? (
-          <TahoeGlassSurface
-            variant="pill"
-            radius={200}
-            semanticTint="light"
-            semanticTintOpacity={0.1}
-            tone="light"
-            className="flex select-none items-center justify-center overflow-hidden px-[10px] py-[3px]"
+          <span
+            className="relative flex select-none items-center justify-center overflow-hidden rounded-[200px] border-[0.75px] border-emerald-500/30 bg-emerald-500/20 px-[10px] py-[3px] shadow-[0_0_10px_rgba(16,185,129,0.2)]"
           >
             <span
               className="whitespace-nowrap text-[10px] font-semibold leading-[14px] text-emerald-100"
@@ -50,22 +40,33 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
             >
               Now live
             </span>
-          </TahoeGlassSurface>
+          </span>
         ) : (
-          <ComingSoonBadge />
+          <span className="relative flex select-none items-center justify-center overflow-hidden rounded-[200px] border-[0.75px] border-white/45 px-[10px] py-[3px]">
+            <span aria-hidden="true" className="absolute inset-0 bg-white/[0.03] mix-blend-luminosity" />
+            <span aria-hidden="true" className="absolute inset-0 bg-gray-500/15 mix-blend-color-dodge" />
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 bg-cover bg-center backdrop-blur-[68px]"
+              style={{ backgroundImage: "url('/assets/premium-bezel.png')" }}
+            />
+            <span
+              className="relative z-10 whitespace-nowrap text-[10px] font-medium leading-[14px] text-white/96"
+              style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}
+            >
+              Coming soon
+            </span>
+          </span>
         )}
-      </TahoeGlassSurface>
+      </div>
 
-      <TahoeGlassSurface
+      <div
         id={tooltipId}
         role="tooltip"
-        variant="popover"
-        radius={12}
-        tone="light"
-        className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 text-xs leading-relaxed text-white/80 opacity-0 transition-all duration-200 group-hover/feature:visible group-hover/feature:opacity-100 group-focus-within/feature:visible group-focus-within/feature:opacity-100"
+        className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full rounded-xl border border-white/10 bg-black/90 p-3 text-xs leading-relaxed text-white/80 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-200 group-hover/feature:visible group-hover/feature:opacity-100 group-focus-within/feature:visible group-focus-within/feature:opacity-100"
       >
         {tooltip}
-      </TahoeGlassSurface>
+      </div>
     </div>
   )
 }
@@ -195,7 +196,7 @@ export default function HomePage() {
             <CleanGlassCard
               className="h-full flex flex-col justify-start relative group"
             >
-              <div className="relative z-10 flex flex-col gap-4 h-full p-8 lg:p-10">
+              <div className="relative z-10 flex h-full flex-col gap-4 px-8 pb-8 pt-[calc(2rem+7svh)] lg:px-10 lg:pb-10 lg:pt-[calc(2.5rem+7svh)]">
                 {/* Top Row: Body Text */}
                 <p className="text-white text-lg font-medium text-center lg:text-left">
                   The most beautiful way to present yourself online
@@ -209,10 +210,10 @@ export default function HomePage() {
                 {/* Bottom Row: Subtitle Text */}
                 <div className="space-y-4 text-white text-lg leading-relaxed text-center lg:text-left">
                   <p>
-                    nsso stands for "new sovereign self online". nsso embodies a vision to revolutionize how we present our multifaceted identities online. Inspired by the challenge of unifying fragmented digital personas, nsso offers a platform where personal and professional stories intertwine beautifully. At its heart, nsso is about celebrating individuality, empowering users to showcase their entire selves; work, passions, and aspirations - in one holistic place.
+                    nsso stands for "new sovereign self online". Your nsso profile acts a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
                   </p>
                   <p>
-                    Your nsso profile acts a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
+                    nsso embodies a vision to revolutionize how we present our multifaceted identities online. Inspired by the challenge of unifying fragmented digital personas, nsso offers a platform where personal and professional stories intertwine beautifully. At its heart, nsso is about celebrating individuality, empowering users to showcase their entire selves; work, passions, and aspirations - in one holistic place.
                   </p>
                 </div>
 

@@ -153,11 +153,8 @@ export const TahoeGlassSurface = React.forwardRef<
     requestRender?.("surface-props-change");
   }, [className, requestRender, style]);
 
-  const activeOptics =
-    diagnostics.status === "active" &&
-    (diagnostics.backend === "svg" || diagnostics.backend === "webgl");
   const solidMaterial = diagnostics.backend === "solid";
-  const fallbackFrost = !activeOptics && !solidMaterial;
+  const webglMaterial = diagnostics.backend === "webgl";
   const resolvedRadius =
     typeof radius === "number"
       ? `${radius}px`
@@ -220,20 +217,23 @@ export const TahoeGlassSurface = React.forwardRef<
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 rounded-[inherit]"
         style={{
-          background: activeOptics
+          background: webglMaterial
             ? "transparent"
             : solidMaterial
               ? "Canvas"
               : "color-mix(in srgb, white 25%, transparent)",
-          backdropFilter: fallbackFrost
-            ? "blur(2px) saturate(180%) brightness(1.05)"
-            : "none",
-          WebkitBackdropFilter: fallbackFrost
-            ? "blur(1px) saturate(180%) brightness(1.05)"
-            : "none",
-          backgroundImage: fallbackFrost
-            ? "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)"
-            : "none",
+          backdropFilter:
+            webglMaterial || solidMaterial
+              ? "none"
+              : "blur(2px) saturate(180%) brightness(1.05)",
+          WebkitBackdropFilter:
+            webglMaterial || solidMaterial
+              ? "none"
+              : "blur(1px) saturate(180%) brightness(1.05)",
+          backgroundImage:
+            webglMaterial || solidMaterial
+              ? "none"
+              : "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)",
           boxShadow: TAHOE_SPECULAR_SHADOW,
         }}
       />
