@@ -1,3 +1,5 @@
+'use client'
+
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface ShinyLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
