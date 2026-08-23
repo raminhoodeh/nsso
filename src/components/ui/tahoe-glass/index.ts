@@ -10,6 +10,11 @@ export {
 } from "./TahoeGlassSurface";
 
 export {
+  TahoeBackdropHeader,
+  type TahoeBackdropHeaderProps,
+} from "./TahoeBackdropHeader";
+
+export {
   TahoeGlassField,
   type TahoeGlassFieldProps,
 } from "./TahoeGlassField";

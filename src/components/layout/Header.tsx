@@ -11,6 +11,7 @@ import { useUser } from '@/components/providers/UserProvider'
 import { useState, useEffect, useCallback } from 'react'
 import { LogOut } from 'lucide-react'
 import {
+    TahoeBackdropHeader,
     TahoeGlassButton,
     TahoeGlassDialog,
     TahoeGlassSurface
@@ -88,9 +89,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     )
 
     return (
-        <TahoeGlassSurface
-            as="header"
-            variant="menu"
+        <TahoeBackdropHeader
             radius="0 0 24px 24px"
             className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden", className)}
             contentClassName="h-full w-full"
@@ -355,6 +354,6 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     animation: slide-in-right 0.3s ease-out;
                 }
             `}</style>
-        </TahoeGlassSurface>
+        </TahoeBackdropHeader>
     )
 }
