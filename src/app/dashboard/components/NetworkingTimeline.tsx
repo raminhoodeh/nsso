@@ -3,7 +3,7 @@
 import { MyNssoConnection } from '@/lib/types'
 import { MapPin, Calendar, Clock, NotebookPen } from 'lucide-react'
 import Link from 'next/link'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface NetworkingTimelineProps {

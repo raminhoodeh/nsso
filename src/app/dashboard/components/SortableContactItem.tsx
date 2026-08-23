@@ -40,6 +40,8 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
             variant="card"
             radius={12}
             tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.38}
             tracking={isDragging ? 'continuous' : 'static'}
             className={isDragging ? 'ring-1 ring-white/30 shadow-xl' : ''}
             contentClassName="flex flex-col md:flex-row gap-4 items-stretch md:items-center p-4"

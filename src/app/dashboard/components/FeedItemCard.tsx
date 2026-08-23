@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns'
 import Image from 'next/image'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState } from 'react'
 import Link from 'next/link'
 import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
@@ -141,7 +141,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                 return (
                     <div className="mt-2 space-y-3">
                         {post.metadata.qualifications?.length > 0 && (
-                            <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-3">
+                            <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-3">
                                 <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">Qualifications</h5>
                                 <div className="space-y-2">
                                     {post.metadata.qualifications.map((q: any, i: number) => (
@@ -158,7 +158,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                         )}
 
                         {post.metadata.projects?.length > 0 && (
-                            <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-3">
+                            <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-3">
                                 <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">New Projects</h5>
                                 <div className="grid grid-cols-2 gap-2">
                                     {post.metadata.projects.map((p: any, i: number) => (
@@ -176,7 +176,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                         )}
 
                         {post.metadata.products?.length > 0 && (
-                            <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-3">
+                            <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-3">
                                 <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-2">New Products</h5>
                                 <div className="space-y-2">
                                     {post.metadata.products.map((p: any, i: number) => (
@@ -200,7 +200,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
 
             case 'qualification_added':
                 return (
-                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="mt-2 p-4">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="mt-2 p-4">
                         <div className="flex items-center gap-3">
                             <TahoeGlassSurface variant="pill" radius={8} tone="light" className="p-2">
                                 <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -239,7 +239,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                 )
             case 'product_added':
                 return (
-                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="mt-2 p-4" contentClassName="flex gap-4">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="mt-2 p-4" contentClassName="flex gap-4">
                         {post.metadata.image_url && (
                             <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                 <Image
@@ -368,7 +368,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                         )}
                                     </div>
                                     <div className="flex-1">
-                                        <TahoeGlassSurface variant="card" radius={16} tone="light" className="p-3" style={{ borderTopLeftRadius: 0 }}>
+                                        <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="p-3" style={{ borderTopLeftRadius: 0 }}>
                                             <div className="flex justify-between items-baseline mb-1">
                                                 <span className="text-sm font-semibold text-white/90">
                                                     {comment.user.full_name || comment.user.username}

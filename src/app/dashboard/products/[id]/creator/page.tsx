@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Product } from '@/lib/types'
 import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2, ShieldCheck, ShieldAlert, Lock } from 'lucide-react'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import DOMPurify from 'dompurify'
@@ -316,7 +316,7 @@ export default function SalesPageCreator() {
         return (
             <CreatorRouteContent>
                 <main className="relative z-[1] flex min-h-screen items-center justify-center">
-                    <TahoeGlassSurface variant="card" tone="light" contentClassName="px-8 py-6 text-center text-xl">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} tone="light" contentClassName="px-8 py-6 text-center text-xl">
                         Product not found.
                     </TahoeGlassSurface>
                 </main>
@@ -331,7 +331,7 @@ export default function SalesPageCreator() {
 
             <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto">
 
-                <GlassCard className="p-8 lg:p-12">
+                <GlassCard refractive className="p-8 lg:p-12">
                     {/* Header */}
                     <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">
@@ -554,7 +554,7 @@ export default function SalesPageCreator() {
                     </div>
 
                     {/* Info Box */}
-                    <TahoeGlassSurface variant="card" radius={18} tone="light" className="mb-12" contentClassName="p-6">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={18} tone="light" className="mb-12" contentClassName="p-6">
                         <h2 className="text-[17px] font-bold text-white mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                             AI-Assisted Creator
                         </h2>
@@ -812,7 +812,7 @@ export default function SalesPageCreator() {
 
                             <div className="space-y-4">
                                 {(product.testimonials || []).map((t, index) => (
-                                    <TahoeGlassSurface key={index} variant="card" radius={14} tone="light" className="group" contentClassName="relative p-4">
+                                    <TahoeGlassSurface key={index} variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={14} tone="light" className="group" contentClassName="relative p-4">
                                         <TahoeGlassButton
                                             onClick={() => {
                                                 const newTestimonials = (product.testimonials || []).filter((_, i) => i !== index)

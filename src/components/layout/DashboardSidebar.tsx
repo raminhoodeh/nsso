@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useSyncExternalStore } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,13 @@ import ComingSoonBadge from '@/components/ui/ComingSoonBadge';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { useUser } from '@/components/providers/UserProvider';
-import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass';
+import { TahoeBackdropSurface, TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass';
+import {
+    getDashboardDesktopLayoutSnapshot,
+    getDashboardDirectBackdropSnapshot,
+    getDashboardServerSnapshot,
+    subscribeDashboardBackdropPolicy,
+} from '@/lib/tahoe-glass/dashboard-backdrop-policy';
 
 // Define interface for navigation items
 interface NavItem {
@@ -51,7 +57,11 @@ const NAV_ITEMS: NavItem[] = [
     }
 ];
 
-function DashboardSidebarContent() {
+function DashboardSidebarContent({
+    backdropEnabled,
+}: {
+    backdropEnabled: boolean;
+}) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const supabase = createClient();
@@ -84,13 +94,16 @@ function DashboardSidebarContent() {
     };
 
     return (
-        <TahoeGlassSurface
+        <TahoeBackdropSurface
             as="aside"
+            backdropEnabled={backdropEnabled}
             variant="panel"
             radius="0 28px 28px 0"
             className="fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] transition-colors duration-300 lg:block"
             contentClassName="flex h-full flex-col"
             tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.38}
         >
             {/* Logo Area */}
             <div className="px-8 py-8">
@@ -217,22 +230,30 @@ function DashboardSidebarContent() {
                     <span className="font-medium text-[14px]">Sign Out</span>
                 </TahoeGlassButton>
             </div>
-        </TahoeGlassSurface>
+        </TahoeBackdropSurface>
     );
 }
 
 export default function DashboardSidebar() {
+    // Width controls only whether the desktop sidebar exists. Optical
+    // capability is independent, so a 1024/1366px iPad can show the sidebar
+    // without allocating an Apple-mobile owned-scene WebGL lens.
+    const isDesktop = useSyncExternalStore(
+        subscribeDashboardBackdropPolicy,
+        getDashboardDesktopLayoutSnapshot,
+        getDashboardServerSnapshot,
+    );
+    const backdropEnabled = useSyncExternalStore(
+        subscribeDashboardBackdropPolicy,
+        getDashboardDirectBackdropSnapshot,
+        getDashboardServerSnapshot,
+    );
+
+    if (!isDesktop) return null;
+
     return (
-        <Suspense fallback={(
-            <TahoeGlassSurface
-                as="aside"
-                variant="panel"
-                radius="0 28px 28px 0"
-                aria-hidden="true"
-                className="fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] lg:block"
-            />
-        )}>
-            <DashboardSidebarContent />
+        <Suspense fallback={null}>
+            <DashboardSidebarContent backdropEnabled={backdropEnabled} />
         </Suspense>
     );
 }

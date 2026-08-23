@@ -5,6 +5,7 @@ import {
   TahoeGlassEngineContext,
   useTahoeGlassDiagnostics,
 } from "@/components/providers/TahoeGlassProvider";
+import { TahoeGlassDirectBackdropBoundaryContext } from "@/components/ui/tahoe-glass/TahoeGlassBoundaryContext";
 import { cn } from "@/lib/utils";
 import { TAHOE_SPECULAR_SHADOW } from "@/lib/tahoe-glass/constants";
 
@@ -115,6 +116,9 @@ export const TahoeGlassSurface = React.forwardRef<
   forwardedRef,
 ) {
   const context = React.useContext(TahoeGlassEngineContext);
+  const insideDirectBackdrop = React.useContext(
+    TahoeGlassDirectBackdropBoundaryContext,
+  );
   const registerSurface = context?.registerSurface;
   const unregisterSurface = context?.unregisterSurface;
   const requestRender = context?.requestRender;
@@ -137,10 +141,12 @@ export const TahoeGlassSurface = React.forwardRef<
     registerSurface(id, element, {
       continuous: tracking === "continuous",
       priority: opticalPriority,
+      refractive: !insideDirectBackdrop,
     });
     return () => unregisterSurface(id);
   }, [
     id,
+    insideDirectBackdrop,
     opticalPriority,
     registerSurface,
     tracking,
@@ -154,6 +160,7 @@ export const TahoeGlassSurface = React.forwardRef<
   }, [className, requestRender, style]);
 
   const activeOptics =
+    !insideDirectBackdrop &&
     diagnostics.status === "active" &&
     (diagnostics.backend === "svg" || diagnostics.backend === "webgl");
   const solidMaterial = diagnostics.backend === "solid";

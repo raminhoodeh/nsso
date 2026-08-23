@@ -32,6 +32,7 @@ interface SurfaceRuntime {
   field: TahoeDisplacementField | null;
   fieldKey: string;
   continuous: boolean;
+  refractive: boolean;
   drawn: boolean;
   priority: number | null;
   rect: DOMRectReadOnly | null;
@@ -44,7 +45,11 @@ interface TahoeGlassEngineContextValue {
   registerSurface: (
     id: string,
     element: HTMLElement,
-    options?: { continuous?: boolean; priority?: number },
+    options?: {
+      continuous?: boolean;
+      priority?: number;
+      refractive?: boolean;
+    },
   ) => void;
   unregisterSurface: (id: string) => void;
   requestRender: (reason?: string) => void;
@@ -642,10 +647,36 @@ export function TahoeGlassProvider({
     (
       id: string,
       element: HTMLElement,
-      options?: { continuous?: boolean; priority?: number },
+      options?: {
+        continuous?: boolean;
+        priority?: number;
+        refractive?: boolean;
+      },
     ) => {
       const existing = registryRef.current.get(id);
-      if (existing?.element === element) return;
+      const nextContinuous = options?.continuous ?? false;
+      const nextPriority =
+        typeof options?.priority === "number" &&
+        Number.isFinite(options.priority)
+          ? options.priority
+          : null;
+      const nextRefractive = options?.refractive ?? true;
+      if (existing?.element === element) {
+        if (
+          existing.continuous !== nextContinuous ||
+          existing.priority !== nextPriority ||
+          existing.refractive !== nextRefractive
+        ) {
+          existing.continuous = nextContinuous;
+          existing.priority = nextPriority;
+          existing.refractive = nextRefractive;
+          existing.fieldKey = "";
+          existing.drawn = false;
+          writeSurfaceDiagnostics(existing, diagnosticsRef.current);
+          requestRender("surface-options-change");
+        }
+        return;
+      }
       if (existing) {
         surfaceResizeObserverRef.current?.unobserve(existing.element);
         intersectionObserverRef.current?.unobserve(existing.element);
@@ -658,13 +689,10 @@ export function TahoeGlassProvider({
         measured: false,
         field: null,
         fieldKey: "",
-        continuous: options?.continuous ?? false,
+        continuous: nextContinuous,
+        refractive: nextRefractive,
         drawn: false,
-        priority:
-          typeof options?.priority === "number" &&
-          Number.isFinite(options.priority)
-            ? options.priority
-            : null,
+        priority: nextPriority,
         rect: null,
         clipRect: null,
         opacity: 0,
@@ -1174,6 +1202,7 @@ export function TahoeGlassProvider({
           [
             runtime.id,
             priority,
+            runtime.refractive ? "refractive" : "material-only",
             stackingChain.map(({ zIndex }) => zIndex).join("/"),
             runtime.opacity.toFixed(3),
             runtime.clipRect?.left.toFixed(1) ?? "x",
@@ -1272,24 +1301,26 @@ export function TahoeGlassProvider({
             return;
           }
 
-          const sourceScaleX = runtime.field.pixelWidth / rect.width;
-          const sourceScaleY = runtime.field.pixelHeight / rect.height;
-          context.save();
-          context.globalAlpha = runtime.opacity;
-          context.drawImage(
-            runtime.field.canvas,
-            (clipRect.left - rect.left) * sourceScaleX,
-            (clipRect.top - rect.top) * sourceScaleY,
-            clipRect.width * sourceScaleX,
-            clipRect.height * sourceScaleY,
-            (clipRect.left - viewportRect.left) * dpr,
-            (clipRect.top - viewportRect.top) * dpr,
-            clipRect.width * dpr,
-            clipRect.height * dpr,
-          );
-          context.restore();
+          if (runtime.refractive) {
+            const sourceScaleX = runtime.field.pixelWidth / rect.width;
+            const sourceScaleY = runtime.field.pixelHeight / rect.height;
+            context.save();
+            context.globalAlpha = runtime.opacity;
+            context.drawImage(
+              runtime.field.canvas,
+              (clipRect.left - rect.left) * sourceScaleX,
+              (clipRect.top - rect.top) * sourceScaleY,
+              clipRect.width * sourceScaleX,
+              clipRect.height * sourceScaleY,
+              (clipRect.left - viewportRect.left) * dpr,
+              (clipRect.top - viewportRect.top) * dpr,
+              clipRect.width * dpr,
+              clipRect.height * dpr,
+            );
+            context.restore();
+            mapHasSurface = true;
+          }
           runtime.drawn = true;
-          mapHasSurface = true;
 
           const centerX =
             (rect.left + rect.width / 2 - viewportRect.left) /

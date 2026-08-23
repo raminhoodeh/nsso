@@ -48,6 +48,26 @@ export interface TahoeNavResolvedSceneRegion {
   regionHeight: number;
 }
 
+export interface TahoeNavTargetSize {
+  width: number;
+  height: number;
+  dpr: number;
+  capped: boolean;
+}
+
+/**
+ * Two physical pixels per CSS pixel preserves Retina edge/detail without
+ * multiplying the cost of every owned-scene surface by an iPhone's full DPR.
+ */
+export const TAHOE_NAV_MAX_RENDER_DPR = 2;
+
+/**
+ * Bound each local lens buffer to eight MiB of RGBA pixels. Multiple Tahoe
+ * surfaces may be visible at once, so this is deliberately more conservative
+ * than the GPU's texture-size limit alone.
+ */
+export const TAHOE_NAV_MAX_TARGET_PIXELS = 2_097_152;
+
 interface UniformLocations {
   scene: WebGLUniformLocation;
   displacement: WebGLUniformLocation;
@@ -141,6 +161,119 @@ function positiveNumber(value: number, name: string): number {
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
+}
+
+/**
+ * Resolves the physical drawing-buffer size for an owned-scene lens.
+ *
+ * The requested device pixel ratio is capped by the visual contract, the
+ * actual GPU texture limit and a per-surface pixel budget. The scale may fall
+ * below 1 for an unusually large surface; a lower-resolution honest lens is
+ * preferable to allocating an unsafe buffer or falsely reporting refraction.
+ */
+export function resolveTahoeNavTargetSize(
+  cssWidth: number,
+  cssHeight: number,
+  requestedDpr: number,
+  maxTextureSize: number,
+  maxTargetPixels = TAHOE_NAV_MAX_TARGET_PIXELS,
+): TahoeNavTargetSize {
+  const widthCss = positiveNumber(cssWidth, "target-css-width");
+  const heightCss = positiveNumber(cssHeight, "target-css-height");
+  const requested = positiveNumber(requestedDpr, "target-dpr");
+  const textureLimit = positiveNumber(
+    maxTextureSize,
+    "max-texture-size",
+  );
+  const pixelLimit = positiveNumber(
+    maxTargetPixels,
+    "max-target-pixels",
+  );
+
+  const effectiveDpr = Math.min(
+    requested,
+    TAHOE_NAV_MAX_RENDER_DPR,
+    textureLimit / widthCss,
+    textureLimit / heightCss,
+    Math.sqrt(pixelLimit / (widthCss * heightCss)),
+  );
+  const width = Math.max(
+    1,
+    Math.min(textureLimit, Math.floor(widthCss * effectiveDpr)),
+  );
+  const height = Math.max(
+    1,
+    Math.min(textureLimit, Math.floor(heightCss * effectiveDpr)),
+  );
+  const resolvedDpr = Math.min(width / widthCss, height / heightCss);
+
+  return {
+    width,
+    height,
+    dpr: resolvedDpr,
+    capped:
+      resolvedDpr + Number.EPSILON < requested ||
+      requested > TAHOE_NAV_MAX_RENDER_DPR,
+  };
+}
+
+const TAHOE_NAV_PROOF_MIN_ALPHA = 24;
+const TAHOE_NAV_PROOF_MIN_RGB_DELTA = 6;
+const TAHOE_NAV_PROOF_MIN_CHANNEL_DELTA = 2;
+const TAHOE_NAV_PROOF_MIN_CHANGED_SAMPLES = 3;
+
+/**
+ * Proves that an owned scene was spatially displaced rather than merely
+ * rendered. Alpha is intentionally excluded from the delta: both frames use
+ * the same lens mask and caustic lift, so a qualifying RGB difference can only
+ * come from sampling a different source coordinate.
+ */
+export function hasMeasurableTahoeNavDisplacement(
+  displaced: ArrayLike<number>,
+  undistorted: ArrayLike<number>,
+): boolean {
+  if (
+    displaced.length !== undistorted.length ||
+    displaced.length === 0 ||
+    displaced.length % 4 !== 0
+  ) {
+    return false;
+  }
+
+  let comparableSamples = 0;
+  let changedSamples = 0;
+
+  for (let index = 0; index < displaced.length; index += 4) {
+    if (
+      Math.min(displaced[index + 3], undistorted[index + 3]) <
+      TAHOE_NAV_PROOF_MIN_ALPHA
+    ) {
+      continue;
+    }
+
+    comparableSamples += 1;
+    const redDelta = Math.abs(displaced[index] - undistorted[index]);
+    const greenDelta = Math.abs(
+      displaced[index + 1] - undistorted[index + 1],
+    );
+    const blueDelta = Math.abs(
+      displaced[index + 2] - undistorted[index + 2],
+    );
+    const rgbDelta = redDelta + greenDelta + blueDelta;
+    const maxChannelDelta = Math.max(redDelta, greenDelta, blueDelta);
+
+    if (
+      rgbDelta >= TAHOE_NAV_PROOF_MIN_RGB_DELTA &&
+      maxChannelDelta >= TAHOE_NAV_PROOF_MIN_CHANNEL_DELTA
+    ) {
+      changedSamples += 1;
+    }
+  }
+
+  return (
+    comparableSamples >= TAHOE_NAV_PROOF_MIN_CHANGED_SAMPLES &&
+    changedSamples >= TAHOE_NAV_PROOF_MIN_CHANGED_SAMPLES
+  );
 }
 
 /**
@@ -275,6 +408,7 @@ export class TahoeNavOwnedSceneWebGLRenderer {
   private causticStrength = 0.1;
   private displacementReady = false;
   private resized = false;
+  private frameDrawn = false;
   private disposed = false;
 
   constructor(target: HTMLCanvasElement, scene: HTMLCanvasElement) {
@@ -406,24 +540,17 @@ export class TahoeNavOwnedSceneWebGLRenderer {
 
   resize(cssWidth: number, cssHeight: number, dpr: number): void {
     this.assertUsable();
-    const safeDpr = positiveNumber(dpr, "target-dpr");
-    const width = Math.max(
-      1,
-      Math.round(
-        positiveNumber(cssWidth, "target-css-width") * safeDpr,
-      ),
+    const { width, height } = resolveTahoeNavTargetSize(
+      cssWidth,
+      cssHeight,
+      dpr,
+      this.maxTextureSize,
     );
-    const height = Math.max(
-      1,
-      Math.round(positiveNumber(cssHeight, "target-css-height") * safeDpr),
-    );
-    if (width > this.maxTextureSize || height > this.maxTextureSize) {
-      throw new Error("nav-owned-scene-target-exceeds-max-texture-size");
-    }
     if (this.target.width !== width) this.target.width = width;
     if (this.target.height !== height) this.target.height = height;
     this.gl.viewport(0, 0, width, height);
     this.resized = true;
+    this.frameDrawn = false;
     assertWebGLSuccess(this.gl, "resize");
   }
 
@@ -461,6 +588,7 @@ export class TahoeNavOwnedSceneWebGLRenderer {
       "displacement",
     );
     this.displacementReady = true;
+    this.frameDrawn = false;
   }
 
   /**
@@ -478,76 +606,38 @@ export class TahoeNavOwnedSceneWebGLRenderer {
 
     this.uploadCanvas(this.sceneTexture, 0, this.scene, "scene");
 
-    const gl = this.gl;
-    const region = this.region;
-    gl.viewport(0, 0, this.target.width, this.target.height);
-    gl.disable(gl.BLEND);
-    gl.disable(gl.DEPTH_TEST);
-    gl.disable(gl.CULL_FACE);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(this.program);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.sceneTexture);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, this.displacementTexture);
-    gl.uniform1i(this.uniforms.scene, 0);
-    gl.uniform1i(this.uniforms.displacement, 1);
-    gl.uniform2f(
-      this.uniforms.viewportResolution,
-      region.viewportWidth,
-      region.viewportHeight,
-    );
-    gl.uniform2f(
-      this.uniforms.regionOrigin,
-      region.regionLeft,
-      region.regionBottom,
-    );
-    gl.uniform2f(
-      this.uniforms.regionSize,
-      region.regionWidth,
-      region.regionHeight,
-    );
-    gl.uniform1f(this.uniforms.displacementScale, this.displacementScale);
-    gl.uniform1f(this.uniforms.maxOpacity, this.maxOpacity);
-    gl.uniform1f(this.uniforms.causticStrength, this.causticStrength);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    assertWebGLSuccess(gl, "draw");
+    this.renderFrame(this.displacementScale, "draw");
+    this.frameDrawn = true;
   }
 
   /**
-   * Verifies that the most recent frame contains a distributed, non-empty
-   * optical overlay. Call only for the first reveal; readback is deliberately
-   * avoided during steady-state animation.
+   * Compares the most recent displaced output against the exact same scene,
+   * mask and caustic pass rendered with zero displacement. Call only for the
+   * first reveal; readback is deliberately avoided during steady-state
+   * animation.
    */
-  hasVisibleOutput(): boolean {
+  hasMeasurableDisplacement(): boolean {
     this.assertUsable();
-    if (this.target.width <= 0 || this.target.height <= 0) return false;
-
-    const gl = this.gl;
-    const pixel = new Uint8Array(4);
-    const xFractions = [0.15, 0.32, 0.68, 0.85];
-    const yFractions = [0.2, 0.5, 0.8];
-    let visibleSamples = 0;
-
-    for (const yFraction of yFractions) {
-      for (const xFraction of xFractions) {
-        const x = Math.min(
-          this.target.width - 1,
-          Math.max(0, Math.round((this.target.width - 1) * xFraction)),
-        );
-        const y = Math.min(
-          this.target.height - 1,
-          Math.max(0, Math.round((this.target.height - 1) * yFraction)),
-        );
-        gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-        if (pixel[3] >= 24 && pixel[0] + pixel[1] + pixel[2] > 12) {
-          visibleSamples += 1;
-        }
-      }
+    if (!this.frameDrawn) {
+      throw new Error("nav-owned-scene-draw-required");
     }
-    assertWebGLSuccess(gl, "visibility-proof");
-    return visibleSamples >= 3;
+
+    const displaced = this.readProofSamples("displacement-proof-read");
+    let undistorted: Uint8Array;
+    try {
+      this.renderFrame(0, "displacement-proof-baseline-draw");
+      undistorted = this.readProofSamples(
+        "displacement-proof-baseline-read",
+      );
+    } finally {
+      // Leave the proven optical frame in the visible target buffer.
+      this.renderFrame(
+        this.displacementScale,
+        "displacement-proof-restore-draw",
+      );
+    }
+
+    return hasMeasurableTahoeNavDisplacement(displaced, undistorted);
   }
 
   dispose(): void {
@@ -565,6 +655,7 @@ export class TahoeNavOwnedSceneWebGLRenderer {
     this.region = null;
     this.displacementReady = false;
     this.resized = false;
+    this.frameDrawn = false;
     this.disposed = true;
   }
 
@@ -621,5 +712,76 @@ export class TahoeNavOwnedSceneWebGLRenderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     assertWebGLSuccess(gl, `${label}-upload`);
+  }
+
+  private renderFrame(displacementScale: number, stage: string): void {
+    const region = this.region;
+    if (!region) throw new Error("nav-owned-scene-update-required");
+
+    const gl = this.gl;
+    gl.viewport(0, 0, this.target.width, this.target.height);
+    gl.disable(gl.BLEND);
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(this.program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.sceneTexture);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.displacementTexture);
+    gl.uniform1i(this.uniforms.scene, 0);
+    gl.uniform1i(this.uniforms.displacement, 1);
+    gl.uniform2f(
+      this.uniforms.viewportResolution,
+      region.viewportWidth,
+      region.viewportHeight,
+    );
+    gl.uniform2f(
+      this.uniforms.regionOrigin,
+      region.regionLeft,
+      region.regionBottom,
+    );
+    gl.uniform2f(
+      this.uniforms.regionSize,
+      region.regionWidth,
+      region.regionHeight,
+    );
+    gl.uniform1f(this.uniforms.displacementScale, displacementScale);
+    gl.uniform1f(this.uniforms.maxOpacity, this.maxOpacity);
+    gl.uniform1f(this.uniforms.causticStrength, this.causticStrength);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    assertWebGLSuccess(gl, stage);
+  }
+
+  private readProofSamples(stage: string): Uint8Array {
+    const gl = this.gl;
+    // These fixed positions cover the horizontal/vertical lobes where the
+    // supplied superellipse has measurable bend while still including the
+    // neutral center and rim. That makes the proof stable across surface sizes.
+    const xFractions = [0.12, 0.2, 0.32, 0.5, 0.68, 0.8, 0.88];
+    const yFractions = [0.12, 0.25, 0.5, 0.75, 0.88];
+    const samples = new Uint8Array(xFractions.length * yFractions.length * 4);
+    const pixel = new Uint8Array(4);
+    let offset = 0;
+
+    for (const yFraction of yFractions) {
+      for (const xFraction of xFractions) {
+        const x = Math.min(
+          this.target.width - 1,
+          Math.max(0, Math.round((this.target.width - 1) * xFraction)),
+        );
+        const y = Math.min(
+          this.target.height - 1,
+          Math.max(0, Math.round((this.target.height - 1) * yFraction)),
+        );
+        gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+        samples.set(pixel, offset);
+        offset += 4;
+      }
+    }
+
+    assertWebGLSuccess(gl, stage);
+    return samples;
   }
 }

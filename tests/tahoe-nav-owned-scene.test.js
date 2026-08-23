@@ -35,9 +35,13 @@ require.extensions[".ts"] = (module, filename) => {
 };
 
 const {
+  hasMeasurableTahoeNavDisplacement,
   resolveTahoeNavSceneRegion,
+  resolveTahoeNavTargetSize,
 } = require("../src/lib/tahoe-glass/nav-owned-scene-webgl.ts");
 const {
+  TAHOE_DIRECT_BACKDROP_MAX_FIELD_PIXELS,
+  resolveTahoeDirectBackdropFieldSampling,
   resolveTahoeNavPlatformRoute,
 } = require("../src/lib/tahoe-glass/nav-platform.ts");
 
@@ -154,6 +158,60 @@ test("accessibility modes override every refractive engine", () => {
   );
 });
 
+test("caps direct backdrop displacement fields to a 512 by 512 pixel budget", () => {
+  const uncapped = resolveTahoeDirectBackdropFieldSampling(390, 88, 1);
+  assert.deepEqual(uncapped, {
+    generationCssWidth: 390,
+    generationCssHeight: 88,
+    fieldDpr: 1,
+    pixelWidth: 390,
+    pixelHeight: 88,
+    capped: false,
+  });
+
+  for (const [width, height] of [
+    [1920, 1080],
+    [4000, 3000],
+    [10000, 1000],
+    [1_000_000_000, 1],
+    [1, 1_000_000_000],
+  ]) {
+    const sampling = resolveTahoeDirectBackdropFieldSampling(
+      width,
+      height,
+      1,
+    );
+    assert.equal(sampling.capped, true);
+    assert.ok(
+      sampling.pixelWidth * sampling.pixelHeight <=
+        TAHOE_DIRECT_BACKDROP_MAX_FIELD_PIXELS,
+    );
+    assert.equal(
+      Math.round(sampling.generationCssWidth * sampling.fieldDpr),
+      sampling.pixelWidth,
+    );
+    assert.equal(
+      Math.round(sampling.generationCssHeight * sampling.fieldDpr),
+      sampling.pixelHeight,
+    );
+  }
+});
+
+test("rejects invalid direct backdrop displacement geometry", () => {
+  assert.throws(
+    () => resolveTahoeDirectBackdropFieldSampling(0, 100, 1),
+    /tahoe-direct-backdrop-width-invalid/,
+  );
+  assert.throws(
+    () => resolveTahoeDirectBackdropFieldSampling(100, Infinity, 1),
+    /tahoe-direct-backdrop-height-invalid/,
+  );
+  assert.throws(
+    () => resolveTahoeDirectBackdropFieldSampling(100, 100, 0),
+    /tahoe-direct-backdrop-dpr-invalid/,
+  );
+});
+
 test("maps a top-fixed mobile nav into WebGL bottom-left coordinates", () => {
   assert.deepEqual(
     resolveTahoeNavSceneRegion(
@@ -232,6 +290,106 @@ test("rejects non-finite or non-positive geometry before drawing", () => {
   );
 });
 
+test("uses Retina resolution while capping the owned-scene target safely", () => {
+  assert.deepEqual(resolveTahoeNavTargetSize(390, 88, 3, 4096), {
+    width: 780,
+    height: 176,
+    dpr: 2,
+    capped: true,
+  });
+
+  const pixelBudgeted = resolveTahoeNavTargetSize(
+    1200,
+    2000,
+    3,
+    4096,
+  );
+  assert.ok(pixelBudgeted.width * pixelBudgeted.height <= 2_097_152);
+  assert.ok(pixelBudgeted.dpr < 1);
+  assert.equal(pixelBudgeted.capped, true);
+
+  const textureBudgeted = resolveTahoeNavTargetSize(
+    3000,
+    1000,
+    2,
+    2048,
+    Number.MAX_SAFE_INTEGER,
+  );
+  assert.equal(textureBudgeted.width, 2048);
+  assert.ok(textureBudgeted.height <= 2048);
+  assert.ok(textureBudgeted.dpr < 1);
+});
+
+function rgbaSamples(colors, alpha = 180) {
+  return Uint8Array.from(
+    colors.flatMap(([red, green, blue]) => [red, green, blue, alpha]),
+  );
+}
+
+test("does not accept a merely non-empty owned-scene overlay as refraction", () => {
+  const nonEmpty = rgbaSamples([
+    [80, 110, 140],
+    [90, 120, 150],
+    [100, 130, 160],
+    [110, 140, 170],
+  ]);
+
+  assert.equal(
+    hasMeasurableTahoeNavDisplacement(nonEmpty, nonEmpty.slice()),
+    false,
+  );
+});
+
+test("requires distributed measurable RGB displacement before reveal", () => {
+  const undistorted = rgbaSamples([
+    [80, 110, 140],
+    [90, 120, 150],
+    [100, 130, 160],
+    [110, 140, 170],
+  ]);
+  const displaced = rgbaSamples([
+    [83, 112, 141],
+    [94, 122, 150],
+    [102, 133, 162],
+    [110, 140, 170],
+  ]);
+  const onlyOneChanged = undistorted.slice();
+  onlyOneChanged.set([120, 160, 200, 180], 0);
+
+  assert.equal(
+    hasMeasurableTahoeNavDisplacement(displaced, undistorted),
+    true,
+  );
+  assert.equal(
+    hasMeasurableTahoeNavDisplacement(onlyOneChanged, undistorted),
+    false,
+  );
+});
+
+test("ignores RGB differences that are effectively transparent", () => {
+  const undistorted = rgbaSamples(
+    [
+      [20, 30, 40],
+      [30, 40, 50],
+      [40, 50, 60],
+    ],
+    12,
+  );
+  const displaced = rgbaSamples(
+    [
+      [200, 210, 220],
+      [210, 220, 230],
+      [220, 230, 240],
+    ],
+    12,
+  );
+
+  assert.equal(
+    hasMeasurableTahoeNavDisplacement(displaced, undistorted),
+    false,
+  );
+});
+
 test("keeps the navbar as a semantic wrapper around the reusable backdrop surface", () => {
   const source = fs.readFileSync(
     "src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx",
@@ -245,6 +403,34 @@ test("keeps the navbar as a semantic wrapper around the reusable backdrop surfac
   assert.match(source, /as="header"/);
   assert.match(source, /variant="menu"/);
   assert.match(source, /radius=\{radius\}/);
+  assert.match(source, /window\.devicePixelRatio/);
+  assert.match(source, /renderer\.hasMeasurableDisplacement\(\)/);
+  assert.doesNotMatch(source, /renderer\.hasVisibleOutput\(\)/);
+  assert.match(
+    source,
+    /nav-owned-scene-measurable-displacement-proof-failed/,
+  );
+  assert.match(source, /backdropEnabled\?: boolean/);
+  assert.match(source, /backdropEnabled = true/);
+  assert.match(
+    source,
+    /backdropEnabled && platformRoute === "webgl-owned-scene"/,
+  );
+  assert.match(source, /if \(!backdropEnabled\)/);
+  assert.match(source, /\{backdropEnabled \? \(\s*<svg/);
+  assert.match(
+    source,
+    /TahoeGlassDirectBackdropBoundaryContext\.Provider/,
+  );
+  assert.match(source, /value=\{backdropEnabled\}/);
+  assert.match(
+    source,
+    /resolveTahoeDirectBackdropFieldSampling\(/,
+  );
+  assert.match(source, /setAttribute\("width", String\(width\)\)/);
+  assert.match(source, /setAttribute\("height", String\(height\)\)/);
+  assert.doesNotMatch(source, /nav-owned-scene-visible-output-proof-failed/);
+  assert.doesNotMatch(source, /nav-owned-scene-visibility-proof-retry/);
 });
 
 test("uses one reusable refractive backdrop for the outer sign-in card", () => {

@@ -45,6 +45,8 @@ function BottomNavContent() {
             className="fixed bottom-0 left-0 right-0 z-50 pb-safe md:hidden"
             contentClassName="w-full"
             tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.38}
         >
             <div className="flex justify-between items-center px-8 h-[64px]">
                 {NAV_ITEMS.map((item) => {

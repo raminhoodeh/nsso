@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import Link from 'next/link'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 

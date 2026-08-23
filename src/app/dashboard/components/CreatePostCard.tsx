@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useUser } from '@/components/providers/UserProvider'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import Image from 'next/image'

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { MyNssoConnection } from '@/lib/types'
 import NetworkTable from './NetworkTable'
 import NetworkingTimeline from './NetworkingTimeline'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import { useUI } from '@/components/providers/UIProvider'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
@@ -108,7 +108,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
     return (
         <div className="space-y-6">
-            <GlassCard className="p-6 lg:p-8 relative pt-[48px]">
+            <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px]">
                 {/* Header Section */}
                 <div className="text-left space-y-2 mb-10">
                     <h2 className="text-3xl font-bold text-white">My nsso Network</h2>
@@ -214,6 +214,8 @@ function NotesModal({ isOpen, onClose, connection, onSave }: NotesModalProps) {
             onOpenChange={(open) => { if (!open) onClose() }}
             portal={false}
             tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.38}
             aria-label={`Notes for ${connection.fullName}`}
             className="max-w-lg p-6"
         >

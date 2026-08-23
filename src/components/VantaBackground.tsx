@@ -1,10 +1,15 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTahoeGlassControls, useTahoeGlassDiagnostics } from '@/components/providers/TahoeGlassProvider'
 import { VantaPerformanceManager, BackgroundPhase } from '@/lib/vanta/VantaPerformanceManager'
 import { VantaVideoRecorder } from '@/lib/vanta/VantaVideoRecorder'
+import {
+    getDashboardAppleMobileSnapshot,
+    getDashboardServerSnapshot,
+    subscribeDashboardBackdropPolicy,
+} from '@/lib/tahoe-glass/dashboard-backdrop-policy'
 
 // Vanta.js type declarations
 declare global {
@@ -109,6 +114,11 @@ interface VantaBackgroundProps {
 
 export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps) {
     const pathname = usePathname()
+    const useFullAppleMobileSource = useSyncExternalStore(
+        subscribeDashboardBackdropPolicy,
+        getDashboardAppleMobileSnapshot,
+        getDashboardServerSnapshot,
+    )
     const { backend, status, reducedMotion } = useTahoeGlassDiagnostics()
     const {
         consumeSceneFrameRequest,
@@ -507,7 +517,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                 window.dispatchEvent(new Event('resize'))
             }, 100)
         }
-    }, [pathname])
+    }, [pathname, useFullAppleMobileSource])
 
 
     // Always render static gradient as fallback (sits beneath everything)
@@ -526,16 +536,20 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             <div
                 ref={vantaRef}
                 id="vanta-bg"
+                className={
+                    useFullAppleMobileSource
+                        ? 'h-[100dvh] w-screen'
+                        : 'h-[75vh] w-[75vw] origin-top-left scale-[1.3333333333]'
+                }
                 style={{
                     display: 'block',
                     position: 'fixed',
                     top: 0,
                     left: 0,
-                    // Approach #4: Render at 75%, scale to 100%
-                    width: '75vw',
-                    height: '75vh',
-                    transform: 'scale(1.3333333333)',
-                    transformOrigin: 'top left',
+                    // Every Apple-mobile WebKit browser, including wide iPads,
+                    // renders at the full viewport so the fixed-header Retina
+                    // lens has real source detail. Desktop keeps the established
+                    // 75% render/scale optimization.
                     // Approach #5: GPU acceleration hints
                     willChange: 'transform',
                     backfaceVisibility: 'hidden' as const,

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import CreatePostCard from './CreatePostCard'
 import FeedItemCard from './FeedItemCard'
 import { useUser } from '@/components/providers/UserProvider'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useUI } from '@/components/providers/UIProvider'
 import Skeleton from '@/components/ui/Skeleton'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
@@ -89,7 +89,7 @@ export default function FeedTab({ initialData }: FeedTabProps) {
 
     return (
         <div className="space-y-6">
-            <GlassCard className="p-6 lg:p-8 relative pt-[48px]">
+            <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px]">
                 {/* Header */}
                 <div className="text-left space-y-2 mb-8">
                     <h2 className="text-3xl font-bold text-white">News Feed</h2>
@@ -114,7 +114,7 @@ export default function FeedTab({ initialData }: FeedTabProps) {
                     ))}
 
                     {posts.length === 0 && (
-                        <TahoeGlassSurface variant="card" radius={16} tone="light" className="py-12" contentClassName="text-center">
+                        <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="py-12" contentClassName="text-center">
                             <p className="text-white/40">No updates yet. Be the first to share something!</p>
                         </TahoeGlassSurface>
                     )}

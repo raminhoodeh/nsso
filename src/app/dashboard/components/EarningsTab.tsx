@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import { formatEarnings, type EarningsStats } from '@/lib/earnings'
 import { useUI } from '@/components/providers/UIProvider'
@@ -112,7 +112,7 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
 
     return (
         <div className="space-y-6">
-            <GlassCard className="p-6 lg:p-8 relative pt-[48px]">
+            <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px]">
                 <h2 className="text-2xl font-bold text-white mb-12 lg:mb-8">Referral & Payout Management</h2>
 
                 {/* Section 1: Referral Identity */}
@@ -215,13 +215,13 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                 <div className="mb-10 pb-10 border-b border-white/10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Left Column: Total Users */}
-                        <TahoeGlassSurface variant="card" radius={16} tone="light" className="p-6">
+                        <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="p-6">
                             <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Total nsso.me/ users</h4>
                             <p className="text-4xl font-bold text-white">{stats?.activeReferrals || 0}</p>
                         </TahoeGlassSurface>
 
                         {/* Right Column: Expected Earnings */}
-                        <TahoeGlassSurface variant="card" radius={16} tone="light" className="p-6">
+                        <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="p-6">
                             <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Expected earnings in next payroll</h4>
                             <p className="text-4xl font-bold text-white">{formatEarnings(stats?.expectedEarnings || 0)}</p>
                         </TahoeGlassSurface>

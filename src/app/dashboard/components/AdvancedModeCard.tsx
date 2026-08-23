@@ -1,6 +1,6 @@
 'use client'
 
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles, GripVertical } from 'lucide-react'
@@ -34,7 +34,7 @@ function SortableItem({ id, children, className }: { id: string; children: (list
     }
 
     return (
-        <TahoeGlassSurface ref={setNodeRef} style={style} variant="card" radius={16} tone="light" tracking={isDragging ? 'continuous' : 'static'} className={className} {...attributes}>
+        <TahoeGlassSurface ref={setNodeRef} style={style} variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" tracking={isDragging ? 'continuous' : 'static'} className={className} {...attributes}>
             {children(listeners)}
         </TahoeGlassSurface>
     )
@@ -377,6 +377,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 variant="card"
                 radius={24}
                 tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.38}
                 onClick={() => setIsExpanded(true)}
                 className="w-full overflow-hidden text-left group"
                 contentClassName="p-6 flex items-center justify-between w-full h-full"
@@ -761,7 +763,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </div>
 
                     {/* Purchase Link Toggle */}
-                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-4">
                         <div className="flex items-center justify-between mb-4">
                             <label className="text-sm font-medium text-white">Purchase Link</label>
                             <TahoeGlassButton
@@ -784,7 +786,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </TahoeGlassSurface>
 
                     {/* PayPal HTML Toggle */}
-                    <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-4">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-2 pt-0.5">
                                 <label className="text-sm font-medium text-white">PayPal Button Code</label>
@@ -1069,6 +1071,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     onOpenChange={(open) => { if (!open) setDeleteConfirmation({ isOpen: false, productId: null }) }}
                     portal={false}
                     tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.38}
                     title="Are you sure?"
                     description="You cannot restore your Product after it has been deleted. This action is permanent."
                     titleClassName="text-xl font-bold text-white"

@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { TahoeGlassEngineContext } from "@/components/providers/TahoeGlassProvider";
+import { TahoeGlassDirectBackdropBoundaryContext } from "@/components/ui/tahoe-glass/TahoeGlassBoundaryContext";
 import { cn } from "@/lib/utils";
 import {
   TAHOE_DISPLACEMENT_SCALE,
@@ -16,6 +17,7 @@ import {
 } from "@/lib/tahoe-glass/optics";
 import { TahoeNavOwnedSceneWebGLRenderer } from "@/lib/tahoe-glass/nav-owned-scene-webgl";
 import {
+  resolveTahoeDirectBackdropFieldSampling,
   resolveTahoeNavPlatformRoute,
   type TahoeNavPlatformRoute,
 } from "@/lib/tahoe-glass/nav-platform";
@@ -41,6 +43,8 @@ export interface TahoeBackdropSurfaceProps extends Omit<
   "children"
 > {
   as?: TahoeBackdropSurfaceElement;
+  /** Enables this surface's direct SVG/local-WebGL backdrop lens. */
+  backdropEnabled?: boolean;
   variant?: TahoeGlassSurfaceVariant;
   children?: React.ReactNode;
   contentClassName?: string;
@@ -72,6 +76,9 @@ const TONE_CLASS: Record<TahoeGlassContentTone, string | undefined> = {
   light: "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]",
   dark: "text-black/90 [text-shadow:0_1px_1px_rgba(255,255,255,0.35)]",
 };
+
+const MATERIAL_ONLY_RIM_GRADIENT =
+  "linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,255,255,0.12) 48%, rgba(255,255,255,0.42))";
 
 function assignRef<T>(ref: React.ForwardedRef<T>, value: T | null): void {
   if (typeof ref === "function") ref(value);
@@ -115,6 +122,7 @@ export const TahoeBackdropSurface = React.forwardRef<
 >(function TahoeBackdropSurface(
   {
     as = "div",
+    backdropEnabled = true,
     variant = "card",
     children,
     className,
@@ -164,8 +172,13 @@ export const TahoeBackdropSurface = React.forwardRef<
   const [ownedSceneReason, setOwnedSceneReason] = React.useState<
     string | undefined
   >(undefined);
-  const mode = backdropModeForRoute(platformRoute);
-  const ownedSceneEligible = platformRoute === "webgl-owned-scene";
+  const platformMode = backdropModeForRoute(platformRoute);
+  const mode =
+    !backdropEnabled && platformMode !== "solid"
+      ? "css-blur"
+      : platformMode;
+  const ownedSceneEligible =
+    backdropEnabled && platformRoute === "webgl-owned-scene";
 
   const commitOwnedSceneState = React.useCallback(
     (nextState: TahoeOwnedSceneState, nextReason?: string) => {
@@ -218,7 +231,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     if (ownedSceneEligible && mode === "css-blur") {
       commitOwnedSceneState(
         "initializing",
-        "nav-owned-scene-awaiting-visible-frame",
+        "nav-owned-scene-awaiting-measurable-displacement-proof",
       );
     } else {
       commitOwnedSceneState("idle");
@@ -232,13 +245,38 @@ export const TahoeBackdropSurface = React.forwardRef<
     const rect = element.getBoundingClientRect();
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
-    const sizeKey = `${width}x${height}:${platformRoute}`;
+    const sizeKey = `${width}x${height}:${platformRoute}:${backdropEnabled ? "direct" : "material"}`;
     if (sizeKey === lastSizeKeyRef.current) return;
 
-    const field = createTahoeDisplacementField(
+    if (!backdropEnabled) {
+      ownedSceneFieldRef.current = null;
+      ownedSceneUploadedFieldRef.current = null;
+      ownedSceneGeometryKeyRef.current = "";
+      feImageRef.current?.setAttribute("href", "");
+      setMapReady(false);
+      element.style.setProperty("--cos", "0");
+      element.style.setProperty("--sin", "0");
+      element.style.setProperty("--light-angle", "135deg");
+      element.style.setProperty("--rim-intensity", "0.6");
+      element.style.setProperty(
+        "--rim-gradient",
+        MATERIAL_ONLY_RIM_GRADIENT,
+      );
+      lastSizeKeyRef.current = sizeKey;
+      requestRender?.("direct-backdrop-disabled");
+      return;
+    }
+
+    const fieldSampling = resolveTahoeDirectBackdropFieldSampling(
       width,
       height,
       1,
+    );
+
+    const field = createTahoeDisplacementField(
+      fieldSampling.generationCssWidth,
+      fieldSampling.generationCssHeight,
+      fieldSampling.fieldDpr,
       ownedSceneEligible ? 0 : 255,
     );
     if (!field) {
@@ -291,6 +329,7 @@ export const TahoeBackdropSurface = React.forwardRef<
       requestRender?.("nav-owned-scene-optics-update");
     }
   }, [
+    backdropEnabled,
     commitOwnedSceneState,
     mode,
     ownedSceneEligible,
@@ -376,7 +415,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     }
 
     // Keep the local buffer hidden until the same synchronous Vanta frame has
-    // both drawn and passed the output proof.
+    // both drawn and proven measurable displacement against its neutral pass.
     targetCanvas.style.opacity = "0";
     if (ownedSceneStateRef.current === "active") {
       commitOwnedSceneState(
@@ -387,13 +426,13 @@ export const TahoeBackdropSurface = React.forwardRef<
 
     let effectActive = true;
     let observedSourceCanvas: HTMLCanvasElement | null = null;
-    let visibilityTimeoutId: number | null = null;
+    let proofTimeoutId: number | null = null;
     let proofRetryTimeoutId: number | null = null;
 
-    const clearVisibilityTimeout = () => {
-      if (visibilityTimeoutId === null) return;
-      window.clearTimeout(visibilityTimeoutId);
-      visibilityTimeoutId = null;
+    const clearProofTimeout = () => {
+      if (proofTimeoutId === null) return;
+      window.clearTimeout(proofTimeoutId);
+      proofTimeoutId = null;
     };
     const clearProofRetry = () => {
       if (proofRetryTimeoutId === null) return;
@@ -426,16 +465,16 @@ export const TahoeBackdropSurface = React.forwardRef<
     };
 
     const failOwnedScene = (reason: string, resetCanvas = true) => {
-      clearVisibilityTimeout();
+      clearProofTimeout();
       releaseRenderer(resetCanvas);
       if (effectActive) commitOwnedSceneState("failed", reason);
     };
 
-    const armVisibilityTimeout = () => {
-      clearVisibilityTimeout();
-      visibilityTimeoutId = window.setTimeout(() => {
+    const armProofTimeout = () => {
+      clearProofTimeout();
+      proofTimeoutId = window.setTimeout(() => {
         if (effectActive && ownedSceneStateRef.current === "initializing") {
-          failOwnedScene("nav-owned-scene-visible-frame-timeout");
+          failOwnedScene("nav-owned-scene-displacement-proof-timeout");
         }
       }, 5000);
     };
@@ -450,7 +489,7 @@ export const TahoeBackdropSurface = React.forwardRef<
         "initializing",
         "nav-owned-scene-source-context-restored",
       );
-      armVisibilityTimeout();
+      armProofTimeout();
       requestRender("nav-owned-scene-source-context-restored");
     };
     const observeSourceCanvas = (sourceCanvas: HTMLCanvasElement) => {
@@ -489,13 +528,13 @@ export const TahoeBackdropSurface = React.forwardRef<
           "initializing",
           "nav-owned-scene-source-replaced",
         );
-        armVisibilityTimeout();
+        armProofTimeout();
       } else if (observedNewSource && ownedSceneStateRef.current === "failed") {
         commitOwnedSceneState(
           "initializing",
           "nav-owned-scene-source-replaced",
         );
-        armVisibilityTimeout();
+        armProofTimeout();
       }
       if (
         ownedSceneStateRef.current === "failed" ||
@@ -537,6 +576,7 @@ export const TahoeBackdropSurface = React.forwardRef<
           ownedSceneRendererRef.current = renderer;
         }
 
+        const targetDpr = Math.max(1, window.devicePixelRatio || 1);
         const geometryKey = [
           headerRect.left,
           headerRect.top,
@@ -548,6 +588,7 @@ export const TahoeBackdropSurface = React.forwardRef<
           sourceRect.height,
           sourceCanvas.width,
           sourceCanvas.height,
+          targetDpr,
         ]
           .map((value) => value.toFixed(2))
           .join(":");
@@ -558,7 +599,7 @@ export const TahoeBackdropSurface = React.forwardRef<
         const sourceChanged = sourceCanvas !== ownedSceneSourceRef.current;
 
         if (geometryChanged || fieldChanged || sourceChanged) {
-          renderer.resize(headerRect.width, headerRect.height, 1);
+          renderer.resize(headerRect.width, headerRect.height, targetDpr);
           renderer.update({
             scene: sourceCanvas,
             displacement,
@@ -587,9 +628,9 @@ export const TahoeBackdropSurface = React.forwardRef<
 
         if (ownedSceneStateRef.current !== "active") {
           ownedSceneFrameAttemptsRef.current += 1;
-          if (renderer.hasVisibleOutput()) {
+          if (renderer.hasMeasurableDisplacement()) {
             clearProofRetry();
-            clearVisibilityTimeout();
+            clearProofTimeout();
             // Reveal this proven buffer before Vanta's reduced-motion
             // microtask can stop the source RAF. React state mirrors this in
             // the following commit, but is not the first-paint gate.
@@ -597,9 +638,13 @@ export const TahoeBackdropSurface = React.forwardRef<
             targetCanvas.style.opacity = "1";
             commitOwnedSceneState("active");
           } else if (ownedSceneFrameAttemptsRef.current >= 120) {
-            failOwnedScene("nav-owned-scene-visible-output-proof-failed");
+            failOwnedScene(
+              "nav-owned-scene-measurable-displacement-proof-failed",
+            );
           } else {
-            scheduleProofRetry("nav-owned-scene-visibility-proof-retry");
+            scheduleProofRetry(
+              "nav-owned-scene-measurable-displacement-proof-retry",
+            );
           }
         }
       } catch (error) {
@@ -613,7 +658,7 @@ export const TahoeBackdropSurface = React.forwardRef<
 
     const handleContextLost = (event: Event) => {
       event.preventDefault();
-      clearVisibilityTimeout();
+      clearProofTimeout();
       releaseRenderer(false);
       if (effectActive) {
         commitOwnedSceneState("failed", "nav-owned-scene-webgl-context-lost");
@@ -623,7 +668,7 @@ export const TahoeBackdropSurface = React.forwardRef<
       if (!effectActive) return;
       releaseRenderer(false);
       commitOwnedSceneState("initializing", "nav-owned-scene-context-restored");
-      armVisibilityTimeout();
+      armProofTimeout();
       requestRender("nav-owned-scene-context-restored");
     };
 
@@ -633,13 +678,13 @@ export const TahoeBackdropSurface = React.forwardRef<
       handleContextRestored,
     );
     const unsubscribe = subscribeOwnedSceneAfterRender(drawOwnedScene);
-    armVisibilityTimeout();
+    armProofTimeout();
     requestRender("nav-owned-scene-init");
 
     return () => {
       effectActive = false;
       clearProofRetry();
-      clearVisibilityTimeout();
+      clearProofTimeout();
       unsubscribe();
       observedSourceCanvas?.removeEventListener(
         "webglcontextlost",
@@ -670,7 +715,7 @@ export const TahoeBackdropSurface = React.forwardRef<
 
   // Chromium's live backdrop already includes the owned scene. Apple-mobile
   // keeps the provider surface registered while its nav-local renderer proves
-  // a visible frame, then unregisters it to prevent double refraction.
+  // measurable displacement, then unregisters it to prevent double refraction.
   React.useLayoutEffect(() => {
     const element = internalRef.current;
     if (
@@ -757,7 +802,9 @@ export const TahoeBackdropSurface = React.forwardRef<
             "--sin": "0",
             "--light-angle": "0deg",
             "--rim-intensity": "0.6",
-            "--rim-gradient": "none",
+            "--rim-gradient": backdropEnabled
+              ? "none"
+              : MATERIAL_ONLY_RIM_GRADIENT,
             borderRadius: resolvedRadius,
             background: "transparent",
             backgroundColor: "transparent",
@@ -769,6 +816,7 @@ export const TahoeBackdropSurface = React.forwardRef<
         data-tahoe-glass-surface={variant}
         data-tahoe-glass-tone={tone}
         data-tahoe-glass-tint={semanticTint}
+        data-tahoe-direct-backdrop-enabled={String(backdropEnabled)}
         data-tahoe-backdrop-backend={
           liveBackdropSelected
             ? "svg"
@@ -886,57 +934,67 @@ export const TahoeBackdropSurface = React.forwardRef<
           }}
         />
 
-        <div
-          className={cn("relative z-20", TONE_CLASS[tone], contentClassName)}
+        <TahoeGlassDirectBackdropBoundaryContext.Provider
+          value={backdropEnabled}
         >
-          {children}
-        </div>
+          <div
+            className={cn(
+              "relative z-20",
+              TONE_CLASS[tone],
+              contentClassName,
+            )}
+          >
+            {children}
+          </div>
+        </TahoeGlassDirectBackdropBoundaryContext.Provider>
       </Component>
 
-      <svg
-        aria-hidden="true"
-        className="pointer-events-none absolute h-0 w-0 overflow-hidden"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <filter
-            ref={filterRef}
-            id={filterId}
-            x="-35"
-            y="-35"
-            width="70"
-            height="70"
-            filterUnits="userSpaceOnUse"
-            primitiveUnits="userSpaceOnUse"
-            colorInterpolationFilters="sRGB"
-          >
-            <feImage
-              ref={feImageRef}
-              href=""
-              x="0"
-              y="0"
-              width="1"
-              height="1"
-              result="lens"
-              preserveAspectRatio="none"
-            />
-            <feFlood floodColor="rgb(128,128,128)" result="neutral" />
-            <feComposite
-              in="lens"
-              in2="neutral"
-              operator="over"
-              result="dispMap"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="dispMap"
-              scale={TAHOE_DISPLACEMENT_SCALE}
-              xChannelSelector="R"
-              yChannelSelector="G"
-            />
-          </filter>
-        </defs>
-      </svg>
+      {backdropEnabled ? (
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute h-0 w-0 overflow-hidden"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <filter
+              ref={filterRef}
+              id={filterId}
+              x="-35"
+              y="-35"
+              width="70"
+              height="70"
+              filterUnits="userSpaceOnUse"
+              primitiveUnits="userSpaceOnUse"
+              colorInterpolationFilters="sRGB"
+            >
+              <feImage
+                ref={feImageRef}
+                href=""
+                x="0"
+                y="0"
+                width="1"
+                height="1"
+                result="lens"
+                preserveAspectRatio="none"
+              />
+              <feFlood floodColor="rgb(128,128,128)" result="neutral" />
+              <feComposite
+                in="lens"
+                in2="neutral"
+                operator="over"
+                result="dispMap"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="dispMap"
+                scale={TAHOE_DISPLACEMENT_SCALE}
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
+            </filter>
+          </defs>
+        </svg>
+      ) : null}
     </>
   );
 });

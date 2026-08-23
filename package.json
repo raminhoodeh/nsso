@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:nav-glass": "node --test tests/tahoe-nav-owned-scene.test.js",
+    "test:dashboard-glass": "node --test tests/dashboard-glass.test.js",
     "test:home-media": "node --test tests/home-vision-player.test.js"
   },
   "dependencies": {

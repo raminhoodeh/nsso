@@ -133,7 +133,7 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
             </div>
 
             {/* Table */}
-            <TahoeGlassSurface variant="card" radius={16} tone="light" className="overflow-x-auto">
+            <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-white/10 bg-white/5">
@@ -277,6 +277,8 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                     onOpenChange={setIsNotesOpen}
                     portal={false}
                     tone="light"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.38}
                     aria-label={`Notes for ${selectedConnection.fullName}`}
                     className="max-w-lg p-6"
                 >

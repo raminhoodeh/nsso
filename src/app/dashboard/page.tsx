@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Header from '@/components/layout/Header'
-import GlassCard from '@/components/ui/GlassCard'
+import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import {
     TahoeGlassButton,
@@ -526,6 +526,8 @@ function DashboardContent() {
                         variant="card"
                         radius={20}
                         tone="light"
+                        semanticTint="dark"
+                        semanticTintOpacity={0.38}
                         className="w-full overflow-hidden text-left hover:scale-[1.01]"
                         contentClassName="p-6 flex items-center gap-4"
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
@@ -545,7 +547,7 @@ function DashboardContent() {
 
                 {/* Your Profile Tab Content */}
                 {currentView === 'profile' && (
-                    <GlassCard className="p-6 lg:p-8 relative pt-[48px] rounded-[40px] overflow-visible">
+                    <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px] rounded-[40px] overflow-visible">
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
                             <h2 className="text-2xl font-bold text-white">
@@ -977,6 +979,8 @@ function DashboardContent() {
                 title="Cancel Subscription?"
                 titleClassName="text-2xl font-bold text-white text-center"
                 tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.38}
                 className="max-w-md p-8"
             >
                             <div className="text-center mb-6">
