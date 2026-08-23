@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         }
 
         // Check reserved words
-        const reservedWords = ['admin', 'api', 'www', 'app', 'dashboard', 'preview', 'sign-in', 'sign-up', 'reset-password', 'auth', 'settings', 'profile']
+        const reservedWords = ['admin', 'api', 'www', 'app', 'dashboard', 'preview', 'sign-in', 'sign-up', 'reset-password', 'set-password', 'auth', 'settings', 'profile']
         if (reservedWords.includes(username.toLowerCase())) {
             return NextResponse.json({ error: 'This username is reserved' }, { status: 400 })
         }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useId } from 'react'
+import { useState, useEffect, useMemo, useRef, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import CleanGlassCard from '@/components/ui/CleanGlassCard'
@@ -74,12 +74,32 @@ export default function HomePage() {
   const router = useRouter()
   const { user } = useUser()
   const [reservedName, setReservedName] = useState('')
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Redirect authenticated users to dashboard (unless they clicked the logo)
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.slice(1))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      const authType = hashParams.get('type')
+
+      if (
+        accessToken
+        && refreshToken
+        && (authType === 'invite' || authType === 'recovery')
+      ) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+
+        window.history.replaceState(null, '', window.location.pathname)
+        router.replace(error ? '/sign-in?error=password-link' : '/set-password')
+        return
+      }
+
       // Check if user came via logo click (view=home parameter)
       const params = new URLSearchParams(window.location.search)
       const viewHome = params.get('view') === 'home'
@@ -92,7 +112,7 @@ export default function HomePage() {
         }
       }
     }
-    checkAuthAndRedirect()
+    void checkAuthAndRedirect()
   }, [router, supabase])
 
   // Lazy load video when it enters viewport
