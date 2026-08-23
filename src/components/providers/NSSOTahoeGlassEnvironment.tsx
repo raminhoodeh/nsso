@@ -72,10 +72,7 @@ export default function NSSOTahoeGlassEnvironment({
       contentClassName="min-h-screen"
       scene={scene}
       sourceLabel={sourceLabel}
-      // Vanta is a live GPU canvas. Use the compositor that owns and samples
-      // those pixels instead of relying on browser-dependent SVG filtering of
-      // a GPU-backed descendant. Static route images retain the SVG path.
-      preferredBackend={usesSiriScene ? "auto" : "webgl"}
+      preferredBackend="auto"
       fallback="webgl"
       webglSource={webglSource}
     >

@@ -463,6 +463,7 @@ export function TahoeGlassProvider({
   const mapHasSurfaceRef = React.useRef(false);
   const paintSignatureRef = React.useRef("");
   const svgAppliedRevisionRef = React.useRef(-1);
+  const svgLoadTokenRef = React.useRef(0);
   const webglUploadedRevisionRef = React.useRef(-1);
   const synchronousSceneFrameRequestedRef = React.useRef(true);
   const sceneFrameListenersRef = React.useRef(new Set<() => void>());
@@ -888,6 +889,7 @@ export function TahoeGlassProvider({
 
     rendererRef.current?.dispose();
     rendererRef.current = null;
+    svgLoadTokenRef.current += 1;
     sceneRef.current?.style.removeProperty("--tahoe-scene-filter");
     geometryDirtyRef.current = true;
     svgAppliedRevisionRef.current = -1;
@@ -1305,31 +1307,53 @@ export function TahoeGlassProvider({
             throw new Error("svg-displacement-map-serialization-empty");
           }
           const revision = mapRevisionRef.current;
-          // Match the supplied working Tahoe engine: the SVG filter must be
-          // referenced immediately after assigning its displacement image.
-          // Chromium does not reliably dispatch `load` on SVGFEImageElement;
-          // waiting for that event creates a circular gate where the filter is
-          // never instantiated and the provider eventually falls back to frost.
-          feImage.setAttribute("x", "0");
-          feImage.setAttribute("y", "0");
-          feImage.setAttribute("width", viewportRect.width.toString());
-          feImage.setAttribute("height", viewportRect.height.toString());
-          feImage.setAttribute("href", mapUrl);
-          sceneElement.style.setProperty(
-            "--tahoe-scene-filter",
-            `url(#${nextFilter})`,
-          );
-          sceneElement.style.filter = `url(#${nextFilter})`;
-          sceneElement.style.webkitFilter = `url(#${nextFilter})`;
-          activeFilterRef.current = inactive;
-          svgAppliedRevisionRef.current = revision;
-          if (current.status === "initializing" && mapHasSurfaceRef.current) {
+          const loadToken = svgLoadTokenRef.current + 1;
+          svgLoadTokenRef.current = loadToken;
+          let timeoutId = 0;
+          const cleanup = () => {
+            feImage.removeEventListener("load", loaded);
+            feImage.removeEventListener("error", failed);
+            window.clearTimeout(timeoutId);
+          };
+          const failed = () => {
+            cleanup();
+            if (svgLoadTokenRef.current !== loadToken) return;
+            sceneElement.style.removeProperty("--tahoe-scene-filter");
             commitDiagnostics({
               ...frameDiagnostics,
-              status: "active",
-              reason: null,
+              status: "fallback",
+              backend: fallback === "solid" ? "solid" : "css-blur",
+              source: domSourceLabel,
+              reason: "svg-displacement-map-image-decode-failed",
             });
-          }
+          };
+          const loaded = () => {
+            cleanup();
+            if (
+              svgLoadTokenRef.current !== loadToken ||
+              sceneRef.current !== sceneElement ||
+              mapRevisionRef.current !== revision
+            ) {
+              return;
+            }
+            sceneElement.style.setProperty(
+              "--tahoe-scene-filter",
+              `url(#${nextFilter})`,
+            );
+            activeFilterRef.current = inactive;
+            svgAppliedRevisionRef.current = revision;
+            if (current.status === "initializing" && mapHasSurfaceRef.current) {
+              commitDiagnostics({
+                ...frameDiagnostics,
+                status: "active",
+                reason: null,
+              });
+            }
+          };
+          feImage.addEventListener("load", loaded, { once: true });
+          feImage.addEventListener("error", failed, { once: true });
+          timeoutId = window.setTimeout(failed, 5000);
+          feImage.setAttribute("href", mapUrl);
         } catch (error: unknown) {
           commitDiagnostics({
             ...frameDiagnostics,
@@ -1429,6 +1453,7 @@ export function TahoeGlassProvider({
 
   React.useEffect(
     () => () => {
+      svgLoadTokenRef.current += 1;
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
       rendererRef.current?.dispose();
     },
