@@ -5,11 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import WalletLogin from '@/components/auth/WalletLogin'
+import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass'
 
 const providers = [
     { name: 'google', label: 'Google' },
@@ -83,11 +83,13 @@ export default function SignInPage() {
 
     return (
         <main className="min-h-screen flex items-center justify-center px-6 py-12 relative overflow-hidden">
-            <GlassCard
+            <TahoeBackdropSurface
+                as="section"
+                variant="card"
+                radius={40}
                 className="w-full max-w-[440px] p-8 lg:p-12 relative z-10"
+                contentClassName="h-full w-full"
                 tone="dark"
-                semanticTint="light"
-                semanticTintOpacity={0.07}
             >
                 {/* Logo */}
                 <div className="text-center mb-8">
@@ -193,7 +195,7 @@ export default function SignInPage() {
                         Sign Up
                     </Link>
                 </div>
-            </GlassCard>
+            </TahoeBackdropSurface>
         </main>
     )
 }

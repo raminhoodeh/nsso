@@ -11,7 +11,9 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
-const VIDEO_URL = 'https://www.youtube.com/watch?v=n9-WjzJlq-Q'
+const VIDEO_URL = 'https://www.youtube.com/watch?v=ukYfrg0ZNbA'
+const VIDEO_ASSET_URL = '/nsso-vision-ukYfrg0ZNbA.mp4'
+const VIDEO_POSTER_URL = '/nsso-vision-ukYfrg0ZNbA-poster.jpg'
 
 interface WebkitFullscreenVideo extends HTMLVideoElement {
   webkitEnterFullscreen?: () => void
@@ -149,8 +151,8 @@ export default function HomeVisionPlayer() {
       <div className="aspect-video w-full bg-black">
         <video
           ref={videoRef}
-          src="/nsso-vision.mp4"
-          poster="/nsso-vision-poster.jpg"
+          src={VIDEO_ASSET_URL}
+          poster={VIDEO_POSTER_URL}
           preload="metadata"
           playsInline
           tabIndex={-1}

@@ -19,18 +19,59 @@ import {
   resolveTahoeNavPlatformRoute,
   type TahoeNavPlatformRoute,
 } from "@/lib/tahoe-glass/nav-platform";
+import type {
+  TahoeGlassContentTone,
+  TahoeGlassSemanticTint,
+  TahoeGlassSurfaceVariant,
+} from "./TahoeGlassSurface";
 
 type TahoeBackdropMode = "svg" | "css-blur" | "solid";
 type TahoeOwnedSceneState = "idle" | "initializing" | "active" | "failed";
+export type TahoeBackdropSurfaceElement =
+  | "div"
+  | "section"
+  | "article"
+  | "nav"
+  | "aside"
+  | "header"
+  | "footer";
 
-export interface TahoeBackdropHeaderProps extends Omit<
+export interface TahoeBackdropSurfaceProps extends Omit<
   React.HTMLAttributes<HTMLElement>,
   "children"
 > {
+  as?: TahoeBackdropSurfaceElement;
+  variant?: TahoeGlassSurfaceVariant;
   children?: React.ReactNode;
   contentClassName?: string;
   radius?: number | string;
+  tone?: TahoeGlassContentTone;
+  semanticTint?: TahoeGlassSemanticTint;
+  semanticTintOpacity?: number;
 }
+
+export type TahoeBackdropHeaderProps = Omit<
+  TahoeBackdropSurfaceProps,
+  "as" | "variant"
+>;
+
+const VARIANT_RADIUS: Record<TahoeGlassSurfaceVariant, string> = {
+  card: "28px",
+  menu: "24px",
+  panel: "32px",
+  button: "9999px",
+  pill: "9999px",
+  recessed: "12px",
+  dialog: "32px",
+  popover: "22px",
+  mediaFrame: "20px",
+};
+
+const TONE_CLASS: Record<TahoeGlassContentTone, string | undefined> = {
+  inherit: undefined,
+  light: "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]",
+  dark: "text-black/90 [text-shadow:0_1px_1px_rgba(255,255,255,0.35)]",
+};
 
 function assignRef<T>(ref: React.ForwardedRef<T>, value: T | null): void {
   if (typeof ref === "function") ref(value);
@@ -68,15 +109,20 @@ function backdropModeForRoute(route: TahoeNavPlatformRoute): TahoeBackdropMode {
   return "css-blur";
 }
 
-export const TahoeBackdropHeader = React.forwardRef<
+export const TahoeBackdropSurface = React.forwardRef<
   HTMLElement,
-  TahoeBackdropHeaderProps
->(function TahoeBackdropHeader(
+  TahoeBackdropSurfaceProps
+>(function TahoeBackdropSurface(
   {
+    as = "div",
+    variant = "card",
     children,
     className,
     contentClassName,
-    radius = "0 0 24px 24px",
+    radius,
+    tone = "inherit",
+    semanticTint = "none",
+    semanticTintOpacity = 0.07,
     style,
     ...props
   },
@@ -649,7 +695,11 @@ export const TahoeBackdropHeader = React.forwardRef<
     unregisterSurface,
   ]);
 
-  const resolvedRadius = typeof radius === "number" ? `${radius}px` : radius;
+  const resolvedRadius =
+    typeof radius === "number"
+      ? `${radius}px`
+      : radius || VARIANT_RADIUS[variant];
+  const Component = as as React.ElementType;
   const liveBackdropSelected = mode === "svg" && mapReady;
   const localOwnedSceneActive =
     ownedSceneEligible && ownedSceneState === "active";
@@ -694,7 +744,7 @@ export const TahoeBackdropHeader = React.forwardRef<
 
   return (
     <>
-      <header
+      <Component
         ref={setRef}
         className={cn(
           "pointer-events-auto relative z-[1] border-0 bg-transparent",
@@ -716,7 +766,9 @@ export const TahoeBackdropHeader = React.forwardRef<
           } as React.CSSProperties
         }
         {...props}
-        data-tahoe-glass-surface="menu"
+        data-tahoe-glass-surface={variant}
+        data-tahoe-glass-tone={tone}
+        data-tahoe-glass-tint={semanticTint}
         data-tahoe-backdrop-backend={
           liveBackdropSelected
             ? "svg"
@@ -784,6 +836,7 @@ export const TahoeBackdropHeader = React.forwardRef<
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 z-[1] h-full w-full rounded-[inherit]"
             data-tahoe-nav-owned-scene-canvas="true"
+            data-tahoe-owned-scene-canvas="true"
             style={{
               opacity: localOwnedSceneActive ? 1 : 0,
             }}
@@ -807,6 +860,18 @@ export const TahoeBackdropHeader = React.forwardRef<
           }}
         />
 
+        {semanticTint !== "none" && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[6] rounded-[inherit]"
+            style={{
+              backgroundColor:
+                semanticTint === "light" ? "white" : "rgb(8, 12, 20)",
+              opacity: Math.max(0, Math.min(0.42, semanticTintOpacity)),
+            }}
+          />
+        )}
+
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-10 rounded-[inherit] p-px"
@@ -821,8 +886,12 @@ export const TahoeBackdropHeader = React.forwardRef<
           }}
         />
 
-        <div className={cn("relative z-20", contentClassName)}>{children}</div>
-      </header>
+        <div
+          className={cn("relative z-20", TONE_CLASS[tone], contentClassName)}
+        >
+          {children}
+        </div>
+      </Component>
 
       <svg
         aria-hidden="true"
@@ -869,6 +938,26 @@ export const TahoeBackdropHeader = React.forwardRef<
         </defs>
       </svg>
     </>
+  );
+});
+
+TahoeBackdropSurface.displayName = "TahoeBackdropSurface";
+
+export const TahoeBackdropHeader = React.forwardRef<
+  HTMLElement,
+  TahoeBackdropHeaderProps
+>(function TahoeBackdropHeader(
+  { radius = "0 0 24px 24px", ...props },
+  forwardedRef,
+) {
+  return (
+    <TahoeBackdropSurface
+      {...props}
+      ref={forwardedRef}
+      as="header"
+      variant="menu"
+      radius={radius}
+    />
   );
 });
 

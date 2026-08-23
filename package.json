@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:nav-glass": "node --test tests/tahoe-nav-owned-scene.test.js"
+    "test:nav-glass": "node --test tests/tahoe-nav-owned-scene.test.js",
+    "test:home-media": "node --test tests/home-vision-player.test.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

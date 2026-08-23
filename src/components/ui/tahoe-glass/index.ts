@@ -11,7 +11,10 @@ export {
 
 export {
   TahoeBackdropHeader,
+  TahoeBackdropSurface,
   type TahoeBackdropHeaderProps,
+  type TahoeBackdropSurfaceElement,
+  type TahoeBackdropSurfaceProps,
 } from "./TahoeBackdropHeader";
 
 export {

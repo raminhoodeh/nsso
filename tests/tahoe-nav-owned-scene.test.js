@@ -231,3 +231,28 @@ test("rejects non-finite or non-positive geometry before drawing", () => {
     /nav-owned-scene-header-height-invalid/,
   );
 });
+
+test("keeps the navbar as a semantic wrapper around the reusable backdrop surface", () => {
+  const source = fs.readFileSync(
+    "src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx",
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /export const TahoeBackdropSurface = React\.forwardRef/,
+  );
+  assert.match(source, /as="header"/);
+  assert.match(source, /variant="menu"/);
+  assert.match(source, /radius=\{radius\}/);
+});
+
+test("uses one reusable refractive backdrop for the outer sign-in card", () => {
+  const source = fs.readFileSync("src/app/sign-in/page.tsx", "utf8");
+  const surfaceOpenings = source.match(/<TahoeBackdropSurface\b/g) || [];
+
+  assert.equal(surfaceOpenings.length, 1);
+  assert.match(source, /as="section"/);
+  assert.match(source, /variant="card"/);
+  assert.doesNotMatch(source, /<GlassCard\b/);
+});
