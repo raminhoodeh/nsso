@@ -7,6 +7,7 @@ import {
 } from "@/components/providers/TahoeGlassProvider";
 import { cn } from "@/lib/utils";
 import { TAHOE_SPECULAR_SHADOW } from "@/lib/tahoe-glass/constants";
+import type { TahoeDisplacementProfile } from "@/lib/tahoe-glass/optics";
 
 export type TahoeGlassSurfaceElement =
   | "div"
@@ -75,6 +76,18 @@ const TONE_CLASS: Record<TahoeGlassContentTone, string> = {
   dark: "text-black/90 [text-shadow:0_1px_1px_rgba(255,255,255,0.35)]",
 };
 
+const CONTROL_PROFILE_VARIANTS = new Set<TahoeGlassSurfaceVariant>([
+  "button",
+  "pill",
+  "recessed",
+]);
+
+function displacementProfileForVariant(
+  variant: TahoeGlassSurfaceVariant,
+): TahoeDisplacementProfile {
+  return CONTROL_PROFILE_VARIANTS.has(variant) ? "control" : "surface";
+}
+
 function enforceClearOpticalRoot(element: HTMLElement): void {
   element.style.setProperty("background", "transparent", "important");
   element.style.setProperty("background-color", "transparent", "important");
@@ -137,6 +150,7 @@ export const TahoeGlassSurface = React.forwardRef<
     registerSurface(id, element, {
       continuous: tracking === "continuous",
       priority: opticalPriority,
+      profile: displacementProfileForVariant(variant),
     });
     return () => unregisterSurface(id);
   }, [
@@ -158,6 +172,7 @@ export const TahoeGlassSurface = React.forwardRef<
     (diagnostics.backend === "svg" || diagnostics.backend === "webgl");
   const solidMaterial = diagnostics.backend === "solid";
   const fallbackFrost = !activeOptics && !solidMaterial;
+  const liveOpticalMaterial = activeOptics;
   const resolvedRadius =
     typeof radius === "number"
       ? `${radius}px`
@@ -220,8 +235,8 @@ export const TahoeGlassSurface = React.forwardRef<
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 rounded-[inherit]"
         style={{
-          background: activeOptics
-            ? "transparent"
+          background: liveOpticalMaterial
+            ? "color-mix(in srgb, white 10%, transparent)"
             : solidMaterial
               ? "Canvas"
               : "color-mix(in srgb, white 25%, transparent)",
@@ -231,9 +246,11 @@ export const TahoeGlassSurface = React.forwardRef<
           WebkitBackdropFilter: fallbackFrost
             ? "blur(1px) saturate(180%) brightness(1.05)"
             : "none",
-          backgroundImage: fallbackFrost
-            ? "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)"
-            : "none",
+          backgroundImage: liveOpticalMaterial
+            ? "radial-gradient(circle at calc(50% - var(--cos) * 48%) calc(50% - var(--sin) * 48%), rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.035) 46%, transparent 72%)"
+            : fallbackFrost
+              ? "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)"
+              : "none",
           boxShadow: TAHOE_SPECULAR_SHADOW,
         }}
       />

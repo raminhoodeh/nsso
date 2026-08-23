@@ -15,6 +15,13 @@ export interface TahoeDisplacementField {
   canvas: HTMLCanvasElement;
 }
 
+/**
+ * `control` is the supplied button map verbatim. `surface` preserves the same
+ * superellipse, curve and displacement constants, but measures distance as a
+ * superellipse radius so the optical profile remains legible on large cards.
+ */
+export type TahoeDisplacementProfile = "control" | "surface";
+
 export interface TahoeRefractionAnalysis {
   profile: number[];
   domAngle: number;
@@ -38,6 +45,7 @@ export function createTahoeDisplacementField(
   cssHeight: number,
   dpr: number,
   alphaOutside: 0 | 255,
+  profile: TahoeDisplacementProfile = "control",
 ): TahoeDisplacementField | null {
   if (typeof document === "undefined") return null;
 
@@ -58,15 +66,18 @@ export function createTahoeDisplacementField(
     for (let x = 0; x < pixelWidth; x += 1) {
       const nx = (x / pixelWidth) * 2 - 1;
       const ny = (y / pixelHeight) * 2 - 1;
-      const distance =
+      const superellipse =
         Math.pow(Math.abs(nx), TAHOE_SUPERELLIPSE_POWER) +
         Math.pow(Math.abs(ny), TAHOE_SUPERELLIPSE_POWER);
+      const distance = profile === "surface"
+        ? Math.pow(superellipse, 1 / TAHOE_SUPERELLIPSE_POWER)
+        : superellipse;
 
       let red = 128;
       let green = 128;
       let alpha: number = alphaOutside;
 
-      if (distance <= 1) {
+      if (superellipse <= 1) {
         const curveMagnitude = Math.sin(
           Math.pow(distance, TAHOE_CURVE_POWER) * Math.PI,
         );
