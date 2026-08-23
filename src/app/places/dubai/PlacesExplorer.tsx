@@ -693,9 +693,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           as="section"
           variant="panel"
           radius={25}
-          tone="dark"
-          semanticTint="light"
-          semanticTintOpacity={0.035}
+          tone="light"
+          semanticTint="dark"
+          semanticTintOpacity={0.38}
           className={styles.rail}
           contentClassName="flex h-full min-h-0 flex-col"
           aria-label="Place finder"
@@ -711,7 +711,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <TahoeGlassSurface
               as="button"
               variant="pill"
-              tone="dark"
+              tone="light"
               semanticTint="light"
               semanticTintOpacity={0.025}
               className={styles.surpriseButton}
@@ -733,7 +733,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           <TahoeGlassSurface
             variant="recessed"
             radius={13}
-            tone="dark"
+            tone="light"
             semanticTint="light"
             semanticTintOpacity={0.025}
             className={styles.searchBox}
@@ -757,7 +757,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <TahoeGlassSurface
               variant="recessed"
               radius={11}
-              tone="dark"
+              tone="light"
               semanticTint="light"
               semanticTintOpacity={0.02}
               className={styles.selectWrap}
@@ -774,7 +774,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <TahoeGlassSurface
               as="button"
               variant="pill"
-              tone="dark"
+              tone="light"
               semanticTint={favouritesOnly ? "light" : "none"}
               semanticTintOpacity={0.035}
               className={`${styles.favouriteFilter}${favouritesOnly ? ` ${styles.favouriteFilterActive}` : ""}`}
@@ -788,7 +788,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <TahoeGlassSurface
               as="button"
               variant="pill"
-              tone="dark"
+              tone="light"
               className={styles.locateButton}
               type="button"
               onClick={locateMe}
@@ -803,7 +803,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <TahoeGlassSurface
               as="button"
               variant="pill"
-              tone="dark"
+              tone="light"
               semanticTint={category === "all" ? "light" : "none"}
               semanticTintOpacity={0.035}
               type="button"
@@ -817,7 +817,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               <TahoeGlassSurface
                 as="button"
                 variant="pill"
-                tone="dark"
+                tone="light"
                 semanticTint={category === key ? "light" : "none"}
                 semanticTintOpacity={0.035}
                 key={key}
@@ -848,9 +848,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 as="article"
                 variant="card"
                 radius={15}
-                tone="dark"
-                semanticTint="light"
-                semanticTintOpacity={selectedId === place.id ? 0.045 : 0.018}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={selectedId === place.id ? 0.42 : 0.38}
                 key={place.id}
                 className={`${styles.placeCard}${selectedId === place.id ? ` ${styles.placeCardSelected}` : ""}`}
                 contentClassName="relative flex min-h-[78px] w-full"
@@ -873,7 +873,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                   as="button"
                   variant="pill"
                   radius={9}
-                  tone="dark"
+                  tone="light"
                   semanticTint={isFavourite ? "light" : "none"}
                   semanticTintOpacity={0.035}
                   className={`${styles.heartButton}${isFavourite ? ` ${styles.heartButtonActive}` : ""}`}

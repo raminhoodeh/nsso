@@ -210,10 +210,11 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                     try {
                         const effect = window.VANTA.CLOUDS({
                             el: vantaRef.current,
-                            // Keep the art-directed horizon stable. The shader's
-                            // native time-based horizontal drift still animates.
-                            mouseControls: false,
-                            touchControls: false,
+                            // Preserve pointer parallax unless the visitor has
+                            // requested reduced motion. The shader horizon patch
+                            // below remains independent from Vanta's input camera.
+                            mouseControls: !reducedMotionRef.current,
+                            touchControls: !reducedMotionRef.current,
                             gyroControls: false,
                             minHeight: window.innerHeight * 0.75,
                             minWidth: window.innerWidth * 0.75,

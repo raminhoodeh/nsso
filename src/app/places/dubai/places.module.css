@@ -63,15 +63,11 @@
   width: min(430px, calc(100vw - 32px));
   overflow: hidden;
   flex-direction: column;
-  border: 1px solid rgba(44, 52, 45, 0.16);
+  border: 1px solid transparent;
   border-radius: 25px;
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.55), transparent 42%),
-    rgba(246, 242, 232, 0.96);
   box-shadow:
     0 28px 80px rgba(29, 38, 31, 0.2),
     0 2px 6px rgba(29, 38, 31, 0.08);
-  backdrop-filter: blur(28px) saturate(110%);
 }
 
 .header {
@@ -90,7 +86,7 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: #3d473f;
+  color: rgba(255, 255, 255, 0.88);
   font-size: 12px;
   font-weight: 650;
   letter-spacing: 0.02em;
@@ -121,10 +117,9 @@
   align-items: center;
   gap: 7px;
   padding: 0 12px;
-  border: 1px solid rgba(45, 54, 47, 0.14);
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.56);
-  color: #465048;
+  color: rgba(255, 255, 255, 0.88);
   cursor: pointer;
   font: inherit;
   font-size: 12px;
@@ -133,8 +128,7 @@
 }
 
 .surpriseButton:hover {
-  border-color: rgba(45, 54, 47, 0.28);
-  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(255, 255, 255, 0.34);
   transform: translateY(-1px);
 }
 
@@ -146,7 +140,7 @@
 
 .eyebrow {
   margin: 0 0 5px;
-  color: #9a6447;
+  color: rgba(255, 211, 184, 0.9);
   font-size: 10px;
   font-weight: 760;
   letter-spacing: 0.16em;
@@ -155,7 +149,7 @@
 
 .header h1 {
   margin: 0;
-  color: #1e251f;
+  color: rgba(255, 255, 255, 0.96);
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(32px, 3.4vw, 43px);
   font-weight: 500;
@@ -166,14 +160,14 @@
 .intro {
   max-width: 345px;
   margin: 10px 0 0;
-  color: #697169;
+  color: rgba(255, 255, 255, 0.68);
   font-size: 13px;
   line-height: 1.45;
 }
 
 .controls {
   padding: 0 22px 15px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .searchBox {
@@ -182,18 +176,16 @@
   align-items: center;
   gap: 10px;
   padding: 0 12px;
-  border: 1px solid rgba(53, 61, 55, 0.14);
+  border: 1px solid transparent;
   border-radius: 13px;
-  background: rgba(255, 255, 255, 0.68);
   box-shadow: inset 0 1px 1px rgba(48, 58, 50, 0.04);
-  color: #747d75;
+  color: rgba(255, 255, 255, 0.72);
   transition: 160ms ease;
 }
 
 .searchBox:focus-within {
-  border-color: rgba(81, 102, 85, 0.48);
-  background: #fffdf7;
-  box-shadow: 0 0 0 3px rgba(77, 103, 83, 0.1);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .searchBox input {
@@ -202,13 +194,13 @@
   border: 0;
   outline: 0;
   background: transparent;
-  color: var(--ink);
+  color: rgba(255, 255, 255, 0.94);
   font: inherit;
   font-size: 13px;
 }
 
 .searchBox input::placeholder {
-  color: #92988f;
+  color: rgba(255, 255, 255, 0.52);
 }
 
 .searchBox button {
@@ -220,7 +212,7 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #7b827b;
+  color: rgba(255, 255, 255, 0.68);
   cursor: pointer;
 }
 
@@ -236,10 +228,9 @@
   display: flex;
   height: 36px;
   align-items: center;
-  border: 1px solid rgba(53, 61, 55, 0.13);
+  border: 1px solid transparent;
   border-radius: 11px;
-  background: rgba(255, 255, 255, 0.48);
-  color: #5e675f;
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .selectWrap {
@@ -263,6 +254,10 @@
   font-weight: 620;
 }
 
+.selectWrap option {
+  color: #1d241f;
+}
+
 .favouriteFilter {
   gap: 6px;
   padding: 0 10px;
@@ -273,9 +268,8 @@
 }
 
 .favouriteFilterActive {
-  border-color: rgba(180, 79, 73, 0.28);
-  background: rgba(190, 84, 78, 0.1);
-  color: #a44d49;
+  border-color: rgba(255, 190, 186, 0.38);
+  color: #ffd1ce;
 }
 
 .locateButton {
@@ -287,13 +281,12 @@
 .selectWrap:hover,
 .favouriteFilter:hover,
 .locateButton:hover {
-  border-color: rgba(53, 61, 55, 0.25);
-  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.34);
 }
 
 .locationMessage {
   margin: 8px 2px 0;
-  color: #777f77;
+  color: rgba(255, 255, 255, 0.62);
   font-size: 11px;
 }
 
@@ -318,10 +311,9 @@
   align-items: center;
   gap: 6px;
   padding: 0 10px;
-  border: 1px solid rgba(53, 61, 55, 0.13);
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.46);
-  color: #5f675f;
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   font: inherit;
   font-size: 11px;
@@ -338,20 +330,19 @@
 }
 
 .categoryPill span {
-  color: #92988f;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 10px;
 }
 
 .categoryPill:hover,
 .categoryPillActive {
-  border-color: rgba(47, 57, 49, 0.28);
-  background: #fffdf7;
-  color: #303832;
+  border-color: rgba(255, 255, 255, 0.34);
+  color: rgba(255, 255, 255, 0.96);
   transform: translateY(-1px);
 }
 
 .categoryPillActive span {
-  color: #5c655d;
+  color: rgba(255, 255, 255, 0.68);
 }
 
 .listHeader {
@@ -359,7 +350,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 22px 9px;
-  color: #858c84;
+  color: rgba(255, 255, 255, 0.58);
   font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.08em;
@@ -385,15 +376,13 @@
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 15px;
-  background: rgba(255, 255, 255, 0.26);
   transition: 150ms ease;
 }
 
 .placeCard:hover,
 .placeCardSelected {
-  border-color: rgba(54, 64, 56, 0.14);
-  background: rgba(255, 255, 255, 0.76);
-  box-shadow: 0 8px 24px rgba(41, 50, 43, 0.07);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 24px rgba(10, 15, 12, 0.18);
   transform: translateY(-1px);
 }
 
@@ -450,7 +439,7 @@
   gap: 5px;
   margin-bottom: 3px;
   overflow: hidden;
-  color: var(--category-color);
+  color: color-mix(in srgb, var(--category-color) 58%, white);
   font-size: 9px;
   font-weight: 750;
   letter-spacing: 0.075em;
@@ -462,7 +451,7 @@
 .placeCopy strong {
   display: block;
   overflow: hidden;
-  color: #252c27;
+  color: rgba(255, 255, 255, 0.95);
   font-size: 14px;
   font-weight: 690;
   letter-spacing: -0.01em;
@@ -475,7 +464,7 @@
   display: block;
   margin-top: 3px;
   overflow: hidden;
-  color: #818881;
+  color: rgba(255, 255, 255, 0.58);
   font-size: 10.5px;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -485,7 +474,7 @@
 .distance {
   align-self: start;
   margin-top: 18px;
-  color: #838b83;
+  color: rgba(255, 255, 255, 0.62);
   font-size: 10px;
   font-weight: 650;
   white-space: nowrap;
@@ -502,14 +491,13 @@
   border: 0;
   border-radius: 9px;
   background: transparent;
-  color: #a0a59f;
+  color: rgba(255, 255, 255, 0.68);
   cursor: pointer;
 }
 
 .heartButton:hover,
 .heartButtonActive {
-  background: rgba(181, 78, 72, 0.09);
-  color: #ad514c;
+  color: #ffd1ce;
 }
 
 .emptyState {
@@ -518,19 +506,19 @@
   place-items: center;
   align-content: center;
   gap: 9px;
-  color: #747c74;
+  color: rgba(255, 255, 255, 0.64);
   text-align: center;
 }
 
 .emptyState strong {
-  color: #465048;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
 }
 
 .emptyState button {
   border: 0;
   background: transparent;
-  color: #9c6246;
+  color: rgba(255, 211, 184, 0.9);
   cursor: pointer;
   font: inherit;
   font-size: 12px;
@@ -543,7 +531,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 9px 5px;
-  color: #92978f;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 9px;
   line-height: 1.4;
 }
