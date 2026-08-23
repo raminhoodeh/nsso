@@ -24,6 +24,24 @@ export default function SetPasswordPage() {
 
     useEffect(() => {
         const checkSession = async () => {
+            const hashParams = new URLSearchParams(window.location.hash.slice(1))
+            const accessToken = hashParams.get('access_token')
+            const refreshToken = hashParams.get('refresh_token')
+
+            if (accessToken && refreshToken) {
+                const { error: sessionError } = await supabase.auth.setSession({
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                })
+
+                window.history.replaceState(null, '', window.location.pathname)
+
+                if (sessionError) {
+                    router.replace('/sign-in?error=password-link')
+                    return
+                }
+            }
+
             const { data } = await supabase.auth.getUser()
 
             if (!data.user) {
