@@ -29,13 +29,13 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
         aria-describedby={tooltipId}
         className="flex w-full cursor-help items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/15 px-4 py-3 text-left outline-none transition-all hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
-        <span className="text-[15px] text-white/90">{label}</span>
+        <span className="text-[15px] text-black">{label}</span>
         {status === 'live' ? (
           <span
             className="relative flex select-none items-center justify-center overflow-hidden rounded-[200px] border-[0.75px] border-emerald-500/30 bg-emerald-500/20 px-[10px] py-[3px] shadow-[0_0_10px_rgba(16,185,129,0.2)]"
           >
             <span
-              className="whitespace-nowrap text-[10px] font-semibold leading-[14px] text-emerald-100"
+              className="whitespace-nowrap text-[10px] font-semibold leading-[14px] text-emerald-950"
               style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 600 }}
             >
               Now live
@@ -51,7 +51,7 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
               style={{ backgroundImage: "url('/assets/premium-bezel.png')" }}
             />
             <span
-              className="relative z-10 whitespace-nowrap text-[10px] font-medium leading-[14px] text-white/96"
+              className="relative z-10 whitespace-nowrap text-[10px] font-medium leading-[14px] text-black"
               style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}
             >
               Coming soon
@@ -198,17 +198,17 @@ export default function HomePage() {
             >
               <div className="relative z-10 flex h-full flex-col gap-4 px-8 pb-8 pt-[calc(2rem+7svh)] lg:px-10 lg:pb-10 lg:pt-[calc(2.5rem+7svh)]">
                 {/* Top Row: Body Text */}
-                <p className="text-white text-lg font-medium text-center lg:text-left">
+                <p className="text-lg font-medium text-black text-center lg:text-left">
                   The most beautiful way to present yourself online
                 </p>
 
                 {/* Middle Row: Title Text */}
-                <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
+                <h3 className="text-3xl lg:text-5xl font-bold text-black leading-tight text-center lg:text-left">
                   All of you. All in one place.
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
-                <div className="space-y-4 text-white text-lg leading-relaxed text-center lg:text-left">
+                <div className="space-y-4 text-black text-lg leading-relaxed text-center lg:text-left">
                   <p>
                     nsso stands for "new sovereign self online". Your nsso profile acts a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
                   </p>
