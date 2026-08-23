@@ -24,10 +24,16 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
 
   return (
     <div className={`group/feature relative ${stackClassName}`}>
-      <div
+      <TahoeGlassSurface
+        variant="recessed"
+        radius={12}
+        tone="light"
+        semanticTint="dark"
+        semanticTintOpacity={0.38}
         tabIndex={0}
         aria-describedby={tooltipId}
-        className="flex w-full cursor-help items-center justify-between gap-3 rounded-xl border border-white/10 bg-[rgba(8,12,20,0.38)] px-4 py-3 text-left outline-none transition-all hover:bg-[rgba(8,12,20,0.46)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="w-full cursor-help text-left outline-none transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        contentClassName="flex w-full items-center justify-between gap-3 px-4 py-3"
       >
         <span className="text-[15px] text-white/90">{label}</span>
         {status === 'live' ? (
@@ -58,7 +64,7 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
             </span>
           </span>
         )}
-      </div>
+      </TahoeGlassSurface>
 
       <div
         id={tooltipId}
@@ -307,7 +313,7 @@ export default function HomePage() {
               variant="recessed"
               radius={12}
               tone="light"
-              className="h-[54px] w-full overflow-hidden"
+              className="h-[54px] w-full"
               contentClassName="flex h-full w-full items-center"
             >
               <span
@@ -345,7 +351,7 @@ export default function HomePage() {
               variant="recessed"
               radius={12}
               tone="light"
-              className="h-[54px] w-full overflow-hidden"
+              className="h-[54px] w-full"
               contentClassName="flex h-full w-full items-center"
             >
               <span
