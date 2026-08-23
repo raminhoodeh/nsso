@@ -27,7 +27,12 @@ const ALIAS_GROUPS = new Map([
   ["cat-cafe-vibrissae-dubai-creek-harbour", "Cat Cafe Vibrissae - Dubai Creek Harbour"],
 ]);
 
+const ALIAS_OVERRIDES = {
+  "la-maison-laggar": ["La Maison x Laggar"],
+};
+
 const QUERY_OVERRIDES = {
+  "la-maison-laggar": "La Maison x Laggar, Palais LAGGAR, 7th Street, Za'abeel II, Dubai, UAE",
   "bar-des-pres": "Bar des Pres, ICD Brookfield Place, DIFC, Dubai, UAE",
   "african-queen": "African Queen, J1 Beach, Jumeirah 1, Dubai, UAE",
   "sakhalin": "Sakhalin, J1 Beach, Jumeirah 1, Dubai, UAE",
@@ -52,6 +57,7 @@ const QUERY_OVERRIDES = {
 };
 
 const PLACE_ID_OVERRIDES = {
+  "la-maison-laggar": "ChIJnVLpYURDXz4R7hmR4xXwps8",
   "bar-des-pres": "ChIJO99024RDXz4ROeOXlO9r1Nw",
   "african-queen": "ChIJNxOhXp9DXz4R7g6wKFRDvoU",
   "sakhalin": "ChIJT9GYCg5DXz4RKg24uryt96k",
@@ -82,6 +88,10 @@ const RESOLUTION_OVERRIDES = {
 };
 
 const SOURCE_URL_OVERRIDES = {
+  "la-maison-laggar": [
+    "https://www.instagram.com/p/DbYd1GPMeqo/",
+    "https://laggar.ae/pages/stocklist",
+  ],
   "bar-des-pres": "https://www.bardespres.com/dubai/",
   "african-queen": "https://africanqueen-restaurant.com/dubai/",
   "sakhalin": "https://sakhalin.rest/dubai/en",
@@ -109,6 +119,7 @@ const EMIRATE_CENTERS = {
 };
 
 const PRIMARY_OVERRIDES = {
+  "la-maison-laggar": "food-drink",
   "bar-des-pres": "food-drink",
   "african-queen": "food-drink",
   "sakhalin": "food-drink",
@@ -190,6 +201,7 @@ const PRIMARY_OVERRIDES = {
 };
 
 const TAG_OVERRIDES = {
+  "la-maison-laggar": ["food-drink"],
   "bar-des-pres": ["food-drink"],
   "african-queen": ["food-drink", "beach-water", "resort-beach-club"],
   "sakhalin": ["food-drink", "beach-water", "resort-beach-club"],
@@ -405,6 +417,9 @@ for (const [index, row] of uaeRows.entries()) {
     sourceRows: [],
     locationHint: row.Location.trim(),
   };
+  for (const alias of ALIAS_OVERRIDES[id] || []) {
+    if (!existing.aliases.includes(alias)) existing.aliases.push(alias);
+  }
   if (canonicalName !== rawName && !existing.aliases.includes(rawName)) existing.aliases.push(rawName);
   if (!existing.description && row["Location Description"]) existing.description = row["Location Description"].trim();
   const url = cleanUrl(row["Location URL"]);
@@ -444,8 +459,9 @@ for (const entry of grouped.values()) {
     if (!googleApiKey) await sleep(1100);
   }
 
-  if (SOURCE_URL_OVERRIDES[entry.id] && !entry.sourceUrls.includes(SOURCE_URL_OVERRIDES[entry.id])) {
-    entry.sourceUrls.push(SOURCE_URL_OVERRIDES[entry.id]);
+  const sourceUrlOverrides = SOURCE_URL_OVERRIDES[entry.id];
+  for (const sourceUrl of Array.isArray(sourceUrlOverrides) ? sourceUrlOverrides : [sourceUrlOverrides].filter(Boolean)) {
+    if (!entry.sourceUrls.includes(sourceUrl)) entry.sourceUrls.push(sourceUrl);
   }
   if (googleApiKey && resolution?.resolutionSource === "google-places-new") {
     resolution = {

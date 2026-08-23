@@ -2,9 +2,9 @@
   "meta": {
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
-    "sourceRecordCount": 83,
-    "placeCount": 77,
-    "generatedAt": "2026-08-23T07:11:58.823Z",
+    "sourceRecordCount": 84,
+    "placeCount": 78,
+    "generatedAt": "2026-08-23T08:13:50.964Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -1382,6 +1382,53 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kite%20Beach%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "la-maison-laggar",
+      "name": "La Maison × Laggar",
+      "aliases": [
+        "La Maison x Laggar"
+      ],
+      "description": "A limited summer 2026 La Maison pop-up at LAGGAR in Za'abeel II, bringing coffee and Belgian waffles into the house of craft. The exclusive lemon-and-orange waffle was advertised through mid-August, while the residency's own end date was not published; check the official pages before visiting.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DbXyJDUjOHn/",
+        "https://www.instagram.com/p/DbYd1GPMeqo/",
+        "https://laggar.ae/pages/stocklist"
+      ],
+      "sourceRows": [
+        85
+      ],
+      "locationHint": "Palais LAGGAR, 7th Street, Za'abeel II, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "7th St - Zaa'beel Second - Za'abeel - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.219973099999997,
+        "lng": 55.2939527
+      },
+      "placeId": "ChIJnVLpYURDXz4R7hmR4xXwps8",
+      "googleTypes": [
+        "shoe_store",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "shoe_store",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-23T08:05:17.595Z",
+        "osm": null,
+        "matchedName": "LAGGAR",
+        "websiteUri": "https://laggar.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=La%20Maison%20x%20Laggar%2C%20Palais%20LAGGAR%2C%207th%20Street%2C%20Za'abeel%20II%2C%20Dubai%2C%20UAE"
     },
     {
       "id": "la-mer-beach",
