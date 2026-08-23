@@ -3,13 +3,12 @@
 import { useState, useEffect, useMemo, useRef, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
-import CleanGlassCard from '@/components/ui/CleanGlassCard'
+import ProfileGlassCard from '@/components/profile/ProfileGlassCard'
 import Link from 'next/link'
 import { useUser } from '@/components/providers/UserProvider'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import ComingSoonBadge from '@/components/ui/ComingSoonBadge'
-import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 
 
@@ -25,24 +24,15 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
 
   return (
     <div className={`group/feature relative ${stackClassName}`}>
-      <TahoeGlassSurface
-        variant="menu"
-        radius={12}
+      <div
         tabIndex={0}
         aria-describedby={tooltipId}
-        tone="light"
-        className="w-full cursor-help px-4 py-3 text-left outline-none transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        contentClassName="flex items-center justify-between gap-3"
+        className="flex w-full cursor-help items-center justify-between gap-3 rounded-xl border border-white/10 bg-[rgba(8,12,20,0.38)] px-4 py-3 text-left outline-none transition-all hover:bg-[rgba(8,12,20,0.46)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <span className="text-[15px] text-white/90">{label}</span>
         {status === 'live' ? (
-          <TahoeGlassSurface
-            variant="pill"
-            radius={200}
-            semanticTint="light"
-            semanticTintOpacity={0.1}
-            tone="light"
-            className="flex select-none items-center justify-center overflow-hidden px-[10px] py-[3px]"
+          <span
+            className="relative flex select-none items-center justify-center overflow-hidden rounded-[200px] border-[0.75px] border-emerald-500/30 bg-emerald-500/20 px-[10px] py-[3px] shadow-[0_0_10px_rgba(16,185,129,0.2)]"
           >
             <span
               className="whitespace-nowrap text-[10px] font-semibold leading-[14px] text-emerald-100"
@@ -50,22 +40,63 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
             >
               Now live
             </span>
-          </TahoeGlassSurface>
+          </span>
         ) : (
-          <ComingSoonBadge />
+          <span className="relative flex select-none items-center justify-center overflow-hidden rounded-[200px] border-[0.75px] border-white/45 px-[10px] py-[3px]">
+            <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-white/[0.03] mix-blend-luminosity" />
+            <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gray-500/15 mix-blend-color-dodge" />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-cover bg-center backdrop-blur-[68px]"
+              style={{ backgroundImage: "url('/assets/premium-bezel.png')" }}
+            />
+            <span
+              className="relative z-10 whitespace-nowrap text-[10px] font-medium leading-[14px] text-white/96"
+              style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}
+            >
+              Coming soon
+            </span>
+          </span>
         )}
-      </TahoeGlassSurface>
+      </div>
 
-      <TahoeGlassSurface
+      <div
         id={tooltipId}
         role="tooltip"
-        variant="popover"
-        radius={12}
-        tone="light"
-        className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 text-xs leading-relaxed text-white/80 opacity-0 transition-all duration-200 group-hover/feature:visible group-hover/feature:opacity-100 group-focus-within/feature:visible group-focus-within/feature:opacity-100"
+        className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full rounded-xl border border-white/10 bg-black/90 p-3 text-xs leading-relaxed text-white/80 opacity-0 shadow-xl backdrop-blur-xl transition-all duration-200 group-hover/feature:visible group-hover/feature:opacity-100 group-focus-within/feature:visible group-focus-within/feature:opacity-100"
       >
         {tooltip}
-      </TahoeGlassSurface>
+      </div>
+    </div>
+  )
+}
+
+function ClaimItButton({ onClick, className }: { onClick: () => void; className?: string }) {
+  return (
+    <div
+      className={cn('rounded-[12px] p-[0.75px]', className)}
+      style={{
+        background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
+      }}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        className="relative flex h-[42px] w-[133px] items-center justify-center rounded-[12px] outline-none transition-all hover:scale-[1.02] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}
+      >
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[12px] bg-[rgba(255,255,255,0.06)] mix-blend-luminosity" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[12px] bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge" />
+        <span
+          className="relative z-10 text-[16px] font-semibold tracking-wide text-white/96"
+          style={{
+            fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontWeight: 590
+          }}
+        >
+          CLAIM IT
+        </span>
+      </button>
     </div>
   )
 }
@@ -192,10 +223,10 @@ export default function HomePage() {
         <div className="flex flex-col lg:flex-row gap-24 items-stretch min-h-[80vh]">
           {/* Left Half - Text Card */}
           <div className="w-full lg:w-1/2">
-            <CleanGlassCard
+            <ProfileGlassCard
               className="h-full flex flex-col justify-start relative group"
             >
-              <div className="relative z-10 flex flex-col gap-4 h-full p-8 lg:p-10">
+              <div className="relative z-10 flex h-full flex-col gap-4 px-8 pb-8 pt-[calc(2rem+7svh)] lg:px-10 lg:pb-10 lg:pt-[calc(2.5rem+7svh)]">
                 {/* Top Row: Body Text */}
                 <p className="text-white text-lg font-medium text-center lg:text-left">
                   The most beautiful way to present yourself online
@@ -207,12 +238,12 @@ export default function HomePage() {
                 </h3>
 
                 {/* Bottom Row: Subtitle Text */}
-                <div className="space-y-4 text-white text-lg leading-relaxed text-center lg:text-left">
+                <div className="space-y-4 text-lg leading-relaxed text-white/90 text-center lg:text-left">
                   <p>
-                    nsso stands for "new sovereign self online". nsso embodies a vision to revolutionize how we present our multifaceted identities online. Inspired by the challenge of unifying fragmented digital personas, nsso offers a platform where personal and professional stories intertwine beautifully. At its heart, nsso is about celebrating individuality, empowering users to showcase their entire selves; work, passions, and aspirations - in one holistic place.
+                    nsso stands for "new sovereign self online". Your nsso profile acts a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
                   </p>
                   <p>
-                    Your nsso profile acts a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
+                    nsso embodies a vision to revolutionize how we present our multifaceted identities online. Inspired by the challenge of unifying fragmented digital personas, nsso offers a platform where personal and professional stories intertwine beautifully. At its heart, nsso is about celebrating individuality, empowering users to showcase their entire selves; work, passions, and aspirations - in one holistic place.
                   </p>
                 </div>
 
@@ -238,7 +269,7 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-            </CleanGlassCard>
+            </ProfileGlassCard>
           </div>
 
           {/* Right Half - Fullscreen Vertical Video */}
@@ -301,15 +332,10 @@ export default function HomePage() {
                   fontWeight: 510
                 }}
               />
-              <TahoeGlassButton
+              <ClaimItButton
                 onClick={handleClaimIt}
-                radius={12}
-                tone="light"
-                className="mr-1.5 h-[42px] w-[133px] shrink-0 px-4 py-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                contentClassName="text-[16px] font-semibold tracking-wide text-white/96"
-              >
-                CLAIM IT
-              </TahoeGlassButton>
+                className="relative z-10 mr-1.5 shrink-0"
+              />
             </TahoeGlassSurface>
           </div>
 
@@ -348,38 +374,30 @@ export default function HomePage() {
 
             {/* Button - centered below */}
             <div className="flex justify-center">
-              <TahoeGlassButton
-                onClick={handleClaimIt}
-                radius={12}
-                tone="light"
-                className="h-[42px] w-[133px] px-4 py-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                contentClassName="text-[16px] font-semibold tracking-wide text-white/96"
-              >
-                CLAIM IT
-              </TahoeGlassButton>
+              <ClaimItButton onClick={handleClaimIt} />
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
           <Link href="/earnings" className="block">
-            <CleanGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
+            <ProfileGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-3">Monetise</h3>
               <div className="h-px w-full bg-white/10 mb-4" />
               <p className="text-white/70 text-sm">
                 Do you have an engaged following? See our nsso earnings programme
               </p>
-            </CleanGlassCard>
+            </ProfileGlassCard>
           </Link>
 
           <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
-            <CleanGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
+            <ProfileGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-3">Example Profile</h3>
               <div className="h-px w-full bg-white/10 mb-4" />
               <p className="text-white/70 text-sm">
                 See how your unified identity could look.
               </p>
-            </CleanGlassCard>
+            </ProfileGlassCard>
           </a>
         </div>
 
