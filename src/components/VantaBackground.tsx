@@ -288,7 +288,16 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                         if (canvas instanceof HTMLCanvasElement) {
                             canvasRef.current = canvas
                             onCanvasChangeRef.current?.(canvas)
-                            retryBackendRef.current()
+                            // The Tahoe renderer already polls for this canvas
+                            // while it initializes. Restart only after a real
+                            // fallback so iOS does not discard and recreate an
+                            // in-flight WebGL context as Vanta becomes ready.
+                            if (
+                                statusRef.current === 'fallback' ||
+                                statusRef.current === 'failed'
+                            ) {
+                                retryBackendRef.current()
+                            }
                         }
 
                         console.log('[Vanta] Initialization success')

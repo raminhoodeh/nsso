@@ -88,6 +88,7 @@ export const TahoeBackdropHeader = React.forwardRef<
   forwardedRef,
 ) {
   const context = React.useContext(TahoeGlassEngineContext);
+  const providerDiagnostics = context?.diagnostics;
   const registerSurface = context?.registerSurface;
   const unregisterSurface = context?.unregisterSurface;
   const internalRef = React.useRef<HTMLElement | null>(null);
@@ -241,18 +242,39 @@ export const TahoeBackdropHeader = React.forwardRef<
   const resolvedRadius =
     typeof radius === "number" ? `${radius}px` : radius;
   const liveBackdropSelected = mode === "svg" && mapReady;
+  const providerWebglActive =
+    mode === "css-blur" &&
+    providerDiagnostics?.status === "active" &&
+    providerDiagnostics.backend === "webgl";
+  const providerWebglInitializing =
+    mode === "css-blur" &&
+    providerDiagnostics?.status === "initializing" &&
+    providerDiagnostics.backend === "webgl";
+  const activeOptics = liveBackdropSelected || providerWebglActive;
+  const fallbackFrost =
+    mode !== "solid" && !liveBackdropSelected && !providerWebglActive;
+  const activeWebglMaterial =
+    "blur(0.75px) saturate(160%) brightness(1.03)";
   const backdropFilter =
     mode === "solid"
       ? "none"
       : liveBackdropSelected
         ? `url(#${filterId}) blur(2px) saturate(180%) brightness(1.05)`
-        : "blur(2px) saturate(180%) brightness(1.05)";
+        : providerWebglActive
+          ? activeWebglMaterial
+          : fallbackFrost
+            ? "blur(2px) saturate(180%) brightness(1.05)"
+            : "none";
   const webkitBackdropFilter =
     mode === "solid"
       ? "none"
       : liveBackdropSelected
         ? `url(#${filterId}) blur(1px) saturate(180%) brightness(1.05)`
-        : "blur(1px) saturate(180%) brightness(1.05)";
+        : providerWebglActive
+          ? activeWebglMaterial
+          : fallbackFrost
+            ? "blur(1px) saturate(180%) brightness(1.05)"
+            : "none";
 
   return (
     <>
@@ -280,13 +302,17 @@ export const TahoeBackdropHeader = React.forwardRef<
         data-tahoe-backdrop-backend={
           liveBackdropSelected
             ? "svg"
+            : providerWebglActive || providerWebglInitializing
+              ? "webgl"
             : mode === "solid"
               ? "solid"
               : "css-blur"
         }
         data-tahoe-backdrop-state={
-          liveBackdropSelected
+          activeOptics
             ? "selected"
+            : providerWebglInitializing
+              ? "initializing"
             : mode === "solid"
               ? "solid"
               : "fallback"
@@ -294,9 +320,32 @@ export const TahoeBackdropHeader = React.forwardRef<
         data-tahoe-backdrop-source={
           liveBackdropSelected
             ? "live-dom"
+            : providerWebglActive || providerWebglInitializing
+              ? providerDiagnostics?.source || "owned-scene-webgl"
             : mode === "solid"
               ? "reduced-transparency-solid"
-              : "owned-scene-fallback"
+              : "live-dom-css-backdrop"
+        }
+        data-tahoe-refraction-backend={
+          liveBackdropSelected
+            ? "svg-live-dom"
+            : providerWebglActive
+              ? "webgl-owned-scene"
+              : mode === "solid"
+                ? "solid"
+                : "css-material"
+        }
+        data-tahoe-refraction-scope={
+          liveBackdropSelected
+            ? "live-backdrop"
+            : providerWebglActive || providerWebglInitializing
+              ? "owned-scene-only"
+              : "none"
+        }
+        data-tahoe-refraction-reason={
+          mode === "css-blur"
+            ? providerDiagnostics?.reason || undefined
+            : undefined
         }
         data-tahoe-glass-displacement={TAHOE_DISPLACEMENT_SCALE}
       >
@@ -304,12 +353,13 @@ export const TahoeBackdropHeader = React.forwardRef<
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-0 rounded-[inherit]"
           style={{
-            background:
-              mode === "solid"
+            background: providerWebglActive
+              ? "rgba(255,255,255,0.10)"
+              : mode === "solid"
                 ? "Canvas"
                 : "color-mix(in srgb, white 25%, transparent)",
             backgroundImage:
-              mode === "solid"
+              mode === "solid" || providerWebglActive
                 ? "none"
                 : "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)",
             boxShadow: TAHOE_SPECULAR_SHADOW,
