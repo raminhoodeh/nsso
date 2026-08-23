@@ -14,6 +14,11 @@ export const TAHOE_V4_LIGHT_SOURCE = { x: 0.5, y: 0 } as const;
 export const TAHOE_V4_EDGE_LENS_MIN_BAND_PX = 40;
 export const TAHOE_V4_EDGE_LENS_MAX_BAND_PX = 88;
 export const TAHOE_V4_EDGE_LENS_SHORT_SIDE_RATIO = 0.12;
+/** Large surfaces retain the supplied 35px rim lens and add a broad body lens. */
+export const TAHOE_V4_PANEL_EDGE_DISPLACEMENT_PX =
+  TAHOE_V4_CONTROL_DISPLACEMENT_PX;
+export const TAHOE_V4_PANEL_BODY_DISPLACEMENT_PX = 12.5;
+export const TAHOE_V4_PANEL_MAX_DISPLACEMENT_PX = 42;
 
 export const TAHOE_V4_DEFAULT_MAX_DPR = 1;
 export const TAHOE_V4_DEFAULT_MAX_FPS = 30;

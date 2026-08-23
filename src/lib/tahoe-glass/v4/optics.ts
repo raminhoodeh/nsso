@@ -5,6 +5,9 @@ import {
   TAHOE_V4_EDGE_LENS_MIN_BAND_PX,
   TAHOE_V4_EDGE_LENS_SHORT_SIDE_RATIO,
   TAHOE_V4_LIGHT_SOURCE,
+  TAHOE_V4_PANEL_BODY_DISPLACEMENT_PX,
+  TAHOE_V4_PANEL_EDGE_DISPLACEMENT_PX,
+  TAHOE_V4_PANEL_MAX_DISPLACEMENT_PX,
   TAHOE_V4_RIM_BINS,
 } from "./constants";
 import type { TahoeV4CornerRadii, TahoeV4Profile } from "./types";
@@ -57,6 +60,20 @@ export interface TahoeV4RimCssVariables {
   "--light-angle": string;
   "--rim-intensity": string;
   "--rim-gradient": string;
+}
+
+export interface TahoeV4Vector2 {
+  x: number;
+  y: number;
+}
+
+export interface TahoeV4PanelDisplacementOptions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  cornerRadiiPx: TahoeV4CornerRadii;
+  edgeBandPx: number;
 }
 
 function dimensions(width: number, height: number, dpr = 1) {
@@ -212,10 +229,95 @@ function roundedRectSample(
   return { distance, outwardX: 0, outwardY: signY || 1 };
 }
 
+/** The supplied normalized convex field, sampled without allocating a map. */
+export function sampleTahoeV4CanonicalBodyVector(
+  normalizedX: number,
+  normalizedY: number,
+): TahoeV4Vector2 {
+  const distance =
+    Math.pow(Math.abs(normalizedX), TAHOE_V4_CONTROL_SUPERELLIPSE_POWER) +
+    Math.pow(Math.abs(normalizedY), TAHOE_V4_CONTROL_SUPERELLIPSE_POWER);
+  if (distance > 1) return { x: 0, y: 0 };
+  const curveMagnitude = Math.sin(
+    Math.pow(distance, TAHOE_V4_CONTROL_CURVE_POWER) * Math.PI,
+  );
+  return {
+    x: -normalizedX * curveMagnitude,
+    y: -normalizedY * curveMagnitude,
+  };
+}
+
+/** Clamp a vector radially, preserving its direction. */
+export function clampTahoeV4VectorMagnitude(
+  vector: TahoeV4Vector2,
+  maximum: number,
+): TahoeV4Vector2 {
+  const safeMaximum = Math.max(0, maximum);
+  const magnitude = Math.hypot(vector.x, vector.y);
+  if (magnitude <= safeMaximum || magnitude === 0) return vector;
+  const scale = safeMaximum / magnitude;
+  return { x: vector.x * scale, y: vector.y * scale };
+}
+
 /**
- * A fixed-CSS-pixel edge lens for cards, panels, menus and dialogs. Its bend
- * remains concentrated near the physical rim instead of stretching a button's
- * neutral center over the full height of a large surface.
+ * Two-scale panel lens in physical CSS pixels. The fixed edge lens preserves
+ * the supplied 35px rim optics while the canonical body term bends detail
+ * across large neutral interiors. `null` means the point is outside the
+ * rounded surface mask.
+ */
+export function sampleTahoeV4PanelDisplacementPx({
+  x,
+  y,
+  width,
+  height,
+  cornerRadiiPx,
+  edgeBandPx,
+}: TahoeV4PanelDisplacementOptions): TahoeV4Vector2 | null {
+  const sample = roundedRectSample(
+    x,
+    y,
+    width,
+    height,
+    cornerRadiiPx,
+  );
+  if (sample.distance > 0) return null;
+
+  const inset = Math.max(0, -sample.distance);
+  const normalizedInset = Math.min(
+    1,
+    inset / Math.max(Number.EPSILON, edgeBandPx),
+  );
+  const edgeMagnitude =
+    normalizedInset >= 1
+      ? 0
+      : Math.sin(
+          Math.pow(normalizedInset, TAHOE_V4_CONTROL_CURVE_POWER) * Math.PI,
+        );
+  const body = sampleTahoeV4CanonicalBodyVector(
+    (x / width) * 2 - 1,
+    (y / height) * 2 - 1,
+  );
+  return clampTahoeV4VectorMagnitude(
+    {
+      x:
+        -sample.outwardX *
+          edgeMagnitude *
+          TAHOE_V4_PANEL_EDGE_DISPLACEMENT_PX +
+        body.x * TAHOE_V4_PANEL_BODY_DISPLACEMENT_PX,
+      y:
+        -sample.outwardY *
+          edgeMagnitude *
+          TAHOE_V4_PANEL_EDGE_DISPLACEMENT_PX +
+        body.y * TAHOE_V4_PANEL_BODY_DISPLACEMENT_PX,
+    },
+    TAHOE_V4_PANEL_MAX_DISPLACEMENT_PX,
+  );
+}
+
+/**
+ * A two-scale lens for cards, panels, menus and dialogs. Its full-strength
+ * edge bend remains fixed in CSS pixels while a weaker canonical body term
+ * prevents large interiors from becoming optically neutral.
  */
 export function createTahoeV4RoundedEdgeLensField({
   width,
@@ -265,29 +367,24 @@ export function createTahoeV4RoundedEdgeLensField({
     for (let x = 0; x < pixelWidth; x += 1) {
       const cssX = (x + 0.5) / safeDpr;
       const cssY = (y + 0.5) / safeDpr;
-      const sample = roundedRectSample(
-        cssX,
-        cssY,
+      const displacement = sampleTahoeV4PanelDisplacementPx({
+        x: cssX,
+        y: cssY,
         width,
         height,
-        cornerRadii,
-      );
+        cornerRadiiPx: cornerRadii,
+        edgeBandPx: band,
+      });
       const index = (y * pixelWidth + x) * 4;
-      if (sample.distance > 0) {
+      if (!displacement) {
         writePixel(data, index, 0, 0, alphaOutside);
         continue;
       }
-
-      const inset = Math.max(0, -sample.distance);
-      const normalizedInset = Math.min(1, inset / band);
-      const magnitude = Math.sin(
-        Math.pow(normalizedInset, TAHOE_V4_CONTROL_CURVE_POWER) * Math.PI,
-      );
       writePixel(
         data,
         index,
-        -sample.outwardX * magnitude,
-        -sample.outwardY * magnitude,
+        displacement.x / TAHOE_V4_PANEL_EDGE_DISPLACEMENT_PX,
+        displacement.y / TAHOE_V4_PANEL_EDGE_DISPLACEMENT_PX,
         255,
       );
     }

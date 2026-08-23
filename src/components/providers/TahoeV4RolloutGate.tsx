@@ -21,7 +21,6 @@ const TahoeV4RolloutContext = React.createContext<TahoeV4RolloutContextValue>({
   setMode: () => undefined,
 });
 
-const STORAGE_KEY = "nsso-tahoe-v4-mode";
 const QUERY_KEY = "tahoeV4";
 
 function parseRolloutMode(value: string | null): TahoeV4RolloutMode | null {
@@ -61,8 +60,9 @@ function routeMatches(pathname: string, routes: readonly string[]): boolean {
 
 /**
  * Route-scoped V4 release and kill switch. The server-provided mode and route
- * manifest are authoritative; client overrides are enabled only in preview or
- * development and persist so navigation does not silently change engines.
+ * manifest are authoritative. Preview/development overrides are explicit URL
+ * state for the current document; stale browser storage must never silently
+ * change the engine selected by the deployed artifact.
  */
 export function TahoeV4RolloutGate({
   children,
@@ -76,37 +76,23 @@ export function TahoeV4RolloutGate({
 
   const setMode = React.useCallback((nextMode: TahoeV4RolloutMode) => {
     setModeState(nextMode);
-    if (!allowClientOverride) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, nextMode);
-    } catch {
-      // Storage can be unavailable in private/embedded browsing. The in-memory
-      // switch still works for the current document.
-    }
-  }, [allowClientOverride]);
+  }, []);
 
   React.useEffect(() => {
-    if (!allowClientOverride) return;
-    const queryMode = parseRolloutMode(
-      new URLSearchParams(window.location.search).get(QUERY_KEY),
-    );
-    setDebug(
-      new URLSearchParams(window.location.search).get("glassDebug") === "1",
-    );
-    if (queryMode) {
-      setMode(queryMode);
+    if (!allowClientOverride) {
+      setModeState(initialMode);
+      setDebug(false);
       return;
     }
 
-    try {
-      const storedMode = parseRolloutMode(
-        window.localStorage.getItem(STORAGE_KEY),
-      );
-      if (storedMode) setModeState(storedMode);
-    } catch {
-      // Keep the server-provided release mode.
-    }
-  }, [allowClientOverride, setMode]);
+    const search = new URLSearchParams(window.location.search);
+    const queryMode = parseRolloutMode(search.get(QUERY_KEY));
+    // The deployed environment becomes authoritative again as soon as the
+    // explicit URL override is absent. This prevents a Preview navigation from
+    // carrying an old validation mode into a different route.
+    setModeState(queryMode ?? initialMode);
+    setDebug(search.get("glassDebug") === "1");
+  }, [allowClientOverride, initialMode, pathname]);
 
   React.useEffect(() => {
     document.documentElement.dataset.tahoeV4 = mode;

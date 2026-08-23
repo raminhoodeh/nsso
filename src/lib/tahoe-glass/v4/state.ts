@@ -1,7 +1,9 @@
 /**
  * These names describe renderer mechanics, not visual approval. In particular,
- * `refraction-presented` means a completed, non-empty composite was observed on
- * the target canvas. Perceptual refraction is qualified by visual fixtures.
+ * `refraction-presented` means distributed high-bend probes cleared the
+ * white-layer-and-tint-transmission-adjusted CIEDE2000 prediction versus a
+ * zero-displacement control render on the target canvas. Final CSS-composited
+ * physical-device approval still belongs to the visual fixtures.
  */
 export type TahoeV4Lifecycle =
   | "material-ready"
@@ -21,6 +23,7 @@ export type TahoeV4LifecycleEvent =
   | { type: "MATERIAL_READY"; now?: number }
   | { type: "SOURCE_LOADING"; now?: number }
   | { type: "SOURCE_READY"; now?: number }
+  | { type: "PROOF_RECOVERING"; reason: string; now?: number }
   | { type: "FRAME_PRESENTED"; now?: number }
   | { type: "FALLBACK"; reason: string; now?: number };
 
@@ -58,6 +61,15 @@ export function reduceTahoeV4Lifecycle(
         throw new Error(`invalid-tahoe-v4-transition-${current.lifecycle}-to-source-ready`);
       }
       lifecycle = "source-ready";
+      break;
+    case "PROOF_RECOVERING":
+      if (current.lifecycle !== "source-ready") {
+        throw new Error(
+          `invalid-tahoe-v4-transition-${current.lifecycle}-to-proof-recovering`,
+        );
+      }
+      lifecycle = "source-ready";
+      reason = event.reason;
       break;
     case "FRAME_PRESENTED":
       if (

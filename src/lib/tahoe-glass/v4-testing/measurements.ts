@@ -1,15 +1,33 @@
 import { clamp, resolveEdgeProbe } from "./geometry";
 import { DEFAULT_VISUAL_ACCEPTANCE_THRESHOLDS } from "./fixtures";
+import type { TahoeV4Diagnostics } from "../v4/types";
 import type {
   ApprovedReferenceComparison,
   EdgeProbeFixture,
   EdgeShiftResult,
   PerceptualDifferenceResult,
   PixelBufferLike,
+  RuntimeOpticalProofInspection,
+  RuntimeRefractionMeasurement,
   TriptychMeasurement,
   VisualAcceptanceThresholds,
   VisualMetricVector,
 } from "./types";
+
+type RuntimeOpticalDiagnostics = Pick<
+  TahoeV4Diagnostics,
+  | "lifecycle"
+  | "backend"
+  | "sourceKind"
+  | "reason"
+  | "framePresented"
+  | "refractiveSurfaceCount"
+  | "proofPassed"
+  | "sampleCount"
+  | "changedCount"
+  | "meanDelta"
+  | "maxDelta"
+>;
 
 interface LabColor {
   l: number;
@@ -406,11 +424,169 @@ export function evaluateTriptych(options: {
       "Lens probes did not demonstrate visible displacement in both directions.",
     );
   }
-
   return {
     material,
     refraction,
     edgeShifts,
+    pass: failures.length === 0,
+    failures,
+  };
+}
+
+/**
+ * Consumes the renderer's stable optical-proof diagnostics. The renderer only
+ * enters `refraction-presented` after its GPU displaced-versus-control samples
+ * clear the canonical thresholds, so this adapter deliberately verifies the
+ * completed lifecycle and that the published proof is non-empty instead of
+ * duplicating private renderer thresholds in the lab.
+ */
+export function evaluateRuntimeOpticalProof(
+  diagnostics: RuntimeOpticalDiagnostics,
+): RuntimeOpticalProofInspection {
+  const failures: string[] = [];
+  if (
+    diagnostics.lifecycle !== "refraction-presented" ||
+    diagnostics.backend !== "webgl" ||
+    !diagnostics.framePresented
+  ) {
+    failures.push(
+      `Renderer did not present proven refraction: ${diagnostics.lifecycle}/${diagnostics.backend}${diagnostics.reason ? ` (${diagnostics.reason})` : ""}.`,
+    );
+  }
+  if (!diagnostics.proofPassed) {
+    failures.push(
+      "Renderer did not publish a certified transmission-adjusted proof.",
+    );
+  }
+  if (diagnostics.refractiveSurfaceCount < 1) {
+    failures.push("Renderer reported zero refractive surfaces.");
+  }
+  if (diagnostics.sourceKind !== "image") {
+    failures.push(
+      `Expected the lab's owned image source, received ${diagnostics.sourceKind}.`,
+    );
+  }
+  if (diagnostics.sampleCount < 1) {
+    failures.push("Renderer published no optical proof samples.");
+  }
+  if (diagnostics.changedCount < 1) {
+    failures.push("Renderer published no changed optical proof samples.");
+  }
+  if (diagnostics.meanDelta <= 0) {
+    failures.push("Renderer optical proof mean CIEDE2000 delta was not positive.");
+  }
+  if (diagnostics.maxDelta <= 0) {
+    failures.push(
+      "Renderer optical proof maximum CIEDE2000 delta was not positive.",
+    );
+  }
+  return {
+    pass: failures.length === 0,
+    sampleCount: diagnostics.sampleCount,
+    changedCount: diagnostics.changedCount,
+    changedRatio:
+      diagnostics.sampleCount > 0
+        ? diagnostics.changedCount / diagnostics.sampleCount
+        : 0,
+    meanDelta: diagnostics.meanDelta,
+    maxDelta: diagnostics.maxDelta,
+    failures,
+  };
+}
+
+/**
+ * Qualifies pixels copied from the live V4 WebGL canvas against the deterministic
+ * owned source. Material is deliberately excluded: it lives in the DOM above
+ * the canvas and is inspected from computed styles by the runtime lab adapter.
+ */
+export function evaluateRuntimeRefraction(options: {
+  bare: PixelBufferLike;
+  refraction: PixelBufferLike;
+  mask?: Uint8Array;
+  probes: readonly EdgeProbeFixture[];
+  devicePixelRatio?: number;
+  thresholds?: VisualAcceptanceThresholds;
+}): RuntimeRefractionMeasurement {
+  const thresholds =
+    options.thresholds ?? DEFAULT_VISUAL_ACCEPTANCE_THRESHOLDS;
+  const refraction = comparePerceptualDifference(
+    options.bare,
+    options.refraction,
+    { mask: options.mask, jndDeltaE: thresholds.jndDeltaE },
+  );
+  const edgeShifts = options.probes.map((probe) =>
+    measureEdgeShift(
+      options.bare,
+      options.refraction,
+      probe,
+      options.devicePixelRatio,
+    ),
+  );
+  const strongEdges = edgeShifts.filter(
+    (edge) =>
+      edge.beforeEdgeContrast >= thresholds.minimumProbeEdgeContrast &&
+      edge.afterEdgeContrast >= thresholds.minimumProbeEdgeContrast,
+  );
+  const visibleLensEdges = strongEdges.filter(
+    (edge) =>
+      edge.kind === "lens" &&
+      Math.abs(edge.shiftCssPixels) >= thresholds.minimumLensProbeShiftCssPx,
+  );
+  const visibleSourceDetailEdges = strongEdges.filter(
+    (edge) =>
+      edge.kind === "source-detail" &&
+      Math.abs(edge.shiftCssPixels) >=
+        thresholds.minimumSourceDetailProbeShiftCssPx,
+  );
+  const maximumProbeShiftCssPx = edgeShifts.reduce(
+    (maximum, edge) => Math.max(maximum, Math.abs(edge.shiftCssPixels)),
+    0,
+  );
+  const hasPositiveLensShift = visibleLensEdges.some(
+    (edge) => edge.shiftCssPixels > 0,
+  );
+  const hasNegativeLensShift = visibleLensEdges.some(
+    (edge) => edge.shiftCssPixels < 0,
+  );
+  const failures: string[] = [];
+
+  if (refraction.jndRatio < thresholds.minimumRefractionJndRatio) {
+    failures.push(
+      `Live refraction changed ${(refraction.jndRatio * 100).toFixed(1)}% of qualified source pixels; expected at least ${(thresholds.minimumRefractionJndRatio * 100).toFixed(1)}%.`,
+    );
+  }
+  if (visibleLensEdges.length < thresholds.minimumLensProbeCount) {
+    failures.push(
+      `${visibleLensEdges.length} live lens probes moved visibly; expected at least ${thresholds.minimumLensProbeCount}.`,
+    );
+  }
+  if (maximumProbeShiftCssPx < thresholds.minimumMaximumProbeShiftCssPx) {
+    failures.push(
+      `Maximum live edge movement was ${maximumProbeShiftCssPx.toFixed(2)} CSS px; expected at least ${thresholds.minimumMaximumProbeShiftCssPx}.`,
+    );
+  }
+  if (
+    visibleSourceDetailEdges.length < thresholds.minimumSourceDetailProbeCount
+  ) {
+    failures.push(
+      `${visibleSourceDetailEdges.length} live source-detail probes moved visibly; expected at least ${thresholds.minimumSourceDetailProbeCount}.`,
+    );
+  }
+  if (
+    thresholds.requireBidirectionalLensShift &&
+    !(hasPositiveLensShift && hasNegativeLensShift)
+  ) {
+    failures.push(
+      "Live lens probes did not demonstrate visible displacement in both directions.",
+    );
+  }
+
+  return {
+    refraction,
+    edgeShifts,
+    visibleLensProbeCount: visibleLensEdges.length,
+    visibleSourceDetailProbeCount: visibleSourceDetailEdges.length,
+    maximumProbeShiftCssPx,
     pass: failures.length === 0,
     failures,
   };

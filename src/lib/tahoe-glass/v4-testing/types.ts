@@ -119,6 +119,49 @@ export interface TriptychMeasurement {
   failures: readonly string[];
 }
 
+/**
+ * Pixel qualification for the live renderer canvas. Unlike TriptychMeasurement,
+ * this compares the owned source pixels directly with pixels read back from the
+ * WebGL refraction layer; the DOM material is qualified separately from its
+ * computed presentation.
+ */
+export interface RuntimeRefractionMeasurement {
+  refraction: PerceptualDifferenceResult;
+  edgeShifts: readonly EdgeShiftResult[];
+  visibleLensProbeCount: number;
+  visibleSourceDetailProbeCount: number;
+  maximumProbeShiftCssPx: number;
+  pass: boolean;
+  failures: readonly string[];
+}
+
+/**
+ * Result of consuming the renderer's own displaced-versus-control GPU proof.
+ * The renderer owns the numeric proof thresholds; this adapter verifies that
+ * the public diagnostics describe a completed, non-empty proof.
+ */
+export interface RuntimeOpticalProofInspection {
+  pass: boolean;
+  sampleCount: number;
+  changedCount: number;
+  changedRatio: number;
+  meanDelta: number;
+  maxDelta: number;
+  failures: readonly string[];
+}
+
+export interface RuntimeMaterialInspection {
+  pass: boolean;
+  backgroundColor: string;
+  backdropFilter: string;
+  failures: readonly string[];
+}
+
+export interface RuntimeSourceParityInspection {
+  pass: boolean;
+  failures: readonly string[];
+}
+
 export interface VisualMetricVector {
   materialJndRatio: number;
   refractionJndRatio: number;

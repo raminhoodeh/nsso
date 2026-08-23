@@ -43,7 +43,22 @@ canvas uploads.
 - Image/video dimensions may not exceed the context's `MAX_TEXTURE_SIZE`.
 - Source resolution timeout: `10s` by default.
 
-`refraction-presented` is a mechanical state: a non-neutral map was composited,
-GPU work completed, and a non-empty pixel was read from the visible canvas. It
-does not claim perceptual approval. Screenshot/on-off visual tests own that
-release gate.
+`refraction-presented` is a runtime renderer pixel-proof state. The renderer selects up
+to 12 high-bend probes while reserving two spatially separated probes per
+visible refractive surface (up to six surfaces), renders the same scene/map once
+at zero displacement and once at the normal scale, then adjusts both RGB pairs
+for the conservative 50% white-layer plus semantic-tint transmission, evaluates
+both light- and dark-tint offsets, and compares them with CIEDE2000.
+Certification requires at least half of the probes to clear one JND, an average
+of one JND across all probes, a two-JND maximum, and changed probes spanning at
+least two vertical viewport regions and (when available) two final owner
+surfaces. The
+candidate scan is capped at 100,000 map points and the displaced render is
+always left as the final output. Initial proof retries for at most two visible
+seconds; a `refraction-subthreshold` or
+`refraction-no-presentable-surfaces` result remains fail-closed behind material
+and retries at no more than 1Hz without rebuilding the source or WebGL context.
+Later map revisions are revalidated in the background without hiding or
+demoting an already-proven scene. This prediction does not simulate the CSS
+blur, saturation, brightness, or spatial highlight at each probe; final
+CSS-composited physical-device A/B approval remains mandatory.

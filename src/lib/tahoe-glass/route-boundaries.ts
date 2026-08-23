@@ -7,6 +7,7 @@ const ROUTE_OWNED_TAHOE_SCENES = [
 const ROUTES_WITHOUT_GLOBAL_TAHOE_SURFACES = [
   ...ROUTE_OWNED_TAHOE_SCENES,
   "/glass-reference",
+  "/glass-lab-v4",
 ] as const;
 
 function normalizedPathname(pathname: string): string {

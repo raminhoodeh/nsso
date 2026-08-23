@@ -1,6 +1,7 @@
 export * from "./capabilities";
 export * from "./constants";
 export * from "./optics";
+export * from "./proof";
 export * from "./registry";
 export * from "./renderer";
 export * from "./route-policy";

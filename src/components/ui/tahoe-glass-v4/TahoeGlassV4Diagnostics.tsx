@@ -68,7 +68,7 @@ export function TahoeGlassV4Diagnostics({
           whiteSpace: "pre-wrap",
         }}
       >
-        {`Tahoe V4 · ${diagnostics.lifecycle}\n${diagnostics.backend} / ${diagnostics.sourceKind} · frame ${diagnostics.framePresented ? "presented" : "not-presented"}\n${diagnostics.refractiveSurfaceCount}/${diagnostics.surfaceCount} refractive · DPR ${diagnostics.dpr.toFixed(2)}${diagnostics.reason ? ` · ${diagnostics.reason}` : ""}`}
+        {`Tahoe V4 · ${diagnostics.lifecycle}\n${diagnostics.backend} / ${diagnostics.sourceKind} · frame ${diagnostics.framePresented ? "presented" : "not-presented"}\n${diagnostics.refractiveSurfaceCount}/${diagnostics.surfaceCount} refractive · DPR ${diagnostics.dpr.toFixed(2)}\nproof ${diagnostics.proofPassed ? "certified" : "pending"} · ${diagnostics.changedCount}/${diagnostics.sampleCount} JND probes · mean ΔE00 ${diagnostics.meanDelta.toFixed(2)} · max ${diagnostics.maxDelta.toFixed(2)}\ncoverage ${diagnostics.changedSurfaceCount}/${diagnostics.sampleSurfaceCount} surfaces · ${diagnostics.changedRegionCount}/${diagnostics.sampleRegionCount} viewport bands${diagnostics.reason ? ` · ${diagnostics.reason}` : ""}`}
       </div>
 
       {surfaces.map((surface) => {

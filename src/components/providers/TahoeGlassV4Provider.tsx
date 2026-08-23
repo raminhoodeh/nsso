@@ -54,6 +54,15 @@ const MISSING_PROVIDER_DIAGNOSTICS: TahoeV4Diagnostics = {
   mapRevision: 0,
   surfaceCount: 0,
   refractiveSurfaceCount: 0,
+  proofPassed: false,
+  sampleCount: 0,
+  changedCount: 0,
+  meanDelta: 0,
+  maxDelta: 0,
+  sampleSurfaceCount: 0,
+  changedSurfaceCount: 0,
+  sampleRegionCount: 0,
+  changedRegionCount: 0,
   dpr: 1,
   reducedMotion: false,
   reducedTransparency: false,
@@ -132,6 +141,15 @@ function equivalentPresentationDiagnostics(
     current.framePresented === next.framePresented &&
     current.surfaceCount === next.surfaceCount &&
     current.refractiveSurfaceCount === next.refractiveSurfaceCount &&
+    current.proofPassed === next.proofPassed &&
+    current.sampleCount === next.sampleCount &&
+    current.changedCount === next.changedCount &&
+    current.meanDelta === next.meanDelta &&
+    current.maxDelta === next.maxDelta &&
+    current.sampleSurfaceCount === next.sampleSurfaceCount &&
+    current.changedSurfaceCount === next.changedSurfaceCount &&
+    current.sampleRegionCount === next.sampleRegionCount &&
+    current.changedRegionCount === next.changedRegionCount &&
     current.dpr === next.dpr &&
     current.reducedMotion === next.reducedMotion &&
     current.reducedTransparency === next.reducedTransparency &&
@@ -444,6 +462,7 @@ export function TahoeGlassV4Provider({
   );
   const debugEnabledRef = React.useRef(debug);
   const lastDebugTelemetryAtRef = React.useRef(0);
+  const revealFrameRequestedRef = React.useRef(false);
   const renderFrameRef = React.useRef<() => void>(() => undefined);
   const [retryRevision, setRetryRevision] = React.useState(0);
   const [preferenceRevision, setPreferenceRevision] = React.useState(0);
@@ -657,6 +676,7 @@ export function TahoeGlassV4Provider({
       !enabled ||
       killSwitch ||
       scene.kind === "material-only" ||
+      environment.reducedTransparency ||
       environment.forcedColors
     ) {
       const materialReason =
@@ -670,10 +690,15 @@ export function TahoeGlassV4Provider({
             ? "kill-switch"
             : !enabled
               ? "feature-disabled"
+              : environment.reducedTransparency
+                ? "reduced-transparency-active"
               : environment.forcedColors
                 ? "forced-colors-active"
                 : materialReason,
-          killSwitch || scene.kind === "material-only" || environment.forcedColors
+          killSwitch ||
+            scene.kind === "material-only" ||
+            environment.reducedTransparency ||
+            environment.forcedColors
             ? "fallback"
             : "material-ready",
           environment,
@@ -832,6 +857,9 @@ export function TahoeGlassV4Provider({
       (snapshot) => snapshot.visible && snapshot.continuous,
     );
     const now = performance.now();
+    const proofRecoveryActive =
+      latestDiagnosticsRef.current.lifecycle === "source-ready" &&
+      latestDiagnosticsRef.current.reason?.startsWith("refraction-") === true;
     const withinMotionWindow = now < motionTrackingUntilRef.current;
     const keepTrackingMotion =
       withinMotionWindow &&
@@ -842,6 +870,7 @@ export function TahoeGlassV4Provider({
     }
     if (
       (hasContinuousGeometry || keepTrackingMotion) &&
+      !proofRecoveryActive &&
       !environment.reducedMotion &&
       document.visibilityState === "visible" &&
       continuousGeometryTimerRef.current === null
@@ -891,6 +920,19 @@ export function TahoeGlassV4Provider({
     !killSwitch &&
     diagnostics.lifecycle === "refraction-presented" &&
     diagnostics.framePresented;
+
+  React.useLayoutEffect(() => {
+    if (!showRenderedScene) {
+      revealFrameRequestedRef.current = false;
+      return;
+    }
+    if (revealFrameRequestedRef.current) return;
+    revealFrameRequestedRef.current = true;
+    // The first proof can complete while the canvas is opacity:0. Safari may
+    // discard that buffer when preserveDrawingBuffer is false, so repaint once
+    // after React has committed the visible refraction layer.
+    requestRender("refraction-visible-commit");
+  }, [requestRender, showRenderedScene]);
 
   return (
     <TahoeGlassV4EngineContext.Provider value={contextValue}>

@@ -123,6 +123,15 @@ export interface TahoeV4FramePresentedEvent {
   dpr: number;
   surfaceCount: number;
   refractiveSurfaceCount: number;
+  proofPassed: boolean;
+  sampleCount: number;
+  changedCount: number;
+  meanDelta: number;
+  maxDelta: number;
+  sampleSurfaceCount: number;
+  changedSurfaceCount: number;
+  sampleRegionCount: number;
+  changedRegionCount: number;
 }
 
 export interface TahoeV4FallbackEvent {
@@ -148,6 +157,20 @@ export interface TahoeV4Diagnostics {
   mapRevision: number;
   surfaceCount: number;
   refractiveSurfaceCount: number;
+  /** True only after a certified, distributed transmission-adjusted proof. */
+  proofPassed: boolean;
+  /** High-bend probes in the immutable last certified proof, once available. */
+  sampleCount: number;
+  /** Probes whose white-layer-and-tint-adjusted delta cleared one JND. */
+  changedCount: number;
+  /** Mean white-layer-and-tint-adjusted CIEDE2000 delta across probes. */
+  meanDelta: number;
+  /** Largest white-layer-and-tint-adjusted delta in the certified proof. */
+  maxDelta: number;
+  sampleSurfaceCount: number;
+  changedSurfaceCount: number;
+  sampleRegionCount: number;
+  changedRegionCount: number;
   dpr: number;
   reducedMotion: boolean;
   reducedTransparency: boolean;
@@ -172,9 +195,9 @@ export interface TahoeV4RendererOptions {
   sourceTimeoutMs?: number;
   onSourceReady?: (source: TahoeV4SceneSource) => void;
   /**
-   * Called only after the first composite has synchronously completed and a
-   * non-empty pixel has been read from the canvas. It does not assert that the
-   * optical difference is perceptually approved; visual tests own that gate.
+   * Called after a new displacement-map revision has synchronously cleared the
+   * distributed white-layer-and-tint-adjusted CIEDE2000 prediction against its
+   * zero-displacement control. Physical-device A/B still owns final approval.
    */
   onFramePresented?: (event: TahoeV4FramePresentedEvent) => void;
   onFallback?: (event: TahoeV4FallbackEvent) => void;

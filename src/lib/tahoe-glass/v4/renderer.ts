@@ -34,6 +34,16 @@ import {
   type TahoeV4ResolvedPixelSource,
 } from "./source";
 import {
+  EMPTY_TAHOE_V4_PROOF_METRICS,
+  TAHOE_V4_PROOF_MIN_SAMPLES,
+  measureTahoeV4RefractionProof,
+  selectTahoeV4RefractionProofSamples,
+  tahoeV4PublishedProofMetrics,
+  tahoeV4RefractionProofPassed,
+  type TahoeV4RefractionProofMetrics,
+  type TahoeV4RefractionProofSample,
+} from "./proof";
+import {
   TahoeV4LifecycleStore,
   type TahoeV4LifecycleSnapshot,
 } from "./state";
@@ -63,11 +73,22 @@ interface CompositeMap {
   key: string;
   refractiveSurfaceCount: number;
   nonNeutral: boolean;
+  proofSamples: readonly TahoeV4RefractionProofSample[];
 }
 
 interface TextureSize {
   width: number;
   height: number;
+}
+
+const TAHOE_V4_PROOF_WINDOW_MS = 2_000;
+const TAHOE_V4_PROOF_WATCHDOG_GRACE_MS = 100;
+const TAHOE_V4_PROOF_ATTEMPT_INTERVAL_MS = 120;
+const TAHOE_V4_PROOF_REVALIDATION_INTERVAL_MS = 500;
+const TAHOE_V4_PROOF_RECOVERY_INTERVAL_MS = 1_000;
+
+function monotonicNow(): number {
+  return typeof performance === "undefined" ? Date.now() : performance.now();
 }
 
 function compileShader(
@@ -297,7 +318,24 @@ export class TahoeV4Renderer {
   private lastScheduledRenderAt = 0;
   private lastSurfaces: readonly TahoeV4SurfaceSnapshot[] | null = null;
   private lastViewport: TahoeV4RenderViewport | null = null;
-  private firstPresentationConfirmed = false;
+  private sourceReadyAt: number | null = null;
+  private proofMapKey = "";
+  private provenMapKey = "";
+  private proofStartedAt: number | null = null;
+  private proofDeadlineAt: number | null = null;
+  private proofDeadlineTimer: number | null = null;
+  private proofRecoveryTimer: number | null = null;
+  private proofPausedAt: number | null = null;
+  private lastProofAttemptAt: number | null = null;
+  private lastRecoveryRenderAt: number | null = null;
+  private lastSuccessfulProofAt: number | null = null;
+  private proofMetrics: TahoeV4RefractionProofMetrics = {
+    ...EMPTY_TAHOE_V4_PROOF_METRICS,
+  };
+  private certifiedProofMetrics: TahoeV4RefractionProofMetrics | null = null;
+  private hasProvenRefraction = false;
+  private proofRecovering = false;
+  private recoveryMapResetAvailable = false;
   private contextLost = false;
   private disposed = false;
   private sourceFrame = 0;
@@ -376,6 +414,15 @@ export class TahoeV4Renderer {
       mapRevision: 0,
       surfaceCount: 0,
       refractiveSurfaceCount: 0,
+      proofPassed: false,
+      sampleCount: 0,
+      changedCount: 0,
+      meanDelta: 0,
+      maxDelta: 0,
+      sampleSurfaceCount: 0,
+      changedSurfaceCount: 0,
+      sampleRegionCount: 0,
+      changedRegionCount: 0,
       dpr: 1,
       reducedMotion: this.environment.reducedMotion,
       reducedTransparency: this.environment.reducedTransparency,
@@ -397,6 +444,7 @@ export class TahoeV4Renderer {
     });
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored);
+    document.addEventListener("visibilitychange", this.handleProofVisibilityChange);
     assertGl(gl, "tahoe-v4-initialization");
   }
 
@@ -413,7 +461,22 @@ export class TahoeV4Renderer {
     this.sourceReady = false;
     this.sourceUploaded = false;
     this.lastUploadedSource = null;
-    this.firstPresentationConfirmed = false;
+    this.sourceReadyAt = null;
+    this.clearProofDeadline();
+    this.proofMapKey = "";
+    this.provenMapKey = "";
+    this.proofStartedAt = null;
+    this.proofDeadlineAt = null;
+    this.proofPausedAt = null;
+    this.lastProofAttemptAt = null;
+    this.lastRecoveryRenderAt = null;
+    this.lastSuccessfulProofAt = null;
+    this.proofMetrics = { ...EMPTY_TAHOE_V4_PROOF_METRICS };
+    this.certifiedProofMetrics = null;
+    this.hasProvenRefraction = false;
+    this.proofRecovering = false;
+    this.recoveryMapResetAvailable = false;
+    this.clearRecoveryTimer();
     this.sourceFrame = 0;
     this.presentedFrame = 0;
     this.updateDiagnostics({
@@ -422,6 +485,15 @@ export class TahoeV4Renderer {
       framePresented: false,
       sourceFrame: 0,
       presentedFrame: 0,
+      proofPassed: false,
+      sampleCount: 0,
+      changedCount: 0,
+      meanDelta: 0,
+      maxDelta: 0,
+      sampleSurfaceCount: 0,
+      changedSurfaceCount: 0,
+      sampleRegionCount: 0,
+      changedRegionCount: 0,
       enabled: source.kind !== "material-only",
       backend: source.kind === "material-only" ? "material-only" : "webgl",
     });
@@ -441,6 +513,8 @@ export class TahoeV4Renderer {
       if (abort.signal.aborted || revision !== this.sourceRevision || this.disposed) return;
       this.resolvedSource = resolved;
       this.sourceReady = true;
+      this.sourceReadyAt = monotonicNow();
+      this.startProofWindow(this.sourceReadyAt);
       this.lifecycle.dispatch({ type: "SOURCE_READY" });
       this.options.onSourceReady?.(source);
       this.requestFrame();
@@ -458,7 +532,7 @@ export class TahoeV4Renderer {
   ): TahoeV4RenderResult {
     this.lastSurfaces = surfaces;
     this.lastViewport = viewport;
-    const started = typeof performance === "undefined" ? Date.now() : performance.now();
+    const started = monotonicNow();
 
     if (
       this.disposed ||
@@ -482,6 +556,7 @@ export class TahoeV4Renderer {
     }
 
     try {
+      const frameNow = viewport.nowMs ?? started;
       const dpr = this.resolveDpr(viewport);
       const width = Math.max(1, Math.round(viewport.width * dpr));
       const height = Math.max(1, Math.round(viewport.height * dpr));
@@ -498,23 +573,65 @@ export class TahoeV4Renderer {
       const sceneHeight = Math.max(1, Math.round(height * sceneScale));
       this.resize(width, height, sceneWidth, sceneHeight);
       const map = this.buildCompositeMap(surfaces, width, height, dpr);
+      if (this.proofMapKey !== map.key) {
+        this.beginMapProof(map, frameNow);
+      }
       if (this.uploadedMapKey !== map.key) {
         this.uploadDisplacement(map);
         this.uploadedMapKey = map.key;
       }
-      this.renderScene(sceneWidth, sceneHeight, viewport.nowMs ?? started);
-      this.renderComposite(width, height, dpr);
+      this.renderScene(sceneWidth, sceneHeight, frameNow);
+
+      const wasAlreadyProven = this.hasProvenRefraction;
+      const proofPending = this.provenMapKey !== map.key;
+      const proofAttemptInterval = this.hasProvenRefraction
+        ? TAHOE_V4_PROOF_REVALIDATION_INTERVAL_MS
+        : this.proofRecovering
+          ? TAHOE_V4_PROOF_RECOVERY_INTERVAL_MS
+          : TAHOE_V4_PROOF_ATTEMPT_INTERVAL_MS;
+      const proofRetryReady =
+        this.lastProofAttemptAt === null ||
+        frameNow - this.lastProofAttemptAt >= proofAttemptInterval;
+      const mapRevalidationReady =
+        !this.hasProvenRefraction ||
+        this.lastSuccessfulProofAt === null ||
+        frameNow - this.lastSuccessfulProofAt >=
+          TAHOE_V4_PROOF_REVALIDATION_INTERVAL_MS;
+      const proofDue =
+        proofPending &&
+        map.proofSamples.length > 0 &&
+        proofRetryReady &&
+        mapRevalidationReady;
+      if (proofDue) {
+        this.lastProofAttemptAt = frameNow;
+        this.proofMetrics = this.renderAndMeasureRefractionProof(
+          map.proofSamples,
+          width,
+          height,
+          dpr,
+        );
+      } else {
+        // Even while proof is pending, the framebuffer always ends with the
+        // displaced composite. The provider keeps it hidden behind material.
+        this.renderComposite(width, height, dpr);
+      }
       this.sourceFrame += 1;
       this.presentedFrame += 1;
 
-      let presented = this.firstPresentationConfirmed;
-      if (!this.firstPresentationConfirmed && map.nonNeutral) {
-        this.gl.finish();
-        if (!this.validatePresentedFrame(width, height)) {
-          throw new Error("tahoe-v4-presented-frame-empty");
-        }
-        this.firstPresentationConfirmed = true;
-        presented = true;
+      if (
+        this.provenMapKey !== map.key &&
+        map.nonNeutral &&
+        tahoeV4RefractionProofPassed(this.proofMetrics)
+      ) {
+        this.provenMapKey = map.key;
+        this.hasProvenRefraction = true;
+        this.proofRecovering = false;
+        this.recoveryMapResetAvailable = false;
+        this.lastRecoveryRenderAt = null;
+        this.clearRecoveryTimer();
+        this.certifiedProofMetrics = { ...this.proofMetrics };
+        this.lastSuccessfulProofAt = frameNow;
+        this.completeProofWindow();
         this.lifecycle.dispatch({ type: "FRAME_PRESENTED" });
         const event: TahoeV4FramePresentedEvent = {
           frame: this.presentedFrame,
@@ -525,30 +642,80 @@ export class TahoeV4Renderer {
           dpr,
           surfaceCount: surfaces.length,
           refractiveSurfaceCount: map.refractiveSurfaceCount,
+          proofPassed: true,
+          sampleCount: this.certifiedProofMetrics.sampleCount,
+          changedCount: this.certifiedProofMetrics.changedCount,
+          meanDelta: this.certifiedProofMetrics.meanDelta,
+          maxDelta: this.certifiedProofMetrics.maxDelta,
+          sampleSurfaceCount: this.certifiedProofMetrics.sampleSurfaceCount,
+          changedSurfaceCount: this.certifiedProofMetrics.changedSurfaceCount,
+          sampleRegionCount: this.certifiedProofMetrics.sampleRegionCount,
+          changedRegionCount: this.certifiedProofMetrics.changedRegionCount,
         };
         this.options.onFramePresented?.(event);
+      } else if (proofDue && wasAlreadyProven) {
+        // A low-contrast patch cannot revoke an already-proven source. Record
+        // its metrics and mark this geometry revision checked without retrying
+        // synchronously on every animation frame.
+        this.provenMapKey = map.key;
       }
 
-      const finished = typeof performance === "undefined" ? Date.now() : performance.now();
+      // First proof gates the reveal. Later map revisions are revalidated in
+      // the background so scrolling and transforms never blink the scene off.
+      const presented = this.hasProvenRefraction;
+      const publishedProof = tahoeV4PublishedProofMetrics(
+        this.certifiedProofMetrics,
+        this.proofMetrics,
+      );
+      const finished = monotonicNow();
       this.updateDiagnostics({
-        framePresented: this.firstPresentationConfirmed,
+        framePresented: presented,
         sourceFrame: this.sourceFrame,
         presentedFrame: this.presentedFrame,
         mapRevision: this.mapRevision,
         surfaceCount: surfaces.length,
         refractiveSurfaceCount: map.refractiveSurfaceCount,
+        proofPassed: this.certifiedProofMetrics !== null,
+        sampleCount: publishedProof.sampleCount,
+        changedCount: publishedProof.changedCount,
+        meanDelta: publishedProof.meanDelta,
+        maxDelta: publishedProof.maxDelta,
+        sampleSurfaceCount: publishedProof.sampleSurfaceCount,
+        changedSurfaceCount: publishedProof.changedSurfaceCount,
+        sampleRegionCount: publishedProof.sampleRegionCount,
+        changedRegionCount: publishedProof.changedRegionCount,
         dpr,
         lastFrameMs: Math.max(0, finished - started),
       });
+      const proofExpired =
+        !this.hasProvenRefraction &&
+        this.provenMapKey !== map.key &&
+        this.proofDeadlineAt !== null &&
+        frameNow >= this.proofDeadlineAt;
+      if (proofExpired) {
+        this.enterRecoverableProof(this.proofFailureReason(map));
+        return {
+          presented: false,
+          needsNextFrame: false,
+          diagnostics: this.getDiagnostics(),
+        };
+      }
       const dynamicScene =
         this.source.kind === "clouds" || this.source.kind === "video";
       const continuousSurface = surfaces.some(
         (surface) => surface.visible && surface.continuous,
       );
+      if (this.proofRecovering && !presented) {
+        this.lastRecoveryRenderAt = frameNow;
+        this.scheduleRecoveryProof();
+      }
       return {
         presented,
         needsNextFrame:
-          !this.environment.reducedMotion && (dynamicScene || continuousSurface),
+          (!this.proofRecovering && this.provenMapKey !== map.key) ||
+          (!this.proofRecovering &&
+            !this.environment.reducedMotion &&
+            (dynamicScene || continuousSurface)),
         diagnostics: this.getDiagnostics(),
       };
     } catch (error: unknown) {
@@ -616,10 +783,16 @@ export class TahoeV4Renderer {
     if (this.disposed) return;
     this.disposed = true;
     this.sourceAbort?.abort();
+    this.completeProofWindow();
+    this.clearRecoveryTimer();
     if (this.frameRequest !== null) cancelAnimationFrame(this.frameRequest);
     this.frameRequest = null;
     this.canvas.removeEventListener("webglcontextlost", this.handleContextLost);
     this.canvas.removeEventListener("webglcontextrestored", this.handleContextRestored);
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleProofVisibilityChange,
+    );
     const gl = this.gl;
     gl.deleteTexture(this.sourceTexture);
     gl.deleteTexture(this.sceneTexture);
@@ -811,6 +984,17 @@ export class TahoeV4Renderer {
     }
 
     this.mapRevision += 1;
+    const proofSamples = this.resolveProofSampleOwners(
+      selectTahoeV4RefractionProofSamples(
+        data,
+        width,
+        height,
+        dpr,
+        ordered,
+      ),
+      ordered,
+      dpr,
+    );
     this.currentMap = {
       data,
       width,
@@ -818,8 +1002,87 @@ export class TahoeV4Renderer {
       key,
       refractiveSurfaceCount,
       nonNeutral,
+      proofSamples,
     };
     return this.currentMap;
+  }
+
+  private resolveProofSampleOwners(
+    samples: readonly TahoeV4RefractionProofSample[],
+    surfaces: readonly TahoeV4SurfaceSnapshot[],
+    dpr: number,
+  ): readonly TahoeV4RefractionProofSample[] {
+    const resolved: TahoeV4RefractionProofSample[] = [];
+    for (const sample of samples) {
+      const viewportX = (sample.x + 0.5) / dpr;
+      const viewportY = (sample.y + 0.5) / dpr;
+      let owner: TahoeV4SurfaceSnapshot | null = null;
+      for (let index = surfaces.length - 1; index >= 0; index -= 1) {
+        const surface = surfaces[index];
+        const clip = surface.clipRect;
+        if (
+          surface.profile === "material-only" ||
+          !surface.visible ||
+          !clip ||
+          surface.opacity <= 0.01 ||
+          viewportX < clip.x ||
+          viewportX >= clip.x + clip.width ||
+          viewportY < clip.y ||
+          viewportY >= clip.y + clip.height
+        ) {
+          continue;
+        }
+        const localX = viewportX - surface.rect.x;
+        const localY = viewportY - surface.rect.y;
+        if (
+          !insideRoundedSurface(
+            localX,
+            localY,
+            surface.rect.width,
+            surface.rect.height,
+            surface.cornerRadiiPx,
+          )
+        ) {
+          continue;
+        }
+        const fieldDpr = Math.max(
+          0.25,
+          Math.min(
+            dpr,
+            Math.sqrt(
+              TAHOE_V4_MAX_SURFACE_FIELD_PIXELS /
+                Math.max(1, surface.rect.width * surface.rect.height),
+            ),
+          ),
+        );
+        const field = this.getField(surface, fieldDpr);
+        const sourceX = Math.max(
+          0,
+          Math.min(field.pixelWidth - 1, Math.floor(localX * field.dpr)),
+        );
+        const sourceY = Math.max(
+          0,
+          Math.min(field.pixelHeight - 1, Math.floor(localY * field.dpr)),
+        );
+        if (field.data[(sourceY * field.pixelWidth + sourceX) * 4 + 3] === 0) {
+          continue;
+        }
+        owner = surface;
+        break;
+      }
+      if (!owner) continue;
+      const ownerTop = owner.rect.y * dpr;
+      const ownerHeight = Math.max(1, owner.rect.height * dpr);
+      resolved.push({
+        ...sample,
+        surfaceId: owner.id,
+        surfaceBand: Math.max(
+          0,
+          Math.min(2, Math.floor(((sample.y - ownerTop) / ownerHeight) * 3)),
+        ) as 0 | 1 | 2,
+      });
+    }
+    return resolved;
   }
 
   private getField(
@@ -1001,7 +1264,12 @@ export class TahoeV4Renderer {
     assertGl(gl, "tahoe-v4-scene-render");
   }
 
-  private renderComposite(width: number, height: number, dpr: number): void {
+  private renderComposite(
+    width: number,
+    height: number,
+    dpr: number,
+    scale = TAHOE_V4_CONTROL_DISPLACEMENT_PX * dpr,
+  ): void {
     const gl = this.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, width, height);
@@ -1015,10 +1283,7 @@ export class TahoeV4Renderer {
     gl.uniform1i(this.compositeProgram.uniforms.uScene, 1);
     gl.uniform1i(this.compositeProgram.uniforms.uDisplacement, 2);
     gl.uniform2f(this.compositeProgram.uniforms.uResolution, width, height);
-    gl.uniform1f(
-      this.compositeProgram.uniforms.uScale,
-      TAHOE_V4_CONTROL_DISPLACEMENT_PX * dpr,
-    );
+    gl.uniform1f(this.compositeProgram.uniforms.uScale, scale);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     assertGl(gl, "tahoe-v4-composite-render");
     gl.flush();
@@ -1070,29 +1335,256 @@ export class TahoeV4Renderer {
     this.gl.uniform3f(location, red, green, blue);
   }
 
-  private validatePresentedFrame(width: number, height: number): boolean {
+  private readProofRgb(
+    samples: readonly TahoeV4RefractionProofSample[],
+    height: number,
+  ): Uint8Array {
     const gl = this.gl;
     const pixel = new Uint8Array(4);
-    const points = [
-      [Math.floor(width / 2), Math.floor(height / 2)],
-      [Math.floor(width * 0.25), Math.floor(height * 0.25)],
-      [Math.floor(width * 0.75), Math.floor(height * 0.75)],
-      [Math.floor(width * 0.25), Math.floor(height * 0.75)],
-      [Math.floor(width * 0.75), Math.floor(height * 0.25)],
-    ];
-    for (const [x, y] of points) {
-      gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-      assertGl(gl, "tahoe-v4-frame-validation");
-      if (pixel[3] > 0) return true;
+    const rgb = new Uint8Array(samples.length * 3);
+    for (let index = 0; index < samples.length; index += 1) {
+      const sample = samples[index];
+      const readY = Math.max(0, Math.min(height - 1, height - 1 - sample.y));
+      gl.readPixels(sample.x, readY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+      const target = index * 3;
+      rgb[target] = pixel[0];
+      rgb[target + 1] = pixel[1];
+      rgb[target + 2] = pixel[2];
     }
-    return false;
+    assertGl(gl, "tahoe-v4-refraction-proof-readback");
+    return rgb;
   }
+
+  private renderAndMeasureRefractionProof(
+    samples: readonly TahoeV4RefractionProofSample[],
+    width: number,
+    height: number,
+    dpr: number,
+  ): TahoeV4RefractionProofMetrics {
+    let control: Uint8Array;
+    try {
+      this.renderComposite(width, height, dpr, 0);
+      this.gl.finish();
+      control = this.readProofRgb(samples, height);
+    } finally {
+      // A control render is never allowed to become the displayed output.
+      this.renderComposite(width, height, dpr);
+    }
+    this.gl.finish();
+    const displaced = this.readProofRgb(samples, height);
+    return measureTahoeV4RefractionProof(control, displaced, samples);
+  }
+
+  private beginMapProof(map: CompositeMap, now: number): void {
+    const continuingPendingWindow = this.proofStartedAt !== null;
+    if (
+      !this.hasProvenRefraction &&
+      !this.proofRecovering &&
+      this.proofStartedAt === null
+    ) {
+      this.startProofWindow(
+        this.sourceReadyAt ?? now,
+      );
+    } else if (this.hasProvenRefraction) {
+      // Revalidation is observational after first proof; no async deadline may
+      // demote a renderer that already established pixel truth.
+      this.clearProofDeadline();
+      this.proofStartedAt = null;
+      this.proofDeadlineAt = null;
+      this.proofPausedAt = null;
+    }
+    this.proofMapKey = map.key;
+    if (
+      !continuingPendingWindow &&
+      !this.hasProvenRefraction &&
+      (!this.proofRecovering || this.recoveryMapResetAvailable)
+    ) {
+      this.lastProofAttemptAt = null;
+      if (this.proofRecovering) this.recoveryMapResetAvailable = false;
+    }
+    this.proofMetrics = {
+      ...EMPTY_TAHOE_V4_PROOF_METRICS,
+      sampleCount: map.proofSamples.length,
+    };
+    if (!this.certifiedProofMetrics) {
+      this.updateDiagnostics({
+        framePresented: false,
+        proofPassed: false,
+        mapRevision: this.mapRevision,
+        sampleCount: this.proofMetrics.sampleCount,
+        changedCount: 0,
+        meanDelta: 0,
+        maxDelta: 0,
+        sampleSurfaceCount: 0,
+        changedSurfaceCount: 0,
+        sampleRegionCount: 0,
+        changedRegionCount: 0,
+      });
+    } else {
+      this.updateDiagnostics({ mapRevision: this.mapRevision });
+    }
+    if (
+      this.hasProvenRefraction &&
+      map.proofSamples.length < TAHOE_V4_PROOF_MIN_SAMPLES
+    ) {
+      this.provenMapKey = map.key;
+    }
+  }
+
+  private startProofWindow(startedAt: number): void {
+    if (this.proofStartedAt !== null || this.disposed) return;
+    this.proofStartedAt = startedAt;
+    this.proofDeadlineAt = startedAt + TAHOE_V4_PROOF_WINDOW_MS;
+    if (document.visibilityState === "hidden") {
+      this.proofPausedAt = monotonicNow();
+      return;
+    }
+    this.scheduleProofDeadline();
+  }
+
+  private scheduleProofDeadline(): void {
+    this.clearProofDeadline();
+    if (this.proofDeadlineAt === null || this.proofPausedAt !== null) return;
+    const remaining = Math.max(
+      0,
+      this.proofDeadlineAt - monotonicNow() +
+        TAHOE_V4_PROOF_WATCHDOG_GRACE_MS,
+    );
+    this.proofDeadlineTimer = window.setTimeout(() => {
+      this.proofDeadlineTimer = null;
+      if (
+        this.disposed ||
+        !this.sourceReady ||
+        this.proofStartedAt === null ||
+        this.hasProvenRefraction
+      ) {
+        return;
+      }
+      this.enterRecoverableProof(this.proofFailureReason(this.currentMap));
+    }, remaining);
+  }
+
+  private enterRecoverableProof(reason: string): void {
+    if (this.disposed || !this.sourceReady || this.hasProvenRefraction) return;
+    const lastAttemptAt = this.lastProofAttemptAt;
+    this.completeProofWindow();
+    this.lastProofAttemptAt = lastAttemptAt;
+    this.proofRecovering = true;
+    this.recoveryMapResetAvailable = true;
+    this.lastRecoveryRenderAt = monotonicNow();
+    this.lifecycle.dispatch({ type: "PROOF_RECOVERING", reason });
+    this.updateDiagnostics({
+      lifecycle: "source-ready",
+      backend: "webgl",
+      enabled: true,
+      reason,
+      framePresented: false,
+      proofPassed: false,
+    });
+    this.scheduleRecoveryProof();
+  }
+
+  private scheduleRecoveryProof(): void {
+    this.clearRecoveryTimer();
+    if (
+      this.disposed ||
+      !this.proofRecovering ||
+      !this.sourceReady ||
+      this.hasProvenRefraction ||
+      document.visibilityState === "hidden"
+    ) {
+      return;
+    }
+    const now = monotonicNow();
+    const remaining = Math.max(
+      0,
+      this.lastRecoveryRenderAt === null
+        ? 0
+        : TAHOE_V4_PROOF_RECOVERY_INTERVAL_MS -
+            (now - this.lastRecoveryRenderAt),
+    );
+    this.proofRecoveryTimer = window.setTimeout(() => {
+      this.proofRecoveryTimer = null;
+      if (!this.proofRecovering || this.disposed || !this.sourceReady) return;
+      this.requestFrame();
+    }, remaining);
+  }
+
+  private clearRecoveryTimer(): void {
+    if (this.proofRecoveryTimer !== null) {
+      window.clearTimeout(this.proofRecoveryTimer);
+      this.proofRecoveryTimer = null;
+    }
+  }
+
+  private completeProofWindow(): void {
+    this.clearProofDeadline();
+    this.proofStartedAt = null;
+    this.proofDeadlineAt = null;
+    this.proofPausedAt = null;
+    this.lastProofAttemptAt = null;
+  }
+
+  private clearProofDeadline(): void {
+    if (this.proofDeadlineTimer !== null) {
+      window.clearTimeout(this.proofDeadlineTimer);
+      this.proofDeadlineTimer = null;
+    }
+  }
+
+  private proofFailureReason(map: CompositeMap | null): string {
+    if (
+      !map ||
+      !map.nonNeutral ||
+      map.refractiveSurfaceCount === 0 ||
+      map.proofSamples.length < TAHOE_V4_PROOF_MIN_SAMPLES
+    ) {
+      return "refraction-no-presentable-surfaces";
+    }
+    return "refraction-subthreshold";
+  }
+
+  private readonly handleProofVisibilityChange = (): void => {
+    if (this.proofRecovering) {
+      if (document.visibilityState === "hidden") {
+        this.clearRecoveryTimer();
+      } else {
+        this.lastProofAttemptAt = null;
+        this.lastRecoveryRenderAt = null;
+        this.scheduleRecoveryProof();
+      }
+      return;
+    }
+    if (this.hasProvenRefraction || this.proofStartedAt === null) return;
+    const now = monotonicNow();
+    if (document.visibilityState === "hidden") {
+      if (this.proofPausedAt === null) this.proofPausedAt = now;
+      this.clearProofDeadline();
+      return;
+    }
+    if (this.proofPausedAt !== null) {
+      const hiddenDuration = Math.max(0, now - this.proofPausedAt);
+      this.proofStartedAt += hiddenDuration;
+      if (this.proofDeadlineAt !== null) {
+        this.proofDeadlineAt += hiddenDuration;
+      }
+      this.proofPausedAt = null;
+    }
+    this.scheduleProofDeadline();
+  };
 
   private enterFallback(reason: string): void {
     if (this.disposed) return;
     const alreadyReported =
       this.lifecycle.getSnapshot().lifecycle === "fallback" &&
       this.lifecycle.getSnapshot().reason === reason;
+    this.completeProofWindow();
+    this.clearRecoveryTimer();
+    this.proofRecovering = false;
+    this.recoveryMapResetAvailable = false;
+    this.lastRecoveryRenderAt = null;
+    this.certifiedProofMetrics = null;
+    this.proofMetrics = { ...EMPTY_TAHOE_V4_PROOF_METRICS };
     this.sourceReady = false;
     this.lifecycle.dispatch({ type: "FALLBACK", reason });
     this.updateDiagnostics({
@@ -1100,6 +1592,15 @@ export class TahoeV4Renderer {
       enabled: false,
       reason,
       framePresented: false,
+      proofPassed: false,
+      sampleCount: 0,
+      changedCount: 0,
+      meanDelta: 0,
+      maxDelta: 0,
+      sampleSurfaceCount: 0,
+      changedSurfaceCount: 0,
+      sampleRegionCount: 0,
+      changedRegionCount: 0,
     });
     if (!alreadyReported) {
       this.options.onFallback?.({
