@@ -2,11 +2,11 @@
   "meta": {
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
-    "sourceRecordCount": 84,
-    "placeCount": 78,
-    "generatedAt": "2026-08-23T08:13:50.964Z",
+    "sourceRecordCount": 86,
+    "placeCount": 80,
+    "generatedAt": "2026-08-24T21:17:40.740Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
-    "cacheMisses": 0,
+    "cacheMisses": 2,
     "geocoder": "google-places-new",
     "attribution": "Place IDs and current location data supplied by Google Maps Platform."
   },
@@ -1341,6 +1341,60 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Hatta%20Dam%2C%20Hatta%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "kefi-books-board-games-cafe",
+      "name": "Kefi Books, Board Games & Cafe",
+      "aliases": [
+        "Kefi Dubai",
+        "Kefi Books, Boardgames and Specialty Coffee"
+      ],
+      "description": "A library cafe in Al Mamzar built for long hangs: choose from 200+ board games, browse more than 6,000 books, or settle in with specialty coffee, food and a laptop. Go for a quiet reading break or a game session together.",
+      "sourceUrls": [
+        "https://www.kefi.ae/"
+      ],
+      "sourceRows": [
+        86
+      ],
+      "locationHint": "Al Mamzar, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "79X6+792 - Tower 1 - Al Mamzar - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2978329,
+        "lng": 55.360839
+      },
+      "placeId": "ChIJZ7sLXuRdXz4RjnancgL14V8",
+      "googleTypes": [
+        "cafe",
+        "coffee_shop",
+        "coworking_space",
+        "library",
+        "association_or_organization",
+        "food_store",
+        "store",
+        "food",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "arts-culture-heritage"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-24T21:17:40.547Z",
+        "osm": null,
+        "matchedName": "Kefi Books, Board Games & Cafe",
+        "websiteUri": "https://www.kefi.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kefi%20Books%20Board%20Games%20Cafe%2C%20Tower%201%2C%20Al%20Mamzar%2C%20Dubai%2C%20UAE"
+    },
+    {
       "id": "kite-beach",
       "name": "Kite Beach",
       "aliases": [],
@@ -2017,6 +2071,54 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Samadhi%20Wellness%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "seoul-spot",
+      "name": "Seoul Spot",
+      "aliases": [
+        "Seoul Spot Dubai"
+      ],
+      "description": "A compact K-culture playground on the first floor of Silicon Central Mall, combining K-pop merchandise with a soundproof karaoke box and Korean-style Photoism photo booth. Drop in to sing, make idol-frame photo strips, browse albums and fan-made accessories, or join community events and photocard trades.",
+      "sourceUrls": [
+        "https://www.seoulspotuae.ae/",
+        "https://www.seoulspotuae.ae/pages/experimental-booth",
+        "https://www.seoulspotuae.ae/pages/faq"
+      ],
+      "sourceRows": [
+        87
+      ],
+      "locationHint": "Dubai Silicon Oasis, Dubai, UAE",
+      "emirate": "Dubai",
+      "address": "Silicon Central Mall - Nadd Hessa - Dubai Silicon Oasis - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1110068,
+        "lng": 55.375456799999995
+      },
+      "placeId": "ChIJJaoM7vplXz4R8Imid0qsfZs",
+      "googleTypes": [
+        "gift_shop",
+        "point_of_interest",
+        "store",
+        "establishment"
+      ],
+      "primaryGoogleType": "gift_shop",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": [
+          "shows-immersive",
+          "shopping-stroll"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-24T21:17:40.731Z",
+        "osm": null,
+        "matchedName": "Seoul Spot",
+        "websiteUri": "https://www.seoulspotuae.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Seoul%20Spot%2C%20Silicon%20Central%20Mall%2C%20Dubai%20Silicon%20Oasis%2C%20Dubai%2C%20UAE"
     },
     {
       "id": "serpenti-beach-club",

@@ -29,10 +29,14 @@ const ALIAS_GROUPS = new Map([
 
 const ALIAS_OVERRIDES = {
   "la-maison-laggar": ["La Maison x Laggar"],
+  "kefi-books-board-games-cafe": ["Kefi Dubai", "Kefi Books, Boardgames and Specialty Coffee"],
+  "seoul-spot": ["Seoul Spot Dubai"],
 };
 
 const QUERY_OVERRIDES = {
   "la-maison-laggar": "La Maison x Laggar, Palais LAGGAR, 7th Street, Za'abeel II, Dubai, UAE",
+  "kefi-books-board-games-cafe": "Kefi Books Board Games Cafe, Tower 1, Al Mamzar, Dubai, UAE",
+  "seoul-spot": "Seoul Spot, Silicon Central Mall, Dubai Silicon Oasis, Dubai, UAE",
   "bar-des-pres": "Bar des Pres, ICD Brookfield Place, DIFC, Dubai, UAE",
   "african-queen": "African Queen, J1 Beach, Jumeirah 1, Dubai, UAE",
   "sakhalin": "Sakhalin, J1 Beach, Jumeirah 1, Dubai, UAE",
@@ -58,6 +62,8 @@ const QUERY_OVERRIDES = {
 
 const PLACE_ID_OVERRIDES = {
   "la-maison-laggar": "ChIJnVLpYURDXz4R7hmR4xXwps8",
+  "kefi-books-board-games-cafe": "ChIJZ7sLXuRdXz4RjnancgL14V8",
+  "seoul-spot": "ChIJJaoM7vplXz4R8Imid0qsfZs",
   "bar-des-pres": "ChIJO99024RDXz4ROeOXlO9r1Nw",
   "african-queen": "ChIJNxOhXp9DXz4R7g6wKFRDvoU",
   "sakhalin": "ChIJT9GYCg5DXz4RKg24uryt96k",
@@ -92,6 +98,12 @@ const SOURCE_URL_OVERRIDES = {
     "https://www.instagram.com/p/DbYd1GPMeqo/",
     "https://laggar.ae/pages/stocklist",
   ],
+  "kefi-books-board-games-cafe": "https://www.kefi.ae/",
+  "seoul-spot": [
+    "https://www.seoulspotuae.ae/",
+    "https://www.seoulspotuae.ae/pages/experimental-booth",
+    "https://www.seoulspotuae.ae/pages/faq",
+  ],
   "bar-des-pres": "https://www.bardespres.com/dubai/",
   "african-queen": "https://africanqueen-restaurant.com/dubai/",
   "sakhalin": "https://sakhalin.rest/dubai/en",
@@ -120,6 +132,8 @@ const EMIRATE_CENTERS = {
 
 const PRIMARY_OVERRIDES = {
   "la-maison-laggar": "food-drink",
+  "kefi-books-board-games-cafe": "food-drink",
+  "seoul-spot": "shows-immersive",
   "bar-des-pres": "food-drink",
   "african-queen": "food-drink",
   "sakhalin": "food-drink",
@@ -202,6 +216,8 @@ const PRIMARY_OVERRIDES = {
 
 const TAG_OVERRIDES = {
   "la-maison-laggar": ["food-drink"],
+  "kefi-books-board-games-cafe": ["food-drink", "arts-culture-heritage"],
+  "seoul-spot": ["shows-immersive", "shopping-stroll"],
   "bar-des-pres": ["food-drink"],
   "african-queen": ["food-drink", "beach-water", "resort-beach-club"],
   "sakhalin": ["food-drink", "beach-water", "resort-beach-club"],
