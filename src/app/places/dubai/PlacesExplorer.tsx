@@ -919,30 +919,42 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             contentClassName={`${styles.detailContent} relative`}
             aria-label={`Details for ${selectedPlace.name}`}
           >
-          <TahoeGlassButton
-            className={styles.closeButton}
-            contentClassName="text-white"
-            tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.035}
-            type="button"
-            onClick={() => setSelectedId(null)}
-            aria-label="Close place details"
-          >
-            <X size={18} />
-          </TahoeGlassButton>
-          <TahoeGlassButton
-            className={`${styles.detailHeart}${favourites.has(selectedPlace.id) ? ` ${styles.detailHeartActive}` : ""}`}
-            contentClassName="text-white"
-            tone="light"
-            semanticTint={favourites.has(selectedPlace.id) ? "dark" : "none"}
-            semanticTintOpacity={0.06}
-            type="button"
-            onClick={() => toggleFavourite(selectedPlace.id)}
-            aria-label={favourites.has(selectedPlace.id) ? "Remove from saved places" : "Save this place"}
-          >
-            <Heart size={18} fill={favourites.has(selectedPlace.id) ? "currentColor" : "none"} />
-          </TahoeGlassButton>
+          <div className={styles.detailControls} role="group" aria-label="Place actions">
+            <TahoeGlassSurface
+              as="button"
+              variant="pill"
+              radius={999}
+              className={`${styles.detailSave}${favourites.has(selectedPlace.id) ? ` ${styles.detailSaveActive}` : ""}`}
+              contentClassName={styles.detailControlContent}
+              tone="light"
+              semanticTint={favourites.has(selectedPlace.id) ? "dark" : "none"}
+              semanticTintOpacity={0.06}
+              type="button"
+              onClick={() => toggleFavourite(selectedPlace.id)}
+              aria-label={favourites.has(selectedPlace.id) ? "Remove from saved places" : "Save this place"}
+              aria-pressed={favourites.has(selectedPlace.id)}
+              title={favourites.has(selectedPlace.id) ? "Remove from saved places" : "Save this place"}
+            >
+              <Heart size={16} fill={favourites.has(selectedPlace.id) ? "currentColor" : "none"} />
+              <span>{favourites.has(selectedPlace.id) ? "Saved" : "Save"}</span>
+            </TahoeGlassSurface>
+            <TahoeGlassSurface
+              as="button"
+              variant="button"
+              radius={20}
+              className={styles.closeButton}
+              contentClassName={styles.detailControlContent}
+              tone="light"
+              semanticTint="dark"
+              semanticTintOpacity={0.035}
+              type="button"
+              onClick={() => setSelectedId(null)}
+              aria-label="Close place details"
+              title="Close details"
+            >
+              <X size={18} />
+            </TahoeGlassSurface>
+          </div>
 
           <div
             ref={galleryRegionRef}
