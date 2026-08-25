@@ -7,6 +7,8 @@
   position: fixed;
   inset: 0;
   z-index: 7000;
+  width: 100vw;
+  height: 100dvh;
   overflow: hidden;
   background: #d9ddd5;
   color: var(--ink);
@@ -18,9 +20,17 @@
   inset: 0;
 }
 
+.explorerContent {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 .map {
   position: absolute;
   inset: 0;
+  overscroll-behavior: none;
+  touch-action: none;
   background:
     radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.7), transparent 32%),
     #d9ddd5;
@@ -70,6 +80,20 @@
   box-shadow:
     0 28px 80px rgba(29, 38, 31, 0.2),
     0 2px 6px rgba(29, 38, 31, 0.08);
+}
+
+.mobileSheetHeader,
+.mobileCategorySelect,
+.mobileDock,
+.mobileLocationStatus {
+  display: none;
+}
+
+.rail,
+.detailCard,
+.mapError,
+.mobileDock {
+  pointer-events: auto;
 }
 
 .header {
@@ -192,6 +216,7 @@
 
 .searchBox input {
   width: 100%;
+  height: 100%;
   min-width: 0;
   border: 0;
   outline: 0;
@@ -243,6 +268,7 @@
 }
 
 .selectWrap select {
+  height: 100%;
   min-width: 0;
   flex: 1;
   appearance: none;
@@ -569,6 +595,8 @@
 .detailContent {
   max-height: inherit;
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   border-radius: inherit;
 }
 
@@ -655,6 +683,11 @@
 
 .closeButton::before,
 .detailSave::before,
+.mobileSurpriseButton::before,
+.mobileMapButton::before,
+.mobileBrowseButton::before,
+.mobileFitButton::before,
+.mobileLocateButton::before,
 .galleryArrow::before,
 .lightboxArrow::before,
 .lightboxClose::before,
@@ -1017,10 +1050,9 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: grid;
+  display: block;
   width: 100vw;
   height: 100dvh;
-  grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   color: white;
 }
@@ -1030,6 +1062,7 @@
   display: grid;
   width: 100%;
   height: 100%;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   color: white;
@@ -1158,6 +1191,15 @@
   align-items: center;
   gap: 24px;
   padding: 14px max(24px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+}
+
+.lightboxFooterContent {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
 }
 
 .lightboxCredit {
@@ -1293,26 +1335,295 @@
 }
 
 @media (max-width: 900px) {
+  .shell {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  .shell :global(.gm-control-active) {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .shell :global(.gm-bundled-control) {
+    margin-top: max(10px, env(safe-area-inset-top)) !important;
+  }
+
   .rail {
-    --surface-fill: linear-gradient(155deg, rgba(39, 68, 76, 0.96), rgba(25, 48, 55, 0.95));
+    --surface-fill: linear-gradient(155deg, rgba(39, 68, 76, 0.985), rgba(25, 48, 55, 0.98));
     top: auto;
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
+    right: 10px;
+    bottom: max(40px, env(safe-area-inset-bottom));
+    left: 10px;
+    z-index: 40;
     width: auto;
-    height: 58vh;
-    min-height: 430px;
-    border-radius: 23px;
+    height: min(86dvh, 760px);
+    min-height: 0;
+    border-radius: 25px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none !important;
+    transform: translate3d(0, calc(100% + 32px), 0);
+    transition:
+      transform 260ms cubic-bezier(0.2, 0.82, 0.2, 1),
+      opacity 180ms ease,
+      visibility 0s linear 260ms;
+    will-change: transform;
+  }
+
+  .railMobileOpen {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto !important;
+    transform: translate3d(0, 0, 0);
+    transition:
+      transform 260ms cubic-bezier(0.2, 0.82, 0.2, 1),
+      opacity 180ms ease,
+      visibility 0s linear 0s;
+  }
+
+  .mobileSheetHeader {
+    position: relative;
+    display: grid;
+    min-height: 68px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .mobileSheetTitle {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 3px;
+    color: white;
+  }
+
+  .mobileSheetTitle strong {
+    overflow: hidden;
+    font-size: 15px;
+    font-weight: 720;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobileSheetTitle span {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 11px;
+  }
+
+  .mobileSurpriseButton,
+  .mobileMapButton {
+    --control-fill: rgba(19, 40, 46, 0.94);
+    height: 44px;
+    min-width: 44px;
+    gap: 6px;
+    padding: 0 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .mobileMapButton {
+    --control-fill: rgba(244, 241, 232, 0.96);
+    color: #27332b;
+  }
+
+  .header {
+    display: none;
+  }
+
+  .controls {
+    padding: 12px 14px;
+  }
+
+  .searchBox {
+    height: 46px;
+  }
+
+  .searchBox input,
+  .selectWrap select,
+  .mobileCategorySelect select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .searchBox button {
+    width: 44px;
+    height: 44px;
+    margin-right: -9px;
+    flex: 0 0 44px;
+    border-radius: 11px;
+  }
+
+  .filterRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .selectWrap,
+  .favouriteFilter {
+    height: 44px;
+  }
+
+  .favouriteFilter {
+    min-width: 92px;
+    justify-content: center;
+  }
+
+  .locateButton {
+    display: none;
+  }
+
+  .mobileCategorySelect {
+    display: flex;
+    height: 44px;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    color: rgba(255, 255, 255, 0.84);
+  }
+
+  .mobileCategorySelect select {
+    width: 100%;
+    min-width: 0;
+    appearance: none;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 620;
+  }
+
+  .mobileCategorySelect option {
+    color: #1d241f;
+  }
+
+  .categoryScroller {
+    display: none;
+  }
+
+  .listHeader {
+    padding: 10px 16px 8px;
+  }
+
+  .placeList {
+    padding: 0 10px 12px;
+    overscroll-behavior: contain;
+    scroll-padding-bottom: max(20px, env(safe-area-inset-bottom));
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobileDock {
+    position: absolute;
+    right: 12px;
+    bottom: max(40px, env(safe-area-inset-bottom));
+    left: 12px;
+    z-index: 30;
+    display: grid;
+    min-height: 66px;
+    grid-template-columns: minmax(0, 1fr) 86px 86px;
+    align-items: center;
+    gap: 8px;
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 22px;
+    background: rgba(30, 57, 64, 0.93);
+    box-shadow: 0 16px 44px rgba(20, 34, 37, 0.28);
+    pointer-events: auto;
+    backdrop-filter: blur(20px) saturate(135%);
+    -webkit-backdrop-filter: blur(20px) saturate(135%);
+  }
+
+  .mobileLocationStatus {
+    position: absolute;
+    right: 20px;
+    bottom: calc(max(40px, env(safe-area-inset-bottom)) + 80px);
+    left: 20px;
+    z-index: 31;
+    display: block;
+    padding: 9px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    border-radius: 13px;
+    background: rgba(249, 246, 237, 0.96);
+    box-shadow: 0 10px 28px rgba(20, 34, 37, 0.2);
+    color: #344039;
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .mobileBrowseButton,
+  .mobileFitButton,
+  .mobileLocateButton {
+    --control-fill: rgba(16, 39, 45, 0.96);
+    display: flex;
+    height: 52px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 13px !important;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    color: white;
+    font-size: 13px;
+    font-weight: 720;
+  }
+
+  .mobileBrowseButton em {
+    display: grid;
+    min-width: 24px;
+    height: 24px;
+    place-items: center;
+    padding: 0 6px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 11px;
+    font-style: normal;
+  }
+
+  .mobileBrowseButton i {
+    color: #ffd3b8;
+    font-size: 9px;
+    font-style: normal;
+    white-space: nowrap;
+  }
+
+  .mobileLocateButton {
+    --control-fill: rgba(241, 238, 227, 0.97);
+    flex-direction: column;
+    gap: 2px;
+    color: #26342c;
+    font-size: 10px;
+  }
+
+  .mobileFitButton {
+    --control-fill: rgba(28, 57, 64, 0.98);
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 8px !important;
+    font-size: 10px;
   }
 
   .detailCard {
     --surface-fill: rgba(249, 246, 237, 0.98);
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
+    right: 10px;
+    bottom: max(40px, env(safe-area-inset-bottom));
+    left: 10px;
+    z-index: 50;
     width: auto;
-    max-height: calc(100vh - 16px);
-    border-radius: 23px;
+    max-height: min(78dvh, 720px);
+    border-radius: 25px;
   }
 
   .placeCard {
@@ -1324,8 +1635,14 @@
     --surface-fill: rgba(20, 40, 46, 0.98);
   }
 
-  .detailHero { height: min(35vh, 270px); }
-  .mapError { top: 12px; right: 12px; left: 12px; max-width: none; }
+  .detailHero { height: min(28dvh, 250px); }
+  .detailActions a { height: 44px; }
+  .mapError {
+    top: max(12px, env(safe-area-inset-top));
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
 
   .lightboxStage { padding-right: 68px; padding-left: 68px; }
   .lightboxArrowPrevious { left: 10px; }
@@ -1337,26 +1654,18 @@
 }
 
 @media (max-width: 560px) {
-  .rail {
-    height: 60vh;
-    min-height: 410px;
-  }
-
-  .header { padding: 15px 16px 10px; }
-  .brandRow { margin-bottom: 11px; }
-  .brand { font-size: 11px; }
-  .logoWrap { width: 28px; height: 28px; border-radius: 9px; }
-  .surpriseButton { min-height: 31px; padding: 0 10px; font-size: 11px; }
-  .eyebrow { margin-bottom: 3px; }
-  .header h1 { font-size: 30px; }
-  .intro { display: none; }
-  .controls { padding: 0 16px 10px; }
-  .searchBox { height: 40px; }
-  .categoryScroller { margin-right: -16px; margin-left: -16px; padding-right: 16px; padding-left: 16px; }
+  .controls { padding: 10px 12px; }
   .listHeader { padding: 9px 16px 7px; }
   .placeList { padding-right: 8px; padding-left: 8px; }
-  .placeCard { min-height: 70px; }
-  .placeMain { padding-top: 8px; padding-bottom: 8px; }
+  .placeCard { min-height: 78px; }
+  .placeMain { padding: 9px 62px 9px 12px; }
+  .heartButton {
+    top: 17px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
   .placeAddress { max-width: 220px; }
   .detailBody { padding: 17px; }
   .detailBody h2 { font-size: 27px; }
@@ -1379,6 +1688,8 @@
   .galleryArrow { width: 44px; height: 44px; }
   .galleryArrowPrevious { left: 8px; }
   .galleryArrowNext { right: 8px; }
+  .galleryPager { min-height: 44px; padding-top: 0; }
+  .galleryPager button { width: 44px; height: 44px; }
   .photoCredit { font-size: 9px; }
 
   .lightboxHeader {
@@ -1395,18 +1706,67 @@
   .lightboxArrowPrevious { left: 4px; }
   .lightboxArrowNext { right: 4px; }
   .lightboxFooter {
-    display: flex;
-    min-height: 100px;
-    flex-direction: column;
-    justify-content: center;
-    gap: 8px;
+    display: block;
+    min-height: 132px;
     padding-top: 10px;
     padding-right: max(14px, env(safe-area-inset-right));
     padding-bottom: max(16px, env(safe-area-inset-bottom));
     padding-left: max(14px, env(safe-area-inset-left));
     text-align: center;
   }
-  .lightboxCredit { font-size: 10px; }
+  .lightboxFooterContent {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+  .lightboxCredit {
+    width: 100%;
+    font-size: 10px;
+  }
+  .lightboxPager {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .lightboxPager::-webkit-scrollbar { display: none; }
+  .lightboxPager button {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+  }
+}
+
+@media (max-width: 370px) {
+  .mobileDock {
+    right: 8px;
+    left: 8px;
+    grid-template-columns: minmax(0, 1fr) 74px 74px;
+    gap: 6px;
+  }
+
+  .mobileBrowseButton {
+    gap: 6px;
+    padding: 0 9px !important;
+  }
+
+  .mobileBrowseButton i {
+    display: none;
+  }
+
+  .mobileSheetTitle span {
+    display: none;
+  }
+
+  .mobileSurpriseButton,
+  .mobileMapButton {
+    padding: 0 10px !important;
+  }
 }
 
 @media (max-height: 720px) and (min-width: 901px) {
