@@ -916,7 +916,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             semanticTint="light"
             semanticTintOpacity={0.035}
             className={styles.detailCard}
-            contentClassName="relative"
+            contentClassName={`${styles.detailContent} relative`}
             aria-label={`Details for ${selectedPlace.name}`}
           >
           <TahoeGlassButton

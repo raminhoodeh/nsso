@@ -35,6 +35,7 @@
 }
 
 .mapError {
+  --surface-fill: rgba(250, 247, 238, 0.96);
   position: absolute;
   top: 24px;
   right: 24px;
@@ -54,6 +55,7 @@
 }
 
 .rail {
+  --surface-fill: linear-gradient(155deg, rgba(39, 68, 76, 0.92), rgba(25, 48, 55, 0.9));
   position: absolute;
   z-index: 10;
   top: 16px;
@@ -350,7 +352,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 22px 9px;
-  color: rgba(255, 255, 255, 0.58);
+  color: rgba(255, 255, 255, 0.72);
   font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.08em;
@@ -369,6 +371,7 @@
 
 .placeCard {
   --category-color: #6c746d;
+  --surface-fill: rgba(22, 43, 49, 0.88);
   position: relative;
   display: flex;
   min-height: 78px;
@@ -381,6 +384,7 @@
 
 .placeCard:hover,
 .placeCardSelected {
+  --surface-fill: rgba(20, 40, 46, 0.96);
   border-color: rgba(255, 255, 255, 0.22);
   box-shadow: 0 8px 24px rgba(10, 15, 12, 0.18);
   transform: translateY(-1px);
@@ -391,8 +395,10 @@
   position: absolute;
   inset: 7px auto 7px 0;
   width: 3px;
+  z-index: 21;
   border-radius: 0 4px 4px 0;
   background: var(--category-color);
+  pointer-events: none;
 }
 
 .placeMain {
@@ -464,7 +470,7 @@
   display: block;
   margin-top: 3px;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.58);
+  color: rgba(255, 255, 255, 0.74);
   font-size: 10.5px;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -531,7 +537,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 9px 5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.68);
   font-size: 9px;
   line-height: 1.4;
 }
@@ -542,13 +548,14 @@
 }
 
 .detailCard {
+  --surface-fill: rgba(249, 246, 237, 0.965);
   position: absolute;
   right: 20px;
   bottom: 20px;
   z-index: 20;
   width: min(405px, calc(100vw - 486px));
   max-height: calc(100vh - 40px);
-  overflow: auto;
+  overflow: hidden;
   border: 1px solid rgba(39, 49, 41, 0.16);
   border-radius: 24px;
   background: rgba(249, 246, 237, 0.96);
@@ -559,6 +566,25 @@
   backdrop-filter: blur(25px) saturate(110%);
 }
 
+.detailContent {
+  max-height: inherit;
+  overflow: auto;
+  border-radius: inherit;
+}
+
+.mapError::before,
+.rail::before,
+.detailCard::before,
+.placeCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: var(--surface-fill);
+  pointer-events: none;
+}
+
 @keyframes detailIn {
   from { opacity: 0; transform: translateY(12px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -566,6 +592,7 @@
 
 .closeButton,
 .detailHeart {
+  --control-fill: rgba(29, 36, 31, 0.82);
   position: absolute;
   top: 13px;
   z-index: 3;
@@ -583,7 +610,25 @@
 
 .closeButton { right: 13px; }
 .detailHeart { right: 57px; }
-.detailHeartActive { background: rgba(160, 65, 61, 0.86); }
+.detailHeartActive { --control-fill: rgba(160, 65, 61, 0.92); }
+
+.closeButton::before,
+.detailHeart::before,
+.galleryArrow::before,
+.lightboxArrow::before,
+.lightboxClose::before,
+.expandHint::before,
+.galleryCount::before,
+.photoCredit::before,
+.detailActions a::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: var(--control-fill, rgba(24, 31, 26, 0.74));
+  pointer-events: none;
+}
 
 .detailHero {
   --detail-color: #667368;
@@ -879,6 +924,7 @@
 }
 
 .detailActions a {
+  --control-fill: rgba(250, 248, 241, 0.94);
   display: inline-flex;
   height: 42px;
   align-items: center;
@@ -893,6 +939,7 @@
 }
 
 .detailActions a:first-child {
+  --control-fill: #34463a;
   flex: 1;
   border-color: #34463a;
   background: #34463a;
@@ -1206,6 +1253,7 @@
 
 @media (max-width: 900px) {
   .rail {
+    --surface-fill: linear-gradient(155deg, rgba(39, 68, 76, 0.96), rgba(25, 48, 55, 0.95));
     top: auto;
     right: 8px;
     bottom: 8px;
@@ -1217,12 +1265,22 @@
   }
 
   .detailCard {
+    --surface-fill: rgba(249, 246, 237, 0.98);
     right: 8px;
     bottom: 8px;
     left: 8px;
     width: auto;
     max-height: calc(100vh - 16px);
     border-radius: 23px;
+  }
+
+  .placeCard {
+    --surface-fill: rgba(22, 43, 49, 0.94);
+  }
+
+  .placeCard:hover,
+  .placeCardSelected {
+    --surface-fill: rgba(20, 40, 46, 0.98);
   }
 
   .detailHero { height: min(35vh, 270px); }
