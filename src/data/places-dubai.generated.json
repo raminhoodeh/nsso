@@ -3,10 +3,12 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "placeCount": 80,
-    "generatedAt": "2026-08-24T21:17:40.740Z",
+    "curatedRecordCount": 27,
+    "eventCount": 16,
+    "placeCount": 106,
+    "generatedAt": "2026-08-26T14:27:40.907Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
-    "cacheMisses": 2,
+    "cacheMisses": 0,
     "geocoder": "google-places-new",
     "attribution": "Place IDs and current location data supplied by Google Maps Platform."
   },
@@ -375,6 +377,52 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=African%20Queen%2C%20J1%20Beach%2C%20Jumeirah%201%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "al-safa-art-design-library",
+      "name": "Al Safa Art & Design Library",
+      "aliases": [
+        "Al Safa Library",
+        "Al Safa Art and Design Library"
+      ],
+      "description": "A specialist public library for art and design, with reading collections, exhibitions and occasional public workshops.",
+      "sourceUrls": [
+        "https://dpl.dubaiculture.gov.ae/en/branches"
+      ],
+      "locationHint": "Al Wasl Road, Jumeirah 3, Dubai, UAE",
+      "placeId": "ChIJ7fKbpeVDXz4RKo-mGUjzVTg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "creative-workshop"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "56QQ+7MW - 564 Al Wasl Rd - Jumeira Third - Jumeirah 3 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.188093199999997,
+        "lng": 55.2395499
+      },
+      "googleTypes": [
+        "library",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "library",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:29.731Z",
+        "osm": null,
+        "matchedName": "Al Safa Art & Design Library",
+        "websiteUri": "https://dpl.dubaiculture.gov.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Safa%20Art%20%26%20Design%20Library%2C%20Al%20Wasl%20Road%2C%20Jumeirah%203%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "al-seef",
       "name": "Al Seef",
       "aliases": [
@@ -419,6 +467,100 @@
         "businessStatus": null
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Seef%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "al-shindagha-museum",
+      "name": "Al Shindagha Museum",
+      "aliases": [
+        "Shindagha Museum"
+      ],
+      "description": "A large heritage museum across restored houses, exploring Dubai Creek, pearl diving, perfume, poetry, crafts and traditional life.",
+      "sourceUrls": [
+        "https://alshindagha.dubaiculture.gov.ae/Documents/LRDCR-2266-ASM%20Brochure-En-OL.pdf"
+      ],
+      "locationHint": "Al Shindagha Historical District, Dubai, UAE",
+      "placeId": "ChIJv8NPy4JDXz4Rq0g_w3p4eEg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "creative-workshop"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Dubai - Al Shindagha - Al Fahidi - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2664029,
+        "lng": 55.289430200000005
+      },
+      "googleTypes": [
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:29.364Z",
+        "osm": null,
+        "matchedName": "Al Shindagha Museum",
+        "websiteUri": "https://alshindagha.dubaiculture.gov.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Shindagha%20Museum%2C%20Al%20Shindagha%20Historical%20District%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "alserkal-avenue",
+      "name": "Alserkal Avenue",
+      "aliases": [
+        "Alserkal Arts District",
+        "Alserkal"
+      ],
+      "description": "A walkable Al Quoz cultural district with galleries, exhibitions, independent cinema, design spaces and places to eat — an easy build-your-own date afternoon.",
+      "sourceUrls": [
+        "https://alserkal.online/alserkal-avenue/"
+      ],
+      "locationHint": "17th Street, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJKc4P3H9pXz4RTyLpHxr6Dyg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "shopping-stroll",
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "17th St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1431157,
+        "lng": 55.224612699999994
+      },
+      "googleTypes": [
+        "cultural_landmark",
+        "tourist_attraction",
+        "art_gallery",
+        "cultural_center",
+        "point_of_interest",
+        "association_or_organization",
+        "establishment"
+      ],
+      "primaryGoogleType": "cultural_landmark",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:28.429Z",
+        "osm": null,
+        "matchedName": "Alserkal Avenue",
+        "websiteUri": "https://alserkal.online/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Alserkal%20Avenue%2C%2017th%20Street%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "amongst-few-cafe",
@@ -651,6 +793,111 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=At.mosphere%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "aventura-parks",
+      "name": "Aventura Parks",
+      "aliases": [
+        "Aventura",
+        "Aventura Parks Dubai"
+      ],
+      "description": "A treetop adventure park in the Ghaf forest at Mushrif Park, with obstacle circuits and zip lines for an active outdoor date.",
+      "sourceUrls": [
+        "https://www.aventuraparks.com/"
+      ],
+      "locationHint": "Mushrif Park Gate 1, Al Khawaneej, Dubai, UAE",
+      "placeId": "ChIJ7RC_A2BgXz4RBJKAqr4PR9g",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "sport-active",
+        "tags": [
+          "sport-active",
+          "nature-wildlife"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Mushrif Park - Gate 1، POB 30929 - Mushraif - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.222241600000004,
+        "lng": 55.4484607
+      },
+      "googleTypes": [
+        "adventure_sports_center",
+        "amusement_park",
+        "family_restaurant",
+        "sports_complex",
+        "event_venue",
+        "amusement_center",
+        "restaurant",
+        "food",
+        "sports_activity_location",
+        "point_of_interest",
+        "health",
+        "establishment"
+      ],
+      "primaryGoogleType": "sports_activity_location",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:31.132Z",
+        "osm": null,
+        "matchedName": "Aventura Parks",
+        "websiteUri": "http://www.aventuraparks.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Aventura%20Parks%2C%20Mushrif%20Park%20Gate%201%2C%20Al%20Khawaneej%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "aya-universe",
+      "name": "AYA Universe",
+      "aliases": [
+        "AYA",
+        "AYA Wafi City"
+      ],
+      "description": "A multi-room immersive light, sound and motion experience inside Wafi City, designed for wandering and photographing together.",
+      "sourceUrls": [
+        "https://www.aya-universe.com/"
+      ],
+      "locationHint": "Wafi City, Oud Metha, Dubai, UAE",
+      "placeId": "ChIJ0S3qW85dXz4Rj-hyqYEpY4g",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": [
+          "shows-immersive",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Wafi City - Oud Metha - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2295792,
+        "lng": 55.3182495
+      },
+      "googleTypes": [
+        "tourist_attraction",
+        "amusement_center",
+        "art_museum",
+        "amusement_park",
+        "indoor_playground",
+        "playground",
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:30.754Z",
+        "osm": null,
+        "matchedName": "AYA Universe",
+        "websiteUri": "http://www.aya-universe.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=AYA%20Universe%2C%20Wafi%20City%2C%20Oud%20Metha%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "bait-al-ahlam",
@@ -961,6 +1208,51 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=CherryHouse%20restaurant%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "cinema-akil",
+      "name": "Cinema Akil",
+      "aliases": [
+        "Cinema Akil Alserkal Avenue"
+      ],
+      "description": "The GCC’s first permanent arthouse cinema, screening independent, classic and international films in Alserkal Avenue.",
+      "sourceUrls": [
+        "https://www.cinemaakil.com/about",
+        "https://www.cinemaakil.com/calendar"
+      ],
+      "locationHint": "Warehouse 68, Alserkal Avenue, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJA363yypqXz4R0Tl8t80quQA",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": [
+          "shows-immersive",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Alserkal Avenue - Warehouse 68 17th St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.142165199999997,
+        "lng": 55.2241667
+      },
+      "googleTypes": [
+        "movie_theater",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "movie_theater",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:28.623Z",
+        "osm": null,
+        "matchedName": "Cinema Akil",
+        "websiteUri": "http://www.cinemaakil.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Cinema%20Akil%2C%20Warehouse%2068%2C%20Alserkal%20Avenue%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "city-walk",
       "name": "City Walk",
       "aliases": [],
@@ -1001,6 +1293,124 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=City%20Walk%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "coca-cola-arena-events",
+      "name": "Coca-Cola Arena",
+      "aliases": [
+        "Coca Cola Arena"
+      ],
+      "description": "Dubai’s City Walk arena, pinned for a currently verified comedy, concert or performance date rather than every arena listing.",
+      "sourceUrls": [
+        "https://www.coca-cola-arena.com/"
+      ],
+      "locationHint": "City Walk, Al Wasl, Dubai, UAE",
+      "placeId": "ChIJ_fQfFNtDXz4RTK9YhGxyztM",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "vir-das-dubai-comedy-festival-2026",
+          "title": "Vir Das at Dubai Comedy Festival",
+          "description": "Vir Das brings his stand-up show to Coca-Cola Arena for Dubai Comedy Festival.",
+          "startsAt": "2026-10-18T18:00:00+04:00",
+          "endsAt": "2026-10-18T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaicomedyfest.ae/shows",
+          "sourceUrl": "https://www.dubaicomedyfest.ae/shows",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-10-18T23:59:00+04:00",
+          "dateLabel": "18 Oct · doors 6pm",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Al Wasl - سٹی واک - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2043102,
+        "lng": 55.2653822
+      },
+      "googleTypes": [
+        "arena",
+        "event_venue",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "arena",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:31.547Z",
+        "osm": null,
+        "matchedName": "Coca-Cola Arena",
+        "websiteUri": "https://www.coca-cola-arena.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Coca-Cola%20Arena%2C%20City%20Walk%2C%20Al%20Wasl%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "coffee-museum",
+      "name": "Coffee Museum",
+      "aliases": [
+        "Dubai Coffee Museum"
+      ],
+      "description": "A heritage villa filled with coffee antiques, books and documents, with live roasting and brewing demonstrations and a quiet lounge.",
+      "sourceUrls": [
+        "https://www.coffeemuseum.ae/"
+      ],
+      "locationHint": "Villa 44, Al Fahidi Historical Neighbourhood, Dubai, UAE",
+      "placeId": "ChIJXWM28ThDXz4Rqp69suwZil8",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Historical Neighborhood, Bastakiya، Villa 44 - Al Hisn St - Al Souq Al Kabeer - Al Fahidi - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2637125,
+        "lng": 55.3001219
+      },
+      "googleTypes": [
+        "museum",
+        "tourist_attraction",
+        "coffee_shop",
+        "coffee_roastery",
+        "cafe",
+        "home_goods_store",
+        "food_store",
+        "store",
+        "food",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:29.552Z",
+        "osm": null,
+        "matchedName": "Coffee Museum",
+        "websiteUri": "http://www.coffeemuseum.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Coffee%20Museum%2C%20Villa%2044%2C%20Al%20Fahidi%20Historical%20Neighbourhood%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "dalia-bagel-bar",
@@ -1050,6 +1460,50 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dalia%20Bagel%20Bar%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "deep-dive-dubai",
+      "name": "Deep Dive Dubai",
+      "aliases": [
+        "Deep Dive"
+      ],
+      "description": "A 60-metre-deep diving pool built as a sunken-city experience, with guided scuba and freediving options for beginners and experienced divers.",
+      "sourceUrls": [
+        "https://www.deepdivedubai.com/"
+      ],
+      "locationHint": "NAS Sports Complex, Nad Al Sheba, Dubai, UAE",
+      "placeId": "ChIJVTTIyb9pXz4RwhcoNMXJGZQ",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "sport-active",
+        "tags": [
+          "sport-active",
+          "beach-water"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "NAS Sports Complex - Wadi Al Safa 3 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1276802,
+        "lng": 55.2951267
+      },
+      "googleTypes": [
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "sports_activity_location",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:30.941Z",
+        "osm": null,
+        "matchedName": "Deep Dive Dubai",
+        "websiteUri": "https://www.deepdivedubai.com/?utm_source=GMB&utm_medium=organic&utm_campaign=DDD",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Deep%20Dive%20Dubai%2C%20NAS%20Sports%20Complex%2C%20Nad%20Al%20Sheba%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "delano-dubai",
@@ -1110,6 +1564,427 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Delano%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "dubai-butterfly-garden",
+      "name": "Dubai Butterfly Garden",
+      "aliases": [
+        "Butterfly Garden Dubai"
+      ],
+      "description": "Climate-controlled domes with thousands of free-flying butterflies and displays about their life cycle — an easy daytime nature date.",
+      "sourceUrls": [
+        "https://www.dubaibutterflygarden.com/"
+      ],
+      "locationHint": "Al Barsha South 3, beside Dubai Miracle Garden, Dubai, UAE",
+      "placeId": "ChIJyzs4_GBuXz4RHLuW0e69qjk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife",
+          "family-animals"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Barsha South 3, Dubailand Area, Beside Dubai Miracle Garden - Al Barsha South Third - Al Barsha South - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.0618046,
+        "lng": 55.2465608
+      },
+      "googleTypes": [
+        "tourist_attraction",
+        "garden",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:30.311Z",
+        "osm": null,
+        "matchedName": "Dubai Butterfly Garden",
+        "websiteUri": "http://www.dubaibutterflygarden.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Butterfly%20Garden%2C%20Al%20Barsha%20South%203%2C%20beside%20Dubai%20Miracle%20Garden%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dubai-design-district-events",
+      "name": "Dubai Design District",
+      "aliases": [
+        "d3",
+        "Dubai Design District d3"
+      ],
+      "description": "Dubai’s design and creative district, pinned when a verified public design event turns its galleries and outdoor spaces into a date-worthy circuit.",
+      "sourceUrls": [
+        "https://dubaidesigndistrict.com/"
+      ],
+      "locationHint": "Dubai Design District, Dubai, UAE",
+      "placeId": "ChIJCUZ_qRZoXz4RQvsPyNmppTs",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "arts-culture-heritage",
+          "shopping-stroll"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "downtown-design-dubai-2026",
+          "title": "Downtown Design",
+          "description": "The region’s leading contemporary design fair, with collectible and commercial design, installations, talks and creative encounters in d3.",
+          "startsAt": "2026-11-05T12:00:00+04:00",
+          "endsAt": "2026-11-08T18:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.downtowndesign.com/dubai/visit",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-11-08T18:00:00+04:00",
+          "dateLabel": "5 Nov, 12pm–8 Nov, 6pm",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "d3 Managment Offices, Level 2, Building 3 - زعبيل الثانية - Dubai Design District - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1874956,
+        "lng": 55.2974816
+      },
+      "googleTypes": [
+        "corporate_office",
+        "community_center",
+        "event_venue",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "corporate_office",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:31.738Z",
+        "osm": null,
+        "matchedName": "Dubai Design District (D3) by TECOM Group",
+        "websiteUri": "https://dubaidesigndistrict.com/?utm_source=obodo_gmb_d3&utm_medium=gmb_click&utm_campaign=d3_gmb_click&utm_id=obodo_gmb_tracking_d3",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Design%20District%2C%20Dubai%20Design%20District%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dubai-exhibition-centre-events",
+      "name": "Dubai Exhibition Centre",
+      "aliases": [
+        "DEC",
+        "Dubai Exhibition Centre at Expo City"
+      ],
+      "description": "Expo City Dubai’s exhibition venue, pinned for verified public shows and large events worth planning a date around.",
+      "sourceUrls": [
+        "https://www.dubaiexhibitioncentre.com/en/whats-on"
+      ],
+      "locationHint": "Expo City Dubai, Dubai, UAE",
+      "placeId": "ChIJJYBKsjhzXz4RG8hyBbqxrnM",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "sport-active",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "dubai-active-muscle-show-2026",
+          "title": "Dubai Active & Dubai Muscle Show",
+          "description": "A three-day fitness and wellness festival with live competitions, classes, talks, brands and hands-on activities.",
+          "startsAt": "2026-10-30T00:00:00+04:00",
+          "endsAt": "2026-11-01T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://dubaiactiveshow.com/",
+          "sourceUrl": "https://www.dubaiexhibitioncentre.com/en/whats-on/dubai-muscle-show-and-active-show-2026",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-11-01T23:59:00+04:00",
+          "dateLabel": "30 Oct–1 Nov",
+          "taxonomyTags": [
+            "events-activities",
+            "sport-active",
+            "wellness"
+          ]
+        },
+        {
+          "id": "world-art-dubai-2026",
+          "title": "World Art Dubai",
+          "description": "A public contemporary-art fair bringing galleries and independent artists together, with work to browse and buy across four days.",
+          "startsAt": "2026-11-19T13:00:00+04:00",
+          "endsAt": "2026-11-22T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.worldartdubai.com/",
+          "sourceUrl": "https://www.dubaiexhibitioncentre.com/en/whats-on/world-art-dubai-2026",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-11-22T21:00:00+04:00",
+          "dateLabel": "19–22 Nov · 1pm–9pm",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Lehbab Street - Madinat Al Mataar - Expo City Dubai - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 24.9626236,
+        "lng": 55.147418
+      },
+      "googleTypes": [
+        "event_venue",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "event_venue",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:32.220Z",
+        "osm": null,
+        "matchedName": "Dubai Exhibition Centre",
+        "websiteUri": "https://www.dubaiexhibitioncentre.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Exhibition%20Centre%2C%20Expo%20City%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dubai-frame",
+      "name": "Dubai Frame",
+      "aliases": [
+        "The Dubai Frame",
+        "Berwaz Dubai"
+      ],
+      "description": "Old Dubai, a panoramic sky deck and a Future Dubai gallery in one visit. Late afternoon works especially well for the changing city views.",
+      "sourceUrls": [
+        "https://www.dubaiframe.ae/en"
+      ],
+      "locationHint": "Zabeel Park, Al Kifaf, Dubai, UAE",
+      "placeId": "ChIJQZ3ZINtCXz4RmFeoAa81MPk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Zabeel Park Jogging Track - Al Kifaf - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.235452199999997,
+        "lng": 55.300340899999995
+      },
+      "googleTypes": [
+        "monument",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "monument",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:30.101Z",
+        "osm": null,
+        "matchedName": "Dubai Frame",
+        "websiteUri": "https://www.dubaiframe.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Frame%2C%20Zabeel%20Park%2C%20Al%20Kifaf%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dubai-opera-events",
+      "name": "Dubai Opera",
+      "aliases": [
+        "Dubai Opera District"
+      ],
+      "description": "Dubai’s Downtown performing-arts venue, pinned here for currently verified tours, ballet, concerts and other bookable date-night events.",
+      "sourceUrls": [
+        "https://www.dubaiopera.com/en-US"
+      ],
+      "locationHint": "Sheikh Mohammed bin Rashid Boulevard, Downtown Dubai, Dubai, UAE",
+      "placeId": "ChIJkdkorypoXz4RY_9KOq__Vcg",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "shows-immersive",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "dubai-opera-grand-tour-2026",
+          "title": "Dubai Opera Grand Tour",
+          "description": "A guided two-hour look behind the scenes of Dubai Opera, including its architecture, auditorium and stories from the stage.",
+          "startsAt": "2026-06-15T12:00:00+04:00",
+          "endsAt": "2026-09-30T20:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/visit/tours?ID=2dc786db-8283-ee11-8179-6045bd6a52a8",
+          "sourceUrl": "https://www.dubaiopera.com/en/visit/tours?ID=2dc786db-8283-ee11-8179-6045bd6a52a8",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-09-30T20:00:00+04:00",
+          "dateLabel": "Daily through 30 Sep · 12pm, 2pm, 4pm & 6pm",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        },
+        {
+          "id": "marriage-of-figaro-ballet-dubai-2026",
+          "title": "The Marriage of Figaro Ballet",
+          "description": "A ballet adaptation of Beaumarchais’ comedy, performed at Dubai Opera across three September dates.",
+          "startsAt": "2026-09-17T14:00:00+04:00",
+          "endsAt": "2026-09-19T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/events/ballet/the-marriage-of-figaro-ballet",
+          "sourceUrl": "https://www.dubaiopera.com/en/events/ballet/the-marriage-of-figaro-ballet",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-09-19T23:59:00+04:00",
+          "dateLabel": "17–19 Sep · 2pm & 8pm performances",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive",
+            "arts-culture-heritage"
+          ]
+        },
+        {
+          "id": "god-save-the-queen-dubai-2026",
+          "title": "God Save the Queen",
+          "description": "A live Queen tribute concert recreating the band’s best-known songs on the Dubai Opera stage.",
+          "startsAt": "2026-10-05T20:30:00+04:00",
+          "endsAt": "2026-10-05T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/events/rock/god-save-the-queen",
+          "sourceUrl": "https://www.dubaiopera.com/en/events/rock/god-save-the-queen",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-10-05T23:59:00+04:00",
+          "dateLabel": "5 Oct · 8:30pm",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.195617,
+        "lng": 55.271879
+      },
+      "googleTypes": [
+        "opera_house",
+        "tourist_attraction",
+        "concert_hall",
+        "auditorium",
+        "live_music_venue",
+        "performing_arts_theater",
+        "event_venue",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "opera_house",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:31.929Z",
+        "osm": null,
+        "matchedName": "Dubai Opera",
+        "websiteUri": "https://www.dubaiopera.com/ar-AE/home",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Opera%2C%20Sheikh%20Mohammed%20bin%20Rashid%20Boulevard%2C%20Downtown%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dubai-parks-resorts-events",
+      "name": "Dubai Parks and Resorts",
+      "aliases": [
+        "Dubai Parks",
+        "Dubai Parks & Resorts"
+      ],
+      "description": "A large entertainment destination on Sheikh Zayed Road, pinned here when a verified festival or public event is scheduled at the resort.",
+      "sourceUrls": [
+        "https://www.dubaiparksandresorts.com/"
+      ],
+      "locationHint": "Sheikh Zayed Road, Dubai, UAE",
+      "placeId": "ChIJ7fMipVMOXz4Rwhy-Scf2LOE",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "untold-dubai-2026",
+          "title": "UNTOLD Dubai",
+          "description": "A four-day international music festival returning to Dubai Parks and Resorts with multiple stages and late-night performances.",
+          "startsAt": "2026-11-05T00:00:00+04:00",
+          "endsAt": "2026-11-08T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.untold.ae/",
+          "sourceUrl": "https://www.untold.ae/",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-11-08T23:59:00+04:00",
+          "dateLabel": "5–8 Nov",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Sheikh Zayed Rd - Saih Shuaib 1 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 24.923945999999997,
+        "lng": 55.0060946
+      },
+      "googleTypes": [
+        "tourist_attraction",
+        "amusement_center",
+        "amusement_park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "amusement_center",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:32.925Z",
+        "osm": null,
+        "matchedName": "Dubai Parks and Resorts",
+        "websiteUri": "https://www.dubaiparksandresorts.com/en?utm_source=google&utm_medium=paidsearch&utm_campaign=always-on&utm_content=gmb",
+        "businessStatus": "CLOSED_TEMPORARILY"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Parks%20and%20Resorts%2C%20Sheikh%20Zayed%20Road%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "dubai-pottery-studio",
       "name": "Dubai Pottery Studio",
       "aliases": [],
@@ -1157,6 +2032,98 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Pottery%20Studio%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "earth-roastery",
+      "name": "EARTH ROASTERY",
+      "aliases": [
+        "Earth Roastery",
+        "Earth Roastery UAE"
+      ],
+      "description": "An industrial Al Quoz specialty-coffee roastery from a direct-trade brand established in 2014. A relaxed coffee date that pairs naturally with nearby Alserkal Avenue.",
+      "sourceUrls": [
+        "https://ae.earthroastery.com/"
+      ],
+      "locationHint": "6th St, Al Quoz Third, Dubai, UAE",
+      "placeId": "ChIJlzR0Np9pXz4R01tmn763c8g",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "6th St - Al Qouz Third - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.161847800000004,
+        "lng": 55.2403094
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:27.501Z",
+        "osm": null,
+        "matchedName": "EARTH ROASTERY",
+        "websiteUri": "https://ae.earthroastery.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=EARTH%20ROASTERY%2C%206th%20St%2C%20Al%20Quoz%20Third%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "etihad-museum",
+      "name": "Etihad Museum",
+      "aliases": [
+        "Union Museum"
+      ],
+      "description": "A thoughtful museum telling the story of the UAE’s 1971 union through historic documents, objects and interactive exhibits.",
+      "sourceUrls": [
+        "https://etihadmuseum.dubaiculture.gov.ae/"
+      ],
+      "locationHint": "Jumeirah Street, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJ-y_VQqpDXz4R1hgHMuyDNXY",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Jumeira St - Jumeira First - Al Mina - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.241295899999997,
+        "lng": 55.2692991
+      },
+      "googleTypes": [
+        "museum",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:29.181Z",
+        "osm": null,
+        "matchedName": "Etihad Museum",
+        "websiteUri": "https://etihadmuseum.dubaiculture.gov.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Etihad%20Museum%2C%20Jumeirah%20Street%2C%20Jumeirah%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "fairmont-the-palm",
@@ -1339,6 +2306,121 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Hatta%20Dam%2C%20Hatta%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "jameel-arts-centre",
+      "name": "Jameel Arts Centre",
+      "aliases": [
+        "Art Jameel Dubai",
+        "Jameel"
+      ],
+      "description": "A free contemporary-art centre on Jaddaf Waterfront with changing exhibitions, a research library, sculpture park and restaurant.",
+      "sourceUrls": [
+        "https://jameelartscentre.org/visitor-information/"
+      ],
+      "locationHint": "Jaddaf Waterfront, Al Jadaf, Dubai, UAE",
+      "placeId": "ChIJl_CSFGldXz4RhlrREDrsiZU",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "library-circles-rend-beiruti-2026",
+          "title": "Library Circles: Rend Beiruti",
+          "description": "A free long-form library installation by Rend Beiruti, with a guided tour on 19 September at 3pm.",
+          "startsAt": "2026-09-16T00:00:00+04:00",
+          "endsAt": "2027-01-11T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://jameelartscentre.org/whats-on/library-circles-rend-beiruti/",
+          "sourceUrl": "https://jameelartscentre.org/whats-on/library-circles-rend-beiruti/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2027-01-11T23:59:00+04:00",
+          "dateLabel": "16 Sep–11 Jan · free guided tour 19 Sep, 3pm",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Ground Floor - Al Jadaf - Jaddaf Waterfront - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2290425,
+        "lng": 55.340396899999995
+      },
+      "googleTypes": [
+        "museum",
+        "tourist_attraction",
+        "art_museum",
+        "library",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:28.995Z",
+        "osm": null,
+        "matchedName": "Jameel Arts Centre",
+        "websiteUri": "https://www.jameelartscentre.org/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Jameel%20Arts%20Centre%2C%20Jaddaf%20Waterfront%2C%20Al%20Jadaf%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "kave-the-story-of-things",
+      "name": "KAVE – The Story of Things",
+      "aliases": [
+        "KAVE",
+        "KAVE Upcycling Café"
+      ],
+      "description": "An upcycling café built around salvaged materials, with food, repair, making and sustainability workshops inside Alserkal Avenue.",
+      "sourceUrls": [
+        "https://thestoryofthings.com/"
+      ],
+      "locationHint": "Warehouse 20, Alserkal Avenue, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJpYCgmotpXz4RsKMXxnFPKw0",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "creative-workshop",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Alserkal Avenue, Warehouse 20 Dubai - القوز الصناعية الأولى - القوز - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.141254399999998,
+        "lng": 55.226113299999994
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:28.216Z",
+        "osm": null,
+        "matchedName": "KAVE - The Story of Things",
+        "websiteUri": "http://www.thestoryofthings.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=KAVE%20%E2%80%93%20The%20Story%20of%20Things%2C%20Warehouse%2020%2C%20Alserkal%20Avenue%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "kefi-books-board-games-cafe",
@@ -1758,6 +2840,54 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mohammed%20Bin%20Rashid%20Library%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "museum-of-the-future",
+      "name": "Museum of the Future",
+      "aliases": [
+        "The Museum of the Future",
+        "MOTF"
+      ],
+      "description": "An immersive journey to 2071 through space, ecology, wellness and future technologies, inside one of Dubai’s most distinctive buildings.",
+      "sourceUrls": [
+        "https://museumofthefuture.ae/en/experience"
+      ],
+      "locationHint": "Sheikh Zayed Road, Trade Centre 2, Dubai, UAE",
+      "placeId": "ChIJqU_DoUtDXz4RxC8gnP8G_Ss",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "67CP+H4Q - Sheikh Zayed Rd - Trade Center Second - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.219203399999998,
+        "lng": 55.2819328
+      },
+      "googleTypes": [
+        "museum",
+        "store",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "museum",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:29.919Z",
+        "osm": null,
+        "matchedName": "The Museum of the Future",
+        "websiteUri": "https://museumofthefuture.ae/ar",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Museum%20of%20the%20Future%2C%20Sheikh%20Zayed%20Road%2C%20Trade%20Centre%202%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "ona",
       "name": "ONA",
       "aliases": [],
@@ -1927,6 +3057,57 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Ramen%20Hisa%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "raw-coffee-company",
+      "name": "RAW Coffee Company",
+      "aliases": [
+        "RAW Coffee",
+        "RAW Coffee Roastery"
+      ],
+      "description": "A working specialty-coffee roastery, café and SCA training campus. Come for an easy coffee date, or plan ahead for a hands-on home-barista class.",
+      "sourceUrls": [
+        "https://rawcoffeecompany.com/pages/about"
+      ],
+      "locationHint": "Warehouse 10, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJbSAmv89rXz4ROS45tG_g-t4",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "creative-workshop"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Warehouse Next to RTA Carpark WH10, Cnr 7A and 4A Street - Al Qouz Ind.first - Al Manara - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1508404,
+        "lng": 55.2271809
+      },
+      "googleTypes": [
+        "coffee_roastery",
+        "coffee_shop",
+        "cafe",
+        "art_gallery",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_roastery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:27.757Z",
+        "osm": null,
+        "matchedName": "RAW Coffee Company",
+        "websiteUri": "http://www.rawcoffeecompany.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=RAW%20Coffee%20Company%2C%20Warehouse%2010%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "sakhalin",
@@ -2451,6 +3632,90 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Umm%20Suqeim%20Sunset%20Beach%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "the-agenda-events",
+      "name": "The Agenda",
+      "aliases": [
+        "The Agenda Dubai"
+      ],
+      "description": "A live-events venue in Dubai Media City, pinned for currently verified music and performance nights worth booking together.",
+      "sourceUrls": [
+        "https://www.theagenda.com/"
+      ],
+      "locationHint": "Dubai Media City, Dubai, UAE",
+      "placeId": "ChIJ8c-ogW5rXz4Rifj0kNi88RE",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "atb-world-tour-dubai-2026",
+          "title": "The Legends of Trance: ATB World Tour",
+          "description": "A Dubai stop on ATB’s world tour, built around a full live trance set at The Agenda.",
+          "startsAt": "2026-09-05T20:00:00+04:00",
+          "endsAt": "2026-09-05T23:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.theagenda.com/events/the-legends-of-trance-atb-world-tour",
+          "sourceUrl": "https://www.theagenda.com/events/the-legends-of-trance-atb-world-tour",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-05T23:50:00+04:00",
+          "dateLabel": "5 Sep · 8pm",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        },
+        {
+          "id": "paul-oakenfold-dubai-2026",
+          "title": "The Legends of Trance: Paul Oakenfold",
+          "description": "A headline trance night with Paul Oakenfold at The Agenda as part of its Legends of Trance series.",
+          "startsAt": "2026-09-18T20:00:00+04:00",
+          "endsAt": "2026-09-18T23:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.theagenda.com/events/the-legends-of-trance-paul-oakenfold",
+          "sourceUrl": "https://www.theagenda.com/events/the-legends-of-trance-paul-oakenfold",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-18T23:50:00+04:00",
+          "dateLabel": "18 Sep · 8pm",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Abdullah Omran Taryam St - corner Al Jaddi St - Al Safouh Second - Dubai Media City - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1004829,
+        "lng": 55.16771310000001
+      },
+      "googleTypes": [
+        "event_venue",
+        "performing_arts_theater",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "event_venue",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:31.320Z",
+        "osm": null,
+        "matchedName": "The Agenda",
+        "websiteUri": "https://theagenda.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The%20Agenda%2C%20Dubai%20Media%20City%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "the-courtyard-playhouse",
       "name": "The Courtyard Playhouse",
       "aliases": [],
@@ -2462,6 +3727,80 @@
         28
       ],
       "locationHint": "Dubai, UAE",
+      "events": [
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-02",
+          "title": "Wednesday Night Improv: Maestro — 2 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-02T20:00:00+04:00",
+          "endsAt": "2026-09-02T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-2-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-2-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-02T22:00:00+04:00",
+          "dateLabel": "2 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        },
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-09",
+          "title": "Wednesday Night Improv: Maestro — 9 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-09T20:00:00+04:00",
+          "endsAt": "2026-09-09T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-9-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-9-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-09T22:00:00+04:00",
+          "dateLabel": "9 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        },
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-16",
+          "title": "Wednesday Night Improv: Maestro — 16 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-16T20:00:00+04:00",
+          "endsAt": "2026-09-16T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-16-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-16-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-16T22:00:00+04:00",
+          "dateLabel": "16 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        },
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-23",
+          "title": "Wednesday Night Improv: Maestro — 23 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-23T20:00:00+04:00",
+          "endsAt": "2026-09-23T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-23-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-23-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-23T22:00:00+04:00",
+          "dateLabel": "23 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ]
+        }
+      ],
       "emirate": "Dubai",
       "address": "The Courtyard - 4B St - Al Qouz Ind.first - Al Quoz - Dubai",
       "coordinates": {
@@ -2541,6 +3880,225 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Knowledge%20Park%20Conference%20Centre%20Auditorium%2C%20Block%202B%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "the-sevens-stadium-events",
+      "name": "The Sevens Stadium",
+      "aliases": [
+        "The Sevens",
+        "7he Sevens Stadium"
+      ],
+      "description": "Dubai’s outdoor sports and events venue, pinned for verified festivals with activities worth making a day of.",
+      "sourceUrls": [
+        "https://thesevensstadium.com/"
+      ],
+      "locationHint": "Dubai–Al Ain Road, Dubai, UAE",
+      "placeId": "ChIJTW1TgHR-Xz4R_gKlyWOauJc",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "sport-active"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "moc-festival-dubai-2026",
+          "title": "MOC26 Festival",
+          "description": "A hands-on motoring and outdoor festival with ride, drive, recovery and adventure try-outs rather than a static showroom visit.",
+          "startsAt": "2026-10-23T15:00:00+04:00",
+          "endsAt": "2026-10-25T21:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.moc-festival.com/programme",
+          "sourceUrl": "https://www.moc-festival.com/programme",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-10-25T21:30:00+04:00",
+          "dateLabel": "23–25 Oct · public festival",
+          "taxonomyTags": [
+            "events-activities",
+            "sport-active"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Al Ain Road - E66 - Al Marmoom - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 24.9958594,
+        "lng": 55.4691851
+      },
+      "googleTypes": [
+        "stadium",
+        "sports_complex",
+        "event_venue",
+        "sports_activity_location",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "stadium",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:33.666Z",
+        "osm": null,
+        "matchedName": "The Sevens Stadium",
+        "websiteUri": "http://www.thesevens.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The%20Sevens%20Stadium%2C%20Dubai%E2%80%93Al%20Ain%20Road%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "the-workshop-dubai",
+      "name": "The Workshop Dubai",
+      "aliases": [
+        "The Workshop",
+        "Café At The Back",
+        "Fann À Porter"
+      ],
+      "description": "A Jumeirah villa combining contemporary art, a sustainable design shop, workshops, books and board games with a pet-friendly garden café.",
+      "sourceUrls": [
+        "https://www.theworkshopdubai.com/about-us"
+      ],
+      "locationHint": "Villa 45, Street 23B, Jumeirah 2, Dubai, UAE",
+      "placeId": "ChIJGS5YUA1CXz4RgMNJuXWLFFk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink",
+          "creative-workshop"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Villa 45 St. 23b - Jumeira Second - Jumeirah 2 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1992846,
+        "lng": 55.247412
+      },
+      "googleTypes": [
+        "art_gallery",
+        "art_studio",
+        "cafe",
+        "event_venue",
+        "food",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:27.975Z",
+        "osm": null,
+        "matchedName": "The Workshop Dubai",
+        "websiteUri": "http://www.theworkshopdubai.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The%20Workshop%20Dubai%2C%20Villa%2045%2C%20Street%2023B%2C%20Jumeirah%202%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "thejamjar",
+      "name": "thejamjar",
+      "aliases": [
+        "The JamJar Dubai",
+        "The JamJar"
+      ],
+      "description": "A DIY painting studio where a session includes an easel, canvas and unlimited acrylic paints and brushes — low-pressure, hands-on and good for two.",
+      "sourceUrls": [
+        "https://www.thejamjardubai.com/diypainting"
+      ],
+      "locationHint": "Warehouse 74, Alserkal Avenue, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJ8UwqScVrXz4RYHU1TW3mxQw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Alserkal Avenue, Warehouse 74, Al Quoz Industrial Area 1 - القوز الصناعية الأولى - القوز 1 - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1425971,
+        "lng": 55.2244816
+      },
+      "googleTypes": [
+        "art_gallery",
+        "child_care_agency",
+        "educational_institution",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": null,
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:28.809Z",
+        "osm": null,
+        "matchedName": "thejamjar",
+        "websiteUri": "http://www.thejamjardubai.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=thejamjar%2C%20Warehouse%2074%2C%20Alserkal%20Avenue%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "toda-theatre-of-digital-art",
+      "name": "TODA – Theatre of Digital Art",
+      "aliases": [
+        "TODA",
+        "Theatre of Digital Art"
+      ],
+      "description": "An immersive digital-art theatre in Souk Madinat Jumeirah, mixing projection, sound and live or programmed cultural experiences.",
+      "sourceUrls": [
+        "https://toda.ae/"
+      ],
+      "locationHint": "Souk Madinat Jumeirah, Al Sufouh 1, Dubai, UAE",
+      "placeId": "ChIJabgg9lZrXz4RG3hNr_vISsg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": [
+          "shows-immersive",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Souk - Madinat Jumeirah - Al Sufouh 1 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1335648,
+        "lng": 55.1853401
+      },
+      "googleTypes": [
+        "tourist_attraction",
+        "concert_hall",
+        "auditorium",
+        "live_music_venue",
+        "event_venue",
+        "association_or_organization",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "association_or_organization",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-26T14:07:30.554Z",
+        "osm": null,
+        "matchedName": "TODA - Theatre of Digital Art",
+        "websiteUri": "http://www.toda.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=TODA%20%E2%80%93%20Theatre%20of%20Digital%20Art%2C%20Souk%20Madinat%20Jumeirah%2C%20Al%20Sufouh%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "treasure-pots",

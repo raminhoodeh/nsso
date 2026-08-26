@@ -1,0 +1,641 @@
+{
+  "version": 1,
+  "places": [
+    {
+      "id": "earth-roastery",
+      "name": "EARTH ROASTERY",
+      "aliases": ["Earth Roastery", "Earth Roastery UAE"],
+      "description": "An industrial Al Quoz specialty-coffee roastery from a direct-trade brand established in 2014. A relaxed coffee date that pairs naturally with nearby Alserkal Avenue.",
+      "sourceUrls": ["https://ae.earthroastery.com/"],
+      "locationHint": "6th St, Al Quoz Third, Dubai, UAE",
+      "placeId": "ChIJlzR0Np9pXz4R01tmn763c8g",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink"]
+      }
+    },
+    {
+      "id": "raw-coffee-company",
+      "name": "RAW Coffee Company",
+      "aliases": ["RAW Coffee", "RAW Coffee Roastery"],
+      "description": "A working specialty-coffee roastery, café and SCA training campus. Come for an easy coffee date, or plan ahead for a hands-on home-barista class.",
+      "sourceUrls": ["https://rawcoffeecompany.com/pages/about"],
+      "locationHint": "Warehouse 10, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJbSAmv89rXz4ROS45tG_g-t4",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink", "creative-workshop"]
+      }
+    },
+    {
+      "id": "the-workshop-dubai",
+      "name": "The Workshop Dubai",
+      "aliases": ["The Workshop", "Café At The Back", "Fann À Porter"],
+      "description": "A Jumeirah villa combining contemporary art, a sustainable design shop, workshops, books and board games with a pet-friendly garden café.",
+      "sourceUrls": ["https://www.theworkshopdubai.com/about-us"],
+      "locationHint": "Villa 45, Street 23B, Jumeirah 2, Dubai, UAE",
+      "placeId": "ChIJGS5YUA1CXz4RgMNJuXWLFFk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "food-drink", "creative-workshop"]
+      }
+    },
+    {
+      "id": "kave-the-story-of-things",
+      "name": "KAVE – The Story of Things",
+      "aliases": ["KAVE", "KAVE Upcycling Café"],
+      "description": "An upcycling café built around salvaged materials, with food, repair, making and sustainability workshops inside Alserkal Avenue.",
+      "sourceUrls": ["https://thestoryofthings.com/"],
+      "locationHint": "Warehouse 20, Alserkal Avenue, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJpYCgmotpXz4RsKMXxnFPKw0",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink", "creative-workshop", "arts-culture-heritage"]
+      }
+    },
+    {
+      "id": "alserkal-avenue",
+      "name": "Alserkal Avenue",
+      "aliases": ["Alserkal Arts District", "Alserkal"],
+      "description": "A walkable Al Quoz cultural district with galleries, exhibitions, independent cinema, design spaces and places to eat — an easy build-your-own date afternoon.",
+      "sourceUrls": ["https://alserkal.online/alserkal-avenue/"],
+      "locationHint": "17th Street, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJKc4P3H9pXz4RTyLpHxr6Dyg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "shopping-stroll", "food-drink"]
+      }
+    },
+    {
+      "id": "cinema-akil",
+      "name": "Cinema Akil",
+      "aliases": ["Cinema Akil Alserkal Avenue"],
+      "description": "The GCC’s first permanent arthouse cinema, screening independent, classic and international films in Alserkal Avenue.",
+      "sourceUrls": ["https://www.cinemaakil.com/about", "https://www.cinemaakil.com/calendar"],
+      "locationHint": "Warehouse 68, Alserkal Avenue, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJA363yypqXz4R0Tl8t80quQA",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": ["shows-immersive", "arts-culture-heritage"]
+      }
+    },
+    {
+      "id": "thejamjar",
+      "name": "thejamjar",
+      "aliases": ["The JamJar Dubai", "The JamJar"],
+      "description": "A DIY painting studio where a session includes an easel, canvas and unlimited acrylic paints and brushes — low-pressure, hands-on and good for two.",
+      "sourceUrls": ["https://www.thejamjardubai.com/diypainting"],
+      "locationHint": "Warehouse 74, Alserkal Avenue, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJ8UwqScVrXz4RYHU1TW3mxQw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": ["creative-workshop", "arts-culture-heritage"]
+      }
+    },
+    {
+      "id": "jameel-arts-centre",
+      "name": "Jameel Arts Centre",
+      "aliases": ["Art Jameel Dubai", "Jameel"],
+      "description": "A free contemporary-art centre on Jaddaf Waterfront with changing exhibitions, a research library, sculpture park and restaurant.",
+      "sourceUrls": ["https://jameelartscentre.org/visitor-information/"],
+      "locationHint": "Jaddaf Waterfront, Al Jadaf, Dubai, UAE",
+      "placeId": "ChIJl_CSFGldXz4RhlrREDrsiZU",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage"]
+      },
+      "events": [
+        {
+          "id": "library-circles-rend-beiruti-2026",
+          "title": "Library Circles: Rend Beiruti",
+          "description": "A free long-form library installation by Rend Beiruti, with a guided tour on 19 September at 3pm.",
+          "startsAt": "2026-09-16T00:00:00+04:00",
+          "endsAt": "2027-01-11T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://jameelartscentre.org/whats-on/library-circles-rend-beiruti/",
+          "sourceUrl": "https://jameelartscentre.org/whats-on/library-circles-rend-beiruti/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2027-01-11T23:59:00+04:00",
+          "dateLabel": "16 Sep–11 Jan · free guided tour 19 Sep, 3pm",
+          "taxonomyTags": ["events-activities", "arts-culture-heritage"]
+        }
+      ]
+    },
+    {
+      "id": "etihad-museum",
+      "name": "Etihad Museum",
+      "aliases": ["Union Museum"],
+      "description": "A thoughtful museum telling the story of the UAE’s 1971 union through historic documents, objects and interactive exhibits.",
+      "sourceUrls": ["https://etihadmuseum.dubaiculture.gov.ae/"],
+      "locationHint": "Jumeirah Street, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJ-y_VQqpDXz4R1hgHMuyDNXY",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage"]
+      }
+    },
+    {
+      "id": "al-shindagha-museum",
+      "name": "Al Shindagha Museum",
+      "aliases": ["Shindagha Museum"],
+      "description": "A large heritage museum across restored houses, exploring Dubai Creek, pearl diving, perfume, poetry, crafts and traditional life.",
+      "sourceUrls": ["https://alshindagha.dubaiculture.gov.ae/Documents/LRDCR-2266-ASM%20Brochure-En-OL.pdf"],
+      "locationHint": "Al Shindagha Historical District, Dubai, UAE",
+      "placeId": "ChIJv8NPy4JDXz4Rq0g_w3p4eEg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "creative-workshop"]
+      }
+    },
+    {
+      "id": "coffee-museum",
+      "name": "Coffee Museum",
+      "aliases": ["Dubai Coffee Museum"],
+      "description": "A heritage villa filled with coffee antiques, books and documents, with live roasting and brewing demonstrations and a quiet lounge.",
+      "sourceUrls": ["https://www.coffeemuseum.ae/"],
+      "locationHint": "Villa 44, Al Fahidi Historical Neighbourhood, Dubai, UAE",
+      "placeId": "ChIJXWM28ThDXz4Rqp69suwZil8",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "food-drink"]
+      }
+    },
+    {
+      "id": "al-safa-art-design-library",
+      "name": "Al Safa Art & Design Library",
+      "aliases": ["Al Safa Library", "Al Safa Art and Design Library"],
+      "description": "A specialist public library for art and design, with reading collections, exhibitions and occasional public workshops.",
+      "sourceUrls": ["https://dpl.dubaiculture.gov.ae/en/branches"],
+      "locationHint": "Al Wasl Road, Jumeirah 3, Dubai, UAE",
+      "placeId": "ChIJ7fKbpeVDXz4RKo-mGUjzVTg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "creative-workshop"]
+      }
+    },
+    {
+      "id": "museum-of-the-future",
+      "name": "Museum of the Future",
+      "aliases": ["The Museum of the Future", "MOTF"],
+      "description": "An immersive journey to 2071 through space, ecology, wellness and future technologies, inside one of Dubai’s most distinctive buildings.",
+      "sourceUrls": ["https://museumofthefuture.ae/en/experience"],
+      "locationHint": "Sheikh Zayed Road, Trade Centre 2, Dubai, UAE",
+      "placeId": "ChIJqU_DoUtDXz4RxC8gnP8G_Ss",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "shows-immersive"]
+      }
+    },
+    {
+      "id": "dubai-frame",
+      "name": "Dubai Frame",
+      "aliases": ["The Dubai Frame", "Berwaz Dubai"],
+      "description": "Old Dubai, a panoramic sky deck and a Future Dubai gallery in one visit. Late afternoon works especially well for the changing city views.",
+      "sourceUrls": ["https://www.dubaiframe.ae/en"],
+      "locationHint": "Zabeel Park, Al Kifaf, Dubai, UAE",
+      "placeId": "ChIJQZ3ZINtCXz4RmFeoAa81MPk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "shows-immersive"]
+      }
+    },
+    {
+      "id": "dubai-butterfly-garden",
+      "name": "Dubai Butterfly Garden",
+      "aliases": ["Butterfly Garden Dubai"],
+      "description": "Climate-controlled domes with thousands of free-flying butterflies and displays about their life cycle — an easy daytime nature date.",
+      "sourceUrls": ["https://www.dubaibutterflygarden.com/"],
+      "locationHint": "Al Barsha South 3, beside Dubai Miracle Garden, Dubai, UAE",
+      "placeId": "ChIJyzs4_GBuXz4RHLuW0e69qjk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": ["nature-wildlife", "family-animals"]
+      }
+    },
+    {
+      "id": "toda-theatre-of-digital-art",
+      "name": "TODA – Theatre of Digital Art",
+      "aliases": ["TODA", "Theatre of Digital Art"],
+      "description": "An immersive digital-art theatre in Souk Madinat Jumeirah, mixing projection, sound and live or programmed cultural experiences.",
+      "sourceUrls": ["https://toda.ae/"],
+      "locationHint": "Souk Madinat Jumeirah, Al Sufouh 1, Dubai, UAE",
+      "placeId": "ChIJabgg9lZrXz4RG3hNr_vISsg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": ["shows-immersive", "arts-culture-heritage"]
+      }
+    },
+    {
+      "id": "aya-universe",
+      "name": "AYA Universe",
+      "aliases": ["AYA", "AYA Wafi City"],
+      "description": "A multi-room immersive light, sound and motion experience inside Wafi City, designed for wandering and photographing together.",
+      "sourceUrls": ["https://www.aya-universe.com/"],
+      "locationHint": "Wafi City, Oud Metha, Dubai, UAE",
+      "placeId": "ChIJ0S3qW85dXz4Rj-hyqYEpY4g",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": ["shows-immersive", "arts-culture-heritage"]
+      }
+    },
+    {
+      "id": "deep-dive-dubai",
+      "name": "Deep Dive Dubai",
+      "aliases": ["Deep Dive"],
+      "description": "A 60-metre-deep diving pool built as a sunken-city experience, with guided scuba and freediving options for beginners and experienced divers.",
+      "sourceUrls": ["https://www.deepdivedubai.com/"],
+      "locationHint": "NAS Sports Complex, Nad Al Sheba, Dubai, UAE",
+      "placeId": "ChIJVTTIyb9pXz4RwhcoNMXJGZQ",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "sport-active",
+        "tags": ["sport-active", "beach-water"]
+      }
+    },
+    {
+      "id": "aventura-parks",
+      "name": "Aventura Parks",
+      "aliases": ["Aventura", "Aventura Parks Dubai"],
+      "description": "A treetop adventure park in the Ghaf forest at Mushrif Park, with obstacle circuits and zip lines for an active outdoor date.",
+      "sourceUrls": ["https://www.aventuraparks.com/"],
+      "locationHint": "Mushrif Park Gate 1, Al Khawaneej, Dubai, UAE",
+      "placeId": "ChIJ7RC_A2BgXz4RBJKAqr4PR9g",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "sport-active",
+        "tags": ["sport-active", "nature-wildlife"]
+      }
+    },
+    {
+      "id": "the-courtyard-playhouse",
+      "name": "The Courtyard Playhouse",
+      "aliases": ["Courtyard Playhouse"],
+      "description": "Dubai’s independent improv and theatre venue, with intimate performances, workshops and recurring free community nights.",
+      "sourceUrls": ["https://courtyardplayhouse.com/"],
+      "locationHint": "The Courtyard, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJsdslHytqXz4RO2HSZtFRPkg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "shows-immersive",
+        "tags": ["shows-immersive", "creative-workshop"]
+      },
+      "events": [
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-02",
+          "title": "Wednesday Night Improv: Maestro — 2 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-02T20:00:00+04:00",
+          "endsAt": "2026-09-02T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-2-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-2-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-02T22:00:00+04:00",
+          "dateLabel": "2 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        },
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-09",
+          "title": "Wednesday Night Improv: Maestro — 9 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-09T20:00:00+04:00",
+          "endsAt": "2026-09-09T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-9-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-9-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-09T22:00:00+04:00",
+          "dateLabel": "9 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        },
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-16",
+          "title": "Wednesday Night Improv: Maestro — 16 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-16T20:00:00+04:00",
+          "endsAt": "2026-09-16T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-16-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-16-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-16T22:00:00+04:00",
+          "dateLabel": "16 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        },
+        {
+          "id": "wednesday-night-improv-maestro-2026-09-23",
+          "title": "Wednesday Night Improv: Maestro — 23 Sep",
+          "description": "A free weekly improv night where performers compete in scenes and the audience helps decide who becomes the evening’s Maestro.",
+          "startsAt": "2026-09-23T20:00:00+04:00",
+          "endsAt": "2026-09-23T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-23-sep-2026/",
+          "sourceUrl": "https://courtyardplayhouse.com/event/wednesday-night-improv-maestro-wed-23-sep-2026/",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-23T22:00:00+04:00",
+          "dateLabel": "23 Sep · 8pm–10pm · free RSVP",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        }
+      ]
+    },
+    {
+      "id": "the-agenda-events",
+      "name": "The Agenda",
+      "aliases": ["The Agenda Dubai"],
+      "description": "A live-events venue in Dubai Media City, pinned for currently verified music and performance nights worth booking together.",
+      "sourceUrls": ["https://www.theagenda.com/"],
+      "locationHint": "Dubai Media City, Dubai, UAE",
+      "placeId": "ChIJ8c-ogW5rXz4Rifj0kNi88RE",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": ["events-activities", "shows-immersive"]
+      },
+      "events": [
+        {
+          "id": "atb-world-tour-dubai-2026",
+          "title": "The Legends of Trance: ATB World Tour",
+          "description": "A Dubai stop on ATB’s world tour, built around a full live trance set at The Agenda.",
+          "startsAt": "2026-09-05T20:00:00+04:00",
+          "endsAt": "2026-09-05T23:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.theagenda.com/events/the-legends-of-trance-atb-world-tour",
+          "sourceUrl": "https://www.theagenda.com/events/the-legends-of-trance-atb-world-tour",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-05T23:50:00+04:00",
+          "dateLabel": "5 Sep · 8pm",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        },
+        {
+          "id": "paul-oakenfold-dubai-2026",
+          "title": "The Legends of Trance: Paul Oakenfold",
+          "description": "A headline trance night with Paul Oakenfold at The Agenda as part of its Legends of Trance series.",
+          "startsAt": "2026-09-18T20:00:00+04:00",
+          "endsAt": "2026-09-18T23:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.theagenda.com/events/the-legends-of-trance-paul-oakenfold",
+          "sourceUrl": "https://www.theagenda.com/events/the-legends-of-trance-paul-oakenfold",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-09-18T23:50:00+04:00",
+          "dateLabel": "18 Sep · 8pm",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        }
+      ]
+    },
+    {
+      "id": "coca-cola-arena-events",
+      "name": "Coca-Cola Arena",
+      "aliases": ["Coca Cola Arena"],
+      "description": "Dubai’s City Walk arena, pinned for a currently verified comedy, concert or performance date rather than every arena listing.",
+      "sourceUrls": ["https://www.coca-cola-arena.com/"],
+      "locationHint": "City Walk, Al Wasl, Dubai, UAE",
+      "placeId": "ChIJixIJqXxCXz4Rwb4j6Pdn9BY",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": ["events-activities", "shows-immersive"]
+      },
+      "events": [
+        {
+          "id": "vir-das-dubai-comedy-festival-2026",
+          "title": "Vir Das at Dubai Comedy Festival",
+          "description": "Vir Das brings his stand-up show to Coca-Cola Arena for Dubai Comedy Festival.",
+          "startsAt": "2026-10-18T18:00:00+04:00",
+          "endsAt": "2026-10-18T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaicomedyfest.ae/shows",
+          "sourceUrl": "https://www.dubaicomedyfest.ae/shows",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-10-18T23:59:00+04:00",
+          "dateLabel": "18 Oct · doors 6pm",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        }
+      ]
+    },
+    {
+      "id": "dubai-design-district-events",
+      "name": "Dubai Design District",
+      "aliases": ["d3", "Dubai Design District d3"],
+      "description": "Dubai’s design and creative district, pinned when a verified public design event turns its galleries and outdoor spaces into a date-worthy circuit.",
+      "sourceUrls": ["https://dubaidesigndistrict.com/"],
+      "locationHint": "Dubai Design District, Dubai, UAE",
+      "placeId": "ChIJCUZ_qRZoXz4RQvsPyNmppTs",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": ["events-activities", "arts-culture-heritage", "shopping-stroll"]
+      },
+      "events": [
+        {
+          "id": "downtown-design-dubai-2026",
+          "title": "Downtown Design",
+          "description": "The region’s leading contemporary design fair, with collectible and commercial design, installations, talks and creative encounters in d3.",
+          "startsAt": "2026-11-05T12:00:00+04:00",
+          "endsAt": "2026-11-08T18:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.downtowndesign.com/dubai/visit",
+          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedUntil": "2026-11-08T18:00:00+04:00",
+          "dateLabel": "5 Nov, 12pm–8 Nov, 6pm",
+          "taxonomyTags": ["events-activities", "arts-culture-heritage"]
+        }
+      ]
+    },
+    {
+      "id": "dubai-opera-events",
+      "name": "Dubai Opera",
+      "aliases": ["Dubai Opera District"],
+      "description": "Dubai’s Downtown performing-arts venue, pinned here for currently verified tours, ballet, concerts and other bookable date-night events.",
+      "sourceUrls": ["https://www.dubaiopera.com/en-US"],
+      "locationHint": "Sheikh Mohammed bin Rashid Boulevard, Downtown Dubai, Dubai, UAE",
+      "placeId": "ChIJkdkorypoXz4RY_9KOq__Vcg",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": ["events-activities", "shows-immersive", "arts-culture-heritage"]
+      },
+      "events": [
+        {
+          "id": "dubai-opera-grand-tour-2026",
+          "title": "Dubai Opera Grand Tour",
+          "description": "A guided two-hour look behind the scenes of Dubai Opera, including its architecture, auditorium and stories from the stage.",
+          "startsAt": "2026-06-15T12:00:00+04:00",
+          "endsAt": "2026-09-30T20:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/visit/tours?ID=2dc786db-8283-ee11-8179-6045bd6a52a8",
+          "sourceUrl": "https://www.dubaiopera.com/en/visit/tours?ID=2dc786db-8283-ee11-8179-6045bd6a52a8",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-09-30T20:00:00+04:00",
+          "dateLabel": "Daily through 30 Sep · 12pm, 2pm, 4pm & 6pm",
+          "taxonomyTags": ["events-activities", "arts-culture-heritage"]
+        },
+        {
+          "id": "marriage-of-figaro-ballet-dubai-2026",
+          "title": "The Marriage of Figaro Ballet",
+          "description": "A ballet adaptation of Beaumarchais’ comedy, performed at Dubai Opera across three September dates.",
+          "startsAt": "2026-09-17T14:00:00+04:00",
+          "endsAt": "2026-09-19T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/events/ballet/the-marriage-of-figaro-ballet",
+          "sourceUrl": "https://www.dubaiopera.com/en/events/ballet/the-marriage-of-figaro-ballet",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-09-19T23:59:00+04:00",
+          "dateLabel": "17–19 Sep · 2pm & 8pm performances",
+          "taxonomyTags": ["events-activities", "shows-immersive", "arts-culture-heritage"]
+        },
+        {
+          "id": "god-save-the-queen-dubai-2026",
+          "title": "God Save the Queen",
+          "description": "A live Queen tribute concert recreating the band’s best-known songs on the Dubai Opera stage.",
+          "startsAt": "2026-10-05T20:30:00+04:00",
+          "endsAt": "2026-10-05T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/events/rock/god-save-the-queen",
+          "sourceUrl": "https://www.dubaiopera.com/en/events/rock/god-save-the-queen",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-10-05T23:59:00+04:00",
+          "dateLabel": "5 Oct · 8:30pm",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        }
+      ]
+    },
+    {
+      "id": "dubai-exhibition-centre-events",
+      "name": "Dubai Exhibition Centre",
+      "aliases": ["DEC", "Dubai Exhibition Centre at Expo City"],
+      "description": "Expo City Dubai’s exhibition venue, pinned for verified public shows and large events worth planning a date around.",
+      "sourceUrls": ["https://www.dubaiexhibitioncentre.com/en/whats-on"],
+      "locationHint": "Expo City Dubai, Dubai, UAE",
+      "placeId": "ChIJJYBKsjhzXz4RG8hyBbqxrnM",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": ["events-activities", "sport-active", "arts-culture-heritage"]
+      },
+      "events": [
+        {
+          "id": "dubai-active-muscle-show-2026",
+          "title": "Dubai Active & Dubai Muscle Show",
+          "description": "A three-day fitness and wellness festival with live competitions, classes, talks, brands and hands-on activities.",
+          "startsAt": "2026-10-30T00:00:00+04:00",
+          "endsAt": "2026-11-01T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://dubaiactiveshow.com/",
+          "sourceUrl": "https://www.dubaiexhibitioncentre.com/en/whats-on/dubai-muscle-show-and-active-show-2026",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-11-01T23:59:00+04:00",
+          "dateLabel": "30 Oct–1 Nov",
+          "taxonomyTags": ["events-activities", "sport-active", "wellness"]
+        },
+        {
+          "id": "world-art-dubai-2026",
+          "title": "World Art Dubai",
+          "description": "A public contemporary-art fair bringing galleries and independent artists together, with work to browse and buy across four days.",
+          "startsAt": "2026-11-19T13:00:00+04:00",
+          "endsAt": "2026-11-22T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.worldartdubai.com/",
+          "sourceUrl": "https://www.dubaiexhibitioncentre.com/en/whats-on/world-art-dubai-2026",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-11-22T21:00:00+04:00",
+          "dateLabel": "19–22 Nov · 1pm–9pm",
+          "taxonomyTags": ["events-activities", "arts-culture-heritage"]
+        }
+      ]
+    },
+    {
+      "id": "dubai-parks-resorts-events",
+      "name": "Dubai Parks and Resorts",
+      "aliases": ["Dubai Parks", "Dubai Parks & Resorts"],
+      "description": "A large entertainment destination on Sheikh Zayed Road, pinned here when a verified festival or public event is scheduled at the resort.",
+      "sourceUrls": ["https://www.dubaiparksandresorts.com/"],
+      "locationHint": "Sheikh Zayed Road, Dubai, UAE",
+      "placeId": "ChIJ7fMipVMOXz4Rwhy-Scf2LOE",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": ["events-activities", "shows-immersive"]
+      },
+      "events": [
+        {
+          "id": "untold-dubai-2026",
+          "title": "UNTOLD Dubai",
+          "description": "A four-day international music festival returning to Dubai Parks and Resorts with multiple stages and late-night performances.",
+          "startsAt": "2026-11-05T00:00:00+04:00",
+          "endsAt": "2026-11-08T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.untold.ae/",
+          "sourceUrl": "https://www.untold.ae/",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-11-08T23:59:00+04:00",
+          "dateLabel": "5–8 Nov",
+          "taxonomyTags": ["events-activities", "shows-immersive"]
+        }
+      ]
+    },
+    {
+      "id": "the-sevens-stadium-events",
+      "name": "The Sevens Stadium",
+      "aliases": ["The Sevens", "7he Sevens Stadium"],
+      "description": "Dubai’s outdoor sports and events venue, pinned for verified festivals with activities worth making a day of.",
+      "sourceUrls": ["https://thesevensstadium.com/"],
+      "locationHint": "Dubai–Al Ain Road, Dubai, UAE",
+      "placeId": "ChIJTW1TgHR-Xz4R_gKlyWOauJc",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": ["events-activities", "sport-active"]
+      },
+      "events": [
+        {
+          "id": "moc-festival-dubai-2026",
+          "title": "MOC26 Festival",
+          "description": "A hands-on motoring and outdoor festival with ride, drive, recovery and adventure try-outs rather than a static showroom visit.",
+          "startsAt": "2026-10-23T15:00:00+04:00",
+          "endsAt": "2026-10-25T21:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.moc-festival.com/programme",
+          "sourceUrl": "https://www.moc-festival.com/programme",
+          "verifiedAt": "2026-08-26T12:00:00+04:00",
+          "verifiedUntil": "2026-10-25T21:30:00+04:00",
+          "dateLabel": "23–25 Oct · public festival",
+          "taxonomyTags": ["events-activities", "sport-active"]
+        }
+      ]
+    }
+  ]
+}

@@ -312,6 +312,66 @@
   border-color: rgba(255, 255, 255, 0.34);
 }
 
+.happeningFilter {
+  width: 100%;
+  height: 38px;
+  margin-top: 8px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.happeningFilterContent {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+}
+
+.happeningFilterContent > svg {
+  flex: 0 0 auto;
+  color: #ffc77f;
+}
+
+.happeningFilterContent > span {
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.happeningFilterContent > small {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.happeningFilterContent > em {
+  display: grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 199, 127, 0.14);
+  color: #ffd39a;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 760;
+}
+
+.happeningFilter:hover,
+.happeningFilterActive {
+  border-color: rgba(255, 199, 127, 0.58);
+  background: rgba(255, 199, 127, 0.08);
+  color: white;
+}
+
 .locationMessage {
   margin: 8px 2px 0;
   color: rgba(255, 255, 255, 0.62);
@@ -427,6 +487,10 @@
   pointer-events: none;
 }
 
+.placeCardEvent {
+  min-height: 96px;
+}
+
 .placeMain {
   display: grid;
   min-width: 0;
@@ -501,6 +565,36 @@
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.placeEvent {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  overflow: hidden;
+  color: #ffd09a;
+  font-size: 9.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.placeEvent > svg {
+  flex: 0 0 auto;
+}
+
+.placeEvent > span {
+  flex: 0 0 auto;
+  font-weight: 720;
+}
+
+.placeEvent > b {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 610;
+  text-overflow: ellipsis;
 }
 
 .distance {
@@ -992,6 +1086,123 @@
   -webkit-line-clamp: 5;
 }
 
+.eventSection {
+  margin: -3px 0 18px;
+  overflow: hidden;
+  border: 1px solid rgba(178, 116, 44, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 244, 225, 0.72);
+}
+
+.eventSectionHeader {
+  display: flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(178, 116, 44, 0.16);
+}
+
+.eventSectionHeader > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #a56728;
+}
+
+.eventSectionHeader h3 {
+  margin: 0;
+  color: #38443b;
+  font-size: 13px;
+  font-weight: 760;
+  letter-spacing: -0.01em;
+}
+
+.eventSectionHeader em {
+  display: grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(178, 116, 44, 0.12);
+  color: #8f5b25;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.eventList {
+  display: grid;
+}
+
+.eventItem {
+  padding: 12px;
+}
+
+.eventItem + .eventItem {
+  border-top: 1px solid rgba(178, 116, 44, 0.15);
+}
+
+.eventItem .eventDate {
+  margin: 0 0 4px;
+  color: #9b6128;
+  font-size: 9px;
+  font-weight: 780;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eventItem h4 {
+  margin: 0;
+  color: #2d3730;
+  font-size: 13px;
+  font-weight: 730;
+  line-height: 1.25;
+}
+
+.eventItem > p:not(.eventDate) {
+  margin: 6px 0 0;
+  color: #667067;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.eventLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.eventLinks a {
+  display: inline-flex;
+  min-width: 86px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 13px;
+  border: 1px solid rgba(92, 105, 94, 0.2);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #4d5a50;
+  font-size: 10.5px;
+  font-weight: 710;
+  text-decoration: none;
+}
+
+.eventLinks a:first-child {
+  border-color: #a66a2d;
+  background: #a66a2d;
+  color: white;
+}
+
+.eventLinks a:hover {
+  border-color: #8e5924;
+}
+
 .detailActions {
   display: flex;
   gap: 8px;
@@ -1285,11 +1496,48 @@
   transform: rotate(45deg);
 }
 
+.mapMarkerEvent {
+  box-shadow:
+    0 4px 12px rgba(28, 38, 31, 0.32),
+    0 0 0 5px rgba(210, 138, 53, 0.28);
+}
+
+.mapMarkerEvent > i {
+  position: absolute;
+  top: -8px;
+  right: -9px;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  background: #d28a35;
+  box-shadow: 0 2px 6px rgba(39, 31, 20, 0.3);
+  transform: rotate(45deg);
+}
+
+.mapMarkerEvent > i::before {
+  content: "";
+  width: 8px;
+  height: 7px;
+  border: 1px solid white;
+  border-top-width: 3px;
+  border-radius: 2px;
+}
+
 .mapMarker:hover,
 .mapMarkerSelected {
   z-index: 2;
   box-shadow: 0 7px 18px rgba(25, 36, 28, 0.38);
   transform: rotate(-45deg) scale(1.28);
+}
+
+.mapMarkerEvent:hover,
+.mapMarkerEvent.mapMarkerSelected {
+  box-shadow:
+    0 7px 18px rgba(25, 36, 28, 0.38),
+    0 0 0 6px rgba(210, 138, 53, 0.38);
 }
 
 .mapMarker:focus-visible {
@@ -1471,6 +1719,10 @@
     height: 44px;
   }
 
+  .happeningFilter {
+    height: 44px;
+  }
+
   .favouriteFilter {
     min-width: 92px;
     justify-content: center;
@@ -1628,6 +1880,10 @@
 
   .placeCard {
     --surface-fill: rgba(22, 43, 49, 0.94);
+  }
+
+  .placeCardEvent {
+    min-height: 100px;
   }
 
   .placeCard:hover,

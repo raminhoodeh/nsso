@@ -13,7 +13,24 @@ export type PlaceCategory =
   | "sport-active"
   | "shopping-stroll"
   | "family-animals"
+  | "events-activities"
   | "date-ideas";
+
+export type DubaiEvent = {
+  id: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+  timezone: "Asia/Dubai";
+  status: "scheduled" | "sold-out" | "cancelled";
+  bookingUrl: string | null;
+  sourceUrl: string;
+  verifiedAt: string;
+  verifiedUntil: string;
+  dateLabel: string;
+  taxonomyTags: PlaceCategory[];
+};
 
 export type DubaiPlace = {
   id: string;
@@ -29,6 +46,8 @@ export type DubaiPlace = {
   placeId: string | null;
   googleTypes: string[];
   primaryGoogleType: string | null;
+  listingType?: "place" | "event-venue";
+  events?: DubaiEvent[];
   taxonomy: {
     primary: PlaceCategory;
     tags: PlaceCategory[];
@@ -50,6 +69,8 @@ export type PlacesPayload = {
     title: string;
     source: string;
     sourceRecordCount: number;
+    curatedRecordCount?: number;
+    eventCount?: number;
     placeCount: number;
     generatedAt: string;
     expiresAt: string | null;

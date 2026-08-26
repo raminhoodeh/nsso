@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Compass,
@@ -23,7 +24,7 @@ import {
 } from "lucide-react";
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { DubaiPlace, PlaceCategory, PlacesPayload } from "@/data/places-dubai";
+import type { DubaiEvent, DubaiPlace, PlaceCategory, PlacesPayload } from "@/data/places-dubai";
 import {
   TahoeGlassButton,
   TahoeGlassProvider,
@@ -79,6 +80,7 @@ const CATEGORY_META: Record<PlaceCategory, CategoryMeta> = {
   "sport-active": { label: "Sport & active", shortLabel: "Move", color: "#c45d3c" },
   "shopping-stroll": { label: "Strolls & shopping", shortLabel: "Stroll", color: "#9a7048" },
   "family-animals": { label: "Animals & family", shortLabel: "Play", color: "#58877a" },
+  "events-activities": { label: "Events & activities", shortLabel: "Events", color: "#d28a35" },
   "date-ideas": { label: "Other date ideas", shortLabel: "More", color: "#747871" },
 };
 
@@ -132,6 +134,30 @@ function categoryFor(place: DubaiPlace) {
   return CATEGORY_META[place.taxonomy.primary] || CATEGORY_META["date-ideas"];
 }
 
+function activeEventsFor(place: DubaiPlace, now: number | null) {
+  if (now === null) return [];
+  return (place.events || [])
+    .filter((event) => {
+      const endsAt = Date.parse(event.endsAt);
+      const verifiedUntil = Date.parse(event.verifiedUntil);
+      return (
+        event.status === "scheduled" &&
+        Number.isFinite(endsAt) &&
+        Number.isFinite(verifiedUntil) &&
+        endsAt > now &&
+        verifiedUntil > now
+      );
+    })
+    .sort((eventA, eventB) => Date.parse(eventA.startsAt) - Date.parse(eventB.startsAt));
+}
+
+function taxonomyTagsFor(place: DubaiPlace, events: DubaiEvent[]) {
+  const tags = new Set(place.taxonomy.tags);
+  events.forEach((event) => event.taxonomyTags.forEach((tag) => tags.add(tag)));
+  if (events.length) tags.add("events-activities");
+  return tags;
+}
+
 function haversineKm(
   pointA: { lat: number; lng: number },
   pointB: { lat: number; lng: number },
@@ -157,16 +183,22 @@ function directionsUrl(place: DubaiPlace, placeId: string | null) {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-function markerNode(place: DubaiPlace, selected: boolean) {
+function markerNode(place: DubaiPlace, selected: boolean, activeEventCount: number) {
   const node = document.createElement("button");
   const category = categoryFor(place);
+  const hasEvents = activeEventCount > 0;
   node.type = "button";
   node.tabIndex = window.matchMedia("(max-width: 900px)").matches ? -1 : 0;
-  node.className = `${styles.mapMarker}${selected ? ` ${styles.mapMarkerSelected}` : ""}`;
+  node.className = `${styles.mapMarker}${hasEvents ? ` ${styles.mapMarkerEvent}` : ""}${selected ? ` ${styles.mapMarkerSelected}` : ""}`;
   node.style.setProperty("--marker-color", category.color);
-  node.setAttribute("aria-label", `Open ${place.name}`);
+  node.setAttribute(
+    "aria-label",
+    hasEvents
+      ? `Open ${place.name}, ${activeEventCount} current or upcoming ${activeEventCount === 1 ? "event" : "events"}`
+      : `Open ${place.name}`,
+  );
   node.title = place.name;
-  node.innerHTML = `<span></span>`;
+  node.innerHTML = `<span></span>${hasEvents ? '<i aria-hidden="true"></i>' : ""}`;
   return node;
 }
 
@@ -235,6 +267,11 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   selectedIdRef.current = selectedId;
   const [favourites, setFavourites] = useState<Set<string>>(new Set());
   const [favouritesOnly, setFavouritesOnly] = useState(false);
+  const [happeningOnly, setHappeningOnly] = useState(false);
+  const [clientNow, setClientNow] = useState<number | null>(() => {
+    const generatedAt = Date.parse(payload.meta.generatedAt);
+    return Number.isFinite(generatedAt) ? generatedAt : null;
+  });
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const [liveDetails, setLiveDetails] = useState<LiveDetails | null>(null);
@@ -256,7 +293,29 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   });
 
   const places = payload.places;
-  const selectedPlace = selectedId ? places.find((place) => place.id === selectedId) || null : null;
+  const activeEventsByPlace = useMemo(() => {
+    const activeEvents = new Map<string, DubaiEvent[]>();
+    places.forEach((place) => activeEvents.set(place.id, activeEventsFor(place, clientNow)));
+    return activeEvents;
+  }, [clientNow, places]);
+  const availablePlaces = useMemo(
+    () => places.filter(
+      (place) => place.listingType !== "event-venue" || (activeEventsByPlace.get(place.id)?.length || 0) > 0,
+    ),
+    [activeEventsByPlace, places],
+  );
+  const activeEventCount = useMemo(
+    () => [...activeEventsByPlace.values()].reduce((total, events) => total + events.length, 0),
+    [activeEventsByPlace],
+  );
+  const happeningPlaceCount = useMemo(
+    () => availablePlaces.filter((place) => (activeEventsByPlace.get(place.id)?.length || 0) > 0).length,
+    [activeEventsByPlace, availablePlaces],
+  );
+  const selectedPlace = selectedId
+    ? availablePlaces.find((place) => place.id === selectedId) || null
+    : null;
+  const selectedEvents = selectedPlace ? activeEventsByPlace.get(selectedPlace.id) || [] : [];
   const currentDetails = liveDetails?.selectionId === selectedPlace?.id ? liveDetails : null;
   const photos = currentDetails?.photos || [];
   const activePhoto = photos[activePhotoIndex] || null;
@@ -274,19 +333,19 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     [activePhotoSceneUrl],
   );
   const emirates = useMemo(
-    () => [...new Set(places.map((place) => place.emirate))].sort(),
-    [places],
+    () => [...new Set(availablePlaces.map((place) => place.emirate))].sort(),
+    [availablePlaces],
   );
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<PlaceCategory, number>();
-    places.forEach((place) => {
-      new Set(place.taxonomy.tags).forEach((tag) => {
+    availablePlaces.forEach((place) => {
+      taxonomyTagsFor(place, activeEventsByPlace.get(place.id) || []).forEach((tag) => {
         counts.set(tag, (counts.get(tag) || 0) + 1);
       });
     });
     return counts;
-  }, [places]);
+  }, [activeEventsByPlace, availablePlaces]);
 
   const visibleCategories = useMemo(
     () =>
@@ -298,10 +357,12 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
 
   const filteredPlaces = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    const next = places.filter((place) => {
-      if (category !== "all" && !place.taxonomy.tags.includes(category)) return false;
+    const next = availablePlaces.filter((place) => {
+      const events = activeEventsByPlace.get(place.id) || [];
+      if (category !== "all" && !taxonomyTagsFor(place, events).has(category)) return false;
       if (emirate !== "all" && place.emirate !== emirate) return false;
       if (favouritesOnly && !favourites.has(place.id)) return false;
+      if (happeningOnly && !events.length) return false;
       if (!normalizedQuery) return true;
       return [
         place.name,
@@ -309,6 +370,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         place.address,
         place.locationHint,
         place.description,
+        ...events.flatMap((event) => [event.title, event.description, event.dateLabel]),
       ]
         .join(" ")
         .toLowerCase()
@@ -321,15 +383,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       );
     }
     return next;
-  }, [category, emirate, favourites, favouritesOnly, places, query, userLocation]);
+  }, [activeEventsByPlace, availablePlaces, category, emirate, favourites, favouritesOnly, happeningOnly, query, userLocation]);
 
   const activeFilterCount = useMemo(
     () =>
       Number(Boolean(query.trim())) +
       Number(category !== "all") +
       Number(emirate !== "all") +
-      Number(favouritesOnly),
-    [category, emirate, favouritesOnly, query],
+      Number(favouritesOnly) +
+      Number(happeningOnly),
+    [category, emirate, favouritesOnly, happeningOnly, query],
   );
 
   const openMobilePanel = useCallback(() => {
@@ -411,6 +474,17 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   }, [fitVisiblePlaces]);
 
   useEffect(() => {
+    const updateClock = () => setClientNow(Date.now());
+    updateClock();
+    const clock = window.setInterval(updateClock, 60_000);
+    return () => window.clearInterval(clock);
+  }, []);
+
+  useEffect(() => {
+    if (selectedId && !selectedPlace) setSelectedId(null);
+  }, [selectedId, selectedPlace]);
+
+  useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as string[];
       setFavourites(new Set(stored));
@@ -484,7 +558,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       });
       markersRef.current = filteredPlaces.map((place) => {
         const selected = place.id === selectedIdRef.current;
-        const node = markerNode(place, selected);
+        const node = markerNode(place, selected, activeEventsByPlace.get(place.id)?.length || 0);
         node.addEventListener("click", () => selectPlace(place.id));
         return {
           ...createMapOverlay(OverlayView, {
@@ -504,7 +578,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       markersRef.current.forEach((marker) => marker.overlay.setMap(null));
       markersRef.current = [];
     };
-  }, [filteredPlaces, map, selectPlace]);
+  }, [activeEventsByPlace, filteredPlaces, map, selectPlace]);
 
   useEffect(() => {
     markersRef.current.forEach((marker) => {
@@ -780,6 +854,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     setCategory("all");
     setEmirate("all");
     setFavouritesOnly(false);
+    setHappeningOnly(false);
   };
 
   return (
@@ -963,6 +1038,25 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               <LocateFixed size={16} />
             </TahoeGlassSurface>
           </div>
+          <TahoeGlassSurface
+            as="button"
+            variant="pill"
+            radius={11}
+            tone="light"
+            semanticTint={happeningOnly ? "light" : "none"}
+            semanticTintOpacity={0.045}
+            className={`${styles.happeningFilter}${happeningOnly ? ` ${styles.happeningFilterActive}` : ""}`}
+            contentClassName={styles.happeningFilterContent}
+            type="button"
+            onClick={() => setHappeningOnly((value) => !value)}
+            aria-pressed={happeningOnly}
+            aria-label={`Show only places with current or upcoming events. ${happeningPlaceCount} ${happeningPlaceCount === 1 ? "venue" : "venues"} available.`}
+          >
+            <CalendarDays size={16} aria-hidden="true" />
+            <span>Happening</span>
+            <small>Current &amp; upcoming</small>
+            <em>{happeningPlaceCount}</em>
+          </TahoeGlassSurface>
           {locationMessage && <p className={styles.locationMessage}>{locationMessage}</p>}
 
           <TahoeGlassSurface
@@ -980,7 +1074,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               value={category}
               onChange={(event) => setCategory(event.target.value as PlaceCategory | "all")}
             >
-              <option value="all">All categories ({places.length})</option>
+              <option value="all">All categories ({availablePlaces.length})</option>
               {visibleCategories.map(([key, meta]) => (
                 <option key={key} value={key}>{meta.label} ({categoryCounts.get(key)})</option>
               ))}
@@ -999,7 +1093,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               onClick={() => setCategory("all")}
               aria-pressed={category === "all"}
             >
-              All <span>{places.length}</span>
+              All <span>{availablePlaces.length}</span>
             </TahoeGlassSurface>
             {visibleCategories.map(([key, meta]) => (
               <TahoeGlassSurface
@@ -1031,6 +1125,18 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             const meta = categoryFor(place);
             const isFavourite = favourites.has(place.id);
             const distance = userLocation ? haversineKm(userLocation, place.coordinates) : null;
+            const placeEvents = activeEventsByPlace.get(place.id) || [];
+            const normalizedCardQuery = query.trim().toLowerCase();
+            const nextEvent = (
+              normalizedCardQuery
+                ? placeEvents.find((event) =>
+                    [event.title, event.description, event.dateLabel]
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(normalizedCardQuery),
+                  )
+                : null
+            ) || placeEvents[0] || null;
             return (
               <TahoeGlassSurface
                 as="article"
@@ -1040,7 +1146,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 semanticTint="dark"
                 semanticTintOpacity={selectedId === place.id ? 0.42 : 0.38}
                 key={place.id}
-                className={`${styles.placeCard}${selectedId === place.id ? ` ${styles.placeCardSelected}` : ""}`}
+                className={`${styles.placeCard}${nextEvent ? ` ${styles.placeCardEvent}` : ""}${selectedId === place.id ? ` ${styles.placeCardSelected}` : ""}`}
                 contentClassName="relative flex min-h-[78px] w-full"
                 style={{ "--category-color": meta.color } as React.CSSProperties}
               >
@@ -1054,6 +1160,13 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                     </span>
                     <strong>{place.name}</strong>
                     <span className={styles.placeAddress}>{place.address}</span>
+                    {nextEvent && (
+                      <span className={styles.placeEvent}>
+                        <CalendarDays size={11} aria-hidden="true" />
+                        <span>{nextEvent.dateLabel}</span>
+                        <b>{nextEvent.title}</b>
+                      </span>
+                    )}
                   </span>
                   {distance !== null && <span className={styles.distance}>{Math.round(distance)} km</span>}
                 </button>
@@ -1083,7 +1196,10 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             </div>
           )}
           <footer className={styles.attribution}>
-            <span>Built from {payload.meta.sourceRecordCount} saved UAE ideas.</span>
+            <span>
+              {availablePlaces.length} places from saved and curated records.
+              {activeEventCount ? ` ${activeEventCount} current ${activeEventCount === 1 ? "event" : "events"}.` : ""}
+            </span>
             <a
               href={payload.meta.geocoder === "google-places-new" ? "https://maps.google.com" : "https://www.openstreetmap.org/copyright"}
               target="_blank"
@@ -1360,6 +1476,38 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               <span>{currentDetails?.address || selectedPlace.address}</span>
             </p>
             <p className={styles.detailDescription}>{selectedPlace.description || "A saved place to explore together."}</p>
+            {selectedEvents.length > 0 && (
+              <section className={styles.eventSection} aria-labelledby="selected-place-events-heading">
+                <header className={styles.eventSectionHeader}>
+                  <span>
+                    <CalendarDays size={16} aria-hidden="true" />
+                    <h3 id="selected-place-events-heading">What&apos;s on</h3>
+                  </span>
+                  <em>{selectedEvents.length}</em>
+                </header>
+                <div className={styles.eventList}>
+                  {selectedEvents.map((event) => (
+                    <article className={styles.eventItem} key={event.id}>
+                      <p className={styles.eventDate}>{event.dateLabel}</p>
+                      <h4>{event.title}</h4>
+                      <p>{event.description}</p>
+                      <div className={styles.eventLinks}>
+                        {event.bookingUrl && (
+                          <a href={event.bookingUrl} target="_blank" rel="noreferrer">
+                            Book <ExternalLink size={13} aria-hidden="true" />
+                          </a>
+                        )}
+                        {(!event.bookingUrl || event.sourceUrl !== event.bookingUrl) && (
+                          <a href={event.sourceUrl} target="_blank" rel="noreferrer">
+                            Details <ExternalLink size={13} aria-hidden="true" />
+                          </a>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
             <div className={styles.detailActions}>
               <TahoeGlassSurface
                 as="a"

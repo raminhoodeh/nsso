@@ -5,14 +5,25 @@ import { parse } from "csv-parse/sync";
 
 const sourceFlag = process.argv.indexOf("--source");
 const outputFlag = process.argv.indexOf("--output");
+const curationFlag = process.argv.indexOf("--curation");
+const asOfFlag = process.argv.indexOf("--as-of");
 const sourcePath = sourceFlag >= 0
   ? path.resolve(process.argv[sourceFlag + 1])
   : path.resolve("../places to go/__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv");
 const outputPath = outputFlag >= 0
   ? path.resolve(process.argv[outputFlag + 1])
   : path.resolve("src/data/places-dubai.generated.json");
+const curationPath = curationFlag >= 0
+  ? path.resolve(process.argv[curationFlag + 1])
+  : path.resolve("src/data/dubai-date-curation.json");
 const cachePath = path.resolve(".places-geocode-cache.json");
 const googleApiKey = process.env.GOOGLE_PLACES_ENRICHMENT_API_KEY;
+const asOf = asOfFlag >= 0 ? process.argv[asOfFlag + 1] : new Date().toISOString();
+const asOfMs = Date.parse(asOf);
+
+if (!Number.isFinite(asOfMs)) {
+  throw new Error(`Invalid --as-of value: ${asOf}`);
+}
 
 const ALIAS_GROUPS = new Map([
   ["arte-museum", "Arte Museum Dubai"],
@@ -250,8 +261,138 @@ function cleanUrl(value = "") {
   }
 }
 
+const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+const EVENT_STATUSES = new Set(["scheduled", "sold-out", "cancelled"]);
+const PLACE_CATEGORIES = new Set([
+  "food-drink",
+  "nature-wildlife",
+  "beach-water",
+  "mountain-hiking",
+  "arts-culture-heritage",
+  "shows-immersive",
+  "creative-workshop",
+  "wellness",
+  "resort-beach-club",
+  "sport-active",
+  "shopping-stroll",
+  "family-animals",
+  "events-activities",
+  "date-ideas",
+]);
+
+function requireHttpsUrl(value, field) {
+  if (typeof value !== "string" || !value.startsWith("https://")) {
+    throw new Error(`${field} must be an HTTPS URL`);
+  }
+  try {
+    return new URL(value).toString();
+  } catch {
+    throw new Error(`${field} is not a valid URL`);
+  }
+}
+
+function requireIsoDateTime(value, field) {
+  if (typeof value !== "string" || !ISO_DATE_TIME.test(value) || !Number.isFinite(Date.parse(value))) {
+    throw new Error(`${field} must be an ISO 8601 date-time with a timezone`);
+  }
+  return value;
+}
+
+function validateCuratedData(payload) {
+  if (!payload || payload.version !== 1 || !Array.isArray(payload.places)) {
+    throw new Error("Curated data must have version 1 and a places array");
+  }
+
+  const placeIds = new Set();
+  const eventIds = new Set();
+  return payload.places.map((place, placeIndex) => {
+    const label = `curation.places[${placeIndex}]`;
+    if (!place || typeof place !== "object") throw new Error(`${label} must be an object`);
+    for (const field of ["id", "name", "description", "locationHint", "placeId"]) {
+      if (typeof place[field] !== "string" || !place[field].trim()) {
+        throw new Error(`${label}.${field} is required`);
+      }
+    }
+    if (normalize(place.id) !== place.id) throw new Error(`${label}.id must be normalized`);
+    if (placeIds.has(place.id)) throw new Error(`Duplicate curated place id: ${place.id}`);
+    placeIds.add(place.id);
+    if (!Array.isArray(place.aliases) || !place.aliases.every((value) => typeof value === "string" && value.trim())) {
+      throw new Error(`${label}.aliases must be an array of non-empty strings`);
+    }
+    if (!Array.isArray(place.sourceUrls) || !place.sourceUrls.length) {
+      throw new Error(`${label}.sourceUrls must contain at least one official source`);
+    }
+    const sourceUrls = place.sourceUrls.map((url, index) => requireHttpsUrl(url, `${label}.sourceUrls[${index}]`));
+    if (!place.taxonomy || typeof place.taxonomy.primary !== "string" || !Array.isArray(place.taxonomy.tags)) {
+      throw new Error(`${label}.taxonomy must include primary and tags`);
+    }
+    if (!PLACE_CATEGORIES.has(place.taxonomy.primary) || !place.taxonomy.tags.every((tag) => PLACE_CATEGORIES.has(tag))) {
+      throw new Error(`${label}.taxonomy contains an unknown category`);
+    }
+    if (!place.taxonomy.tags.includes(place.taxonomy.primary)) {
+      throw new Error(`${label}.taxonomy.tags must include its primary category`);
+    }
+    const listingType = place.listingType || "place";
+    if (!["place", "event-venue"].includes(listingType)) {
+      throw new Error(`${label}.listingType must be place or event-venue`);
+    }
+    const events = (place.events || []).map((event, eventIndex) => {
+      const eventLabel = `${label}.events[${eventIndex}]`;
+      for (const field of ["id", "title", "description", "timezone", "dateLabel"]) {
+        if (typeof event[field] !== "string" || !event[field].trim()) {
+          throw new Error(`${eventLabel}.${field} is required`);
+        }
+      }
+      if (eventIds.has(event.id)) throw new Error(`Duplicate curated event id: ${event.id}`);
+      eventIds.add(event.id);
+      if (event.timezone !== "Asia/Dubai") throw new Error(`${eventLabel}.timezone must be Asia/Dubai`);
+      if (!EVENT_STATUSES.has(event.status)) throw new Error(`${eventLabel}.status is invalid`);
+      const startsAt = requireIsoDateTime(event.startsAt, `${eventLabel}.startsAt`);
+      const endsAt = requireIsoDateTime(event.endsAt, `${eventLabel}.endsAt`);
+      const verifiedAt = requireIsoDateTime(event.verifiedAt, `${eventLabel}.verifiedAt`);
+      const verifiedUntil = requireIsoDateTime(event.verifiedUntil, `${eventLabel}.verifiedUntil`);
+      if (Date.parse(endsAt) <= Date.parse(startsAt)) throw new Error(`${eventLabel}.endsAt must be after startsAt`);
+      if (Date.parse(verifiedUntil) < Date.parse(verifiedAt)) throw new Error(`${eventLabel}.verifiedUntil must not precede verifiedAt`);
+      if (!Array.isArray(event.taxonomyTags) || !event.taxonomyTags.length) {
+        throw new Error(`${eventLabel}.taxonomyTags must not be empty`);
+      }
+      if (!event.taxonomyTags.every((tag) => PLACE_CATEGORIES.has(tag))) {
+        throw new Error(`${eventLabel}.taxonomyTags contains an unknown category`);
+      }
+      return {
+        ...event,
+        startsAt,
+        endsAt,
+        verifiedAt,
+        verifiedUntil,
+        bookingUrl: event.bookingUrl === null
+          ? null
+          : requireHttpsUrl(event.bookingUrl, `${eventLabel}.bookingUrl`),
+        sourceUrl: requireHttpsUrl(event.sourceUrl, `${eventLabel}.sourceUrl`),
+      };
+    });
+    if (listingType === "event-venue" && !events.length) {
+      throw new Error(`${label} is an event venue but has no events`);
+    }
+    return {
+      ...place,
+      aliases: [...new Set(place.aliases)],
+      sourceUrls: [...new Set(sourceUrls)],
+      listingType,
+      ...(events.length ? { events } : {}),
+    };
+  });
+}
+
+function isActiveEvent(event) {
+  return event.status === "scheduled"
+    && Date.parse(event.endsAt) > asOfMs
+    && Date.parse(event.verifiedUntil) > asOfMs;
+}
+
 function inferEmirate(location, name) {
   if (/bkd/i.test(name)) return "Ajman";
+  if (/\bdubai\b/i.test(location)) return "Dubai";
   if (/umm al quwain/i.test(location)) return "Umm Al Quwain";
   if (/ras al khaimah|al rams/i.test(location)) return "Ras Al Khaimah";
   if (/fujairah|al aqah/i.test(location)) return "Fujairah";
@@ -445,6 +586,33 @@ for (const [index, row] of uaeRows.entries()) {
   grouped.set(id, existing);
 }
 
+const curatedPayload = JSON.parse(await fs.readFile(curationPath, "utf8"));
+const curatedEntries = validateCuratedData(curatedPayload);
+const includedCuratedIds = new Set();
+
+for (const curatedEntry of curatedEntries) {
+  const activeEvents = (curatedEntry.events || []).filter(isActiveEvent);
+  if (curatedEntry.listingType === "event-venue" && !activeEvents.length) continue;
+  const existing = grouped.get(curatedEntry.id);
+  if (existing) {
+    grouped.set(curatedEntry.id, {
+      ...existing,
+      ...(activeEvents.length ? { events: activeEvents } : {}),
+    });
+    includedCuratedIds.add(curatedEntry.id);
+    continue;
+  }
+
+  const curatedPlace = { ...curatedEntry };
+  delete curatedPlace.events;
+  grouped.set(curatedEntry.id, {
+    ...curatedPlace,
+    sourceRows: [],
+    ...(activeEvents.length ? { events: activeEvents } : {}),
+  });
+  includedCuratedIds.add(curatedEntry.id);
+}
+
 const cache = await loadCache();
 const places = [];
 let cacheMisses = 0;
@@ -453,7 +621,7 @@ const provider = googleApiKey ? "google" : "nominatim";
 for (const entry of grouped.values()) {
   const emirate = inferEmirate(entry.locationHint, entry.name);
   const query = QUERY_OVERRIDES[entry.id] || `${entry.name}, ${entry.locationHint.replace(/UAE/gi, "United Arab Emirates")}`;
-  const placeIdOverride = PLACE_ID_OVERRIDES[entry.id];
+  const placeIdOverride = entry.placeId || PLACE_ID_OVERRIDES[entry.id];
   const cacheKey = googleApiKey && placeIdOverride
     ? `google-place-id:${placeIdOverride}`
     : `${provider}:${query}`;
@@ -491,7 +659,7 @@ for (const entry of grouped.values()) {
   if (resolution && RESOLUTION_PATCHES[entry.id]) {
     resolution = { ...resolution, ...RESOLUTION_PATCHES[entry.id] };
   }
-  const editorial = taxonomy(entry.id, entry.name, entry.description);
+  const editorial = entry.taxonomy || taxonomy(entry.id, entry.name, entry.description);
   const fallbackCenter = EMIRATE_CENTERS[emirate];
   const coordinates = resolution?.coordinates || fallbackCenter;
   const address = resolution?.address || entry.locationHint;
@@ -502,7 +670,7 @@ for (const entry of grouped.values()) {
     emirate,
     address,
     coordinates,
-    placeId: resolution?.placeId || null,
+    placeId: resolution?.placeId || entry.placeId || null,
     googleTypes: resolution?.googleTypes || [],
     primaryGoogleType: resolution?.primaryGoogleType || null,
     taxonomy: editorial,
@@ -531,6 +699,8 @@ const payload = {
     title: "Places to go in the UAE",
     source: path.basename(sourcePath),
     sourceRecordCount: uaeRows.length,
+    curatedRecordCount: includedCuratedIds.size,
+    eventCount: places.reduce((count, place) => count + (place.events?.length || 0), 0),
     placeCount: places.length,
     generatedAt: new Date().toISOString(),
     expiresAt: oldestGoogleFetch === null
