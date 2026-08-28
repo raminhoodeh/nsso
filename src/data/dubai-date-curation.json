@@ -58,6 +58,24 @@
       }
     },
     {
+      "id": "qartuli-authentic-georgian",
+      "name": "Qartuli Authentic Georgian",
+      "aliases": ["Qartuli", "Qartuli Restaurant", "Qartuli Authentic Georgian Restaurant", "Tamada"],
+      "description": "An intimate Downtown Georgian restaurant styled like a vintage home, serving shareable khinkali, khachapuri and traditional grills. A warm, old-world dinner date in Dunya Tower, with free valet parking.",
+      "sourceUrls": [
+        "https://www.qartuli.ae/",
+        "https://www.qartuli.ae/menu/",
+        "https://www.instagram.com/qartuli.dxb/"
+      ],
+      "locationHint": "Dunya Tower, Al Ohood Street, Burj Khalifa Boulevard, Downtown Dubai, Dubai, UAE",
+      "placeId": "ChIJxR5uUjNpXz4RTGoCLWqUyVg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink"]
+      }
+    },
+    {
       "id": "alserkal-avenue",
       "name": "Alserkal Avenue",
       "aliases": ["Alserkal Arts District", "Alserkal"],

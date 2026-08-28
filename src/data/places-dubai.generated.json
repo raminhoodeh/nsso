@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 27,
+    "curatedRecordCount": 28,
     "eventCount": 16,
-    "placeCount": 106,
-    "generatedAt": "2026-08-26T14:27:40.907Z",
+    "placeCount": 107,
+    "generatedAt": "2026-08-28T05:55:45.563Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -3013,6 +3013,56 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Herinox%20Studios%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "qartuli-authentic-georgian",
+      "name": "Qartuli Authentic Georgian",
+      "aliases": [
+        "Qartuli",
+        "Qartuli Restaurant",
+        "Qartuli Authentic Georgian Restaurant",
+        "Tamada"
+      ],
+      "description": "An intimate Downtown Georgian restaurant styled like a vintage home, serving shareable khinkali, khachapuri and traditional grills. A warm, old-world dinner date in Dunya Tower, with free valet parking.",
+      "sourceUrls": [
+        "https://www.qartuli.ae/",
+        "https://www.qartuli.ae/menu/",
+        "https://www.instagram.com/qartuli.dxb/"
+      ],
+      "locationHint": "Dunya Tower, Al Ohood Street, Burj Khalifa Boulevard, Downtown Dubai, Dubai, UAE",
+      "placeId": "ChIJxR5uUjNpXz4RTGoCLWqUyVg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Dunya Tower - Al Ohood street - 1/2 - بوليفارد برج خليفة - برج خليفة - وسط مدينة دبي - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1946118,
+        "lng": 55.2832131
+      },
+      "googleTypes": [
+        "eastern_european_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "eastern_european_restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T05:55:27.095Z",
+        "osm": null,
+        "matchedName": "Qartuli Authentic Georgian",
+        "websiteUri": "https://www.qartuli.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Qartuli%20Authentic%20Georgian%2C%20Dunya%20Tower%2C%20Al%20Ohood%20Street%2C%20Burj%20Khalifa%20Boulevard%2C%20Downtown%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "ramen-hisa",
