@@ -741,6 +741,24 @@
       }
     },
     {
+      "id": "fiker-institute-library",
+      "name": "Fiker Institute Library",
+      "aliases": ["Fiker Library", "Fiker Institute", "Fiker Politics Library"],
+      "description": "A 15,000-plus-book politics and culture library in Warehouse 88 at Alserkal Avenue, with English and Arabic collections spanning history, diplomacy, international relations and literature. Settle in for a thoughtful reading date, then wander the surrounding galleries; access uses a paid day pass or membership and books stay in the library.",
+      "sourceUrls": [
+        "https://www.fikerinstitute.org/library",
+        "https://www.fikerinstitute.org/contact-us/faq",
+        "https://www.visitdubai.com/en/places-to-visit/fiker-institute"
+      ],
+      "locationHint": "Warehouse 88, Alserkal Avenue, Al Quoz, Dubai, UAE",
+      "placeId": "ChIJJZRkGgBrXz4RF7b8HEhxMNE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage"]
+      }
+    },
+    {
       "id": "cinema-akil",
       "name": "Cinema Akil",
       "aliases": ["Cinema Akil Alserkal Avenue"],

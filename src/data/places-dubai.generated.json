@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 64,
+    "curatedRecordCount": 65,
     "eventCount": 18,
-    "placeCount": 143,
-    "generatedAt": "2026-08-28T10:46:49.208Z",
+    "placeCount": 144,
+    "generatedAt": "2026-08-28T12:13:40.169Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -2844,6 +2844,53 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Fairmont%20The%20Palm%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "fiker-institute-library",
+      "name": "Fiker Institute Library",
+      "aliases": [
+        "Fiker Library",
+        "Fiker Institute",
+        "Fiker Politics Library"
+      ],
+      "description": "A 15,000-plus-book politics and culture library in Warehouse 88 at Alserkal Avenue, with English and Arabic collections spanning history, diplomacy, international relations and literature. Settle in for a thoughtful reading date, then wander the surrounding galleries; access uses a paid day pass or membership and books stay in the library.",
+      "sourceUrls": [
+        "https://www.fikerinstitute.org/library",
+        "https://www.fikerinstitute.org/contact-us/faq",
+        "https://www.visitdubai.com/en/places-to-visit/fiker-institute"
+      ],
+      "locationHint": "Warehouse 88, Alserkal Avenue, Al Quoz, Dubai, UAE",
+      "placeId": "ChIJJZRkGgBrXz4RF7b8HEhxMNE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "42 17th St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1426784,
+        "lng": 55.2256618
+      },
+      "googleTypes": [
+        "research_institute",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "research_institute",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T12:11:47.953Z",
+        "osm": null,
+        "matchedName": "Fiker Institute",
+        "websiteUri": "http://www.fikerinstitute.org/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Fiker%20Institute%20Library%2C%20Warehouse%2088%2C%20Alserkal%20Avenue%2C%20Al%20Quoz%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "founder-sports-club",
