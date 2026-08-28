@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 28,
-    "eventCount": 16,
-    "placeCount": 107,
-    "generatedAt": "2026-08-28T05:55:45.563Z",
+    "curatedRecordCount": 64,
+    "eventCount": 18,
+    "placeCount": 143,
+    "generatedAt": "2026-08-28T10:46:49.208Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -327,6 +327,54 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=BKD%20by%20Gemini%2C%20Al%20Safiya%20Park%2C%20Al%20Zorah%2C%20Ajman%2C%20UAE"
+    },
+    {
+      "id": "eighth-cafe-showroom",
+      "name": "8th Cafe Showroom",
+      "aliases": [
+        "8th Café",
+        "8th Cafe",
+        "8th Car Cafe"
+      ],
+      "description": "A car-lover’s coffee stop inside Barugzai Cars, where specialty drinks come with a changing showroom of supercars and custom builds.",
+      "sourceUrls": [
+        "https://www.instagram.com/8th.cafe/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Inside Barugzai Cars, Nad Al Hamar Road, Ras Al Khor Industrial Area 2, Dubai, UAE",
+      "placeId": "ChIJDSPVlNhnXz4RsvNsDw20v9Q",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Nad Al Hamar Rd - inside Barugzai Cars - Ras Al Khor Ind. Second - Ras Al Khor - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1715331,
+        "lng": 55.366524899999995
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:11.795Z",
+        "osm": null,
+        "matchedName": "8th Cafe Showroom",
+        "websiteUri": "https://www.instagram.com/8th.cafe/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=8th%20Cafe%20Showroom%2C%20Inside%20Barugzai%20Cars%2C%20Nad%20Al%20Hamar%20Road%2C%20Ras%20Al%20Khor%20Industrial%20Area%202%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "african-queen",
@@ -795,6 +843,57 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=At.mosphere%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "atom-shot-jvc",
+      "name": "Atom Shot — JVC",
+      "aliases": [
+        "Atom",
+        "Atom Shot",
+        "Atom Shot JVC",
+        "Atom Shot Dubai"
+      ],
+      "description": "A new JVC neighbourhood café for early coffee, creative lattes and artisanal or lighter bakes, with spacious seating from early morning.",
+      "sourceUrls": [
+        "https://www.gleehospitality.com/portfolio",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Retail 01, Binghatti Gardenia, Jumeirah Village Circle, Dubai, UAE",
+      "placeId": "ChIJ1dPObiBtXz4RHPPxa0vMSGE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Binghatti Gardenia - Retail 01 - Lazuward N E - Al Barsha South Fourth - Jumeirah Village Circle - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.0588133,
+        "lng": 55.2129858
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:15.617Z",
+        "osm": null,
+        "matchedName": "Atom Shot - Speciality Coffee and Artisanal Bakes",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Atom%20Shot%20%E2%80%94%20JVC%2C%20Retail%2001%2C%20Binghatti%20Gardenia%2C%20Jumeirah%20Village%20Circle%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "aventura-parks",
       "name": "Aventura Parks",
       "aliases": [
@@ -898,6 +997,56 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=AYA%20Universe%2C%20Wafi%20City%2C%20Oud%20Metha%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "backyard-mirdif",
+      "name": "Backyard — Mirdif",
+      "aliases": [
+        "Backyard Mirdif",
+        "Backyard Avenue by Y.A",
+        "BCKYRD Mirdif"
+      ],
+      "description": "A leafy neighbourhood coffee-club branch in Mirdif with spacious seating, baked treats and fuller bowls for a low-key catch-up.",
+      "sourceUrls": [
+        "https://www.instagram.com/bckyrd.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Avenue by Y.A, Mirdif, Dubai, UAE",
+      "placeId": "ChIJTTYZaQBhXz4R097HaSqm6dk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Avenue by Y.A - Mirdif - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2321514,
+        "lng": 55.4347905
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:13.508Z",
+        "osm": null,
+        "matchedName": "Backyard",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Backyard%20%E2%80%94%20Mirdif%2C%20Avenue%20by%20Y.A%2C%20Mirdif%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "bait-al-ahlam",
@@ -1035,6 +1184,54 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Barbari%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "better-al-wasl",
+      "name": "Better Healthy Restaurant",
+      "aliases": [
+        "Better",
+        "Better Al Wasl",
+        "Better Cafe"
+      ],
+      "description": "A bright Al Wasl breakfast-and-brunch spot balancing health-conscious plates with indulgent choices.",
+      "sourceUrls": [
+        "https://www.instagram.com/betteruae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Umm Amara Street, Al Wasl, Jumeirah, Dubai, UAE",
+      "placeId": "ChIJoUCjsq9DXz4RMEEVL0s3Do0",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "wellness"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Umm Amara St - Al Wasl - Jumeirah - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.194758999999998,
+        "lng": 55.2524593
+      },
+      "googleTypes": [
+        "restaurant",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:11.388Z",
+        "osm": null,
+        "matchedName": "Better Healthy Restaurant",
+        "websiteUri": "https://betteruae.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Better%20Healthy%20Restaurant%2C%20Umm%20Amara%20Street%2C%20Al%20Wasl%2C%20Jumeirah%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "birch",
       "name": "Birch",
       "aliases": [],
@@ -1079,6 +1276,163 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Birch%20Restaurant%2C%20The%20Ritz-Carlton%20DIFC%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "black-sheep-coffee-peninsula-three",
+      "name": "Black Sheep Coffee — Peninsula Three",
+      "aliases": [
+        "Black Sheep Coffee Business Bay",
+        "Black Sheep Peninsula Three"
+      ],
+      "description": "The Peninsula Three branch of the London coffee brand, with espresso, pastries and outdoor seating for an easy Business Bay coffee date.",
+      "sourceUrls": [
+        "https://blacksheepcoffee.me/blogs/locations/peninsula-three",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Unit B01, Peninsula Three, Business Bay, Dubai, UAE",
+      "placeId": "ChIJkTcyaABpXz4RHwGWvyfaffI",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "at The Peninsula 3 - Unit B01 - Business Bay - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.185022,
+        "lng": 55.2686268
+      },
+      "googleTypes": [
+        "cafe",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:12.745Z",
+        "osm": null,
+        "matchedName": "Black Sheep Coffee - Peninsula Three",
+        "websiteUri": "https://blacksheepcoffee.me/blogs/locations/peninsula-three",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Black%20Sheep%20Coffee%20%E2%80%94%20Peninsula%20Three%2C%20Unit%20B01%2C%20Peninsula%20Three%2C%20Business%20Bay%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "blue-tokai-burjuman",
+      "name": "Blue Tokai Coffee Roasters — BurJuman",
+      "aliases": [
+        "Blue Tokai Dubai",
+        "Blue Tokai BurJuman",
+        "Blue Tokai Coffee Roasters Dubai"
+      ],
+      "description": "Blue Tokai’s first UAE café, bringing single-estate Indian coffees, manual brews, pastries and all-day bites to a spacious Level 1 branch.",
+      "sourceUrls": [
+        "https://bluetokaicoffee.ae/pages/contact",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Shop L1/10, Level 1, BurJuman Centre, Al Mankhool, Dubai, UAE",
+      "placeId": "ChIJXUKGNgBDXz4RIbvrF_hFYDY",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Shop L1/10, 1st Floor, Burjuman Centre - Burjuman - المنخول - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2545616,
+        "lng": 55.303483199999995
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "sandwich_shop",
+        "breakfast_restaurant",
+        "bakery",
+        "coffee_roastery",
+        "food_store",
+        "cafe",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "store",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:15.434Z",
+        "osm": null,
+        "matchedName": "Blue Tokai Coffee Roasters | Burjuman Mall",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Blue%20Tokai%20Coffee%20Roasters%20%E2%80%94%20BurJuman%2C%20Shop%20L1%2F10%2C%20Level%201%2C%20BurJuman%20Centre%2C%20Al%20Mankhool%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "ca-phin-jlt",
+      "name": "Ca Phin — JLT",
+      "aliases": [
+        "Ca Phin Coffee Supply",
+        "Ca Phin Coffee House",
+        "Cà Phin",
+        "Ca Phin JLT"
+      ],
+      "description": "A Vietnamese specialty coffee house in JLT for egg, coconut or salted coffee, with light bites and desserts in a space made for slowing down.",
+      "sourceUrls": [
+        "https://caphin.co/",
+        "https://jlt.ae/directory/ca-phin-coffee-house",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Cluster F, Basement Lake Level, Jumeirah Lakes Towers, Dubai, UAE",
+      "placeId": "ChIJnfk-5CMOiKoRFzsTkvRRgR8",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Cluster F, Basement Lake Level - Under the construction parking - الثنيه الخامسة - أبراج بحيرات الجميرا - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.072677499999998,
+        "lng": 55.141549399999995
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "sandwich_shop",
+        "cafe",
+        "wholesaler",
+        "restaurant",
+        "point_of_interest",
+        "food_store",
+        "store",
+        "food",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:12.178Z",
+        "osm": null,
+        "matchedName": "Ca Phin - Vietnamese Speciality Coffee",
+        "websiteUri": "https://caphin.co/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Ca%20Phin%20%E2%80%94%20JLT%2C%20Cluster%20F%2C%20Basement%20Lake%20Level%2C%20Jumeirah%20Lakes%20Towers%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "cabinet-of-curiosity",
       "name": "Cabinet of Curiosity",
       "aliases": [],
@@ -1121,6 +1475,174 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Cabinet%20of%20Curiosity%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "cafe-du-port-dubai-harbour",
+      "name": "Café du Port",
+      "aliases": [
+        "Cafe Du Port",
+        "Cafe du Port Dubai Harbour"
+      ],
+      "description": "A waterfront French-Mediterranean café at Dubai Harbour for lingering coffee, warm pastries, crêpes and light breakfast or lunch on a yacht-facing terrace.",
+      "sourceUrls": [
+        "https://barduportdubai.com/cafe-du-port/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Pier Club, Dubai Harbour, Dubai Marina, Dubai, UAE",
+      "placeId": "ChIJTYy_km9rXz4Rg0gKIK26yiw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Pier Club - Dubai Marina - Dubai Harbour - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.097058999999998,
+        "lng": 55.1435472
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:07.907Z",
+        "osm": null,
+        "matchedName": "Café du Port",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20du%20Port%2C%20Pier%20Club%2C%20Dubai%20Harbour%2C%20Dubai%20Marina%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "cafe-leon-dore-ounass-stage",
+      "name": "Café Leon Dore at Aimé Leon Dore",
+      "aliases": [
+        "Aimé Leon Dore",
+        "Aime Leon Dore",
+        "Café Leon Dore",
+        "Cafe Leon Dore",
+        "Ounass Stage"
+      ],
+      "description": "A limited six-month 2026 Café Leon Dore counter inside Aimé Leon Dore’s Ounass Stage takeover, mixing espresso with vintage objects, art and a Porsche 911 SC. The exact closing date is unpublished, so verify before going.",
+      "sourceUrls": [
+        "https://www.linkedin.com/posts/ounass_ounassstage-innovation-aimeleondore-activity-7463615841838817281-E0Z_",
+        "https://hypebeast.com/2026/5/aime-leon-dore-ounass-dubai-pop-up-dates-information",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Ounass Stage, Al Wasl Road, Jumeirah 3, Dubai, UAE",
+      "placeId": "ChIJ64TvYrtpXz4RgnTU04gj_WQ",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "shopping-stroll",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "cafe-leon-dore-ounass-stage-2026",
+          "title": "Café Leon Dore at Ounass Stage",
+          "description": "A limited six-month retail and hospitality takeover that opened on 23 May. Its exact final day is unpublished, so this pin uses a short verification window.",
+          "startsAt": "2026-05-23T10:00:00+04:00",
+          "endsAt": "2026-09-05T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://hypebeast.com/2026/5/aime-leon-dore-ounass-dubai-pop-up-dates-information",
+          "verifiedAt": "2026-08-28T00:00:00+04:00",
+          "verifiedUntil": "2026-09-05T23:59:00+04:00",
+          "dateLabel": "Limited 2026 takeover · verify before going",
+          "taxonomyTags": [
+            "events-activities",
+            "food-drink",
+            "shopping-stroll"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Al Wasl Rd - Jumeirah - Jumeira Third - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1773955,
+        "lng": 55.2327125
+      },
+      "googleTypes": [
+        "department_store",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "department_store",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:11.200Z",
+        "osm": null,
+        "matchedName": "Ounass Stage",
+        "websiteUri": "https://www.ounass.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Leon%20Dore%20at%20Aim%C3%A9%20Leon%20Dore%2C%20Ounass%20Stage%2C%20Al%20Wasl%20Road%2C%20Jumeirah%203%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "caffelini-dubai-sports-city",
+      "name": "Caffelini Dubai",
+      "aliases": [
+        "Caffelini",
+        "Caffellini",
+        "Caffelini ISD Padel",
+        "Caffellini Dubai"
+      ],
+      "description": "A coffee-and-smoothie stop inside ISD Padel in Dubai Sports City, ideal before or after a game.",
+      "sourceUrls": [
+        "https://www.instagram.com/caffelinidubai/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Inside ISD Padel, Dubai Sports City, Dubai, UAE",
+      "placeId": "ChIJfSyyWoFtXz4R1sGFfzuJA8o",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "sport-active"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Hebiah Fourth - Dubai Sports City - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.0395167,
+        "lng": 55.2247025
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:13.327Z",
+        "osm": null,
+        "matchedName": "Caffelini Dubai",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Caffelini%20Dubai%2C%20Inside%20ISD%20Padel%2C%20Dubai%20Sports%20City%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "cat-cafe-vibrissae-dubai-creek-harbour",
@@ -1251,6 +1773,57 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Cinema%20Akil%2C%20Warehouse%2068%2C%20Alserkal%20Avenue%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "circle-cafe-jumeirah-islands",
+      "name": "Circle Café — Jumeirah Islands",
+      "aliases": [
+        "Circle Cafe Jumeirah Islands",
+        "Circle Café",
+        "Circle Cafe"
+      ],
+      "description": "A casual neighbourhood café for breakfast, lunch, dinner, desserts and coffee—easy for a laid-back brunch date.",
+      "sourceUrls": [
+        "https://www.circle-cafe.com/locations/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Jumeirah Islands Pavilion, Al Thanyah Fifth, Dubai, UAE",
+      "placeId": "ChIJN1S6BohtXz4RKNROgSo22Rg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Pavilion - Al Thanyah Fifth - Jumeirah Islands - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.0635588,
+        "lng": 55.146802699999995
+      },
+      "googleTypes": [
+        "restaurant",
+        "catering_service",
+        "meal_takeaway",
+        "food_delivery",
+        "service",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:10.626Z",
+        "osm": null,
+        "matchedName": "Circle Café Jumeirah Islands",
+        "websiteUri": "https://www.circle-cafe.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Circle%20Caf%C3%A9%20%E2%80%94%20Jumeirah%20Islands%2C%20Jumeirah%20Islands%20Pavilion%2C%20Al%20Thanyah%20Fifth%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "city-walk",
@@ -1411,6 +1984,105 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Coffee%20Museum%2C%20Villa%2044%2C%20Al%20Fahidi%20Historical%20Neighbourhood%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "culture-deli",
+      "name": "Culture Deli",
+      "aliases": [
+        "culture.deli",
+        "Culture Deli Canal Front"
+      ],
+      "description": "A Canal Front neighbourhood deli rewriting familiar sandwiches with Dubai flavours, from mustard-labneh beef to crispy chicken with toum and za’atar.",
+      "sourceUrls": [
+        "https://www.instagram.com/culture.deli/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Canal Front Residences, Al Wasl, Al Safa, Dubai, UAE",
+      "placeId": "ChIJjdDNiC9rXz4R2qBU_N47QZo",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Wasl - Al Safa - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1856202,
+        "lng": 55.2484276
+      },
+      "googleTypes": [
+        "deli",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "deli",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:09.598Z",
+        "osm": null,
+        "matchedName": "Culture Deli",
+        "websiteUri": "https://www.culturedeli.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Culture%20Deli%2C%20Canal%20Front%20Residences%2C%20Al%20Wasl%2C%20Al%20Safa%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "cup-coffee-house",
+      "name": "Cup. Coffee House",
+      "aliases": [
+        "Cup.",
+        "Cup",
+        "Cup Coffee House",
+        "Cup Coffee House & Collaborative Workspace"
+      ],
+      "description": "A work-friendly Al Quoz coffee house with relaxed seating, specialty coffee, matcha, smoothies, bagels and sandwiches.",
+      "sourceUrls": [
+        "https://www.instagram.com/p/DcYi3d-DcIN/",
+        "https://www.letswork.io/venues/united-arab-emirates/dubai/cup/cowork"
+      ],
+      "locationHint": "Al Quoz Central Street, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJXdGrtDRpXz4RsBv4e28wTAU",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Quoz Central St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1544529,
+        "lng": 55.233666899999996
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "point_of_interest",
+        "food_store",
+        "store",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:11.992Z",
+        "osm": null,
+        "matchedName": "Cup. Coffee House",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Cup.%20Coffee%20House%2C%20Al%20Quoz%20Central%20Street%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "dalia-bagel-bar",
@@ -2213,6 +2885,125 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Founder%20Sports%20Club%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "friends-avenue-creek-beach",
+      "name": "Friends Avenue Cafe — Creek Beach",
+      "aliases": [
+        "Friends Avenue Creek Beach",
+        "Friends Avenue Creek Harbour",
+        "Friends Avenue Cafe DCH"
+      ],
+      "description": "The Creek Beach branch of Friends Avenue, pairing all-day breakfast, brunch and coffee with a relaxed waterfront-neighbourhood setting.",
+      "sourceUrls": [
+        "https://www.instagram.com/friendsavenue/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Creek Beach Phase 3, Dubai Creek Harbour, Dubai, UAE",
+      "placeId": "ChIJRwyZkFVnXz4RRG--yn4nI8U",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "beach-water"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Creek Beach Phase 3 - Al Kheeran First - Dubai Creek Harbour - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2041388,
+        "lng": 55.349112999999996
+      },
+      "googleTypes": [
+        "restaurant",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:16.138Z",
+        "osm": null,
+        "matchedName": "Friends Avenue Cafe Creek Beach",
+        "websiteUri": "https://www.friendsavenue.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Friends%20Avenue%20Cafe%20%E2%80%94%20Creek%20Beach%2C%20Creek%20Beach%20Phase%203%2C%20Dubai%20Creek%20Harbour%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "fynd-at-the-top",
+      "name": "FYND at The Top",
+      "aliases": [
+        "Fynd Burj Khalifa",
+        "Fynd Level 124",
+        "Fynd at The Top"
+      ],
+      "description": "A current matcha activation on Burj Khalifa Level 124, pairing Japanese-inspired drinks with the At The Top view. Observation-deck admission may be required; Google photos show the host attraction, and availability should be checked before booking.",
+      "sourceUrls": [
+        "https://www.instagram.com/fynd.ae/",
+        "https://www.emaar.com/en/at-the-top-burj-khalifa",
+        "https://dubai.news/lifestyle/fynd-opens-burj-khalifa-matcha-cafe-on-level-124/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Level 124, At The Top, Burj Khalifa, Downtown Dubai, Dubai, UAE",
+      "placeId": "ChIJE1LWwt9DXz4RAa3pNktz2EA",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "events": [
+        {
+          "id": "fynd-at-the-top-2026",
+          "title": "FYND at The Top",
+          "description": "A newly opened Level 124 matcha activation inside the ticketed At The Top observation-deck experience.",
+          "startsAt": "2026-08-10T00:00:00+04:00",
+          "endsAt": "2026-09-05T23:59:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.emaar.com/en/at-the-top-burj-khalifa",
+          "sourceUrl": "https://dubai.news/lifestyle/fynd-opens-burj-khalifa-matcha-cafe-on-level-124/",
+          "verifiedAt": "2026-08-28T00:00:00+04:00",
+          "verifiedUntil": "2026-09-05T23:59:00+04:00",
+          "dateLabel": "Current Level 124 activation · ticketed access",
+          "taxonomyTags": [
+            "events-activities",
+            "food-drink",
+            "shows-immersive"
+          ]
+        }
+      ],
+      "emirate": "Dubai",
+      "address": "Blvd Dubai Unit LG - 089 - burj khalifa - Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1974035,
+        "lng": 55.276021500000006
+      },
+      "googleTypes": [
+        "observation_deck",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "observation_deck",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:14.085Z",
+        "osm": null,
+        "matchedName": "At The Top, Burj Khalifa",
+        "websiteUri": "https://tickets.atthetop.ae/atthetop/ar-ae",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=FYND%20at%20The%20Top%2C%20Level%20124%2C%20At%20The%20Top%2C%20Burj%20Khalifa%2C%20Downtown%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "gooder",
       "name": "Gooder",
       "aliases": [],
@@ -2376,6 +3167,103 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Jameel%20Arts%20Centre%2C%20Jaddaf%20Waterfront%2C%20Al%20Jadaf%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "kairos-coffee-assembly",
+      "name": "Kairos | Coffee Assembly",
+      "aliases": [
+        "Kairos Coffee Assembly",
+        "Kairos Coffee",
+        "Kairos Al Quoz"
+      ],
+      "description": "A calm Al Quoz Creative Zone café roasting small batches on site, with careful filter coffee, house bakes and room to linger or work.",
+      "sourceUrls": [
+        "https://kairoscoffeedxb.com/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "4B Street, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJrczyLARrXz4RlGpc963LMDY",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "4B St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1443211,
+        "lng": 55.223243
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:13.902Z",
+        "osm": null,
+        "matchedName": "Kairos | Coffee Assembly",
+        "websiteUri": "http://kairoscoffeedxb.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kairos%20%7C%20Coffee%20Assembly%2C%204B%20Street%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "kaps-cafe",
+      "name": "Kap’s Cafe",
+      "aliases": [
+        "Kap's Cafe",
+        "Kaps Cafe",
+        "Kap’s cafe"
+      ],
+      "description": "A cozy, late-opening Al Kifaf café for a relaxed meal, crafted coffee and a long evening catch-up.",
+      "sourceUrls": [
+        "https://www.kapscafe.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Al Kifaf, Dubai, UAE",
+      "placeId": "ChIJuZHs6YdDXz4ROzdd93qnAXs",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Kifaf - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.231766,
+        "lng": 55.294843699999994
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:10.436Z",
+        "osm": null,
+        "matchedName": "Kap’s cafe",
+        "websiteUri": "http://kapscafe.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kap%E2%80%99s%20Cafe%2C%20Al%20Kifaf%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "kave-the-story-of-things",
       "name": "KAVE – The Story of Things",
       "aliases": [
@@ -2518,6 +3406,104 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kite%20Beach%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "kurasu-difc",
+      "name": "Kurasu DIFC",
+      "aliases": [
+        "Kurasu Gate Avenue",
+        "Kurasu Dubai DIFC"
+      ],
+      "description": "A calm Kyoto-born specialty coffee and matcha bar at Gate Avenue for a minimalist pause over carefully brewed drinks.",
+      "sourceUrls": [
+        "https://www.instagram.com/kurasuae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Zone C, Gate Avenue, Shop 105, DIFC, Dubai, UAE",
+      "placeId": "ChIJqTqyWIpDXz4RWE4bA2SvR-U",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Zone C, Gate Avenue - Shop 105 - Zaa'beel Second - DIFC - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.209130299999998,
+        "lng": 55.2782188
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:11.011Z",
+        "osm": null,
+        "matchedName": "Kurasu DIFC",
+        "websiteUri": "https://www.instagram.com/kurasuae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kurasu%20DIFC%2C%20Zone%20C%2C%20Gate%20Avenue%2C%20Shop%20105%2C%20DIFC%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "kurasu-wasl-vita",
+      "name": "Kurasu Wasl Vita",
+      "aliases": [
+        "Kurasu Dubai",
+        "Kurasu Jumeirah"
+      ],
+      "description": "The Kyoto-born roaster’s calm new Wasl Vita home, focused on precision filter coffee, matcha and unhurried conversation.",
+      "sourceUrls": [
+        "https://www.instagram.com/kurasudxb/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Wasl Vita, 32C Street, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJyUMSQ8dDXz4RQTlR0jhzAZE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "1 32C St - Jumeirah - Jumeira First - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.210345099999998,
+        "lng": 55.25544430000001
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "food",
+        "store",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:14.668Z",
+        "osm": null,
+        "matchedName": "Kurasu Wasl Vita",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kurasu%20Wasl%20Vita%2C%20Wasl%20Vita%2C%2032C%20Street%2C%20Jumeirah%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "la-maison-laggar",
@@ -2797,6 +3783,56 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mazmi%20Coffee%20%26%20More%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "mereu-speciality-coffee",
+      "name": "mereu. speciality coffee",
+      "aliases": [
+        "Mereu",
+        "Mereu Speciality Coffee",
+        "mereu."
+      ],
+      "description": "A neighbourhood-feel Wasl Port Views specialty café for single-origin brews and a slow coffee catch-up.",
+      "sourceUrls": [
+        "https://mereu.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Building 6, Wasl Port Views, Al Mina, Dubai, UAE",
+      "placeId": "ChIJb2I-Zd5DXz4R0dxiu50CztA",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Wasl Port Views - Building 6 - Madinat Dubai Al Melaheyah - Al Mina - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.247818499999997,
+        "lng": 55.2767323
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:11.609Z",
+        "osm": null,
+        "matchedName": "mereu. speciality coffee",
+        "websiteUri": "https://mereu.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=mereu.%20speciality%20coffee%2C%20Building%206%2C%20Wasl%20Port%20Views%2C%20Al%20Mina%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "mohammed-bin-rashid-library",
       "name": "Mohammed Bin Rashid Library",
       "aliases": [],
@@ -2838,6 +3874,59 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mohammed%20Bin%20Rashid%20Library%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "mondoux-bluewaters",
+      "name": "MONDOUX — Bluewaters",
+      "aliases": [
+        "Mondoux Bluewaters",
+        "MONDOUX Bluewaters",
+        "Monduox"
+      ],
+      "description": "A relaxed Bluewaters Boardwalk café for an unhurried coffee or meal before an island waterfront walk.",
+      "sourceUrls": [
+        "https://mondoux.ae/locations/bluewaters",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Bluewaters Island, Dubai Marina, Dubai, UAE",
+      "placeId": "ChIJL0Nc3BYVXz4RGDNqsZtOYgc",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "shopping-stroll"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Dubai Marina - Bluewaters Island - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.0767036,
+        "lng": 55.1244677
+      },
+      "googleTypes": [
+        "restaurant",
+        "bistro",
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:08.651Z",
+        "osm": null,
+        "matchedName": "MONDOUX",
+        "websiteUri": "https://www.mondoux.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=MONDOUX%20%E2%80%94%20Bluewaters%2C%20Bluewaters%20Island%2C%20Dubai%20Marina%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "museum-of-the-future",
@@ -2929,6 +4018,152 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=ONA%20restaurant%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "ottimo-cafe-al-quoz",
+      "name": "Ottimo Cafe",
+      "aliases": [
+        "Ottimo",
+        "Ottimo Café Al Quoz",
+        "Ottimo Cafe Al Quoz"
+      ],
+      "description": "A restrained, quiet Al Quoz café for coffee, conversation or a short laptop stop, with a minimalist room away from busier themed cafés.",
+      "sourceUrls": [
+        "https://ottimo.cafe/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "5A Street, Al Quoz Industrial Area 1, Dubai, UAE",
+      "placeId": "ChIJwyEXZQBpXz4R2UyaXiRiCvQ",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "4 5A St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1525242,
+        "lng": 55.2278125
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:14.275Z",
+        "osm": null,
+        "matchedName": "Ottimo Cafe",
+        "websiteUri": "http://ottimo.cafe/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Ottimo%20Cafe%2C%205A%20Street%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "pages-cafe",
+      "name": "Pages Cafe",
+      "aliases": [
+        "Pages Café",
+        "Pages Book Cafe",
+        "Pages Café Al Thanya"
+      ],
+      "description": "A contemporary book café with shelves to browse, specialty coffee and a full breakfast-and-brunch menu, suited to a quiet, unhurried catch-up.",
+      "sourceUrls": [
+        "https://www.pagescafe.com/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Shop 30, API 1000, Al Thanya Street, Umm Al Sheif, Dubai, UAE",
+      "placeId": "ChIJ950IQeZrXz4RfDbIKy6JDK8",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "API 1000 - Shop 30 Al Thanya St - Umm Al Sheif - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.139522799999998,
+        "lng": 55.2047132
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:12.552Z",
+        "osm": null,
+        "matchedName": "Pages Cafe",
+        "websiteUri": "https://www.pagescafe.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Pages%20Cafe%2C%20Shop%2030%2C%20API%201000%2C%20Al%20Thanya%20Street%2C%20Umm%20Al%20Sheif%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "plaka-al-mizhar",
+      "name": "PLAKA CAFE",
+      "aliases": [
+        "Plaka",
+        "Plaka Café",
+        "Plaka Cafe",
+        "Plaka Al Mizhar"
+      ],
+      "description": "A Greek-inspired garden café in Al Mizhar with blue-and-white arches, a glass pavilion, specialty coffee, pastries and light brunch—an especially photogenic daytime date.",
+      "sourceUrls": [
+        "https://www.instagram.com/plaka.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "3D Street, Al Mizhar First, Dubai, UAE",
+      "placeId": "ChIJYYktH6JdXz4R9QFTvCsYfq4",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "3D St - Al Mizhar First - Al Mizhar - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2329305,
+        "lng": 55.446487499999996
+      },
+      "googleTypes": [
+        "cafe",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:12.361Z",
+        "osm": null,
+        "matchedName": "PLAKA CAFE",
+        "websiteUri": "https://www.instagram.com/plaka.ae?igsh=MWVjNWN0MWp6aTE0dg==",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=PLAKA%20CAFE%2C%203D%20Street%2C%20Al%20Mizhar%20First%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "port-de-la-mer",
       "name": "Port de La Mer",
       "aliases": [],
@@ -2968,6 +4203,57 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Port%20de%20La%20Mer%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "pressio-al-warqa",
+      "name": "pressio speciality Coffee",
+      "aliases": [
+        "Pressio Specialty Coffee",
+        "Pressio",
+        "Pressio Al Warqa",
+        "Pressio Speciality Coffee"
+      ],
+      "description": "A quiet Al Warqa specialty-coffee stop at Q1 Mall, with a spacious setting, desserts and room for a slower neighbourhood catch-up.",
+      "sourceUrls": [
+        "https://www.instagram.com/pressio.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Unit 414, Q1 Mall, Al Warqa First, Dubai, UAE",
+      "placeId": "ChIJF61UXkthXz4RhLFT8DGxIms",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "414 - Q1 mall - الورقاء - الورقاء الأولى - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1877644,
+        "lng": 55.40902570000001
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "food_store",
+        "cafe",
+        "food",
+        "point_of_interest",
+        "store",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:14.861Z",
+        "osm": null,
+        "matchedName": "pressio speciality Coffee",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=pressio%20speciality%20Coffee%2C%20Unit%20414%2C%20Q1%20Mall%2C%20Al%20Warqa%20First%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "puppy-yoga-at-herinox-studios",
@@ -3013,6 +4299,53 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Herinox%20Studios%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "puzzle-coffee-dch",
+      "name": "Puzzle Coffee DCH",
+      "aliases": [
+        "Puzzle Coffee",
+        "Puzzle Coffee Dubai Creek Harbour"
+      ],
+      "description": "An Australian-style coffee house at The Grand with specialty drinks, all-day breakfast and a Creek Harbour promenade for a walk afterwards.",
+      "sourceUrls": [
+        "https://www.instagram.com/puzzlecoffeedubai/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "The Grand 7.2, Dubai Creek Harbour, Dubai, UAE",
+      "placeId": "ChIJLVleAA9nXz4RY3wakJYPaNM",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "beach-water"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "The Grand 7.2 - Al Kheeran First - Dubai Creek Harbour - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.207164700000003,
+        "lng": 55.3419502
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:15.234Z",
+        "osm": null,
+        "matchedName": "Puzzle Coffee DCH",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Puzzle%20Coffee%20DCH%2C%20The%20Grand%207.2%2C%20Dubai%20Creek%20Harbour%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "qartuli-authentic-georgian",
@@ -3063,6 +4396,54 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Qartuli%20Authentic%20Georgian%2C%20Dunya%20Tower%2C%20Al%20Ohood%20Street%2C%20Burj%20Khalifa%20Boulevard%2C%20Downtown%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "qinwan-d3",
+      "name": "Qinwan Premium Dates & Cafe — D3",
+      "aliases": [
+        "Qinwan Café",
+        "Qinwan Cafe D3",
+        "Qinwan Premium Dates & Cafe"
+      ],
+      "description": "A polished d3 dates-and-coffee café pairing premium date collections and gift boxes with coffee, tea and light bites.",
+      "sourceUrls": [
+        "https://qinwandates.com/pages/dubai",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Dubai Design District, Za’abeel Second, Dubai, UAE",
+      "placeId": "ChIJcX4t_HtpXz4R8fVz7QqiR7g",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "shopping-stroll"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "D3 - Zaa'beel Second - Dubai Design District - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.187469399999998,
+        "lng": 55.297095399999996
+      },
+      "googleTypes": [
+        "gift_shop",
+        "point_of_interest",
+        "store",
+        "establishment"
+      ],
+      "primaryGoogleType": "gift_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:10.822Z",
+        "osm": null,
+        "matchedName": "Qinwan Premium Dates & Cafe - D3",
+        "websiteUri": "https://qinwandates.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Qinwan%20Premium%20Dates%20%26%20Cafe%20%E2%80%94%20D3%2C%20Dubai%20Design%20District%2C%20Za%E2%80%99abeel%20Second%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "ramen-hisa",
@@ -3158,6 +4539,62 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=RAW%20Coffee%20Company%2C%20Warehouse%2010%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "romina-fleur-downtown",
+      "name": "Romina Fleur — Downtown",
+      "aliases": [
+        "Romina Fleur Café",
+        "Romina Fleur Cafe",
+        "Romina Fleur Cafe & Florist"
+      ],
+      "description": "A café-florist on Downtown Boulevard pairing artisan coffee, matcha, tea and pastries with a flower-filled setting made for a relaxed afternoon date.",
+      "sourceUrls": [
+        "https://rominafleur.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Sheikh Mohammed bin Rashid Boulevard, Downtown Dubai, Dubai, UAE",
+      "placeId": "ChIJi_lT9bdpXz4RylfG_WjwpAE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "shopping-stroll"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Romina Fleur - Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1919224,
+        "lng": 55.271939499999995
+      },
+      "googleTypes": [
+        "florist",
+        "coffee_shop",
+        "cafe",
+        "breakfast_restaurant",
+        "clothing_store",
+        "restaurant",
+        "point_of_interest",
+        "food_store",
+        "store",
+        "food",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "florist",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:12.957Z",
+        "osm": null,
+        "matchedName": "Romina Fleur - Matcha | Cafe | Florist",
+        "websiteUri": "http://rominafleur.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Romina%20Fleur%20%E2%80%94%20Downtown%2C%20Sheikh%20Mohammed%20bin%20Rashid%20Boulevard%2C%20Downtown%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "sakhalin",
@@ -3682,6 +5119,55 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Umm%20Suqeim%20Sunset%20Beach%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "tease-dxb",
+      "name": "tease DXB",
+      "aliases": [
+        "Tease Dubai",
+        "Tease at Villa BOOST",
+        "Tease Wellness Bar"
+      ],
+      "description": "A refined-sugar-free wellness bar inside Villa BOOST serving customisable matcha, functional smoothies and adaptogen- or superfood-led drinks.",
+      "sourceUrls": [
+        "https://www.drinktease.co.uk/",
+        "https://www.instagram.com/drinktease/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Villa BOOST, 775B Al Wasl Road, Al Safa 2, Dubai, UAE",
+      "placeId": "ChIJwQOquxRDXz4RlwEFmWRuW6I",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "wellness"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "775b Al Wasl Rd - Al Safa Second - Al Safa - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1634332,
+        "lng": 55.2232941
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:10.243Z",
+        "osm": null,
+        "matchedName": "tease DXB",
+        "websiteUri": "https://www.drinktease.co.uk/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=tease%20DXB%2C%20Villa%20BOOST%2C%20775B%20Al%20Wasl%20Road%2C%20Al%20Safa%202%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "the-agenda-events",
       "name": "The Agenda",
       "aliases": [
@@ -3932,6 +5418,155 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20Knowledge%20Park%20Conference%20Centre%20Auditorium%2C%20Block%202B%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "the-kaf-downtown",
+      "name": "THE KAF — Downtown",
+      "aliases": [
+        "The KAF Downtown",
+        "The KAF Coffee Concept Store Downtown",
+        "THE KAF"
+      ],
+      "description": "A polished Downtown coffee-concept store combining specialty brews, breakfast and all-day plates in a calm, design-led room.",
+      "sourceUrls": [
+        "https://thekafdubai.com/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Downtown Dubai, Burj Khalifa district, Dubai, UAE",
+      "placeId": "ChIJuWXJoI5DXz4RUXnhyn_F9ZY",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "downtown - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.196046799999998,
+        "lng": 55.2696149
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:15.051Z",
+        "osm": null,
+        "matchedName": "THE KAF | Coffee Concept Store",
+        "websiteUri": "https://thekafdubai.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=THE%20KAF%20%E2%80%94%20Downtown%2C%20Downtown%20Dubai%2C%20Burj%20Khalifa%20district%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "the-kaf-sobha-hartland",
+      "name": "THE KAF — Sobha Hartland Greens",
+      "aliases": [
+        "The KAF",
+        "KAF Coffee",
+        "The KAF Sobha Hartland"
+      ],
+      "description": "A calm coffee concept store for single-origin brews, breakfast or an açaí bowl, designed equally for conversation and a quiet work session.",
+      "sourceUrls": [
+        "https://thekafdubai.com/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Building 2, Sobha Hartland Greens, Al Merkadh, Dubai, UAE",
+      "placeId": "ChIJ-a8GZptpXz4R8CrBvxJu3ww",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Sobha Hartland Greens - Building 2 Restaurant 1 - Al Merkadh - Nad Al Sheba 1 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.176123200000003,
+        "lng": 55.3092958
+      },
+      "googleTypes": [
+        "cafe",
+        "coffee_shop",
+        "food_store",
+        "restaurant",
+        "store",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:09.820Z",
+        "osm": null,
+        "matchedName": "THE KAF | Coffee Concept Store",
+        "websiteUri": "https://thekafdubai.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=THE%20KAF%20%E2%80%94%20Sobha%20Hartland%20Greens%2C%20Building%202%2C%20Sobha%20Hartland%20Greens%2C%20Al%20Merkadh%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "the-mark-cafe",
+      "name": "The Mark",
+      "aliases": [
+        "The Mark Café",
+        "The Mark Cafe",
+        "The Mark Dubai"
+      ],
+      "description": "A Q East café inside an auction-house setting where specialty coffee, contemporary comfort food and restored vintage cars share the room.",
+      "sourceUrls": [
+        "https://www.instagram.com/the.mark.cafe/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Al Quoz Industrial Area 3, Al Quoz 4, Dubai, UAE",
+      "placeId": "ChIJ4x96LGVrXz4RfrSkuC1r-mE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Qouz Ind.third - Al Quoz 4 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1202248,
+        "lng": 55.212383100000004
+      },
+      "googleTypes": [
+        "cafe",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:08.862Z",
+        "osm": null,
+        "matchedName": "The Mark",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The%20Mark%2C%20Al%20Quoz%20Industrial%20Area%203%2C%20Al%20Quoz%204%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "the-sevens-stadium-events",
       "name": "The Sevens Stadium",
       "aliases": [
@@ -4100,6 +5735,109 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=thejamjar%2C%20Warehouse%2074%2C%20Alserkal%20Avenue%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "tino-mercato-beach",
+      "name": "Tino — Mercato Beach",
+      "aliases": [
+        "Tino",
+        "Tino Cafe Jumeirah",
+        "Tino Mercato Beach"
+      ],
+      "description": "A small beach kiosk at Mercato Beach for coffee or a smoothie before an early walk or sunset by the water.",
+      "sourceUrls": [
+        "https://www.instagram.com/tino.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Beach kiosk, 71A Street, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJgferTS9DXz4RwPtLy2ZX9zs",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink",
+          "beach-water"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "beach kiosk - 71A St - Jumeira First - Jumeirah 1 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.213142599999998,
+        "lng": 55.2472906
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:14.475Z",
+        "osm": null,
+        "matchedName": "Tino cafe jumeira",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Tino%20%E2%80%94%20Mercato%20Beach%2C%20Beach%20kiosk%2C%2071A%20Street%2C%20Jumeirah%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "tlg-difc",
+      "name": "TLG — DIFC",
+      "aliases": [
+        "The Lazy Guy",
+        "The Lazy Guy Café",
+        "The Lazy Guy Cafe",
+        "TLG Dubai"
+      ],
+      "description": "A laid-back Currency House café for coffee, matcha, smoothies, pastries, bowls and toasties in the middle of a DIFC wander.",
+      "sourceUrls": [
+        "https://www.instagram.com/thelazyguycafe/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Al Fattan Currency House, DIFC, Dubai, UAE",
+      "placeId": "ChIJQbsGtFtDXz4R-KxPE_tG6xc",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Fattan Currency House - Zaa'beel Second - DIFC - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2130586,
+        "lng": 55.2807677
+      },
+      "googleTypes": [
+        "restaurant",
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:10.039Z",
+        "osm": null,
+        "matchedName": "TLG",
+        "websiteUri": "https://www.instagram.com/thelazyguycafe/?hl=en",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=TLG%20%E2%80%94%20DIFC%2C%20Al%20Fattan%20Currency%20House%2C%20DIFC%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
       "id": "toda-theatre-of-digital-art",
       "name": "TODA – Theatre of Digital Art",
       "aliases": [
@@ -4193,6 +5931,56 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Treasure%20Pots%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "trio-mirdif",
+      "name": "TRIO — Mirdif",
+      "aliases": [
+        "Trio Café Mirdif",
+        "Trio Coffee Mirdif",
+        "TRIO Mirdif 35"
+      ],
+      "description": "A warm Mirdif café for long catch-ups, with specialty coffee, matcha, chocolate drinks and bakehouse-style desserts plus indoor and outdoor seating.",
+      "sourceUrls": [
+        "https://www.instagram.com/triocoffee.ae/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "35, 93D Street, Mirdif, Dubai, UAE",
+      "placeId": "ChIJoVRhJIlhXz4R_7bAbTqrjdc",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "35 93D Street - Mirdif - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.232464699999998,
+        "lng": 55.433642899999995
+      },
+      "googleTypes": [
+        "cafe",
+        "coffee_shop",
+        "food_store",
+        "food",
+        "point_of_interest",
+        "store",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:13.712Z",
+        "osm": null,
+        "matchedName": "TRIO",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=TRIO%20%E2%80%94%20Mirdif%2C%2035%2C%2093D%20Street%2C%20Mirdif%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "wawa-dining",
@@ -4377,6 +6165,54 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Yesterday%20restaurant%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "zoeys-cafe-arjan",
+      "name": "ZOEY'S CAFE",
+      "aliases": [
+        "Zoey’s Café",
+        "Zoeys Cafe",
+        "Zoey’s Arjan"
+      ],
+      "description": "A homegrown Arjan neighbourhood café with European-inspired warmth, coffee and nourishing all-day food in a relaxed, pet-friendly setting.",
+      "sourceUrls": [
+        "https://zoeycafe.com/",
+        "https://www.instagram.com/p/DcYi3d-DcIN/"
+      ],
+      "locationHint": "Al Ghaf 1 Building, Arjan, Al Barsha South Third, Dubai, UAE",
+      "placeId": "ChIJUe4ps7RvXz4RwVf_6US-MXw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "AL GHAF-1 BUILDING Arjan - opposite Wings Building - البرشاء جنوب الثالثة - جنوب البرشاء - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.060014799999998,
+        "lng": 55.2407361
+      },
+      "googleTypes": [
+        "restaurant",
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-08-28T10:41:13.141Z",
+        "osm": null,
+        "matchedName": "ZOEY'S CAFE",
+        "websiteUri": "https://zoeycafe.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=ZOEY'S%20CAFE%2C%20Al%20Ghaf%201%20Building%2C%20Arjan%2C%20Al%20Barsha%20South%20Third%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
       "id": "al-dahir-trail",
