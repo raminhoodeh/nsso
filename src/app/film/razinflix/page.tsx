@@ -5,7 +5,7 @@ import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard, { type Film } from '@/components/film/MovieCard';
 import AddFilmModal from '@/components/film/AddFilmModal';
-import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X, Pause, Play } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import {
     TahoeGlassButton,
@@ -19,6 +19,7 @@ import GlobalNavigation from '@/components/layout/GlobalNavigation';
 import ConditionalNSSOAgent from '@/components/agent/ConditionalNSSOAgent';
 import { ToastViewport } from '@/components/ui/Toast';
 import modalStyles from '@/components/film/MovieModal.module.css';
+import styles from './razinflix.module.css';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
 
@@ -34,6 +35,8 @@ export default function RazinFlixPage() {
     const [selectedFilm, setSelectedFilm] = useState<Film | null>(null);
     const [featuredFilms, setFeaturedFilms] = useState<Film[]>([]);
     const [featuredIndex, setFeaturedIndex] = useState(0);
+    const [rotationPaused, setRotationPaused] = useState(false);
+    const [heroHasFocus, setHeroHasFocus] = useState(false);
     const [modalContext, setModalContext] = useState<{ list: Film[], index: number }>({ list: [], index: 0 });
     const [scrolled, setScrolled] = useState(false);
     const [films, setFilms] = useState<Film[]>([]);
@@ -135,6 +138,35 @@ export default function RazinFlixPage() {
         fetchFilms();
     }, []);
 
+    useEffect(() => {
+        // Cache the five scene images before they enter the rotation.
+        const images = featuredFilms.map(film => {
+            const image = new window.Image();
+            image.src = `/api/razinflix/hero/${encodeURIComponent(film.trailer_key!)}`;
+            return image;
+        });
+        return () => images.forEach(image => { image.src = ''; });
+    }, [featuredFilms]);
+
+    useEffect(() => {
+        if (featuredFilms.length < 2 || previewsDisabled || rotationPaused || heroHasFocus) return;
+        let timer: ReturnType<typeof setInterval> | undefined;
+        const restart = () => {
+            clearInterval(timer);
+            if (!document.hidden) {
+                timer = setInterval(() => {
+                    setFeaturedIndex(index => (index + 1) % featuredFilms.length);
+                }, 5000);
+            }
+        };
+        restart();
+        document.addEventListener('visibilitychange', restart);
+        return () => {
+            clearInterval(timer);
+            document.removeEventListener('visibilitychange', restart);
+        };
+    }, [featuredFilms.length, featuredIndex, previewsDisabled, rotationPaused, heroHasFocus]);
+
     const featuredFilm = featuredFilms[featuredIndex];
     const heroSceneUrl = featuredFilm?.trailer_key
         ? `/api/razinflix/hero/${encodeURIComponent(featuredFilm.trailer_key)}`
@@ -147,6 +179,19 @@ export default function RazinFlixPage() {
             label: 'razinflix-featured',
         }),
         [heroSceneUrl],
+    );
+
+    const rotationControl = (
+        <button
+            type="button"
+            className={modalStyles.control}
+            aria-label={rotationPaused ? 'Resume background rotation' : 'Pause background rotation'}
+            title={rotationPaused ? 'Resume background rotation' : 'Pause background rotation'}
+            aria-pressed={rotationPaused}
+            onClick={() => setRotationPaused(paused => !paused)}
+        >
+            {rotationPaused ? <Play size={18} aria-hidden="true" /> : <Pause size={18} aria-hidden="true" />}
+        </button>
     );
 
     const requestAddFilmAccess = () => {
@@ -309,6 +354,7 @@ export default function RazinFlixPage() {
             scene={(
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                    data-razinflix-background={featuredFilm?.id ?? ''}
                     style={{ backgroundImage: `url(${JSON.stringify(heroSceneUrl)})` }}
                 />
             )}
@@ -321,7 +367,9 @@ export default function RazinFlixPage() {
         >
         <GlobalNavigation />
         <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans relative">
-            <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.5)_65%,rgba(0,0,0,0.78))]" />
+            <div aria-hidden="true" className={styles.backgroundShade} data-razinflix-background-shade="true">
+                <div key={heroSceneUrl} className={styles.backgroundFade} />
+            </div>
             {/* Navbar */}
             <TahoeGlassSurface
                 as="nav"
@@ -335,7 +383,7 @@ export default function RazinFlixPage() {
             >
                 
                 {/* Keep desktop controls in normal flow at tablet widths. */}
-                <div className="hidden shrink-0 md:block">
+                <div className="hidden shrink-0 items-center gap-2 md:flex">
                     <TahoeGlassButton
                         onClick={requestAddFilmAccess}
                         tone="light"
@@ -346,6 +394,7 @@ export default function RazinFlixPage() {
                     >
                         <Plus size={16} /> Add Film
                     </TahoeGlassButton>
+                    {rotationControl}
                 </div>
 
                 {/* Desktop Right Side Navigation */}
@@ -405,7 +454,7 @@ export default function RazinFlixPage() {
                 </div>
 
                 {/* Mobile Add Button Row (Under Search) */}
-                <div className="md:hidden w-full flex justify-end">
+                <div className="md:hidden w-full flex justify-end gap-2">
                     <TahoeGlassButton
                         onClick={requestAddFilmAccess}
                         tone="light"
@@ -416,12 +465,17 @@ export default function RazinFlixPage() {
                     >
                         <Plus size={16} /> Add Film
                     </TahoeGlassButton>
+                    {rotationControl}
                 </div>
             </TahoeGlassSurface>
 
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
             {!searchQuery && viewMode === 'category' && featuredFilms.length > 0 && (
                 <div 
+                    onFocusCapture={() => setHeroHasFocus(true)}
+                    onBlurCapture={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget)) setHeroHasFocus(false);
+                    }}
                     onClick={() => {
                         if (suppressHeroClick.current) {
                             suppressHeroClick.current = false;

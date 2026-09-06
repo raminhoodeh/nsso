@@ -1,0 +1,23 @@
+.backgroundShade {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, .82), rgba(0, 0, 0, .88) 65%, rgba(0, 0, 0, .94));
+}
+
+.backgroundFade {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  animation: revealBackdrop 700ms ease-out both;
+}
+
+@keyframes revealBackdrop {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backgroundFade { animation: none; opacity: 0; }
+}
