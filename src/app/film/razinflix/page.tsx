@@ -5,7 +5,7 @@ import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard, { type Film } from '@/components/film/MovieCard';
 import AddFilmModal from '@/components/film/AddFilmModal';
-import { Search, Loader2, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import {
     TahoeGlassButton,
@@ -18,8 +18,14 @@ import {
 import GlobalNavigation from '@/components/layout/GlobalNavigation';
 import ConditionalNSSOAgent from '@/components/agent/ConditionalNSSOAgent';
 import { ToastViewport } from '@/components/ui/Toast';
+import modalStyles from '@/components/film/MovieModal.module.css';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
+
+function matchesFilmSearch(film: Film, query: string) {
+    return [film.title, film.director, film.description, ...(film.categories ?? [])]
+        .some(value => value?.toLowerCase().includes(query));
+}
 
 export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -38,7 +44,11 @@ export default function RazinFlixPage() {
     const [adminPassword, setAdminPassword] = useState('');
     const [passwordError, setPasswordError] = useState<string | null>(null);
 
-    const touchStartX = useRef(0);
+    const heroTouchStart = useRef<{ x: number; y: number } | null>(null);
+    const suppressHeroClick = useRef(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const searchQuery = searchTerm.trim().toLowerCase();
+    const previewsDisabled = Boolean(selectedFilm || isAddModalOpen || isPasswordDialogOpen);
 
     useEffect(() => {
         if (viewMode === 'update_mode' && !isCheckingPosters && films.length > 0) {
@@ -158,7 +168,13 @@ export default function RazinFlixPage() {
 
     const handleFilmClick = (film: Film, list: Film[]) => {
         setSelectedFilm(film);
-        setModalContext({ list, index: list.indexOf(film) });
+        const index = list.findIndex(item => item.id === film.id);
+        setModalContext(index >= 0 ? { list, index } : { list: [film], index: 0 });
+    };
+
+    const handleSimilarFilmClick = (film: Film) => {
+        const list = modalContext.list.some(item => item.id === film.id) ? modalContext.list : films;
+        handleFilmClick(film, list);
     };
 
     const handleNextFilm = () => {
@@ -179,7 +195,7 @@ export default function RazinFlixPage() {
     const categories = useMemo(() => {
         const cats: Record<string, Film[]> = {};
         
-        if (!searchTerm) {
+        if (!searchQuery) {
             films.forEach(film => {
                 if (film.categories && film.categories.length > 0) {
                     // Forcefully prioritize Japanese Anime per UX directive, otherwise strictly assign 1 category
@@ -209,14 +225,10 @@ export default function RazinFlixPage() {
             }
             return finalCats;
         } else {
-            cats['Search Results'] = films.filter(f =>
-                f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                f.director.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                f.description.toLowerCase().includes(searchTerm.toLowerCase())
-            );
+            cats['Search Results'] = films.filter(film => matchesFilmSearch(film, searchQuery));
             return cats;
         }
-    }, [searchTerm, films]);
+    }, [searchQuery, films]);
 
     // Flat sorted array for dynamic views
     const sortedFilms = useMemo(() => {
@@ -225,12 +237,8 @@ export default function RazinFlixPage() {
         let result = [...films];
 
         // Apply search filtering first
-        if (searchTerm) {
-             result = result.filter(f =>
-                f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                f.director.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                f.description.toLowerCase().includes(searchTerm.toLowerCase())
-            );
+        if (searchQuery) {
+             result = result.filter(film => matchesFilmSearch(film, searchQuery));
         }
 
         const extractRating = (r: string) => {
@@ -285,7 +293,7 @@ export default function RazinFlixPage() {
             });
         }
         return result;
-    }, [films, viewMode, searchTerm, brokenPosters]);
+    }, [films, viewMode, searchQuery, brokenPosters]);
 
     // Handle scroll for navbar bg
     useEffect(() => {
@@ -323,17 +331,17 @@ export default function RazinFlixPage() {
                 semanticTint="dark"
                 semanticTintOpacity={scrolled ? 0.08 : 0.025}
                 className="fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4"
-                contentClassName="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-0"
+                contentClassName="flex min-w-0 flex-col md:flex-row items-center justify-between gap-3"
             >
                 
-                {/* Desktop Add Button (Absolute Left) */}
-                <div className="hidden md:block absolute left-12 top-1/2 -translate-y-1/2">
+                {/* Keep desktop controls in normal flow at tablet widths. */}
+                <div className="hidden shrink-0 md:block">
                     <TahoeGlassButton
                         onClick={requestAddFilmAccess}
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.04}
-                        className="px-4 py-2 hover:scale-105"
+                        className="min-h-11 whitespace-nowrap px-4 py-2 hover:scale-105"
                         contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
                     >
                         <Plus size={16} /> Add Film
@@ -341,25 +349,36 @@ export default function RazinFlixPage() {
                 </div>
 
                 {/* Desktop Right Side Navigation */}
-                <div className="flex w-full md:w-auto items-center justify-between md:justify-end gap-2 md:ml-auto">
+                <div className="flex min-w-0 w-full items-center justify-between gap-2 md:ml-auto md:flex-1 md:max-w-2xl">
                     <TahoeGlassSurface
                         variant="recessed"
                         radius={12}
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.035}
-                        className="relative flex-1 md:w-96 px-3 py-2"
+                        className="relative min-w-0 flex-1 p-0 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-white"
                         contentClassName="flex items-center gap-2"
                     >
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
-                            type="text"
-                            placeholder="Titles, people, genres"
+                            ref={searchInputRef}
+                            type="search"
+                            placeholder="Titles, directors, genres"
                             aria-label="Search films"
-                            className="w-full bg-transparent pl-7 pr-1 text-sm text-white outline-none placeholder:text-white/55"
+                            className={`relative min-h-11 w-full min-w-0 bg-transparent py-2 pl-10 text-base text-white outline-none placeholder:text-white/55 [&::-webkit-search-cancel-button]:appearance-none ${searchTerm ? 'pr-12' : 'pr-3'}`}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                aria-label="Clear search"
+                                className="absolute right-0 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-white focus-visible:outline-2 focus-visible:outline-white"
+                                onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
+                            >
+                                <X size={18} aria-hidden="true" />
+                            </button>
+                        )}
                     </TahoeGlassSurface>
                     <TahoeGlassField
                         visuallyHideLabel
@@ -367,9 +386,9 @@ export default function RazinFlixPage() {
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.035}
-                        className="flex-1 md:w-56"
-                        surfaceClassName="px-4 py-2"
-                        controlClassName="cursor-pointer overflow-hidden text-ellipsis text-sm text-white"
+                        className="min-w-0 flex-1 md:w-56 md:flex-none"
+                        surfaceClassName="p-0 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-white"
+                        controlClassName="min-h-11 cursor-pointer overflow-hidden text-ellipsis px-3 py-2 text-base text-white [&>option]:bg-neutral-900 [&>option]:text-white"
                     >
                         <select
                             value={viewMode}
@@ -392,7 +411,7 @@ export default function RazinFlixPage() {
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.04}
-                        className="w-full px-4 py-2.5"
+                        className="min-h-11 w-full px-4 py-2.5"
                         contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
                     >
                         <Plus size={16} /> Add Film
@@ -401,16 +420,32 @@ export default function RazinFlixPage() {
             </TahoeGlassSurface>
 
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
-            {!searchTerm && viewMode === 'category' && featuredFilms.length > 0 && (
+            {!searchQuery && viewMode === 'category' && featuredFilms.length > 0 && (
                 <div 
                     onClick={() => {
+                        if (suppressHeroClick.current) {
+                            suppressHeroClick.current = false;
+                            return;
+                        }
                         handleFilmClick(featuredFilms[featuredIndex], films);
                     }}
-                    onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+                    onPointerDown={() => { suppressHeroClick.current = false; }}
+                    onTouchStart={(e) => {
+                        if ((e.target as HTMLElement).closest('button') || e.touches.length !== 1) {
+                            heroTouchStart.current = null;
+                            return;
+                        }
+                        heroTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    }}
+                    onTouchCancel={() => { heroTouchStart.current = null; }}
                     onTouchEnd={(e) => {
-                        const touchEndX = e.changedTouches[0].clientX;
-                        const deltaX = touchEndX - touchStartX.current;
-                        if (Math.abs(deltaX) > 50) {
+                        const start = heroTouchStart.current;
+                        heroTouchStart.current = null;
+                        if (!start) return;
+                        const deltaX = e.changedTouches[0].clientX - start.x;
+                        const deltaY = e.changedTouches[0].clientY - start.y;
+                        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+                            suppressHeroClick.current = true;
                             if (deltaX > 0) setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length);
                             else setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length);
                         }
@@ -436,29 +471,23 @@ export default function RazinFlixPage() {
                         <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-black/90 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
                         <div className="absolute inset-y-0 left-0 w-[80%] md:w-[50%] bg-gradient-to-r from-black/80 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
 
-                        {/* Desktop Hero Controls */}
-                        <TahoeGlassButton
+                        {/* Featured-film controls remain available on touch and keyboard. */}
+                        <button
+                            type="button"
                             onClick={(e) => { e.stopPropagation(); setFeaturedIndex((curr) => (curr - 1 + featuredFilms.length) % featuredFilms.length); }}
                             aria-label="Previous featured film"
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.03}
-                            className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 z-50 p-4 text-white/70 hover:text-white"
-                            contentClassName="flex items-center justify-center text-white"
+                            className={`${modalStyles.control} !hidden md:!inline-flex absolute left-6 top-1/2 -translate-y-1/2 z-50`}
                         >
-                            <ChevronLeft size={36} />
-                        </TahoeGlassButton>
-                        <TahoeGlassButton
+                            <ChevronLeft size={24} aria-hidden="true" />
+                        </button>
+                        <button
+                            type="button"
                             onClick={(e) => { e.stopPropagation(); setFeaturedIndex((curr) => (curr + 1) % featuredFilms.length); }}
                             aria-label="Next featured film"
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.03}
-                            className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 z-50 p-4 text-white/70 hover:text-white"
-                            contentClassName="flex items-center justify-center text-white"
+                            className={`${modalStyles.control} !hidden md:!inline-flex absolute right-6 top-1/2 -translate-y-1/2 z-50`}
                         >
-                            <ChevronRight size={36} />
-                        </TahoeGlassButton>
+                            <ChevronRight size={24} aria-hidden="true" />
+                        </button>
 
                         {/* Billboard Content (Typography Slides In) */}
                         <div className="relative z-20 max-w-3xl space-y-4 md:space-y-6" style={{ animation: 'slideInX 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
@@ -469,14 +498,14 @@ export default function RazinFlixPage() {
                             {featuredFilms[featuredIndex].description}
                         </p>
                         
-                        <div className="flex gap-3 pt-6">
+                        <div className="flex flex-wrap gap-3 pt-6">
                             <TahoeGlassButton
                                 onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
-                                tone="dark"
+                                tone="light"
                                 semanticTint="light"
                                 semanticTintOpacity={0.08}
                                 className="px-5 py-2.5 hover:scale-105 whitespace-nowrap"
-                                contentClassName="flex items-center gap-2 text-sm md:text-base font-bold text-black/90"
+                                contentClassName="flex items-center gap-2 text-sm md:text-base font-bold text-white"
                             >
                                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                                 Play Trailer
@@ -492,6 +521,24 @@ export default function RazinFlixPage() {
                                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                                 More Info
                             </TahoeGlassButton>
+                            <div className="flex w-full justify-end gap-2 md:hidden">
+                                <button
+                                    type="button"
+                                    className={modalStyles.control}
+                                    aria-label="Previous featured film"
+                                    onClick={(event) => { event.stopPropagation(); setFeaturedIndex(current => (current - 1 + featuredFilms.length) % featuredFilms.length); }}
+                                >
+                                    <ChevronLeft size={24} aria-hidden="true" />
+                                </button>
+                                <button
+                                    type="button"
+                                    className={modalStyles.control}
+                                    aria-label="Next featured film"
+                                    onClick={(event) => { event.stopPropagation(); setFeaturedIndex(current => (current + 1) % featuredFilms.length); }}
+                                >
+                                    <ChevronRight size={24} aria-hidden="true" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -499,7 +546,7 @@ export default function RazinFlixPage() {
             )}
 
             {/* Content Feed */}
-            <div className={`relative z-10 space-y-4 ${!searchTerm && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-44 md:pt-24'}`}>
+            <div className={`relative z-10 space-y-4 ${!searchQuery && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-44 md:pt-24'}`}>
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
                         <Loader2 className="animate-spin mb-4" size={48} />
@@ -519,10 +566,11 @@ export default function RazinFlixPage() {
                                 key={title}
                                 title={title}
                                 films={films}
+                                previewsDisabled={previewsDisabled}
                                 onFilmClick={(film) => handleFilmClick(film, films)}
                             />
                         ))}
-                        {searchTerm && categories['Search Results'].length === 0 && (
+                        {searchQuery && categories['Search Results'].length === 0 && (
                             <div className="text-center text-gray-500 mt-20">No matching titles found.</div>
                         )}
                     </>
@@ -536,6 +584,7 @@ export default function RazinFlixPage() {
                                         film={film}
                                         onClick={(f) => handleFilmClick(f, sortedFilms)}
                                         isGrid={true}
+                                        previewsDisabled={previewsDisabled}
                                     />
                                 ))}
                             </div>
@@ -565,7 +614,9 @@ export default function RazinFlixPage() {
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={0.04}
-                className="max-w-md"
+                className={modalStyles.nestedDialog}
+                overlayClassName={modalStyles.nestedOverlay}
+                backdropClassName={modalStyles.nestedBackdrop}
             >
                 <form
                     className="mt-5 space-y-4"
@@ -577,6 +628,8 @@ export default function RazinFlixPage() {
                     <TahoeGlassField
                         label="Password"
                         error={passwordError}
+                        surfaceClassName="p-0"
+                        controlClassName="min-h-11 px-3 py-2 text-base"
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.025}
@@ -602,11 +655,11 @@ export default function RazinFlixPage() {
                         </TahoeGlassButton>
                         <TahoeGlassButton
                             type="submit"
-                            tone="dark"
+                            tone="light"
                             semanticTint="light"
                             semanticTintOpacity={0.08}
                             className="px-5 py-2.5"
-                            contentClassName="text-black/90"
+                            contentClassName="text-white"
                         >
                             Continue
                         </TahoeGlassButton>
@@ -623,13 +676,15 @@ export default function RazinFlixPage() {
                         onClose={() => setSelectedFilm(null)}
                         onNext={handleNextFilm}
                         onPrev={handlePrevFilm}
-                        onSelect={setSelectedFilm}
+                        onSelect={handleSimilarFilmClick}
                         onUpdate={(updatedFilm) => {
                             setFilms(prev => prev.map(f => f.id === updatedFilm.id ? updatedFilm : f));
+                            setModalContext(prev => ({ ...prev, list: prev.list.map(f => f.id === updatedFilm.id ? updatedFilm : f) }));
                             setSelectedFilm(updatedFilm);
                         }}
                         onDelete={(id) => {
                             setFilms(prev => prev.filter(f => f.id !== id));
+                            setModalContext(prev => ({ list: prev.list.filter(f => f.id !== id), index: 0 }));
                         }}
                         onSearch={(term) => {
                             setSearchTerm(term);

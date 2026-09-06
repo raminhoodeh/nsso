@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Edit2, Save, Upload, Loader2, Check, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import { TahoeGlassDirectBackdropBoundaryContext } from '@/components/ui/tahoe-glass/TahoeGlassBoundaryContext';
+import styles from './MovieModal.module.css';
 import {
     TahoeGlassButton,
     TahoeGlassDialog,
@@ -60,8 +63,9 @@ interface MovieModalProps {
 const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onDelete, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
+    const closeRef = useRef<HTMLButtonElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLElement | null>(null);
-    const touchStartXModal = useRef(0);
     const dialogTitleId = React.useId();
 
     useEffect(() => {
@@ -90,7 +94,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         }
 
         const focusFrame = window.requestAnimationFrame(() => {
-            dialogRef.current?.focus({ preventScroll: true });
+            closeRef.current?.focus({ preventScroll: true });
         });
 
         return () => {
@@ -147,6 +151,15 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         setPreviewUrl(null);
         setIsEditing(false);
     }, [film]);
+
+    useEffect(() => {
+        scrollRef.current?.scrollTo({ top: 0 });
+        carouselRef.current?.scrollTo({ left: 0 });
+    }, [film.id]);
+
+    useEffect(() => () => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+    }, [previewUrl]);
 
     const handleSave = async () => {
         if (!film) return;
@@ -309,7 +322,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 return;
             }
 
-            if (isEditableTarget(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+            if (isEditing || isEditableTarget(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
+            if (eventTarget instanceof Element && eventTarget.closest('[data-film-recommendations]')) return;
             if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 onPrev();
@@ -336,124 +350,42 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             document.removeEventListener('keydown', handleKeyDown, true);
             document.removeEventListener('focusin', handleFocusIn, true);
         };
-    }, [nestedDialogOpen, onClose, onNext, onPrev]);
+    }, [isEditing, nestedDialogOpen, onClose, onNext, onPrev]);
 
-    // Scroll carousel to active item
-    useEffect(() => {
-        if (carouselRef.current && film) {
-            const activeItem = carouselRef.current.querySelector(`[data-title="${film.title}"]`);
-            if (activeItem) {
-                activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
-        }
-    }, [film]);
-
-    return (
+    return createPortal(
+        <TahoeGlassDirectBackdropBoundaryContext.Provider value={true}>
         <div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby={dialogTitleId}
             tabIndex={-1}
-            className="fixed top-0 left-0 w-[100dvw] h-[100dvh] z-[100] flex flex-col justify-end md:justify-center items-center pb-0 md:p-4 transition-opacity duration-300 pt-[calc(max(env(safe-area-inset-top),_1rem))] bg-transparent overscroll-none outline-none"
+            className={styles.overlay}
+            data-razinflix-dialog="true"
         >
             <h2 id={dialogTitleId} className="sr-only">Film details: {film.title}</h2>
-            <div aria-hidden="true" className="absolute inset-0" onClick={onClose} />
-            {/* Back Button (Top Left) */}
-            <TahoeGlassButton
-                onClick={onClose}
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.025}
-                className="absolute left-6 top-[calc(max(env(safe-area-inset-top),_1.5rem))] z-[120] hidden md:flex px-6 py-3 hover:scale-105 group"
-                contentClassName="flex items-center gap-2 text-lg font-medium text-white"
-            >
-                <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                <span>Back</span>
-            </TahoeGlassButton>
-
-            {/* Global Previous Button */}
-            <TahoeGlassButton
-                onClick={(e) => { e.stopPropagation(); onPrev(); }}
-                aria-label="Previous film"
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.025}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 text-white/70 hover:text-white hidden md:flex"
-                contentClassName="text-white"
-            >
-                <ChevronLeft size={48} />
-            </TahoeGlassButton>
-
-            {/* Global Next Button */}
-            <TahoeGlassButton
-                onClick={(e) => { e.stopPropagation(); onNext(); }}
-                aria-label="Next film"
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.025}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 text-white/70 hover:text-white hidden md:flex"
-                contentClassName="text-white"
-            >
-                <ChevronRight size={48} />
-            </TahoeGlassButton>
-
-            <div
-                className="relative w-full max-w-[100vw] md:max-w-[1600px] flex-1 md:h-[85vh] flex flex-col items-center justify-start md:justify-center origin-bottom pb-[env(safe-area-inset-bottom)] bg-transparent rounded-t-[32px] md:rounded-none overflow-hidden mt-auto"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Native Apple Close Header (Mobile) */}
-                <TahoeGlassSurface
-                    as="header"
-                    variant="menu"
-                    radius="32px 32px 0 0"
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.04}
-                    className="md:hidden flex-none relative w-full px-4 py-2 text-white/90 font-bold text-[15px] shadow-2xl z-[130]"
-                    contentClassName="flex items-center justify-center"
-                >
-                    <button onClick={onClose} className="w-full py-2 text-center rounded-t-[32px]">
-                        Back
+            <div aria-hidden="true" className={styles.backdrop} data-razinflix-backdrop="true" onClick={onClose} />
+            <div className={styles.window}>
+                <header className={styles.toolbar}>
+                    <button ref={closeRef} type="button" onClick={onClose} className={styles.control} aria-label="Close film details">
+                        <X size={20} aria-hidden="true" />
+                        <span>Back to films</span>
                     </button>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center z-[135]">
-                        {isEditing ? (
-                            <div className="flex gap-2">
-                                <button onClick={() => setIsDeleteConfirmOpen(true)} className="p-2 text-red-500/80 hover:text-red-500" aria-label="Delete">
-                                    {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-                                </button>
-                                <button onClick={() => setIsEditing(false)} className="p-2 text-gray-400 hover:text-gray-300" aria-label="Cancel"><X size={20} /></button>
-                                <button onClick={handleSave} className="p-2 text-green-500 hover:text-green-400" aria-label="Save">
-                                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                                </button>
-                            </div>
-                        ) : (
-                            <button onClick={requestEditAccess} className="p-2 text-white/50 hover:text-white" aria-label="Edit"><Edit2 size={18} /></button>
-                        )}
+                    <span className={styles.toolbarTitle} aria-live="polite">{film.title}</span>
+                    <div className={styles.navigation}>
+                        <button type="button" onClick={onPrev} disabled={isEditing} className={styles.control} aria-label="Previous film">
+                            <ChevronLeft size={22} aria-hidden="true" />
+                        </button>
+                        <button type="button" onClick={onNext} disabled={isEditing} className={styles.control} aria-label="Next film">
+                            <ChevronRight size={22} aria-hidden="true" />
+                        </button>
                     </div>
-                </TahoeGlassSurface>
-                
-                {/* Main Content Area (70% Height) */}
-                <TahoeGlassSurface
-                    onTouchStart={(e) => { touchStartXModal.current = e.touches[0].clientX; }}
-                    onTouchEnd={(e) => {
-                        const deltaX = e.changedTouches[0].clientX - touchStartXModal.current;
-                        if (Math.abs(deltaX) > 50) {
-                            if (deltaX > 0) onPrev();
-                            else onNext();
-                        }
-                    }}
-                    variant="panel"
-                    radius={32}
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.025}
-                    className="relative w-full flex-1 md:h-[50%] md:flex-none shadow-2xl overflow-hidden mb-0 md:mb-6"
-                    contentClassName="flex h-full flex-col overflow-hidden md:flex-row"
-                >
+                </header>
+                <div ref={scrollRef} className={styles.scrollBody}>
+                <section className={styles.main}>
 
-                    {/* Left Column: Media (75%) */}
-                    <div className="w-full md:w-[75%] h-full relative bg-black flex items-center justify-center group overflow-hidden touch-pan-y">
+                    {/* Trailer or full poster, with its own readable black canvas. */}
+                    <div className={styles.media}>
                         {isEditing ? (
                                 <TahoeGlassSurface
                                     variant="panel"
@@ -506,6 +438,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                         {film.trailer_key && !isEditing ? (
                             <div className="w-full h-full">
                                 <iframe
+                                    key={film.id}
                                     title={film.title + " Trailer"}
                                     width="100%"
                                     height="100%"
@@ -523,7 +456,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                         src={previewUrl || film.poster}
                                         alt={film.title}
                                         fill
-                                        className="object-contain md:object-cover opacity-80"
+                                        className="object-contain"
                                         unoptimized={true}
                                     />
                                 </div>
@@ -532,11 +465,11 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                         )}
                     </div>
 
-                    {/* Right Column: Content (25%) */}
-                    <div className="w-full md:w-[25%] h-full bg-transparent overflow-y-auto custom-scrollbar border-l border-white/10 relative">
+                    {/* Film information follows the media on smaller screens. */}
+                    <div className={styles.details}>
                         
-                        {/* Static Edit/Save Button (Desktop Only) */}
-                        <div className="hidden md:block absolute top-4 right-4 z-[110]">
+                        {/* Record controls remain reachable at every viewport size. */}
+                        <div className={styles.editActions}>
                             {isEditing ? (
                                 <TahoeGlassSurface
                                     variant="menu"
@@ -569,7 +502,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                             )}
                         </div>
 
-                        <div className="p-6 flex flex-col h-full">
+                        <div className={styles.detailContent}>
                             {isEditing ? (
                                 <TahoeGlassField
                                     visuallyHideLabel
@@ -631,7 +564,6 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                     <>
                                         <span className="text-green-400">{typeof film.rating === 'string' && film.rating.includes('/') ? film.rating.split('/')[0] : film.rating} Rating</span>
                                         <span>{film.year}</span>
-                                        <span className="border border-gray-600 px-1 rounded text-[10px] tracking-wide">HD</span>
                                     </>
                                 )}
                             </div>
@@ -702,7 +634,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                         </button>
                                     )}
                                 </div>
-                                <div className="hidden md:block">
+                                <div>
                                     <span className="block text-gray-500 text-xs uppercase tracking-wider mb-1">Categories</span>
                                     {isEditing ? (
                                         <TahoeGlassField visuallyHideLabel label="Category" tone="light" surfaceClassName="px-2 py-1.5" controlClassName="appearance-none text-sm text-white">
@@ -753,32 +685,40 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                             <div className="mt-auto pt-4 border-t border-white/5" />
                         </div>
                     </div>
-                </TahoeGlassSurface>
+                </section>
 
                 {/* Bottom Carousel: Recommended Films (Intelligent Overlap Algorithm) */}
-                <div className="w-full h-auto min-h-[25%] md:min-h-[40%] px-0 md:px-12 flex flex-col justify-center mt-6 md:mt-0 mb-6 md:mb-0">
-                    <h3 className="text-gray-400 text-xs uppercase font-bold tracking-widest pl-6 md:pl-4 mb-3">Similar Films</h3>
-                    <div className="w-full overflow-x-auto flex gap-4 px-6 md:p-4 no-scrollbar items-center mask-image-blur" ref={carouselRef}>
+                <section className={styles.recommendations} data-film-recommendations="true" aria-label="Similar films">
+                    <div className={styles.recommendationsHeader}>
+                        <h3>More like this</h3>
+                        <div className={styles.navigation}>
+                            <button type="button" className={styles.control} onClick={() => carouselRef.current?.scrollBy({ left: -carouselRef.current.clientWidth * 0.8, behavior: 'smooth' })} aria-label="Scroll similar films left"><ChevronLeft size={20} /></button>
+                            <button type="button" className={styles.control} onClick={() => carouselRef.current?.scrollBy({ left: carouselRef.current.clientWidth * 0.8, behavior: 'smooth' })} aria-label="Scroll similar films right"><ChevronRight size={20} /></button>
+                        </div>
+                    </div>
+                    <div className={styles.recommendationsRow} ref={carouselRef}>
                         {similarFilms.map((f) => (
                             <TahoeGlassSurface
                                 as="button"
                                 type="button"
                                 key={f.id}
                                 data-title={f.title}
-                                onClick={(e) => { e.stopPropagation(); onSelect(f); }}
+                                onClick={() => { onSelect(f); closeRef.current?.focus({ preventScroll: true }); }}
                                 aria-label={`View details for ${f.title}`}
                                 variant="mediaFrame"
                                 radius={12}
                                 tone="light"
                                 semanticTint="dark"
                                 semanticTintOpacity={0.02}
-                                className="flex-shrink-0 cursor-pointer transition-all duration-300 relative p-[2px] w-28 h-40 md:w-40 md:h-56 opacity-75 hover:opacity-100 hover:scale-105 focus-visible:opacity-100 focus-visible:scale-105"
+                                className={styles.recommendation}
                                 contentClassName="relative block h-full w-full overflow-hidden rounded-[10px]"
                             >
                                 <Image src={f.poster} alt={f.title} fill className="object-cover" unoptimized={true} />
+                                <span className={styles.recommendationCaption}>{f.title}<small>{f.year}</small></span>
                             </TahoeGlassSurface>
                         ))}
                     </div>
+                </section>
                 </div>
             </div>
 
@@ -796,7 +736,9 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={0.045}
-                className="max-w-md"
+                className={styles.nestedDialog}
+                overlayClassName={styles.nestedOverlay}
+                backdropClassName={styles.nestedBackdrop}
             >
                 <form
                     className="mt-5 space-y-4"
@@ -820,7 +762,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                         <TahoeGlassButton onClick={() => setIsEditAuthOpen(false)} tone="light" className="px-5 py-2.5" contentClassName="text-white">
                             Cancel
                         </TahoeGlassButton>
-                        <TahoeGlassButton type="submit" tone="dark" semanticTint="light" semanticTintOpacity={0.08} className="px-5 py-2.5" contentClassName="text-black/90">
+                        <TahoeGlassButton type="submit" tone="light" semanticTint="dark" semanticTintOpacity={0.3} className="px-5 py-2.5" contentClassName="text-white">
                             Continue
                         </TahoeGlassButton>
                     </div>
@@ -835,7 +777,9 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={0.05}
-                className="max-w-md"
+                className={styles.nestedDialog}
+                overlayClassName={styles.nestedOverlay}
+                backdropClassName={styles.nestedBackdrop}
             >
                 <div className="mt-6 flex justify-end gap-3">
                     <TahoeGlassButton onClick={() => setIsDeleteConfirmOpen(false)} tone="light" className="px-5 py-2.5" contentClassName="text-white">
@@ -858,7 +802,9 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={0.05}
-                className="max-w-md"
+                className={styles.nestedDialog}
+                overlayClassName={styles.nestedOverlay}
+                backdropClassName={styles.nestedBackdrop}
             >
                 <div className="mt-6 flex justify-end">
                     <TahoeGlassButton onClick={() => setOperationError(null)} tone="light" className="px-5 py-2.5" contentClassName="text-white">
@@ -867,6 +813,8 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 </div>
             </TahoeGlassDialog>
         </div>
+        </TahoeGlassDirectBackdropBoundaryContext.Provider>,
+        document.body,
     );
 };
 

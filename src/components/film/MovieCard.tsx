@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass';
 
@@ -19,38 +19,54 @@ interface MovieCardProps {
     film: Film;
     onClick: (film: Film) => void;
     isGrid?: boolean;
+    previewsDisabled?: boolean;
 }
 
-const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
+const MovieCard = ({ film, onClick, isGrid = false, previewsDisabled = false }: MovieCardProps) => {
     const [isHoverPlaying, setIsHoverPlaying] = useState(false);
-    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [failedPoster, setFailedPoster] = useState<string | null>(null);
+    const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hasPoster = Boolean(film.poster && film.poster !== 'N/A' && film.poster !== failedPoster);
 
-    const handleMouseEnter = () => {
-        if (!film.trailer_key) return; // Only hover-play if there is a trailer
+    // Reset the preview with the incoming dialog state so closing a dialog cannot resume it.
+    if (previewsDisabled && isHoverPlaying) setIsHoverPlaying(false);
+
+    const stopPreview = () => {
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+        hoverTimeoutRef.current = null;
+        setIsHoverPlaying(false);
+    };
+
+    useEffect(() => {
+        return () => {
+            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = null;
+        };
+    }, [previewsDisabled, film.id]);
+
+    const handlePointerEnter = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (event.pointerType !== 'mouse' || previewsDisabled || !film.trailer_key ||
+            !window.matchMedia('(hover: hover) and (pointer: fine)').matches ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        stopPreview();
         hoverTimeoutRef.current = setTimeout(() => {
+            hoverTimeoutRef.current = null;
             setIsHoverPlaying(true);
         }, 1200);
     };
 
-    const handleMouseLeave = () => {
-        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-        setIsHoverPlaying(false);
-    };
-
     return (
         <div
-            className={`relative transition-transform duration-300 transform hover:scale-110 hover:z-50 group origin-center ${isGrid ? 'w-full' : 'flex-none w-48'}`}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            className={`relative transition-transform duration-300 motion-reduce:transition-none hover:scale-105 hover:z-50 origin-center ${isGrid ? 'w-full min-w-0' : 'flex-none w-48'}`}
+            onPointerEnter={handlePointerEnter}
+            onPointerLeave={stopPreview}
         >
             <button
                 type="button"
                 aria-label={`Open details for ${film.title}`}
-                onClick={() => onClick(film)}
+                onClick={() => { stopPreview(); onClick(film); }}
                 onPointerDown={(event) => event.currentTarget.focus({ preventScroll: true })}
-                onFocus={handleMouseEnter}
-                onBlur={handleMouseLeave}
+                onBlur={stopPreview}
                 className="absolute inset-0 z-[60] cursor-pointer rounded-3xl border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             />
             <TahoeGlassSurface
@@ -60,9 +76,9 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
                 semanticTint="dark"
                 semanticTintOpacity={0.02}
                 className="aspect-[2/3] p-[2px] shadow-2xl"
-                contentClassName="relative h-full w-full overflow-hidden rounded-[22px]"
+                contentClassName="relative h-full w-full overflow-hidden rounded-[22px] bg-neutral-950"
             >
-                {isHoverPlaying && film.trailer_key ? (
+                {!previewsDisabled && isHoverPlaying && film.trailer_key ? (
                     <div className="absolute inset-0 z-20 w-full h-full scale-[1.35] pointer-events-none">
                         <iframe
                             src={`https://www.youtube.com/embed/${film.trailer_key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&loop=1&playlist=${film.trailer_key}`}
@@ -74,22 +90,29 @@ const MovieCard = ({ film, onClick, isGrid = false }: MovieCardProps) => {
                         ></iframe>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none z-30" />
                     </div>
-                ) : (
+                ) : hasPoster ? (
                     <Image
                         src={film.poster}
                         alt={film.title}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        sizes={isGrid ? '(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 17vw' : '192px'}
                         className="object-cover z-10"
                         loading="lazy"
                         unoptimized={true}
+                        onError={() => setFailedPoster(film.poster)}
                     />
+                ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-neutral-800 to-neutral-950 p-5 pb-20 text-center">
+                        <span aria-hidden="true" className="text-4xl text-white/35">▶</span>
+                        <span className="text-base font-semibold text-white">{film.title}</span>
+                        <span className="text-xs text-neutral-400">Poster unavailable</span>
+                    </div>
                 )}
                 
-                <div className={`absolute inset-x-0 bottom-0 p-3 text-xs text-white bg-gradient-to-t from-black via-black/80 to-transparent transition-opacity duration-300 ${isHoverPlaying ? 'z-40 opacity-100' : 'z-20 opacity-100 group-hover:opacity-0'}`}>
+                <div className="absolute inset-x-0 bottom-0 z-40 bg-gradient-to-t from-black via-black/95 to-transparent px-3 pb-3 pt-10 text-xs text-white">
                     <h3 className="font-bold truncate capitalize">{film.title}</h3>
-                    <div className="flex items-center justify-between text-gray-300">
-                        <span>{film.year}</span>
+                    <div className="flex flex-wrap items-center justify-between gap-x-2 text-gray-300">
+                        <span className="shrink-0">{film.year}</span>
                         {film.rating && film.rating !== 'N/A' && (
                             <span className="text-yellow-400">★ {film.rating}</span>
                         )}

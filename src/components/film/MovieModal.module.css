@@ -1,0 +1,157 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  color: #f7f7f8;
+  isolation: isolate;
+  overscroll-behavior: none;
+  outline: none;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.window {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(1320px, 100%);
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #ffffff26;
+  border-radius: 24px;
+  background: #151619;
+  box-shadow: 0 24px 100px #000b;
+}
+
+.toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ffffff1a;
+  background: #1b1c20;
+  z-index: 2;
+}
+
+.toolbarTitle {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #bfc1ca;
+  font-size: 14px;
+}
+
+.navigation { display: flex; gap: 8px; flex: none; }
+
+.control {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #ffffff26;
+  border-radius: 12px;
+  color: #f7f7f8;
+  background: #2b2d33;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.control:hover { background: #3a3d45; }
+.control:disabled { cursor: default; opacity: .4; }
+.control:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+
+.scrollBody {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-color: #5c5f68 #151619;
+  background: #151619;
+}
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 350px; align-items: start; }
+
+.media {
+  position: relative;
+  display: flex;
+  aspect-ratio: 16 / 9;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.details {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid #ffffff1a;
+  background: #1b1c20;
+}
+
+.editActions { position: relative; display: flex; justify-content: flex-end; padding: 12px 20px 0; }
+.editActions button { min-width: 44px; min-height: 44px; padding: 10px !important; }
+.detailContent { padding: 12px 24px 24px; display: flex; flex-direction: column; }
+.detailContent h2 { font-size: clamp(24px, 2vw, 30px); margin-bottom: 12px; }
+.detailContent :global(.text-gray-500) { color: #a5a8b3; }
+.detailContent :global(.text-gray-400) { color: #c0c2cc; }
+.detailContent button { min-height: 44px; }
+.detailContent input, .detailContent textarea, .detailContent select { font-size: 16px; }
+
+.recommendations {
+  padding: 20px 24px 28px;
+  border-top: 1px solid #ffffff1a;
+  background: #151619;
+}
+.recommendationsHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.recommendationsHeader h3 { font-size: 18px; font-weight: 650; color: #f7f7f8; }
+.recommendationsRow { display: flex; gap: 14px; overflow-x: auto; padding: 6px 4px 12px; scrollbar-width: thin; scrollbar-color: #5c5f68 #151619; overscroll-behavior-x: contain; }
+.recommendation { position: relative; flex: none; width: 150px; height: 225px; padding: 0; overflow: hidden; }
+.recommendationCaption { position: absolute; inset: auto 0 0; padding: 28px 10px 12px; background: linear-gradient(transparent, #000e 42%); color: white; text-align: left; font-size: 13px; font-weight: 650; }
+.recommendationCaption small { display: block; color: #c0c2cc; font-size: 12px; margin-top: 4px; font-weight: 400; }
+
+.nestedOverlay { z-index: 10010; }
+.nestedBackdrop { background: rgba(0, 0, 0, .9); }
+.nestedDialog { max-width: 448px; overflow: hidden; }
+.nestedDialog::before { content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: 2; background: #202126; pointer-events: none; }
+.nestedDialog button { min-height: 44px; }
+
+@media (max-width: 1000px) {
+  .main { grid-template-columns: 1fr; }
+  .media { max-height: 55dvh; }
+  .details { border-left: 0; }
+}
+
+@media (max-width: 600px) {
+  .overlay { padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)); }
+  .window { width: 100%; border-radius: 18px; }
+  .toolbar { gap: 8px; padding: 10px; justify-content: space-between; }
+  .toolbarTitle { display: none; }
+  .detailContent { padding: 8px 18px 20px; }
+  .editActions { padding: 8px 14px 0; }
+  .recommendations { padding: 16px 14px 22px; }
+  .recommendation { width: 128px; height: 192px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay *, .nestedOverlay * { scroll-behavior: auto !important; transition: none !important; }
+}
