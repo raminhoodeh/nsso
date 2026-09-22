@@ -40,10 +40,30 @@ const {
   resolveTahoeNavTargetSize,
 } = require("../src/lib/tahoe-glass/nav-owned-scene-webgl.ts");
 const {
+  resolveTahoeCurveMagnitude,
+} = require("../src/lib/tahoe-glass/optics.ts");
+const {
   TAHOE_DIRECT_BACKDROP_MAX_FIELD_PIXELS,
   resolveTahoeDirectBackdropFieldSampling,
   resolveTahoeNavPlatformRoute,
 } = require("../src/lib/tahoe-glass/nav-platform.ts");
+
+test("wide navigation moves refraction monotonically toward its physical edge", () => {
+  const samples = [0, 0.25, 0.5, 0.75, 1].map((distance) =>
+    resolveTahoeCurveMagnitude(distance, "edge"),
+  );
+
+  assert.equal(samples[0], 0);
+  for (let index = 1; index < samples.length; index += 1) {
+    assert.ok(samples[index] > samples[index - 1]);
+  }
+  assert.ok(samples.at(-1) > 0.99);
+  assert.ok(
+    resolveTahoeCurveMagnitude(0.5, "convex") >
+      resolveTahoeCurveMagnitude(1, "convex"),
+    "the legacy full-card profile remains convex",
+  );
+});
 
 const defaultPlatformCapabilities = {
   forcedColors: false,
@@ -411,6 +431,8 @@ test("keeps the navbar as a semantic wrapper around the reusable backdrop surfac
     /nav-owned-scene-measurable-displacement-proof-failed/,
   );
   assert.match(source, /backdropEnabled\?: boolean/);
+  assert.match(source, /displacementProfile\?: TahoeDisplacementProfile/);
+  assert.match(source, /materialLighting\?: "radial" \| "uniform"/);
   assert.match(source, /backdropEnabled = true/);
   assert.match(
     source,

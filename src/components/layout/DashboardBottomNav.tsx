@@ -47,6 +47,8 @@ function BottomNavContent() {
             tone="light"
             semanticTint="dark"
             semanticTintOpacity={0.42}
+            displacementProfile="edge"
+            materialLighting="uniform"
             data-mobile-nav-material="dark-refractive"
         >
             <div

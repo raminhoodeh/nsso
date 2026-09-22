@@ -13,6 +13,7 @@ import {
   applyTahoeRimVariables,
   calculateTahoeRim,
   createTahoeDisplacementField,
+  type TahoeDisplacementProfile,
   type TahoeDisplacementField,
 } from "@/lib/tahoe-glass/optics";
 import { TahoeNavOwnedSceneWebGLRenderer } from "@/lib/tahoe-glass/nav-owned-scene-webgl";
@@ -52,6 +53,10 @@ export interface TahoeBackdropSurfaceProps extends Omit<
   tone?: TahoeGlassContentTone;
   semanticTint?: TahoeGlassSemanticTint;
   semanticTintOpacity?: number;
+  /** Moves nav refraction to the perimeter instead of a central convex band. */
+  displacementProfile?: TahoeDisplacementProfile;
+  /** Wide chrome should not inherit the fallback material's radial spotlight. */
+  materialLighting?: "radial" | "uniform";
 }
 
 export type TahoeBackdropHeaderProps = Omit<
@@ -131,6 +136,8 @@ export const TahoeBackdropSurface = React.forwardRef<
     tone = "inherit",
     semanticTint = "none",
     semanticTintOpacity = 0.07,
+    displacementProfile = "convex",
+    materialLighting = "radial",
     style,
     ...props
   },
@@ -245,7 +252,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     const rect = element.getBoundingClientRect();
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
-    const sizeKey = `${width}x${height}:${platformRoute}:${backdropEnabled ? "direct" : "material"}`;
+    const sizeKey = `${width}x${height}:${platformRoute}:${backdropEnabled ? "direct" : "material"}:${displacementProfile}`;
     if (sizeKey === lastSizeKeyRef.current) return;
 
     if (!backdropEnabled) {
@@ -278,6 +285,7 @@ export const TahoeBackdropSurface = React.forwardRef<
       fieldSampling.generationCssHeight,
       fieldSampling.fieldDpr,
       ownedSceneEligible ? 0 : 255,
+      displacementProfile,
     );
     if (!field) {
       ownedSceneFieldRef.current = null;
@@ -331,6 +339,7 @@ export const TahoeBackdropSurface = React.forwardRef<
   }, [
     backdropEnabled,
     commitOwnedSceneState,
+    displacementProfile,
     mode,
     ownedSceneEligible,
     platformRoute,
@@ -877,6 +886,8 @@ export const TahoeBackdropSurface = React.forwardRef<
           ownedSceneEligible ? ownedSceneState : undefined
         }
         data-tahoe-glass-displacement={TAHOE_DISPLACEMENT_SCALE}
+        data-tahoe-displacement-profile={displacementProfile}
+        data-tahoe-material-lighting={materialLighting}
       >
         {ownedSceneEligible ? (
           <canvas
@@ -901,7 +912,9 @@ export const TahoeBackdropSurface = React.forwardRef<
                 ? "Canvas"
                 : "color-mix(in srgb, white 25%, transparent)",
             backgroundImage:
-              mode === "solid" || webglMaterialActive
+              mode === "solid" ||
+              webglMaterialActive ||
+              materialLighting === "uniform"
                 ? "none"
                 : "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)",
             boxShadow: TAHOE_SPECULAR_SHADOW,

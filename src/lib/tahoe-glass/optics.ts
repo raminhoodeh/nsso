@@ -29,15 +29,40 @@ export interface TahoeRimVariables {
   gradient: string;
 }
 
+export type TahoeDisplacementProfile = "convex" | "edge";
+
 /**
- * Generates the supplied power-3.5 superellipse and
- * sin(pow(d, .8) * PI) convex deformation without approximation.
+ * Full cards keep the supplied convex lens. Wide navigation chrome uses a
+ * monotonic edge profile so the strongest bend sits at the physical rim
+ * instead of reading as a large oval spotlight through the middle.
+ */
+export function resolveTahoeCurveMagnitude(
+  distance: number,
+  profile: TahoeDisplacementProfile = "convex",
+): number {
+  const normalizedDistance = Math.max(0, Math.min(1, distance));
+  if (profile === "edge") {
+    return Math.pow(
+      Math.sin((normalizedDistance * Math.PI) / 2),
+      6,
+    );
+  }
+  return Math.sin(
+    Math.pow(normalizedDistance, TAHOE_CURVE_POWER) * Math.PI,
+  );
+}
+
+/**
+ * Generates the supplied power-3.5 superellipse. The default preserves the
+ * sin(pow(d, .8) * PI) convex deformation without approximation; navigation
+ * chrome may opt into the edge-weighted curve above.
  */
 export function createTahoeDisplacementField(
   cssWidth: number,
   cssHeight: number,
   dpr: number,
   alphaOutside: 0 | 255,
+  profile: TahoeDisplacementProfile = "convex",
 ): TahoeDisplacementField | null {
   if (typeof document === "undefined") return null;
 
@@ -67,9 +92,7 @@ export function createTahoeDisplacementField(
       let alpha: number = alphaOutside;
 
       if (distance <= 1) {
-        const curveMagnitude = Math.sin(
-          Math.pow(distance, TAHOE_CURVE_POWER) * Math.PI,
-        );
+        const curveMagnitude = resolveTahoeCurveMagnitude(distance, profile);
         red = Math.round(128 + -nx * curveMagnitude * 127);
         green = Math.round(128 + -ny * curveMagnitude * 127);
         alpha = 255;

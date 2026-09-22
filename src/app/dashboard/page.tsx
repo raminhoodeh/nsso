@@ -673,7 +673,12 @@ function DashboardContent() {
                                             <span className="text-[10px] font-medium">Ask Deity</span>
                                         </TahoeGlassButton>
                                     </div>
-                                    <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-4 text-[17px] font-medium leading-[22px] resize-none">
+                                    <TahoeGlassField
+                                        tone="light"
+                                        surfaceClassName="p-0"
+                                        controlClassName="min-h-[384px] resize-none p-4 text-[17px] font-medium leading-[22px] md:min-h-0"
+                                        data-mobile-bio-field="expanded"
+                                    >
                                         <textarea
                                             value={bio}
                                             onChange={(e) => setBio(e.target.value)}

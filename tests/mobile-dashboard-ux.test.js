@@ -204,6 +204,8 @@ test('the bottom bar shares the header backdrop engine and owns real safe-area s
     assert.doesNotMatch(bottomNavSource, /<TahoeGlassButton/)
     assert.match(bottomNavSource, /semanticTint="dark"/)
     assert.match(bottomNavSource, /semanticTintOpacity=\{0\.42\}/)
+    assert.match(bottomNavSource, /displacementProfile="edge"/)
+    assert.match(bottomNavSource, /materialLighting="uniform"/)
     assert.match(bottomNavSource, /data-mobile-nav-material="dark-refractive"/)
     assert.match(bottomNavSource, /contentClassName="w-full bg-\[#080c14\]\/40"/)
     assert.match(bottomNavSource, /border-white\/10 bg-black\/\[0\.12\]/)
@@ -222,6 +224,8 @@ test('the bottom bar shares the header backdrop engine and owns real safe-area s
 })
 
 test('mobile header and dashboard content fit narrow and notched viewports', () => {
+    assert.match(headerSource, /displacementProfile="edge"/)
+    assert.match(headerSource, /materialLighting="uniform"/)
     assert.match(headerSource, /h-\[calc\(88px\+env\(safe-area-inset-top\)\)\]/)
     assert.match(headerSource, /pl-\[max\(12px,env\(safe-area-inset-left\)\)\]/)
     assert.match(headerSource, /pr-\[max\(12px,env\(safe-area-inset-right\)\)\]/)
@@ -233,6 +237,20 @@ test('mobile header and dashboard content fit narrow and notched viewports', () 
     assert.match(dashboardPageSource, /pt-\[calc\(120px\+env\(safe-area-inset-top\)\)\]/)
     assert.match(dashboardPageSource, /pl-\[max\(16px,env\(safe-area-inset-left\)\)\]/)
     assert.match(dashboardPageSource, /pr-\[max\(16px,env\(safe-area-inset-right\)\)\]/)
+})
+
+test('the profile bio provides four times the mobile writing capacity', () => {
+    const bioMarker = dashboardPageSource.indexOf('data-mobile-bio-field="expanded"')
+    const bioFieldStart = dashboardPageSource.lastIndexOf('<TahoeGlassField', bioMarker)
+    const bioFieldEnd = dashboardPageSource.indexOf('</TahoeGlassField>', bioFieldStart)
+    const bioFieldMarkup = dashboardPageSource.slice(bioFieldStart, bioFieldEnd)
+
+    assert.ok(bioMarker >= 0 && bioFieldStart >= 0, 'the expanded mobile bio field is present')
+    assert.match(
+        bioFieldMarkup,
+        /controlClassName="min-h-\[384px\][^"\n]*md:min-h-0"/
+    )
+    assert.match(bioFieldMarkup, /rows=\{4\}/, 'desktop keeps the existing four-row intrinsic size')
 })
 
 test('mobile notifications clear the bottom bar and use an opaque readable token', () => {
