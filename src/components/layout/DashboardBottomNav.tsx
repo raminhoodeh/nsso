@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
-import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeBackdropSurface, TahoeGlassButton } from '@/components/ui/tahoe-glass'
 
 // Navigation Configuration
 const NAV_ITEMS = [
@@ -37,18 +37,19 @@ function BottomNavContent() {
     }
 
     return (
-        <TahoeGlassSurface
+        <TahoeBackdropSurface
             as="nav"
             variant="menu"
             radius="24px 24px 0 0"
             aria-label="Dashboard"
-            className="fixed bottom-0 left-0 right-0 z-50 pb-safe md:hidden"
+            className="fixed bottom-0 left-0 right-0 z-[5000] overflow-hidden md:hidden"
             contentClassName="w-full"
             tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.38}
         >
-            <div className="flex justify-between items-center px-8 h-[64px]">
+            <div
+                className="grid min-h-[64px] grid-cols-4 items-center gap-1 pl-[max(12px,env(safe-area-inset-left))] pr-[max(12px,env(safe-area-inset-right))] pt-2"
+                style={{ paddingBottom: 'var(--mobile-bottom-safe-space)' }}
+            >
                 {NAV_ITEMS.map((item) => {
                     const isActive = activeView === item.id && item.id !== 'deity' && item.id !== 'news'
 
@@ -60,8 +61,8 @@ function BottomNavContent() {
                             tone="light"
                             semanticTint={isActive ? 'light' : 'none'}
                             semanticTintOpacity={0.08}
-                            className="min-w-[64px] px-3 py-2"
-                            contentClassName="flex-col gap-1 text-inherit"
+                            className="h-14 w-full min-w-0 px-1 py-1.5"
+                            contentClassName="flex-col gap-0.5 text-inherit"
                             aria-label={item.label}
                             aria-current={isActive ? 'page' : undefined}
                         >
@@ -70,12 +71,12 @@ function BottomNavContent() {
                                 isActive || item.id === 'deity' ? "opacity-100 scale-100" : "opacity-40 hover:opacity-80"
                             )}>
                                 {item.id === 'deity' ? (
-                                    <span className="block h-[32px] w-[32px] overflow-hidden rounded-full">
+                                    <span className="block h-7 w-7 overflow-hidden rounded-full">
                                         <Image
                                             src={item.icon}
                                             alt={item.label}
-                                            width={32}
-                                            height={32}
+                                            width={28}
+                                            height={28}
                                             className="object-cover"
                                         />
                                     </span>
@@ -90,11 +91,17 @@ function BottomNavContent() {
                                     </span>
                                 )}
                             </span>
+                            <span className={cn(
+                                'max-w-full truncate text-[10px] font-medium leading-3',
+                                isActive || item.id === 'deity' ? 'text-white' : 'text-white/60'
+                            )}>
+                                {item.label}
+                            </span>
                         </TahoeGlassButton>
                     )
                 })}
             </div>
-        </TahoeGlassSurface>
+        </TahoeBackdropSurface>
     )
 }
 

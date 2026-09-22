@@ -32,6 +32,11 @@
   /* Font families */
   --font-sf-pro: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-sf-pro-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Shared mobile chrome geometry. The 64px content band starts after the
+     fixed bar's 8px top inset; the safe-area token owns its bottom inset. */
+  --mobile-bottom-safe-space: max(8px, env(safe-area-inset-bottom));
+  --mobile-bottom-nav-height: calc(64px + var(--mobile-bottom-safe-space));
 }
 
 @theme inline {
@@ -234,6 +239,11 @@ body {
    Responsive Breakpoints
    ============================================ */
 @media (max-width: 768px) {
+  html {
+    scroll-padding-top: 104px;
+    scroll-padding-bottom: calc(var(--mobile-bottom-nav-height) + 16px);
+  }
+
   .text-large-title {
     font-size: 48px;
     line-height: 60px;

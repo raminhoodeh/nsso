@@ -10,6 +10,7 @@
     "test:nav-glass": "node --test tests/tahoe-nav-owned-scene.test.js",
     "test:dashboard-glass": "node --test tests/dashboard-glass.test.js",
     "test:mobile-deity": "node --test tests/mobile-deity-overlay.test.js",
+    "test:mobile-dashboard": "node --test tests/mobile-dashboard-ux.test.js",
     "test:home-media": "node --test tests/home-vision-player.test.js"
   },
   "dependencies": {

@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
-import { TahoeGlassSurface, type TahoeGlassSemanticTint } from '@/components/ui/tahoe-glass'
+import { cn } from '@/lib/utils'
 
 interface Toast {
     id: string
@@ -87,40 +87,26 @@ function ToastContainer({
 }) {
     if (toasts.length === 0) return null
 
-    const semanticTint = (type: Toast['type']): TahoeGlassSemanticTint => {
-        if (type === 'success') return 'light'
-        if (type === 'error') return 'dark'
-        return 'none'
-    }
-
-    const contentClassName = (type: Toast['type']): string => {
-        if (type === 'success') return 'text-emerald-100'
-        if (type === 'error') return 'text-red-100'
-        return 'text-white'
-    }
-
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-2">
+        <div className="fixed bottom-[calc(var(--mobile-bottom-nav-height)+12px)] left-1/2 z-[9999] flex w-[calc(100%_-_2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 md:bottom-6 md:w-auto">
             {toasts.map(toast => (
-                <div key={toast.id}>
+                <div key={toast.id} className="w-full">
                     <span className="sr-only" role={toast.type === 'error' ? 'alert' : 'status'}>
                         {toast.message}
                     </span>
-                    <TahoeGlassSurface
-                        as="button"
+                    <button
                         type="button"
-                        variant="popover"
-                        radius={12}
-                        tone="light"
-                        semanticTint={semanticTint(toast.type)}
-                        semanticTintOpacity={0.1}
                         aria-label={`Dismiss notification: ${toast.message}`}
-                        className="animate-slide-up cursor-pointer px-6 py-3 text-[15px] font-medium"
-                        contentClassName={contentClassName(toast.type)}
+                        className={cn(
+                            'animate-slide-up min-h-12 w-full cursor-pointer rounded-2xl border bg-[#11161d] px-5 py-3 text-center text-[15px] font-semibold text-white shadow-[0_18px_50px_rgba(0,0,0,0.55)] outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:w-auto',
+                            toast.type === 'success' && 'border-emerald-300/50 text-emerald-100',
+                            toast.type === 'error' && 'border-red-300/50 text-red-100',
+                            toast.type === 'info' && 'border-white/25'
+                        )}
                         onClick={() => onDismiss(toast.id)}
                     >
                         {toast.message}
-                    </TahoeGlassSurface>
+                    </button>
                 </div>
             ))}
         </div>

@@ -13,8 +13,7 @@ import { LogOut } from 'lucide-react'
 import {
     TahoeBackdropHeader,
     TahoeGlassButton,
-    TahoeGlassDialog,
-    TahoeGlassSurface
+    TahoeGlassDialog
 } from '@/components/ui/tahoe-glass'
 
 interface HeaderProps {
@@ -39,15 +38,42 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
     // ... (rest)
 
-    // Prevent body scroll when menu is open
+    // Lock the visual viewport while the mobile sheet is open. iOS ignores an
+    // overflow-only lock, which previously let the dashboard move behind the
+    // already-translucent menu and made both layers difficult to read.
     useEffect(() => {
-        if (mobileMenuOpen) {
-            document.body.style.overflow = 'hidden'
-        } else {
-            document.body.style.overflow = ''
+        if (!mobileMenuOpen) return
+
+        const body = document.body
+        const root = document.documentElement
+        const scrollX = window.scrollX
+        const scrollY = window.scrollY
+        const previousBodyStyles = {
+            position: body.style.position,
+            top: body.style.top,
+            left: body.style.left,
+            width: body.style.width,
+            overflow: body.style.overflow,
+            overscrollBehavior: body.style.overscrollBehavior,
         }
+        const previousRootStyles = {
+            overflow: root.style.overflow,
+            overscrollBehavior: root.style.overscrollBehavior,
+        }
+
+        body.style.position = 'fixed'
+        body.style.top = `${-scrollY}px`
+        body.style.left = `${-scrollX}px`
+        body.style.width = '100%'
+        body.style.overflow = 'hidden'
+        body.style.overscrollBehavior = 'none'
+        root.style.overflow = 'hidden'
+        root.style.overscrollBehavior = 'none'
+
         return () => {
-            document.body.style.overflow = ''
+            Object.assign(body.style, previousBodyStyles)
+            Object.assign(root.style, previousRootStyles)
+            window.scrollTo(scrollX, scrollY)
         }
     }, [mobileMenuOpen])
 
@@ -74,17 +100,20 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             variant="ghost"
             size="sm"
             onClick={copyProfileUrl}
+            className="min-h-11 px-3 min-[360px]:px-4"
         >
-            Copy profile URL
+            <span className="min-[360px]:hidden">Copy URL</span>
+            <span className="hidden min-[360px]:inline">Copy profile URL</span>
         </GlassButton>
     ) : (
         <TahoeGlassButton
             onClick={() => router.push('/preview')}
-            className="px-4 py-2 text-sm font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="min-h-11 px-3 py-2 text-sm font-medium transition-all min-[360px]:px-4 hover:scale-[1.02] active:scale-[0.98]"
             contentClassName="text-white"
             tone="light"
         >
-            Preview Profile
+            <span className="min-[360px]:hidden">Preview</span>
+            <span className="hidden min-[360px]:inline">Preview Profile</span>
         </TahoeGlassButton>
     )
 
@@ -94,7 +123,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden", className)}
             contentClassName="h-full w-full"
         >
-            <nav className="relative z-[60] max-w-[1800px] mx-auto px-6 lg:px-10 h-[88px] flex items-center justify-between">
+            <nav className="relative z-[60] mx-auto flex h-[calc(88px+env(safe-area-inset-top))] max-w-[1800px] items-center justify-between pb-0 pl-[max(12px,env(safe-area-inset-left))] pr-[max(12px,env(safe-area-inset-right))] pt-[env(safe-area-inset-top)] sm:pl-[max(24px,env(safe-area-inset-left))] sm:pr-[max(24px,env(safe-area-inset-right))] lg:px-10">
 
                 {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
                 {isOwnerMode ? (
@@ -145,7 +174,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 </div>
 
                 {/* --- MOBILE NAVIGATION (HAMBURGER) --- */}
-                <div className="flex md:hidden items-center gap-3 ml-auto">
+                <div className="ml-auto flex items-center gap-2 min-[360px]:gap-3 md:hidden">
 
                     {/* Default Mode: Contextual Button (Preview/Copy) */}
                     {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
@@ -155,7 +184,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         <TahoeGlassButton
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             radius={8}
-                            className="p-2 text-white transition-colors"
+                            className="h-11 w-11 p-0 text-white transition-colors"
                             contentClassName="text-white"
                             tone="light"
                             aria-label="Toggle menu"
@@ -185,7 +214,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         <TahoeGlassButton
                             onClick={handleSignOut}
                             radius={8}
-                            className="p-2 text-white/80 transition-colors hover:text-white"
+                            className="h-11 w-11 p-0 text-white/80 transition-colors hover:text-white"
                             contentClassName="text-inherit"
                             tone="light"
                             semanticTint="dark"
@@ -204,126 +233,105 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         radius="32px 0 0 32px"
                         tone="light"
                         aria-label="Menu"
+                        preventBodyScroll={false}
                         overlayClassName="z-[5001] items-stretch justify-end p-0"
-                        backdropClassName="bg-black/50"
-                        className="h-[100dvh] max-h-[100dvh] w-64 max-w-64 animate-slide-in-right rounded-none p-0"
+                        backdropClassName="bg-black/70"
+                        className="h-[100dvh] max-h-[100dvh] w-[min(352px,calc(100vw_-_24px))] max-w-none animate-slide-in-right overflow-hidden p-0"
                         contentClassName="h-full w-full"
                         tracking="continuous"
                     >
-                                <div className="flex flex-col h-full">
+                                <div className="flex h-full flex-col overflow-hidden rounded-l-[32px] bg-[#11161d] text-white shadow-[-24px_0_64px_rgba(0,0,0,0.42)]">
                                     {/* Menu Header */}
-                                    <div className="flex items-center justify-between p-6 border-b border-white/10">
-                                        <span className="text-white font-medium">Menu</span>
-                                        <TahoeGlassButton
+                                    <div className="flex items-center justify-between border-b border-white/10 pb-4 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(1.25rem,env(safe-area-inset-top))]">
+                                        <span className="text-lg font-semibold text-white">Menu</span>
+                                        <button
+                                            type="button"
                                             onClick={() => setMobileMenuOpen(false)}
-                                            radius={8}
-                                            className="p-1 text-white/60 transition-colors hover:text-white"
-                                            contentClassName="text-inherit"
-                                            tone="light"
+                                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-[#222a35] text-white/80 outline-none transition-colors hover:bg-[#2a3441] hover:text-white focus-visible:ring-2 focus-visible:ring-white/80"
                                             aria-label="Close menu"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                             </svg>
-                                        </TahoeGlassButton>
+                                        </button>
                                     </div>
 
                                     {/* Menu Items */}
-                                    <div className="flex flex-col gap-2 p-4 flex-1">
+                                    <div
+                                        className="flex flex-1 flex-col gap-2 overflow-y-auto pb-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-4"
+                                        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+                                    >
 
                                         {/* Button: Copy Page URL (Both Modes) */}
-                                        <TahoeGlassButton
+                                        <button
+                                            type="button"
                                             onClick={() => {
                                                 copyProfileUrl()
                                                 setMobileMenuOpen(false)
                                             }}
-                                            radius={8}
-                                            className="w-full px-4 py-3 text-left text-white transition-colors"
-                                            contentClassName="w-full justify-start text-inherit"
-                                            tone="light"
+                                            className="min-h-12 w-full rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
                                         >
                                             Copy profile URL
-                                        </TahoeGlassButton>
+                                        </button>
 
                                         {/* Default Mode: Preview Page Button (if not on preview) */}
                                         {!isOwnerMode && !isPreviewPage && (
-                                            <TahoeGlassButton
+                                            <button
+                                                type="button"
                                                 onClick={() => {
                                                     router.push('/preview')
                                                     setMobileMenuOpen(false)
                                                 }}
-                                                radius={8}
-                                                className="w-full px-4 py-3 text-left text-white transition-colors"
-                                                contentClassName="w-full justify-start text-inherit"
-                                                tone="light"
+                                                className="min-h-12 w-full rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
                                             >
                                                 Preview Profile
-                                            </TahoeGlassButton>
+                                            </button>
                                         )}
 
                                         {/* Owner Mode: Edit Profile */}
                                         {isOwnerMode && (
-                                            <TahoeGlassSurface
-                                                as="a"
-                                                variant="button"
-                                                radius={8}
+                                            <Link
                                                 href="/dashboard"
                                                 onClick={() => setMobileMenuOpen(false)}
-                                                className="block w-full px-4 py-3 text-left text-white transition-colors"
-                                                contentClassName="w-full text-left"
-                                                tone="light"
+                                                className="flex min-h-12 w-full items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
                                             >
                                                 Edit Profile
-                                            </TahoeGlassSurface>
+                                            </Link>
                                         )}
 
                                         {/* Regular Mode: Dashboard (if not on dashboard) */}
                                         {!isOwnerMode && pathname !== '/dashboard' && (
-                                            <TahoeGlassSurface
-                                                as="a"
-                                                variant="button"
-                                                radius={8}
+                                            <Link
                                                 href="/dashboard"
                                                 onClick={() => setMobileMenuOpen(false)}
-                                                className="block w-full px-4 py-3 text-left text-white transition-colors"
-                                                contentClassName="w-full text-left"
-                                                tone="light"
+                                                className="flex min-h-12 w-full items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
                                             >
                                                 Dashboard
-                                            </TahoeGlassSurface>
+                                            </Link>
                                         )}
 
                                         {isAdmin && (
-                                            <TahoeGlassSurface
-                                                as="a"
-                                                variant="button"
-                                                radius={8}
+                                            <Link
                                                 href="/admin"
                                                 onClick={() => setMobileMenuOpen(false)}
-                                                className="block w-full px-4 py-3 text-left text-white transition-colors"
-                                                contentClassName="w-full text-left"
-                                                tone="light"
+                                                className="flex min-h-12 w-full items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
                                             >
                                                 Admin
-                                            </TahoeGlassSurface>
+                                            </Link>
                                         )}
 
                                         <div className="border-t border-white/10 my-2" />
 
-                                        <TahoeGlassButton
+                                        <button
+                                            type="button"
                                             onClick={() => {
                                                 handleSignOut()
                                                 setMobileMenuOpen(false)
                                             }}
-                                            radius={8}
-                                            className="w-full px-4 py-3 text-left text-red-400 transition-colors"
-                                            contentClassName="w-full justify-start text-inherit"
-                                            tone="light"
-                                            semanticTint="dark"
-                                            semanticTintOpacity={0.1}
+                                            className="min-h-12 w-full rounded-xl border border-red-300/15 bg-[#21191e] px-4 py-3 text-left font-medium text-red-300 outline-none transition-colors hover:bg-[#2b1e24] focus-visible:ring-2 focus-visible:ring-red-200/80"
                                         >
                                             Sign Out
-                                        </TahoeGlassButton>
+                                        </button>
                                     </div>
                                 </div>
                     </TahoeGlassDialog>

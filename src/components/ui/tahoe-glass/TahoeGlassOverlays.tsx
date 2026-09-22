@@ -414,6 +414,8 @@ export interface TahoeGlassDialogProps
   portal?: boolean;
   portalContainer?: Element | DocumentFragment | null;
   modal?: boolean;
+  /** Disable the built-in overflow lock when a caller supplies an iOS-safe fixed-body lock. */
+  preventBodyScroll?: boolean;
   closeOnEscape?: boolean;
   closeOnPointerDownOutside?: boolean;
   restoreFocus?: boolean;
@@ -438,6 +440,7 @@ export const TahoeGlassDialog = React.forwardRef<
     portal = true,
     portalContainer,
     modal = true,
+    preventBodyScroll = true,
     closeOnEscape = true,
     closeOnPointerDownOutside = true,
     restoreFocus = true,
@@ -482,6 +485,7 @@ export const TahoeGlassDialog = React.forwardRef<
     isolationRoot: overlayElement,
     initialFocusRef,
     modal,
+    preventBodyScroll: modal && preventBodyScroll,
     closeOnEscape,
     restoreFocus,
     onOpenChange,

@@ -514,7 +514,7 @@ function DashboardContent() {
                 <Header />
             </div>
 
-            <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto space-y-6">
+            <div className="mx-auto max-w-[1470px] space-y-6 pb-0 pl-[max(16px,env(safe-area-inset-left))] pr-[max(16px,env(safe-area-inset-right))] pt-[calc(120px+env(safe-area-inset-top))] sm:pl-[max(24px,env(safe-area-inset-left))] sm:pr-[max(24px,env(safe-area-inset-right))] md:pt-10 lg:px-8">
 
                 {/* Tab Bar Removed - Replaced by Global Sidebar/BottomNav */}
 
@@ -547,7 +547,7 @@ function DashboardContent() {
 
                 {/* Your Profile Tab Content */}
                 {currentView === 'profile' && (
-                    <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px] rounded-[40px] overflow-visible">
+                    <GlassCard refractive className="relative overflow-visible rounded-[32px] p-4 pt-[48px] sm:rounded-[40px] sm:p-6 sm:pt-[48px] lg:p-8 lg:pt-[48px]">
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
                             <h2 className="text-2xl font-bold text-white">
@@ -559,7 +559,7 @@ function DashboardContent() {
                                 onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                     detail: { initialMessage: "How can you help me improve my profile?" }
                                 }))}
-                                className="px-4 py-2"
+                                className="min-h-11 px-4 py-2"
                                 contentClassName="text-white/90"
                             >
                                 <Sparkles className="w-4 h-4" />
@@ -568,7 +568,7 @@ function DashboardContent() {
                         </div>
 
                         {/* Profile Content */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
                             {/* Profile Picture */}
                             <div className="flex flex-col items-center">
                                 <TahoeGlassSurface
@@ -642,7 +642,7 @@ function DashboardContent() {
                                                 onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                     detail: { initialMessage: "Help me write a catchy headline..." }
                                                 }))}
-                                                className="px-2 py-1"
+                                                className="-my-2 min-h-11 min-w-11 px-2 py-1"
                                                 contentClassName="gap-1 text-white/75"
                                             >
                                                 <Sparkles className="w-3 h-3" />
@@ -666,7 +666,7 @@ function DashboardContent() {
                                             onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me write my bio..." }
                                             }))}
-                                            className="px-2 py-1"
+                                            className="-my-2 min-h-11 min-w-11 px-2 py-1"
                                             contentClassName="gap-1 text-white/75"
                                         >
                                             <Sparkles className="w-3 h-3" />
@@ -714,7 +714,7 @@ function DashboardContent() {
                                     <TahoeGlassSurface variant="recessed" radius={12} tone="light" className="w-full lg:flex-1 h-[54px]" contentClassName="flex h-full w-full items-center px-2">
                                         {/* Prefix text - nsso.me/ */}
                                         <span
-                                            className="text-[22px] font-medium text-white/96 shrink-0 pl-2"
+                                            className="shrink-0 pl-2 text-[18px] font-medium text-white/96 sm:text-[22px]"
                                             style={{
                                                 fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                                 fontWeight: 510
@@ -735,7 +735,7 @@ function DashboardContent() {
                                                 }
                                             }}
                                             placeholder="yourname"
-                                            className="flex-1 min-w-0 bg-transparent border-none outline-none text-[22px] font-medium text-white placeholder:text-white/50"
+                                            className="min-w-0 flex-1 border-none bg-transparent text-[18px] font-medium text-white outline-none placeholder:text-white/50 sm:text-[22px]"
                                             style={{
                                                 fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
                                                 fontWeight: 510
@@ -745,7 +745,7 @@ function DashboardContent() {
                                         {/* Copy Button */}
                                         <TahoeGlassButton
                                             onClick={handleCopyUrl}
-                                            className="p-2 mr-1"
+                                            className="mr-1 h-11 w-11 p-0"
                                             contentClassName="text-white/70"
                                             title="Copy URL"
                                             aria-label="Copy profile URL"
@@ -807,7 +807,7 @@ function DashboardContent() {
                                                     (user?.is_premium && !customDomain) ||
                                                     (!user?.is_premium && !desiredUsername)
                                                 }
-                                                className="h-[42px] flex-1 px-6"
+                                                className="h-11 flex-1 px-6"
                                                 contentClassName="text-white/95"
                                             >
                                                     {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -862,7 +862,7 @@ function DashboardContent() {
                     currentView === 'profile' && (
                         <>
                             {/* Card 2: Links Section */}
-                            <GlassCard className="p-6 lg:p-8">
+                            <GlassCard className="p-4 sm:p-6 lg:p-8">
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="pr-8">
                                         <h2 className="text-2xl font-bold text-white">Links</h2>
@@ -874,7 +874,7 @@ function DashboardContent() {
                                             onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me find links to add to my profile..." }
                                             }))}
-                                            className="px-3 py-2"
+                                            className="min-h-11 px-3 py-2"
                                             contentClassName="text-white/90"
                                         >
                                             <Sparkles className="w-4 h-4" />
@@ -882,7 +882,7 @@ function DashboardContent() {
                                         </TahoeGlassButton>
                                         <TahoeGlassButton
                                             onClick={() => addLink('', '')}
-                                            className="w-10 h-10 p-0 shrink-0"
+                                            className="h-11 w-11 shrink-0 p-0"
                                             contentClassName="text-white text-2xl"
                                             aria-label="Add link"
                                         >
@@ -921,7 +921,7 @@ function DashboardContent() {
                             </GlassCard>
 
                             {/* Card 3: Contact Section */}
-                            <GlassCard className="p-8">
+                            <GlassCard className="p-4 sm:p-8">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
                                         <h2 className="text-2xl font-bold text-white mb-2">Contact</h2>
@@ -929,7 +929,7 @@ function DashboardContent() {
                                     </div>
                                     <TahoeGlassButton
                                         onClick={() => addContact()}
-                                        className="w-10 h-10 p-0"
+                                        className="h-11 w-11 p-0"
                                         contentClassName="text-white text-xl"
                                         aria-label="Add contact method"
                                     >

@@ -24,7 +24,7 @@ export default function AuthenticatedLayoutWrapper({
     return (
         <div className={cn(
             "relative w-full transition-all duration-300",
-            isLoggedIn && !ownsViewport ? "lg:pl-[280px] pb-[100px] lg:pb-0" : ""
+            isLoggedIn && !ownsViewport ? "pb-[calc(var(--mobile-bottom-nav-height)+16px)] lg:pb-0 lg:pl-[280px]" : ""
         )}>
             {children}
         </div>

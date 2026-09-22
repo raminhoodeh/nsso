@@ -1,16 +1,15 @@
 'use client'
 
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, X, ChevronDown, ChevronUp, Trash2, Info, Edit2, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles, GripVertical } from 'lucide-react'
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { Plus, X, ChevronDown, ChevronUp, Info, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles, GripVertical } from 'lucide-react'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DraggableAttributes, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import DOMPurify from 'dompurify'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useProfile } from '@/components/providers/ProfileProvider'
-import { useUI } from '@/components/providers/UIProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
@@ -18,42 +17,68 @@ interface AdvancedModeCardProps {
     userId: string
 }
 
-type ActiveSection = 'experiences' | 'qualifications' | 'projects' | 'products'
+type ActiveSection = 'experiences' | 'qualifications' | 'projects'
+type ExpandedPanel = 'experience' | 'products' | null
+const ACTIVE_SECTION_ORDER: ActiveSection[] = ['experiences', 'qualifications', 'projects']
+
+interface SortableItemRenderProps {
+    attributes: DraggableAttributes
+    listeners: DraggableSyntheticListeners
+    setActivatorNodeRef: (element: HTMLElement | null) => void
+}
 
 // Sortable Item Component
-function SortableItem({ id, children, className }: { id: string; children: (listeners: any) => React.ReactNode; className?: string }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+function SortableItem({ id, children, className }: { id: string; children: (props: SortableItemRenderProps) => React.ReactNode; className?: string }) {
+    const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id })
 
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
-        touchAction: 'none', // Crucial for touch dragging
         zIndex: isDragging ? 50 : 'auto',
         position: 'relative' as const,
     }
 
     return (
-        <TahoeGlassSurface ref={setNodeRef} style={style} variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" tracking={isDragging ? 'continuous' : 'static'} className={className} {...attributes}>
-            {children(listeners)}
+        <TahoeGlassSurface ref={setNodeRef} style={style} variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" tracking={isDragging ? 'continuous' : 'static'} className={className}>
+            {children({ attributes, listeners, setActivatorNodeRef })}
         </TahoeGlassSurface>
     )
 }
 
 export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const [supabase] = useState(() => createClient())
-    const [isExpanded, setIsExpanded] = useState(false)
+    const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(null)
     const [activeSection, setActiveSection] = useState<ActiveSection>('experiences')
     // const [isLoading, setIsLoading] = useState(false) // Driven by provider now
     const [isUploading, setIsUploading] = useState(false)
-    const { setBackgroundDimmed } = useUI()
     const [showGuide, setShowGuide] = useState(false)
+    const sectionTabRefs = useRef<Record<ActiveSection, HTMLButtonElement | null>>({
+        experiences: null,
+        qualifications: null,
+        projects: null,
+    })
 
-    // Sync dimming state with expansion
-    useEffect(() => {
-        setBackgroundDimmed(isExpanded)
-        return () => setBackgroundDimmed(false)
-    }, [isExpanded, setBackgroundDimmed])
+    const handleSectionTabKeyDown = (event: KeyboardEvent<HTMLElement>, section: ActiveSection) => {
+        let nextIndex: number | null = null
+        const currentIndex = ACTIVE_SECTION_ORDER.indexOf(section)
+
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+            nextIndex = (currentIndex + 1) % ACTIVE_SECTION_ORDER.length
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+            nextIndex = (currentIndex - 1 + ACTIVE_SECTION_ORDER.length) % ACTIVE_SECTION_ORDER.length
+        } else if (event.key === 'Home') {
+            nextIndex = 0
+        } else if (event.key === 'End') {
+            nextIndex = ACTIVE_SECTION_ORDER.length - 1
+        }
+
+        if (nextIndex === null) return
+        event.preventDefault()
+        const nextSection = ACTIVE_SECTION_ORDER[nextIndex]
+        setActiveSection(nextSection)
+        sectionTabRefs.current[nextSection]?.focus()
+    }
 
     // Global Profile Data
     const {
@@ -61,7 +86,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         qualifications: globalQualifications,
         projects: globalProjects,
         products: globalProducts,
-        loading: globalLoading,
         reorderExperiences,
         reorderQualifications,
         reorderProjects
@@ -368,36 +392,46 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // --- Render Helpers ---
 
-    // Collapsed View
-    if (!isExpanded) {
+    const renderPanelToggle = (
+        panel: Exclude<ExpandedPanel, null>,
+        title: string,
+        description: string,
+        controls: string
+    ) => {
+        const expanded = expandedPanel === panel
+
         return (
             <TahoeGlassSurface
                 as="button"
                 type="button"
+                id={`${controls}-toggle`}
                 variant="card"
                 radius={24}
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={0.38}
-                onClick={() => setIsExpanded(true)}
+                onClick={() => setExpandedPanel(current => current === panel ? null : panel)}
                 className="w-full overflow-hidden text-left group"
-                contentClassName="p-6 flex items-center justify-between w-full h-full"
-                aria-expanded={false}
+                contentClassName="p-4 sm:p-6 flex items-center justify-between gap-4 w-full h-full"
+                aria-expanded={expanded}
+                aria-controls={controls}
             >
-                        <span className="flex items-center gap-4">
-                            <span>
-                                <span className="block text-2xl font-bold text-white">Advanced Mode</span>
-                                <span className="block text-sm text-white/60">Add Experiences, Projects, and Products</span>
-                            </span>
-                        </span>
-                        <ChevronDown className="text-white/50 group-hover:text-white transition-colors" />
+                <span className="min-w-0">
+                    <span className="block text-xl sm:text-2xl font-bold text-white">{title}</span>
+                    <span className="block text-sm text-white/60">{description}</span>
+                </span>
+                {expanded ? (
+                    <ChevronUp className="shrink-0 text-white/80 transition-colors" />
+                ) : (
+                    <ChevronDown className="shrink-0 text-white/50 transition-colors group-hover:text-white" />
+                )}
             </TahoeGlassSurface>
         )
     }
 
     // Render Experiences Editor
     const renderExperiences = () => (
-        <div className="flex flex-col gap-6 pt-6">
+        <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
@@ -406,14 +440,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my work experience..." }
                         }))}
-                        className="px-3 py-1 group"
+                        className="min-h-11 min-w-11 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
                         contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
-                        <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
+                        <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton onClick={addExperience} className="w-8 h-8 p-0" contentClassName="text-white" aria-label="Add experience">
+                <TahoeGlassButton onClick={addExperience} className="h-11 w-11 shrink-0 p-0 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add experience">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
@@ -421,27 +455,33 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             {/* List */}
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'experiences')}>
                 <SortableContext items={experiences.map(e => e.id)} strategy={verticalListSortingStrategy}>
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 md:gap-4">
                         {experiences.map((exp) => (
-                            <SortableItem key={exp.id} id={exp.id} className="relative group p-4">
-                                {(listeners) => (
+                            <SortableItem key={exp.id} id={exp.id} className="relative group p-3 md:p-4">
+                                {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div
-                                            {...listeners}
-                                            className="absolute top-4 left-4 w-6 h-6 flex items-center justify-center text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing transition-colors z-20"
-                                        >
-                                            <GripVertical size={16} />
+                                        <div className="mb-2 flex items-center justify-between md:mb-0">
+                                            <button
+                                                ref={setActivatorNodeRef}
+                                                type="button"
+                                                {...attributes}
+                                                {...listeners}
+                                                className="z-20 flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/40 outline-none transition-colors hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing md:absolute md:left-4 md:top-4 md:h-8 md:w-8 md:text-white/20"
+                                                aria-label="Drag to reorder experience"
+                                            >
+                                                <GripVertical size={16} />
+                                            </button>
+                                            <TahoeGlassButton
+                                                onClick={() => deleteExperience(exp.id)}
+                                                className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
+                                                contentClassName="text-red-200"
+                                                aria-label="Delete experience"
+                                            >
+                                                <X size={18} />
+                                            </TahoeGlassButton>
                                         </div>
-                                        <TahoeGlassButton
-                                            onClick={() => deleteExperience(exp.id)}
-                                            className="absolute top-4 right-4 w-10 h-10 p-0 z-20"
-                                            contentClassName="text-red-200"
-                                            aria-label="Delete experience"
-                                        >
-                                            <X size={18} />
-                                        </TahoeGlassButton>
 
-                                        <div className="grid gap-4 pl-8">
+                                        <div className="grid gap-3 md:gap-4 md:pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
@@ -454,7 +494,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                                     <input type="text" value={exp.job_title} onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })} placeholder="e.g. Senior Product Designer" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
-                                            <div className="flex gap-4">
+                                            <div className="flex gap-3 md:gap-4">
                                                 <div className="flex-1">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
                                                     <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
@@ -482,7 +522,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // Render Qualifications Editor
     const renderQualifications = () => (
-        <div className="flex flex-col gap-6 pt-6">
+        <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <h4 className="text-white font-semibold text-lg">Qualifications</h4>
@@ -490,36 +530,47 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my qualifications..." }
                         }))}
-                        className="px-3 py-1 group"
+                        className="min-h-11 min-w-11 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
                         contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
-                        <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
+                        <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton onClick={addQualification} className="w-8 h-8 p-0" contentClassName="text-white" aria-label="Add qualification">
+                <TahoeGlassButton onClick={addQualification} className="h-11 w-11 shrink-0 p-0 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add qualification">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'qualifications')}>
                 <SortableContext items={qualifications.map(q => q.id)} strategy={verticalListSortingStrategy}>
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 md:gap-4">
                         {qualifications.map((qual) => (
-                            <SortableItem key={qual.id} id={qual.id} className="relative group p-4">
-                                {(listeners) => (
+                            <SortableItem key={qual.id} id={qual.id} className="relative group p-3 md:p-4">
+                                {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div
-                                            {...listeners}
-                                            className="absolute top-4 left-4 w-6 h-6 flex items-center justify-center text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing transition-colors z-20"
-                                        >
-                                            <GripVertical size={16} />
+                                        <div className="mb-2 flex items-center justify-between md:mb-0">
+                                            <button
+                                                ref={setActivatorNodeRef}
+                                                type="button"
+                                                {...attributes}
+                                                {...listeners}
+                                                className="z-20 flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/40 outline-none transition-colors hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing md:absolute md:left-4 md:top-4 md:h-8 md:w-8 md:text-white/20"
+                                                aria-label="Drag to reorder qualification"
+                                            >
+                                                <GripVertical size={16} />
+                                            </button>
+                                            <TahoeGlassButton
+                                                onClick={() => deleteQualification(qual.id)}
+                                                className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
+                                                contentClassName="text-red-200"
+                                                aria-label="Delete qualification"
+                                            >
+                                                <X size={18} />
+                                            </TahoeGlassButton>
                                         </div>
-                                        <TahoeGlassButton onClick={() => deleteQualification(qual.id)} className="absolute top-4 right-4 w-10 h-10 p-0 z-20" contentClassName="text-red-200" aria-label="Delete qualification">
-                                            <X size={18} />
-                                        </TahoeGlassButton>
 
-                                        <div className="grid gap-4 pl-8">
+                                        <div className="grid gap-3 md:gap-4 md:pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
@@ -532,7 +583,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                                     <input type="text" value={qual.qualification_name} onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })} placeholder="e.g. MSc Computer Science" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
-                                            <div className="flex gap-4">
+                                            <div className="flex gap-3 md:gap-4">
                                                 <div className="flex-1">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
                                                     <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
@@ -560,7 +611,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // Render Projects Editor
     const renderProjects = () => (
-        <div className="flex flex-col gap-6 pt-6">
+        <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <h4 className="text-white font-semibold text-lg">Projects</h4>
@@ -568,36 +619,47 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add a project..." }
                         }))}
-                        className="px-3 py-1 group"
+                        className="min-h-11 min-w-11 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
                         contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
-                        <span className="text-xs font-medium text-cyan-100 group-hover:text-white">Ask Deity</span>
+                        <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton onClick={addProject} className="w-8 h-8 p-0" contentClassName="text-white" aria-label="Add project">
+                <TahoeGlassButton onClick={addProject} className="h-11 w-11 shrink-0 p-0 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add project">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'projects')}>
                 <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 md:gap-4">
                         {projects.map((proj) => (
-                            <SortableItem key={proj.id} id={proj.id} className="relative group p-4">
-                                {(listeners) => (
+                            <SortableItem key={proj.id} id={proj.id} className="relative group p-3 md:p-4">
+                                {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div
-                                            {...listeners}
-                                            className="absolute top-4 left-4 w-6 h-6 flex items-center justify-center text-white/20 hover:text-white/60 cursor-grab active:cursor-grabbing transition-colors z-20"
-                                        >
-                                            <GripVertical size={16} />
+                                        <div className="mb-2 flex items-center justify-between md:mb-0">
+                                            <button
+                                                ref={setActivatorNodeRef}
+                                                type="button"
+                                                {...attributes}
+                                                {...listeners}
+                                                className="z-20 flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/40 outline-none transition-colors hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing md:absolute md:left-4 md:top-4 md:h-8 md:w-8 md:text-white/20"
+                                                aria-label="Drag to reorder project"
+                                            >
+                                                <GripVertical size={16} />
+                                            </button>
+                                            <TahoeGlassButton
+                                                onClick={() => deleteProject(proj.id)}
+                                                className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
+                                                contentClassName="text-red-200"
+                                                aria-label="Delete project"
+                                            >
+                                                <X size={18} />
+                                            </TahoeGlassButton>
                                         </div>
-                                        <TahoeGlassButton onClick={() => deleteProject(proj.id)} className="absolute top-4 right-4 w-10 h-10 p-0 z-20" contentClassName="text-red-200" aria-label="Delete project">
-                                            <X size={18} />
-                                        </TahoeGlassButton>
 
-                                        <div className="grid gap-4 pl-8">
+                                        <div className="grid gap-3 md:gap-4 md:pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
@@ -660,7 +722,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         // If no product selected but existing products in list, prompt selection
         if (!selectedProduct && products.length > 0) {
             return (
-                <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-50">
+                <div className="flex flex-col items-center justify-center h-full text-center p-4 opacity-50 md:p-8">
                     <p className="text-white/80">Select a product from the left menu to edit <br /> or click + above to create one.</p>
                 </div>
             )
@@ -668,7 +730,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
         if (!selectedProduct) {
             return (
-                <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-50">
+                <div className="flex flex-col items-center justify-center h-full text-center p-4 opacity-50 md:p-8">
                     <p className="text-white/80">No products yet. <br /> Click + in the sidebar to add your first product.</p>
                 </div>
             )
@@ -676,17 +738,17 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
         // Edit Product Form
         return (
-            <div className="flex flex-col gap-6 animate-fadeIn pt-6 relative">
+            <div className="relative flex flex-col gap-4 pt-4 animate-fadeIn md:gap-6 md:pt-6">
                 <TahoeGlassButton
                     onClick={() => confirmDeleteProduct(selectedProduct.id)}
-                    className="absolute top-[27px] right-0 w-10 h-10 p-0 z-10"
+                    className="absolute right-0 top-[19px] z-10 h-11 w-11 p-0 md:top-[27px] md:h-10 md:w-10"
                     contentClassName="text-red-200"
                     aria-label="Delete product"
                 >
                     <X size={18} />
                 </TahoeGlassButton>
 
-                <div className="grid gap-6">
+                <div className="grid gap-4 md:gap-6">
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Product Name</label>
                         <TahoeGlassField tone="light" surfaceClassName="px-3 py-2 pr-12">
@@ -907,196 +969,268 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         )
     }
 
-    // Main Expanded View
     return (
-        <GlassCard
-            className="w-full min-h-[600px] rounded-[40px] relative"
-        >
-            <div className="flex flex-col md:flex-row w-full h-full">
-
-                {/* Collapse Button */}
-                <TahoeGlassButton
-                    onClick={() => setIsExpanded(false)}
-                    className="absolute top-4 right-4 z-50 h-9 w-9 p-0"
-                    contentClassName="text-white/65"
-                    aria-label="Collapse advanced mode"
-                    aria-expanded={true}
+        <div className="flex flex-col gap-6" data-profile-editor-sections="split">
+            <section className="flex flex-col gap-3" data-editor-accordion="experience">
+                {renderPanelToggle(
+                    'experience',
+                    'Experience & Education',
+                    'Manage job titles, qualifications, and projects',
+                    'experience-education-editor'
+                )}
+                <div
+                    id="experience-education-editor"
+                    role="region"
+                    aria-labelledby="experience-education-editor-toggle"
+                    hidden={expandedPanel !== 'experience'}
                 >
-                    <ChevronUp size={20} />
-                </TahoeGlassButton>
-
-                {/* LEFT COLUMN: Sidebar Navigation */}
-                <TahoeGlassSurface as="aside" variant="menu" tone="light" className="w-full md:w-[300px] border-r border-white/10" contentClassName="p-6 flex flex-col gap-8">
-
-                    {/* Experiences Section */}
-                    <div>
-                        <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold mb-4">Experiences</h3>
-                        <div className="flex flex-col gap-2">
-                            <TahoeGlassButton
-                                onClick={() => { setActiveSection('experiences'); setSelectedProduct(null); }}
-                                semanticTint={activeSection === 'experiences' ? 'light' : 'dark'}
-                                className="w-full px-4 py-3"
-                                contentClassName="w-full justify-start text-left text-white/90"
-                            >
-                                Job Titles
-                            </TahoeGlassButton>
-                            <TahoeGlassButton
-                                onClick={() => { setActiveSection('qualifications'); setSelectedProduct(null); }}
-                                semanticTint={activeSection === 'qualifications' ? 'light' : 'dark'}
-                                className="w-full px-4 py-3"
-                                contentClassName="w-full justify-start text-left text-white/90"
-                            >
-                                Qualifications
-                            </TahoeGlassButton>
-                            <TahoeGlassButton
-                                onClick={() => { setActiveSection('projects'); setSelectedProduct(null); }}
-                                semanticTint={activeSection === 'projects' ? 'light' : 'dark'}
-                                className="w-full px-4 py-3"
-                                contentClassName="w-full justify-start text-left text-white/90"
-                            >
-                                Projects
-                            </TahoeGlassButton>
-                        </div>
-                    </div>
-
-                    {/* Products Section */}
-                    <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs text-white/70 uppercase tracking-widest font-bold">Products & Services</h3>
-                            <div className="flex items-center gap-2">
+                    {expandedPanel === 'experience' && (
+                        <GlassCard className="w-full rounded-[40px] md:min-h-[600px]">
+                            <div className="flex h-full w-full flex-col md:flex-row" data-editor-card="experience">
+                        <TahoeGlassSurface
+                            as="aside"
+                            variant="menu"
+                            tone="light"
+                            className="w-full border-b border-white/10 md:w-[300px] md:border-b-0 md:border-r"
+                            contentClassName="p-4 md:p-6"
+                        >
+                            <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-white/70">Experience & Education</h3>
+                            <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0" role="tablist" aria-label="Experience and education sections">
                                 <TahoeGlassButton
-                                    onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
-                                        detail: { initialMessage: "I want to add a product or service..." }
-                                    }))}
-                                    className="w-7 h-7 p-0"
-                                    contentClassName="text-cyan-300"
-                                    title="Ask Deity"
+                                    ref={(node) => { sectionTabRefs.current.experiences = node }}
+                                    type="button"
+                                    id="experience-tab-experiences"
+                                    onClick={() => setActiveSection('experiences')}
+                                    onKeyDown={(event) => handleSectionTabKeyDown(event, 'experiences')}
+                                    semanticTint={activeSection === 'experiences' ? 'light' : 'dark'}
+                                    className="min-h-11 shrink-0 px-4 py-2.5 md:w-full md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-white/90 md:justify-start md:text-left"
+                                    role="tab"
+                                    aria-selected={activeSection === 'experiences'}
+                                    aria-controls="experience-experiences-panel"
+                                    tabIndex={activeSection === 'experiences' ? 0 : -1}
                                 >
-                                    <Sparkles size={12} />
+                                    Job Titles
                                 </TahoeGlassButton>
                                 <TahoeGlassButton
-                                    onClick={addProduct}
-                                    className="w-7 h-7 p-0"
-                                    contentClassName="text-white"
-                                    aria-label="Add product"
+                                    ref={(node) => { sectionTabRefs.current.qualifications = node }}
+                                    type="button"
+                                    id="experience-tab-qualifications"
+                                    onClick={() => setActiveSection('qualifications')}
+                                    onKeyDown={(event) => handleSectionTabKeyDown(event, 'qualifications')}
+                                    semanticTint={activeSection === 'qualifications' ? 'light' : 'dark'}
+                                    className="min-h-11 shrink-0 px-4 py-2.5 md:w-full md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-white/90 md:justify-start md:text-left"
+                                    role="tab"
+                                    aria-selected={activeSection === 'qualifications'}
+                                    aria-controls="experience-qualifications-panel"
+                                    tabIndex={activeSection === 'qualifications' ? 0 : -1}
                                 >
-                                    <Plus size={12} />
+                                    Qualifications
+                                </TahoeGlassButton>
+                                <TahoeGlassButton
+                                    ref={(node) => { sectionTabRefs.current.projects = node }}
+                                    type="button"
+                                    id="experience-tab-projects"
+                                    onClick={() => setActiveSection('projects')}
+                                    onKeyDown={(event) => handleSectionTabKeyDown(event, 'projects')}
+                                    semanticTint={activeSection === 'projects' ? 'light' : 'dark'}
+                                    className="min-h-11 shrink-0 px-4 py-2.5 md:w-full md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-white/90 md:justify-start md:text-left"
+                                    role="tab"
+                                    aria-selected={activeSection === 'projects'}
+                                    aria-controls="experience-projects-panel"
+                                    tabIndex={activeSection === 'projects' ? 0 : -1}
+                                >
+                                    Projects
                                 </TahoeGlassButton>
                             </div>
+                        </TahoeGlassSurface>
+
+                        <div className="relative flex-1 p-4 md:max-h-[800px] md:overflow-y-auto md:p-10">
+                            <div
+                                id="experience-experiences-panel"
+                                role="tabpanel"
+                                aria-labelledby="experience-tab-experiences"
+                                hidden={activeSection !== 'experiences'}
+                            >
+                                {activeSection === 'experiences' && renderExperiences()}
+                            </div>
+                            <div
+                                id="experience-qualifications-panel"
+                                role="tabpanel"
+                                aria-labelledby="experience-tab-qualifications"
+                                hidden={activeSection !== 'qualifications'}
+                            >
+                                {activeSection === 'qualifications' && renderQualifications()}
+                            </div>
+                            <div
+                                id="experience-projects-panel"
+                                role="tabpanel"
+                                aria-labelledby="experience-tab-projects"
+                                hidden={activeSection !== 'projects'}
+                            >
+                                {activeSection === 'projects' && renderProjects()}
+                            </div>
                         </div>
+                            </div>
+                        </GlassCard>
+                    )}
+                </div>
+            </section>
 
-                        {/* Web3 Coming Soon Teaser */}
-                        <div className="relative group mb-4">
-                            <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 hover:opacity-100 transition-opacity" contentClassName="flex items-center justify-between px-4 py-3 text-left">
-                                <span className="text-white/50 text-[15px]">Integrate web3 wallet</span>
-                                <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
-                                    <span className="font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                                        Coming soon
-                                    </span>
-                                </TahoeGlassSurface>
-                            </TahoeGlassSurface>
-
-                            {/* Tooltip */}
-                            <TahoeGlassSurface variant="popover" radius={12} tone="light" className="absolute left-0 -bottom-2 translate-y-full w-full p-3 z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-xl" contentClassName="text-white/80 text-xs leading-relaxed">
-                                Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
-                            </TahoeGlassSurface>
-                        </div>
-
-                        {/* Facebook Pixel Coming Soon Teaser */}
-                        <div className="relative group mb-4">
-                            <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 hover:opacity-100 transition-opacity" contentClassName="flex items-center justify-between px-4 py-3 text-left">
-                                <span className="text-white/50 text-[15px]">Connect Facebook Pixel</span>
-                                <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
-                                    <span className="font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                                        Coming soon
-                                    </span>
-                                </TahoeGlassSurface>
-                            </TahoeGlassSurface>
-
-                            {/* Tooltip */}
-                            <TahoeGlassSurface variant="popover" radius={12} tone="light" className="absolute left-0 -bottom-2 translate-y-full w-full p-3 z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-xl" contentClassName="text-white/80 text-xs leading-relaxed">
-                                Track conversions and optimize your ads with Facebook Pixel integration.
-                            </TahoeGlassSurface>
-                        </div>
-
-                        <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
-                            {products.map(product => (
-                                <div key={product.id} className="relative group">
+            <section className="flex flex-col gap-3" data-editor-accordion="products">
+                {renderPanelToggle(
+                    'products',
+                    'Products & Services',
+                    'Manage what you offer without opening your experience editor',
+                    'products-services-editor'
+                )}
+                <div
+                    id="products-services-editor"
+                    role="region"
+                    aria-labelledby="products-services-editor-toggle"
+                    hidden={expandedPanel !== 'products'}
+                >
+                    {expandedPanel === 'products' && (
+                        <GlassCard className="w-full rounded-[40px] md:min-h-[600px]">
+                            <div className="flex h-full w-full flex-col md:flex-row" data-editor-card="products">
+                        <TahoeGlassSurface
+                            as="aside"
+                            variant="menu"
+                            tone="light"
+                            className="w-full border-b border-white/10 md:w-[300px] md:border-b-0 md:border-r"
+                            contentClassName="p-4 md:p-6"
+                        >
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-white/70">Products & Services</h3>
+                                <div className="flex shrink-0 items-center gap-2">
                                     <TahoeGlassButton
-                                        onClick={() => { setActiveSection('products'); setSelectedProduct(product); }}
-                                        semanticTint={activeSection === 'products' && selectedProduct?.id === product.id ? 'light' : 'dark'}
-                                        className="w-full px-4 py-3 pr-8"
-                                        contentClassName="w-full justify-start truncate text-left text-white/90"
+                                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                            detail: { initialMessage: "I want to add a product or service..." }
+                                        }))}
+                                        className="h-11 w-11 p-0 md:h-8 md:w-8"
+                                        contentClassName="text-cyan-300"
+                                        title="Ask Deity"
+                                        aria-label="Ask Deity about products and services"
                                     >
-                                        {product.name || 'New Product'}
+                                        <Sparkles size={14} />
                                     </TahoeGlassButton>
                                     <TahoeGlassButton
-                                        onClick={(e) => { e.stopPropagation(); confirmDeleteProduct(product.id); }}
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100"
-                                        contentClassName="text-red-300"
-                                        aria-label={`Delete ${product.name || 'product'}`}
+                                        onClick={addProduct}
+                                        className="h-11 w-11 p-0 md:h-8 md:w-8"
+                                        contentClassName="text-white"
+                                        aria-label="Add product"
                                     >
-                                        <X size={12} />
+                                        <Plus size={16} />
                                     </TahoeGlassButton>
                                 </div>
-                            ))}
-                            {products.length === 0 && (
-                                <p className="text-white/60 text-xs italic px-2">No products added.</p>
-                            )}
-                        </div>
-                    </div>
-                </TahoeGlassSurface>
-
-                {/* RIGHT COLUMN: Content Editor */}
-                <div className="flex-1 p-6 md:p-10 overflow-y-auto max-h-[800px] relative">
-                    {activeSection === 'experiences' && renderExperiences()}
-                    {activeSection === 'qualifications' && renderQualifications()}
-                    {activeSection === 'projects' && renderProjects()}
-                    {activeSection === 'products' && renderProducts()}
-                </div>
-
-                {/* Cropper Modal */}
-                {cropperImage && (
-                    <ImageCropperModal
-                        isOpen={cropperOpen}
-                        onClose={() => setCropperOpen(false)}
-                        imageSrc={cropperImage}
-                        aspectRatio={cropperAspect}
-                        onCropComplete={handleCropComplete}
-                        loading={isUploading}
-                    />
-                )}
-                <TahoeGlassDialog
-                    open={deleteConfirmation.isOpen}
-                    onOpenChange={(open) => { if (!open) setDeleteConfirmation({ isOpen: false, productId: null }) }}
-                    portal={false}
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.38}
-                    title="Are you sure?"
-                    description="You cannot restore your Product after it has been deleted. This action is permanent."
-                    titleClassName="text-xl font-bold text-white"
-                    descriptionClassName="text-white/70 leading-relaxed"
-                    className="max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200"
-                >
-                            <div className="flex gap-3">
-                                <TahoeGlassButton
-                                    onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })}
-                                    className="flex-1 py-2.5"
-                                    contentClassName="text-white font-medium"
-                                >
-                                    Cancel
-                                </TahoeGlassButton>
-                                <TahoeGlassButton
-                                    onClick={executeDeleteProduct}
-                                    className="flex-1 py-2.5"
-                                    contentClassName="text-red-200 font-medium"
-                                >
-                                    Delete
-                                </TahoeGlassButton>
                             </div>
-                </TahoeGlassDialog>
-            </div>
-        </GlassCard>
+
+                            <div className="relative group mb-3 md:mb-4">
+                                <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 transition-opacity hover:opacity-100" contentClassName="flex items-center justify-between gap-2 px-3 py-3 text-left md:px-4">
+                                    <span className="text-[15px] text-white/50">Integrate web3 wallet</span>
+                                    <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
+                                        <span className="whitespace-nowrap text-[10px] font-medium leading-[14px] text-white/96" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                            Coming soon
+                                        </span>
+                                    </TahoeGlassSurface>
+                                </TahoeGlassSurface>
+                                <TahoeGlassSurface variant="popover" radius={12} tone="light" className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 pointer-events-none" contentClassName="text-xs leading-relaxed text-white/80">
+                                    Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
+                                </TahoeGlassSurface>
+                            </div>
+
+                            <div className="relative group mb-3 md:mb-4">
+                                <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 transition-opacity hover:opacity-100" contentClassName="flex items-center justify-between gap-2 px-3 py-3 text-left md:px-4">
+                                    <span className="text-[15px] text-white/50">Connect Facebook Pixel</span>
+                                    <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
+                                        <span className="whitespace-nowrap text-[10px] font-medium leading-[14px] text-white/96" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                            Coming soon
+                                        </span>
+                                    </TahoeGlassSurface>
+                                </TahoeGlassSurface>
+                                <TahoeGlassSurface variant="popover" radius={12} tone="light" className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 pointer-events-none" contentClassName="text-xs leading-relaxed text-white/80">
+                                    Track conversions and optimize your ads with Facebook Pixel integration.
+                                </TahoeGlassSurface>
+                            </div>
+
+                            <div className="flex flex-col gap-2 pr-1 md:max-h-[300px] md:overflow-y-auto md:pr-2">
+                                {products.map(product => (
+                                    <div key={product.id} className="relative group">
+                                        <TahoeGlassButton
+                                            onClick={() => setSelectedProduct(product)}
+                                            semanticTint={selectedProduct?.id === product.id ? 'light' : 'dark'}
+                                            className="min-h-11 w-full py-2.5 pl-4 pr-14 md:py-3"
+                                            contentClassName="w-full justify-start truncate text-left text-white/90"
+                                        >
+                                            {product.name || 'New Product'}
+                                        </TahoeGlassButton>
+                                        <TahoeGlassButton
+                                            onClick={(e) => { e.stopPropagation(); confirmDeleteProduct(product.id); }}
+                                            className="absolute right-1 top-1/2 h-11 w-11 -translate-y-1/2 p-0 opacity-100 md:h-8 md:w-8 md:opacity-0 md:group-hover:opacity-100"
+                                            contentClassName="text-red-300"
+                                            aria-label={`Delete ${product.name || 'product'}`}
+                                        >
+                                            <X size={14} />
+                                        </TahoeGlassButton>
+                                    </div>
+                                ))}
+                                {products.length === 0 && (
+                                    <p className="px-2 text-xs italic text-white/60">No products added.</p>
+                                )}
+                            </div>
+                        </TahoeGlassSurface>
+
+                        <div className="relative flex-1 p-4 md:max-h-[800px] md:overflow-y-auto md:p-10">
+                            {renderProducts()}
+                        </div>
+                            </div>
+                        </GlassCard>
+                    )}
+                </div>
+            </section>
+
+            {cropperImage && (
+                <ImageCropperModal
+                    isOpen={cropperOpen}
+                    onClose={() => setCropperOpen(false)}
+                    imageSrc={cropperImage}
+                    aspectRatio={cropperAspect}
+                    onCropComplete={handleCropComplete}
+                    loading={isUploading}
+                />
+            )}
+            <TahoeGlassDialog
+                open={deleteConfirmation.isOpen}
+                onOpenChange={(open) => { if (!open) setDeleteConfirmation({ isOpen: false, productId: null }) }}
+                portal={false}
+                tone="light"
+                semanticTint="dark"
+                semanticTintOpacity={0.38}
+                title="Are you sure?"
+                description="You cannot restore your Product after it has been deleted. This action is permanent."
+                titleClassName="text-xl font-bold text-white"
+                descriptionClassName="text-white/70 leading-relaxed"
+                className="max-w-sm p-6 shadow-2xl animate-in zoom-in-95 duration-200"
+            >
+                <div className="flex gap-3">
+                    <TahoeGlassButton
+                        onClick={() => setDeleteConfirmation({ isOpen: false, productId: null })}
+                        className="flex-1 py-2.5"
+                        contentClassName="text-white font-medium"
+                    >
+                        Cancel
+                    </TahoeGlassButton>
+                    <TahoeGlassButton
+                        onClick={executeDeleteProduct}
+                        className="flex-1 py-2.5"
+                        contentClassName="text-red-200 font-medium"
+                    >
+                        Delete
+                    </TahoeGlassButton>
+                </div>
+            </TahoeGlassDialog>
+        </div>
     )
 }

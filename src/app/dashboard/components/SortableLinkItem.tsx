@@ -42,7 +42,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
             semanticTintOpacity={0.38}
             tracking={isDragging ? 'continuous' : 'static'}
             className={isDragging ? 'ring-1 ring-white/30 shadow-xl' : ''}
-            contentClassName="flex flex-col md:flex-row gap-4 items-stretch md:items-center p-4"
+            contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4 md:flex-row md:items-center"
         >
             {/* Drag Handle */}
             <div
@@ -57,7 +57,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
             <div
                 {...attributes}
                 {...listeners}
-                className="flex md:hidden items-center justify-center cursor-move text-white/30 hover:text-white/70 transition-colors py-1 -mx-4 -mt-4 mb-2 border-b border-white/10 touch-none select-none"
+                className="-mx-3 -mt-3 mb-1 flex min-h-11 cursor-move touch-none select-none items-center justify-center border-b border-white/10 py-1 text-white/30 transition-colors hover:text-white/70 sm:-mx-4 sm:-mt-4 md:hidden"
             >
                 <GripVertical size={16} />
             </div>
@@ -69,7 +69,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
                     placeholder="Link name (e.g. Portfolio)"
                 />
             </div>
-            <div className="flex w-full md:flex-1 gap-4 items-center">
+            <div className="flex w-full items-center gap-2 sm:gap-4 md:flex-1">
                 {/* Validation Status Indicator */}
                 <div
                     className="w-2 h-2 rounded-full flex-shrink-0"
@@ -89,7 +89,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
                 </div>
                 <TahoeGlassButton
                     onClick={() => removeLink(link.id)}
-                    className="w-10 h-10 p-0 shrink-0"
+                    className="h-11 w-11 shrink-0 p-0"
                     contentClassName="text-red-200 text-xl"
                     aria-label={`Remove ${link.link_name || 'link'}`}
                 >
