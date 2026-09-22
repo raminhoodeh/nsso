@@ -433,14 +433,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const renderExperiences = () => (
         <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
+            <div className="mb-2 grid grid-cols-[minmax(0,1fr)_44px] items-start gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Job titles</h4>
                     <TahoeGlassButton
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my work experience..." }
                         }))}
-                        className="min-h-11 min-w-11 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
+                        className="min-h-11 min-w-11 shrink-0 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
                         contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
@@ -460,7 +460,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <SortableItem key={exp.id} id={exp.id} className="relative group p-3 md:p-4">
                                 {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div className="mb-2 flex items-center justify-between md:mb-0">
+                                        <div className="mb-3 flex items-center justify-between gap-3 md:mb-0">
                                             <button
                                                 ref={setActivatorNodeRef}
                                                 type="button"
@@ -484,26 +484,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         <div className="grid gap-3 md:gap-4 md:pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                     <input type="text" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                     <input type="text" value={exp.job_title} onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })} placeholder="e.g. Senior Product Designer" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
-                                            <div className="flex gap-3 md:gap-4">
-                                                <div className="flex-1">
+                                            <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 md:gap-4">
+                                                <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
-                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                         <input type="number" value={exp.start_year} onChange={(e) => updateExperience(exp.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
-                                                <div className="flex-1">
+                                                <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
-                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                         <input type="number" value={exp.end_year || ''} placeholder="Present" onChange={(e) => updateExperience(exp.id, { end_year: e.target.value ? parseInt(e.target.value) : null })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
@@ -523,14 +523,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     // Render Qualifications Editor
     const renderQualifications = () => (
         <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
+            <div className="mb-2 grid grid-cols-[minmax(0,1fr)_44px] items-start gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Qualifications</h4>
                     <TahoeGlassButton
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my qualifications..." }
                         }))}
-                        className="min-h-11 min-w-11 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
+                        className="min-h-11 min-w-11 shrink-0 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
                         contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
@@ -549,7 +549,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <SortableItem key={qual.id} id={qual.id} className="relative group p-3 md:p-4">
                                 {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div className="mb-2 flex items-center justify-between md:mb-0">
+                                        <div className="mb-3 flex items-center justify-between gap-3 md:mb-0">
                                             <button
                                                 ref={setActivatorNodeRef}
                                                 type="button"
@@ -573,26 +573,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         <div className="grid gap-3 md:gap-4 md:pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                     <input type="text" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                     <input type="text" value={qual.qualification_name} onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })} placeholder="e.g. MSc Computer Science" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
-                                            <div className="flex gap-3 md:gap-4">
-                                                <div className="flex-1">
+                                            <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 md:gap-4">
+                                                <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
-                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                         <input type="number" value={qual.start_year} onChange={(e) => updateQualification(qual.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
-                                                <div className="flex-1">
+                                                <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
-                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                    <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                         <input type="number" value={qual.end_year} onChange={(e) => updateQualification(qual.id, { end_year: parseInt(e.target.value) })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
@@ -612,14 +612,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     // Render Projects Editor
     const renderProjects = () => (
         <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
+            <div className="mb-2 grid grid-cols-[minmax(0,1fr)_44px] items-start gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Projects</h4>
                     <TahoeGlassButton
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add a project..." }
                         }))}
-                        className="min-h-11 min-w-11 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
+                        className="min-h-11 min-w-11 shrink-0 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
                         contentClassName="gap-1.5 text-cyan-100"
                     >
                         <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
@@ -638,7 +638,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <SortableItem key={proj.id} id={proj.id} className="relative group p-3 md:p-4">
                                 {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div className="mb-2 flex items-center justify-between md:mb-0">
+                                        <div className="mb-3 flex items-center justify-between gap-3 md:mb-0">
                                             <button
                                                 ref={setActivatorNodeRef}
                                                 type="button"
@@ -662,26 +662,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         <div className="grid gap-3 md:gap-4 md:pl-8">
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                     <input type="text" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                     <input type="text" value={proj.contribution} onChange={(e) => updateProject(proj.id, { contribution: e.target.value })} placeholder="e.g. Lead UI/UX Designer" className="text-white/80 placeholder:text-white/20" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project URL (Optional)</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
+                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
                                                     <input type="url" value={proj.project_url || ''} onChange={(e) => updateProject(proj.id, { project_url: e.target.value })} placeholder="e.g. https://example.com" className="text-white/80 placeholder:text-white/20" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Description</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-3 min-h-[60px] resize-none">
-                                                    <textarea value={proj.description || ''} onChange={(e) => updateProject(proj.id, { description: e.target.value })} placeholder="Describe the project..." className="text-white/70 text-sm placeholder:text-white/20" />
+                                                <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-3 min-h-[88px] resize-none md:min-h-[60px]">
+                                                    <textarea value={proj.description || ''} onChange={(e) => updateProject(proj.id, { description: e.target.value })} placeholder="Describe the project..." className="text-base text-white/70 placeholder:text-white/20 md:text-sm" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
@@ -739,42 +739,45 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         // Edit Product Form
         return (
             <div className="relative flex flex-col gap-4 pt-4 animate-fadeIn md:gap-6 md:pt-6">
-                <TahoeGlassButton
-                    onClick={() => confirmDeleteProduct(selectedProduct.id)}
-                    className="absolute right-0 top-[19px] z-10 h-11 w-11 p-0 md:top-[27px] md:h-10 md:w-10"
-                    contentClassName="text-red-200"
-                    aria-label="Delete product"
-                >
-                    <X size={18} />
-                </TahoeGlassButton>
+                <div className="flex min-h-11 items-center justify-between gap-3 md:absolute md:right-0 md:top-[27px] md:z-10 md:min-h-0">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-white/55 md:hidden">Product details</span>
+                    <TahoeGlassButton
+                        onClick={() => confirmDeleteProduct(selectedProduct.id)}
+                        className="h-11 w-11 shrink-0 p-0 md:h-10 md:w-10"
+                        contentClassName="text-red-200"
+                        aria-label="Delete product"
+                    >
+                        <X size={18} />
+                    </TahoeGlassButton>
+                </div>
 
                 <div className="grid gap-4 md:gap-6">
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Product Name</label>
-                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2 pr-12">
-                            <input type="text" value={selectedProduct.name} onChange={(e) => updateProduct(selectedProduct.id, { name: e.target.value })} className="text-2xl font-bold text-white placeholder:text-white/20" />
+                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2 md:pr-12">
+                            <input type="text" value={selectedProduct.name} onChange={(e) => updateProduct(selectedProduct.id, { name: e.target.value })} className="text-xl font-bold text-white placeholder:text-white/20 min-[390px]:text-2xl" />
                         </TahoeGlassField>
                     </div>
 
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Price (include the currency)</label>
-                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2">
-                            <input type="text" value={selectedProduct.price || ''} onChange={(e) => updateProduct(selectedProduct.id, { price: e.target.value })} placeholder="e.g. $50 or Free" className="text-xl font-medium text-white placeholder:text-white/20" />
+                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
+                            <input type="text" value={selectedProduct.price || ''} onChange={(e) => updateProduct(selectedProduct.id, { price: e.target.value })} placeholder="e.g. $50 or Free" className="text-lg font-medium text-white placeholder:text-white/20 min-[390px]:text-xl" />
                         </TahoeGlassField>
                     </div>
 
                     {/* Product Image & Sales Page - Side by Side */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-5 md:gap-6 lg:grid-cols-2">
                         {/* Product Image */}
                         <div>
                             <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Image</label>
-                            <div className="flex items-center gap-4 min-h-[64px]">
+                            <div className="flex min-h-[64px] flex-wrap items-center gap-3 md:gap-4">
                                 {selectedProduct.image_url && (
                                     <TahoeGlassSurface variant="mediaFrame" radius={8} className="h-16 w-16 overflow-hidden" contentClassName="h-full w-full">
                                         <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${selectedProduct.image_url})` }} />
                                     </TahoeGlassSurface>
                                 )}
-                                <TahoeGlassSurface variant="button" radius={12} tone="light" className="px-4 py-2" contentClassName="flex items-center gap-2">
+                                <TahoeGlassSurface variant="button" radius={12} tone="light" className="min-h-11 min-w-0 flex-1 px-3 py-2 md:flex-none md:px-4" contentClassName="flex items-center justify-center gap-2">
                                     <label className="cursor-pointer flex items-center gap-2">
                                         {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
                                         <span className="text-sm text-white/70">{selectedProduct.image_url ? 'Change Image' : 'Upload Image'}</span>
@@ -791,26 +794,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         {/* Sales Page Creator */}
                         <div>
                             <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Sales Page</label>
-                            <div className="flex items-center gap-4 min-h-[64px]">
+                            <div className="flex min-h-[64px] items-center gap-3 md:gap-4">
                                 <TahoeGlassButton
                                     onClick={() => updateProduct(selectedProduct.id, { sales_page_active: !selectedProduct.sales_page_active })}
                                     role="switch"
                                     aria-checked={selectedProduct.sales_page_active}
                                     aria-label="Enable product sales page"
                                     semanticTint={selectedProduct.sales_page_active ? 'light' : 'dark'}
-                                    className="w-11 h-6 p-0 flex-shrink-0"
-                                    contentClassName="relative block h-full w-full"
+                                    className="h-11 w-14 shrink-0 p-0"
+                                    contentClassName="relative block h-6 w-11"
                                 >
                                     <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.sales_page_active ? 'left-6' : 'left-1'}`} />
                                 </TahoeGlassButton>
                                 {selectedProduct.sales_page_active && (
                                     <TahoeGlassButton
                                         onClick={() => window.open(`/dashboard/products/${selectedProduct.id}/creator`, '_blank')}
-                                        className="px-4 py-2"
+                                        className="min-h-11 min-w-0 flex-1 px-3 py-2 md:flex-none md:px-4"
                                         contentClassName="text-white/70"
                                     >
                                         <Layout size={16} className="text-white/70" />
-                                        <span className="text-sm text-white/70">Open Sales Page Creator</span>
+                                        <span className="text-left text-sm leading-tight text-white/70">Open Sales Page Creator</span>
                                     </TahoeGlassButton>
                                 )}
                             </div>
@@ -819,14 +822,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Description</label>
-                        <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-4 min-h-[100px] resize-none">
-                            <textarea value={selectedProduct.description || ''} onChange={(e) => updateProduct(selectedProduct.id, { description: e.target.value })} className="text-white/80 text-sm" placeholder="Describe your offering..." />
+                        <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="min-h-[144px] resize-none px-3 py-3 md:min-h-[100px] md:p-4">
+                            <textarea value={selectedProduct.description || ''} onChange={(e) => updateProduct(selectedProduct.id, { description: e.target.value })} className="text-base text-white/80 md:text-sm" placeholder="Describe your offering..." />
                         </TahoeGlassField>
                     </div>
 
                     {/* Purchase Link Toggle */}
-                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-4">
-                        <div className="flex items-center justify-between mb-4">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-3 md:p-4">
+                        <div className="mb-3 flex min-h-11 items-center justify-between gap-3 md:mb-4">
                             <label className="text-sm font-medium text-white">Purchase Link</label>
                             <TahoeGlassButton
                                 onClick={() => updateProduct(selectedProduct.id, { purchase_link_active: !selectedProduct.purchase_link_active })}
@@ -834,25 +837,25 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 aria-checked={selectedProduct.purchase_link_active}
                                 aria-label="Enable purchase link"
                                 semanticTint={selectedProduct.purchase_link_active ? 'light' : 'dark'}
-                                className="w-11 h-6 p-0"
-                                contentClassName="relative block h-full w-full"
+                                className="h-11 w-14 shrink-0 p-0"
+                                contentClassName="relative block h-6 w-11"
                             >
                                 <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.purchase_link_active ? 'left-6' : 'left-1'}`} />
                             </TahoeGlassButton>
                         </div>
                         {selectedProduct.purchase_link_active && (
-                            <TahoeGlassField tone="light" surfaceClassName="p-2">
-                                <input type="url" value={selectedProduct.purchase_link || ''} onChange={(e) => updateProduct(selectedProduct.id, { purchase_link: e.target.value })} placeholder="https://..." className="text-white/80 text-sm" />
+                            <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:p-2">
+                                <input type="url" value={selectedProduct.purchase_link || ''} onChange={(e) => updateProduct(selectedProduct.id, { purchase_link: e.target.value })} placeholder="https://..." className="text-base text-white/80 md:text-sm" />
                             </TahoeGlassField>
                         )}
                     </TahoeGlassSurface>
 
                     {/* PayPal HTML Toggle */}
-                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-4">
-                        <div className="flex justify-between items-start mb-4">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={12} tone="light" className="p-3 md:p-4">
+                        <div className="mb-3 flex min-h-11 items-start justify-between gap-3 md:mb-4">
                             <div className="flex items-center gap-2 pt-0.5">
                                 <label className="text-sm font-medium text-white">PayPal Button Code</label>
-                                <div className="group relative hidden min-[391px]:block">
+                                <div className="group relative hidden md:block">
                                     <TahoeGlassButton
                                         onClick={() => setShowGuide(!showGuide)}
                                         className="px-2 py-0.5"
@@ -870,15 +873,15 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     aria-checked={selectedProduct.paypal_active}
                                     aria-label="Enable PayPal button code"
                                     semanticTint={selectedProduct.paypal_active ? 'light' : 'dark'}
-                                    className="w-11 h-6 p-0"
-                                    contentClassName="relative block h-full w-full"
+                                    className="h-11 w-14 shrink-0 p-0"
+                                    contentClassName="relative block h-6 w-11"
                                 >
                                     <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.paypal_active ? 'left-6' : 'left-1'}`} />
                                 </TahoeGlassButton>
-                                <div className="group relative block min-[391px]:hidden">
+                                <div className="group relative block md:hidden">
                                     <TahoeGlassButton
                                         onClick={() => setShowGuide(!showGuide)}
-                                        className="px-2 py-0.5"
+                                        className="min-h-11 px-3 py-2"
                                         contentClassName="gap-1.5 text-white/60"
                                     >
                                         <Info size={12} className="text-white/60" />
@@ -923,13 +926,13 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 <TahoeGlassField
                                     tone="light"
                                     surfaceClassName={`p-0 ring-1 ${verificationStatus === 'scanning' ? 'ring-yellow-500/50' : verificationStatus === 'secure' ? 'ring-green-500/50' : verificationStatus === 'unsafe' ? 'ring-red-500/50' : 'ring-white/10'}`}
-                                    controlClassName="p-2 min-h-[80px] text-xs font-mono resize-none"
+                                    controlClassName="min-h-[112px] resize-none px-3 py-3 text-base font-mono md:min-h-[80px] md:p-2 md:text-xs"
                                 >
                                     <textarea value={selectedProduct.paypal_html || ''} onChange={(e) => updateProduct(selectedProduct.id, { paypal_html: e.target.value })} placeholder="<form action=...>" className="text-white/80" />
                                 </TahoeGlassField>
                                 {/* Security Status Indicator Overlay */}
                                 {selectedProduct.paypal_html && (
-                                    <div className="mt-2 flex items-center justify-between animate-in fade-in duration-300">
+                                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 animate-in fade-in duration-300">
                                         <div className="flex items-center gap-2">
                                             {verificationStatus === 'scanning' && (
                                                 <>
@@ -985,16 +988,16 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     hidden={expandedPanel !== 'experience'}
                 >
                     {expandedPanel === 'experience' && (
-                        <GlassCard className="w-full rounded-[40px] md:min-h-[600px]">
+                        <GlassCard className="w-full rounded-[28px] md:min-h-[600px] md:rounded-[40px]">
                             <div className="flex h-full w-full flex-col md:flex-row" data-editor-card="experience">
                         <TahoeGlassSurface
                             as="aside"
                             variant="menu"
                             tone="light"
                             className="w-full border-b border-white/10 md:w-[300px] md:border-b-0 md:border-r"
-                            contentClassName="p-4 md:p-6"
+                            contentClassName="p-3 md:p-6"
                         >
-                            <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-white/70">Experience & Education</h3>
+                            <h3 className="sr-only md:not-sr-only md:mb-4 md:block md:text-xs md:font-bold md:uppercase md:tracking-widest md:text-white/70">Experience & Education</h3>
                             <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0" role="tablist" aria-label="Experience and education sections">
                                 <TahoeGlassButton
                                     ref={(node) => { sectionTabRefs.current.experiences = node }}
@@ -1003,8 +1006,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     onClick={() => setActiveSection('experiences')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'experiences')}
                                     semanticTint={activeSection === 'experiences' ? 'light' : 'dark'}
-                                    className="min-h-11 shrink-0 px-4 py-2.5 md:w-full md:py-3"
-                                    contentClassName="w-full justify-center whitespace-nowrap text-white/90 md:justify-start md:text-left"
+                                    className="min-h-11 shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] text-white/90 md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'experiences'}
                                     aria-controls="experience-experiences-panel"
@@ -1019,8 +1022,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     onClick={() => setActiveSection('qualifications')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'qualifications')}
                                     semanticTint={activeSection === 'qualifications' ? 'light' : 'dark'}
-                                    className="min-h-11 shrink-0 px-4 py-2.5 md:w-full md:py-3"
-                                    contentClassName="w-full justify-center whitespace-nowrap text-white/90 md:justify-start md:text-left"
+                                    className="min-h-11 shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] text-white/90 md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'qualifications'}
                                     aria-controls="experience-qualifications-panel"
@@ -1035,8 +1038,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     onClick={() => setActiveSection('projects')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'projects')}
                                     semanticTint={activeSection === 'projects' ? 'light' : 'dark'}
-                                    className="min-h-11 shrink-0 px-4 py-2.5 md:w-full md:py-3"
-                                    contentClassName="w-full justify-center whitespace-nowrap text-white/90 md:justify-start md:text-left"
+                                    className="min-h-11 shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] text-white/90 md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'projects'}
                                     aria-controls="experience-projects-panel"
@@ -1047,7 +1050,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             </div>
                         </TahoeGlassSurface>
 
-                        <div className="relative flex-1 p-4 md:max-h-[800px] md:overflow-y-auto md:p-10">
+                        <div className="relative flex-1 p-3 md:max-h-[800px] md:overflow-y-auto md:p-10">
                             <div
                                 id="experience-experiences-panel"
                                 role="tabpanel"
@@ -1093,14 +1096,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     hidden={expandedPanel !== 'products'}
                 >
                     {expandedPanel === 'products' && (
-                        <GlassCard className="w-full rounded-[40px] md:min-h-[600px]">
+                        <GlassCard className="w-full rounded-[28px] md:min-h-[600px] md:rounded-[40px]">
                             <div className="flex h-full w-full flex-col md:flex-row" data-editor-card="products">
                         <TahoeGlassSurface
                             as="aside"
                             variant="menu"
                             tone="light"
                             className="w-full border-b border-white/10 md:w-[300px] md:border-b-0 md:border-r"
-                            contentClassName="p-4 md:p-6"
+                            contentClassName="p-3 md:p-6"
                         >
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-white/70">Products & Services</h3>
@@ -1182,7 +1185,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             </div>
                         </TahoeGlassSurface>
 
-                        <div className="relative flex-1 p-4 md:max-h-[800px] md:overflow-y-auto md:p-10">
+                        <div className="relative flex-1 p-3 md:max-h-[800px] md:overflow-y-auto md:p-10">
                             {renderProducts()}
                         </div>
                             </div>

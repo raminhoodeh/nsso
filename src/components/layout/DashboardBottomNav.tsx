@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
-import { TahoeBackdropSurface, TahoeGlassButton } from '@/components/ui/tahoe-glass'
+import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass'
 
 // Navigation Configuration
 const NAV_ITEMS = [
@@ -43,8 +43,11 @@ function BottomNavContent() {
             radius="24px 24px 0 0"
             aria-label="Dashboard"
             className="fixed bottom-0 left-0 right-0 z-[5000] overflow-hidden md:hidden"
-            contentClassName="w-full"
+            contentClassName="w-full bg-[#080c14]/40"
             tone="light"
+            semanticTint="dark"
+            semanticTintOpacity={0.42}
+            data-mobile-nav-material="dark-refractive"
         >
             <div
                 className="grid min-h-[64px] grid-cols-4 items-center gap-1 pl-[max(12px,env(safe-area-inset-left))] pr-[max(12px,env(safe-area-inset-right))] pt-2"
@@ -54,21 +57,22 @@ function BottomNavContent() {
                     const isActive = activeView === item.id && item.id !== 'deity' && item.id !== 'news'
 
                     return (
-                        <TahoeGlassButton
+                        <button
                             key={item.id}
+                            type="button"
                             onClick={() => handleItemClick(item.id)}
-                            radius={14}
-                            tone="light"
-                            semanticTint={isActive ? 'light' : 'none'}
-                            semanticTintOpacity={0.08}
-                            className="h-14 w-full min-w-0 px-1 py-1.5"
-                            contentClassName="flex-col gap-0.5 text-inherit"
+                            className={cn(
+                                'relative flex h-14 w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border px-1 py-1.5 text-white outline-none transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#080c14]',
+                                isActive
+                                    ? 'border-white/35 bg-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.20),0_4px_14px_rgba(0,0,0,0.18)]'
+                                    : 'border-white/10 bg-black/[0.12] hover:border-white/25 hover:bg-white/[0.10]'
+                            )}
                             aria-label={item.label}
                             aria-current={isActive ? 'page' : undefined}
                         >
                             <span className={cn(
-                                "relative block transition-all duration-300",
-                                isActive || item.id === 'deity' ? "opacity-100 scale-100" : "opacity-40 hover:opacity-80"
+                                'relative block transition-all duration-200',
+                                isActive || item.id === 'deity' ? 'scale-100 opacity-100' : 'opacity-80'
                             )}>
                                 {item.id === 'deity' ? (
                                     <span className="block h-7 w-7 overflow-hidden rounded-full">
@@ -92,12 +96,12 @@ function BottomNavContent() {
                                 )}
                             </span>
                             <span className={cn(
-                                'max-w-full truncate text-[10px] font-medium leading-3',
-                                isActive || item.id === 'deity' ? 'text-white' : 'text-white/60'
+                                'max-w-full truncate text-[10px] font-semibold leading-3',
+                                isActive || item.id === 'deity' ? 'text-white' : 'text-white/80'
                             )}>
                                 {item.label}
                             </span>
-                        </TahoeGlassButton>
+                        </button>
                     )
                 })}
             </div>

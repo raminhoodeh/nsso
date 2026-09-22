@@ -99,6 +99,11 @@ test('mobile navigation immediately precedes the active experience editor', () =
         experienceMarkup,
         /scrollbar-hide flex gap-2 overflow-x-auto[^"\n]*md:flex-col/
     )
+    const roomyMobileTabs = experienceMarkup.match(
+        /className="min-h-11 shrink-0 px-5 py-2\.5 md:w-full md:px-4 md:py-3"/g
+    ) || []
+    assert.equal(roomyMobileTabs.length, 3, 'tabs keep natural width and breathing room in the horizontal scroller')
+    assert.doesNotMatch(experienceMarkup, /min-w-\[84px\] flex-1 shrink-0/)
 })
 
 test('experience tabs expose complete relationships and roving keyboard navigation', () => {
@@ -144,7 +149,7 @@ test('advanced editor drag handles are native focusable keyboard controls', () =
 test('mobile form fields avoid the old nested padding gutter', () => {
     assert.match(advancedModeSource, /p-3 md:p-4/)
     assert.match(advancedModeSource, /grid gap-3 md:gap-4 md:pl-8/)
-    assert.match(advancedModeSource, /p-4 md:max-h-\[800px\] md:overflow-y-auto md:p-10/)
+    assert.match(advancedModeSource, /p-3 md:max-h-\[800px\] md:overflow-y-auto md:p-10/)
     assert.match(advancedModeSource, /md:min-h-\[600px\]/)
     assert.doesNotMatch(advancedModeSource, /className="relative min-h-\[600px\]/)
     assert.doesNotMatch(advancedModeSource, /max-h-\[240px\]/)
@@ -152,6 +157,33 @@ test('mobile form fields avoid the old nested padding gutter', () => {
     assert.doesNotMatch(advancedModeSource, /className="grid gap-4 pl-8"/)
     assert.doesNotMatch(advancedModeSource, /touchAction: 'none'/)
     assert.match(advancedModeSource, /touch-none cursor-grab/)
+})
+
+test('mobile advanced editors reserve writing room without changing desktop density', () => {
+    const stackedYearRows = advancedModeSource.match(
+        /grid grid-cols-1 gap-3 min-\[480px\]:grid-cols-2 md:gap-4/g
+    ) || []
+    assert.equal(stackedYearRows.length, 2, 'experience and qualification years stack on narrow phones')
+
+    const sectionHeaders = advancedModeSource.match(
+        /grid grid-cols-\[minmax\(0,1fr\)_44px\] items-start gap-3/g
+    ) || []
+    assert.equal(sectionHeaders.length, 3, 'editor headings cannot squeeze their add buttons')
+    assert.match(advancedModeSource, /py-2\.5 md:py-2/)
+    assert.match(advancedModeSource, /min-h-\[88px\] resize-none md:min-h-\[60px\]/)
+
+    assert.match(advancedModeSource, /md:absolute md:right-0 md:top-\[27px\][^>]*>[\s\S]*?Product details/)
+    assert.match(advancedModeSource, /min-h-\[144px\] resize-none[^"\n]*md:min-h-\[100px\]/)
+    assert.match(advancedModeSource, /min-h-\[112px\] resize-none[^"\n]*md:min-h-\[80px\]/)
+    assert.match(advancedModeSource, /text-base text-white\/70[^"\n]*md:text-sm/)
+    assert.match(advancedModeSource, /text-base text-white\/80 md:text-sm/)
+    assert.match(advancedModeSource, /text-base font-mono[^"\n]*md:text-xs/)
+
+    const mobileSwitchTargets = advancedModeSource.match(
+        /className="h-11 w-14 shrink-0 p-0"/g
+    ) || []
+    assert.equal(mobileSwitchTargets.length, 3, 'all product switches retain 44px mobile targets')
+    assert.match(advancedModeSource, /min-h-11 min-w-0 flex-1 px-3 py-2 md:flex-none md:px-4/)
 })
 
 test('the split products card retains its existing CRUD and editor paths', () => {
@@ -169,6 +201,13 @@ test('the split products card retains its existing CRUD and editor paths', () =>
 test('the bottom bar shares the header backdrop engine and owns real safe-area space', () => {
     assert.match(bottomNavSource, /<TahoeBackdropSurface/)
     assert.doesNotMatch(bottomNavSource, /<TahoeGlassSurface/)
+    assert.doesNotMatch(bottomNavSource, /<TahoeGlassButton/)
+    assert.match(bottomNavSource, /semanticTint="dark"/)
+    assert.match(bottomNavSource, /semanticTintOpacity=\{0\.42\}/)
+    assert.match(bottomNavSource, /data-mobile-nav-material="dark-refractive"/)
+    assert.match(bottomNavSource, /contentClassName="w-full bg-\[#080c14\]\/40"/)
+    assert.match(bottomNavSource, /border-white\/10 bg-black\/\[0\.12\]/)
+    assert.match(bottomNavSource, /text-white\/80/)
     assert.doesNotMatch(bottomNavSource, /pb-safe/)
     assert.match(bottomNavSource, /--mobile-bottom-safe-space/)
     assert.match(bottomNavSource, /env\(safe-area-inset-left\)/)
