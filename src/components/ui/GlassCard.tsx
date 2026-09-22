@@ -10,6 +10,7 @@ export interface GlassCardProps {
     children: ReactNode
     className?: string
     variant?: 'default' | 'strong' | 'subtle' | 'apple' | 'ultimate'
+    radius?: number | string
     style?: React.CSSProperties
     tone?: TahoeGlassContentTone
     semanticTint?: TahoeGlassSemanticTint
@@ -29,17 +30,18 @@ export default function GlassCard({
     children,
     className = '',
     variant = 'default',
+    radius,
     style,
     tone = 'inherit',
     semanticTint = 'none',
     semanticTintOpacity,
 }: GlassCardProps) {
-    const radius = variant === 'apple' || variant === 'ultimate' ? 24 : 40
+    const resolvedRadius = radius ?? (variant === 'apple' || variant === 'ultimate' ? 24 : 40)
 
     return (
         <TahoeGlassSurface
             variant={VARIANT_SURFACE[variant]}
-            radius={radius}
+            radius={resolvedRadius}
             className={`overflow-visible ${className}`}
             contentClassName="h-full w-full"
             style={style}

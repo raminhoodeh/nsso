@@ -29,33 +29,25 @@ export interface TahoeRimVariables {
   gradient: string;
 }
 
-export type TahoeDisplacementProfile = "convex" | "edge";
+export type TahoeDisplacementProfile =
+  | "convex"
+  | "prism-top"
+  | "prism-bottom";
 
 /**
  * Full cards keep the supplied convex lens. Wide navigation chrome uses a
- * monotonic edge profile so the strongest bend sits at the physical rim
- * instead of reading as a large oval spotlight through the middle.
+ * constant prism vector: the entire clipped surface samples the scene from a
+ * slightly shifted coordinate, without drawing a radial or elliptical lens
+ * contour across the material.
  */
-export function resolveTahoeCurveMagnitude(
-  distance: number,
-  profile: TahoeDisplacementProfile = "convex",
-): number {
-  const normalizedDistance = Math.max(0, Math.min(1, distance));
-  if (profile === "edge") {
-    return Math.pow(
-      Math.sin((normalizedDistance * Math.PI) / 2),
-      6,
-    );
-  }
-  return Math.sin(
-    Math.pow(normalizedDistance, TAHOE_CURVE_POWER) * Math.PI,
-  );
-}
+const TAHOE_PRISM_RED = 128;
+const TAHOE_PRISM_GREEN_TOP = 144;
+const TAHOE_PRISM_GREEN_BOTTOM = 112;
 
 /**
  * Generates the supplied power-3.5 superellipse. The default preserves the
  * sin(pow(d, .8) * PI) convex deformation without approximation; navigation
- * chrome may opt into the edge-weighted curve above.
+ * chrome may opt into a uniform directional prism shift instead.
  */
 export function createTahoeDisplacementField(
   cssWidth: number,
@@ -78,24 +70,38 @@ export function createTahoeDisplacementField(
 
   const image = context.createImageData(pixelWidth, pixelHeight);
   const { data } = image;
+  const prismGreen =
+    profile === "prism-top"
+      ? TAHOE_PRISM_GREEN_TOP
+      : profile === "prism-bottom"
+        ? TAHOE_PRISM_GREEN_BOTTOM
+        : null;
 
   for (let y = 0; y < pixelHeight; y += 1) {
     for (let x = 0; x < pixelWidth; x += 1) {
-      const nx = (x / pixelWidth) * 2 - 1;
-      const ny = (y / pixelHeight) * 2 - 1;
-      const distance =
-        Math.pow(Math.abs(nx), TAHOE_SUPERELLIPSE_POWER) +
-        Math.pow(Math.abs(ny), TAHOE_SUPERELLIPSE_POWER);
-
       let red = 128;
       let green = 128;
       let alpha: number = alphaOutside;
 
-      if (distance <= 1) {
-        const curveMagnitude = resolveTahoeCurveMagnitude(distance, profile);
-        red = Math.round(128 + -nx * curveMagnitude * 127);
-        green = Math.round(128 + -ny * curveMagnitude * 127);
+      if (prismGreen !== null) {
+        red = TAHOE_PRISM_RED;
+        green = prismGreen;
         alpha = 255;
+      } else {
+        const nx = (x / pixelWidth) * 2 - 1;
+        const ny = (y / pixelHeight) * 2 - 1;
+        const distance =
+          Math.pow(Math.abs(nx), TAHOE_SUPERELLIPSE_POWER) +
+          Math.pow(Math.abs(ny), TAHOE_SUPERELLIPSE_POWER);
+
+        if (distance <= 1) {
+          const curveMagnitude = Math.sin(
+            Math.pow(distance, TAHOE_CURVE_POWER) * Math.PI,
+          );
+          red = Math.round(128 + -nx * curveMagnitude * 127);
+          green = Math.round(128 + -ny * curveMagnitude * 127);
+          alpha = 255;
+        }
       }
 
       const index = (y * pixelWidth + x) * 4;

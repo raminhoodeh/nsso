@@ -988,13 +988,17 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     hidden={expandedPanel !== 'experience'}
                 >
                     {expandedPanel === 'experience' && (
-                        <GlassCard className="w-full rounded-[28px] md:min-h-[600px] md:rounded-[40px]">
+                        <GlassCard
+                            radius="var(--editor-card-radius)"
+                            className="w-full [--editor-card-radius:28px] md:min-h-[600px] md:[--editor-card-radius:40px]"
+                        >
                             <div className="flex h-full w-full flex-col md:flex-row" data-editor-card="experience">
                         <TahoeGlassSurface
                             as="aside"
                             variant="menu"
+                            radius="var(--editor-aside-radius)"
                             tone="light"
-                            className="w-full border-b border-white/10 md:w-[300px] md:border-b-0 md:border-r"
+                            className="w-full [--editor-aside-radius:28px_28px_0px_0px] border-b border-white/10 md:w-[300px] md:[--editor-aside-radius:40px_0px_0px_40px] md:border-b-0 md:border-r"
                             contentClassName="p-3 md:p-6"
                         >
                             <h3 className="sr-only md:not-sr-only md:mb-4 md:block md:text-xs md:font-bold md:uppercase md:tracking-widest md:text-white/70">Experience & Education</h3>
@@ -1096,13 +1100,17 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     hidden={expandedPanel !== 'products'}
                 >
                     {expandedPanel === 'products' && (
-                        <GlassCard className="w-full rounded-[28px] md:min-h-[600px] md:rounded-[40px]">
+                        <GlassCard
+                            radius="var(--editor-card-radius)"
+                            className="w-full [--editor-card-radius:28px] md:min-h-[600px] md:[--editor-card-radius:40px]"
+                        >
                             <div className="flex h-full w-full flex-col md:flex-row" data-editor-card="products">
                         <TahoeGlassSurface
                             as="aside"
                             variant="menu"
+                            radius="var(--editor-aside-radius)"
                             tone="light"
-                            className="w-full border-b border-white/10 md:w-[300px] md:border-b-0 md:border-r"
+                            className="w-full [--editor-aside-radius:28px_28px_0px_0px] border-b border-white/10 md:w-[300px] md:[--editor-aside-radius:40px_0px_0px_40px] md:border-b-0 md:border-r"
                             contentClassName="p-3 md:p-6"
                         >
                             <div className="mb-4 flex items-center justify-between gap-3">
@@ -1131,7 +1139,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             </div>
 
                             <div className="relative group mb-3 md:mb-4">
-                                <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 transition-opacity hover:opacity-100" contentClassName="flex items-center justify-between gap-2 px-3 py-3 text-left md:px-4">
+                                <TahoeGlassSurface variant="panel" radius={16} tone="light" className="w-full cursor-help opacity-60 transition-opacity hover:opacity-100" contentClassName="flex items-center justify-between gap-2 px-3 py-3 text-left md:px-4">
                                     <span className="text-[15px] text-white/50">Integrate web3 wallet</span>
                                     <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
                                         <span className="whitespace-nowrap text-[10px] font-medium leading-[14px] text-white/96" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
@@ -1139,13 +1147,13 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         </span>
                                     </TahoeGlassSurface>
                                 </TahoeGlassSurface>
-                                <TahoeGlassSurface variant="popover" radius={12} tone="light" className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 pointer-events-none" contentClassName="text-xs leading-relaxed text-white/80">
+                                <TahoeGlassSurface variant="popover" radius={16} tone="light" className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 pointer-events-none" contentClassName="text-xs leading-relaxed text-white/80">
                                     Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
                                 </TahoeGlassSurface>
                             </div>
 
                             <div className="relative group mb-3 md:mb-4">
-                                <TahoeGlassSurface variant="panel" radius={12} tone="light" className="w-full cursor-help opacity-60 transition-opacity hover:opacity-100" contentClassName="flex items-center justify-between gap-2 px-3 py-3 text-left md:px-4">
+                                <TahoeGlassSurface variant="panel" radius={16} tone="light" className="w-full cursor-help opacity-60 transition-opacity hover:opacity-100" contentClassName="flex items-center justify-between gap-2 px-3 py-3 text-left md:px-4">
                                     <span className="text-[15px] text-white/50">Connect Facebook Pixel</span>
                                     <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]">
                                         <span className="whitespace-nowrap text-[10px] font-medium leading-[14px] text-white/96" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
@@ -1153,7 +1161,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         </span>
                                     </TahoeGlassSurface>
                                 </TahoeGlassSurface>
-                                <TahoeGlassSurface variant="popover" radius={12} tone="light" className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 pointer-events-none" contentClassName="text-xs leading-relaxed text-white/80">
+                                <TahoeGlassSurface variant="popover" radius={16} tone="light" className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 pointer-events-none" contentClassName="text-xs leading-relaxed text-white/80">
                                     Track conversions and optimize your ads with Facebook Pixel integration.
                                 </TahoeGlassSurface>
                             </div>

@@ -756,9 +756,9 @@ export class TahoeNavOwnedSceneWebGLRenderer {
 
   private readProofSamples(stage: string): Uint8Array {
     const gl = this.gl;
-    // These fixed positions cover the horizontal/vertical lobes where the
-    // supplied superellipse has measurable bend while still including the
-    // neutral center and rim. That makes the proof stable across surface sizes.
+    // These fixed positions cover both a shaped lens and a uniform prism
+    // field. Spreading the proof across the target keeps it stable across
+    // surface sizes and prevents a single scene pixel from certifying optics.
     const xFractions = [0.12, 0.2, 0.32, 0.5, 0.68, 0.8, 0.88];
     const yFractions = [0.12, 0.25, 0.5, 0.75, 0.88];
     const samples = new Uint8Array(xFractions.length * yFractions.length * 4);

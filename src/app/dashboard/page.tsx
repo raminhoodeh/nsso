@@ -547,7 +547,11 @@ function DashboardContent() {
 
                 {/* Your Profile Tab Content */}
                 {currentView === 'profile' && (
-                    <GlassCard refractive className="relative overflow-visible rounded-[32px] p-4 pt-[48px] sm:rounded-[40px] sm:p-6 sm:pt-[48px] lg:p-8 lg:pt-[48px]">
+                    <GlassCard
+                        refractive
+                        radius="var(--profile-card-radius)"
+                        className="relative overflow-visible [--profile-card-radius:32px] p-4 pt-[48px] sm:[--profile-card-radius:40px] sm:p-6 sm:pt-[48px] lg:p-8 lg:pt-[48px]"
+                    >
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
                             <h2 className="text-2xl font-bold text-white">
@@ -631,7 +635,7 @@ function DashboardContent() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between mb-1 ml-1">
+                                    <div className="mb-3 ml-1 flex items-center justify-between gap-3">
                                         <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">HEADLINE</label>
                                         <div className="flex items-center gap-3">
                                             {/* Character Counter */}
@@ -642,7 +646,7 @@ function DashboardContent() {
                                                 onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                     detail: { initialMessage: "Help me write a catchy headline..." }
                                                 }))}
-                                                className="-my-2 min-h-11 min-w-11 px-2 py-1"
+                                                className="min-h-11 min-w-11 px-1.5 py-0.5"
                                                 contentClassName="gap-1 text-white/75"
                                             >
                                                 <Sparkles className="w-3 h-3" />
@@ -660,13 +664,13 @@ function DashboardContent() {
                                 </div>
 
                                 <div>
-                                    <div className="flex items-center justify-between mb-1 ml-1">
+                                    <div className="mb-3 ml-1 flex items-center justify-between gap-3">
                                         <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">BIO</label>
                                         <TahoeGlassButton
                                             onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me write my bio..." }
                                             }))}
-                                            className="-my-2 min-h-11 min-w-11 px-2 py-1"
+                                            className="min-h-11 min-w-11 px-1.5 py-0.5"
                                             contentClassName="gap-1 text-white/75"
                                         >
                                             <Sparkles className="w-3 h-3" />

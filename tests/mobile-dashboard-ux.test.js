@@ -204,7 +204,7 @@ test('the bottom bar shares the header backdrop engine and owns real safe-area s
     assert.doesNotMatch(bottomNavSource, /<TahoeGlassButton/)
     assert.match(bottomNavSource, /semanticTint="dark"/)
     assert.match(bottomNavSource, /semanticTintOpacity=\{0\.42\}/)
-    assert.match(bottomNavSource, /displacementProfile="edge"/)
+    assert.match(bottomNavSource, /displacementProfile="prism-bottom"/)
     assert.match(bottomNavSource, /materialLighting="uniform"/)
     assert.match(bottomNavSource, /data-mobile-nav-material="dark-refractive"/)
     assert.match(bottomNavSource, /contentClassName="w-full bg-\[#080c14\]\/40"/)
@@ -224,7 +224,7 @@ test('the bottom bar shares the header backdrop engine and owns real safe-area s
 })
 
 test('mobile header and dashboard content fit narrow and notched viewports', () => {
-    assert.match(headerSource, /displacementProfile="edge"/)
+    assert.match(headerSource, /displacementProfile="prism-top"/)
     assert.match(headerSource, /materialLighting="uniform"/)
     assert.match(headerSource, /h-\[calc\(88px\+env\(safe-area-inset-top\)\)\]/)
     assert.match(headerSource, /pl-\[max\(12px,env\(safe-area-inset-left\)\)\]/)
@@ -251,6 +251,55 @@ test('the profile bio provides four times the mobile writing capacity', () => {
         /controlClassName="min-h-\[384px\][^"\n]*md:min-h-0"/
     )
     assert.match(bioFieldMarkup, /rows=\{4\}/, 'desktop keeps the existing four-row intrinsic size')
+})
+
+test('profile Ask Deity controls have clear field spacing and compact chrome', () => {
+    const profileFieldsStart = dashboardPageSource.indexOf('{/* Profile Fields */}')
+    const profileFieldsEnd = dashboardPageSource.indexOf('{/* Username availability indicator */}', profileFieldsStart)
+    const profileFieldsMarkup = dashboardPageSource.slice(profileFieldsStart, profileFieldsEnd)
+
+    assert.ok(profileFieldsStart >= 0 && profileFieldsEnd > profileFieldsStart)
+    assert.equal(
+        (profileFieldsMarkup.match(/className="mb-3 ml-1 flex items-center justify-between gap-3"/g) || []).length,
+        2,
+        'Headline and Bio each reserve space between their action and field'
+    )
+    assert.equal(
+        (profileFieldsMarkup.match(/className="min-h-11 min-w-11 px-1\.5 py-0\.5"/g) || []).length,
+        2,
+        'both field actions keep a 44px target with reduced internal padding'
+    )
+    assert.doesNotMatch(profileFieldsMarkup, /-my-2/)
+})
+
+test('nested dashboard cards use one concentric radius system', () => {
+    assert.equal(
+        (advancedModeSource.match(/radius="var\(--editor-card-radius\)"/g) || []).length,
+        2,
+        'both expanded editor shells use the responsive radius token'
+    )
+    assert.equal(
+        (advancedModeSource.match(/radius="var\(--editor-aside-radius\)"/g) || []).length,
+        2,
+        'both flush editor menus use the matching corner-aware token'
+    )
+    assert.equal(
+        (advancedModeSource.match(/\[--editor-aside-radius:28px_28px_0px_0px\]/g) || []).length,
+        2
+    )
+    assert.equal(
+        (advancedModeSource.match(/md:\[--editor-aside-radius:40px_0px_0px_40px\]/g) || []).length,
+        2
+    )
+    assert.doesNotMatch(advancedModeSource, /rounded-\[28px\][^"\n]*md:rounded-\[40px\]/)
+    assert.match(dashboardPageSource, /radius="var\(--profile-card-radius\)"/)
+    assert.match(dashboardPageSource, /\[--profile-card-radius:32px\]/)
+    assert.match(dashboardPageSource, /sm:\[--profile-card-radius:40px\]/)
+
+    const productsStart = advancedModeSource.indexOf('data-editor-card="products"')
+    const productsEnd = advancedModeSource.indexOf('</GlassCard>', productsStart)
+    const productsMarkup = advancedModeSource.slice(productsStart, productsEnd)
+    assert.equal((productsMarkup.match(/radius=\{16\}/g) || []).length, 4)
 })
 
 test('mobile notifications clear the bottom bar and use an opaque readable token', () => {

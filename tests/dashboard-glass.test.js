@@ -144,7 +144,7 @@ test("primary dashboard panes use the reusable backdrop engine without mobile le
   assert.equal((primaryWrapper.match(/<TahoeBackdropSurface\b/g) || []).length, 1);
   assert.doesNotMatch(primaryWrapper, /<GlassCard\b/);
   assert.doesNotMatch(primaryWrapper, /if \(!directBackdropEnabled\)/);
-  assert.match(page, /<GlassCard refractive/);
+  assert.match(page, /<GlassCard[\s\S]{0,120}\brefractive/);
   assert.match(sidebar, /<TahoeBackdropSurface/);
   assert.match(sidebar, /backdropEnabled=\{backdropEnabled\}/);
   assert.match(sidebar, /getDashboardDirectBackdropSnapshot/);
@@ -154,6 +154,40 @@ test("primary dashboard panes use the reusable backdrop engine without mobile le
   assert.match(vanta, /h-\[100dvh\] w-screen/);
   assert.match(vanta, /h-\[75vh\] w-\[75vw\]/);
   assert.doesNotMatch(vanta, /lg:h-\[75vh\]/);
+});
+
+test("explicit radii reach every dashboard card path and pill field", () => {
+  const wrapper = fs.readFileSync(
+    path.join(DASHBOARD_ROOT, "components/DashboardGlassCard.tsx"),
+    "utf8",
+  );
+  const baseCard = fs.readFileSync(
+    path.join(process.cwd(), "src/components/ui/GlassCard.tsx"),
+    "utf8",
+  );
+  const field = fs.readFileSync(
+    path.join(
+      process.cwd(),
+      "src/components/ui/tahoe-glass/TahoeGlassField.tsx",
+    ),
+    "utf8",
+  );
+  const feedItem = fs.readFileSync(
+    path.join(DASHBOARD_ROOT, "components/FeedItemCard.tsx"),
+    "utf8",
+  );
+
+  assert.match(baseCard, /radius\?: number \| string/);
+  assert.match(baseCard, /const resolvedRadius = radius \?\?/);
+  assert.match(baseCard, /radius=\{resolvedRadius\}/);
+  assert.match(wrapper, /radius\?: number \| string/);
+  assert.match(wrapper, /radius=\{radius\}/);
+  assert.match(wrapper, /radius=\{resolvedRadius\}/);
+  assert.match(field, /radius\?: number \| string/);
+  assert.match(field, /radius = 12/);
+  assert.match(field, /radius=\{radius\}/);
+  assert.match(feedItem, /<TahoeGlassField[^>]*radius=\{9999\}/);
+  assert.doesNotMatch(feedItem, /surfaceClassName="rounded-full/);
 });
 
 const BASE_CAPABILITIES = {

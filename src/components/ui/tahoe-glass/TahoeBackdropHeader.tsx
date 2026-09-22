@@ -53,7 +53,7 @@ export interface TahoeBackdropSurfaceProps extends Omit<
   tone?: TahoeGlassContentTone;
   semanticTint?: TahoeGlassSemanticTint;
   semanticTintOpacity?: number;
-  /** Moves nav refraction to the perimeter instead of a central convex band. */
+  /** Selects a shaped card lens or a contour-free directional nav prism. */
   displacementProfile?: TahoeDisplacementProfile;
   /** Wide chrome should not inherit the fallback material's radial spotlight. */
   materialLighting?: "radial" | "uniform";

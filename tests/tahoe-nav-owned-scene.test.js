@@ -40,7 +40,7 @@ const {
   resolveTahoeNavTargetSize,
 } = require("../src/lib/tahoe-glass/nav-owned-scene-webgl.ts");
 const {
-  resolveTahoeCurveMagnitude,
+  createTahoeDisplacementField,
 } = require("../src/lib/tahoe-glass/optics.ts");
 const {
   TAHOE_DIRECT_BACKDROP_MAX_FIELD_PIXELS,
@@ -48,21 +48,58 @@ const {
   resolveTahoeNavPlatformRoute,
 } = require("../src/lib/tahoe-glass/nav-platform.ts");
 
-test("wide navigation moves refraction monotonically toward its physical edge", () => {
-  const samples = [0, 0.25, 0.5, 0.75, 1].map((distance) =>
-    resolveTahoeCurveMagnitude(distance, "edge"),
-  );
+test("wide navigation uses a uniform prism field without an oval contour", () => {
+  const originalDocument = global.document;
+  global.document = {
+    createElement(type) {
+      assert.equal(type, "canvas");
+      return {
+        width: 0,
+        height: 0,
+        getContext() {
+          return {
+            createImageData(width, height) {
+              return { data: new Uint8ClampedArray(width * height * 4) };
+            },
+            putImageData() {},
+          };
+        },
+      };
+    },
+  };
 
-  assert.equal(samples[0], 0);
-  for (let index = 1; index < samples.length; index += 1) {
-    assert.ok(samples[index] > samples[index - 1]);
+  try {
+    for (const [profile, expectedPixel] of [
+      ["prism-top", [128, 144, 128, 255]],
+      ["prism-bottom", [128, 112, 128, 255]],
+    ]) {
+      const field = createTahoeDisplacementField(4, 3, 1, 0, profile);
+      assert.ok(field);
+      for (let offset = 0; offset < field.data.length; offset += 4) {
+        assert.deepEqual(
+          Array.from(field.data.slice(offset, offset + 4)),
+          expectedPixel,
+        );
+      }
+    }
+
+    const viewportHeight = 844;
+    const displacementScale = 35;
+    const sourceY = (viewportY, green) =>
+      viewportY -
+      (((green - 128) / 255) * 2 * displacementScale) / viewportHeight;
+    assert.ok(
+      sourceY(1, 144) < 1,
+      "the top prism samples down into the viewport",
+    );
+    assert.ok(
+      sourceY(0, 112) > 0,
+      "the bottom prism samples up into the viewport",
+    );
+  } finally {
+    if (originalDocument === undefined) delete global.document;
+    else global.document = originalDocument;
   }
-  assert.ok(samples.at(-1) > 0.99);
-  assert.ok(
-    resolveTahoeCurveMagnitude(0.5, "convex") >
-      resolveTahoeCurveMagnitude(1, "convex"),
-    "the legacy full-card profile remains convex",
-  );
 });
 
 const defaultPlatformCapabilities = {

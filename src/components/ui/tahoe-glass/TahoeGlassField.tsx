@@ -22,6 +22,7 @@ export interface TahoeGlassFieldProps
   labelClassName?: string;
   surfaceClassName?: string;
   controlClassName?: string;
+  radius?: number | string;
   tone?: TahoeGlassContentTone;
   semanticTint?: TahoeGlassSemanticTint;
   semanticTintOpacity?: number;
@@ -51,6 +52,7 @@ export const TahoeGlassField = React.forwardRef<
     labelClassName,
     surfaceClassName,
     controlClassName,
+    radius = 12,
     tone = "inherit",
     semanticTint = "none",
     semanticTintOpacity,
@@ -102,7 +104,7 @@ export const TahoeGlassField = React.forwardRef<
 
       <TahoeGlassSurface
         variant="recessed"
-        radius={12}
+        radius={radius}
         tone={tone}
         semanticTint={semanticTint}
         semanticTintOpacity={semanticTintOpacity}

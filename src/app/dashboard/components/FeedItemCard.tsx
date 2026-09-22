@@ -385,7 +385,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
 
                             {/* Add Comment Input */}
                             <form onSubmit={handlePostComment} className="flex gap-3 mt-4">
-                                <TahoeGlassField label="Comment" visuallyHideLabel tone="light" className="flex-1" surfaceClassName="rounded-full px-4 py-2">
+                                <TahoeGlassField label="Comment" visuallyHideLabel tone="light" radius={9999} className="flex-1" surfaceClassName="px-4 py-2">
                                     <input
                                         type="text"
                                         value={newComment}

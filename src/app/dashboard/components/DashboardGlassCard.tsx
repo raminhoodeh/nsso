@@ -21,6 +21,7 @@ export interface DashboardGlassCardProps {
   children: ReactNode;
   className?: string;
   variant?: GlassCardProps["variant"];
+  radius?: number | string;
   style?: CSSProperties;
   tone?: TahoeGlassContentTone;
   semanticTint?: TahoeGlassSemanticTint;
@@ -58,6 +59,7 @@ function PrimaryBackdropCard({
   children,
   className = "",
   variant,
+  radius,
   style,
   tone,
   semanticTint,
@@ -73,13 +75,14 @@ function PrimaryBackdropCard({
     getDashboardServerSnapshot,
   );
 
-  const radius = variant === "apple" || variant === "ultimate" ? 24 : 40;
+  const resolvedRadius =
+    radius ?? (variant === "apple" || variant === "ultimate" ? 24 : 40);
 
   return (
     <TahoeBackdropSurface
       backdropEnabled={directBackdropEnabled}
       variant={VARIANT_SURFACE[variant]}
-      radius={radius}
+      radius={resolvedRadius}
       className={`overflow-visible ${className}`}
       contentClassName="h-full w-full"
       style={style}
@@ -103,6 +106,7 @@ export default function DashboardGlassCard({
   children,
   className = "",
   variant = "default",
+  radius,
   style,
   tone = "light",
   semanticTint = "dark",
@@ -117,6 +121,7 @@ export default function DashboardGlassCard({
       <GlassCard
         className={className}
         variant={variant}
+        radius={radius}
         style={style}
         tone={tone}
         semanticTint={semanticTint}
@@ -131,6 +136,7 @@ export default function DashboardGlassCard({
     <PrimaryBackdropCard
       className={className}
       variant={variant}
+      radius={radius}
       style={style}
       tone={tone}
       semanticTint={semanticTint}
