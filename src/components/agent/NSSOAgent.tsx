@@ -5,8 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
-import { TahoeGlassSurface } from '@/components/ui/tahoe-glass';
-
 // Lazy load the heavy chat interface
 const AgentChatInterface = dynamic(
     () => import('./AgentChatInterface'),
@@ -24,7 +22,7 @@ export default function NSSOAgent() {
     const [isOpen, setIsOpen] = useState(false);
     const [hasOpened, setHasOpened] = useState(false);
     const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
-    const launcherRef = useRef<HTMLElement>(null);
+    const launcherRef = useRef<HTMLButtonElement>(null);
     const chatWindowRef = useRef<HTMLDivElement>(null);
     const restoreLauncherFocusRef = useRef(false);
 
@@ -142,20 +140,15 @@ export default function NSSOAgent() {
         <>
             {/* Persistent Entry Point (Pill) */}
             {!isOpen && (
-                <TahoeGlassSurface
+                <button
                     ref={launcherRef}
-                    as="button"
-                    variant="pill"
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.04}
+                    type="button"
                     onClick={handleOpen}
                     aria-label="Open Deity assistant"
                     aria-haspopup="dialog"
-                    className="group fixed bottom-6 right-6 z-[6000] hidden h-[56px] border border-white/20 pl-2 pr-6 transition-all duration-500 hover:scale-105 md:inline-flex"
-                    contentClassName="flex items-center"
+                    className="group fixed bottom-6 right-6 z-[6000] hidden h-[56px] items-center rounded-full border border-white/10 bg-[#171d26] pl-2 pr-6 shadow-xl shadow-black/30 transition-transform duration-300 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transform-none motion-reduce:transition-none md:inline-flex"
                 >
-                    <span className="mr-3 flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full border border-white/50">
+                    <span className="mr-3 flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full bg-[#232b36]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/nsso-agent-avatar.png"
@@ -169,14 +162,14 @@ export default function NSSOAgent() {
                         alt="Deity"
                         className="h-7 w-auto translate-y-[2px] object-contain"
                     />
-                </TahoeGlassSurface>
+                </button>
             )}
 
             {/* Pop-up Mode - ALWAYS RENDERED but HIDDEN when closed to persist state */}
             <>
                 {/* Dimming Overlay */}
                 <div
-                    className={`fixed inset-0 z-[5990] bg-black/60 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    className={`fixed inset-0 z-[5990] bg-black/60 transition-opacity duration-300 motion-reduce:transition-none ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                         }`}
                     aria-hidden="true"
                     onClick={handleClose}
@@ -191,7 +184,7 @@ export default function NSSOAgent() {
                     aria-hidden={!isOpen}
                     inert={!isOpen}
                     tabIndex={-1}
-                    className={`fixed z-[6000] w-full h-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+                    className={`fixed z-[6000] w-full h-full bg-[#11161d] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transform-none motion-reduce:transition-none
                         /* Mobile Styles (Default) */
                         inset-0 
                         ${isOpen

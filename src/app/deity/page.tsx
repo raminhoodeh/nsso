@@ -4,7 +4,6 @@
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import AgentChatInterface from "@/components/agent/AgentChatInterface";
-import { TahoeGlassSurface } from "@/components/ui/tahoe-glass";
 
 export default function AgentPage() {
     const router = useRouter();
@@ -25,18 +24,12 @@ export default function AgentPage() {
             <Header />
 
             <div className="relative z-10 h-full w-full px-3 pb-3 pt-[100px]">
-                <TahoeGlassSurface
-                    as="section"
-                    variant="panel"
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.045}
+                <section
                     aria-label="Deity chat"
-                    className="h-full w-full overflow-hidden border border-white/10"
-                    contentClassName="h-full w-full overflow-hidden [&>div]:!h-full [&>div]:!bg-transparent [&>div]:!backdrop-blur-none"
+                    className="h-full w-full overflow-hidden rounded-[28px] border border-white/10 bg-[#11161d]"
                 >
                     <AgentChatInterface isFullScreen={true} onClose={handleClose} />
-                </TahoeGlassSurface>
+                </section>
             </div>
         </main>
     );
