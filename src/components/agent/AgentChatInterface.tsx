@@ -725,9 +725,9 @@ Check out some of the areas I can help you with below.`;
             radius={isFullScreen ? 0 : '32px 0 0 32px'}
             tone="light"
             semanticTint="dark"
-            semanticTintOpacity={0.04}
+            semanticTintOpacity={0.38}
             aria-label="Deity assistant"
-            className={`h-dvh transition-all duration-500 ${isFullScreen
+            className={`h-dvh max-md:!rounded-none transition-all duration-500 ${isFullScreen
                 ? 'w-full border-none'
                 : 'w-full overflow-hidden border border-white/10'
                 }`}
@@ -1052,7 +1052,7 @@ Check out some of the areas I can help you with below.`;
                 document.body
             )}
 
-            <div className="p-6 pt-2">
+            <div className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
                 <form
                     onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputValue); }}
                     className="group relative"

@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
-import { useUI } from '@/components/providers/UIProvider';
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass';
 
 // Lazy load the heavy chat interface
@@ -25,7 +24,6 @@ export default function NSSOAgent() {
     const [isOpen, setIsOpen] = useState(false);
     const [hasOpened, setHasOpened] = useState(false);
     const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
-    const { isBackgroundDimmed } = useUI();
     const launcherRef = useRef<HTMLElement>(null);
     const chatWindowRef = useRef<HTMLDivElement>(null);
     const restoreLauncherFocusRef = useRef(false);
@@ -101,6 +99,45 @@ export default function NSSOAgent() {
         };
     }, [isOpen]);
 
+    // Keep the dashboard stationary while the mobile dialog owns the viewport.
+    // `overflow: hidden` alone does not reliably stop background scrolling on
+    // iOS, so preserve the current position and temporarily pin the body.
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const scrollX = window.scrollX;
+        const scrollY = window.scrollY;
+        const body = document.body;
+        const root = document.documentElement;
+        const previousBodyStyles = {
+            overflow: body.style.overflow,
+            position: body.style.position,
+            top: body.style.top,
+            left: body.style.left,
+            width: body.style.width,
+            overscrollBehavior: body.style.overscrollBehavior,
+        };
+        const previousRootStyles = {
+            overflow: root.style.overflow,
+            overscrollBehavior: root.style.overscrollBehavior,
+        };
+
+        body.style.overflow = 'hidden';
+        body.style.position = 'fixed';
+        body.style.top = `-${scrollY}px`;
+        body.style.left = `-${scrollX}px`;
+        body.style.width = '100%';
+        body.style.overscrollBehavior = 'none';
+        root.style.overflow = 'hidden';
+        root.style.overscrollBehavior = 'none';
+
+        return () => {
+            Object.assign(body.style, previousBodyStyles);
+            Object.assign(root.style, previousRootStyles);
+            window.scrollTo(scrollX, scrollY);
+        };
+    }, [isOpen]);
+
     return (
         <>
             {/* Persistent Entry Point (Pill) */}
@@ -139,8 +176,7 @@ export default function NSSOAgent() {
             <>
                 {/* Dimming Overlay */}
                 <div
-                    className={`fixed inset-0 z-40 transition-all duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                        } ${isBackgroundDimmed ? 'bg-black/0' : 'bg-black/60'
+                    className={`fixed inset-0 z-[5990] bg-black/60 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                         }`}
                     aria-hidden="true"
                     onClick={handleClose}
