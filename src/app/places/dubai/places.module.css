@@ -455,6 +455,162 @@
   scrollbar-width: thin;
 }
 
+.eventFilters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.eventFilters .happeningFilter {
+  margin-top: 0;
+  height: 44px;
+}
+
+.eventFilters .happeningFilter small {
+  display: none;
+}
+
+.exhibitionsFilter {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border: 1px solid #9b7b93;
+  border-radius: 11px;
+  background: #433444;
+  color: #fff2f8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.exhibitionsFilter[aria-pressed="true"] {
+  background: #f4e5ee;
+  color: #4b2845;
+  border-color: #fff;
+}
+
+.exhibitionsFilter span {
+  font-size: 11px;
+}
+
+.exhibitionsSection > header {
+  padding: 7px 4px 16px;
+  color: #fff;
+}
+
+.exhibitionsSection h2 {
+  margin: 0 0 5px;
+  font: 26px Georgia, serif;
+}
+
+.exhibitionsSection > header p {
+  margin: 0 0 7px;
+  color: #e1e9e7;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.exhibitionsSection > header a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #ffdeef;
+  font-size: 12px;
+  text-underline-offset: 3px;
+}
+
+.exhibitionCard {
+  margin-bottom: 10px;
+  padding: 16px;
+  border: 1px solid #dfcbd7;
+  border-radius: 15px;
+  background: #fcf7f3;
+  color: #322d32;
+}
+
+.exhibitionCard h3 {
+  margin: 6px 0;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.exhibitionCard,
+.exhibitionCard * {
+  text-shadow: none;
+}
+
+.exhibitionCard p {
+  margin: 7px 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.exhibitionCard .exhibitionDate {
+  margin-top: 0;
+  color: #7b315e;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.exhibitionVenue {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.exhibitionNote,
+.eventItem > p.exhibitionNote {
+  padding: 10px;
+  border-left: 3px solid #af819e;
+  border-radius: 4px;
+  background: #efe5e9;
+  color: #503e49;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.exhibitionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.exhibitionActions button,
+.exhibitionActions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border: 1px solid #bda7b5;
+  border-radius: 9px;
+  background: white;
+  color: #583748;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.exhibitionActions button {
+  background: #653d58;
+  color: white;
+}
+
+.exhibitionsFilter:focus-visible,
+.exhibitionActions :focus-visible {
+  outline: 3px solid #bd84aa;
+  outline-offset: 3px;
+}
+
 .placeCard {
   --category-color: #6c746d;
   --surface-fill: rgba(22, 43, 49, 0.88);

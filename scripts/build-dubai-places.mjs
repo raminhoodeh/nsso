@@ -269,6 +269,7 @@ const PLACE_CATEGORIES = new Set([
   "beach-water",
   "mountain-hiking",
   "arts-culture-heritage",
+  "art-exhibitions",
   "shows-immersive",
   "creative-workshop",
   "wellness",
@@ -358,6 +359,17 @@ function validateCuratedData(payload) {
       }
       if (!event.taxonomyTags.every((tag) => PLACE_CATEGORIES.has(tag))) {
         throw new Error(`${eventLabel}.taxonomyTags contains an unknown category`);
+      }
+      if (event.visitNote !== undefined && (typeof event.visitNote !== "string" || !event.visitNote.trim())) {
+        throw new Error(`${eventLabel}.visitNote must be a non-empty string`);
+      }
+      if (event.calendar !== undefined) {
+        const validDate = (date) => typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)
+          && Number.isFinite(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date;
+        if (!validDate(event.calendar.startDate) || !validDate(event.calendar.endDateExclusive)
+          || event.calendar.endDateExclusive <= event.calendar.startDate) {
+          throw new Error(`${eventLabel}.calendar must contain valid start and exclusive end dates`);
+        }
       }
       return {
         ...event,

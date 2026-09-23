@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 65,
-    "eventCount": 18,
-    "placeCount": 144,
-    "generatedAt": "2026-08-28T12:13:40.169Z",
+    "curatedRecordCount": 67,
+    "eventCount": 21,
+    "placeCount": 146,
+    "generatedAt": "2026-09-23T14:48:11.714Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -608,7 +608,33 @@
         "websiteUri": "https://alserkal.online/",
         "businessStatus": "OPERATIONAL"
       },
-      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Alserkal%20Avenue%2C%2017th%20Street%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates"
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Alserkal%20Avenue%2C%2017th%20Street%2C%20Al%20Quoz%20Industrial%20Area%201%2C%20Dubai%2C%20United%20Arab%20Emirates",
+      "events": [
+        {
+          "id": "quoz-arts-fest-2027",
+          "title": "Quoz Arts Fest",
+          "description": "A weekend of exhibitions, installations, performances and food across Alserkal Avenue and its creative neighbourhood.",
+          "startsAt": "2027-01-30T00:00:00+04:00",
+          "endsAt": "2027-02-01T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.visitdubai.com/en/festivals-and-events/dubai-events-calendar/quoz-arts-fest",
+          "verifiedAt": "2026-09-23T12:00:00+04:00",
+          "verifiedUntil": "2027-02-01T00:00:00+04:00",
+          "dateLabel": "30–31 Jan 2027 · hours to be announced",
+          "visitNote": "Dates confirmed by Visit Dubai. The 2027 programme, daily opening hours and ticket details are still to be announced.",
+          "calendar": {
+            "startDate": "2027-01-30",
+            "endDateExclusive": "2027-02-01"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ]
     },
     {
       "id": "amongst-few-cafe",
@@ -2305,6 +2331,31 @@
       "sourceRows": [],
       "events": [
         {
+          "id": "dubai-design-week-2026",
+          "title": "Dubai Design Week",
+          "description": "Explore installations, exhibitions, design commissions, talks and workshops around Dubai Design District.",
+          "startsAt": "2026-11-03T00:00:00+04:00",
+          "endsAt": "2026-11-09T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.dubaidesignweek.ae/programme-2026-volunteer/",
+          "verifiedAt": "2026-09-23T12:00:00+04:00",
+          "verifiedUntil": "2026-11-09T00:00:00+04:00",
+          "dateLabel": "3–8 Nov 2026",
+          "visitNote": "Opening times and registration vary by installation, workshop and venue. Downtown Design is a separate fair within the week.",
+          "calendar": {
+            "startDate": "2026-11-03",
+            "endDateExclusive": "2026-11-09"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage",
+            "creative-workshop"
+          ]
+        },
+        {
           "id": "downtown-design-dubai-2026",
           "title": "Downtown Design",
           "description": "The region’s leading contemporary design fair, with collectible and commercial design, installations, talks and creative encounters in d3.",
@@ -2312,12 +2363,18 @@
           "endsAt": "2026-11-08T18:00:00+04:00",
           "timezone": "Asia/Dubai",
           "status": "scheduled",
-          "bookingUrl": null,
+          "bookingUrl": "https://www.downtowndesign.com/dubai/visit",
           "sourceUrl": "https://www.downtowndesign.com/dubai/visit",
-          "verifiedAt": "2026-08-26T00:00:00+04:00",
+          "verifiedAt": "2026-09-23T12:00:00+04:00",
           "verifiedUntil": "2026-11-08T18:00:00+04:00",
-          "dateLabel": "5 Nov, 12pm–8 Nov, 6pm",
+          "dateLabel": "5–8 Nov 2026 · public visiting days",
+          "visitNote": "The full fair runs 4–8 November, but 4 November is invitation-only. Public hours: 5–7 November, noon–8pm; 8 November, noon–6pm. Calendar reminders cover public days only.",
+          "calendar": {
+            "startDate": "2026-11-05",
+            "endDateExclusive": "2026-11-09"
+          },
           "taxonomyTags": [
+            "art-exhibitions",
             "events-activities",
             "arts-culture-heritage"
           ]
@@ -2390,24 +2447,6 @@
             "events-activities",
             "sport-active",
             "wellness"
-          ]
-        },
-        {
-          "id": "world-art-dubai-2026",
-          "title": "World Art Dubai",
-          "description": "A public contemporary-art fair bringing galleries and independent artists together, with work to browse and buy across four days.",
-          "startsAt": "2026-11-19T13:00:00+04:00",
-          "endsAt": "2026-11-22T21:00:00+04:00",
-          "timezone": "Asia/Dubai",
-          "status": "scheduled",
-          "bookingUrl": "https://www.worldartdubai.com/",
-          "sourceUrl": "https://www.dubaiexhibitioncentre.com/en/whats-on/world-art-dubai-2026",
-          "verifiedAt": "2026-08-26T12:00:00+04:00",
-          "verifiedUntil": "2026-11-22T21:00:00+04:00",
-          "dateLabel": "19–22 Nov · 1pm–9pm",
-          "taxonomyTags": [
-            "events-activities",
-            "arts-culture-heritage"
           ]
         }
       ],
@@ -7166,6 +7205,155 @@
         "businessStatus": null
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Mangrove%20Beach%2C%20Umm%20Al%20Quwain%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "dubai-world-trade-centre-events",
+      "name": "Dubai World Trade Centre",
+      "aliases": [
+        "DWTC",
+        "World Art Dubai venue",
+        "Za’abeel Halls 2 & 3"
+      ],
+      "description": "Dubai’s exhibition and events venue. World Art Dubai 2026 takes place in Za’abeel Halls 2 & 3; follow the event’s entrance and parking instructions.",
+      "sourceUrls": [
+        "https://www.worldartdubai.com/",
+        "https://www.worldartdubai.com/art-blog-news",
+        "https://www.instagram.com/p/Dcx5OULkf4C/"
+      ],
+      "locationHint": "Dubai World Trade Centre, Za’abeel Halls 2 & 3, Dubai, UAE",
+      "placeId": "ChIJBWO8EulCXz4RK2pM9KVtSB4",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "world-art-dubai-2026",
+          "title": "World Art Dubai",
+          "description": "Browse contemporary art from galleries and independent artists, alongside installations, creative workshops and live experiences.",
+          "startsAt": "2026-11-19T13:00:00+04:00",
+          "endsAt": "2026-11-22T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.worldartdubai.com/",
+          "sourceUrl": "https://www.worldartdubai.com/the-fair",
+          "verifiedAt": "2026-09-23T12:00:00+04:00",
+          "verifiedUntil": "2026-11-22T21:00:00+04:00",
+          "dateLabel": "19–22 Nov 2026 · daily 1pm–9pm",
+          "visitNote": "Venue updated: the organiser now lists Dubai World Trade Centre, Za’abeel Halls 2 & 3, not Dubai Exhibition Centre at Expo City shown in the Instagram post. Recheck tickets before travelling.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-23"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Sheikh Zayed Rd - Trade Center Second - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.223345899999998,
+        "lng": 55.2869344
+      },
+      "googleTypes": [
+        "event_venue",
+        "service",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": null,
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-23T14:48:11.713Z",
+        "osm": null,
+        "matchedName": "Dubai World Trade Centre",
+        "websiteUri": "https://www.dwtc.com/",
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20World%20Trade%20Centre&query_place_id=ChIJBWO8EulCXz4RK2pM9KVtSB4"
+    },
+    {
+      "id": "difc-art-events",
+      "name": "DIFC — Art Connects Women",
+      "aliases": [
+        "Dubai International Financial Centre",
+        "Art Connects Women",
+        "ZeeArts"
+      ],
+      "description": "DIFC is the advertised exhibition district for Art Connects Women. This is an area-level pin, not a confirmed gallery entrance; verify the exact exhibition location and public access with ZeeArts before visiting.",
+      "sourceUrls": [
+        "https://www.artconnectswomen.com/program/",
+        "https://www.heike-berl.de/",
+        "https://www.instagram.com/p/Dcx5OULkf4C/"
+      ],
+      "locationHint": "DIFC, Dubai, UAE — exact exhibition entrance to be confirmed",
+      "placeId": "ChIJTSevApJCXz4Ry6uFtXbgsRo",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "art-connects-women-2026",
+          "title": "Art Connects Women",
+          "description": "ZeeArts’ international women-artists programme, themed Educate to Empower, brings together an exhibition, conference and cultural activities.",
+          "startsAt": "2026-11-12T00:00:00+04:00",
+          "endsAt": "2026-11-16T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.artconnectswomen.com/program/",
+          "verifiedAt": "2026-09-23T12:00:00+04:00",
+          "verifiedUntil": "2026-11-16T00:00:00+04:00",
+          "dateLabel": "12–15 Nov 2026 · check public access",
+          "visitNote": "Save-the-date, not confirmed admission: 12 Nov is a VIP private viewing, 13 Nov a conference, 14 Nov a cultural tour, and 15 Nov a gala at One&Only Royal Mirage. Public exhibition hours and the exact DIFC entrance need organiser confirmation; not every session is at this pin.",
+          "calendar": {
+            "startDate": "2026-11-12",
+            "endDateExclusive": "2026-11-16"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Sheikh Zayed Rd - Zaa'beel Second - DIFC - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2146342,
+        "lng": 55.28134
+      },
+      "googleTypes": [
+        "finance",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": null,
+      "resolution": {
+        "status": "approximate",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-23T14:48:11.714Z",
+        "osm": null,
+        "matchedName": "Dubai International Financial Centre",
+        "websiteUri": "https://difc.ae/?utm_source=GMB&utm_medium=organic&utm_campaign=difc",
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20International%20Financial%20Centre&query_place_id=ChIJTSevApJCXz4Ry6uFtXbgsRo"
     }
   ]
 }

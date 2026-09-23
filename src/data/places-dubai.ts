@@ -6,6 +6,7 @@ export type PlaceCategory =
   | "beach-water"
   | "mountain-hiking"
   | "arts-culture-heritage"
+  | "art-exhibitions"
   | "shows-immersive"
   | "creative-workshop"
   | "wellness"
@@ -30,6 +31,8 @@ export type DubaiEvent = {
   verifiedUntil: string;
   dateLabel: string;
   taxonomyTags: PlaceCategory[];
+  visitNote?: string;
+  calendar?: { startDate: string; endDateExclusive: string };
 };
 
 export type DubaiPlace = {

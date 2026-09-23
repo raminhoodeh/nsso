@@ -25,6 +25,7 @@ import {
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DubaiEvent, DubaiPlace, PlaceCategory, PlacesPayload } from "@/data/places-dubai";
+import { activeEventsFor, exhibitionEntries, googleCalendarUrl } from "@/lib/places-events";
 import {
   TahoeGlassButton,
   TahoeGlassProvider,
@@ -73,6 +74,7 @@ const CATEGORY_META: Record<PlaceCategory, CategoryMeta> = {
   "beach-water": { label: "Beach & water", shortLabel: "Water", color: "#2f7f92" },
   "mountain-hiking": { label: "Mountains & hiking", shortLabel: "Hike", color: "#706957" },
   "arts-culture-heritage": { label: "Arts & culture", shortLabel: "Culture", color: "#865b8e" },
+  "art-exhibitions": { label: "Art Exhibitions", shortLabel: "Exhibitions", color: "#9b548b" },
   "shows-immersive": { label: "Shows & immersive", shortLabel: "Shows", color: "#b85270" },
   "creative-workshop": { label: "Creative workshops", shortLabel: "Make", color: "#b97a36" },
   wellness: { label: "Wellness", shortLabel: "Reset", color: "#668078" },
@@ -132,23 +134,6 @@ function proxiedPlacePhoto(url: string) {
 
 function categoryFor(place: DubaiPlace) {
   return CATEGORY_META[place.taxonomy.primary] || CATEGORY_META["date-ideas"];
-}
-
-function activeEventsFor(place: DubaiPlace, now: number | null) {
-  if (now === null) return [];
-  return (place.events || [])
-    .filter((event) => {
-      const endsAt = Date.parse(event.endsAt);
-      const verifiedUntil = Date.parse(event.verifiedUntil);
-      return (
-        event.status === "scheduled" &&
-        Number.isFinite(endsAt) &&
-        Number.isFinite(verifiedUntil) &&
-        endsAt > now &&
-        verifiedUntil > now
-      );
-    })
-    .sort((eventA, eventB) => Date.parse(eventA.startsAt) - Date.parse(eventB.startsAt));
 }
 
 function taxonomyTagsFor(place: DubaiPlace, events: DubaiEvent[]) {
@@ -293,6 +278,12 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   });
 
   const places = payload.places;
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("category") === "art-exhibitions") {
+      setCategory("art-exhibitions");
+    }
+  }, []);
+  const allExhibitions = useMemo(() => exhibitionEntries(places, clientNow), [places, clientNow]);
   const activeEventsByPlace = useMemo(() => {
     const activeEvents = new Map<string, DubaiEvent[]>();
     places.forEach((place) => activeEvents.set(place.id, activeEventsFor(place, clientNow)));
@@ -420,6 +411,10 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const filterSignature = useMemo(
     () => filteredPlaces.map((place) => place.id).sort().join("|"),
     [filteredPlaces],
+  );
+  const filteredExhibitions = useMemo(
+    () => exhibitionEntries(filteredPlaces, clientNow, query),
+    [filteredPlaces, clientNow, query],
   );
 
   const fitVisiblePlaces = useCallback(() => {
@@ -1038,6 +1033,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               <LocateFixed size={16} />
             </TahoeGlassSurface>
           </div>
+          <div className={styles.eventFilters}>
           <TahoeGlassSurface
             as="button"
             variant="pill"
@@ -1057,6 +1053,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <small>Current &amp; upcoming</small>
             <em>{happeningPlaceCount}</em>
           </TahoeGlassSurface>
+          <button
+            type="button"
+            className={styles.exhibitionsFilter}
+            aria-pressed={category === "art-exhibitions"}
+            onClick={() => setCategory((value) => value === "art-exhibitions" ? "all" : "art-exhibitions")}
+          >
+            <CalendarDays size={16} aria-hidden="true" />
+            Art Exhibitions <span>{allExhibitions.length}</span>
+          </button>
+          </div>
           {locationMessage && <p className={styles.locationMessage}>{locationMessage}</p>}
 
           <TahoeGlassSurface
@@ -1076,7 +1082,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             >
               <option value="all">All categories ({availablePlaces.length})</option>
               {visibleCategories.map(([key, meta]) => (
-                <option key={key} value={key}>{meta.label} ({categoryCounts.get(key)})</option>
+                <option key={key} value={key}>{meta.label} ({key === "art-exhibitions" ? allExhibitions.length : categoryCounts.get(key)})</option>
               ))}
             </select>
           </TahoeGlassSurface>
@@ -1109,19 +1115,48 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 aria-pressed={category === key}
                 style={{ "--pill-color": meta.color } as React.CSSProperties}
               >
-                <i /> {meta.shortLabel} <span>{categoryCounts.get(key)}</span>
+                <i /> {meta.shortLabel} <span>{key === "art-exhibitions" ? allExhibitions.length : categoryCounts.get(key)}</span>
               </TahoeGlassSurface>
             ))}
           </div>
         </div>
 
         <div className={styles.listHeader}>
-          <span>{filteredPlaces.length} {filteredPlaces.length === 1 ? "place" : "places"}</span>
-          {userLocation ? <span>nearest first</span> : <span>across the UAE</span>}
+          {category === "art-exhibitions" ? <>
+            <span>{filteredExhibitions.length} exhibitions &amp; festivals</span>
+            <span>by date</span>
+          </> : <>
+            <span>{filteredPlaces.length} {filteredPlaces.length === 1 ? "place" : "places"}</span>
+            {userLocation ? <span>nearest first</span> : <span>across the UAE</span>}
+          </>}
         </div>
 
         <div className={styles.placeList}>
-          {filteredPlaces.map((place) => {
+          {category === "art-exhibitions" && (
+            <section className={styles.exhibitionsSection} aria-labelledby="art-exhibitions-heading">
+              <header>
+                <h2 id="art-exhibitions-heading">Art Exhibitions</h2>
+                <p>Art fairs, design weeks &amp; creative weekends. Shared venues use one map pin.</p>
+                <a href="/places/dubai/art-exhibitions.ics" download>Download all upcoming dates (.ics)</a>
+              </header>
+              {filteredExhibitions.map(({place, event}) => (
+                <article className={styles.exhibitionCard} key={event.id} data-event-id={event.id}>
+                  <p className={styles.exhibitionDate}>{event.dateLabel}</p>
+                  <h3>{event.title}</h3>
+                  <p className={styles.exhibitionVenue}><MapPin size={14} aria-hidden="true" />{place.name}</p>
+                  <p>{event.description}</p>
+                  {event.visitNote && <p className={styles.exhibitionNote}>{event.visitNote}</p>}
+                  <div className={styles.exhibitionActions}>
+                    <button type="button" onClick={() => selectPlace(place.id)}>Show on map</button>
+                    <a href={event.sourceUrl} target="_blank" rel="noreferrer">Official details <ExternalLink size={13} /></a>
+                    {event.calendar && <a href={googleCalendarUrl(event, place)!} target="_blank" rel="noreferrer">Add to Google Calendar <ExternalLink size={13} /></a>}
+                  </div>
+                </article>
+              ))}
+              {filteredExhibitions.length === 0 && <p>No exhibitions match these filters. Try another search or clear your filters.</p>}
+            </section>
+          )}
+          {category !== "art-exhibitions" && filteredPlaces.map((place) => {
             const meta = categoryFor(place);
             const isFavourite = favourites.has(place.id);
             const distance = userLocation ? haversineKm(userLocation, place.coordinates) : null;
@@ -1491,12 +1526,14 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                       <p className={styles.eventDate}>{event.dateLabel}</p>
                       <h4>{event.title}</h4>
                       <p>{event.description}</p>
+                      {event.visitNote && <p className={styles.exhibitionNote}>{event.visitNote}</p>}
                       <div className={styles.eventLinks}>
                         {event.bookingUrl && (
                           <a href={event.bookingUrl} target="_blank" rel="noreferrer">
-                            Book <ExternalLink size={13} aria-hidden="true" />
+                            Tickets &amp; info <ExternalLink size={13} aria-hidden="true" />
                           </a>
                         )}
+                        {event.calendar && <a href={googleCalendarUrl(event, selectedPlace)!} target="_blank" rel="noreferrer">Add to Google Calendar <ExternalLink size={13} aria-hidden="true" /></a>}
                         {(!event.bookingUrl || event.sourceUrl !== event.bookingUrl) && (
                           <a href={event.sourceUrl} target="_blank" rel="noreferrer">
                             Details <ExternalLink size={13} aria-hidden="true" />
