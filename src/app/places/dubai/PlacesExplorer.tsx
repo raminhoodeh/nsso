@@ -426,11 +426,13 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     const bounds = new google.maps.LatLngBounds();
     filteredPlaces.forEach((place) => bounds.extend(place.coordinates));
     const isMobile = window.matchMedia("(max-width: 900px)").matches;
-    if (isMobile) {
+    {
       const northEast = bounds.getNorthEast();
       const southWest = bounds.getSouthWest();
       const mapRect = map.getDiv().getBoundingClientRect();
-      const availableWidth = Math.max(1, mapRect.width - 84);
+      const leftPadding = isMobile ? 42 : Math.min(500, mapRect.width * 0.4);
+      const rightPadding = isMobile ? 42 : 80;
+      const availableWidth = Math.max(1, mapRect.width - leftPadding - rightPadding);
       const availableHeight = Math.max(1, mapRect.height - 196);
       const latitudeRadians = (latitude: number) => {
         const sine = Math.sin((latitude * Math.PI) / 180);
@@ -456,10 +458,13 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           )),
         ),
       );
-      map.moveCamera({ center: bounds.getCenter(), zoom: fittedZoom });
+      // Set centre and zoom atomically. Initial raster fitBounds animation can
+      // retain the old UAE centre while applying the tighter exhibition zoom.
+      const center = bounds.getCenter();
+      const longitudeOffset = ((leftPadding - rightPadding) / 2) * 360 / (256 * 2 ** fittedZoom);
+      map.moveCamera({ center: { lat: center.lat(), lng: center.lng() - longitudeOffset }, zoom: fittedZoom });
       return;
     }
-    map.fitBounds(bounds, { top: 100, right: 80, bottom: 100, left: 80 });
   }, [filteredPlaces, map]);
 
   const fitPinsOnMap = useCallback(() => {

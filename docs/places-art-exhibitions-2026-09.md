@@ -24,3 +24,5 @@ Expired, cancelled, sold-out and verification-expired events are omitted at runt
 ## Verification
 
 `node --test tests/places-exhibitions.test.mjs`, scoped ESLint, TypeScript check, production build, desktop/mobile browser checks, and live route/calendar checks.
+
+The initial raster map fit could apply a tighter zoom while retaining an old centre, leaving exhibition pins offscreen. Framing now sets centre and zoom together and reserves desktop sidebar space. Browser checks assert all four venue markers are inside the viewport before testing event cards, search, selection and dismissal at 1440px and 390px widths.

@@ -8,6 +8,13 @@ const curation = JSON.parse(fs.readFileSync(new URL("../src/data/dubai-date-cura
 const now = Date.parse("2026-09-23T18:00:00+04:00");
 const entries = exhibitionEntries(payload.places, now);
 
+test("initial exhibition framing sets centre and zoom together, allowing for the sidebar", () => {
+  const explorer=fs.readFileSync(new URL("../src/app/places/dubai/PlacesExplorer.tsx",import.meta.url),"utf8");
+  assert.ok(!explorer.includes("map.fitBounds("));
+  assert.match(explorer,/map\.moveCamera\(\{ center: \{ lat: center\.lat\(\), lng: center\.lng\(\) - longitudeOffset \}, zoom: fittedZoom \}\)/);
+  assert.match(explorer,/mapRect\.width - leftPadding - rightPadding/);
+});
+
 test("all five carousel events are distinct and chronological at four venues", () => {
   assert.deepEqual(entries.map(({event})=>event.id), ["dubai-design-week-2026", "downtown-design-dubai-2026", "art-connects-women-2026", "world-art-dubai-2026", "quoz-arts-fest-2027"]);
   assert.equal(new Set(entries.map(({place})=>place.id)).size, 4);
