@@ -2,6 +2,20 @@
   "version": 1,
   "places": [
     {
+      "id": "ashjar-cafe-ras-al-khaimah",
+      "name": "Ashjar Cafe",
+      "aliases": ["Ashjar Café", "Ashjar Cafe RAK", "أشجار كافيه"],
+      "description": "A coffee-and-dessert stop in Al Digdaga, Ras Al Khaimah, featured in the shared 'coffee with deer' reel. An idea for a café date on a RAK outing; deer sightings are not guaranteed, so check with the café before travelling specifically for that.",
+      "sourceUrls": ["https://www.instagram.com/ashjar.cafe/"],
+      "locationHint": "9 26B Street, Al Digdaga, Ras Al Khaimah, UAE",
+      "placeId": "ChIJYU0HLgDZ9T4Rg-5mKO9HqzA",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink"]
+      }
+    },
+    {
       "id": "earth-roastery",
       "name": "EARTH ROASTERY",
       "aliases": ["Earth Roastery", "Earth Roastery UAE"],

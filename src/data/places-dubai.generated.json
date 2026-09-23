@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 67,
+    "curatedRecordCount": 68,
     "eventCount": 21,
-    "placeCount": 146,
-    "generatedAt": "2026-09-23T14:48:11.714Z",
+    "placeCount": 147,
+    "generatedAt": "2026-09-23T15:03:27.000Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -6518,6 +6518,55 @@
         "businessStatus": null
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Ghadf%20Garden%2C%20Ras%20Al%20Khaimah%2C%20UAE"
+    },
+    {
+      "id": "ashjar-cafe-ras-al-khaimah",
+      "name": "Ashjar Cafe",
+      "aliases": [
+        "Ashjar Café",
+        "Ashjar Cafe RAK",
+        "أشجار كافيه"
+      ],
+      "description": "A coffee-and-dessert stop in Al Digdaga, Ras Al Khaimah, featured in the shared 'coffee with deer' reel. An idea for a café date on a RAK outing; deer sightings are not guaranteed, so check with the café before travelling specifically for that.",
+      "sourceUrls": [
+        "https://www.instagram.com/ashjar.cafe/"
+      ],
+      "sourceRows": [],
+      "locationHint": "9 26B Street, Al Digdaga, Ras Al Khaimah, UAE",
+      "emirate": "Ras Al Khaimah",
+      "address": "9 26B Street - Al Digdaga - Ras Al Khaimah - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.6884091,
+        "lng": 55.9666946
+      },
+      "placeId": "ChIJYU0HLgDZ9T4Rg-5mKO9HqzA",
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-23T15:03:27.000Z",
+        "osm": null,
+        "matchedName": "أشجار كافيه Ashjar cafe",
+        "websiteUri": "https://www.instagram.com/ashjar.cafe/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Ashjar%20Cafe%2C%20Ras%20Al%20Khaimah&query_place_id=ChIJYU0HLgDZ9T4Rg-5mKO9HqzA"
     },
     {
       "id": "jebel-jais",
