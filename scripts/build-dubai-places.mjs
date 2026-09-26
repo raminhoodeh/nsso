@@ -42,6 +42,7 @@ const ALIAS_OVERRIDES = {
   "la-maison-laggar": ["La Maison x Laggar"],
   "kefi-books-board-games-cafe": ["Kefi Dubai", "Kefi Books, Boardgames and Specialty Coffee"],
   "seoul-spot": ["Seoul Spot Dubai"],
+  "seva-experience": ["SEVA", "SEVA Table", "Seva Cafe", "Seva Garden"],
 };
 
 const QUERY_OVERRIDES = {
@@ -105,6 +106,10 @@ const RESOLUTION_OVERRIDES = {
 };
 
 const SOURCE_URL_OVERRIDES = {
+  "seva-experience": [
+    "https://www.sevaexperience.com/cafe",
+    "https://www.instagram.com/p/DdrDeFmjWOA/",
+  ],
   "la-maison-laggar": [
     "https://www.instagram.com/p/DbYd1GPMeqo/",
     "https://laggar.ae/pages/stocklist",

@@ -2,6 +2,76 @@
   "version": 1,
   "places": [
     {
+      "id": "artisan-bakers-jumeirah",
+      "name": "Artisan Bakers — Jumeirah",
+      "aliases": ["Artisan Bakers", "Artisan Bakers Umm Suqeim", "Artisan Bakers Jumeirah"],
+      "description": "A bakery and café paired with Plaza Hollandi's floral garden on the Jumeirah coast. Come for artisan breads, pastries and coffee among hanging plants and greenery; this is the Umm Suqeim branch featured in the greenery-and-daylight café carousel.",
+      "sourceUrls": [
+        "https://linktr.ee/artisanbakers.ae",
+        "https://plazahollandi.ae/locations/jumeirah/",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "3 Umm Suqeim Street, Umm Suqeim 3, Jumeirah, Dubai, UAE",
+      "placeId": "ChIJMRHoSVNqXz4Rqnbr28NiHpE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink"]
+      }
+    },
+    {
+      "id": "oath-cafe-jumeirah",
+      "name": "Oath Cafe — Jumeirah",
+      "aliases": ["Oath", "Oath Cafe", "Oath Café", "Oath at Wud Flowers"],
+      "description": "A specialty-coffee café at WUD Flowers on Al Wasl Road, with a leafy garden, outdoor seating and a light-filled villa setting. A relaxed coffee or matcha date surrounded by plants and flowers.",
+      "sourceUrls": [
+        "https://www.instagram.com/oath.ae/",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "WUD Flowers & Events, 342 Al Wasl Road, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJuTVLBwBDXz4R7Na6NxH4wL0",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink"]
+      }
+    },
+    {
+      "id": "the-barn-al-khazzan-park",
+      "name": "The Barn — Al Khazzan Park",
+      "aliases": ["The Barn", "The Barn Dubai", "THE BARN Coffee Roasters Dubai", "The Barn Satwa"],
+      "description": "Berlin's specialty-coffee roaster in a Japanese-inspired bungalow in Al Khazzan Park, Al Satwa. Coffee and cake with outdoor seating beneath mature trees make this an easy greenery-filled café date near City Walk and Downtown Dubai.",
+      "sourceUrls": [
+        "https://www.thebarn.pro/pages/locations/the-barn-dubai",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "Al Khazzan Park, Al Safa Street / 89th Street, Al Satwa, Dubai, UAE",
+      "placeId": "ChIJ12D64s9DXz4RSVJd_4qB1X4",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink"]
+      }
+    },
+    {
+      "id": "the-farm-al-barari",
+      "name": "The Farm — Al Barari",
+      "aliases": ["The Farm", "The Farm Restaurant", "The Farm Restaurant Al Barari", "The Farm Dubai"],
+      "description": "A garden restaurant in Al Barari surrounded by botanical greenery, waterways and ponds. A leafy setting for a breakfast, lunch or dinner date, with an internationally inspired menu and outdoor seating overlooking the water.",
+      "sourceUrls": [
+        "https://www.thefarmdubai.ae/",
+        "https://www.albarari.com/dining",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "The Farm Restaurant, Al Barari, Wadi Al Safa 3, Dubai, UAE",
+      "placeId": "ChIJ5eRM1GNvXz4RbTaTNuyR1pA",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": ["food-drink"]
+      }
+    },
+    {
       "id": "ashjar-cafe-ras-al-khaimah",
       "name": "Ashjar Cafe",
       "aliases": ["Ashjar Café", "Ashjar Cafe RAK", "أشجار كافيه"],

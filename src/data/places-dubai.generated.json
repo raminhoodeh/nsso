@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 68,
+    "curatedRecordCount": 72,
     "eventCount": 21,
-    "placeCount": 147,
-    "generatedAt": "2026-09-23T15:03:27.000Z",
+    "placeCount": 151,
+    "generatedAt": "2026-09-26T07:58:48.134Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -820,6 +820,66 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Arte%20Museum%20Dubai%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "artisan-bakers-jumeirah",
+      "name": "Artisan Bakers — Jumeirah",
+      "aliases": [
+        "Artisan Bakers",
+        "Artisan Bakers Umm Suqeim",
+        "Artisan Bakers Jumeirah"
+      ],
+      "description": "A bakery and café paired with Plaza Hollandi's floral garden on the Jumeirah coast. Come for artisan breads, pastries and coffee among hanging plants and greenery; this is the Umm Suqeim branch featured in the greenery-and-daylight café carousel.",
+      "sourceUrls": [
+        "https://linktr.ee/artisanbakers.ae",
+        "https://plazahollandi.ae/locations/jumeirah/",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "3 Umm Suqeim Street, Umm Suqeim 3, Jumeirah, Dubai, UAE",
+      "placeId": "ChIJMRHoSVNqXz4Rqnbr28NiHpE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "3 Umm Suqeim St - Umm Suqeim Third - Umm Suqeim 3 - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.145198,
+        "lng": 55.1955378
+      },
+      "googleTypes": [
+        "cake_shop",
+        "chocolate_shop",
+        "candy_store",
+        "coffee_shop",
+        "cafe",
+        "bakery",
+        "dessert_shop",
+        "confectionery",
+        "food_store",
+        "manufacturer",
+        "store",
+        "wholesaler",
+        "service",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cake_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-26T07:57:02.807Z",
+        "osm": null,
+        "matchedName": "Artisan Bakers - Umm Suqeim",
+        "websiteUri": "https://artisanbakers.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Artisan+Bakers+%E2%80%94+Jumeirah%2C+Dubai&query_place_id=ChIJMRHoSVNqXz4Rqnbr28NiHpE"
     },
     {
       "id": "at-mosphere",
@@ -4063,6 +4123,57 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Museum%20of%20the%20Future%2C%20Sheikh%20Zayed%20Road%2C%20Trade%20Centre%202%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "oath-cafe-jumeirah",
+      "name": "Oath Cafe — Jumeirah",
+      "aliases": [
+        "Oath",
+        "Oath Cafe",
+        "Oath Café",
+        "Oath at Wud Flowers"
+      ],
+      "description": "A specialty-coffee café at WUD Flowers on Al Wasl Road, with a leafy garden, outdoor seating and a light-filled villa setting. A relaxed coffee or matcha date surrounded by plants and flowers.",
+      "sourceUrls": [
+        "https://www.instagram.com/oath.ae/",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "WUD Flowers & Events, 342 Al Wasl Road, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJuTVLBwBDXz4R7Na6NxH4wL0",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "342 Al Wasl Rd - Jumeirah 1 - Jumeirah - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2152826,
+        "lng": 55.258941699999994
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-26T07:57:02.819Z",
+        "osm": null,
+        "matchedName": "Oath Cafe",
+        "websiteUri": "https://www.instagram.com/oath.ae",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Oath+Cafe+%E2%80%94+Jumeirah%2C+Dubai&query_place_id=ChIJuTVLBwBDXz4R7Na6NxH4wL0"
+    },
+    {
       "id": "ona",
       "name": "ONA",
       "aliases": [],
@@ -4924,10 +5035,17 @@
     {
       "id": "seva-experience",
       "name": "Seva Experience",
-      "aliases": [],
+      "aliases": [
+        "SEVA",
+        "SEVA Table",
+        "Seva Cafe",
+        "Seva Garden"
+      ],
       "description": "Seva Experience is the Middle East's leading holistic wellness center, offering a diverse range of yoga, meditation, sound healing, and other wellness classes, workshops, and private treatments. It also features Seva Table, the region's first 100% plant-based, gluten-free, and cane sugar-free cafe. This sanctuary in Dubai is dedicated to fostering personal growth and a conscious lifestyle through its community-focused offerings.",
       "sourceUrls": [
-        "https://www.sevaexperience.com/"
+        "https://www.sevaexperience.com/",
+        "https://www.sevaexperience.com/cafe",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
       ],
       "sourceRows": [
         53
@@ -5338,6 +5456,54 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The%20Agenda%2C%20Dubai%20Media%20City%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "the-barn-al-khazzan-park",
+      "name": "The Barn — Al Khazzan Park",
+      "aliases": [
+        "The Barn",
+        "The Barn Dubai",
+        "THE BARN Coffee Roasters Dubai",
+        "The Barn Satwa"
+      ],
+      "description": "Berlin's specialty-coffee roaster in a Japanese-inspired bungalow in Al Khazzan Park, Al Satwa. Coffee and cake with outdoor seating beneath mature trees make this an easy greenery-filled café date near City Walk and Downtown Dubai.",
+      "sourceUrls": [
+        "https://www.thebarn.pro/pages/locations/the-barn-dubai",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "Al Khazzan Park, Al Safa Street / 89th Street, Al Satwa, Dubai, UAE",
+      "placeId": "ChIJ12D64s9DXz4RSVJd_4qB1X4",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Khazan Park - 89th St - Al Satwa - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.209067899999997,
+        "lng": 55.2647334
+      },
+      "googleTypes": [
+        "cafe",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-26T07:57:02.824Z",
+        "osm": null,
+        "matchedName": "THE BARN Coffee Roasters Dubai",
+        "websiteUri": "http://www.thebarn.de/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The+Barn+%E2%80%94+Al+Khazzan+Park%2C+Dubai&query_place_id=ChIJ12D64s9DXz4RSVJd_4qB1X4"
+    },
+    {
       "id": "the-courtyard-playhouse",
       "name": "The Courtyard Playhouse",
       "aliases": [],
@@ -5459,6 +5625,66 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The%20Courtyard%20Playhouse%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "the-farm-al-barari",
+      "name": "The Farm — Al Barari",
+      "aliases": [
+        "The Farm",
+        "The Farm Restaurant",
+        "The Farm Restaurant Al Barari",
+        "The Farm Dubai"
+      ],
+      "description": "A garden restaurant in Al Barari surrounded by botanical greenery, waterways and ponds. A leafy setting for a breakfast, lunch or dinner date, with an internationally inspired menu and outdoor seating overlooking the water.",
+      "sourceUrls": [
+        "https://www.thefarmdubai.ae/",
+        "https://www.albarari.com/dining",
+        "https://www.instagram.com/p/DdrDeFmjWOA/"
+      ],
+      "locationHint": "The Farm Restaurant, Al Barari, Wadi Al Safa 3, Dubai, UAE",
+      "placeId": "ChIJ5eRM1GNvXz4RbTaTNuyR1pA",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Wadi Al Safa 3 - Al Barari - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.094472,
+        "lng": 55.310579
+      },
+      "googleTypes": [
+        "restaurant",
+        "pizza_restaurant",
+        "dessert_restaurant",
+        "coffee_shop",
+        "tea_house",
+        "thai_restaurant",
+        "cafe",
+        "wedding_venue",
+        "event_venue",
+        "food_store",
+        "store",
+        "service",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-26T07:57:03.489Z",
+        "osm": null,
+        "matchedName": "The Farm Restaurant, Al Barari",
+        "websiteUri": "http://www.thefarmdubai.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The+Farm+%E2%80%94+Al+Barari%2C+Dubai&query_place_id=ChIJ5eRM1GNvXz4RbTaTNuyR1pA"
     },
     {
       "id": "the-jury-experience-the-deadly-boat-ride",
