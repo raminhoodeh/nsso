@@ -2,6 +2,24 @@
   "version": 1,
   "places": [
     {
+      "id": "al-quaa-milky-way-spot",
+      "name": "Al Quaa Milky Way Spot",
+      "aliases": ["Al Quaa", "Al Qua'a", "Al Qua’a", "Al Qoua", "Al Quaa Desert", "Razeen Milky Way Spot", "Abu Dhabi Stargazing"],
+      "description": "A remote desert stargazing and astrophotography spot in Abu Dhabi's Razeen area, away from the city lights. Plan for a clear, moonless night; the Milky Way appears much fainter to the naked eye than in long-exposure photos. Arrive before dark, bring water and an offline map, and follow permitted access tracks. Do not drive onto soft sand without suitable off-road experience and equipment. Check current access and weather before travelling.",
+      "sourceUrls": [
+        "https://www.google.com/maps/search/?api=1&query=Al+Quaa+Milky+Way+Spot&query_place_id=ChIJIVnqB_z3YD4RdA-_0oMYJRw",
+        "https://dubaiastronomy.com/contact-us/",
+        "https://www.thenationalnews.com/lifestyle/travel/al-quaa-the-secluded-abu-dhabi-spot-that-offers-out-of-this-world-views-of-the-milky-way-1.1129033"
+      ],
+      "locationHint": "Al Quaa Milky Way Spot, Razeen desert, Al Sout, Abu Dhabi, UAE",
+      "placeId": "ChIJIVnqB_z3YD4RdA-_0oMYJRw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": ["nature-wildlife"]
+      }
+    },
+    {
       "id": "artisan-bakers-jumeirah",
       "name": "Artisan Bakers — Jumeirah",
       "aliases": ["Artisan Bakers", "Artisan Bakers Umm Suqeim", "Artisan Bakers Jumeirah"],

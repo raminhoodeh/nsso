@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 72,
+    "curatedRecordCount": 73,
     "eventCount": 21,
-    "placeCount": 151,
-    "generatedAt": "2026-09-26T07:58:48.134Z",
+    "placeCount": 152,
+    "generatedAt": "2026-09-26T08:10:55.047Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -55,6 +55,59 @@
         "businessStatus": null
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al%20Ain%20Oasis%2C%20Al%20Ain%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "al-quaa-milky-way-spot",
+      "name": "Al Quaa Milky Way Spot",
+      "aliases": [
+        "Al Quaa",
+        "Al Qua'a",
+        "Al Qua’a",
+        "Al Qoua",
+        "Al Quaa Desert",
+        "Razeen Milky Way Spot",
+        "Abu Dhabi Stargazing"
+      ],
+      "description": "A remote desert stargazing and astrophotography spot in Abu Dhabi's Razeen area, away from the city lights. Plan for a clear, moonless night; the Milky Way appears much fainter to the naked eye than in long-exposure photos. Arrive before dark, bring water and an offline map, and follow permitted access tracks. Do not drive onto soft sand without suitable off-road experience and equipment. Check current access and weather before travelling.",
+      "sourceUrls": [
+        "https://www.google.com/maps/search/?api=1&query=Al+Quaa+Milky+Way+Spot&query_place_id=ChIJIVnqB_z3YD4RdA-_0oMYJRw",
+        "https://dubaiastronomy.com/contact-us/",
+        "https://www.thenationalnews.com/lifestyle/travel/al-quaa-the-secluded-abu-dhabi-spot-that-offers-out-of-this-world-views-of-the-milky-way-1.1129033"
+      ],
+      "locationHint": "Al Quaa Milky Way Spot, Razeen desert, Al Sout, Abu Dhabi, UAE",
+      "placeId": "ChIJIVnqB_z3YD4RdA-_0oMYJRw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Abu Dhabi",
+      "address": "Unnamed Road - Al Sout - U37 - Abu Dhabi - United Arab Emirates",
+      "coordinates": {
+        "lat": 23.6054742,
+        "lng": 54.7504395
+      },
+      "googleTypes": [
+        "tourist_attraction",
+        "campground",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-26T08:09:59.215Z",
+        "osm": null,
+        "matchedName": "Al Quaa Milky way Spot",
+        "websiteUri": "https://www.milkywayabudhabi.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Al+Quaa+Milky+Way+Spot&query_place_id=ChIJIVnqB_z3YD4RdA-_0oMYJRw"
     },
     {
       "id": "dalma-island",
