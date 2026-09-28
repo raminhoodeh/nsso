@@ -1,4 +1,5 @@
 .shell {
+  --navigation-width: 368px;
   --paper: #f4f0e6;
   --paper-strong: #fbf8f0;
   --ink: #1d241f;
@@ -28,7 +29,7 @@
 
 .map {
   position: absolute;
-  inset: 0;
+  inset: 0 0 0 var(--navigation-width);
   overscroll-behavior: none;
   touch-action: none;
   background:
@@ -500,17 +501,18 @@
 
 .exhibitionsSection > header {
   padding: 7px 4px 16px;
-  color: #fff;
+  color: #364658;
 }
 
 .exhibitionsSection h2 {
   margin: 0 0 5px;
-  font: 26px Georgia, serif;
+  font-size: 21px;
+  font-weight: 650;
 }
 
 .exhibitionsSection > header p {
   margin: 0 0 7px;
-  color: #e1e9e7;
+  color: #6b7783;
   font-size: 12px;
   line-height: 1.5;
 }
@@ -519,7 +521,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: #ffdeef;
+  color: #865b8e;
   font-size: 12px;
   text-underline-offset: 3px;
 }
@@ -613,23 +615,25 @@
 
 .placeCard {
   --category-color: #6c746d;
-  --surface-fill: rgba(22, 43, 49, 0.88);
+  --surface-fill: transparent;
   position: relative;
   display: flex;
   min-height: 78px;
   margin-bottom: 6px;
   overflow: hidden;
-  border: 1px solid transparent;
+  border: 1px solid #e0e5eb;
   border-radius: 15px;
+  background: #fff;
+  color: #293b4d;
   transition: 150ms ease;
 }
 
 .placeCard:hover,
 .placeCardSelected {
-  --surface-fill: rgba(20, 40, 46, 0.96);
-  border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 8px 24px rgba(10, 15, 12, 0.18);
-  transform: translateY(-1px);
+  --surface-fill: transparent;
+  border-color: #bdd0e3;
+  background: #eef4fa;
+  box-shadow: none;
 }
 
 .placeCardSelected::before {
@@ -691,7 +695,7 @@
   gap: 5px;
   margin-bottom: 3px;
   overflow: hidden;
-  color: color-mix(in srgb, var(--category-color) 58%, white);
+  color: color-mix(in srgb, var(--category-color) 72%, #233344);
   font-size: 9px;
   font-weight: 750;
   letter-spacing: 0.075em;
@@ -703,7 +707,7 @@
 .placeCopy strong {
   display: block;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.95);
+  color: #293b4d;
   font-size: 14px;
   font-weight: 690;
   letter-spacing: -0.01em;
@@ -716,7 +720,7 @@
   display: block;
   margin-top: 3px;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.74);
+  color: #6c7884;
   font-size: 10.5px;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -730,7 +734,7 @@
   gap: 5px;
   margin-top: 6px;
   overflow: hidden;
-  color: #ffd09a;
+  color: #8b6436;
   font-size: 9.5px;
   line-height: 1.2;
   white-space: nowrap;
@@ -748,7 +752,7 @@
 .placeEvent > b {
   min-width: 0;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.82);
+  color: #687887;
   font-weight: 610;
   text-overflow: ellipsis;
 }
@@ -756,7 +760,7 @@
 .distance {
   align-self: start;
   margin-top: 18px;
-  color: rgba(255, 255, 255, 0.62);
+  color: #687887;
   font-size: 10px;
   font-weight: 650;
   white-space: nowrap;
@@ -765,21 +769,21 @@
 .heartButton {
   position: absolute;
   top: 12px;
-  right: 12px;
+  right: 5px;
   display: grid;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   place-items: center;
   border: 0;
   border-radius: 9px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.68);
+  color: #8091a2;
   cursor: pointer;
 }
 
 .heartButton:hover,
 .heartButtonActive {
-  color: #ffd1ce;
+  color: #aa4c69;
 }
 
 .emptyState {
@@ -788,19 +792,20 @@
   place-items: center;
   align-content: center;
   gap: 9px;
-  color: rgba(255, 255, 255, 0.64);
+  color: #687887;
   text-align: center;
 }
 
 .emptyState strong {
-  color: rgba(255, 255, 255, 0.9);
+  color: #364c60;
   font-size: 14px;
 }
 
 .emptyState button {
   border: 0;
   background: transparent;
-  color: rgba(255, 211, 184, 0.9);
+  color: #326aa4;
+  min-height: 44px;
   cursor: pointer;
   font: inherit;
   font-size: 12px;
@@ -813,7 +818,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 9px 5px;
-  color: rgba(255, 255, 255, 0.68);
+  color: #687887;
   font-size: 9px;
   line-height: 1.4;
 }
@@ -852,8 +857,7 @@
 
 .mapError::before,
 .rail::before,
-.detailCard::before,
-.placeCard::after {
+.detailCard::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1739,6 +1743,7 @@
 }
 
 @media (max-width: 900px) {
+  .map { left: 0; }
   .shell {
     height: 100dvh;
     min-height: 100dvh;
@@ -2035,7 +2040,7 @@
   }
 
   .placeCard {
-    --surface-fill: rgba(22, 43, 49, 0.94);
+    --surface-fill: transparent;
   }
 
   .placeCardEvent {
@@ -2044,7 +2049,7 @@
 
   .placeCard:hover,
   .placeCardSelected {
-    --surface-fill: rgba(20, 40, 46, 0.98);
+    --surface-fill: transparent;
   }
 
   .detailHero { height: min(28dvh, 250px); }
