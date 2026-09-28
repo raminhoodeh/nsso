@@ -37,7 +37,7 @@ test("mobile drawer has isolation, focus containment, dismissal and reduced moti
   assert.match(navigation, /aria-label="Dismiss navigation"/);
   assert.match(navigationCss, /translateX\(-100%\)/);
   assert.match(navigationCss, /prefers-reduced-motion: reduce/);
-  assert.match(explorer, /inert=\{galleryOpen \|\| \(isCompact && mobilePanelOpen\)\}/);
+  assert.match(explorer, /inert=\{galleryOpen \|\| \(isCompact && \(mobilePanelOpen \|\| deityOpen\)\)\}/);
   assert.match(explorer, /if \(!media\.matches\) setMobilePanelOpen\(false\)/);
   assert.match(explorer, /marker\.node\.tabIndex = media\.matches \? -1 : 0/);
 });

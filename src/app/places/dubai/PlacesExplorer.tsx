@@ -39,6 +39,7 @@ import styles from "./places.module.css";
 import PlacesNavigation from "./PlacesNavigation";
 import EventsAgenda from "./EventsAgenda";
 import PlaceVisitGuide from "./PlaceVisitGuide";
+import PlacesDeity from "./PlacesDeity";
 
 type CategoryMeta = {
   label: string;
@@ -267,6 +268,30 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [failedPhotoUrls, setFailedPhotoUrls] = useState<Set<string>>(new Set());
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [navigationMinimized, setNavigationMinimized] = useState(false);
+  const [deityOpen, setDeityOpen] = useState(false);
+
+  useEffect(() => {
+    try { setNavigationMinimized(localStorage.getItem("nsso-places-menu-minimized") === "true"); } catch { /* Storage is optional. */ }
+  }, []);
+  const changeNavigationMinimized = (value: boolean) => {
+    setNavigationMinimized(value);
+    try { localStorage.setItem("nsso-places-menu-minimized", String(value)); } catch { /* Keep the in-memory preference. */ }
+  };
+  const changeDeityOpen = useCallback((value: boolean) => {
+    setDeityOpen(value);
+    if (value) setMobilePanelOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!map) return;
+    const frame = window.requestAnimationFrame(() => {
+      const center = map.getCenter();
+      google.maps.event.trigger(map, "resize");
+      if (center) map.setCenter(center);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [map, navigationMinimized, isCompact]);
 
   useTahoeModalAccessibility({
     open: galleryOpen,
@@ -382,6 +407,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   }, [activeEventsByPlace, windowedEventsByPlace, availablePlaces, experienceId, subcategoryId, selectedDatePlan, emirate, favourites, favouritesOnly, userLocation]);
 
   const openMobilePanel = useCallback(() => {
+    setDeityOpen(false);
     setSelectedId(null);
     setMobilePanelOpen(true);
   }, []);
@@ -399,6 +425,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   }, []);
 
   const selectPlace = useCallback((placeId: string) => {
+    setDeityOpen(false);
     setMobilePanelOpen(false);
     setSelectedId(placeId);
   }, []);
@@ -756,7 +783,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   };
 
   useEffect(() => {
-    if (!selectedPlace) return;
+    if (!selectedPlace || deityOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
       if (
@@ -781,12 +808,13 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [closeSelectedPlace, galleryOpen, movePhoto, photos.length, selectedPlace]);
+  }, [closeSelectedPlace, deityOpen, galleryOpen, movePhoto, photos.length, selectedPlace]);
 
   useEffect(() => {
-    if (!selectedPlace || !window.matchMedia("(max-width: 900px)").matches) return;
-    window.requestAnimationFrame(() => detailCloseRef.current?.focus());
-  }, [selectedPlace]);
+    if (!selectedPlace || deityOpen || !window.matchMedia("(max-width: 900px)").matches) return;
+    const frame = window.requestAnimationFrame(() => detailCloseRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedPlace, deityOpen]);
 
   const toggleFavourite = useCallback((placeId: string) => {
     setFavourites((current) => {
@@ -883,15 +911,15 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   };
 
   return (
-    <main className={styles.shell}>
+    <main className={styles.shell} style={{ "--navigation-width": navigationMinimized && !isCompact ? "72px" : "460px" } as React.CSSProperties}>
       <TahoeGlassProvider
         scene={(
           <div
             ref={mapElementRef}
             className={styles.map}
             aria-label="Map of places to go in the UAE"
-            aria-hidden={galleryOpen || (isCompact && mobilePanelOpen)}
-            inert={galleryOpen || (isCompact && mobilePanelOpen)}
+            aria-hidden={galleryOpen || (isCompact && (mobilePanelOpen || deityOpen))}
+            inert={galleryOpen || (isCompact && (mobilePanelOpen || deityOpen))}
           />
         )}
         sourceLabel="places-map"
@@ -902,7 +930,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         className={styles.explorerSurface}
         contentClassName={styles.explorerSurface}
       >
-      <div className={styles.explorerContent} inert={galleryOpen} aria-hidden={galleryOpen}>
+      <div className={styles.explorerContent} inert={galleryOpen || (isCompact && deityOpen)} aria-hidden={galleryOpen || (isCompact && deityOpen)}>
         {mapError && (
           <TahoeGlassSurface
             variant="popover"
@@ -920,6 +948,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         )}
 
         <PlacesNavigation
+          minimized={navigationMinimized}
+          onMinimizedChange={changeNavigationMinimized}
+          onAskDeity={() => changeDeityOpen(true)}
           compact={isCompact}
           open={mobilePanelOpen}
           experienceId={experienceId}
@@ -1047,7 +1078,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         </div>
         </PlacesNavigation>
 
-        {!selectedPlace && !mobilePanelOpen && (
+        {!selectedPlace && !mobilePanelOpen && !deityOpen && (
           <>
           {locationMessage && (
             <div className={styles.mobileLocationStatus} role="status" aria-live="polite">
@@ -1107,7 +1138,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           </>
         )}
 
-        {selectedPlace && (
+        {selectedPlace && !deityOpen && (
           <TahoeGlassSurface
             ref={detailPanelRef}
             as="aside"
@@ -1597,6 +1628,23 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       )}
       <ToastViewport />
       </TahoeGlassProvider>
+      <PlacesDeity
+        open={deityOpen}
+        compact={isCompact}
+        launcherHidden={galleryOpen || (isCompact && mobilePanelOpen)}
+        places={availablePlaces}
+        selectedPlaceId={selectedId}
+        filteredPlaceIds={filteredPlaces.map(place => place.id)}
+        savedPlaceIds={[...favourites]}
+        contextLabel={selectedPlace ? selectedPlace.name : `${resultLabel}${emirate === "all" ? " across the UAE" : ` in ${emirate}`}`}
+        onOpenChange={changeDeityOpen}
+        onSelectPlace={id => {
+          // Recommendations can go beyond the active category; reveal the pin
+          // before selecting it so the map and detail panel always agree.
+          clearFilters();
+          selectPlace(id);
+        }}
+      />
     </main>
   );
 }
