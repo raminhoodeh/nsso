@@ -249,7 +249,6 @@ test("offline regeneration preserves all six seasonal identities, statuses and e
       resolutionSource: place.resolution.source, resolutionStatus: place.resolution.status,
       fetchedAt: place.resolution.matchedAt, matchedName: place.resolution.matchedName,
       websiteUri: place.resolution.websiteUri, businessStatus: place.resolution.businessStatus,
-      googleMapsSearchUri: place.googleMapsSearchUri,
     }]));
     fs.writeFileSync(path.join(dir, ".places-geocode-cache.json"), JSON.stringify(cache));
     fs.writeFileSync(path.join(dir, "no-network.mjs"), "globalThis.fetch = () => { throw new Error('Unexpected network call'); };\n");
@@ -268,7 +267,13 @@ test("offline regeneration preserves all six seasonal identities, statuses and e
       assert.deepEqual(place.coordinates, places.get(entry.id).coordinates, entry.id);
       assert.equal(place.emirate, places.get(entry.id).emirate, entry.id);
       assert.equal(place.resolution.businessStatus, places.get(entry.id).resolution.businessStatus, entry.id);
-      assert.equal(place.googleMapsSearchUri, places.get(entry.id).googleMapsSearchUri, entry.id);
+      const destination = new URL(place.googleMapsSearchUri);
+      if (entry.placeId) {
+        assert.equal(destination.searchParams.get("query_place_id"), entry.placeId, entry.id);
+      } else {
+        assert.equal(destination.searchParams.get("query"), "24.8393125,55.3570625", entry.id);
+        assert.equal(destination.searchParams.has("query_place_id"), false, entry.id);
+      }
       assert.ok(matchesExperience(place, [], "eat-drink", "cafes"), entry.id);
     }
     const rebuiltUncommon = rebuilt.places.find(place => place.id === uncommonId);
