@@ -8,17 +8,32 @@ read-only context instead of the account assistant's profile tools.
 
 - The desktop navigation is pinned at 460px and minimizes to a 72px icon rail.
   The width preference is saved locally; filters and disclosure state survive
-  minimizing. Mobile uses the existing dismissible drawer.
+  minimizing. Mobile uses a map-first layout with one Explore / Saved / Deity
+  bottom bar. Explore and Saved open resizable bottom sheets; category choices
+  stay open until the visitor taps Show places on map. Area and date controls
+  are tucked into a disclosure rather than crowding the map.
 - Deity knows the selected place, current filtered IDs and locally saved IDs.
   The server validates those IDs and supplies the complete public catalog,
   researched visit guides, curated date ideas and currently verified events.
 - Recommendation and itinerary cards resolve to canonical map records. Selecting
-  one reveals its pin and detail panel, clearing filters that could hide it.
+  one reveals its pin and detail panel without clearing the visitor's filters.
+  A recommended place outside the collection gets an additional selected pin.
 - Chat can be minimized/closed and resumed without losing messages or draft.
   Conversation state lives in component memory, not browser storage or a profile.
   Messages and context are sent to the server/model when the user asks a question.
 - Mobile chat is a focus-contained dialog, with an isolated background, safe-area
   padding, 44px controls and Visual Viewport sizing for the software keyboard.
+  A single Map button returns to an interactive preview; recommended place
+  previews include Back to conversation. Itinerary stops keep their canonical
+  event dates visible while longer descriptions are expandable.
+- Mobile place sheets start with a compact preview and persistent Directions / Save
+  actions. Photos, visit guides and events are available on expansion. Full sheets
+  isolate the map and contain focus; smaller sheets leave the map interactive.
+  Only the sheet handle resizes the panel, so scrolling content does not drag it.
+- Mobile pins cluster by screen-space proximity, keeping the selected place
+  separate. Cluster taps zoom into the group. Photos are requested at a smaller
+  mobile size only after a place is selected; desktop marker and sidebar behavior
+  stays unchanged.
 
 ## Backend and configuration
 
@@ -54,6 +69,7 @@ npm run build
 
 Backend tests use a deterministic fake provider, never live API calls. Before
 release, separately verify a real provider response and desktop/mobile browser
-flows: menu minimize/reopen, saved filters, chat context, linked itinerary stops,
+flows: menu minimize/reopen, sheet resizing on narrow and landscape screens,
+map clusters, saved filters, chat context, linked itinerary stops,
 error/retry/cancel, Escape/focus and mobile keyboard-height layout. Global Deity
 and film-page UI are intentionally unchanged.

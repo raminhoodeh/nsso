@@ -33,7 +33,8 @@ const researchEvents = [
 
 test("initial exhibition framing sets centre and zoom together, allowing for the sidebar", () => {
   const explorer=fs.readFileSync(new URL("../src/app/places/dubai/PlacesExplorer.tsx",import.meta.url),"utf8");
-  assert.ok(!explorer.includes("map.fitBounds("));
+  const initialFit = explorer.slice(explorer.indexOf("const fitVisiblePlaces"), explorer.indexOf("const fitPinsOnMap"));
+  assert.ok(!initialFit.includes("map.fitBounds("), "only user-initiated cluster zoom may use fitBounds");
   assert.match(explorer,/map\.moveCamera\(\{ center: \{ lat: center\.lat\(\), lng: center\.lng\(\) - longitudeOffset \}, zoom: fittedZoom \}\)/);
   assert.match(explorer,/mapRect\.width - leftPadding - rightPadding/);
 });

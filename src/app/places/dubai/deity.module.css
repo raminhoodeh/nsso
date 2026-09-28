@@ -9,6 +9,7 @@
 .brand img { width: 72px; height: 30px; object-fit: contain; }
 .brand span { color: #b7c3ce; font-size: 10px; }
 .header button { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; color: #d9e4eb; background: #222c37; border: 1px solid #3b4957; border-radius: 50%; cursor: pointer; }
+.header .backToMap { display: inline-flex; justify-content: center; gap: 6px; width: auto; min-width: 44px; min-height: 44px; padding: 0 11px; border-radius: 14px; font: inherit; font-size: 13px; }
 .context { padding: 11px 18px; flex-shrink: 0; font-size: 11px; color: #dce6eb; background: #15242d; line-height: 1.5; }
 .context > span:last-child { display: block; color: #a7c0ce; margin-left: 14px; }
 .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #8acbc4; margin-right: 8px; }
@@ -32,6 +33,22 @@
 .mapLink { display: flex; align-items: center; gap: 3px; margin-top: 9px; color: #9bd2df; font-size: 11px; font-weight: 650; }
 .time { display: block; color: #a9d0dc; font-size: 10px; margin-bottom: 5px; }
 .event { display: block; margin-top: 8px; color: #e7c88d; font-size: 11px; line-height: 1.6; }
+.compactStop { margin-top: 10px; overflow: hidden; border: 1px solid #34434f; border-radius: 15px; background: #1b2631; }
+.stopMapButton { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 44px; padding: 12px; border: 0; background: #1b2631; color: #f1f5f7; text-align: left; font: inherit; cursor: pointer; }
+.stopTitle { min-width: 0; }
+.stopTitle strong { display: block; font-size: 14px; line-height: 1.45; }
+.stopTitle small { display: block; margin-top: 3px; color: #aabdc9; font-size: 11px; line-height: 1.4; }
+.stopTitle .time { line-height: 1.5; }
+.stopTitle .mapLink { margin-top: 6px; }
+.stopEvent { display: block; padding: 0 12px 11px 49px; color: #e7c88d; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.stopDetails { border-top: 1px solid #34434f; }
+.stopDetails summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 8px 12px; box-sizing: border-box; color: #a9c3d0; font-size: 12px; cursor: pointer; list-style: none; }
+.stopDetails summary::-webkit-details-marker { display: none; }
+.stopDetails summary svg { flex-shrink: 0; transition: transform .15s ease; }
+.stopDetails[open] summary svg { transform: rotate(180deg); }
+.stopDetails summary:focus-visible { outline: 2px solid #99d9e8; outline-offset: -3px; }
+.stopDetails p { margin: 0; padding: 0 12px 12px; color: #c1ced8; font-size: 12px; line-height: 1.6; }
+.stopDetails .stopAddress { color: #aabdc9; font-size: 11px; }
 .itinerary { margin-top: 18px; }
 .itinerary h3 { margin: 6px 0; font-size: 18px; letter-spacing: -.025em; }
 .warnings { margin: 15px 0 0; padding-left: 17px; color: #c7bea8; font-size: 11px; line-height: 1.6; }
@@ -52,8 +69,11 @@
 .panel button:hover { filter: brightness(1.13); }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
 @media (max-width: 900px) {
-  .launcher { top: max(14px, env(safe-area-inset-top)); left: 14px; }
-  .panel { inset: 0; top: var(--deity-viewport-top, 0px); width: 100%; height: var(--deity-viewport-height, 100dvh); border: 0; border-radius: 0; padding-top: env(safe-area-inset-top); box-sizing: border-box; }
+  .launcher { display: none; }
+  .panel { position: fixed; inset: 0; bottom: auto; top: var(--deity-viewport-top, 0px); width: 100%; height: var(--deity-viewport-height, 100dvh); border: 0; border-radius: 0; padding-top: env(safe-area-inset-top); box-sizing: border-box; }
+  .header { padding: 12px; gap: 9px; }
+  .header .avatar { width: 34px; height: 34px; }
+  .transcript { padding: 18px 14px; }
   .composer { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
   .inputRow textarea { font-size: 16px; }
   .header button, .inputRow button { width: 44px; height: 44px; }

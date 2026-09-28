@@ -9,7 +9,7 @@ const navigationCss = read("../src/app/places/dubai/navigation.module.css");
 const mapCss = read("../src/app/places/dubai/places.module.css");
 
 test("experiences replace the always-visible search, chips and venue list", () => {
-  assert.ok(explorer.includes("<PlacesNavigation"));
+  assert.match(explorer, /const Navigation = isCompact \? MobilePlacesNavigation : PlacesNavigation/);
   assert.ok(!explorer.includes("styles.categoryScroller"));
   assert.ok(!explorer.includes('placeholder="Search a place, area or mood…"'));
   assert.match(navigation, /resultsOpen \? \(/);
@@ -37,7 +37,7 @@ test("mobile drawer has isolation, focus containment, dismissal and reduced moti
   assert.match(navigation, /aria-label="Dismiss navigation"/);
   assert.match(navigationCss, /translateX\(-100%\)/);
   assert.match(navigationCss, /prefers-reduced-motion: reduce/);
-  assert.match(explorer, /inert=\{galleryOpen \|\| \(isCompact && \(mobilePanelOpen \|\| deityOpen\)\)\}/);
+  assert.match(explorer, /inert=\{galleryOpen \|\| mobileModalOpen\}/);
   assert.match(explorer, /if \(!media\.matches\) setMobilePanelOpen\(false\)/);
   assert.match(explorer, /marker\.node\.tabIndex = media\.matches \? -1 : 0/);
 });

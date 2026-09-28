@@ -6,6 +6,7 @@ const read = file => fs.readFileSync(new URL(file, import.meta.url), "utf8");
 const chat = read("../src/app/places/dubai/PlacesDeity.tsx");
 const css = read("../src/app/places/dubai/deity.module.css");
 const explorer = read("../src/app/places/dubai/PlacesExplorer.tsx");
+const mobileDetails = read("../src/app/places/dubai/MobilePlaceDetails.tsx");
 const globalAgent = read("../src/components/agent/ConditionalNSSOAgent.tsx");
 
 test("Places Deity is a separate public-map assistant, not the account-mutating global chat", () => {
@@ -26,14 +27,31 @@ test("assistant content is plain React text and recommendation links come from c
   assert.match(chat, /props\.onSelectPlace\(place\.id\)/);
 });
 
-test("opening mobile Deity isolates map and navigation and prevents competing drawers", () => {
+test("Deity and full mobile sheets isolate the map while half sheets keep it interactive", () => {
   assert.match(chat, /open: compact && open, panelRef, initialFocusRef: closeRef, modal: true/);
   assert.match(chat, /role="dialog"[\s\S]*?aria-modal=\{compact \|\| undefined\}/);
-  assert.match(explorer, /inert=\{galleryOpen \|\| \(isCompact && \(mobilePanelOpen \|\| deityOpen\)\)\}/);
+  assert.match(explorer, /const mobileModalOpen = isCompact && \(deityOpen \|\| \(mobilePanelOpen && navigationSnap === "full"\) \|\| \(!!selectedPlace && !mobilePanelOpen && detailSnap === "full"\)\)/);
+  assert.match(explorer, /aria-hidden=\{galleryOpen \|\| mobileModalOpen\}\s+inert=\{galleryOpen \|\| mobileModalOpen\}/);
   assert.match(explorer, /className=\{styles\.explorerContent\} inert=\{galleryOpen \|\| \(isCompact && deityOpen\)\}/);
-  assert.match(explorer, /if \(value\) setMobilePanelOpen\(false\)/);
+  assert.match(explorer, /if \(value\) \{ setMobilePanelOpen\(false\); setMapOptionsOpen\(false\); \}/);
   assert.match(explorer, /const openMobilePanel = useCallback\(\(\) => \{\s+setDeityOpen\(false\)/);
   assert.match(explorer, /launcherHidden=\{galleryOpen \|\| \(isCompact && mobilePanelOpen\)\}/);
+  assert.match(explorer, /aria-label="Places navigation" inert=\{mobileModalOpen\} aria-hidden=\{mobileModalOpen\}/);
+});
+
+test("a Deity recommendation outside filters gets its own pin without clearing the chosen collection", () => {
+  assert.match(explorer, /const mapPlaces = useMemo\(\(\) => selectedPlace && !filteredPlaces\.some\(place => place\.id === selectedPlace\.id\)\s*\? \[\.\.\.filteredPlaces, selectedPlace\] : filteredPlaces/);
+  assert.match(explorer, /clusterPlaces\(mapPlaces, markerZoom, markerSelection\)/);
+  const selectionBody = explorer.match(/const selectPlace = useCallback\(\(placeId: string, fromDeity = false\) => \{([\s\S]*?)\n  \}, \[\]\)/)?.[1];
+  assert.ok(selectionBody);
+  assert.match(selectionBody, /setSelectedFromDeity\(fromDeity\)/);
+  assert.match(selectionBody, /setDetailSnap\("peek"\)/);
+  assert.match(selectionBody, /setSelectedId\(placeId\)/);
+  assert.doesNotMatch(selectionBody, /clearFilters|setExperienceId|setSubcategoryId|setDatePlanId|setEmirate|setFavouritesOnly/);
+  assert.match(explorer, /onSelectPlace=\{id => \{\s*selectPlace\(id, true\)/);
+  assert.match(explorer, /fromDeity=\{selectedFromDeity\} onBackToDeity=\{\(\) => changeDeityOpen\(true\)\}/);
+  assert.match(mobileDetails, /props\.fromDeity && <button[\s\S]*?onClick=\{props\.onBackToDeity\}[\s\S]*?Back to conversation/);
+  assert.match(mobileDetails, /This place is outside your filters\. Your collection is unchanged\./);
 });
 
 test("minimizing or closing the assistant preserves the in-tab conversation and pending reply", () => {
@@ -46,6 +64,35 @@ test("minimizing or closing the assistant preserves the in-tab conversation and 
   // Keeping the component mounted is what preserves messages after open changes.
   assert.match(explorer, /<PlacesDeity\s+open=\{deityOpen\}/);
   assert.doesNotMatch(explorer, /deityOpen && \(?\s*<PlacesDeity/);
+});
+
+test("mobile Deity is a dedicated screen with one back control and the persistent tab as its focus return", () => {
+  assert.match(chat, /!open && !compact && !props\.launcherHidden/);
+  assert.match(chat, /compact && <button ref=\{closeRef\}[\s\S]*?aria-label="Back to map"/);
+  assert.match(chat, /!compact && <>\s*<button[\s\S]*?aria-label="Minimize Deity"[\s\S]*?aria-label="Close Deity"/);
+  assert.match(chat, /compact \? document\.getElementById\("places-mobile-deity-trigger"\) : launcherRef\.current/);
+  assert.match(explorer, /id="places-mobile-deity-trigger"[\s\S]*?onClick=\{\(\) => changeDeityOpen\(true\)\}[\s\S]*?aria-controls="places-deity-panel"/);
+  assert.match(chat, /trigger\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.launcher \{ display: none; \}/);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.panel \{ position: fixed/);
+  assert.match(chat, /window\.visualViewport/);
+  assert.match(chat, /viewport\.addEventListener\("resize", syncKeyboardViewport\)/);
+  assert.match(chat, /viewport\.removeEventListener\("resize", syncKeyboardViewport\)/);
+});
+
+test("mobile itinerary stops keep the canonical dates visible while reasons and addresses expand", () => {
+  const mobileCard = chat.match(/if \(compact && timeLabel\) return <div([\s\S]*?)\n    <\/div>;/)?.[1];
+  assert.ok(mobileCard, "only mobile itinerary stops use the compact layout");
+  assert.match(mobileCard, /styles\.pin\}>\{index \+ 1\}/);
+  assert.match(mobileCard, /Suggested · \{timeLabel\}/);
+  assert.match(mobileCard, /<strong>\{place\.name\}<\/strong>/);
+  assert.match(mobileCard, /\{event\.title\} · \{event\.dateLabel\}<\/span>\}\s*<details/);
+  assert.match(mobileCard, /<details className=\{styles\.stopDetails\}>\s*<summary>Why this stop &amp; details/);
+  assert.match(mobileCard, /<p>\{pick\.reason\}<\/p>/);
+  assert.match(mobileCard, /styles\.stopAddress\}>\{place\.address\}/);
+  assert.doesNotMatch(mobileCard, /<details[^>]+\bopen\b/);
+  assert.match(css, /\.stopDetails summary \{[^}]*min-height: 44px/);
+  assert.match(css, /\.stopDetails summary:focus-visible/);
 });
 
 test("requests are bounded, cancellable and expose retry without sending an empty or duplicate request", () => {

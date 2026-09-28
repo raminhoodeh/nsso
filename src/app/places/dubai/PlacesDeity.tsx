@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Reuses the existing Deity brand assets. */
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, ChevronRight, MapPin, Minus, RotateCcw, Square, X } from "lucide-react";
+import { ArrowLeft, ArrowUp, ChevronDown, ChevronRight, MapPin, Minus, RotateCcw, Square, X } from "lucide-react";
 import type { DubaiPlace } from "@/data/places-dubai";
 import type { PlacesChatRecommendation, PlacesChatResponse } from "@/lib/deity/places-types";
 import { activeEventsFor } from "@/lib/places-events";
@@ -87,7 +87,10 @@ export default function PlacesDeity(props: Props) {
   function dismiss(minimize: boolean) {
     setMinimized(minimize);
     onOpenChange(false);
-    window.requestAnimationFrame(() => launcherRef.current?.focus());
+    window.requestAnimationFrame(() => {
+      const trigger = compact ? document.getElementById("places-mobile-deity-trigger") : launcherRef.current;
+      trigger?.focus({ preventScroll: true });
+    });
   }
 
   async function send(text: string, retry = false) {
@@ -133,6 +136,24 @@ export default function PlacesDeity(props: Props) {
     if (!place || placeClosureNotice(place)) return null;
     const event = pick.eventId ? activeEventsFor(place, Date.now()).find(item => item.id === pick.eventId && item.status === "scheduled") : null;
     if (pick.eventId && !event) return null;
+    if (compact && timeLabel) return <div key={`${pick.placeId}-${index}`} className={styles.compactStop}>
+      <button type="button" className={styles.stopMapButton}
+        onClick={() => props.onSelectPlace(place.id)} aria-label={`Show ${place.name} on map`}>
+        <span className={styles.pin}>{index + 1}</span>
+        <span className={styles.stopTitle}>
+          <span className={styles.time}>Suggested · {timeLabel}</span>
+          <strong>{place.name}</strong>
+          <small>{place.emirate}</small>
+          <span className={styles.mapLink}>Show on map <ChevronRight size={13} /></span>
+        </span>
+      </button>
+      {event && <span className={styles.stopEvent}>{event.title} · {event.dateLabel}</span>}
+      <details className={styles.stopDetails}>
+        <summary>Why this stop &amp; details <ChevronDown size={15} /></summary>
+        <p>{pick.reason}</p>
+        <p className={styles.stopAddress}>{place.address}</p>
+      </details>
+    </div>;
     return <button key={`${pick.placeId}-${index}`} type="button" className={styles.place}
       onClick={() => props.onSelectPlace(place.id)} aria-label={`Show ${place.name} on map`}>
       <span className={styles.pin}>{timeLabel ? index + 1 : <MapPin size={17} />}</span>
@@ -148,7 +169,7 @@ export default function PlacesDeity(props: Props) {
   }
 
   return <>
-    {!open && !props.launcherHidden && <button ref={launcherRef} type="button" className={styles.launcher}
+    {!open && !compact && !props.launcherHidden && <button ref={launcherRef} type="button" className={styles.launcher}
       onClick={() => { setMinimized(false); onOpenChange(true); }} aria-label="Open Deity places assistant"
       aria-expanded={false} aria-controls="places-deity-panel" aria-haspopup="dialog">
       <img src="/nsso-agent-avatar.png" alt="" />
@@ -158,10 +179,16 @@ export default function PlacesDeity(props: Props) {
       aria-modal={compact || undefined} aria-label="Deity places assistant" tabIndex={-1}
       onKeyDown={event => { if (!compact && event.key === "Escape") { event.stopPropagation(); dismiss(true); } }}>
       <header className={styles.header}>
+        {compact && <button ref={closeRef} type="button" className={styles.backToMap}
+          onClick={() => dismiss(true)} aria-label="Back to map" title="Back to map, keep conversation">
+          <ArrowLeft size={18} /><span>Map</span>
+        </button>}
         <img className={styles.avatar} src="/nsso-agent-avatar.png" alt="" />
         <div className={styles.brand}><img src="/deity logo white.png" alt="Deity" /><span>Your UAE day planner</span></div>
-        <button type="button" onClick={() => dismiss(true)} aria-label="Minimize Deity" title="Minimize, keep conversation"><Minus size={19} /></button>
-        <button ref={closeRef} type="button" onClick={() => dismiss(false)} aria-label="Close Deity" title="Close"><X size={19} /></button>
+        {!compact && <>
+          <button type="button" onClick={() => dismiss(true)} aria-label="Minimize Deity" title="Minimize, keep conversation"><Minus size={19} /></button>
+          <button ref={closeRef} type="button" onClick={() => dismiss(false)} aria-label="Close Deity" title="Close"><X size={19} /></button>
+        </>}
       </header>
       <div className={styles.context}><span className={styles.dot} /> Connected to this map <span>{props.contextLabel} · {props.savedPlaceIds.length} saved</span></div>
       <div ref={transcriptRef} className={styles.transcript} role="log" aria-label="Conversation with Deity" aria-live="polite" aria-relevant="additions">
