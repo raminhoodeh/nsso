@@ -1,0 +1,722 @@
+{
+  "researchedAt": "2026-09-28",
+  "guides": [
+    {
+      "placeId": "jameel-arts-centre",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Browse an exhibition separately, then compare the work you each chose. Leave time for the library and the waterside sculpture park.",
+      "practicalities": [
+        {
+          "label": "Admission",
+          "text": "Free entry; check in at the Welcome Desk when you arrive."
+        },
+        {
+          "label": "Plan around",
+          "text": "Closed Tuesdays. Official visitor pages currently differ on evening closing times; confirm directly before planning an evening visit."
+        },
+        {
+          "label": "Arriving",
+          "text": "The venue lists parking outside beside Art Jameel Shop. Al Jaddaf Metro is a published 12-minute walk; allow for the heat."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Jameel visitor information",
+          "url": "https://jameelartscentre.org/visit/"
+        },
+        {
+          "label": "Jameel visitor FAQ",
+          "url": "https://jameelartscentre.org/visitor-information/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "mohammed-bin-rashid-library"
+      ]
+    },
+    {
+      "placeId": "fiker-institute-library",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Choose a book for each other, read for a while, then take the conversation outside. This is a reading-room date, not a borrowing-library visit.",
+      "practicalities": [
+        {
+          "label": "Plan around",
+          "text": "Warehouse 88, Alserkal Avenue. Fiker publishes Tuesday–Sunday, 9am–9pm; closed Mondays."
+        },
+        {
+          "label": "Before you go",
+          "text": "The official FAQ lists a daily pass at AED 85, bought contactlessly on arrival. Books stay inside; check membership or event access separately."
+        },
+        {
+          "label": "Arriving",
+          "text": "Use the paid RTA spaces outside Alserkal and check the bay signage. Visitor parking inside the Avenue is restricted."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Fiker library access",
+          "url": "https://www.fikerinstitute.org/library"
+        },
+        {
+          "label": "Alserkal arrival guide",
+          "url": "https://alserkal.online/plan-your-visit/"
+        },
+        {
+          "label": "Fiker admission FAQ",
+          "url": "https://www.fikerinstitute.org/contact-us/faq"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "cinema-akil",
+        "green-art-gallery"
+      ]
+    },
+    {
+      "placeId": "cinema-akil",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Build a film date around something neither of you would usually choose, then share chai and talk about it afterwards.",
+      "practicalities": [
+        {
+          "label": "Book the screening",
+          "text": "Pick an actual film and showtime from Cinema Akil's calendar. A venue pin does not mean a film is screening now."
+        },
+        {
+          "label": "Make time for",
+          "text": "Project Chaiwala operates the chai diner at the cinema. Check its menu and service times separately from your screening."
+        },
+        {
+          "label": "Arriving",
+          "text": "Warehouse 68, Alserkal Avenue. Use the surrounding paid RTA spaces, then walk into the Avenue."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Cinema Akil programme & chai diner",
+          "url": "https://www.cinemaakil.com/"
+        },
+        {
+          "label": "Alserkal arrival guide",
+          "url": "https://alserkal.online/plan-your-visit/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "fiker-institute-library",
+        "the-third-line"
+      ]
+    },
+    {
+      "placeId": "mohammed-bin-rashid-library",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A quiet indoor date for browsing books and the building itself. Pair it with an exhibition at Jameel for a culture-focused afternoon in Al Jaddaf.",
+      "practicalities": [
+        {
+          "label": "Admission",
+          "text": "Visit Dubai lists general admission as free. Check the library's own visitor guidance for access requirements, hours and special exhibitions before travelling."
+        },
+        {
+          "label": "Two separate venues",
+          "text": "The library and Jameel Arts Centre have separate entrances and opening schedules; use each pin for directions rather than assuming a shared entrance."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Visit Dubai library guide",
+          "url": "https://www.visitdubai.com/en/places-to-visit/mohammed-bin-rashid-library"
+        },
+        {
+          "label": "Library visitor website",
+          "url": "https://www.mbrl.ae/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "jameel-arts-centre"
+      ]
+    },
+    {
+      "placeId": "lecole-jewelry-arts-dubai",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A genuinely different indoor date: share a hands-on class or compare favourite pieces, then continue around d3.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Beginners are welcome; book the specific course first and arrive 15 minutes early."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "Exhibitions and the jewelry library are free; guided exhibition tours require advance registration. Check which exhibition is currently on."
+        },
+        {
+          "label": "Plan around",
+          "text": "Courses typically last 2–4 hours; the school provides materials. Most adult courses and talks are for ages 18+."
+        }
+      ],
+      "sources": [
+        {
+          "label": "lecolevancleefarpels.com",
+          "url": "https://www.lecolevancleefarpels.com/me/en/faq-0"
+        },
+        {
+          "label": "lecolevancleefarpels.com",
+          "url": "https://www.lecolevancleefarpels.com/me/en/lecole-libraries-corners-uae"
+        },
+        {
+          "label": "lecolevancleefarpels.com",
+          "url": "https://www.lecolevancleefarpels.com/me/en"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "oo-la-lab-d3",
+        "qinwan-d3"
+      ]
+    },
+    {
+      "placeId": "oo-la-lab-d3",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Make separate scents inspired by each other—a shared activity with a tangible reminder to take home.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Choose a group or private Dubai workshop and book two places before travelling."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "Check whether your selected option includes a 20ml or 50ml bottle; experiences and prices vary."
+        },
+        {
+          "label": "Plan around",
+          "text": "Use the current d3 Building 4 address on the official contact page, and reconfirm the venue in your booking confirmation."
+        }
+      ],
+      "sources": [
+        {
+          "label": "oola-lab.com",
+          "url": "https://oola-lab.com/en-hk/pages/contact"
+        },
+        {
+          "label": "oola-lab.com",
+          "url": "https://oola-lab.com/collections/dubai-workshops/products/dubai-fragrance-design-mixology-session-group-session"
+        },
+        {
+          "label": "oola-lab.com",
+          "url": "https://oola-lab.com/collections/dubai-workshops"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "lecole-jewelry-arts-dubai",
+        "qinwan-d3"
+      ]
+    },
+    {
+      "placeId": "yadawei-pottery-studio",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Make a cup or bowl, compare your imperfect first attempts, and plan a return for glazing or collection.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Book a trial class rather than assuming open-access studio use means a drop-in beginner lesson."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "The wheel trial includes one piece; the official page says the firing/glazing process can take up to three weeks, so it is not an immediate take-home souvenir."
+        },
+        {
+          "label": "Plan around",
+          "text": "Confirm final VAT-inclusive price and collection steps when booking: the site shows AED220 in the product header but AED231 including VAT in the hand-building description."
+        }
+      ],
+      "sources": [
+        {
+          "label": "yadaweistudio.com",
+          "url": "https://yadaweistudio.com/pages/contact"
+        },
+        {
+          "label": "yadaweistudio.com",
+          "url": "https://yadaweistudio.com/products/pottery-on-the-wheel-trial"
+        },
+        {
+          "label": "yadaweistudio.com",
+          "url": "https://yadaweistudio.com/products/handbuild-trial-class"
+        },
+        {
+          "label": "yadaweistudio.com",
+          "url": "https://yadaweistudio.com/collections/frontpage"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "boston-lane-al-quoz",
+        "cinema-akil"
+      ]
+    },
+    {
+      "placeId": "tashkeel-makerspace",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A useful anchor for a make-something afternoon at Alserkal rather than another café-only outing.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Book a session or ask about an introductory workshop; the clay studio welcomes the public as well as members."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "Confirm the specific session location: Tashkeel also operates a separate Nad Al Sheba site."
+        },
+        {
+          "label": "Plan around",
+          "text": "Confirm hours with the booking team. The clay-studio page and general facilities page publish different access schedules."
+        }
+      ],
+      "sources": [
+        {
+          "label": "tashkeel.org",
+          "url": "https://tashkeel.org/contact"
+        },
+        {
+          "label": "tashkeel.org",
+          "url": "https://tashkeel.org/facilities"
+        },
+        {
+          "label": "tashkeel.org",
+          "url": "https://tashkeel.org/facilities/clay-studio"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "fiker-institute-library",
+        "cinema-akil"
+      ]
+    },
+    {
+      "placeId": "tashkeel-nad-al-sheba",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A shared creative discovery away from the main mall circuit, with something to discuss afterwards.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Use the published exhibition or adult-workshop programme to choose a visit rather than treating every specialist studio as a public attraction."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "Check the workshop's venue: some Tashkeel sessions are at Alserkal, not Nad Al Sheba."
+        },
+        {
+          "label": "Plan around",
+          "text": "Book courses in advance; studio membership and technical-facility access are separate from attending a public exhibition."
+        }
+      ],
+      "sources": [
+        {
+          "label": "tashkeel.org",
+          "url": "https://tashkeel.org/contact"
+        },
+        {
+          "label": "tashkeel.org",
+          "url": "https://tashkeel.org/about"
+        },
+        {
+          "label": "tashkeel.org",
+          "url": "https://tashkeel.org/workshops/adult"
+        },
+        {
+          "label": "shop.tashkeel.org",
+          "url": "https://shop.tashkeel.org/policies/contact-information"
+        }
+      ],
+      "pairWithPlaceIds": []
+    },
+    {
+      "placeId": "xva-gallery-cafe",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Browse art, then settle into a courtyard meal: a strong low-key alternative to a loud dinner venue.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Go before 6pm if you want the gallery as well as the café: the gallery lists 10am–6pm daily."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "The café has a separate schedule, listed as 7am–10pm daily; check before making a late plan."
+        },
+        {
+          "label": "Plan around",
+          "text": "Pair with a wander through Al Fahidi and the nearby Coffee Museum or Al Seef, checking each venue's hours independently."
+        }
+      ],
+      "sources": [
+        {
+          "label": "xvagallery.com",
+          "url": "https://xvagallery.com/contact/"
+        },
+        {
+          "label": "xvagallery.com",
+          "url": "https://xvagallery.com/hotel-cafe/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "smccu-al-fahidi",
+        "coffee-museum"
+      ]
+    },
+    {
+      "placeId": "crossroads-of-civilizations-museum",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Good for curious couples who enjoy objects and stories that spark conversation; combine it with a Creek-side heritage afternoon.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "The official visit page lists AED25 per person and daily 9am–8pm hours; reconfirm before travelling."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "Al Ghubaiba Metro is a short walk according to the museum; its official page also identifies metered parking outside the entrance."
+        },
+        {
+          "label": "Plan around",
+          "text": "Ask the museum which galleries and associated museum spaces your ticket covers, rather than assuming all nearby museums are included."
+        }
+      ],
+      "sources": [
+        {
+          "label": "themuseum.ae",
+          "url": "https://themuseum.ae/visit/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "al-shindagha-museum",
+        "xva-gallery-cafe"
+      ]
+    },
+    {
+      "placeId": "smccu-al-fahidi",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A shared cultural meal gives you both new stories and questions to take into the rest of an Old Dubai date.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Book a specific public programme and follow its start time; the displayed 8am–8pm schedule is office timing, not a drop-in meal timetable."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "For the cultural breakfast, the operator describes a roughly 90-minute hosted meal on traditional floor cushions."
+        },
+        {
+          "label": "Plan around",
+          "text": "Mention dietary or seating needs before booking. The operator also advertises seasonal rooftop dinners, but no date-specific availability is verified here."
+        }
+      ],
+      "sources": [
+        {
+          "label": "cultures.ae",
+          "url": "https://cultures.ae/"
+        },
+        {
+          "label": "cultures.ae",
+          "url": "https://cultures.ae/program-category/public/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "xva-gallery-cafe",
+        "al-seef"
+      ]
+    },
+    {
+      "placeId": "house-of-wisdom-sharjah",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A bookish, unhurried half-day idea that combines reading, architecture and a meal rather than another shopping centre.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Check the programme for adult events and reserve those separately; event availability is not implied by general opening hours."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "Borrowing books and some benefits require a membership. Do not confuse membership prices with a general visit admission fee."
+        },
+        {
+          "label": "Plan around",
+          "text": "The official site lists Sun–Thu 8am–11pm and Fri–Sat 8am–midnight; the in-house dining venues list their own start time of 9am."
+        }
+      ],
+      "sources": [
+        {
+          "label": "houseofwisdom.ae",
+          "url": "https://houseofwisdom.ae/contact/"
+        },
+        {
+          "label": "houseofwisdom.ae",
+          "url": "https://houseofwisdom.ae/about/"
+        },
+        {
+          "label": "houseofwisdom.ae",
+          "url": "https://houseofwisdom.ae/dine/"
+        },
+        {
+          "label": "houseofwisdom.ae",
+          "url": "https://houseofwisdom.ae/membership/"
+        },
+        {
+          "label": "houseofwisdom.ae",
+          "url": "https://houseofwisdom.ae/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "rain-room-sharjah"
+      ]
+    },
+    {
+      "placeId": "rain-room-sharjah",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A playful, atmospheric moment together, with a small group rather than a private session.",
+      "practicalities": [
+        {
+          "label": "Before you go",
+          "text": "Book a timed ticket ahead, especially on weekends; adult admission is listed as AED25."
+        },
+        {
+          "label": "Worth knowing",
+          "text": "Each viewing lasts 15 minutes and admits up to seven people, so plan another stop afterwards rather than treating it as a full evening."
+        },
+        {
+          "label": "Plan around",
+          "text": "Arrive 10 minutes early and move slowly; sudden movement can get you wet. Official guidance warns against high heels and notes that dark, shiny or reflective clothing may affect sensors."
+        }
+      ],
+      "sources": [
+        {
+          "label": "sharjahart.org",
+          "url": "https://www.sharjahart.org/en/whats-on/details/rain-room"
+        },
+        {
+          "label": "sharjahart.org",
+          "url": "https://www.sharjahart.org/ar/whats-on/details/rain-room-ar/"
+        },
+        {
+          "label": "rainroom.sharjahart.org",
+          "url": "https://rainroom.sharjahart.org/getTicket.htm"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "house-of-wisdom-sharjah"
+      ]
+    },
+    {
+      "placeId": "green-art-gallery",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A contemporary gallery in Alserkal Avenue. An easy stop for a slow gallery-hopping date, with small-scale works and changing exhibitions that reward looking closely together.",
+      "practicalities": [
+        {
+          "label": "Find the entrance",
+          "text": "Unit 28, Alserkal Avenue, Street 8, Al Quoz 1, Dubai, UAE"
+        },
+        {
+          "label": "Plan around",
+          "text": "Published hours: Monday–Saturday 11am–7pm; Sunday closed."
+        },
+        {
+          "label": "Before you go",
+          "text": "See the dated programme below and check the organiser for current access. An exhibition run does not mean the gallery is open every day."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official venue information",
+          "url": "https://www.gagallery.com/exhibitions/private-world"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "the-third-line",
+        "cinema-akil"
+      ]
+    },
+    {
+      "placeId": "the-third-line",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A contemporary art gallery in Alserkal Avenue. Pair an exhibition visit with nearby coffee and a stroll through the creative district; check the programme before planning a dedicated visit.",
+      "practicalities": [
+        {
+          "label": "Find the entrance",
+          "text": "Warehouse 78, Alserkal Avenue, Street 8, Al Quoz 1, Dubai, UAE"
+        },
+        {
+          "label": "Plan around",
+          "text": "Published hours: Monday–Saturday 11am–7pm."
+        },
+        {
+          "label": "Before you go",
+          "text": "See the dated programme below and check the organiser for current access. An exhibition run does not mean the gallery is open every day."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official venue information",
+          "url": "https://www.thethirdline.com/contact/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "lawrie-shabibi",
+        "fiker-institute-library"
+      ]
+    },
+    {
+      "placeId": "lawrie-shabibi",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A contemporary gallery focused on artists from the Middle East and North Africa, alongside international artists. A thoughtful stop for a two-person gallery walk around Alserkal Avenue.",
+      "practicalities": [
+        {
+          "label": "Find the entrance",
+          "text": "Warehouse 21, Alserkal Avenue, Al Quoz 1, Dubai, UAE"
+        },
+        {
+          "label": "Plan around",
+          "text": "Alserkal's current directory lists Monday–Saturday 10am–6pm."
+        },
+        {
+          "label": "Before you go",
+          "text": "See the dated programme below and check the organiser for current access. An exhibition run does not mean the gallery is open every day."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official venue information",
+          "url": "https://alserkal.online/community/lawrie-shabibi/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "green-art-gallery",
+        "cinema-akil"
+      ]
+    },
+    {
+      "placeId": "tabari-artspace",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A gallery at Gate Village in DIFC. Combine an exhibition with a walk around the district and dinner nearby; this pin should identify the podium-level gallery, not a generic DIFC event area.",
+      "practicalities": [
+        {
+          "label": "Find the entrance",
+          "text": "Gate Village, Building 3, Podium Level, DIFC, Dubai, UAE"
+        },
+        {
+          "label": "Plan around",
+          "text": "Gallery contact page currently lists Monday–Sunday 10am–10pm; recheck for holiday or installation changes."
+        },
+        {
+          "label": "Before you go",
+          "text": "See the dated programme below and check the organiser for current access. An exhibition run does not mean the gallery is open every day."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official venue information",
+          "url": "https://tabariartspace.com/contact/"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "kurasu-difc"
+      ]
+    },
+    {
+      "placeId": "dom-art-projects",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "An Al Quoz art space with exhibitions and artist-support programmes. A quieter alternative for seeing work by UAE-based artists and talking about the creative process together.",
+      "practicalities": [
+        {
+          "label": "Find the entrance",
+          "text": "Warehouse 40, Al Khayat Avenue, Al Quoz 1, Dubai, UAE"
+        },
+        {
+          "label": "Plan around",
+          "text": "Published hours: Tuesday–Sunday 11am–8pm; Monday closed."
+        },
+        {
+          "label": "Before you go",
+          "text": "See the dated programme below and check the organiser for current access. An exhibition run does not mean the gallery is open every day."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official venue information",
+          "url": "https://domprojects.art/contact"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "boston-lane-al-quoz",
+        "yadawei-pottery-studio"
+      ]
+    },
+    {
+      "placeId": "al-safa-art-design-library",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Add a small discovery to a library date: L’ÉCOLE's dedicated library corner brings together books and archive materials on jewelry history, gemstones and craftsmanship.",
+      "practicalities": [
+        {
+          "label": "Look out for",
+          "text": "Look specifically for the L’ÉCOLE jewelry-arts corner within the existing library."
+        },
+        {
+          "label": "Plan around",
+          "text": "The full L’ÉCOLE campus and its classes are in d3, not inside Al Safa Library."
+        }
+      ],
+      "sources": [
+        {
+          "label": "L’ÉCOLE library corners",
+          "url": "https://www.lecolevancleefarpels.com/me/en/lecole-libraries-corners-uae"
+        }
+      ],
+      "pairWithPlaceIds": [
+        "lecole-jewelry-arts-dubai"
+      ]
+    }
+  ],
+  "datePlans": [
+    {
+      "id": "alserkal-books-film",
+      "title": "Books, art & a film",
+      "area": "Alserkal Avenue · Dubai",
+      "description": "An unhurried Al Quoz afternoon: browse Fiker, stop in a gallery, then choose a Cinema Akil screening. An NSSO suggestion, not a timed itinerary; confirm library access, gallery hours and your film booking independently.",
+      "placeIds": [
+        "fiker-institute-library",
+        "green-art-gallery",
+        "cinema-akil"
+      ]
+    },
+    {
+      "id": "old-dubai-conversations",
+      "title": "Courtyards & conversation",
+      "area": "Al Fahidi · Dubai",
+      "description": "Pair XVA's courtyard and art with a booked cultural meal or heritage experience at SMCCU. These are separate venues in Al Fahidi; reserve the programme you want before planning around it.",
+      "placeIds": [
+        "xva-gallery-cafe",
+        "smccu-al-fahidi"
+      ]
+    },
+    {
+      "id": "jaddaf-art-books",
+      "title": "Art, books & the Creek",
+      "area": "Al Jaddaf · Dubai",
+      "description": "Two quieter cultural stops: Jameel's galleries and Mohammed Bin Rashid Library. General entry is listed as free at both, but check their separate opening days and visitor rules. Travel between the pins using official directions.",
+      "placeIds": [
+        "jameel-arts-centre",
+        "mohammed-bin-rashid-library"
+      ]
+    },
+    {
+      "id": "sharjah-rain-reading",
+      "title": "Rain, then reading",
+      "area": "Sharjah · two-stop road trip",
+      "description": "Book a Rain Room slot, then slow down at House of Wisdom. Drive between these two Sharjah destinations; this is a pairing idea, not a walking route or a claim about live traffic.",
+      "placeIds": [
+        "rain-room-sharjah",
+        "house-of-wisdom-sharjah"
+      ]
+    },
+    {
+      "id": "d3-make-a-memory",
+      "title": "Make something, keep a memory",
+      "area": "Dubai Design District · Dubai",
+      "description": "Choose a booked fragrance workshop or jewelry-arts class, browse L’ÉCOLE’s library if the schedules align, then pause for coffee at Qinwan. An editorial pairing, not a package: each activity has its own booking and price.",
+      "placeIds": [
+        "oo-la-lab-d3",
+        "lecole-jewelry-arts-dubai",
+        "qinwan-d3"
+      ]
+    }
+  ]
+}

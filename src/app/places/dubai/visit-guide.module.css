@@ -1,0 +1,18 @@
+.guide { margin: 22px 0; padding: 18px; background: #f1f4f5; border: 1px solid #dbe1e5; border-radius: 16px; color: #293b47; }
+.guide header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.guide h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.guide header > span { margin-left: auto; font-size: 10px; color: #5a6a75; }
+.idea { font-size: 13px; line-height: 1.65; margin: 12px 0 18px; }
+.guide dl { margin: 0; display: grid; gap: 13px; }
+.guide dt { font-size: 11px; font-weight: 750; margin-bottom: 3px; }
+.guide dd { margin: 0; color: #4b5c69; font-size: 12px; line-height: 1.6; }
+.pairings { margin-top: 20px; }
+.pairings h4 { margin: 0 0 7px; font-size: 11px; font-weight: 700; }
+.pairings button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; margin-top: 6px; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid #d6dfe6; color: #315c7b; text-align: left; cursor: pointer; font: inherit; font-size: 12px; }
+.pairings button svg { flex-shrink: 0; }
+.pairings button:hover { background: #e9f0f7; }
+.guide button:focus-visible, .guide a:focus-visible, .guide summary:focus-visible { outline: 3px solid #3478bc; outline-offset: 3px; }
+.sources { margin-top: 18px; color: #506473; font-size: 10px; line-height: 1.6; }
+.sources summary { padding: 8px 0; cursor: pointer; min-height: 36px; }
+.sources p { margin: 5px 0; }
+.sources a { display: flex; align-items: center; gap: 7px; min-height: 36px; color: #305b7b; text-decoration: underline; }

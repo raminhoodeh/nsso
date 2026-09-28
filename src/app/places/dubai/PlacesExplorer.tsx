@@ -21,7 +21,9 @@ import {
 import { importLibrary, setOptions } from "@googlemaps/js-api-loader";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DubaiEvent, DubaiPlace, PlaceCategory, PlacesPayload } from "@/data/places-dubai";
-import { activeEventsFor, exhibitionEntries, googleCalendarUrl } from "@/lib/places-events";
+import { activeEventsFor, googleCalendarUrl } from "@/lib/places-events";
+import { agendaEntries, type AgendaWindow } from "@/lib/places-agenda";
+import { datePlans, editorialResearchedAt } from "@/lib/places-editorial";
 import { EXPERIENCES, matchesExperience, type ExperienceId } from "@/lib/places-experiences";
 import {
   TahoeGlassButton,
@@ -33,6 +35,8 @@ import {
 import { ToastViewport } from "@/components/ui/Toast";
 import styles from "./places.module.css";
 import PlacesNavigation from "./PlacesNavigation";
+import EventsAgenda from "./EventsAgenda";
+import PlaceVisitGuide from "./PlaceVisitGuide";
 
 type CategoryMeta = {
   label: string;
@@ -238,6 +242,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const [experienceId, setExperienceId] = useState<ExperienceId | null>(null);
   const [subcategoryId, setSubcategoryId] = useState<string | null>(null);
   const [resultsOpen, setResultsOpen] = useState(false);
+  const [agendaWindow, setAgendaWindow] = useState<AgendaWindow>("all");
+  const [datePlanId, setDatePlanId] = useState<string | null>(null);
+  const selectedDatePlan = datePlans.find(plan => plan.id === datePlanId) || null;
   const [isCompact, setIsCompact] = useState(false);
   const category = subcategoryId === "art-exhibitions" ? "art-exhibitions" : "all";
   const [emirate, setEmirate] = useState("all");
@@ -295,6 +302,13 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     places.forEach((place) => activeEvents.set(place.id, activeEventsFor(place, clientNow)));
     return activeEvents;
   }, [clientNow, places]);
+  const windowedEventsByPlace = useMemo(() => {
+    const events = new Map<string, DubaiEvent[]>();
+    agendaEntries(places, clientNow, null, agendaWindow).forEach(({ place, event }) => {
+      events.set(place.id, [...(events.get(place.id) || []), event]);
+    });
+    return events;
+  }, [places, clientNow, agendaWindow]);
   const availablePlaces = useMemo(
     () => places.filter(
       (place) => place.listingType !== "event-venue" || (activeEventsByPlace.get(place.id)?.length || 0) > 0,
@@ -335,31 +349,34 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     const groups: Record<string, number> = {};
     const subcategories: Record<string, number> = {};
     EXPERIENCES.forEach(experience => {
-      const groupPlaces = inArea.filter(place => matchesExperience(place, activeEventsByPlace.get(place.id) || [], experience.id));
+      const eventsForNavigation = experience.id === "whats-on" ? windowedEventsByPlace : activeEventsByPlace;
+      const groupPlaces = inArea.filter(place => matchesExperience(place, eventsForNavigation.get(place.id) || [], experience.id));
       groups[experience.id] = groupPlaces.length;
       experience.subcategories.forEach(subcategory => {
-        subcategories[subcategory.id] = groupPlaces.filter(place => matchesExperience(place, activeEventsByPlace.get(place.id) || [], experience.id, subcategory.id)).length;
+        subcategories[subcategory.id] = groupPlaces.filter(place => matchesExperience(place, eventsForNavigation.get(place.id) || [], experience.id, subcategory.id)).length;
       });
     });
     return { groups, subcategories };
-  }, [activeEventsByPlace, availablePlaces, emirate]);
+  }, [activeEventsByPlace, windowedEventsByPlace, availablePlaces, emirate]);
 
   const filteredPlaces = useMemo(() => {
     const next = availablePlaces.filter((place) => {
-      const events = activeEventsByPlace.get(place.id) || [];
+      const events = (experienceId === "whats-on" ? windowedEventsByPlace : activeEventsByPlace).get(place.id) || [];
       if (experienceId && !matchesExperience(place, events, experienceId, subcategoryId)) return false;
+      if (selectedDatePlan && !selectedDatePlan.placeIds.includes(place.id)) return false;
       if (emirate !== "all" && place.emirate !== emirate) return false;
       if (favouritesOnly && !favourites.has(place.id)) return false;
       return true;
     });
 
+    if (selectedDatePlan) return [...next].sort((a, b) => selectedDatePlan.placeIds.indexOf(a.id) - selectedDatePlan.placeIds.indexOf(b.id));
     if (userLocation) {
       return [...next].sort(
         (a, b) => haversineKm(userLocation, a.coordinates) - haversineKm(userLocation, b.coordinates),
       );
     }
     return next;
-  }, [activeEventsByPlace, availablePlaces, experienceId, subcategoryId, emirate, favourites, favouritesOnly, userLocation]);
+  }, [activeEventsByPlace, windowedEventsByPlace, availablePlaces, experienceId, subcategoryId, selectedDatePlan, emirate, favourites, favouritesOnly, userLocation]);
 
   const openMobilePanel = useCallback(() => {
     setSelectedId(null);
@@ -387,12 +404,12 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     () => filteredPlaces.map((place) => place.id).sort().join("|"),
     [filteredPlaces],
   );
-  const filteredExhibitions = useMemo(
-    () => exhibitionEntries(filteredPlaces, clientNow),
-    [filteredPlaces, clientNow],
+  const filteredAgenda = useMemo(
+    () => agendaEntries(filteredPlaces, clientNow, subcategoryId, agendaWindow),
+    [filteredPlaces, clientNow, subcategoryId, agendaWindow],
   );
-  const resultLabel = category === "art-exhibitions"
-    ? `${filteredExhibitions.length} ${filteredExhibitions.length === 1 ? "exhibition" : "exhibitions"}`
+  const resultLabel = experienceId === "whats-on"
+    ? `${filteredAgenda.length} ${category === "art-exhibitions" ? filteredAgenda.length === 1 ? "exhibition" : "exhibitions" : filteredAgenda.length === 1 ? "event" : "events"}`
     : `${filteredPlaces.length} ${filteredPlaces.length === 1 ? "place" : "places"}`;
 
   const fitVisiblePlaces = useCallback(() => {
@@ -537,7 +554,8 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       });
       markersRef.current = filteredPlaces.map((place) => {
         const selected = place.id === selectedIdRef.current;
-        const node = markerNode(place, selected, activeEventsByPlace.get(place.id)?.length || 0);
+        const eventCount = experienceId === "whats-on" ? filteredAgenda.filter(entry => entry.place.id === place.id).length : activeEventsByPlace.get(place.id)?.length || 0;
+        const node = markerNode(place, selected, eventCount);
         node.addEventListener("click", () => selectPlace(place.id));
         return {
           ...createMapOverlay(OverlayView, {
@@ -557,7 +575,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
       markersRef.current.forEach((marker) => marker.overlay.setMap(null));
       markersRef.current = [];
     };
-  }, [activeEventsByPlace, filteredPlaces, map, selectPlace]);
+  }, [activeEventsByPlace, filteredAgenda, experienceId, filteredPlaces, map, selectPlace]);
 
   useEffect(() => {
     markersRef.current.forEach((marker) => {
@@ -820,6 +838,8 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   };
 
   const clearFilters = () => {
+    setDatePlanId(null);
+    setAgendaWindow("all");
     setExperienceId(null);
     setSubcategoryId(null);
     setResultsOpen(false);
@@ -829,6 +849,8 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   };
 
   const chooseExperience = (id: ExperienceId) => {
+    setDatePlanId(null);
+    setAgendaWindow("all");
     setExperienceId(id);
     setSubcategoryId(null);
     setResultsOpen(false);
@@ -844,8 +866,10 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
 
   const navigateBack = () => {
     setSelectedId(null);
-    if (resultsOpen && !favouritesOnly) setResultsOpen(false);
+    if (resultsOpen && !favouritesOnly && !selectedDatePlan) setResultsOpen(false);
     else {
+      setDatePlanId(null);
+      setAgendaWindow("all");
       setExperienceId(null);
       setSubcategoryId(null);
       setResultsOpen(false);
@@ -905,18 +929,31 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           emirates={emirates}
           emirate={emirate}
           locationMessage={locationMessage}
+          datePlan={selectedDatePlan}
+          agendaWindow={agendaWindow}
+          onAgendaWindow={value => { setAgendaWindow(value); setSelectedId(null); }}
+          onDatePlan={id => {
+            setDatePlanId(id);
+            setExperienceId(null);
+            setSubcategoryId(null);
+            setFavouritesOnly(false);
+            setSelectedId(null);
+            setResultsOpen(true);
+          }}
           onExperience={chooseExperience}
           onSubcategory={chooseSubcategory}
           onBack={navigateBack}
           onResults={() => setResultsOpen(true)}
           onSaved={() => {
+            setDatePlanId(null);
+            setAgendaWindow("all");
             setFavouritesOnly(true);
             setExperienceId(null);
             setSubcategoryId(null);
             setResultsOpen(true);
             setSelectedId(null);
           }}
-          onEmirate={value => { setEmirate(value); setSelectedId(null); }}
+          onEmirate={value => { setEmirate(value); setDatePlanId(null); setSelectedId(null); }}
           onClose={closeMobilePanel}
           onMap={() => { fitPinsOnMap(); if (isCompact) closeMobilePanel(); }}
           onSurprise={surpriseMe}
@@ -925,31 +962,12 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         >
 
         <div className={styles.placeList}>
-          {category === "art-exhibitions" && (
-            <section className={styles.exhibitionsSection} aria-labelledby="art-exhibitions-heading">
-              <header>
-                <h2 id="art-exhibitions-heading">Art Exhibitions</h2>
-                <p>Art fairs, design weeks &amp; creative weekends. Shared venues use one map pin.</p>
-                <a href="/places/dubai/art-exhibitions.ics" download>Download all upcoming dates (.ics)</a>
-              </header>
-              {filteredExhibitions.map(({place, event}) => (
-                <article className={styles.exhibitionCard} key={event.id} data-event-id={event.id}>
-                  <p className={styles.exhibitionDate}>{event.dateLabel}</p>
-                  <h3>{event.title}</h3>
-                  <p className={styles.exhibitionVenue}><MapPin size={14} aria-hidden="true" />{place.name}</p>
-                  <p>{event.description}</p>
-                  {event.visitNote && <p className={styles.exhibitionNote}>{event.visitNote}</p>}
-                  <div className={styles.exhibitionActions}>
-                    <button type="button" onClick={() => selectPlace(place.id)}>Show on map</button>
-                    <a href={event.sourceUrl} target="_blank" rel="noreferrer">Official details <ExternalLink size={13} /></a>
-                    {event.calendar && <a href={googleCalendarUrl(event, place)!} target="_blank" rel="noreferrer">Add to Google Calendar <ExternalLink size={13} /></a>}
-                  </div>
-                </article>
-              ))}
-              {filteredExhibitions.length === 0 && <p>No current exhibitions in this area. Choose another emirate or explore another experience.</p>}
-            </section>
-          )}
-          {category !== "art-exhibitions" && filteredPlaces.map((place) => {
+          {selectedDatePlan && <p className={styles.datePlanIntro}>{selectedDatePlan.description}</p>}
+          {experienceId === "whats-on" && <>
+            {category === "art-exhibitions" && <p className={styles.calendarDownload}><a href="/places/dubai/art-exhibitions.ics" download>Download all upcoming exhibitions (.ics)</a><span>Full exhibition calendar, across all areas and dates.</span></p>}
+            <EventsAgenda entries={filteredAgenda} now={clientNow} onSelectPlace={place => selectPlace(place.id)} />
+          </>}
+          {experienceId !== "whats-on" && filteredPlaces.map((place) => {
             const meta = categoryFor(place);
             const isFavourite = favourites.has(place.id);
             const distance = userLocation ? haversineKm(userLocation, place.coordinates) : null;
@@ -993,7 +1011,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             );
           })}
 
-          {!filteredPlaces.length && (
+          {!filteredPlaces.length && experienceId !== "whats-on" && (
             <div className={styles.emptyState}>
               <Sparkles size={24} />
               <strong>{favouritesOnly ? "No saved places in this area yet." : "No places in this collection here yet."}</strong>
@@ -1004,6 +1022,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <span>
               {availablePlaces.length} places from saved and curated records.
               {activeEventCount ? ` ${activeEventCount} current ${activeEventCount === 1 ? "event" : "events"}.` : ""}
+              {` Latest research: ${editorialResearchedAt}.`}
             </span>
             <a
               href={payload.meta.geocoder === "google-places-new" ? "https://maps.google.com" : "https://www.openstreetmap.org/copyright"}
@@ -1086,7 +1105,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             semanticTint="light"
             semanticTintOpacity={0.035}
             className={styles.detailCard}
-            contentClassName={`${styles.detailContent} relative`}
+            contentClassName={`${styles.detailFrame} relative`}
             aria-label={`Details for ${selectedPlace.name}`}
           >
           <div className={styles.detailControls} role="group" aria-label="Place actions">
@@ -1127,6 +1146,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             </TahoeGlassSurface>
           </div>
 
+          <div className={styles.detailContent}>
           <div
             ref={galleryRegionRef}
             className={`${styles.detailHero}${!activePhoto || activePhotoUnavailable ? ` ${styles.detailHeroFallback}` : ""}`}
@@ -1281,6 +1301,11 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               <span>{currentDetails?.address || selectedPlace.address}</span>
             </p>
             <p className={styles.detailDescription}>{selectedPlace.description || "A saved place to explore together."}</p>
+            <PlaceVisitGuide place={selectedPlace} places={availablePlaces} onPair={place => {
+              clearFilters();
+              setSelectedId(place.id);
+              setMobilePanelOpen(false);
+            }} />
             {selectedEvents.length > 0 && (
               <section className={styles.eventSection} aria-labelledby="selected-place-events-heading">
                 <header className={styles.eventSectionHeader}>
@@ -1363,6 +1388,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                 ))}
               </p>
             ) : null}
+          </div>
           </div>
           </TahoeGlassSurface>
         )}

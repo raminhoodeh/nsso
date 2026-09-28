@@ -112,7 +112,32 @@ test("event cancellation, sold-out, expiry and verification rules pass through f
     assert.equal(matchesExperience(changed, activeEventsFor(changed, now), "whats-on"), false);
   }
   assert.ok(matches("dubai-opera-events", "whats-on", "live-shows"));
-  assert.ok(matches("jameel-arts-centre", "whats-on", "other-events"));
+  assert.ok(matches("jameel-arts-centre", "whats-on", "art-exhibitions"));
+  assert.equal(matches("jameel-arts-centre", "whats-on", "other-events"), false);
+  assert.ok(matches("oo-la-lab-d3", "whats-on", "other-events"));
+});
+
+test("new cultural and workshop venues are reachable through meaningful refinements", () => {
+  for (const id of ["lecole-jewelry-arts-dubai", "oo-la-lab-d3", "yadawei-pottery-studio", "tashkeel-makerspace", "tashkeel-nad-al-sheba"]) {
+    assert.ok(matches(id, "activities", "workshops"), id);
+  }
+  for (const id of ["green-art-gallery", "the-third-line", "lawrie-shabibi", "tabari-artspace", "dom-art-projects", "xva-gallery-cafe"]) {
+    assert.ok(matches(id, "arts-culture", "galleries"), id);
+  }
+  assert.ok(matches("lecole-jewelry-arts-dubai", "arts-culture", "libraries"));
+  assert.ok(matches("house-of-wisdom-sharjah", "arts-culture", "libraries"));
+  assert.ok(matches("crossroads-of-civilizations-museum", "arts-culture", "museums"));
+  assert.ok(matches("smccu-al-fahidi", "arts-culture", "heritage"));
+  assert.ok(matches("rain-room-sharjah", "activities", "shows"));
+});
+
+test("editorial classification exceptions do not mislabel arbitrary schools or art spaces", () => {
+  for (const [id, refinement] of [["lecole-jewelry-arts-dubai", "libraries"], ["dom-art-projects", "galleries"], ["smccu-al-fahidi", "heritage"]]) {
+    const source = byId(id);
+    assert.ok(matchesExperience(source, [], "arts-culture", refinement), id);
+    const unrelated = { ...source, id: "unrelated-venue", name: "Unrelated venue", aliases: [], googleTypes: [], primaryGoogleType: null };
+    assert.equal(matchesExperience(unrelated, [], "arts-culture", refinement), false, `${id}: evidence must not leak to arbitrary places`);
+  }
 });
 
 test("unknown refinements and children under the wrong parent never expand results", () => {

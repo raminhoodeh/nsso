@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { EXPERIENCES, type ExperienceId } from "@/lib/places-experiences";
+import { datePlans, type DatePlan } from "@/lib/places-editorial";
+import type { AgendaWindow } from "@/lib/places-agenda";
 import { useTahoeModalAccessibility } from "@/components/ui/tahoe-glass";
 import styles from "./navigation.module.css";
 
@@ -35,6 +37,10 @@ type Props = {
   emirates: string[];
   emirate: string;
   locationMessage: string | null;
+  datePlan: DatePlan | null;
+  agendaWindow: AgendaWindow;
+  onAgendaWindow: (value: AgendaWindow) => void;
+  onDatePlan: (id: string) => void;
   onExperience: (id: ExperienceId) => void;
   onSubcategory: (id: string | null) => void;
   onBack: () => void;
@@ -55,6 +61,7 @@ export default function PlacesNavigation(props: Props) {
     count, resultLabel, groupCounts, subcategoryCounts, emirates, emirate, locationMessage,
     onExperience, onSubcategory, onBack, onResults, onSaved, onEmirate, onClose,
     onMap, onSurprise, onLocate, onReset, children,
+    datePlan, agendaWindow, onAgendaWindow, onDatePlan,
   } = props;
   const panelRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -62,8 +69,8 @@ export default function PlacesNavigation(props: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const experience = EXPERIENCES.find(item => item.id === experienceId);
   const subcategory = experience?.subcategories.find(item => item.id === subcategoryId);
-  const title = savedOnly ? "Saved places" : subcategory?.label || experience?.label || (resultsOpen ? "All places" : "Let's go somewhere.");
-  const key = `${experienceId}:${subcategoryId}:${resultsOpen}:${savedOnly}`;
+  const title = savedOnly ? "Saved places" : datePlan?.title || subcategory?.label || experience?.label || (resultsOpen ? "All places" : "Let's go somewhere.");
+  const key = `${experienceId}:${subcategoryId}:${resultsOpen}:${savedOnly}:${datePlan?.id}`;
   const lastKey = useRef(key);
   const drawerOpen = compact && open;
 
@@ -129,8 +136,10 @@ export default function PlacesNavigation(props: Props) {
         <header className={`${styles.heading}${experience || resultsOpen || savedOnly ? ` ${styles.headingNested}` : ""}`}>
           {!experience && !resultsOpen && !savedOnly && <p className={styles.eyebrow}>A little time together</p>}
           <h1 ref={headingRef} tabIndex={-1}>{title}</h1>
-          <p>{resultsOpen ? `${resultLabel} · ${emirate === "all" ? "across the UAE" : emirate}` : experience ? (subcategory?.description || experience.description) : "What do you feel like doing?"}</p>
+          <p>{datePlan ? datePlan.area : resultsOpen ? `${resultLabel} · ${emirate === "all" ? "across the UAE" : emirate}` : experience ? (subcategory?.description || experience.description) : "What do you feel like doing?"}</p>
         </header>
+
+        {experienceId === "whats-on" && <label className={styles.when}><CalendarDays size={16} aria-hidden="true" /><span>When</span><select aria-label="Event date window" value={agendaWindow} onChange={event => onAgendaWindow(event.target.value as AgendaWindow)}><option value="all">All upcoming dates</option><option value="this-week">Next 7 days</option><option value="this-month">This month</option></select><ChevronDown size={14} aria-hidden="true" /></label>}
 
         {resultsOpen ? (
           <div className={styles.results}>{children}</div>
@@ -179,7 +188,7 @@ export default function PlacesNavigation(props: Props) {
                 {!count && <div className={styles.empty}><strong>No matches in this area.</strong><button type="button" onClick={onReset}>Explore all of the UAE</button></div>}
               </>
             )}
-            {!experience && <div className={styles.exploreNote}><Compass size={19} /><p>Good places. A little curiosity.<br />Your next day out starts here.</p></div>}
+            {!experience && <section className={styles.plans} aria-label="Date ideas"><h2>Make a day of it</h2><p>Thoughtful pairings, ready to explore.</p><div className={styles.group}>{datePlans.filter(plan => emirate === "all" || plan.area.includes(emirate)).map(plan => <button type="button" className={styles.planRow} key={plan.id} onClick={() => onDatePlan(plan.id)}><Compass size={19} aria-hidden="true" /><span className={styles.rowCopy}><strong>{plan.title}</strong><small>{plan.area}</small></span><ChevronRight size={15} aria-hidden="true" /></button>)}</div></section>}
           </div>
         )}
 

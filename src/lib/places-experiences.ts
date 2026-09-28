@@ -109,7 +109,9 @@ function named(place: DubaiPlace, pattern: RegExp) {
 // These exceptions are backed by the existing curated records and their sources.
 // Fiker is a Google research_institute; Pages is a book cafe; Al Quaa is a
 // tourist_attraction. None of those generic types describes the intended visit.
-const READING_PLACES = new Set(["fiker-institute-library", "pages-cafe"]);
+const READING_PLACES = new Set(["fiker-institute-library", "pages-cafe", "lecole-jewelry-arts-dubai"]);
+// Official venue programmes identify these art spaces despite generic Google types.
+const ART_SPACES = new Set(["dom-art-projects", "lecole-jewelry-arts-dubai"]);
 const STARGAZING_PLACES = new Set(["al-quaa-milky-way-spot"]);
 const BOARD_GAME_PLACES = new Set(["kefi-books-board-games-cafe"]);
 const HERITAGE_PLACES = new Set([
@@ -132,6 +134,7 @@ function matchesPlaceSubcategory(place: DubaiPlace, subcategoryId: string) {
       return hasType(place, /^(?:museum|art_museum)$/) || named(place, /\bmuseum\b/);
     case "galleries":
       return hasType(place, /^(?:art_gallery|art_studio|art_museum)$/)
+        || ART_SPACES.has(place.id)
         || named(place, /\b(?:gallery|galleries|arts? cent(?:re|er))\b/)
         || place.id === "cabinet-of-curiosity";
     case "libraries":
@@ -139,6 +142,7 @@ function matchesPlaceSubcategory(place: DubaiPlace, subcategoryId: string) {
         || named(place, /\b(?:library|libraries|book cafe)\b/);
     case "heritage":
       return HERITAGE_PLACES.has(place.id)
+        || ["smccu-al-fahidi", "crossroads-of-civilizations-museum", "xva-gallery-cafe"].includes(place.id)
         || hasType(place, /^(?:historical_landmark|historical_place|heritage_museum)$/)
         || named(place, /\b(?:heritage|archaeological|historic|historical|souk|souq)\b/);
     case "parks":

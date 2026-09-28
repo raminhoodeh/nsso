@@ -3,16 +3,882 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 87,
-    "eventCount": 21,
-    "placeCount": 166,
-    "generatedAt": "2026-09-28T07:05:59.028Z",
+    "curatedRecordCount": 102,
+    "eventCount": 32,
+    "placeCount": 181,
+    "generatedAt": "2026-09-28T08:09:02.190Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
     "attribution": "Place IDs and current location data supplied by Google Maps Platform."
   },
   "places": [
+    {
+      "id": "lecole-jewelry-arts-dubai",
+      "name": "L’ÉCOLE, School of Jewelry Arts — Dubai",
+      "aliases": [
+        "L'ÉCOLE, School of Jewelry Arts (Dubai - Dubai Design District)"
+      ],
+      "description": "A jewelry-arts school with exhibitions, expert-led courses and a specialist library in d3. Learn about gemstones and craftsmanship together, or start with its free-access library and exhibition programme.",
+      "sourceUrls": [
+        "https://www.lecolevancleefarpels.com/me/en/faq-0",
+        "https://www.lecolevancleefarpels.com/me/en/lecole-libraries-corners-uae",
+        "https://www.lecolevancleefarpels.com/me/en"
+      ],
+      "locationHint": "L’ÉCOLE, School of Jewelry Arts — Dubai, Building 10, Ground Floor, Dubai Design District (d3), Dubai",
+      "placeId": "ChIJe7NHrBdpXz4RxQjxtLnH1tU",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Building 10 - زعبيل الثانية - Dubai Design District - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1895705,
+        "lng": 55.298080399999996
+      },
+      "googleTypes": [
+        "educational_institution",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "educational_institution",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:33.352Z",
+        "osm": null,
+        "matchedName": "L'ÉCOLE, School of Jewelry Arts (Dubai - Dubai Design District)",
+        "websiteUri": "https://www.lecolevancleefarpels.com/me/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=L%E2%80%99%C3%89COLE%2C+School+of+Jewelry+Arts+%E2%80%94+Dubai&query_place_id=ChIJe7NHrBdpXz4RxQjxtLnH1tU"
+    },
+    {
+      "id": "oo-la-lab-d3",
+      "name": "Oo La Lab — Dubai",
+      "aliases": [
+        "Oo La Lab"
+      ],
+      "description": "A fragrance lab offering hands-on perfume design and mixology sessions. Explore fragrance notes and create a personal eau de parfum in a booked group or private workshop.",
+      "sourceUrls": [
+        "https://oola-lab.com/en-hk/pages/contact",
+        "https://oola-lab.com/collections/dubai-workshops/products/dubai-fragrance-design-mixology-session-group-session",
+        "https://oola-lab.com/collections/dubai-workshops"
+      ],
+      "locationHint": "Oo La Lab — Dubai, Dubai Design District, Building 4, Unit 204B, Dubai",
+      "placeId": "ChIJ-_weeOVrXz4RieeddsJd-as",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop"
+        ]
+      },
+      "events": [
+        {
+          "id": "oo-la-date-night-challenge-2026-11-20",
+          "title": "Date Night — Challenge Edition",
+          "description": "Design perfumes together and take on couple challenges at Oo La Lab. A hands-on two-hour date in d3, with refreshments and a scent to remember the evening by.",
+          "startsAt": "2026-11-20T19:00:00+04:00",
+          "endsAt": "2026-11-20T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://oola-lab.com/products/dubai-date-night-challenge-edition",
+          "sourceUrl": "https://oola-lab.com/products/dubai-date-night-challenge-edition",
+          "verifiedAt": "2026-09-28T12:00:00+04:00",
+          "verifiedUntil": "2026-11-20T21:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 7–9pm · AED 550 per couple",
+          "visitNote": "D3 Building 4, Unit 204B. The organiser lists a maximum of 10 couples and AED 550 per couple; remaining places and checkout price are not verified. Book with the organiser. Calendar link saves an all-day reminder; your booked session is 7–9pm Dubai time.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          },
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Design District (D3 Level 2, Building 4 - زعبيل الثانية - Dubai Design District - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1884774,
+        "lng": 55.2971168
+      },
+      "googleTypes": [
+        "tourist_attraction",
+        "wellness_center",
+        "supplier",
+        "home_goods_store",
+        "manufacturer",
+        "school",
+        "educational_institution",
+        "clothing_store",
+        "store",
+        "health",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:33.815Z",
+        "osm": null,
+        "matchedName": "Oo La Lab",
+        "websiteUri": "https://oola-lab.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Oo+La+Lab+%E2%80%94+Dubai&query_place_id=ChIJ-_weeOVrXz4RieeddsJd-as"
+    },
+    {
+      "id": "yadawei-pottery-studio",
+      "name": "Yadawei Ceramic Studio",
+      "aliases": [],
+      "description": "A community ceramics studio with introductory wheel-throwing and hand-building sessions. A practical, tactile date where the activity is making an object together rather than simply watching.",
+      "sourceUrls": [
+        "https://yadaweistudio.com/pages/contact",
+        "https://yadaweistudio.com/products/pottery-on-the-wheel-trial",
+        "https://yadaweistudio.com/products/handbuild-trial-class",
+        "https://yadaweistudio.com/collections/frontpage"
+      ],
+      "locationHint": "Yadawei Ceramic Studio, Warehouse 30, First Al Khail Street, corner of 19 Street, opposite Alserkal Avenue, Al Quoz 1, Dubai",
+      "placeId": "ChIJiRKgNn5pXz4RqMtDfyfIRJI",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Studio 30, First Al Khail Street - Corner 19 Street - opposite AlSerkal Avenue - القوز الصناعية الأولى - القوز - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1400385,
+        "lng": 55.2267836
+      },
+      "googleTypes": [
+        "art_gallery",
+        "educational_institution",
+        "store",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "educational_institution",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:34.185Z",
+        "osm": null,
+        "matchedName": "Yadawei Ceramic Studio",
+        "websiteUri": "http://yadaweistudio.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Yadawei+Ceramic+Studio&query_place_id=ChIJiRKgNn5pXz4RqMtDfyfIRJI"
+    },
+    {
+      "id": "tashkeel-makerspace",
+      "name": "Tashkeel Makerspace — Alserkal Avenue",
+      "aliases": [
+        "Tashkeel Makerspace"
+      ],
+      "description": "Tashkeel's Alserkal Makerspace houses its clay studio, with pottery wheels, kilns and bookable making sessions. Pair a creative session with the surrounding independent galleries and cafés.",
+      "sourceUrls": [
+        "https://tashkeel.org/contact",
+        "https://tashkeel.org/facilities",
+        "https://tashkeel.org/facilities/clay-studio"
+      ],
+      "locationHint": "Tashkeel Makerspace — Alserkal Avenue, Unit 89, Alserkal Avenue, Al Quoz, Dubai",
+      "placeId": "ChIJhz4CqQFrXz4RNQhZiK-9B_U",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop",
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Tashkeel Makerspace, Alserkal Avenue - Warehouse 89 17th St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1424375,
+        "lng": 55.2257289
+      },
+      "googleTypes": [
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": null,
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:02:00.668Z",
+        "osm": null,
+        "matchedName": "Tashkeel Makerspace",
+        "websiteUri": "https://tashkeel.org/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Tashkeel+Makerspace+%E2%80%94+Alserkal+Avenue&query_place_id=ChIJhz4CqQFrXz4RNQhZiK-9B_U"
+    },
+    {
+      "id": "tashkeel-nad-al-sheba",
+      "name": "Tashkeel — Nad Al Sheba",
+      "aliases": [
+        "Tashkeel Nad Al Sheba"
+      ],
+      "description": "An independent art and design hub with an exhibition programme, adult workshops and specialist creative facilities. Choose a scheduled public exhibition or workshop for a quieter culture-led outing.",
+      "sourceUrls": [
+        "https://tashkeel.org/contact",
+        "https://tashkeel.org/about",
+        "https://tashkeel.org/workshops/adult",
+        "https://shop.tashkeel.org/policies/contact-information"
+      ],
+      "locationHint": "Tashkeel — Nad Al Sheba, Intersection 5 & 20, Nad Al Sheba 1, Dubai (official shop contact also describes Street 120)",
+      "placeId": "ChIJL51OAyVmXz4RdnZyIuAvsrE",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "creative-workshop"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "St. 5 and 20 - ند الشبا 1 - ند الشبا - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1554045,
+        "lng": 55.323372
+      },
+      "googleTypes": [
+        "coworking_space",
+        "art_studio",
+        "art_gallery",
+        "real_estate_agency",
+        "association_or_organization",
+        "store",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "association_or_organization",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:02:00.981Z",
+        "osm": null,
+        "matchedName": "Tashkeel Nad Al Sheba",
+        "websiteUri": "http://tashkeel.org/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Tashkeel+%E2%80%94+Nad+Al+Sheba&query_place_id=ChIJL51OAyVmXz4RdnZyIuAvsrE"
+    },
+    {
+      "id": "xva-gallery-cafe",
+      "name": "XVA Gallery & Café",
+      "aliases": [
+        "XVA Gallery"
+      ],
+      "description": "Contemporary art and a vegetarian/vegan café tucked into the courtyards and wind-tower architecture of Al Fahidi. An intimate place to slow down between the neighbourhood's heritage lanes.",
+      "sourceUrls": [
+        "https://xvagallery.com/contact/",
+        "https://xvagallery.com/hotel-cafe/"
+      ],
+      "locationHint": "XVA Gallery & Café, Al Fahidi Historical Neighbourhood, Bur Dubai, Dubai",
+      "placeId": "ChIJtcXng5FCXz4R7BYg9jKLO44",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Fahidi Neighborhood, 312th Road - Al Fahidi St - Al Souq Al Kabeer - Al Fahidi - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.264106899999998,
+        "lng": 55.2998755
+      },
+      "googleTypes": [
+        "art_gallery",
+        "tourist_attraction",
+        "art_museum",
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:34.583Z",
+        "osm": null,
+        "matchedName": "XVA Gallery",
+        "websiteUri": "http://www.xvagallery.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=XVA+Gallery+%26+Caf%C3%A9&query_place_id=ChIJtcXng5FCXz4R7BYg9jKLO44"
+    },
+    {
+      "id": "crossroads-of-civilizations-museum",
+      "name": "Crossroads of Civilizations Museum",
+      "aliases": [
+        "Crossroad of Civilizations Museum (CCM) متحف معبر الحضارات‎"
+      ],
+      "description": "A historic-house museum exploring Dubai's role in trade and encounters between cultures. It offers a more intimate museum stop than the headline attractions, with a courtyard for a pause between displays.",
+      "sourceUrls": [
+        "https://themuseum.ae/visit/"
+      ],
+      "locationHint": "Crossroads of Civilizations Museum, Sheikh Hasher Al Maktoum House, Al Khaleej Road, Al Shindagha, Dubai; Makani 27703 95540",
+      "placeId": "ChIJAYjKxGtDXz4R3rcAPwhfejY",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Khaleej Road Sheikh Hasher AlMaktoum House - الشندغة - Al Fahidi - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.267628799999997,
+        "lng": 55.2889674
+      },
+      "googleTypes": [
+        "history_museum",
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "history_museum",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:35.202Z",
+        "osm": null,
+        "matchedName": "Crossroad of Civilizations Museum (CCM) متحف معبر الحضارات‎",
+        "websiteUri": "http://www.themuseum.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Crossroads+of+Civilizations+Museum&query_place_id=ChIJAYjKxGtDXz4R3rcAPwhfejY"
+    },
+    {
+      "id": "smccu-al-fahidi",
+      "name": "Sheikh Mohammed Centre for Cultural Understanding",
+      "aliases": [],
+      "description": "Hosted Emirati meals and heritage experiences in an Al Fahidi house. Food comes with conversation about local customs and everyday life, making the visit an experience rather than just a restaurant reservation.",
+      "sourceUrls": [
+        "https://cultures.ae/",
+        "https://cultures.ae/program-category/public/"
+      ],
+      "locationHint": "Sheikh Mohammed Centre for Cultural Understanding, House 26, Al Fahidi Historical Neighbourhood, Al Musallah Street, Bur Dubai, Dubai",
+      "placeId": "ChIJJ7AvWDhDXz4RgtxWx69mLkk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink",
+          "date-ideas"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Mussallah Rd - Al Souq Al Kabeer - Al Fahidi - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2641156,
+        "lng": 55.300739400000005
+      },
+      "googleTypes": [
+        "tourist_attraction",
+        "cultural_center",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "tourist_attraction",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:35.590Z",
+        "osm": null,
+        "matchedName": "Sheikh Mohammed Centre for Cultural Understanding",
+        "websiteUri": "https://www.cultures.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Sheikh+Mohammed+Centre+for+Cultural+Understanding&query_place_id=ChIJJ7AvWDhDXz4RgtxWx69mLkk"
+    },
+    {
+      "id": "house-of-wisdom-sharjah",
+      "name": "House of Wisdom",
+      "aliases": [],
+      "description": "An architecturally distinctive library and cultural hub with exhibitions, adult programmes and places to eat. Browse books, share discoveries and extend the visit with Chie Restaurant or DROWSY Café inside the same destination.",
+      "sourceUrls": [
+        "https://houseofwisdom.ae/contact/",
+        "https://houseofwisdom.ae/about/",
+        "https://houseofwisdom.ae/dine/",
+        "https://houseofwisdom.ae/membership/",
+        "https://houseofwisdom.ae/"
+      ],
+      "locationHint": "House of Wisdom, Al Juraina 1, Sharjah, United Arab Emirates",
+      "placeId": "ChIJM2wxqpX19T4RKMyYzNbZvak",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Sharjah",
+      "address": "8G94+9C8 - Al Juraina 1 - Sharjah - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.3182346,
+        "lng": 55.5058705
+      },
+      "googleTypes": [
+        "cultural_center",
+        "library",
+        "point_of_interest",
+        "service",
+        "establishment"
+      ],
+      "primaryGoogleType": "cultural_center",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:02:01.603Z",
+        "osm": null,
+        "matchedName": "House of Wisdom",
+        "websiteUri": "http://houseofwisdom.ae/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=House+of+Wisdom&query_place_id=ChIJM2wxqpX19T4RKMyYzNbZvak"
+    },
+    {
+      "id": "rain-room-sharjah",
+      "name": "Rain Room — Sharjah",
+      "aliases": [
+        "Rain Room"
+      ],
+      "description": "Random International's permanent immersive rain installation: sensors respond to your movement through a dark room of falling water. A short, unusual shared art experience that works best as one stop within a wider Sharjah outing.",
+      "sourceUrls": [
+        "https://www.sharjahart.org/en/whats-on/details/rain-room",
+        "https://www.sharjahart.org/ar/whats-on/details/rain-room-ar/",
+        "https://rainroom.sharjahart.org/getTicket.htm"
+      ],
+      "locationHint": "Rain Room — Sharjah, Al Majarrah, Sharjah, United Arab Emirates",
+      "placeId": "ChIJjRqI5HNbXz4ROiwAfhh94BI",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage",
+          "shows-immersive"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Sharjah",
+      "address": "26 St - Al Majarra - Sharjah - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.3655181,
+        "lng": 55.393178199999994
+      },
+      "googleTypes": [
+        "art_gallery",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:02:02.048Z",
+        "osm": null,
+        "matchedName": "Rain Room",
+        "websiteUri": "https://rainroom.sharjahart.org/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Rain+Room+%E2%80%94+Sharjah&query_place_id=ChIJjRqI5HNbXz4ROiwAfhh94BI"
+    },
+    {
+      "id": "green-art-gallery",
+      "name": "Green Art Gallery",
+      "aliases": [],
+      "description": "A contemporary gallery in Alserkal Avenue. An easy stop for a slow gallery-hopping date, with small-scale works and changing exhibitions that reward looking closely together.",
+      "sourceUrls": [
+        "https://www.gagallery.com/exhibitions/private-world"
+      ],
+      "locationHint": "Green Art Gallery, Unit 28, Alserkal Avenue, Street 8, Al Quoz 1, Dubai, UAE",
+      "placeId": "ChIJZXf9_X9pXz4RVZ897vIapf8",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "private-world-green-art-2026",
+          "title": "Private World",
+          "description": "Works by Lulua Alyahya, Rami Farook, Sohrab Hura and Khaled Jarada explore intimacy, solitude and personal experience. A good choice for a quiet gallery date: compare which small detail each of you notices first.",
+          "startsAt": "2026-09-23T00:00:00+04:00",
+          "endsAt": "2026-10-25T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.gagallery.com/exhibitions/private-world",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2026-10-25T00:00:00+04:00",
+          "dateLabel": "23 Sep–24 Oct 2026",
+          "visitNote": "Unit 28, Alserkal Avenue. Published gallery hours: Mon–Sat 11am–7pm; Sunday closed. No admission price is stated on the exhibition page; check with the gallery. Calendar reminder covers the exhibition run, not a booked visit.",
+          "calendar": {
+            "startDate": "2026-09-23",
+            "endDateExclusive": "2026-10-25"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "8 - Alserkal Avenue - Warehouse 28 17th St - القوز الصناعية الأولى - القوز - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1420213,
+        "lng": 55.226081099999995
+      },
+      "googleTypes": [
+        "art_gallery",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:35.955Z",
+        "osm": null,
+        "matchedName": "Green Art Gallery",
+        "websiteUri": "https://www.gagallery.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Green+Art+Gallery&query_place_id=ChIJZXf9_X9pXz4RVZ897vIapf8"
+    },
+    {
+      "id": "the-third-line",
+      "name": "The Third Line",
+      "aliases": [],
+      "description": "A contemporary art gallery in Alserkal Avenue. Pair an exhibition visit with nearby coffee and a stroll through the creative district; check the programme before planning a dedicated visit.",
+      "sourceUrls": [
+        "https://www.thethirdline.com/contact/"
+      ],
+      "locationHint": "The Third Line, Warehouse 78, Alserkal Avenue, Street 8, Al Quoz 1, Dubai, UAE",
+      "placeId": "ChIJRcbZaklDXz4RO7L-wglILxM",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "rana-begum-taking-form-2026",
+          "title": "Rana Begum: Taking Form",
+          "description": "Large woven tapestries, linen paintings and works on paper explore colour, light and geometry. Walk around the hanging textiles together: their patterns shift as your viewpoint changes.",
+          "startsAt": "2026-09-23T00:00:00+04:00",
+          "endsAt": "2026-11-11T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.thethirdline.com/exhibitions/88-rana-begum-taking-form/",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2026-11-11T00:00:00+04:00",
+          "dateLabel": "23 Sep–10 Nov 2026",
+          "visitNote": "Warehouse 78, Alserkal Avenue. Published gallery hours: Mon–Sat 11am–7pm. Check current admission and any closure dates with the gallery. Calendar reminder covers the run, not a booked visit.",
+          "calendar": {
+            "startDate": "2026-09-23",
+            "endDateExclusive": "2026-11-11"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Unit H 78, Alserkal Avenue - القوز الصناعية الأولى - القوز - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1426964,
+        "lng": 55.224573899999996
+      },
+      "googleTypes": [
+        "art_gallery",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:36.330Z",
+        "osm": null,
+        "matchedName": "The Third Line",
+        "websiteUri": "http://www.thethirdline.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=The+Third+Line&query_place_id=ChIJRcbZaklDXz4RO7L-wglILxM"
+    },
+    {
+      "id": "lawrie-shabibi",
+      "name": "Lawrie Shabibi",
+      "aliases": [],
+      "description": "A contemporary gallery focused on artists from the Middle East and North Africa, alongside international artists. A thoughtful stop for a two-person gallery walk around Alserkal Avenue.",
+      "sourceUrls": [
+        "https://alserkal.online/community/lawrie-shabibi/"
+      ],
+      "locationHint": "Lawrie Shabibi, Warehouse 21, Alserkal Avenue, Al Quoz 1, Dubai, UAE",
+      "placeId": "ChIJJ83L4X9pXz4R6D4MGyLjIcs",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "nada-elkalaawy-butterflys-burden-2026",
+          "title": "Nada Elkalaawy: The Butterfly’s Burden",
+          "description": "Layered paintings draw on family photographs, flowers and remembered interiors to explore grief, tenderness and renewal. A reflective gallery date for couples who enjoy talking through what an artwork brings to mind.",
+          "startsAt": "2026-09-23T00:00:00+04:00",
+          "endsAt": "2026-11-08T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://www.lawrieshabibi.com/exhibitions/203-the-butterflys-burden-nada-elkalaawy/overview/",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2026-11-08T00:00:00+04:00",
+          "dateLabel": "23 Sep–7 Nov 2026",
+          "visitNote": "Warehouse 21, Alserkal Avenue. Alserkal lists Mon–Sat 10am–6pm. The exhibition page does not state an admission fee; confirm any visit requirements with the gallery. Calendar reminder covers the exhibition run.",
+          "calendar": {
+            "startDate": "2026-09-23",
+            "endDateExclusive": "2026-11-08"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Quoz 1, Al Serkal Avenue - 21 - القوز الصناعية الأولى - القوز - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.141088,
+        "lng": 55.225995999999995
+      },
+      "googleTypes": [
+        "art_gallery",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:36.679Z",
+        "osm": null,
+        "matchedName": "Lawrie Shabibi",
+        "websiteUri": "http://www.lawrieshabibi.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Lawrie+Shabibi&query_place_id=ChIJJ83L4X9pXz4R6D4MGyLjIcs"
+    },
+    {
+      "id": "tabari-artspace",
+      "name": "Tabari Artspace — DIFC",
+      "aliases": [
+        "Tabari"
+      ],
+      "description": "A gallery at Gate Village in DIFC. Combine an exhibition with a walk around the district and dinner nearby; this pin should identify the podium-level gallery, not a generic DIFC event area.",
+      "sourceUrls": [
+        "https://tabariartspace.com/contact/"
+      ],
+      "locationHint": "Tabari Artspace — DIFC, Gate Village, Building 3, Podium Level, DIFC, Dubai, UAE",
+      "placeId": "ChIJRcbZaklDXz4RXl9EscSd0CA",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "fellow-travellers-tabari-2026",
+          "title": "Fellow Travellers",
+          "description": "Curated by Omar Kholeif, this group exhibition connects artistic journeys, migration and memory through painting and works on paper. A thoughtful pre-dinner cultural stop in DIFC.",
+          "startsAt": "2026-10-08T00:00:00+04:00",
+          "endsAt": "2026-12-01T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://tabariartspace.com/exhibitions/206-fellow-travellers-curated-by-dr-omar-kholeif-tabari-difc/",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2026-12-01T00:00:00+04:00",
+          "dateLabel": "8 Oct–30 Nov 2026",
+          "visitNote": "Gate Village, Building 3, podium level. The contact page lists daily 10am–10pm, but check the gallery before an evening visit. Admission price is not stated on the consulted pages. Calendar reminder covers the run.",
+          "calendar": {
+            "startDate": "2026-10-08",
+            "endDateExclusive": "2026-12-01"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "DIFC, The Gate Village, Bldg,3, Podium Level DIFC, Gate Village, Bld 3 - Podium Level - زعبيل الثانية - DIFC - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.213512100000003,
+        "lng": 55.28238950000001
+      },
+      "googleTypes": [
+        "art_gallery",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:01:36.993Z",
+        "osm": null,
+        "matchedName": "Tabari",
+        "websiteUri": "https://tabariartspace.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Tabari+Artspace+%E2%80%94+DIFC&query_place_id=ChIJRcbZaklDXz4RXl9EscSd0CA"
+    },
+    {
+      "id": "dom-art-projects",
+      "name": "Dom Art Projects",
+      "aliases": [],
+      "description": "An Al Quoz art space with exhibitions and artist-support programmes. A quieter alternative for seeing work by UAE-based artists and talking about the creative process together.",
+      "sourceUrls": [
+        "https://domprojects.art/contact"
+      ],
+      "locationHint": "Dom Art Projects, Warehouse 40, Al Khayat Avenue, Al Quoz 1, Dubai, UAE",
+      "placeId": "ChIJe8qJaJBrXz4Rr9OEMB04xGI",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "studio-wounds-battles-dom-2026",
+          "title": "Studio, Wounds, and Battles",
+          "description": "A Studio Support Program presentation shares experiments, sketches and finished work by UAE-based artists. A free art date that opens up the usually hidden trial-and-error of making things.",
+          "startsAt": "2026-09-23T00:00:00+04:00",
+          "endsAt": "2026-10-12T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://domprojects.art/exhibitions/studiowoundsandbattles",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2026-10-12T00:00:00+04:00",
+          "dateLabel": "23 Sep–11 Oct 2026 · free admission",
+          "visitNote": "Warehouse 40, Al Khayat Avenue. Tue–Sun 11am–8pm; Monday closed. Free admission is stated by the organiser. Calendar reminder covers the run, not daily opening hours.",
+          "calendar": {
+            "startDate": "2026-09-23",
+            "endDateExclusive": "2026-10-12"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        },
+        {
+          "id": "sara-masinaei-boundaries-breaches-2026",
+          "title": "Sara Masinaei: Boundaries and Breaches",
+          "description": "Found objects and imprints of urban surfaces turn overlooked details of city life into art. A free exhibition that may make your next walk together feel a little more observant.",
+          "startsAt": "2026-09-23T00:00:00+04:00",
+          "endsAt": "2026-10-19T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://domprojects.art/exhibitions/boundariesandbreaches",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2026-10-19T00:00:00+04:00",
+          "dateLabel": "23 Sep–18 Oct 2026 · free admission",
+          "visitNote": "Warehouse 40, Al Khayat Avenue. Tue–Sun 11am–8pm; Monday closed. The organiser's individual exhibition page confirms the 18 October end date. Calendar reminder covers the run.",
+          "calendar": {
+            "startDate": "2026-09-23",
+            "endDateExclusive": "2026-10-19"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Al Khayat Avenue - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1402163,
+        "lng": 55.226697400000006
+      },
+      "googleTypes": [
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": null,
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T08:05:59.209Z",
+        "osm": null,
+        "matchedName": "Dom Art Projects",
+        "websiteUri": "https://domprojects.art/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dom+Art+Projects&query_place_id=ChIJe8qJaJBrXz4Rr9OEMB04xGI"
+    },
     {
       "id": "al-ain-oasis",
       "name": "Al Ain Oasis",
@@ -3012,6 +3878,54 @@
             "events-activities",
             "shows-immersive"
           ]
+        },
+        {
+          "id": "titize-venetian-dream-2026",
+          "title": "Titizé — A Venetian Dream",
+          "description": "Compagnia Finzi Pasca combines acrobatics, physical theatre and music in a Venice-inspired stage production. A visually led, dreamlike option for a special night out close to Downtown.",
+          "startsAt": "2026-10-29T00:00:00+04:00",
+          "endsAt": "2026-11-01T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/events/acrobatic/titize-a-venetian-dream",
+          "sourceUrl": "https://www.dubaiopera.com/en/events/acrobatic/titize-a-venetian-dream",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2026-11-01T00:00:00+04:00",
+          "dateLabel": "29–31 Oct 2026 · from AED 275",
+          "visitNote": "Dubai Opera, Main Auditorium. Organiser lists 2pm and 8pm timeslots across the run; select your date to confirm its actual performance. Published starting price AED 275, subject to availability. Calendar is a run reminder, not a ticket or confirmed performance time.",
+          "calendar": {
+            "startDate": "2026-10-29",
+            "endDateExclusive": "2026-11-01"
+          },
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive",
+            "arts-culture-heritage"
+          ]
+        },
+        {
+          "id": "swan-lake-on-ice-2027",
+          "title": "Swan Lake on Ice",
+          "description": "The Imperial Ice Stars reimagine Swan Lake through figure skating and Tchaikovsky’s music on a theatre ice rink. A winter date-night idea with a romantic story and a different take on classical ballet.",
+          "startsAt": "2027-01-14T00:00:00+04:00",
+          "endsAt": "2027-01-18T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaiopera.com/en/events/ballet/swan-lake-on-ice",
+          "sourceUrl": "https://www.dubaiopera.com/en/events/ballet/swan-lake-on-ice",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2027-01-18T00:00:00+04:00",
+          "dateLabel": "14–17 Jan 2027 · from AED 300",
+          "visitNote": "Dubai Opera, Main Auditorium. Organiser lists 2pm and 8pm timeslots across the run; check your chosen date. Published starting price AED 300, subject to availability. Calendar is a run reminder, not a ticket or confirmed performance time.",
+          "calendar": {
+            "startDate": "2027-01-14",
+            "endDateExclusive": "2027-01-18"
+          },
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive",
+            "arts-culture-heritage"
+          ]
         }
       ],
       "emirate": "Dubai",
@@ -3728,17 +4642,71 @@
         {
           "id": "library-circles-rend-beiruti-2026",
           "title": "Library Circles: Rend Beiruti",
-          "description": "A free long-form library installation by Rend Beiruti, with a guided tour on 19 September at 3pm.",
+          "description": "Rend Beiruti’s research display explores Dubai’s baqala grocery stores through photographs, maps and archival material, tracing how everyday shops have shaped the city. A quiet, conversation-starting stop inside Jameel Library.",
           "startsAt": "2026-09-16T00:00:00+04:00",
-          "endsAt": "2027-01-11T23:59:00+04:00",
+          "endsAt": "2027-01-12T00:00:00+04:00",
           "timezone": "Asia/Dubai",
           "status": "scheduled",
-          "bookingUrl": "https://jameelartscentre.org/whats-on/library-circles-rend-beiruti/",
+          "bookingUrl": null,
           "sourceUrl": "https://jameelartscentre.org/whats-on/library-circles-rend-beiruti/",
-          "verifiedAt": "2026-08-26T00:00:00+04:00",
-          "verifiedUntil": "2027-01-11T23:59:00+04:00",
-          "dateLabel": "16 Sep–11 Jan · free guided tour 19 Sep, 3pm",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2027-01-12T00:00:00+04:00",
+          "dateLabel": "16 Sep 2026–11 Jan 2027 · research display",
           "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "The 19 September guided tour has finished; this entry is for the ongoing research display, not a future tour. Free centre entry; closed Tuesdays. Check library access before a dedicated trip. Calendar reminder covers the display run.",
+          "calendar": {
+            "startDate": "2026-09-16",
+            "endDateExclusive": "2027-01-12"
+          }
+        },
+        {
+          "id": "walid-siti-artists-room-2026",
+          "title": "Artist’s Room: Walid Siti",
+          "description": "Sculpture, sketches and paintings trace four decades of Walid Siti’s practice, using mountains and architecture to explore memory and belonging. Pair a slow look through the galleries with the waterfront sculpture park.",
+          "startsAt": "2026-09-20T00:00:00+04:00",
+          "endsAt": "2027-02-01T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": null,
+          "sourceUrl": "https://jameelartscentre.org/whats-on/artists-rooms-walid-siti/",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2027-02-01T00:00:00+04:00",
+          "dateLabel": "20 Sep 2026–31 Jan 2027 · free entry",
+          "visitNote": "Free entry; check in at the welcome desk. Closed Tuesdays. Official visitor pages differ on evening hours: confirm directly before an evening trip. Parking is outside beside Art Jameel Shop. Calendar reminder covers the exhibition run.",
+          "calendar": {
+            "startDate": "2026-09-20",
+            "endDateExclusive": "2027-02-01"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ]
+        },
+        {
+          "id": "salah-elmur-heart-of-mango-2026",
+          "title": "Salah Elmur: Just as the Heart of a Mango is a Stone",
+          "description": "Vivid paintings and archival photographs explore Sudanese memory, landscape and the artist’s sense of belonging. A rich visual exhibition for an unhurried art-and-waterfront date.",
+          "startsAt": "2026-10-31T00:00:00+04:00",
+          "endsAt": "2027-03-15T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://jameelartscentre.org/whats-on/salah-elmur/",
+          "sourceUrl": "https://jameelartscentre.org/whats-on/salah-elmur/",
+          "verifiedAt": "2026-09-28T00:00:00+04:00",
+          "verifiedUntil": "2027-03-15T00:00:00+04:00",
+          "dateLabel": "31 Oct 2026–14 Mar 2027 · free centre entry",
+          "visitNote": "Closed Tuesdays. Confirm the latest opening hours directly, especially for an evening visit. The exhibition page includes an RSVP link; check it for opening or special-programme requirements. Calendar reminder covers the run, not a booked session.",
+          "calendar": {
+            "startDate": "2026-10-31",
+            "endDateExclusive": "2027-03-15"
+          },
+          "taxonomyTags": [
+            "art-exhibitions",
             "events-activities",
             "arts-culture-heritage"
           ]

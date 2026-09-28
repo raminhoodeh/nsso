@@ -19,6 +19,7 @@ test("experiences replace the always-visible search, chips and venue list", () =
 });
 
 test("desktop sidebar is flush and owns layout space instead of covering the map", () => {
+  assert.match(mapCss, /--navigation-width: 460px/); // 368 × 1.25; mobile remains capped.
   assert.match(navigationCss, /inset: 0 auto 0 0/);
   assert.match(navigationCss, /border-radius: 0/);
   assert.match(navigationCss, /height: 100%/);
@@ -46,7 +47,7 @@ test("saved places, exhibition deep links and calendar actions remain reachable"
   assert.match(explorer, /get\("category"\) === "art-exhibitions"/);
   assert.match(explorer, /setExperienceId\("whats-on"\)/);
   assert.match(explorer, /setSubcategoryId\("art-exhibitions"\)/);
-  assert.match(explorer, /googleCalendarUrl\(event, place\)/);
+  assert.match(explorer, /googleCalendarUrl\(event, selectedPlace\)/);
   assert.match(explorer, /art-exhibitions\.ics/);
   assert.match(explorer, /localStorage\.setItem\(STORAGE_KEY/);
 });
@@ -61,4 +62,11 @@ test("small navigation labels have readable contrast on the sidebar and selected
   for (const background of ["ffffff", "f4f5f7", "edf4fb"]) {
     assert.ok((luminance(background)+.05)/(luminance(secondary)+.05) >= 4.5, background);
   }
+});
+
+test("long visit guides scroll independently of the fixed save and close controls", () => {
+  assert.match(explorer, /contentClassName=\{`\$\{styles.detailFrame\} relative`\}/);
+  assert.ok(explorer.indexOf('className={styles.detailControls}') < explorer.indexOf('className={styles.detailContent}'));
+  assert.match(mapCss, /\.detailFrame \{ max-height: inherit; \}/);
+  assert.match(mapCss, /\.detailContent \{[\s\S]*?overflow: auto;/);
 });
