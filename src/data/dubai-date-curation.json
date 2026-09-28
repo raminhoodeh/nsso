@@ -2,6 +2,83 @@
   "version": 1,
   "places": [
     {
+      "id": "montys-emirates-hills",
+      "name": "Monty's — Emirates Hills",
+      "aliases": ["Monty", "Montys", "Monty's Restaurant", "Emirates hill, Monty restaurant entrance", "Address Montgomerie Restaurant", "Monty restaurant entrance"],
+      "description": "A conservatory-style restaurant at Address Montgomerie in Emirates Hills, overlooking the golf course's 18th hole, with indoor and outdoor seating. A relaxed breakfast, lunch or dinner date with green views. This pin identifies Monty's restaurant, not a residential entrance; use the Address Montgomerie clubhouse arrival and ask staff for the restaurant entrance.",
+      "sourceUrls": ["https://www.addresshotels.com/en/restaurant/address-montgomerie/montys/"],
+      "locationHint": "Monty's restaurant, Address Montgomerie clubhouse, Emirates Hills, Dubai, UAE",
+      "placeId": "ChIJ30lgcpRsXz4RuRGv-jAdKVk",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "ethr-al-ain-oasis",
+      "name": "ETHR — Al Ain Oasis",
+      "aliases": ["Ethr", "Ethr Cafe", "Ethr Café", "Ethr - al ain oasis"],
+      "description": "A seasonal café among the date palms of Al Ain Oasis, with a heritage-inspired setting and upcycled furniture. Pair a coffee date with a walk through the oasis. ETHR describes this outdoor location as winter-only: confirm the current season and opening dates before travelling. This is the oasis café, not Jreed by ETHR or ETHR's other UAE locations.",
+      "sourceUrls": ["https://www.ethr.ae/alain-oasis", "https://alainoasis.com/ethr-cafe/"],
+      "locationHint": "ETHR cafe, 6Q88+JPQ, Central District, Al Ain Oasis, Abu Dhabi, UAE",
+      "placeId": "ChIJLU7d_By3ij4RSDVW7PgTqSY",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "dubai-hills-cycling-start",
+      "name": "Dubai Hills Park — Cycling Start",
+      "aliases": ["Dubai Hills Park", "Dubai Hills to Al Mamzar biking route", "Dubai Hills to Al Mamzar cycling route", "Dubai Hills cycling start-area bookmark"],
+      "description": "Route idea only: a continuous cycle-safe Dubai Hills–Al Mamzar route has not been verified. This start-area bookmark marks Dubai Hills Park, a green landmark near the community's walking and cycling trails; it is not an exact trailhead. Pair it with the Al Mamzar Beach Track finish bookmark. Directions lead only to this park, not along a verified cycling route. Check the current RTA cycle network and access before setting off; use designated cycle tracks and do not follow a car route onto major roads.",
+      "sourceUrls": ["https://www.ecm.ae/en/communities/dubai-hills-estate/discover/whats-around/dubai-hills-park-dubai-hills-estate/", "https://rta.ae/wps/portal/rta/ae/home/about-rta/cycling-track?lang=en"],
+      "locationHint": "Dubai Hills Park, Dubai Hills Estate, Hadaeq Sheikh Mohammed Bin Rashid, Dubai, UAE",
+      "placeId": "ChIJF_Fpa6BpXz4R-wbhbbAPWx4",
+      "listingType": "place",
+      "taxonomy": {"primary": "sport-active", "tags": ["sport-active", "nature-wildlife"]}
+    },
+    {
+      "id": "al-mamzar-cycling-finish",
+      "name": "Al Mamzar Beach Track — Cycling Finish",
+      "aliases": ["Mamzar Beach Walking Point and Cycling track", "Al Mamzar cycling track", "Dubai Hills to Al Mamzar biking route", "Dubai Hills to Al Mamzar cycling route", "Al Mamzar cycling end-area bookmark"],
+      "description": "Route idea only: a continuous cycle-safe Dubai Hills–Al Mamzar route has not been verified. This finish-area bookmark marks the listed Mamzar Beach Walking Point and Cycling Track, rather than a route line or a guaranteed connection from Dubai Hills. Pair it with the Dubai Hills Park start bookmark. Directions lead only to this waterfront point, not along a verified cycling route. Check the current RTA cycle network and local access; follow designated cycling lanes and do not follow a car route onto major roads.",
+      "sourceUrls": ["https://www.google.com/maps/search/?api=1&query=Mamzar+Beach+Walking+Point+and+Cycling+track&query_place_id=ChIJgxvmJ25bXz4RMfW64IUSkSw", "https://www.mediaoffice.ae/en/news/2026/may/05-05/dubai-municipality-opens-khor-al-mamzar-beach-to-the-public", "https://rta.ae/wps/portal/rta/ae/home/about-rta/cycling-track?lang=en"],
+      "locationHint": "Mamzar Beach Walking Point and Cycling Track, Al Mamzar, Dubai, UAE",
+      "placeId": "ChIJgxvmJ25bXz4RMfW64IUSkSw",
+      "listingType": "place",
+      "taxonomy": {"primary": "sport-active", "tags": ["sport-active", "beach-water"]}
+    },
+    {
+      "id": "legacy-cafe-dibba-mountain-park",
+      "name": "Legacy Café — Dibba Mountain Park",
+      "aliases": ["Legacy Cafe", "Legacy Café", "Dibba Mountain Park Resort Legacy Cafe", "Dibba mountain park resort legacy cafe - fujairah"],
+      "description": "A specialty-coffee café at Dibba Mountain Park Resort in Al Fqait, Fujairah, with mountain scenery, pastries, cakes and breakfast options. A scenic coffee-and-dessert stop for a Dibba road trip. The pin is for Legacy Café itself rather than the resort's general reception; check current visitor access and opening hours with the resort before travelling.",
+      "sourceUrls": ["https://dibbamountainpark.com/legacy-cafe/"],
+      "locationHint": "Legacy Cafe, Dibba Mountain Park Resort, H8CV+P9, Al Fqait, Fujairah, UAE",
+      "placeId": "ChIJHYwQcgAx9D4RYY0b3ishq6U",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "emirates-national-auto-museum",
+      "name": "Emirates National Auto Museum",
+      "aliases": ["Emirates National Automobile Museum", "Emirates national Auto museum Abu dhabi", "ENAM", "Rainbow Sheikh Car Museum"],
+      "description": "A pyramid-shaped car museum on Hamim Road in Abu Dhabi's Al Dhafra region, housing Sheikh Hamad bin Hamdan Al Nahyan's collection of more than 200 vehicles. Look out for classic cars, rainbow-coloured Mercedes and oversized vehicles: an unusual road-trip date for car and design lovers. It is outside Abu Dhabi city; confirm current opening days and admission before making the drive.",
+      "sourceUrls": ["https://visitabudhabi.ae/en/things-to-do/culture/museums-and-art/emirates-national-auto-museum"],
+      "locationHint": "Emirates National Auto Museum, Hamim / Hameem Road off E11, Al Bihouth, Al Dhafra, Abu Dhabi, UAE",
+      "placeId": "ChIJY_S0dokYXj4RwFelXp1uRUg",
+      "listingType": "place",
+      "taxonomy": {"primary": "arts-culture-heritage", "tags": ["arts-culture-heritage"]}
+    },
+    {
+      "id": "knafeh-omar-odali-cactus-park",
+      "name": "Knafeh Omar Odali — Cactus Park",
+      "aliases": ["Knafeh cactus park al jadaf", "Knafeh Cactus Park Al Jaddaf", "Kunafa Omar Odali", "Knafeh Omar Odali Al Jaddaf", "Omar Adili", "كنافة عمر عديلي"],
+      "description": "A knafeh and dessert stop at Cactus Park in Al Jaddaf, Dubai, for a sweet evening date. This is Knafeh Omar Odali's Al Jaddaf branch, not its other Dubai locations. Check the branch's current trading hours before going.",
+      "sourceUrls": ["https://linktr.ee/KnafehOmarOdali", "https://www.omar-odali.com/"],
+      "locationHint": "Knafeh Omar Odali, Cactus Park, Al Jaddaf / Al Jadaf, Dubai, UAE",
+      "placeId": "ChIJDzZNDBxnXz4RTAmr3OxTMN0",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
       "id": "al-quaa-milky-way-spot",
       "name": "Al Quaa Milky Way Spot",
       "aliases": ["Al Quaa", "Al Qua'a", "Al Qua’a", "Al Qoua", "Al Quaa Desert", "Razeen Milky Way Spot", "Abu Dhabi Stargazing"],
