@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 80,
+    "curatedRecordCount": 87,
     "eventCount": 21,
-    "placeCount": 159,
-    "generatedAt": "2026-09-28T06:55:20.416Z",
+    "placeCount": 166,
+    "generatedAt": "2026-09-28T07:05:59.028Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -1563,6 +1563,57 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Birch%20Restaurant%2C%20The%20Ritz-Carlton%20DIFC%2C%20Dubai%2C%20UAE"
     },
     {
+      "id": "bishette-bakery-mirdif",
+      "name": "Bishette Bakery — Mirdif",
+      "aliases": [
+        "Bishette Bakery",
+        "Bishette",
+        "Bishette Cafe",
+        "Bishette Café"
+      ],
+      "description": "A vintage-inspired bakery in Mirdif's Tulip Building, with cakes, cookies and a pastel tea-room feel. A cosy cake-and-coffee date; this pin is the bakery's physical Mirdif shop, not its delivery service.",
+      "sourceUrls": [
+        "https://bishettebakery.com/",
+        "https://www.instagram.com/p/DdyIaZNEqdt/"
+      ],
+      "locationHint": "Bishette Bakery, Tulip Building, Mirdif, Dubai, UAE",
+      "placeId": "ChIJj6XHaQBhXz4Rcwvsd90C2ac",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "tulip building - Mirdif - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2209199,
+        "lng": 55.4409962
+      },
+      "googleTypes": [
+        "dessert_shop",
+        "confectionery",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "dessert_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T07:03:06.350Z",
+        "osm": null,
+        "matchedName": "Bishette Bakery",
+        "websiteUri": "http://www.bishettebakery.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Bishette+Bakery&query_place_id=ChIJj6XHaQBhXz4Rcwvsd90C2ac"
+    },
+    {
       "id": "black-sheep-coffee-peninsula-three",
       "name": "Black Sheep Coffee — Peninsula Three",
       "aliases": [
@@ -1662,6 +1713,61 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Blue%20Tokai%20Coffee%20Roasters%20%E2%80%94%20BurJuman%2C%20Shop%20L1%2F10%2C%20Level%201%2C%20BurJuman%20Centre%2C%20Al%20Mankhool%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "boston-lane-al-quoz",
+      "name": "Boston Lane — The Courtyard",
+      "aliases": [
+        "Boston Lane",
+        "Boston Lane Cafe",
+        "Boston Lane Café",
+        "Boston Lane Al Quoz"
+      ],
+      "description": "A café tucked into the plant-filled Courtyard in Al Quoz, surrounded by independent shops and creative spaces. Come for coffee, breakfast or toasties, then explore the courtyard together. This is the Al Quoz café, not the brand's seasonal market kiosk.",
+      "sourceUrls": [
+        "https://www.courtyard-uae.com/boston-lane",
+        "https://www.linkedin.com/company/boston-lane",
+        "https://www.instagram.com/p/DdyIaZNEqdt/"
+      ],
+      "locationHint": "Boston Lane, The Courtyard, 25 4B Street, Al Quoz Industrial 1, Dubai, UAE",
+      "placeId": "ChIJ41Ed_SpqXz4Rjugp_6PLflw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Courtyard 25 - 4B St - Al Qouz Ind.first - Al Quoz - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.143522800000003,
+        "lng": 55.223216699999995
+      },
+      "googleTypes": [
+        "cafe",
+        "breakfast_restaurant",
+        "brunch_restaurant",
+        "coffee_shop",
+        "food_store",
+        "store",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "cafe",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T07:03:06.421Z",
+        "osm": null,
+        "matchedName": "Boston Lane",
+        "websiteUri": "https://www.outset.ae/hospitality",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Boston+Lane&query_place_id=ChIJ41Ed_SpqXz4Rjugp_6PLflw"
     },
     {
       "id": "ca-phin-jlt",
@@ -3102,6 +3208,57 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=EARTH%20ROASTERY%2C%206th%20St%2C%20Al%20Quoz%20Third%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "el-primo-taqueria",
+      "name": "El Primo Taquería — Al Wasl",
+      "aliases": [
+        "El Primo Taqueria",
+        "El Primo Taquería",
+        "Taqueria El Primo",
+        "Taquería El Primo",
+        "El Primo"
+      ],
+      "description": "A homegrown Mexican taquería in Bada'a Aswaaq Mall on Al Wasl Road, inspired by Mexico City's street-food culture. An easygoing taco date with made-to-order tacos, tostadas and Mexican desserts. The pin marks the restaurant itself, not a general shopping-mall stop.",
+      "sourceUrls": [
+        "https://www.visitdubai.com/en/restaurants/taqueria-el-primo",
+        "https://elprimotaqueria.ae/",
+        "https://www.instagram.com/p/DdyIaZNEqdt/"
+      ],
+      "locationHint": "Taqueria El Primo, Bada'a Aswaaq Mall, 365 Al Wasl Road, Al Bada', Dubai, UAE",
+      "placeId": "ChIJyYIlcZ1DXz4RrPYzUHfuUsI",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Bada'a Aswaaq Mall - 365 Al Wasl Rd - Al Bada' - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2144893,
+        "lng": 55.2589584
+      },
+      "googleTypes": [
+        "mexican_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "mexican_restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T07:03:05.720Z",
+        "osm": null,
+        "matchedName": "Taqueria El Primo",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Taqueria+El+Primo&query_place_id=ChIJyYIlcZ1DXz4RrPYzUHfuUsI"
+    },
+    {
       "id": "etihad-museum",
       "name": "Etihad Museum",
       "aliases": [
@@ -3494,6 +3651,59 @@
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Hatta%20Dam%2C%20Hatta%2C%20Dubai%2C%20United%20Arab%20Emirates"
     },
     {
+      "id": "iykyk-at-salvaje-dubai",
+      "name": "IYKYK — Dinner Party at Salvaje",
+      "aliases": [
+        "IYKYK",
+        "If You Know You Know",
+        "IYKYK Dubai",
+        "iykykdubai",
+        "Salvaje Dubai",
+        "IYKYK Hip-hop and R&B Dinner Party"
+      ],
+      "description": "IYKYK is a hip-hop and R&B dinner-party series, not the similarly named café. The organiser listed Salvaje Dubai at Address Residences Dubai Opera as its Saturday host when checked on 28 September 2026. Confirm the current venue, date, entry policy and booking with @iykykdubai before going. This pin, its photos and directions identify Salvaje, the host venue; no individual event date is guaranteed.",
+      "sourceUrls": [
+        "https://www.instagram.com/iykykdubai/",
+        "https://salvajedubai.com/",
+        "https://www.instagram.com/p/DdyIaZNEqdt/"
+      ],
+      "locationHint": "IYKYK dinner party at Salvaje Dubai, Address Residences Dubai Opera, Opera District, Downtown Dubai, UAE",
+      "placeId": "ChIJoZaNldxpXz4RHkJjaXz6MQs",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Address Residences - Opera District - برج خليفة - وسط مدينة دبي - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.1967279,
+        "lng": 55.2715837
+      },
+      "googleTypes": [
+        "japanese_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "japanese_restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T07:04:39.809Z",
+        "osm": null,
+        "matchedName": "Salvaje Dubai",
+        "websiteUri": "https://salvajedubai.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Salvaje+Dubai&query_place_id=ChIJoZaNldxpXz4RHkJjaXz6MQs"
+    },
+    {
       "id": "jameel-arts-centre",
       "name": "Jameel Arts Centre",
       "aliases": [
@@ -3560,6 +3770,57 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Jameel%20Arts%20Centre%2C%20Jaddaf%20Waterfront%2C%20Al%20Jadaf%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "juntas-al-mizhar",
+      "name": "Juntas — Al Mizhar",
+      "aliases": [
+        "Juntas",
+        "Live Juntas",
+        "Juntas Cafe",
+        "Juntas Café"
+      ],
+      "description": "A Portuguese-countryside-inspired neighbourhood café in Al Mizhar 2, with a leafy, shaded courtyard and a relaxed villa setting. A quiet coffee-and-bakes date away from Dubai's busier dining districts.",
+      "sourceUrls": [
+        "https://www.instagram.com/livejuntas/",
+        "https://www.instagram.com/p/DdyIaZNEqdt/"
+      ],
+      "locationHint": "Juntas, Villa 35, 6C Street, Al Mizhar 2, Dubai, UAE",
+      "placeId": "ChIJ-w5h06JhXz4R_vupJwMQGLo",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "35 6C St - Al Mizhar Second - Al Mizhar - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.242517700000004,
+        "lng": 55.4559833
+      },
+      "googleTypes": [
+        "coffee_shop",
+        "cafe",
+        "food_store",
+        "store",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "coffee_shop",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T07:03:06.364Z",
+        "osm": null,
+        "matchedName": "Juntas",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Juntas&query_place_id=ChIJ-w5h06JhXz4R_vupJwMQGLo"
     },
     {
       "id": "kairos-coffee-assembly",
@@ -3758,6 +4019,56 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kefi%20Books%20Board%20Games%20Cafe%2C%20Tower%201%2C%20Al%20Mamzar%2C%20Dubai%2C%20UAE"
+    },
+    {
+      "id": "kima-izakaya-jlt",
+      "name": "Kima Izakaya — JLT",
+      "aliases": [
+        "Kima Izakaya",
+        "Kima",
+        "Kima Japanese Restaurant"
+      ],
+      "description": "A small neighbourhood Japanese izakaya on the podium of MAG 214 in JLT's Cluster R. An informal setting for a Japanese dinner date, with sushi, donburi and small plates to share; the entrance is at podium level, not inside a mall.",
+      "sourceUrls": [
+        "https://www.kimaizakaya.com/",
+        "https://jlt.ae/directory/kima-izakaya",
+        "https://www.instagram.com/p/DdyIaZNEqdt/"
+      ],
+      "locationHint": "Kima Izakaya, MAG 214, Podium Level, Cluster R, Jumeirah Lakes Towers, Dubai, UAE",
+      "placeId": "ChIJ6c6r8Q1tXz4RMduKL3q05g4",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Podium Level - Cluster R - Al Thanyah Fifth - Jumeirah Lakes Towers - Dubai - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.0769126,
+        "lng": 55.1474833
+      },
+      "googleTypes": [
+        "japanese_restaurant",
+        "japanese_izakaya_restaurant",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "japanese_restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T07:03:05.726Z",
+        "osm": null,
+        "matchedName": "Kima Izakaya",
+        "websiteUri": "https://www.kimaizakaya.com/",
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Kima+Izakaya&query_place_id=ChIJ6c6r8Q1tXz4RMduKL3q05g4"
     },
     {
       "id": "kite-beach",
@@ -4042,6 +4353,56 @@
         "businessStatus": "OPERATIONAL"
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=La%20Mer%20Beach%2C%20Dubai%2C%20United%20Arab%20Emirates"
+    },
+    {
+      "id": "lahkee-al-safa",
+      "name": "LahKee — Al Safa",
+      "aliases": [
+        "LahKee",
+        "Lah Kee",
+        "LahKee Pan Asian Kitchen",
+        "LahKee Pan Asian Restaurant",
+        "Lahkee8"
+      ],
+      "description": "A tiny pan-Asian kitchen in Al Safa Park Complex with counter seating around an open kitchen, vintage posters and outdoor tables. The menu brings together Filipino, Japanese and Chinese influences. An intimate, casual dinner date; check with the restaurant for a table because seating is limited.",
+      "sourceUrls": [
+        "https://www.visitdubai.com/en/restaurants/lahkee-pan-asian-restaurant",
+        "https://www.instagram.com/lahkee8/",
+        "https://www.instagram.com/p/DdyIaZNEqdt/"
+      ],
+      "locationHint": "LahKee Pan Asian Kitchen, Shop 3, Building 1, Al Safa Park Complex, Al Safa 1, Dubai, UAE",
+      "placeId": "ChIJfan3vEFpXz4Rwl2oKxtJMtU",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "Shop 3, Building 1 - Park Complex - الصفا 1 - الصفا - دبي - United Arab Emirates",
+      "coordinates": {
+        "lat": 25.178596,
+        "lng": 55.242478899999995
+      },
+      "googleTypes": [
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "primaryGoogleType": "restaurant",
+      "resolution": {
+        "status": "resolved",
+        "source": "google-places-new",
+        "matchedAt": "2026-09-28T07:03:05.724Z",
+        "osm": null,
+        "matchedName": "LahKee Pan Asian Restaurant",
+        "websiteUri": null,
+        "businessStatus": "OPERATIONAL"
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=LahKee+Pan+Asian+Restaurant&query_place_id=ChIJfan3vEFpXz4Rwl2oKxtJMtU"
     },
     {
       "id": "maison-revka",

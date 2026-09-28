@@ -2,6 +2,83 @@
   "version": 1,
   "places": [
     {
+      "id": "juntas-al-mizhar",
+      "name": "Juntas — Al Mizhar",
+      "aliases": ["Juntas", "Live Juntas", "Juntas Cafe", "Juntas Café"],
+      "description": "A Portuguese-countryside-inspired neighbourhood café in Al Mizhar 2, with a leafy, shaded courtyard and a relaxed villa setting. A quiet coffee-and-bakes date away from Dubai's busier dining districts.",
+      "sourceUrls": ["https://www.instagram.com/livejuntas/", "https://www.instagram.com/p/DdyIaZNEqdt/"],
+      "locationHint": "Juntas, Villa 35, 6C Street, Al Mizhar 2, Dubai, UAE",
+      "placeId": "ChIJ-w5h06JhXz4R_vupJwMQGLo",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "kima-izakaya-jlt",
+      "name": "Kima Izakaya — JLT",
+      "aliases": ["Kima Izakaya", "Kima", "Kima Japanese Restaurant"],
+      "description": "A small neighbourhood Japanese izakaya on the podium of MAG 214 in JLT's Cluster R. An informal setting for a Japanese dinner date, with sushi, donburi and small plates to share; the entrance is at podium level, not inside a mall.",
+      "sourceUrls": ["https://www.kimaizakaya.com/", "https://jlt.ae/directory/kima-izakaya", "https://www.instagram.com/p/DdyIaZNEqdt/"],
+      "locationHint": "Kima Izakaya, MAG 214, Podium Level, Cluster R, Jumeirah Lakes Towers, Dubai, UAE",
+      "placeId": "ChIJ6c6r8Q1tXz4RMduKL3q05g4",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "bishette-bakery-mirdif",
+      "name": "Bishette Bakery — Mirdif",
+      "aliases": ["Bishette Bakery", "Bishette", "Bishette Cafe", "Bishette Café"],
+      "description": "A vintage-inspired bakery in Mirdif's Tulip Building, with cakes, cookies and a pastel tea-room feel. A cosy cake-and-coffee date; this pin is the bakery's physical Mirdif shop, not its delivery service.",
+      "sourceUrls": ["https://bishettebakery.com/", "https://www.instagram.com/p/DdyIaZNEqdt/"],
+      "locationHint": "Bishette Bakery, Tulip Building, Mirdif, Dubai, UAE",
+      "placeId": "ChIJj6XHaQBhXz4Rcwvsd90C2ac",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "boston-lane-al-quoz",
+      "name": "Boston Lane — The Courtyard",
+      "aliases": ["Boston Lane", "Boston Lane Cafe", "Boston Lane Café", "Boston Lane Al Quoz"],
+      "description": "A café tucked into the plant-filled Courtyard in Al Quoz, surrounded by independent shops and creative spaces. Come for coffee, breakfast or toasties, then explore the courtyard together. This is the Al Quoz café, not the brand's seasonal market kiosk.",
+      "sourceUrls": ["https://www.courtyard-uae.com/boston-lane", "https://www.linkedin.com/company/boston-lane", "https://www.instagram.com/p/DdyIaZNEqdt/"],
+      "locationHint": "Boston Lane, The Courtyard, 25 4B Street, Al Quoz Industrial 1, Dubai, UAE",
+      "placeId": "ChIJ41Ed_SpqXz4Rjugp_6PLflw",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "el-primo-taqueria",
+      "name": "El Primo Taquería — Al Wasl",
+      "aliases": ["El Primo Taqueria", "El Primo Taquería", "Taqueria El Primo", "Taquería El Primo", "El Primo"],
+      "description": "A homegrown Mexican taquería in Bada'a Aswaaq Mall on Al Wasl Road, inspired by Mexico City's street-food culture. An easygoing taco date with made-to-order tacos, tostadas and Mexican desserts. The pin marks the restaurant itself, not a general shopping-mall stop.",
+      "sourceUrls": ["https://www.visitdubai.com/en/restaurants/taqueria-el-primo", "https://elprimotaqueria.ae/", "https://www.instagram.com/p/DdyIaZNEqdt/"],
+      "locationHint": "Taqueria El Primo, Bada'a Aswaaq Mall, 365 Al Wasl Road, Al Bada', Dubai, UAE",
+      "placeId": "ChIJyYIlcZ1DXz4RrPYzUHfuUsI",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
+      "id": "iykyk-at-salvaje-dubai",
+      "name": "IYKYK — Dinner Party at Salvaje",
+      "aliases": ["IYKYK", "If You Know You Know", "IYKYK Dubai", "iykykdubai", "Salvaje Dubai", "IYKYK Hip-hop and R&B Dinner Party"],
+      "description": "IYKYK is a hip-hop and R&B dinner-party series, not the similarly named café. The organiser listed Salvaje Dubai at Address Residences Dubai Opera as its Saturday host when checked on 28 September 2026. Confirm the current venue, date, entry policy and booking with @iykykdubai before going. This pin, its photos and directions identify Salvaje, the host venue; no individual event date is guaranteed.",
+      "sourceUrls": ["https://www.instagram.com/iykykdubai/", "https://salvajedubai.com/", "https://www.instagram.com/p/DdyIaZNEqdt/"],
+      "locationHint": "IYKYK dinner party at Salvaje Dubai, Address Residences Dubai Opera, Opera District, Downtown Dubai, UAE",
+      "placeId": "ChIJoZaNldxpXz4RHkJjaXz6MQs",
+      "listingType": "place",
+      "taxonomy": {"primary": "events-activities", "tags": ["events-activities", "food-drink"]}
+    },
+    {
+      "id": "lahkee-al-safa",
+      "name": "LahKee — Al Safa",
+      "aliases": ["LahKee", "Lah Kee", "LahKee Pan Asian Kitchen", "LahKee Pan Asian Restaurant", "Lahkee8"],
+      "description": "A tiny pan-Asian kitchen in Al Safa Park Complex with counter seating around an open kitchen, vintage posters and outdoor tables. The menu brings together Filipino, Japanese and Chinese influences. An intimate, casual dinner date; check with the restaurant for a table because seating is limited.",
+      "sourceUrls": ["https://www.visitdubai.com/en/restaurants/lahkee-pan-asian-restaurant", "https://www.instagram.com/lahkee8/", "https://www.instagram.com/p/DdyIaZNEqdt/"],
+      "locationHint": "LahKee Pan Asian Kitchen, Shop 3, Building 1, Al Safa Park Complex, Al Safa 1, Dubai, UAE",
+      "placeId": "ChIJfan3vEFpXz4Rwl2oKxtJMtU",
+      "listingType": "place",
+      "taxonomy": {"primary": "food-drink", "tags": ["food-drink"]}
+    },
+    {
       "id": "montys-emirates-hills",
       "name": "Monty's — Emirates Hills",
       "aliases": ["Monty", "Montys", "Monty's Restaurant", "Emirates hill, Monty restaurant entrance", "Address Montgomerie Restaurant", "Monty restaurant entrance"],
