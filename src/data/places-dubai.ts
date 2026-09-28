@@ -51,6 +51,12 @@ export type DubaiPlace = {
   primaryGoogleType: string | null;
   listingType?: "place" | "event-venue";
   events?: DubaiEvent[];
+  visitStatus?: {
+    kind: "season-unconfirmed";
+    checkedAt: string;
+    note: string;
+    sourceUrl: string;
+  };
   taxonomy: {
     primary: PlaceCategory;
     tags: PlaceCategory[];

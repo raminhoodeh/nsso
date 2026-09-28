@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  CircleAlert,
   Compass,
   ExternalLink,
   Heart,
@@ -24,6 +25,7 @@ import type { DubaiEvent, DubaiPlace, PlaceCategory, PlacesPayload } from "@/dat
 import { activeEventsFor, googleCalendarUrl } from "@/lib/places-events";
 import { agendaEntries, type AgendaWindow } from "@/lib/places-agenda";
 import { datePlans, editorialResearchedAt } from "@/lib/places-editorial";
+import { placeClosureNotice, surpriseCandidates } from "@/lib/places-business-status";
 import { EXPERIENCES, matchesExperience, type ExperienceId } from "@/lib/places-experiences";
 import {
   TahoeGlassButton,
@@ -322,6 +324,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const selectedPlace = selectedId
     ? availablePlaces.find((place) => place.id === selectedId) || null
     : null;
+  const selectedClosure = selectedPlace ? placeClosureNotice(selectedPlace) : null;
   const selectedEvents = selectedPlace ? activeEventsByPlace.get(selectedPlace.id) || [] : [];
   const currentDetails = liveDetails?.selectionId === selectedPlace?.id ? liveDetails : null;
   const photos = currentDetails?.photos || [];
@@ -797,10 +800,12 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
 
   const surpriseMe = () => {
     if (!filteredPlaces.length) return;
-    const options = selectedId
-      ? filteredPlaces.filter((place) => place.id !== selectedId)
-      : filteredPlaces;
-    const pool = options.length ? options : filteredPlaces;
+    const pool = surpriseCandidates(filteredPlaces, selectedId);
+    if (!pool.length) {
+      setLocationMessage("The places in this selection are reported closed or awaiting seasonal confirmation. Try another collection, or confirm with the venues before travelling.");
+      return;
+    }
+    setLocationMessage(null);
     selectPlace(pool[Math.floor(Math.random() * pool.length)].id);
   };
 
@@ -969,6 +974,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           </>}
           {experienceId !== "whats-on" && filteredPlaces.map((place) => {
             const meta = categoryFor(place);
+            const closure = placeClosureNotice(place);
             const isFavourite = favourites.has(place.id);
             const distance = userLocation ? haversineKm(userLocation, place.coordinates) : null;
             const placeEvents = activeEventsByPlace.get(place.id) || [];
@@ -989,6 +995,12 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
                     </span>
                     <strong>{place.name}</strong>
                     <span className={styles.placeAddress}>{place.address}</span>
+                    {closure && (
+                      <span className={styles.placeClosure}>
+                        <CircleAlert size={12} aria-hidden="true" />
+                        <span>{closure.label}</span>
+                      </span>
+                    )}
                     {nextEvent && (
                       <span className={styles.placeEvent}>
                         <CalendarDays size={11} aria-hidden="true" />
@@ -1300,6 +1312,22 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
               <MapPin size={15} />
               <span>{currentDetails?.address || selectedPlace.address}</span>
             </p>
+            {selectedClosure && (
+              <section className={styles.detailClosure} aria-label="Listing status">
+                <CircleAlert size={17} aria-hidden="true" />
+                <div>
+                  <strong>{selectedClosure.label}</strong>
+                  <p>
+                    {selectedClosure.sourceLabel}{selectedClosure.checkedDate
+                      ? ` checked ${selectedClosure.checkedDate}`
+                      : "; check date unavailable"}.
+                    {" "}Confirm directly with the venue before travelling.
+                  </p>
+                  {selectedClosure.note && <p>{selectedClosure.note}</p>}
+                  {selectedClosure.sourceUrl && <a href={selectedClosure.sourceUrl} target="_blank" rel="noreferrer">Check venue source <ExternalLink size={12} aria-hidden="true" /></a>}
+                </div>
+              </section>
+            )}
             <p className={styles.detailDescription}>{selectedPlace.description || "A saved place to explore together."}</p>
             <PlaceVisitGuide place={selectedPlace} places={availablePlaces} onPair={place => {
               clearFilters();

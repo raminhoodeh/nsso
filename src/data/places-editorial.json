@@ -2,6 +2,222 @@
   "researchedAt": "2026-09-28",
   "guides": [
     {
+      "placeId": "the-uncommon-desert-cafe",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Save the mirrored desert setting as an idea for a future winter evening, then check whether the brand has announced a new Al Marmoom season before making plans.",
+      "practicalities": [
+        {
+          "label": "Historical location",
+          "text": "The official archived Dubai Shopping Festival map links plus code R9Q4+PR. The pin marks that former desert site, within an approximately 14-metre map cell; it is not a verified current entrance or parking area."
+        },
+        {
+          "label": "Reopening unconfirmed",
+          "text": "No new desert season or reopening date was confirmed on 28 September 2026. DIFC and the Beach Edition are separate venues; their hours and opening announcements do not apply here."
+        },
+        {
+          "label": "Photos and programme",
+          "text": "The old Google venue ID no longer resolves, so no live Google gallery is available for this site. Past festival dates, film screenings and performances are not advertised as upcoming events."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official venue ventures",
+          "url": "https://theuncommon.ae/pages/about-us"
+        },
+        {
+          "label": "Official seasonal updates",
+          "url": "https://www.instagram.com/theuncommon.ae/"
+        },
+        {
+          "label": "Official archived DSF map",
+          "url": "https://dsfmap.visitdubai.com/"
+        },
+        {
+          "label": "Original desert-site directions from DSF",
+          "url": "https://maps.app.goo.gl/Brm66n6wVo8kavdKA?g_st=iw"
+        }
+      ],
+      "pairWithPlaceIds": []
+    },
+    {
+      "placeId": "hidden-desert-cafe",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Once the announced season starts, make this a sunset coffee date: arrive in daylight, find an outdoor seat and stay as the desert light changes.",
+      "practicalities": [
+        {
+          "label": "Announced return",
+          "text": "Hidden’s official 25 September 2026 post announces a return on 1 October 2026. Google still marked it temporarily closed on 28 September; confirm that reopening has happened before travelling."
+        },
+        {
+          "label": "Find the right place",
+          "text": "This is Hidden’s Al Lisaili desert site beside The Fort, not a city café. Ask Hidden for the current entrance and parking instructions; a map pin is not confirmation of a suitable access road."
+        },
+        {
+          "label": "Before you go",
+          "text": "Confirm current hours, reservations and minimum spend directly. The neighbouring Fort has its own admission and activities; these are not automatically included with a café visit."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official café information",
+          "url": "https://www.instagram.com/hidden_dubai/"
+        },
+        {
+          "label": "Official reopening announcement",
+          "url": "https://www.instagram.com/hidden_dubai/reel/DdtWRkGpXPN/"
+        },
+        {
+          "label": "Officially linked branch map",
+          "url": "https://maps.app.goo.gl/phGKeRBfAJfz67nD6"
+        },
+        {
+          "label": "Neighbouring venue location confirmation",
+          "url": "https://arabian-adventures.presspage.com/new-desert-dining-and-entertainment-destination-the-fort--lisaili-opens-in-dubai/"
+        }
+      ],
+      "pairWithPlaceIds": []
+    },
+    {
+      "placeId": "limited-desert-cafe",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Save this for a future lakeside coffee-and-conversation date when the seasonal café confirms it is welcoming visitors again.",
+      "practicalities": [
+        {
+          "label": "Seasonal bookmark",
+          "text": "Both the official café profile and Google listing said temporarily closed on 28 September 2026. No new public reopening date was confirmed."
+        },
+        {
+          "label": "Check public access",
+          "text": "The brand previously advertised private Ramadan events. That historical offer does not establish current public access, opening hours or booking availability."
+        },
+        {
+          "label": "Before driving",
+          "text": "Use LIMITED’s official Al Marmoom Lakes map link and confirm the entrance, parking and current public service with the café before setting off."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official café information",
+          "url": "https://www.instagram.com/limited.dubai/"
+        },
+        {
+          "label": "Officially linked branch map",
+          "url": "https://maps.app.goo.gl/VDCESNeXbhzowNxv8"
+        },
+        {
+          "label": "Official café information",
+          "url": "https://www.instagram.com/limited.dubai/p/DU5A5pulymf/"
+        }
+      ],
+      "pairWithPlaceIds": []
+    },
+    {
+      "placeId": "parkers-al-marmoom",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Keep this seasonal coffee-and-dessert stop for a cooler-weather evening together, once Parker’s confirms the Marmoom branch has reopened.",
+      "practicalities": [
+        {
+          "label": "Seasonal bookmark",
+          "text": "Google marked Parker’s Marmoom temporarily closed when checked on 28 September 2026. The official site still lists the branch, but no reopening date was confirmed."
+        },
+        {
+          "label": "Choose Marmoom",
+          "text": "Use the Marmoom link on Parker’s official location page. Its mall restaurants and Nad Al Sheba branch are different destinations."
+        },
+        {
+          "label": "Menu and access",
+          "text": "The published desert menu is useful inspiration, not a guarantee of this season's prices or dishes. Confirm opening, reservation requirements and the arrival route directly."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official Parker’s UAE locations",
+          "url": "https://byparkers.com/parkers-international/social-media-uae/"
+        },
+        {
+          "label": "Officially linked Marmoom map",
+          "url": "https://maps.app.goo.gl/NVxBVAb1yBckmuhn6"
+        },
+        {
+          "label": "Published desert café menu",
+          "url": "https://byparkers.com/uae/wp-content/uploads/sites/3/2025/04/Desert-Menu.pdf"
+        },
+        {
+          "label": "Official seasonal updates",
+          "url": "https://www.instagram.com/parkers/"
+        }
+      ],
+      "pairWithPlaceIds": []
+    },
+    {
+      "placeId": "one-degree-mushrif",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "A potential outdoor coffee date among the palms at Mushrif’s winter café. Confirm the seasonal opening and park access before planning an evening around it.",
+      "practicalities": [
+        {
+          "label": "Seasonal bookmark",
+          "text": "Google marked this winter branch temporarily closed when checked on 28 September 2026. Confirm this season's reopening directly before making the trip."
+        },
+        {
+          "label": "Use the winter-branch pin",
+          "text": "Follow ONE DEGREE WINTER - DUBAI from the café's official location links. Al Warqa, Jumeirah and Last Exit are separate branches."
+        },
+        {
+          "label": "Before driving",
+          "text": "Ask about the current park entrance, parking, any park admission and this season's activities. Older hours and entertainment programmes should not be treated as current."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official One Degree locations",
+          "url": "https://linktr.ee/onedegree.ae"
+        },
+        {
+          "label": "Official café updates",
+          "url": "https://www.instagram.com/onedegree.ae/"
+        },
+        {
+          "label": "Officially linked winter-branch map",
+          "url": "https://maps.app.goo.gl/mnoDUPrV2e4n4C9V8"
+        }
+      ],
+      "pairWithPlaceIds": []
+    },
+    {
+      "placeId": "my-space-desert-cafe",
+      "verifiedAt": "2026-09-28",
+      "dateIdea": "Bookmark the sand-and-rock scenery for a cooler-weather coffee date after the desert branch confirms its return; this is an out-of-town destination, not Aljada.",
+      "practicalities": [
+        {
+          "label": "Seasonal bookmark",
+          "text": "The desert branch was marked temporarily closed when checked on 28 September 2026. No confirmed reopening date was found."
+        },
+        {
+          "label": "Call the desert branch",
+          "text": "The brand lists +971 52 729 6666 for DESERT. Its Aljada branch has a different number, and Aljada's 24/7 hours do not apply here."
+        },
+        {
+          "label": "Before driving",
+          "text": "Ask for the current entrance and parking instructions and confirm that the desert location—not just the Aljada café—is operating. Do not improvise a route across the dunes."
+        }
+      ],
+      "sources": [
+        {
+          "label": "Official My Space branches and contacts",
+          "url": "https://www.instagram.com/myspace.cafe/"
+        },
+        {
+          "label": "Officially linked desert-branch map",
+          "url": "https://maps.app.goo.gl/unsFF2YrRJkJ4QiR9?g_st=ipc"
+        },
+        {
+          "label": "Official Aljada-only 24/7 announcement",
+          "url": "https://www.instagram.com/myspace.cafe/reel/DdUdgD-OrQI/"
+        }
+      ],
+      "pairWithPlaceIds": []
+    },
+    {
       "placeId": "jameel-arts-centre",
       "verifiedAt": "2026-09-28",
       "dateIdea": "Browse an exhibition separately, then compare the work you each chose. Leave time for the library and the waterside sculpture park.",

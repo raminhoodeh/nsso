@@ -85,6 +85,20 @@ const PLACE_ID_OVERRIDES = {
 };
 
 const RESOLUTION_OVERRIDES = {
+  // The official archived DSF map links R9Q4+PR The Uncommon - Dubai.
+  // Its Google venue ID no longer resolves. Preserve the historic plus-code
+  // location without substituting the current DIFC branch or stale photo ID.
+  "the-uncommon-desert-cafe": {
+    address: "7HPQR9Q4+PR — former Al Marmoom desert pop-up, Saih Al Salam, Dubai",
+    coordinates: { lat: 24.8393125, lng: 55.3570625 },
+    placeId: null,
+    matchedName: "The Uncommon X DSF — Al Marmoom",
+    resolutionSource: "official-dsf-map",
+    resolutionStatus: "resolved",
+    fetchedAt: "2026-09-28T08:33:30Z",
+    websiteUri: "https://theuncommon.ae/pages/about-us",
+    googleMapsSearchUri: "https://www.google.com/maps/search/?api=1&query=24.8393125%2C55.3570625",
+  },
   "al-ghadf-garden": {
     address: "Al Sagel Road, 8 District, Ras Al Khaimah",
     coordinates: { lat: 25.283293, lng: 56.174277 },
@@ -314,10 +328,21 @@ function validateCuratedData(payload) {
   return payload.places.map((place, placeIndex) => {
     const label = `curation.places[${placeIndex}]`;
     if (!place || typeof place !== "object") throw new Error(`${label} must be an object`);
-    for (const field of ["id", "name", "description", "locationHint", "placeId"]) {
+    for (const field of ["id", "name", "description", "locationHint"]) {
       if (typeof place[field] !== "string" || !place[field].trim()) {
         throw new Error(`${label}.${field} is required`);
       }
+    }
+    if (!(typeof place.placeId === "string" && place.placeId.trim())
+      && !(place.placeId === null && Object.hasOwn(RESOLUTION_OVERRIDES, place.id))) {
+      throw new Error(`${label}.placeId is required unless an explicit verified location override exists`);
+    }
+    if (place.visitStatus !== undefined) {
+      if (place.visitStatus.kind !== "season-unconfirmed" || typeof place.visitStatus.note !== "string" || !place.visitStatus.note.trim()) {
+        throw new Error(`${label}.visitStatus must describe an unconfirmed season`);
+      }
+      requireIsoDateTime(place.visitStatus.checkedAt, `${label}.visitStatus.checkedAt`);
+      requireHttpsUrl(place.visitStatus.sourceUrl, `${label}.visitStatus.sourceUrl`);
     }
     if (normalize(place.id) !== place.id) throw new Error(`${label}.id must be normalized`);
     if (placeIds.has(place.id)) throw new Error(`Duplicate curated place id: ${place.id}`);
@@ -681,13 +706,16 @@ for (const entry of grouped.values()) {
   const coordinates = resolution?.coordinates || fallbackCenter;
   const address = resolution?.address || entry.locationHint;
   const resolutionStatus = resolution?.resolutionStatus || "approximate";
+  const resolvedPlaceId = resolution?.placeId || entry.placeId || null;
+  const mapsQuery = new URLSearchParams({ api: "1", query });
+  if (resolvedPlaceId) mapsQuery.set("query_place_id", resolvedPlaceId);
 
   places.push({
     ...entry,
     emirate,
     address,
     coordinates,
-    placeId: resolution?.placeId || entry.placeId || null,
+    placeId: resolvedPlaceId,
     googleTypes: resolution?.googleTypes || [],
     primaryGoogleType: resolution?.primaryGoogleType || null,
     taxonomy: editorial,
@@ -700,7 +728,7 @@ for (const entry of grouped.values()) {
       websiteUri: resolution?.websiteUri || null,
       businessStatus: resolution?.businessStatus || null,
     },
-    googleMapsSearchUri: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
+    googleMapsSearchUri: resolution?.googleMapsSearchUri || `https://www.google.com/maps/search/?${mapsQuery}`,
   });
 }
 

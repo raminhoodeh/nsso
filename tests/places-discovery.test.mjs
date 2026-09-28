@@ -85,14 +85,15 @@ test("gallery warehouse addresses and separate Tashkeel branches are preserved",
   assert.ok(Math.abs(places.get("tashkeel-makerspace").coordinates.lng - places.get("tashkeel-nad-al-sheba").coordinates.lng) > 0.05);
 });
 
-test("twenty dated visit guides have substantive practical advice and official sources", () => {
+test("the original twenty dated visit guides retain practical advice and official sources", () => {
   const expectedIds = [...newPins.map(([id]) => id), "jameel-arts-centre", "fiker-institute-library", "cinema-akil",
     "mohammed-bin-rashid-library", "al-safa-art-design-library"];
   assert.equal(editorial.researchedAt, "2026-09-28");
-  assert.equal(editorial.guides.length, 20);
   assert.equal(guides.size, editorial.guides.length);
-  assert.deepEqual([...guides.keys()].sort(), expectedIds.sort());
-  for (const guide of editorial.guides) {
+  assert.equal(expectedIds.length, 20);
+  for (const id of expectedIds) {
+    const guide = guides.get(id);
+    assert.ok(guide, id);
     assert.ok(places.has(guide.placeId), guide.placeId);
     assert.equal(guide.verifiedAt, editorial.researchedAt, guide.placeId);
     assert.ok(guide.dateIdea.length >= 40, guide.placeId);

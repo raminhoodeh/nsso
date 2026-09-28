@@ -2,6 +2,171 @@
   "version": 1,
   "places": [
     {
+      "id": "the-uncommon-desert-cafe",
+      "name": "The Uncommon — Al Marmoom (seasonal site)",
+      "aliases": [
+        "THE UNCOMMON",
+        "The Uncommon desert cafe",
+        "The Uncommon Al Marmoom",
+        "The Uncommon X DSF"
+      ],
+      "description": "A bookmark for The Uncommon’s former mirrored desert pop-up in Al Marmoom, as featured in the carousel. Its next desert season is unconfirmed. The pin comes from Dubai’s official archived festival map and identifies the historical site, not a guaranteed current entrance. This is not the brand’s DIFC, beach or Al Fayah venue; confirm the current desert location and opening directly before travelling.",
+      "sourceUrls": [
+        "https://theuncommon.ae/pages/about-us",
+        "https://www.instagram.com/p/DdOdLB7ivlr/",
+        "https://www.instagram.com/theuncommon.ae/",
+        "https://dsfmap.visitdubai.com/",
+        "https://dsfmap.visitdubai.com/assets/maps/dsfinteractive.json",
+        "https://maps.app.goo.gl/Brm66n6wVo8kavdKA?g_st=iw",
+        "https://www.visitdubai.com/en/articles/dubais-desert-activities"
+      ],
+      "locationHint": "The Uncommon historical Al Marmoom desert pop-up, 7HPQR9Q4+PR, Saih Al Salam / Al Lisaili, Dubai, UAE",
+      "placeId": null,
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      },
+      "visitStatus": {
+        "kind": "season-unconfirmed",
+        "checkedAt": "2026-09-28T08:33:30Z",
+        "note": "Historical desert-site bookmark. A new Al Marmoom season, current entrance and access have not been confirmed. Check directly with The Uncommon before setting off.",
+        "sourceUrl": "https://theuncommon.ae/pages/about-us"
+      }
+    },
+    {
+      "id": "hidden-desert-cafe",
+      "name": "Hidden Café — Al Lisaili",
+      "aliases": [
+        "HIDDEN",
+        "Hidden Dubai",
+        "Hidden cafe",
+        "Hidden desert cafe"
+      ],
+      "description": "An open-air desert cafe at Al Lisaili, with mirrored design, low outdoor seating and a sunset-to-evening atmosphere. The brand announced its return for 1 October 2026; it was still marked temporarily closed when checked on 28 September. Confirm the opening, current access and hours with Hidden before driving out.",
+      "sourceUrls": [
+        "https://www.instagram.com/hidden_dubai/",
+        "https://www.instagram.com/p/DdOdLB7ivlr/",
+        "https://www.instagram.com/hidden_dubai/reel/DdtWRkGpXPN/",
+        "https://maps.app.goo.gl/phGKeRBfAJfz67nD6",
+        "https://arabian-adventures.presspage.com/new-desert-dining-and-entertainment-destination-the-fort--lisaili-opens-in-dubai/"
+      ],
+      "locationHint": "Hidden Café — Al Lisaili, Desert cafe beside The Fort - Lisaili, Al Lisaili / Madinat Al Qudra, Dubai",
+      "placeId": "ChIJT9Rbs4aBXz4REeRFuxHkQ14",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      }
+    },
+    {
+      "id": "limited-desert-cafe",
+      "name": "LIMITED — Al Marmoom Lakes",
+      "aliases": [
+        "LIMITED",
+        ".LIMITED",
+        "Limited Dubai",
+        "Limited desert cafe"
+      ],
+      "description": "A seasonal desert-lakeside cafe at Al Marmoom, suited to a sunset coffee or an unhurried outdoor meal when operating. The official profile and Google listing were marked temporarily closed on 28 September 2026. Save it for a future visit, but confirm reopening, the exact entrance and current service with LIMITED before travelling.",
+      "sourceUrls": [
+        "https://www.instagram.com/limited.dubai/",
+        "https://www.instagram.com/p/DdOdLB7ivlr/",
+        "https://maps.app.goo.gl/VDCESNeXbhzowNxv8",
+        "https://www.instagram.com/limited.dubai/p/DU5A5pulymf/"
+      ],
+      "locationHint": "LIMITED — Al Marmoom Lakes, Al Marmoom Lakes / Al Qudra Lake Road, Saih Al Salam, Dubai",
+      "placeId": "ChIJu0-8EQCDXz4RI5xuNUoQosk",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      }
+    },
+    {
+      "id": "parkers-al-marmoom",
+      "name": "Parker’s — Al Marmoom",
+      "aliases": [
+        "Parker's",
+        "Parker's Marmoom",
+        "Parkers desert cafe"
+      ],
+      "description": "Parker’s seasonal Al Marmoom desert outpost, shown by the Parker’s signage in the carousel. Its dedicated desert menu features coffee and indulgent desserts, making it a winter coffee-and-cake date to save for later. The branch is currently marked temporarily closed; check its return before setting off.",
+      "sourceUrls": [
+        "https://byparkers.com/parkers-international/social-media-uae/",
+        "https://www.instagram.com/p/DdOdLB7ivlr/",
+        "https://maps.app.goo.gl/NVxBVAb1yBckmuhn6",
+        "https://byparkers.com/uae/wp-content/uploads/sites/3/2025/04/Desert-Menu.pdf",
+        "https://www.instagram.com/parkers/"
+      ],
+      "locationHint": "Parker’s — Al Marmoom, R9R7+4X8, Saih Al Salam, Al Marmoom, Dubai",
+      "placeId": "ChIJ0-Uren2DXz4R9hDE2XNbucw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      }
+    },
+    {
+      "id": "one-degree-mushrif",
+      "name": "One Degree Winter Café — Mushrif",
+      "aliases": [
+        "ONE DEGREE",
+        "ONE DEGREE WINTER CAFE",
+        "One Degree Cafe Mushrif"
+      ],
+      "description": "A seasonal outdoor One Degree café in Mushrif National Park, with sandy seating and palms—the park-based winter venue shown in your carousel, not the older Margham pop-up. Saved as a cooler-weather coffee date; currently marked temporarily closed, with reopening still to be confirmed.",
+      "sourceUrls": [
+        "https://linktr.ee/onedegree.ae",
+        "https://www.instagram.com/p/DdOdLB7ivlr/",
+        "https://www.instagram.com/onedegree.ae/",
+        "https://maps.app.goo.gl/mnoDUPrV2e4n4C9V8"
+      ],
+      "locationHint": "One Degree Winter Café — Mushrif, Mushrif National Park, Dubai",
+      "placeId": "ChIJqQn6Y_aD9T4RgIGU5gIr_34",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      }
+    },
+    {
+      "id": "my-space-desert-cafe",
+      "name": "My Space Café — Desert, Nazwa",
+      "aliases": [
+        "MY SPACE",
+        "MY SPACE COFFEE",
+        "My Space Cafe Desert",
+        "My Space Nazwa"
+      ],
+      "description": "My Space's seasonal desert branch in Nazwa/Al Qasimia, with outdoor coffee seating among the sand and rocky scenery shown in your carousel. This is separate from its Aljada city café. Currently marked temporarily closed; keep it as a winter-date bookmark and confirm reopening first.",
+      "sourceUrls": [
+        "https://www.instagram.com/myspace.cafe/",
+        "https://www.instagram.com/p/DdOdLB7ivlr/",
+        "https://maps.app.goo.gl/unsFF2YrRJkJ4QiR9?g_st=ipc",
+        "https://www.instagram.com/myspace.cafe/reel/DdUdgD-OrQI/"
+      ],
+      "locationHint": "My Space Café — Desert, Nazwa, XMQ7+38M, Al Qasimia City - Industrial 1, Sharjah; official brand calls the desert branch Nazwa",
+      "placeId": "ChIJyXfcDv2D9T4R0gqhSiTk_vI",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      }
+    },
+    {
       "id": "lecole-jewelry-arts-dubai",
       "name": "L’ÉCOLE, School of Jewelry Arts — Dubai",
       "aliases": [
