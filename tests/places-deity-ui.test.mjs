@@ -108,13 +108,42 @@ test("requests are bounded, cancellable and expose retry without sending an empt
 });
 
 test("chat panels stay opaque and touch controls remain usable at mobile sizes", () => {
-  assert.match(css, /\.panel \{[^}]*background: #11161d/);
+  assert.match(css, /\.panel \{[^}]*background: #f7f8fa; color: #243342/);
+  assert.match(css, /\.panel \{[^}]*color-scheme: light/);
   assert.match(css, /\.transcript \{[^}]*min-height: 0;[^}]*overflow: auto;[^}]*overscroll-behavior: contain/);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*?height: (?:var\(--deity-viewport-height, )?100dvh/);
-  assert.match(css, /padding-bottom: max\(14px, env\(safe-area-inset-bottom\)\)/);
+  assert.match(css, /padding-bottom: max\(16px, env\(safe-area-inset-bottom\)\)/);
   assert.match(css, /\.inputRow textarea \{ font-size: 16px; \}/);
   assert.match(css, /\.header button, \.inputRow button \{ width: 44px; height: 44px; \}/);
   assert.match(chat, /AI suggestions, not live availability/);
+});
+
+test("Places chat uses spacious light cards without changing the rest of Deity", () => {
+  assert.match(css, /\.compactStop \{[^}]*margin-top: 18px;[^}]*background: #fff/);
+  assert.match(css, /\.stopMapButton \{[^}]*gap: 14px;[^}]*padding: 20px/);
+  assert.match(css, /\.message \{[^}]*font-size: 15px; line-height: 1.8/);
+  assert.match(css, /\.stopTitle strong \{[^}]*font-size: 16px/);
+  assert.match(css, /\.brand img \{[^}]*filter: brightness\(0\)/);
+  assert.doesNotMatch(css, /#11161d|#171d26|#1b2631|#0c1118/);
+  assert.match(chat, /<details className=\{styles.context\}>/);
+  assert.match(chat, /void send\(prompt.message\)/);
+  assert.match(chat, /<strong>\{prompt.label\}<\/strong>/);
+});
+
+test("new answers start at their beginning and reopening restores the reading position", () => {
+  assert.match(chat, /transcriptUpdateRef.current === update/);
+  assert.match(chat, /transcript.scrollTop = transcriptScrollRef.current/);
+  assert.match(chat, /data-latest-answer/);
+  assert.match(chat, /answer.getBoundingClientRect\(\).top - transcript.getBoundingClientRect\(\).top - 24/);
+  assert.match(chat, /onScroll=\{event => \{ transcriptScrollRef.current = event.currentTarget.scrollTop/);
+});
+
+test("the composer grows with the draft but does not consume the whole small viewport", () => {
+  assert.match(chat, /ref=\{draftRef\}[^>]*rows=\{1\}/);
+  assert.match(chat, /Math.min\(120, Math.max\(44, textarea.scrollHeight\)\)/);
+  assert.match(css, /@media \(max-height: 500px\) and \(max-width: 900px\)/);
+  assert.match(css, /\.inputRow textarea \{ max-height: 72px; \}/);
+  assert.match(css, /\.context > div \{ max-height: 72px; \}/);
 });
 
 test("sidebar width is persisted independently and resizes the map without resetting its center", () => {

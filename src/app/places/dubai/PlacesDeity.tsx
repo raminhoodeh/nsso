@@ -24,9 +24,9 @@ type Props = {
   onSelectPlace: (id: string) => void;
 };
 const PROMPTS = [
-  "Plan a relaxed date from Downtown Dubai with coffee, art and dinner.",
-  "Which current exhibitions or events would make a good date?",
-  "Suggest somewhere unusual from my saved places.",
+  { label: "Plan a relaxed date", detail: "Coffee, art & dinner", message: "Plan a relaxed date from Downtown Dubai with coffee, art and dinner." },
+  { label: "Explore what’s on", detail: "Exhibitions & events", message: "Which current exhibitions or events would make a good date?" },
+  { label: "Pick from my saved places", detail: "Something a little different", message: "Suggest somewhere unusual from my saved places." },
 ];
 
 function historyText(message: Message, places: DubaiPlace[]) {
@@ -49,6 +49,9 @@ export default function PlacesDeity(props: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const draftRef = useRef<HTMLTextAreaElement>(null);
+  const transcriptScrollRef = useRef(0);
+  const transcriptUpdateRef = useRef("");
   const controllerRef = useRef<AbortController | null>(null);
 
   useTahoeModalAccessibility({
@@ -62,8 +65,29 @@ export default function PlacesDeity(props: Props) {
     panelRef.current?.focus({ preventScroll: true });
   }, [open]);
   useEffect(() => {
-    if (open) transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight });
+    const transcript = transcriptRef.current;
+    if (!open || !transcript) return;
+    const update = `${messages.length}:${busy}:${error || ""}`;
+    if (transcriptUpdateRef.current === update) {
+      transcript.scrollTop = transcriptScrollRef.current;
+    } else if (!messages.length) {
+      transcript.scrollTop = 0;
+    } else if (!busy && !error && messages[messages.length - 1]?.role === "assistant") {
+      // Start at the answer, not the last itinerary stop. Keep focus in the composer.
+      const answer = transcript.querySelector<HTMLElement>('[data-latest-answer="true"]');
+      if (answer) transcript.scrollTop += answer.getBoundingClientRect().top - transcript.getBoundingClientRect().top - 24;
+    } else {
+      transcript.scrollTop = transcript.scrollHeight;
+    }
+    transcriptUpdateRef.current = update;
+    transcriptScrollRef.current = transcript.scrollTop;
   }, [messages, busy, error, open]);
+  useEffect(() => {
+    const textarea = draftRef.current;
+    if (!open || !textarea) return;
+    textarea.style.height = "0px";
+    textarea.style.height = `${Math.min(120, Math.max(44, textarea.scrollHeight))}px`;
+  }, [draft, open, compact]);
   useEffect(() => () => controllerRef.current?.abort(), []);
   useEffect(() => {
     if (!open || !compact || !window.visualViewport) return;
@@ -190,15 +214,20 @@ export default function PlacesDeity(props: Props) {
           <button ref={closeRef} type="button" onClick={() => dismiss(false)} aria-label="Close Deity" title="Close"><X size={19} /></button>
         </>}
       </header>
-      <div className={styles.context}><span className={styles.dot} /> Connected to this map <span>{props.contextLabel} · {props.savedPlaceIds.length} saved</span></div>
-      <div ref={transcriptRef} className={styles.transcript} role="log" aria-label="Conversation with Deity" aria-live="polite" aria-relevant="additions">
+      <details className={styles.context}>
+        <summary><span><span className={styles.dot} />Connected to this map</span><span>{props.savedPlaceIds.length} saved <ChevronDown size={15} /></span></summary>
+        <div><p>{props.contextLabel} · {props.savedPlaceIds.length} saved</p><p>AI suggestions, not live availability. Check opening hours and bookings before you go. Chat stays in this tab.</p></div>
+      </details>
+      <div ref={transcriptRef} className={styles.transcript} role="log" aria-label="Conversation with Deity" aria-live="polite" aria-relevant="additions"
+        onScroll={event => { transcriptScrollRef.current = event.currentTarget.scrollTop; }}>
         {messages.length === 0 && <div className={styles.welcome}>
           <span className={styles.eyebrow}>A little inspiration</span>
-          <h2>What kind of day<br />are you imagining?</h2>
+          <h2>What kind of day are you imagining?</h2>
           <p>Tell me your mood, starting area, budget and when you’re going. I’ll connect places and current events from this map into a plan for you.</p>
-          <div className={styles.prompts}>{PROMPTS.map(prompt => <button key={prompt} type="button" onClick={() => void send(prompt)}>{prompt}<ChevronRight size={16} /></button>)}</div>
+          <div className={styles.prompts}>{PROMPTS.map(prompt => <button key={prompt.label} type="button" onClick={() => void send(prompt.message)}><span><strong>{prompt.label}</strong><small>{prompt.detail}</small></span><ChevronRight size={18} /></button>)}</div>
         </div>}
-        {messages.map((message, index) => <article key={index} className={message.role === "user" ? styles.userMessage : styles.answer}>
+        {messages.map((message, index) => <article key={index} className={message.role === "user" ? styles.userMessage : styles.answer}
+          data-latest-answer={message.role === "assistant" && index === messages.length - 1 || undefined}>
           <span className={styles.speaker}>{message.role === "user" ? "You" : "Deity"}</span>
           <p className={styles.message}>{message.content}</p>
           {message.reply?.recommendations.map((pick, pickIndex) => placeCard(pick, pickIndex))}
@@ -215,13 +244,13 @@ export default function PlacesDeity(props: Props) {
       </div>
       <form className={styles.composer} onSubmit={event => { event.preventDefault(); void send(draft); }}>
         <label htmlFor="places-deity-message" className={styles.srOnly}>Ask Deity about places or plan an itinerary</label>
-        <div className={styles.inputRow}><textarea id="places-deity-message" value={draft} maxLength={2000} rows={2}
-          placeholder="A quiet date near Downtown, this evening…" onChange={event => setDraft(event.target.value)}
+        <div className={styles.inputRow}><textarea ref={draftRef} id="places-deity-message" value={draft} maxLength={2000} rows={1}
+          placeholder="Plan your next date…" onChange={event => setDraft(event.target.value)}
           onKeyDown={event => { if (!compact && event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(draft); } }} />
           {busy ? <button type="button" aria-label="Stop response" onClick={() => controllerRef.current?.abort()}><Square size={16} /></button>
             : <button type="submit" disabled={!draft.trim()} aria-label="Send message"><ArrowUp size={20} /></button>}
         </div>
-        <p>AI suggestions, not live availability. Check opening hours and bookings before you go. Chat stays in this tab.</p>
+        <p>AI suggestions · Check hours &amp; availability.</p>
       </form>
     </section>}
   </>;

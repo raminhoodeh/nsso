@@ -23,6 +23,10 @@ read-only context instead of the account assistant's profile tools.
   Messages and context are sent to the server/model when the user asks a question.
 - Mobile chat is a focus-contained dialog, with an isolated background, safe-area
   padding, 44px controls and Visual Viewport sizing for the software keyboard.
+  The Places assistant uses the same opaque light palette as the explorer,
+  with readable body text and generously spaced cards. Map context expands on
+  demand, and the composer grows from one line up to a bounded height. New answers
+  open at their beginning; returning from the map restores the reading position.
   A single Map button returns to an interactive preview; recommended place
   previews include Back to conversation. Itinerary stops keep their canonical
   event dates visible while longer descriptions are expandable.
