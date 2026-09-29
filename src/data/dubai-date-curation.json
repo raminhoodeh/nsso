@@ -2,6 +2,20 @@
   "version": 1,
   "places": [
     {
+      "id": "the-courtyard-al-quoz",
+      "name": "The Courtyard — Al Quoz",
+      "aliases": ["The Courtyard", "Courtyard", "Courtyard Al Quoz"],
+      "description": "A creative courtyard in Al Quoz, with Gulf-inspired façades, contemporary art, design boutiques, studios and cafés. Browse the spaces together, then stop for coffee. This pin marks the overall Courtyard complex; Boston Lane and the Courtyard Playhouse remain separate destinations on the map.",
+      "sourceUrls": ["https://www.courtyard-uae.com/", "https://www.courtyard-uae.com/concept", "https://www.courtyard-uae.com/find-us"],
+      "locationHint": "The Courtyard, Al Quoz Industrial 1, Al Quoz Central Street / Kunooz 1 Street, Dubai, UAE",
+      "placeId": "ChIJxWaG5CpqXz4R63SPc-GJlSM",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": ["arts-culture-heritage", "shopping-stroll"]
+      }
+    },
+    {
       "id": "the-uncommon-desert-cafe",
       "name": "The Uncommon — Al Marmoom (seasonal site)",
       "aliases": [

@@ -1,6 +1,31 @@
 {
-  "researchedAt": "2026-09-28",
+  "researchedAt": "2026-09-29",
   "guides": [
+    {
+      "placeId": "the-courtyard-al-quoz",
+      "verifiedAt": "2026-09-29",
+      "dateIdea": "Take a slow browse through the courtyard, art and design spaces, then choose a café together. Boston Lane and the Courtyard Playhouse have their own map cards if you want to plan a coffee stop or a show.",
+      "practicalities": [
+        {
+          "label": "Finding the complex",
+          "text": "The official address is Al Quoz Industrial 1, Al Quoz Central Street / Kunooz 1 Street. Google labels the same complex E11 – 1 4B Street. Use this complex pin, rather than a similarly named hotel."
+        },
+        {
+          "label": "Published complex hours",
+          "text": "The Courtyard website lists 8am–7pm daily, checked 29 September 2026. Individual cafés, shops, galleries and theatre programmes can keep different hours; confirm your intended stop before going."
+        },
+        {
+          "label": "Plan a specific activity",
+          "text": "Use the official tenant directory for café, workshop or theatre enquiries. This is an everyday place pin, not a ticket or a promise that a particular show or exhibition is running."
+        }
+      ],
+      "sources": [
+        { "label": "Official directory", "url": "https://www.courtyard-uae.com/" },
+        { "label": "Official location and hours", "url": "https://www.courtyard-uae.com/find-us" },
+        { "label": "Official art and community concept", "url": "https://www.courtyard-uae.com/concept" }
+      ],
+      "pairWithPlaceIds": ["boston-lane-al-quoz", "the-courtyard-playhouse"]
+    },
     {
       "placeId": "the-uncommon-desert-cafe",
       "verifiedAt": "2026-09-28",

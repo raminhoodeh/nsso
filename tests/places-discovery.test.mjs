@@ -88,14 +88,14 @@ test("gallery warehouse addresses and separate Tashkeel branches are preserved",
 test("the original twenty dated visit guides retain practical advice and official sources", () => {
   const expectedIds = [...newPins.map(([id]) => id), "jameel-arts-centre", "fiker-institute-library", "cinema-akil",
     "mohammed-bin-rashid-library", "al-safa-art-design-library"];
-  assert.equal(editorial.researchedAt, "2026-09-28");
+  assert.ok(Date.parse(editorial.researchedAt) >= Date.parse("2026-09-28"));
   assert.equal(guides.size, editorial.guides.length);
   assert.equal(expectedIds.length, 20);
   for (const id of expectedIds) {
     const guide = guides.get(id);
     assert.ok(guide, id);
     assert.ok(places.has(guide.placeId), guide.placeId);
-    assert.equal(guide.verifiedAt, editorial.researchedAt, guide.placeId);
+    assert.equal(guide.verifiedAt, "2026-09-28", guide.placeId);
     assert.ok(guide.dateIdea.length >= 40, guide.placeId);
     assert.ok(guide.practicalities.length >= 2, guide.placeId);
     for (const item of guide.practicalities) {
