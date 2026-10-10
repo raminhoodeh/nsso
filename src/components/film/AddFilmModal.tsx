@@ -7,6 +7,7 @@ import {
     TahoeGlassField,
     TahoeGlassSurface,
 } from '@/components/ui/tahoe-glass';
+import styles from './AddFilmModal.module.css';
 
 interface MatchCandidate {
     title: string;
@@ -182,13 +183,15 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
             closeOnEscape={!isProcessing}
             closeOnPointerDownOutside={!isProcessing}
             aria-label="Add film to database"
+            data-razinflix-add-film-surface="opaque"
             tone="light"
             semanticTint="dark"
             semanticTintOpacity={0.045}
             radius={32}
-            className="h-[calc(100dvh-2rem)] max-w-2xl overflow-hidden p-0 md:h-auto"
+            className={`${styles.dialog} h-[calc(100dvh-2rem)] max-w-2xl overflow-hidden p-0 md:h-auto`}
             contentClassName="flex h-full flex-col"
-            overlayClassName="z-[200]"
+            overlayClassName={styles.overlay}
+            backdropClassName={styles.backdrop}
         >
                 
                 {/* Header */}
@@ -199,7 +202,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                     tone="light"
                     semanticTint="dark"
                     semanticTintOpacity={0.035}
-                    className="flex-none px-6 py-5"
+                    className={`${styles.header} flex-none px-6 py-5`}
                     contentClassName="flex items-center justify-between"
                 >
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -229,7 +232,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                 tone="light"
                                 semanticTint="dark"
                                 semanticTintOpacity={0.03}
-                                surfaceClassName="p-0"
+                                surfaceClassName={`${styles.inputPanel} p-0`}
                                 controlClassName="h-48 resize-none p-4 font-medium leading-relaxed text-white"
                             >
                                 <textarea
@@ -249,7 +252,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                     tone="light"
                                     semanticTint="dark"
                                     semanticTintOpacity={0.04}
-                                    className="p-4 text-sm font-medium text-red-300 animate-pulse"
+                                    className={`${styles.warningPanel} p-4 text-sm font-medium text-red-300 animate-pulse`}
                                 >
                                     Warning: You have unsubmitted text. Tap Cancel again to discard and close.
                                 </TahoeGlassSurface>
@@ -276,7 +279,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                             tone="light"
                             semanticTint="dark"
                             semanticTintOpacity={0.055}
-                            className="flex-1 h-64 md:h-80 p-4 overflow-hidden"
+                            className={`${styles.statusPanel} flex-1 h-64 md:h-80 p-4 overflow-hidden`}
                             contentClassName="relative flex h-full flex-col font-mono text-xs text-green-300 md:text-sm"
                         >
                             <div className={`absolute top-2 right-4 flex items-center gap-2 text-[#007AFF] text-xs font-bold opacity-70 ${isFinished ? '' : 'animate-pulse'}`}>
