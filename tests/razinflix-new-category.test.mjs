@@ -19,7 +19,7 @@ test('the New shelf is protected from thin-category consolidation and pinned fir
 
 test('the curated 2026 ingest is deterministic, complete, and dry-run by default', () => {
     const curatedEntries = ingestSource.match(/\{ title: .*? tmdbId: \d+, evidence: /g) ?? [];
-    assert.equal(curatedEntries.length, 25);
+    assert.equal(curatedEntries.length, 29);
     assert.match(ingestSource, /const EXPECTED_YEAR = '2026'/);
     assert.match(ingestSource, /film\.tmdbId !== candidate\.tmdbId/);
     assert.match(ingestSource, /verifyPosterUrl\(film\.posterUrl\)/);

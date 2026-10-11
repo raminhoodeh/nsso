@@ -47,6 +47,10 @@ const CURATED_FILMS = [
     { title: 'The Weight', tmdbId: 1433583, evidence: 'https://www.augenschein-filmproduktion.de/de/news/weight-trailer-de.html' },
     { title: 'Tony', tmdbId: 1329016, evidence: 'https://a24films.com/films/tony' },
     { title: 'Time and Water', tmdbId: 1596278, evidence: 'https://timeandwaterfilm.com/' },
+    { title: 'Blue Heron', tmdbId: 1184941, evidence: 'https://www.metacritic.com/pictures/best-movies-of-2026-at-midyear/' },
+    { title: 'Remake', tmdbId: 1329909, evidence: 'https://www.metacritic.com/browse/movie/all/all/current-year/metascore/' },
+    { title: 'The Furious', tmdbId: 1280738, evidence: 'https://editorial.rottentomatoes.com/guide/best-new-movies/' },
+    { title: 'Silent Friend', tmdbId: 1168719, evidence: 'https://www.metacritic.com/pictures/best-movies-of-2026-at-midyear/' },
 ];
 
 const MANUAL_TRAILERS = new Map([
