@@ -3,6 +3,10 @@
 import { useUser } from '@/components/providers/UserProvider';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import {
+    routeSuppressesAuthenticatedNavigation,
+    routeUsesDashboardSidebar,
+} from '@/lib/tahoe-glass/route-boundaries';
 
 export default function AuthenticatedLayoutWrapper({
     children
@@ -12,19 +16,15 @@ export default function AuthenticatedLayoutWrapper({
     const { user } = useUser();
     const pathname = usePathname();
 
-    // Determine if we should apply the authenticated layout spacing
-    // Generally, if the user is logged in, we want to show the nav, so we need spacing.
-    // However, we might want to opt-out on specific pages (like landing page if they go back?)
-    // For now, based on "persistent navigation", we apply it globally if logged in.
-
-    // Check if user is logged in
     const isLoggedIn = !!user;
-    const ownsViewport = pathname.startsWith('/places');
+    const navigationSuppressed = routeSuppressesAuthenticatedNavigation(pathname);
+    const usesDashboardSidebar = routeUsesDashboardSidebar(pathname);
 
     return (
         <div className={cn(
             "relative w-full transition-all duration-300",
-            isLoggedIn && !ownsViewport ? "pb-[calc(var(--mobile-bottom-nav-height)+16px)] lg:pb-0 lg:pl-[280px]" : ""
+            isLoggedIn && !navigationSuppressed ? "pb-[calc(var(--mobile-bottom-nav-height)+16px)] lg:pb-0" : "",
+            isLoggedIn && usesDashboardSidebar ? "lg:pl-[280px]" : ""
         )}>
             {children}
         </div>

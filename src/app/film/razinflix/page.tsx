@@ -8,6 +8,7 @@ import AddFilmModal from '@/components/film/AddFilmModal';
 import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X, Pause, Play } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import {
+    TahoeBackdropHeader,
     TahoeGlassButton,
     TahoeGlassDialog,
     TahoeGlassField,
@@ -15,7 +16,6 @@ import {
     TahoeGlassSurface,
     type TahoeGlassWebGLSource,
 } from '@/components/ui/tahoe-glass';
-import GlobalNavigation from '@/components/layout/GlobalNavigation';
 import ConditionalNSSOAgent from '@/components/agent/ConditionalNSSOAgent';
 import { ToastViewport } from '@/components/ui/Toast';
 import modalStyles from '@/components/film/MovieModal.module.css';
@@ -365,109 +365,112 @@ export default function RazinFlixPage() {
             className="min-h-screen bg-black text-white font-sans"
             contentClassName="min-h-screen"
         >
-        <GlobalNavigation />
         <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans relative">
             <div aria-hidden="true" className={styles.backgroundShade} data-razinflix-background-shade="true">
                 <div key={heroSceneUrl} className={styles.backgroundFade} />
             </div>
             {/* Navbar */}
-            <TahoeGlassSurface
-                as="nav"
-                variant="menu"
+            <TahoeBackdropHeader
                 radius="0 0 24px 24px"
                 tone="light"
                 semanticTint="dark"
                 semanticTintOpacity={scrolled ? 0.08 : 0.025}
-                className="fixed top-0 w-full z-40 transition-all duration-300 px-4 md:px-12 pt-[calc(max(env(safe-area-inset-top),_1rem))] pb-4"
-                contentClassName="flex min-w-0 flex-col md:flex-row items-center justify-between gap-3"
+                displacementProfile="prism-top"
+                materialLighting="uniform"
+                className="fixed inset-x-0 top-0 z-[5000] w-full transition-all duration-300"
+                contentClassName="w-full"
             >
-                
-                {/* Keep desktop controls in normal flow at tablet widths. */}
-                <div className="hidden shrink-0 items-center gap-2 md:flex">
-                    <TahoeGlassButton
-                        onClick={requestAddFilmAccess}
-                        tone="light"
-                        semanticTint="dark"
-                        semanticTintOpacity={0.04}
-                        className="min-h-11 whitespace-nowrap px-4 py-2 hover:scale-105"
-                        contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
-                    >
-                        <Plus size={16} /> Add Film
-                    </TahoeGlassButton>
-                    {rotationControl}
-                </div>
-
-                {/* Desktop Right Side Navigation */}
-                <div className="flex min-w-0 w-full items-center justify-between gap-2 md:ml-auto md:flex-1 md:max-w-2xl">
-                    <TahoeGlassSurface
-                        variant="recessed"
-                        radius={12}
-                        tone="light"
-                        semanticTint="dark"
-                        semanticTintOpacity={0.035}
-                        className="relative min-w-0 flex-1 p-0 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-white"
-                        contentClassName="flex items-center gap-2"
-                    >
-                        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <input
-                            ref={searchInputRef}
-                            type="search"
-                            placeholder="Titles, directors, genres"
-                            aria-label="Search films"
-                            className={`relative min-h-11 w-full min-w-0 bg-transparent py-2 pl-10 text-base text-white outline-none placeholder:text-white/55 [&::-webkit-search-cancel-button]:appearance-none ${searchTerm ? 'pr-12' : 'pr-3'}`}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        {searchTerm && (
-                            <button
-                                type="button"
-                                aria-label="Clear search"
-                                className="absolute right-0 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-white focus-visible:outline-2 focus-visible:outline-white"
-                                onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
-                            >
-                                <X size={18} aria-hidden="true" />
-                            </button>
-                        )}
-                    </TahoeGlassSurface>
-                    <TahoeGlassField
-                        visuallyHideLabel
-                        label="Film view"
-                        tone="light"
-                        semanticTint="dark"
-                        semanticTintOpacity={0.035}
-                        className="min-w-0 flex-1 md:w-56 md:flex-none"
-                        surfaceClassName="p-0 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-white"
-                        controlClassName="min-h-11 cursor-pointer overflow-hidden text-ellipsis px-3 py-2 text-base text-white [&>option]:bg-neutral-900 [&>option]:text-white"
-                    >
-                        <select
-                            value={viewMode}
-                            onChange={(e) => setViewMode(e.target.value as ViewMode)}
+                <nav
+                    aria-label="RazinFlix controls"
+                    className="flex min-w-0 flex-col items-center justify-between gap-3 px-4 pb-4 pt-[calc(max(env(safe-area-inset-top),_1rem))] md:flex-row md:px-12"
+                >
+                    {/* Keep desktop controls in normal flow at tablet widths. */}
+                    <div className="hidden shrink-0 items-center gap-2 md:flex">
+                        <TahoeGlassButton
+                            onClick={requestAddFilmAccess}
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.04}
+                            className="min-h-11 whitespace-nowrap px-4 py-2 hover:scale-105"
+                            contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
                         >
-                            <option value="category">Category View</option>
-                            <option value="alpha">Alphabetical (A-Z)</option>
-                            <option value="date_desc">Release Date (Newest)</option>
-                            <option value="rating_desc">IMDb Rating (Highest)</option>
-                            <option value="rating_asc">IMDb Rating (Lowest)</option>
-                            <option value="update_mode">Update Mode</option>
-                        </select>
-                    </TahoeGlassField>
-                </div>
+                            <Plus size={16} /> Add Film
+                        </TahoeGlassButton>
+                        {rotationControl}
+                    </div>
 
-                {/* Mobile Add Button Row (Under Search) */}
-                <div className="md:hidden w-full flex justify-end gap-2">
-                    <TahoeGlassButton
-                        onClick={requestAddFilmAccess}
-                        tone="light"
-                        semanticTint="dark"
-                        semanticTintOpacity={0.04}
-                        className="min-h-11 w-full px-4 py-2.5"
-                        contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
-                    >
-                        <Plus size={16} /> Add Film
-                    </TahoeGlassButton>
-                    {rotationControl}
-                </div>
-            </TahoeGlassSurface>
+                    {/* Desktop Right Side Navigation */}
+                    <div className="flex min-w-0 w-full items-center justify-between gap-2 md:ml-auto md:flex-1 md:max-w-2xl">
+                        <TahoeGlassSurface
+                            variant="recessed"
+                            radius={12}
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.035}
+                            className="relative min-w-0 flex-1 p-0 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-white"
+                            contentClassName="flex items-center gap-2"
+                        >
+                            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                                ref={searchInputRef}
+                                type="search"
+                                placeholder="Titles, directors, genres"
+                                aria-label="Search films"
+                                className={`relative min-h-11 w-full min-w-0 bg-transparent py-2 pl-10 text-base text-white outline-none placeholder:text-white/55 [&::-webkit-search-cancel-button]:appearance-none ${searchTerm ? 'pr-12' : 'pr-3'}`}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    aria-label="Clear search"
+                                    className="absolute right-0 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-white focus-visible:outline-2 focus-visible:outline-white"
+                                    onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
+                                >
+                                    <X size={18} aria-hidden="true" />
+                                </button>
+                            )}
+                        </TahoeGlassSurface>
+                        <TahoeGlassField
+                            visuallyHideLabel
+                            label="Film view"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.035}
+                            className="min-w-0 flex-1 md:w-56 md:flex-none"
+                            surfaceClassName="p-0 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-white"
+                            controlClassName="min-h-11 cursor-pointer overflow-hidden text-ellipsis px-3 py-2 text-base text-white [&>option]:bg-neutral-900 [&>option]:text-white"
+                        >
+                            <select
+                                value={viewMode}
+                                onChange={(e) => setViewMode(e.target.value as ViewMode)}
+                            >
+                                <option value="category">Category View</option>
+                                <option value="alpha">Alphabetical (A-Z)</option>
+                                <option value="date_desc">Release Date (Newest)</option>
+                                <option value="rating_desc">IMDb Rating (Highest)</option>
+                                <option value="rating_asc">IMDb Rating (Lowest)</option>
+                                <option value="update_mode">Update Mode</option>
+                            </select>
+                        </TahoeGlassField>
+                    </div>
+
+                    {/* Mobile Add Button Row (Under Search) */}
+                    <div className="md:hidden w-full flex justify-end gap-2">
+                        <TahoeGlassButton
+                            onClick={requestAddFilmAccess}
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.04}
+                            className="min-h-11 w-full px-4 py-2.5"
+                            contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
+                        >
+                            <Plus size={16} /> Add Film
+                        </TahoeGlassButton>
+                        {rotationControl}
+                    </div>
+                </nav>
+            </TahoeBackdropHeader>
 
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
             {!searchQuery && viewMode === 'category' && featuredFilms.length > 0 && (

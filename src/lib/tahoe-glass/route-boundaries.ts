@@ -13,6 +13,20 @@ function normalizedPathname(pathname: string): string {
   return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
 }
 
+export function routeSuppressesAuthenticatedNavigation(pathname: string): boolean {
+  const normalized = normalizedPathname(pathname);
+  return (
+    normalized === "/film/razinflix" ||
+    normalized === "/places" ||
+    normalized.startsWith("/places/")
+  );
+}
+
+export function routeUsesDashboardSidebar(pathname: string): boolean {
+  const normalized = normalizedPathname(pathname);
+  return normalized === "/dashboard" || normalized.startsWith("/dashboard/");
+}
+
 export function routeOwnsTahoeScene(pathname: string): boolean {
   const normalized = normalizedPathname(pathname);
   return ROUTE_OWNED_TAHOE_SCENES.some((route) => normalized === route);
