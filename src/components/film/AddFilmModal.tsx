@@ -1,12 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Plus, Terminal } from 'lucide-react';
 import type { Film } from './MovieCard';
-import {
-    TahoeGlassButton,
-    TahoeGlassDialog,
-    TahoeGlassField,
-    TahoeGlassSurface,
-} from '@/components/ui/tahoe-glass';
 import styles from './AddFilmModal.module.css';
 
 interface MatchCandidate {
@@ -33,6 +28,15 @@ interface AddFilmModalProps {
     onFilmAdded: (newFilm: Film) => void;
 }
 
+const FOCUSABLE_SELECTOR = [
+    'button:not([disabled])',
+    'textarea:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    '[href]',
+    '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
 export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps) {
     const [inputText, setInputText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -40,14 +44,10 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
     const [logs, setLogs] = useState<string[]>([]);
     const [hasAttemptedCancel, setHasAttemptedCancel] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
+    const dialogRef = useRef<HTMLElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-    // Prevent body scroll
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = 'auto'; };
-    }, []);
-
-    // Auto-scroll logs
     useEffect(() => {
         if (bottomRef.current) {
             bottomRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -70,12 +70,12 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
 
     const handleAdd = async () => {
         if (!inputText.trim()) return;
-        
+
         setIsProcessing(true);
         setIsFinished(false);
         setLogs([]);
         setHasAttemptedCancel(false);
-        
+
         const films = parseInput(inputText);
         let addedCount = 0;
         let failedCount = 0;
@@ -88,9 +88,9 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
             addLog(`========================================`);
             addLog(`▶ SYSTEM: Initiating search for "${film.title}" ${film.year ? `(${film.year})` : ''}`);
             await delay(400);
-            
+
             addLog(`▶ TMDB: Resolving the canonical film, release year, poster, and credits...`);
-            
+
             try {
                 const apiPromise = fetch('/api/razinflix/add', {
                     method: 'POST',
@@ -106,14 +106,14 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                 addLog(`▶ FALLBACK: Ranking playable trailer candidates when required...`);
                 await delay(700);
                 addLog(`▶ QUALITY GATE: Requiring both verified artwork and a playable trailer...`);
-                
+
                 const response = await apiPromise;
                 const data = await response.json() as AddFilmApiResponse;
-                
+
                 if (response.ok) {
                     const match = data._match;
                     addLog(`▶ MATCH: "${match?.canonicalTitle || data.title}" resolved at ${match?.confidence ?? 'high'}% confidence.`);
-                    
+
                     await delay(200);
                     addLog(`  ↳ Poster: Verified TMDB artwork selected.`);
 
@@ -128,13 +128,12 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                     await delay(300);
                     addLog(`▶ SUCCESS: "${data.title}" is complete and live on RazinFlix!`);
                     addedCount++;
-                    
-                    // Remove the backend-only flags before pushing to state
+
                     const cleanData = { ...data };
                     delete cleanData._posterVerified;
                     delete cleanData._operation;
                     delete cleanData._match;
-                    
+
                     onFilmAdded(cleanData as Film);
                 } else {
                     failedCount++;
@@ -153,7 +152,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                 const message = err instanceof Error ? err.message : 'Unexpected request failure.';
                 addLog(`▶ CRITICAL FAILURE: ${message}`);
             }
-            
+
             await delay(1200);
         }
 
@@ -166,169 +165,193 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
         }
     };
 
-    const handleCancel = () => {
+    const handleCancel = useCallback(() => {
         if (inputText.trim() && !hasAttemptedCancel) {
             setHasAttemptedCancel(true);
         } else {
             onClose();
         }
-    };
+    }, [hasAttemptedCancel, inputText, onClose]);
 
-    return (
-        <TahoeGlassDialog
-            open
-            onOpenChange={(open) => {
-                if (!open && !isProcessing) handleCancel();
-            }}
-            closeOnEscape={!isProcessing}
-            closeOnPointerDownOutside={!isProcessing}
-            aria-label="Add film to database"
-            data-razinflix-add-film-surface="opaque"
-            tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.045}
-            radius={32}
-            className={`${styles.dialog} h-[calc(100dvh-2rem)] max-w-2xl overflow-hidden p-0 md:h-auto`}
-            contentClassName="flex h-full flex-col"
-            overlayClassName={styles.overlay}
-            backdropClassName={styles.backdrop}
+    useEffect(() => {
+        const previousOverflow = document.body.style.overflow;
+        const previousOverscroll = document.body.style.overscrollBehavior;
+        const previouslyFocused = document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+
+        document.body.style.overflow = 'hidden';
+        document.body.style.overscrollBehavior = 'none';
+
+        const focusFrame = window.requestAnimationFrame(() => {
+            (textareaRef.current || closeButtonRef.current || dialogRef.current)?.focus();
+        });
+
+        return () => {
+            window.cancelAnimationFrame(focusFrame);
+            document.body.style.overflow = previousOverflow;
+            document.body.style.overscrollBehavior = previousOverscroll;
+            previouslyFocused?.focus({ preventScroll: true });
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && !isProcessing) {
+                event.preventDefault();
+                handleCancel();
+                return;
+            }
+
+            if (event.key !== 'Tab' || !dialogRef.current) return;
+
+            const focusable = Array.from(
+                dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+            ).filter(element => !element.hasAttribute('disabled') && element.offsetParent !== null);
+
+            if (focusable.length === 0) {
+                event.preventDefault();
+                dialogRef.current.focus();
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [handleCancel, isProcessing]);
+
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
+        <div
+            className={styles.overlay}
+            data-razinflix-add-film-overlay="native"
+            style={{ zIndex: 2147483000 }}
         >
-                
-                {/* Header */}
-                <TahoeGlassSurface
-                    as="header"
-                    variant="menu"
-                    radius="32px 32px 0 0"
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.035}
-                    className={`${styles.header} flex-none px-6 py-5`}
-                    contentClassName="flex items-center justify-between"
-                >
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Plus className="text-[#007AFF]" /> Add Film to Database
+            <div
+                aria-hidden="true"
+                className={styles.backdrop}
+                onPointerDown={() => {
+                    if (!isProcessing) handleCancel();
+                }}
+            />
+            <section
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="razinflix-add-film-title"
+                className={styles.dialog}
+                data-razinflix-add-film-surface="opaque-native"
+                tabIndex={-1}
+            >
+                <header className={styles.header}>
+                    <h2 id="razinflix-add-film-title" className={styles.title}>
+                        <Plus aria-hidden="true" />
+                        <span>Add Film to Database</span>
                     </h2>
                     {!isProcessing && (
-                        <TahoeGlassButton
+                        <button
+                            ref={closeButtonRef}
+                            type="button"
                             onClick={handleCancel}
                             aria-label="Close add film dialog"
-                            tone="light"
-                            className="p-2 text-white/65 hover:text-white"
-                            contentClassName="text-white"
+                            className={styles.iconButton}
                         >
-                            <X size={20} />
-                        </TahoeGlassButton>
+                            <X aria-hidden="true" size={22} />
+                        </button>
                     )}
-                </TahoeGlassSurface>
+                </header>
 
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 relative">
+                <div className={styles.content}>
                     {!isProcessing ? (
                         <>
-                            <TahoeGlassField
-                                label="Film Intel Input"
-                                labelClassName="pl-1 text-sm font-semibold uppercase tracking-widest text-gray-300"
-                                description="Enter one film per line. Add the release year in parentheses when a title has remakes or multiple versions."
-                                tone="light"
-                                semanticTint="dark"
-                                semanticTintOpacity={0.03}
-                                surfaceClassName={`${styles.inputPanel} p-0`}
-                                controlClassName="h-48 resize-none p-4 font-medium leading-relaxed text-white"
-                            >
+                            <div className={styles.fieldGroup}>
+                                <label htmlFor="razinflix-film-input" className={styles.label}>
+                                    Film Intel Input
+                                </label>
                                 <textarea
+                                    ref={textareaRef}
+                                    id="razinflix-film-input"
                                     value={inputText}
-                                    onChange={(e) => {
-                                        setInputText(e.target.value);
+                                    onChange={(event) => {
+                                        setInputText(event.target.value);
                                         setHasAttemptedCancel(false);
                                     }}
                                     placeholder={'e.g. The Matrix (1999)\nAvatar\nInception (2010)'}
+                                    className={styles.textarea}
+                                    aria-describedby="razinflix-film-input-description"
                                 />
-                            </TahoeGlassField>
+                                <p id="razinflix-film-input-description" className={styles.description}>
+                                    Enter one film per line. Add the release year in parentheses when a title has remakes or multiple versions.
+                                </p>
+                            </div>
 
                             {hasAttemptedCancel && (
-                                <TahoeGlassSurface
-                                    variant="panel"
-                                    radius={12}
-                                    tone="light"
-                                    semanticTint="dark"
-                                    semanticTintOpacity={0.04}
-                                    className={`${styles.warningPanel} p-4 text-sm font-medium text-red-300 animate-pulse`}
-                                >
+                                <div role="alert" className={styles.warningPanel}>
                                     Warning: You have unsubmitted text. Tap Cancel again to discard and close.
-                                </TahoeGlassSurface>
+                                </div>
                             )}
 
-                            <div className="mt-auto md:mt-4">
-                                <TahoeGlassButton
+                            <div className={styles.primaryActionRow}>
+                                <button
+                                    type="button"
                                     onClick={handleAdd}
                                     disabled={!inputText.trim()}
-                                    tone="dark"
-                                    semanticTint="light"
-                                    semanticTintOpacity={0.08}
-                                    className="w-full py-4"
-                                    contentClassName="flex items-center justify-center gap-2 text-lg font-bold text-black/90"
+                                    className={styles.primaryButton}
                                 >
-                                    <Plus size={20} /> Add Film
-                                </TahoeGlassButton>
+                                    <Plus aria-hidden="true" size={20} />
+                                    Add Film
+                                </button>
                             </div>
                         </>
                     ) : (
-                        <TahoeGlassSurface
-                            variant="recessed"
-                            radius={12}
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.055}
-                            className={`${styles.statusPanel} flex-1 h-64 md:h-80 p-4 overflow-hidden`}
-                            contentClassName="relative flex h-full flex-col font-mono text-xs text-green-300 md:text-sm"
-                        >
-                            <div className={`absolute top-2 right-4 flex items-center gap-2 text-[#007AFF] text-xs font-bold opacity-70 ${isFinished ? '' : 'animate-pulse'}`}>
-                                <Terminal size={12} /> {isFinished ? 'COMPLETE' : 'ACTIVE'}
+                        <div className={styles.statusPanel}>
+                            <div className={`${styles.statusBadge} ${isFinished ? '' : styles.statusActive}`}>
+                                <Terminal aria-hidden="true" size={12} />
+                                {isFinished ? 'COMPLETE' : 'ACTIVE'}
                             </div>
-                            <div className="flex-1 overflow-y-auto space-y-1 pb-4 custom-scrollbar">
-                                {logs.map((log, i) => (
-                                    <div key={i} className="break-words leading-relaxed opacity-90">{log}</div>
+                            <div className={styles.logs} aria-live="polite">
+                                {logs.map((log, index) => (
+                                    <div key={index}>{log}</div>
                                 ))}
                                 <div ref={bottomRef} />
                             </div>
                             {!isFinished ? (
-                                <div className="h-1 w-full bg-[#007AFF]/20 mt-2 rounded overflow-hidden">
-                                    <div className="h-full bg-[#007AFF] animate-[indeterminate_1.5s_infinite_ease-in-out] w-1/3" />
+                                <div className={styles.progressTrack}>
+                                    <div className={styles.progressBar} />
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-white/10 font-sans">
-                                    <TahoeGlassButton
+                                <div className={styles.statusActions}>
+                                    <button
+                                        type="button"
                                         onClick={() => {
                                             setIsProcessing(false);
                                             setIsFinished(false);
                                         }}
-                                        tone="light"
-                                        className="py-2.5 px-4"
-                                        contentClassName="font-semibold text-white"
+                                        className={styles.secondaryButton}
                                     >
                                         Edit Input
-                                    </TahoeGlassButton>
-                                    <TahoeGlassButton
-                                        onClick={onClose}
-                                        tone="dark"
-                                        semanticTint="light"
-                                        semanticTintOpacity={0.08}
-                                        className="py-2.5 px-4"
-                                        contentClassName="font-semibold text-black/90"
-                                    >
+                                    </button>
+                                    <button type="button" onClick={onClose} className={styles.primaryButton}>
                                         Close
-                                    </TahoeGlassButton>
+                                    </button>
                                 </div>
                             )}
-                        </TahoeGlassSurface>
+                        </div>
                     )}
                 </div>
-            <style dangerouslySetInnerHTML={{__html: `
-                @keyframes indeterminate {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(300%); }
-                }
-            `}} />
-        </TahoeGlassDialog>
+            </section>
+        </div>,
+        document.body,
     );
 }
