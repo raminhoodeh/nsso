@@ -23,6 +23,14 @@ import styles from './razinflix.module.css';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
 
+const PINNED_CATEGORY_ORDER = ['New', 'Recently Added'] as const;
+const PROTECTED_CATEGORIES = new Set<string>(PINNED_CATEGORY_ORDER);
+
+function categoryRank(title: string): number {
+    const rank = PINNED_CATEGORY_ORDER.indexOf(title as typeof PINNED_CATEGORY_ORDER[number]);
+    return rank === -1 ? PINNED_CATEGORY_ORDER.length : rank;
+}
+
 function matchesFilmSearch(film: Film, query: string) {
     return [film.title, film.director, film.description, ...(film.categories ?? [])]
         .some(value => value?.toLowerCase().includes(query));
@@ -257,7 +265,7 @@ export default function RazinFlixPage() {
             const leftovers: Film[] = [];
             
             Object.keys(cats).forEach(key => {
-                 if (cats[key].length < 5) {
+                 if (cats[key].length < 5 && !PROTECTED_CATEGORIES.has(key)) {
                      leftovers.push(...cats[key]);
                  } else {
                      finalCats[key] = cats[key];
@@ -448,8 +456,8 @@ export default function RazinFlixPage() {
                                 <option value="category">Category View</option>
                                 <option value="alpha">Alphabetical (A-Z)</option>
                                 <option value="date_desc">Release Date (Newest)</option>
-                                <option value="rating_desc">IMDb Rating (Highest)</option>
-                                <option value="rating_asc">IMDb Rating (Lowest)</option>
+                                <option value="rating_desc">Rating (Highest)</option>
+                                <option value="rating_asc">Rating (Lowest)</option>
                                 <option value="update_mode">Update Mode</option>
                             </select>
                         </TahoeGlassField>
@@ -614,9 +622,7 @@ export default function RazinFlixPage() {
                         {Object.entries(categories)
                             .filter(([, categoryFilms]) => categoryFilms.length > 0)
                             .sort(([titleA], [titleB]) => {
-                                if (titleA === 'Recently Added') return -1;
-                                if (titleB === 'Recently Added') return 1;
-                                return 0;
+                                return categoryRank(titleA) - categoryRank(titleB);
                             })
                             .map(([title, films]) => (
                             <CategoryRow

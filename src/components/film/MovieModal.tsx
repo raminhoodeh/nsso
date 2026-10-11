@@ -541,7 +541,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                                  value={editForm.rating}
                                                  onChange={(e) => setEditForm({ ...editForm, rating: e.target.value })}
                                                  maxLength={15}
-                                                 placeholder="IMDb 8.5/10"
+                                                 placeholder="e.g. 8.5/10"
                                             />
                                         </TahoeGlassField>
                                         <TahoeGlassField
@@ -643,6 +643,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                                 onChange={(e) => setEditForm({...editForm, category: e.target.value})}
                                             >
                                             {[
+                                                "New",
                                                 "Critically-Acclaimed Mind-Bending Sci-Fi", 
                                                 "Visually Striking Emotional Dramas",
                                                 "Gritty Heist & Crime Thrillers", 

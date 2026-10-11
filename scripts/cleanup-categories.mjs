@@ -6,6 +6,7 @@ dotenv.config({ path: '.env.local' });
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const model = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY).getGenerativeModel({ model: "gemini-2.5-flash" });
 
+const PROTECTED_CATEGORIES = new Set(["New"]);
 const TARGET_CATEGORIES = [
     "Critically-Acclaimed Mind-Bending Sci-Fi", "Visually Striking Emotional Dramas",
     "Gritty Heist & Crime Thrillers", "Suspenseful Psychological Mysteries",
@@ -27,6 +28,7 @@ async function run() {
     }
 
     for (const [catName, catFilms] of Object.entries(cats)) {
+         if (PROTECTED_CATEGORIES.has(catName)) continue;
          if (catFilms.length < 5 || catName === "Recently Added" || catName === "Uncategorized" || !TARGET_CATEGORIES.includes(catName)) {
              console.log(`Processing category: ${catName} (${catFilms.length} films)`);
              for (const film of catFilms) {
