@@ -241,7 +241,10 @@ export function searchPlaces(places: readonly DubaiPlace[], query: string): Duba
       const location = !topic || semantic ? match(token, index.location, !topic) : 0;
       const category = !topic ? match(token, index.categories, false) : 0;
       const descriptive = !topic && !identityVocabulary.has(token) ? match(token, index.description, false) : 0;
-      if (!identity && !location && !semantic && !category && !descriptive) return [];
+      // Preserve joined-up name typing ("TreasurePots", "thecourtyard") as
+      // well as normal word matching. A full name/prefix remains authoritative.
+      const joinedName = !topic && queryTerms.length === 1 && (exactName >= 800 || aliasName >= 700);
+      if (!identity && !location && !semantic && !category && !descriptive && !joinedName) return [];
       score += (identity * 45 + location * 12 + semantic * 18 + category * 5 + descriptive * 3) / queryTerms.length;
     }
     return [{ place, score, name: index.names[0] }];

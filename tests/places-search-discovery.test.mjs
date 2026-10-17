@@ -69,6 +69,8 @@ test("misspelled venue names remain discoverable and exact venue names remain fi
     ["Treasure Ptos", "treasure-pots"],
     ["Yadawi", "yadawei-pottery-studio"],
     ["Courtyrad", "the-courtyard-al-quoz"],
+    ["TreasurePots", "treasure-pots"],
+    ["thecourtyard", "the-courtyard-al-quoz"],
   ]) includes(query, [id]);
 
   for (const id of ["treasure-pots", "yadawei-pottery-studio", "the-courtyard-al-quoz", "alserkal-avenue"])
