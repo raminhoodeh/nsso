@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight,
   Compass, Heart, Landmark, Leaf, List, LocateFixed, Map as MapIcon,
-  MapPin, PanelLeftClose, PanelLeftOpen, Shapes, Shuffle, Sparkles, Trees, UtensilsCrossed, X,
+  PanelLeftClose, PanelLeftOpen, Shapes, Shuffle, Sparkles, Trees, UtensilsCrossed, X,
 } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { EXPERIENCES, type ExperienceId } from "@/lib/places-experiences";
@@ -12,6 +12,7 @@ import { datePlans, type DatePlan } from "@/lib/places-editorial";
 import type { AgendaWindow } from "@/lib/places-agenda";
 import { useTahoeModalAccessibility } from "@/components/ui/tahoe-glass";
 import styles from "./navigation.module.css";
+import PlaceSearch from "./PlaceSearch";
 
 const ICONS = {
   "eat-drink": UtensilsCrossed,
@@ -37,8 +38,8 @@ type Props = {
   resultLabel: string;
   groupCounts: Record<string, number>;
   subcategoryCounts: Record<string, number>;
-  emirates: string[];
-  emirate: string;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
   locationMessage: string | null;
   datePlan: DatePlan | null;
   agendaWindow: AgendaWindow;
@@ -49,7 +50,6 @@ type Props = {
   onBack: () => void;
   onResults: () => void;
   onSaved: () => void;
-  onEmirate: (value: string) => void;
   onClose: () => void;
   onMap: () => void;
   onSurprise: () => void;
@@ -61,8 +61,8 @@ type Props = {
 export default function PlacesNavigation(props: Props) {
   const {
     compact, open, minimized, onMinimizedChange, onAskDeity, experienceId, subcategoryId, resultsOpen, savedOnly, savedCount,
-    count, resultLabel, groupCounts, subcategoryCounts, emirates, emirate, locationMessage,
-    onExperience, onSubcategory, onBack, onResults, onSaved, onEmirate, onClose,
+    count, resultLabel, groupCounts, subcategoryCounts, searchQuery, onSearchChange, locationMessage,
+    onExperience, onSubcategory, onBack, onResults, onSaved, onClose,
     onMap, onSurprise, onLocate, onReset, children,
     datePlan, agendaWindow, onAgendaWindow, onDatePlan,
   } = props;
@@ -77,7 +77,8 @@ export default function PlacesNavigation(props: Props) {
   const [plansExpanded, setPlansExpanded] = useState(true);
   const experience = EXPERIENCES.find(item => item.id === experienceId);
   const subcategory = experience?.subcategories.find(item => item.id === subcategoryId);
-  const title = savedOnly ? "Saved places" : datePlan?.title || subcategory?.label || experience?.label || (resultsOpen ? "All places" : "Let's go somewhere.");
+  const searching = searchQuery.trim().length > 0;
+  const title = searching ? "Search results" : savedOnly ? "Saved places" : datePlan?.title || subcategory?.label || experience?.label || (resultsOpen ? "All places" : "Let's go somewhere.");
   const key = `${experienceId}:${subcategoryId}:${resultsOpen}:${savedOnly}:${datePlan?.id}`;
   const lastKey = useRef(key);
   const drawerOpen = compact && open;
@@ -95,12 +96,12 @@ export default function PlacesNavigation(props: Props) {
   });
 
   useEffect(() => {
-    if (lastKey.current !== key && (!compact || open) && !desktopMinimized) {
+    if (lastKey.current !== key && (!compact || open) && !desktopMinimized && !searching && document.activeElement?.tagName !== "INPUT") {
       headingRef.current?.focus({ preventScroll: true });
       scrollRef.current?.scrollTo({ top: 0 });
     }
     lastKey.current = key;
-  }, [key, compact, open, desktopMinimized]);
+  }, [key, compact, open, desktopMinimized, searching]);
 
   useEffect(() => {
     if (minimizeRequested.current && !compact) {
@@ -155,20 +156,13 @@ export default function PlacesNavigation(props: Props) {
 
         <div id="places-navigation-content" className={styles.fullContent} hidden={desktopMinimized}>
         <div className={styles.areaRow}>
-          <label className={styles.area}>
-            <MapPin size={16} aria-hidden="true" />
-            <select aria-label="Filter by emirate" value={emirate} onChange={event => onEmirate(event.target.value)}>
-              <option value="all">Across the UAE</option>
-              {emirates.map(value => <option key={value} value={value}>{value}</option>)}
-            </select>
-            <ChevronDown size={14} aria-hidden="true" />
-          </label>
+          <PlaceSearch query={searchQuery} onChange={onSearchChange} />
           <button type="button" className={`${styles.saved}${savedOnly ? ` ${styles.savedActive}` : ""}`} onClick={onSaved} aria-label={`Saved places, ${savedCount} saved`} aria-pressed={savedOnly}>
             <Heart size={17} fill={savedOnly ? "currentColor" : "none"} /><span>{savedCount || "Saved"}</span>
           </button>
         </div>
 
-        {(experience || resultsOpen || savedOnly) && (
+        {!searching && (experience || resultsOpen || savedOnly) && (
           <button type="button" className={styles.back} onClick={onBack}>
             <ChevronLeft size={19} /><span>{resultsOpen && experience && !savedOnly ? "Back to categories" : "All experiences"}</span>
           </button>
@@ -177,10 +171,10 @@ export default function PlacesNavigation(props: Props) {
         <header className={`${styles.heading}${experience || resultsOpen || savedOnly ? ` ${styles.headingNested}` : ""}`}>
           {!experience && !resultsOpen && !savedOnly && <p className={styles.eyebrow}>A little time together</p>}
           <h1 ref={headingRef} tabIndex={-1}>{title}</h1>
-          <p>{datePlan ? datePlan.area : resultsOpen ? `${resultLabel} · ${emirate === "all" ? "across the UAE" : emirate}` : experience ? (subcategory?.description || experience.description) : "What do you feel like doing?"}</p>
+          <p role={searching ? "status" : undefined} aria-live={searching ? "polite" : undefined} aria-atomic={searching || undefined}>{searching ? `${resultLabel} found · all UAE places` : datePlan ? datePlan.area : resultsOpen ? `${resultLabel} · across the UAE` : experience ? (subcategory?.description || experience.description) : "What do you feel like doing?"}</p>
         </header>
 
-        {experienceId === "whats-on" && <label className={styles.when}><CalendarDays size={16} aria-hidden="true" /><span>When</span><select aria-label="Event date window" value={agendaWindow} onChange={event => onAgendaWindow(event.target.value as AgendaWindow)}><option value="all">All upcoming dates</option><option value="this-week">Next 7 days</option><option value="this-month">This month</option></select><ChevronDown size={14} aria-hidden="true" /></label>}
+        {!searching && experienceId === "whats-on" && <label className={styles.when}><CalendarDays size={16} aria-hidden="true" /><span>When</span><select aria-label="Event date window" value={agendaWindow} onChange={event => onAgendaWindow(event.target.value as AgendaWindow)}><option value="all">All upcoming dates</option><option value="this-week">Next 7 days</option><option value="this-month">This month</option></select><ChevronDown size={14} aria-hidden="true" /></label>}
 
         {resultsOpen ? (
           <div className={styles.results}>{children}</div>
@@ -232,7 +226,7 @@ export default function PlacesNavigation(props: Props) {
                 {!count && <div className={styles.empty}><strong>No matches in this area.</strong><button type="button" onClick={onReset}>Explore all of the UAE</button></div>}
               </>
             )}
-            {!experience && <section className={styles.plans} aria-label="Date ideas"><h2 className={styles.sectionHeading}><button type="button" className={styles.sectionToggle} aria-expanded={plansExpanded} aria-controls="places-date-ideas" onClick={() => setPlansExpanded(value => !value)}><span>Make a day of it</span><ChevronDown size={17} aria-hidden="true" /></button></h2><div id="places-date-ideas" hidden={!plansExpanded}><p className={styles.plansDescription}>Thoughtful pairings, ready to explore.</p><div className={styles.group}>{datePlans.filter(plan => emirate === "all" || plan.area.includes(emirate)).map(plan => <button type="button" className={styles.planRow} key={plan.id} onClick={() => onDatePlan(plan.id)}><Compass size={19} aria-hidden="true" /><span className={styles.rowCopy}><strong>{plan.title}</strong><small>{plan.area}</small></span><ChevronRight size={15} aria-hidden="true" /></button>)}</div></div></section>}
+            {!experience && <section className={styles.plans} aria-label="Date ideas"><h2 className={styles.sectionHeading}><button type="button" className={styles.sectionToggle} aria-expanded={plansExpanded} aria-controls="places-date-ideas" onClick={() => setPlansExpanded(value => !value)}><span>Make a day of it</span><ChevronDown size={17} aria-hidden="true" /></button></h2><div id="places-date-ideas" hidden={!plansExpanded}><p className={styles.plansDescription}>Thoughtful pairings, ready to explore.</p><div className={styles.group}>{datePlans.map(plan => <button type="button" className={styles.planRow} key={plan.id} onClick={() => onDatePlan(plan.id)}><Compass size={19} aria-hidden="true" /><span className={styles.rowCopy}><strong>{plan.title}</strong><small>{plan.area}</small></span><ChevronRight size={15} aria-hidden="true" /></button>)}</div></div></section>}
           </div>
         )}
 

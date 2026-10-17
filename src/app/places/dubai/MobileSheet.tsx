@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronUp, Minus, X } from "lucide-react";
-import { forwardRef, useEffect, useRef, type PointerEvent, type ReactNode } from "react";
+import { forwardRef, useEffect, useRef, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { useTahoeModalAccessibility } from "@/components/ui/tahoe-glass";
 import styles from "./mobile-sheet.module.css";
 
@@ -18,11 +18,12 @@ type Props = {
   footer?: ReactNode;
   className?: string;
   scrollContent?: boolean;
+  initialFocusRef?: RefObject<HTMLElement | null>;
 };
 
 const MobileSheet = forwardRef<HTMLElement, Props>(function MobileSheet({
   open, snap, onSnapChange, onClose, title, ariaLabel = title,
-  id, children, footer, className, scrollContent = true,
+  id, children, footer, className, scrollContent = true, initialFocusRef,
 }, forwardedRef) {
   const panelRef = useRef<HTMLElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -34,7 +35,7 @@ const MobileSheet = forwardRef<HTMLElement, Props>(function MobileSheet({
   useTahoeModalAccessibility({
     open: open && full,
     panelRef,
-    initialFocusRef: closeRef,
+    initialFocusRef: initialFocusRef || closeRef,
     modal: true,
     closeOnEscape: true,
     restoreFocus: false,

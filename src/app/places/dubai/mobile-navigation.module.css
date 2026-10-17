@@ -1,4 +1,7 @@
 .controls { flex: 0 0 auto; padding: 0 12px 8px; }
+.navigationSheet[data-keyboard-open="true"] { position: fixed; top: calc(var(--search-viewport-top, 0px) + 8px); bottom: auto; height: calc(var(--search-viewport-height) - 16px); max-height: calc(var(--search-viewport-height) - 16px); }
+.searchRow { min-width: 0; margin-bottom: 8px; }
+.searchCount { margin: 12px 2px 4px; font-size: 12px; color: #52687a; }
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; }
 .back { display: flex; align-items: center; gap: 2px; min-height: 40px; padding: 0 3px; border: 0; background: none; color: #32638b; font-size: 12px !important; cursor: pointer; }
 .viewToggle { display: flex; width: 100%; gap: 3px; padding: 3px; background: #e7ecf1; border-radius: 11px; }
@@ -41,6 +44,7 @@
 .empty button { min-height: 44px; border: 0; background: none; color: #32638b; text-decoration: underline; cursor: pointer; }
 @media (max-height: 500px) and (min-width: 600px) {
   .controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 12px; padding: 0 12px 4px; }
+  .searchRow { grid-column: 1 / -1; margin-bottom: 4px; }
   .toolbar, .filters { min-width: 0; min-height: 44px; }
   .filters { padding-left: 8px; }
   .filterMenu { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 4px 0; }

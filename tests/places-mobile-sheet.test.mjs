@@ -54,13 +54,16 @@ test("mobile navigation has one primary map action and no repeated Deity or util
   assert.match(nav, /if \(resultsOpen\) onBack\(\)/);
 });
 
-test("the mobile menu retains six source categories, tucked filters and collapsed date ideas", () => {
+test("the mobile menu retains categories, event dates and date ideas beside live search", () => {
   assert.match(nav, /EXPERIENCES\.map\(item =>/);
   assert.match(nav, /aria-label="Experiences"/);
   assert.match(nav, /const \[settingsOpen, setSettingsOpen\] = useState\(false\)/);
   assert.match(nav, /aria-controls="places-mobile-filter-menu"/);
   assert.match(nav, /id="places-mobile-filter-menu"[^>]*hidden=\{!settingsOpen\}/);
-  assert.match(nav, /aria-label="Filter by emirate"/);
+  assert.doesNotMatch(nav, /aria-label="Filter by emirate"/);
+  assert.match(nav, /<PlaceSearch inputRef=\{searchRef\}/);
+  assert.match(nav, /initialFocusRef=\{searchRef\}/);
+  assert.match(nav, /window\.visualViewport/);
   assert.match(nav, /aria-label="Event date window"/);
   assert.match(nav, /const \[plansOpen, setPlansOpen\] = useState\(false\)/);
   assert.match(nav, /id="places-mobile-date-ideas"[^>]*hidden=\{!plansOpen\}/);

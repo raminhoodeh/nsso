@@ -7,13 +7,38 @@ const explorer = read("../src/app/places/dubai/PlacesExplorer.tsx");
 const navigation = read("../src/app/places/dubai/PlacesNavigation.tsx");
 const navigationCss = read("../src/app/places/dubai/navigation.module.css");
 const mapCss = read("../src/app/places/dubai/places.module.css");
+const search = read("../src/app/places/dubai/PlaceSearch.tsx");
+const searchCss = read("../src/app/places/dubai/search.module.css");
 
-test("experiences replace the always-visible search, chips and venue list", () => {
+test("live database search keeps keyboard input, clearing and IME composition accessible", () => {
+  assert.match(search, /type="search" aria-label="Search places"/);
+  assert.match(search, /aria-label="Clear search"/);
+  assert.match(search, /event\.nativeEvent\.isComposing/);
+  assert.match(search, /event\.key === "Escape"/);
+  assert.match(search, /event\.key === "ArrowDown"/);
+  assert.match(search, /event\.key === "Enter"/);
+  assert.match(searchCss, /font-size: 16px/);
+  assert.match(searchCss, /width: 44px; height: 44px/);
+  assert.match(navigation, /!searching && document\.activeElement\?\.tagName !== "INPUT"/);
+});
+
+test("search shows places rather than the event agenda and exposes a dedicated empty state", () => {
+  assert.match(explorer, /resultsOpen=\{resultsOpen \|\| searchActive\}/);
+  assert.match(explorer, /\(searchActive \|\| experienceId !== "whats-on"\) && filteredPlaces\.map/);
+  assert.match(explorer, /!searchActive && experienceId === "whats-on"/);
+  assert.match(explorer, /No places found for/);
+  assert.match(navigation, /aria-live=\{searching \? "polite"/);
+});
+
+test("experience browsing remains the default beside the new place search", () => {
   assert.match(explorer, /const Navigation = isCompact \? MobilePlacesNavigation : PlacesNavigation/);
   assert.ok(!explorer.includes("styles.categoryScroller"));
   assert.ok(!explorer.includes('placeholder="Search a place, area or mood…"'));
   assert.match(navigation, /resultsOpen \? \(/);
   assert.match(navigation, /aria-label="Experiences"/);
+  assert.match(navigation, /<PlaceSearch query=\{searchQuery\}/);
+  assert.doesNotMatch(navigation, /Filter by emirate/);
+  assert.match(explorer, /if \(searchActive\) return searchPlaces\(availablePlaces, searchQuery\)/);
   assert.match(navigation, /View \{resultLabel\}/);
   assert.match(explorer, /matchesExperience\(place, events, experienceId, subcategoryId\)/);
 });
