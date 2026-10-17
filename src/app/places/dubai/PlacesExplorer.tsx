@@ -1138,7 +1138,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             <div className={styles.emptyState}>
               <Sparkles size={24} />
               <strong>{searchActive ? `No places found for “${searchQuery.trim()}”.` : favouritesOnly ? "No saved places yet." : "No places in this collection here yet."}</strong>
-              {searchActive && <p>Try a place name, neighbourhood or emirate.</p>}
+              {searchActive && <p>Try a name, area or activity—like “pottery”, “Al Quoz cafés” or “books”.</p>}
               <button type="button" onClick={searchActive ? () => setSearchQuery("") : clearFilters}>{searchActive ? "Clear search and browse" : "Explore all experiences"}</button>
             </div>
           )}

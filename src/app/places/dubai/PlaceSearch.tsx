@@ -17,7 +17,7 @@ export default function PlaceSearch({ query, onChange, onFocus, inputRef }: Prop
   return <div className={styles.search} role="search" aria-label="Find a place">
     <Search size={18} aria-hidden="true" />
     <input
-      ref={ref} type="search" aria-label="Search places" placeholder="Search places in the UAE"
+      ref={ref} type="search" aria-label="Search places" placeholder="Search places, areas or things to do"
       value={query} autoComplete="off" spellCheck={false} enterKeyHint="search"
       aria-controls={query.trim() ? "places-search-results" : undefined}
       onChange={event => onChange(event.target.value)} onFocus={onFocus}
