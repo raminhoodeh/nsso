@@ -23,6 +23,8 @@ test("live database search keeps keyboard input, clearing and IME composition ac
 });
 
 test("search shows places rather than the event agenda and exposes a dedicated empty state", () => {
+  assert.match(explorer, /placeListRef\.current\?\.scrollTo\(\{ top: 0 \}\)/);
+  assert.match(explorer, /\}, \[searchQuery\]\)/);
   assert.match(explorer, /resultsOpen=\{resultsOpen \|\| searchActive\}/);
   assert.match(explorer, /\(searchActive \|\| experienceId !== "whats-on"\) && filteredPlaces\.map/);
   assert.match(explorer, /!searchActive && experienceId === "whats-on"/);

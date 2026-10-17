@@ -247,6 +247,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const mobileBrowseButtonRef = useRef<HTMLElement>(null);
   const detailCloseRef = useRef<HTMLElement>(null);
   const detailPanelRef = useRef<HTMLElement>(null);
+  const placeListRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [experienceId, setExperienceId] = useState<ExperienceId | null>(null);
@@ -259,6 +260,9 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const category = subcategoryId === "art-exhibitions" ? "art-exhibitions" : "all";
   const [searchQuery, setSearchQuery] = useState("");
   const searchActive = searchQuery.trim().length > 0;
+  useEffect(() => {
+    placeListRef.current?.scrollTo({ top: 0 });
+  }, [searchQuery]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef(selectedId);
   selectedIdRef.current = selectedId;
@@ -1073,7 +1077,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           onReset={clearFilters}
         >
 
-        <div className={styles.placeList} id={searchActive ? "places-search-results" : undefined} role={searchActive ? "region" : undefined} aria-label={searchActive ? "Search results" : undefined}>
+        <div ref={placeListRef} className={styles.placeList} id={searchActive ? "places-search-results" : undefined} role={searchActive ? "region" : undefined} aria-label={searchActive ? "Search results" : undefined}>
           {!searchActive && selectedDatePlan && <p className={styles.datePlanIntro}>{selectedDatePlan.description}</p>}
           {!searchActive && experienceId === "whats-on" && <>
             {category === "art-exhibitions" && <p className={styles.calendarDownload}><a href="/places/dubai/art-exhibitions.ics" download>Download all upcoming exhibitions (.ics)</a><span>Full exhibition calendar, across all areas and dates.</span></p>}
