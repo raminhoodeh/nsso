@@ -24,6 +24,7 @@ const { POST } = await import(new URL('app/api/deity/chat/route.ts', source));
 const { NSSO_PRODUCT_CONTEXT, isNssoProductQuestion } = await import(new URL('lib/deity/product-context.ts', source));
 const { chatFailureDetails } = await import(new URL('lib/deity/chat-diagnostics.ts', source));
 const { boundedChatHistory } = await import(new URL('lib/deity/chat-allowance.ts', source));
+const { startChatWithRecovery } = await import(new URL('lib/deity/chat-recovery.ts', source));
 hooks.deregister();
 
 const realFetch = globalThis.fetch;
@@ -44,6 +45,9 @@ beforeEach(() => {
     if (path.endsWith(':countTokens')) return Response.json({ totalTokens: 500 });
     if (path.endsWith(':streamGenerateContent')) {
       if (mode === 'retired') return Response.json({ error: { code: 404, message: `Model retired ${privateText}` } }, { status: 404 });
+      if (mode === 'always_busy' || (mode === 'busy_once' && calls.filter(c => c.path.endsWith(':streamGenerateContent')).length === 1)) {
+        return Response.json({ error: { code: 503, message: `Busy ${privateText}` } }, { status: 503 });
+      }
       const candidate = { candidates: [{ index: 0, content: { role: 'model', parts: mode === 'empty' ? [] : [{ text: 'NSSO stands for new sovereign self online.' }] }, finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 500, candidatesTokenCount: 20, totalTokenCount: 520 } };
       const wire = `data: ${JSON.stringify(candidate)}\n\n${mode === 'broken_stream' ? 'data: {broken JSON}\n\n' : ''}`;
@@ -108,6 +112,43 @@ test('the original daily allowance still blocks all provider calls with the Link
   assert.equal(response.status, 429);
   assert.equal((await response.json()).cta.href, 'https://www.linkedin.com/in/raminhoodeh/');
   assert.equal(calls.filter(c => c.path.includes('/models/')).length, 0);
+});
+test('a transient 503 gets exactly one separately budgeted attempt and settles each independently', async () => {
+  mode = 'busy_once';
+  const response = await POST(request());
+  assert.equal(response.status, 200); assert.match(await response.text(), /new sovereign self online/);
+  assert.equal(calls.filter(c => c.path.endsWith(':streamGenerateContent')).length, 2);
+  const finishes = calls.filter(c => c.path.endsWith('/finish_nsso_chat_budget'));
+  assert.deepEqual(finishes.map(c => c.body.p_confirmed), [false, true]);
+  assert.notEqual(finishes[0].body.p_request_id, finishes[1].body.p_request_id);
+  assert.equal(response.headers.get('x-deity-request-id'), finishes[1].body.p_request_id);
+  assert.equal(calls.filter(c => c.path.endsWith('/reserve_nsso_chat_budget')).length, 4);
+});
+test('sustained provider 503s stop after two attempts, without leaking errors or looping', async () => {
+  mode = 'always_busy';
+  const response = await POST(request());
+  assert.equal(response.status, 503); assert.ok(!JSON.stringify(await response.json()).includes(privateText));
+  assert.equal(calls.filter(c => c.path.endsWith(':streamGenerateContent')).length, 2);
+  assert.deepEqual(calls.filter(c => c.path.endsWith('/finish_nsso_chat_budget')).map(c => c.body.p_confirmed), [false, false]);
+});
+test('recovery never retries billing, authentication, retirement, ambiguous network errors or an exhausted deadline', async () => {
+  for (const error of [{ status: 401 }, { status: 402 }, { status: 403 }, { status: 404 }, { status: 429 }, new Error('unknown network state')]) {
+    let attempts = 0, reservations = 0;
+    await assert.rejects(startChatWithRecovery({ generate: async () => { attempts++; throw error; }, budget: { finish: async () => {} },
+      reserveRetry: async () => { reservations++; }, deadline: Date.now() + 80000, pause: async () => {} }));
+    assert.equal(attempts, 1); assert.equal(reservations, 0);
+  }
+  let attempts = 0;
+  await assert.rejects(startChatWithRecovery({ generate: async () => { attempts++; throw { status: 503 }; }, budget: { finish: async () => {} },
+    reserveRetry: async () => {}, deadline: Date.now(), pause: async () => {} }));
+  assert.equal(attempts, 1);
+});
+test('a denied retry reservation cannot cause a second provider call', async () => {
+  let attempts = 0, settlements = 0;
+  await assert.rejects(startChatWithRecovery({ generate: async () => { attempts++; throw { status: 503 }; },
+    budget: { finish: async () => { settlements++; } }, reserveRetry: async () => { throw new Error('daily allowance reached'); },
+    deadline: Date.now() + 80000, pause: async () => {} }));
+  assert.equal(attempts, 1); assert.equal(settlements, 1);
 });
 test('NSSO product-question routing is narrow and facts remain aligned with the public homepage', () => {
   for (const q of ['what is nsso?', "What's NSSO?", 'Tell me about nsso', 'What does nsso stand for?', 'How does nsso work?']) assert.equal(isNssoProductQuestion(q), true, q);

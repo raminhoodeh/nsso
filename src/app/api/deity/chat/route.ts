@@ -1,11 +1,12 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, type Content } from '@google/generative-ai';
 import { ChatAllowanceError, allowanceResponse } from '@/lib/deity/chat-allowance';
 import { openChatBudget, CHAT_MODEL, CHAT_OUTPUT_TOKENS, type ChatBudget } from '@/lib/deity/chat-budget-server';
 import { readChatRequest } from '@/lib/deity/chat-request';
 import { isNssoProductQuestion } from '@/lib/deity/product-context';
 import { chatFailureDetails, type ChatPhase } from '@/lib/deity/chat-diagnostics';
+import { startChatWithRecovery } from '@/lib/deity/chat-recovery';
 import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
 import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
@@ -149,6 +150,7 @@ export async function POST(req: Request) {
     let budget: ChatBudget | undefined;
     let phase: ChatPhase = 'request';
     let requestId = crypto.randomUUID() as string;
+    const deadline = Date.now() + 80_000;
     try {
         const { message, category, history, disableTools } = await readChatRequest(req);
         phase = 'allowance';
@@ -428,7 +430,7 @@ export async function POST(req: Request) {
         const model = genAI.getGenerativeModel(modelOptions);
 
         // 5. Build Content History
-        const chatContents = [];
+        const chatContents: Content[] = [];
         if (history && Array.isArray(history)) {
             history.forEach((msg: any) => {
                 if (msg.role && msg.content) {
@@ -451,11 +453,23 @@ export async function POST(req: Request) {
         const tokenCount = await model.countTokens({ contents: chatContents }, { timeout: 10_000 });
         phase = 'completion_allowance';
         await budget.prepare(tokenCount.totalTokens, CHAT_OUTPUT_TOKENS);
-        const activeBudget = budget;
         phase = 'generation';
-        const result = await model.generateContentStream({
-            contents: chatContents
-        }, { timeout: 30_000, signal: AbortSignal.timeout(40_000) });
+        const result = await startChatWithRecovery({
+            generate: () => model.generateContentStream({ contents: chatContents },
+                { timeout: 30_000, signal: AbortSignal.timeout(40_000) }),
+            budget,
+            deadline,
+            reserveRetry: async () => {
+                console.warn('Deity transient provider 503; one separately budgeted retry', { requestId });
+                phase = 'allowance';
+                budget = await openChatBudget(req, 'chat');
+                requestId = budget.requestId;
+                phase = 'completion_allowance';
+                await budget.prepare(tokenCount.totalTokens, CHAT_OUTPUT_TOKENS);
+                phase = 'generation';
+            },
+        });
+        const activeBudget = budget;
         // The SDK aggregates the same stream in a separate promise; observe its
         // rejection even if a disconnect makes the chunk iterator fail first.
         void result.response.catch(() => undefined);

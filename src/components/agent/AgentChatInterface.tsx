@@ -688,7 +688,7 @@ Check out some of the areas I can help you with below.`;
             setMessages(prev => [...prev, {
                 id: (Date.now() + 2).toString(),
                 role: 'model',
-                content: "Deity couldn't finish that response. Please refresh this page and try again. No automatic retry was made.",
+                content: "Deity couldn't finish that response. Please refresh this page and try again.",
                 responseError: true,
                 timestamp: Date.now()
             }]);

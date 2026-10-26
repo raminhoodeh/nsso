@@ -20,7 +20,11 @@ request may be declined if its maximum possible completion would exceed the cap.
 - SECURITY INVOKER RPCs serialize reservations and settlements under one
   transaction-level advisory lock. Reservations and settlement are idempotent.
 - Each generation uses Gemini 2.5 Flash, bounded output, thinking disabled and a
-  bounded provider timeout. No automatic provider retry occurs.
+  bounded provider timeout. The main chat retries at most once for an explicit
+  HTTP 503 before any response stream exists, only with enough deadline remaining.
+  The first reservation is retained and a separate second reservation must pass
+  the same IP/global caps. Billing/authentication/model errors and partial streams
+  are never automatically retried. There is no background retry loop.
 - Failure to access the database or identify the trusted client IP pauses paid
   requests. There is no process-local budget fallback.
 - Only Vercel's normalized forwarding headers identify production clients.
