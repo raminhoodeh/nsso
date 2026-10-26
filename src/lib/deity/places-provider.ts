@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, SchemaType, type Schema, type ObjectSchema, type GenerationConfig } from "@google/generative-ai";
 import type { PlacesProvider } from "./places-service";
+import { CHAT_MODEL, type ChatBudget } from "./chat-budget-server";
 
 const string = { type: SchemaType.STRING } as const;
 const recommendation: ObjectSchema = {
@@ -29,7 +30,7 @@ const responseSchema: Schema = {
 };
 
 /** Same server-only Gemini SDK/key as the existing NSSO Deity and film assistant. */
-export const geminiPlacesProvider: PlacesProvider = async ({ system, user }) => {
+export const geminiPlacesProvider = async ({ system, user }: Parameters<PlacesProvider>[0], budget: ChatBudget) => {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) throw new Error("Places provider is not configured");
   const configuredTimeout = Number(process.env.DEITY_PLACES_TIMEOUT_MS || 22_000);
@@ -41,10 +42,19 @@ export const geminiPlacesProvider: PlacesProvider = async ({ system, user }) => 
     thinkingConfig: { thinkingBudget: 0 },
   };
   const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({
-    model: process.env.DEITY_PLACES_MODEL || "gemini-2.5-flash",
+    model: CHAT_MODEL,
     systemInstruction: system,
     generationConfig,
   });
-  const result = await model.generateContent({ contents: [{ role: "user", parts: [{ text: user }] }] }, { timeout });
-  return result.response.text();
+  try {
+    const contents = [{ role: "user", parts: [{ text: user }] }];
+    const counted = await model.countTokens({ contents }, { timeout: 10_000 });
+    await budget.prepare(counted.totalTokens, 4096);
+    const result = await model.generateContent({ contents }, { timeout, signal: AbortSignal.timeout(timeout) });
+    await budget.finish(result.response.usageMetadata);
+    return result.response.text();
+  } catch (error) {
+    await budget.finish();
+    throw error;
+  }
 };

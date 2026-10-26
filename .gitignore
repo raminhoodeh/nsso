@@ -64,3 +64,4 @@ next-env.d.ts
 
 # Local connector configuration
 /.mcp.json
+/supabase/.temp/

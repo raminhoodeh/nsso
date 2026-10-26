@@ -2,6 +2,7 @@ import type { DubaiEvent, DubaiPlace } from "../../data/places-dubai";
 import type { DatePlan, PlaceVisitGuide } from "../places-editorial";
 import { activeEventsFor } from "../places-events";
 import { placeClosureNotice } from "../places-business-status";
+import { ChatAllowanceError, allowanceResponse } from "./chat-allowance";
 import type { PlacesChatRequest, PlacesChatResponse, PlacesChatRecommendation, PlacesChatHistoryItem } from "./places-types";
 
 const MAX_BODY_BYTES = 65_536;
@@ -257,7 +258,8 @@ async function boundedJson(request: Request) {
 }
 
 /** Per-instance abuse guard, not a substitute for the hosting platform's distributed WAF limits. */
-export function createPlacesChatHandler(knowledge: PlacesKnowledge, provider: PlacesProvider, clock = Date.now) {
+export function createPlacesChatHandler(knowledge: PlacesKnowledge, provider: PlacesProvider, clock = Date.now,
+  wrapProvider?: (request: Request) => PlacesProvider) {
   const recent = new Map<string, number[]>();
   let active = 0;
   return async function handle(request: Request): Promise<Response> {
@@ -278,9 +280,10 @@ export function createPlacesChatHandler(knowledge: PlacesKnowledge, provider: Pl
       recent.set(address, [...times, now]);
       active += 1;
       try {
-        return json(await answerPlacesChat(input, knowledge, now, provider));
+        return json(await answerPlacesChat(input, knowledge, now, wrapProvider ? wrapProvider(request) : provider));
       } finally { active -= 1; }
     } catch (error) {
+      if (error instanceof ChatAllowanceError) return allowanceResponse(error);
       if (error instanceof PlacesChatError) return json({ error: error.message }, error.status);
       // Provider errors may contain request URLs/keys or user content; never echo or log them.
       return json({ error: "Deity couldn't connect just now. Your map still works; please try again shortly." }, 503);

@@ -6,13 +6,14 @@ import { readFile } from "node:fs/promises";
 const serviceUrl = new URL("../src/lib/deity/places-service.ts", import.meta.url);
 const hooks = registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (context.parentURL === serviceUrl.href && ["../places-events", "../places-business-status"].includes(specifier)) {
+    if (context.parentURL === serviceUrl.href && ["../places-events", "../places-business-status", "./chat-allowance"].includes(specifier)) {
       return nextResolve(new URL(`${specifier}.ts`, serviceUrl).href, context);
     }
     return nextResolve(specifier, context);
   },
 });
 const { parsePlacesChatRequest, buildPlacesPrompt, validatePlacesReply, answerPlacesChat, createPlacesChatHandler } = await import(serviceUrl.href);
+const { ChatAllowanceError } = await import(new URL('../src/lib/deity/chat-allowance.ts', import.meta.url));
 hooks.deregister();
 
 const now = Date.parse("2026-09-28T16:00:00+04:00");
@@ -44,6 +45,16 @@ const knowledge = {
 const reply = (patch = {}) => JSON.stringify({ message: "Here are a couple of ideas from the map.", recommendations: [{ placeId: "museum", reason: "Browse art together." }], itinerary: null, ...patch });
 const request = (body = { message: "Plan a date" }, headers = {}) => new Request("https://www.nsso.me/api/deity/places", {
   method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body),
+});
+
+test("Places preserves shared-budget exhaustion and never invokes an unbudgeted provider", async () => {
+  let calls = 0;
+  const handler = createPlacesChatHandler(knowledge, async () => { calls++; return reply(); }, () => now,
+    () => async () => { throw new ChatAllowanceError("daily_ip_allowance_exhausted", 429, "2026-10-27T20:00:00Z"); });
+  const response = await handler(request());
+  assert.equal(response.status, 429);
+  assert.equal((await response.json()).cta.href, "https://www.linkedin.com/in/raminhoodeh/");
+  assert.equal(calls, 0);
 });
 
 test("request keeps user/assistant history and bounded map IDs, not client facts", () => {

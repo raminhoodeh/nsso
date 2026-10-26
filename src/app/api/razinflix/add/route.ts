@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { openChatBudget, CHAT_MODEL, type ChatBudget } from '@/lib/deity/chat-budget-server';
 
 import {
     buildSearchTitleVariants,
@@ -65,19 +66,23 @@ function extractJsonObject(value: string): Record<string, unknown> | null {
 async function generateEditorialMetadata(
     film: ResolvedFilm,
     geminiApiKey?: string,
+    request?: Request,
 ): Promise<EditorialMetadata> {
     const fallbackCategory = fallbackRazinflixCategory(film);
     const fallbackDescription = film.overview || 'No verified synopsis is currently available.';
 
     // Japanese animation is deterministic from TMDB country and genre metadata.
     const categoryMustRemainJapaneseAnime = fallbackCategory === 'Japanese Anime';
-    if (!geminiApiKey) {
+    if (!geminiApiKey || !request) {
         return { description: fallbackDescription, category: fallbackCategory };
     }
 
+    let budget: ChatBudget | undefined;
     try {
+        budget = await openChatBudget(request, 'editorial');
         const genAI = new GoogleGenerativeAI(geminiApiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+        const model = genAI.getGenerativeModel({ model: CHAT_MODEL,
+            generationConfig: { maxOutputTokens: 1024, ...{ thinkingConfig: { thinkingBudget: 0 } } } });
         const prompt = `You are formatting verified TMDB metadata for RazinFlix.
 
 Film: ${film.title} (${film.year})
@@ -94,7 +99,10 @@ ${RAZINFLIX_CATEGORIES.map(category => `  - ${category}`).join('\n')}
 
 Return JSON only.`;
 
-        const result = await model.generateContent(prompt);
+        const counted = await model.countTokens(prompt, { timeout: 10_000 });
+        await budget.prepare(counted.totalTokens, 1024);
+        const result = await model.generateContent(prompt, { timeout: 15_000, signal: AbortSignal.timeout(15_000) });
+        await budget.finish(result.response.usageMetadata);
         const parsed = extractJsonObject(result.response.text());
         const proposedDescription = typeof parsed?.description === 'string'
             ? parsed.description.trim().replace(/\*\*/g, '')
@@ -113,8 +121,9 @@ Return JSON only.`;
                     ? proposedCategory
                     : fallbackCategory,
         };
-    } catch (error) {
-        console.error('Gemini editorial metadata failed:', error);
+    } catch {
+        await budget?.finish();
+        console.error('AI editorial enrichment unavailable; using verified TMDB metadata');
         return { description: fallbackDescription, category: fallbackCategory };
     }
 }
@@ -165,6 +174,7 @@ export async function POST(request: Request) {
         const editorial = await generateEditorialMetadata(
             film,
             process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+            request,
         );
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

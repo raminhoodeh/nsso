@@ -7,6 +7,7 @@ import type { DubaiPlace } from "@/data/places-dubai";
 import type { PlacesChatRecommendation, PlacesChatResponse } from "@/lib/deity/places-types";
 import { activeEventsFor } from "@/lib/places-events";
 import { placeClosureNotice } from "@/lib/places-business-status";
+import { ALLOWANCE_CTA_URL, ALLOWANCE_CTA_LABEL, isDailyAllowanceCode } from "@/lib/deity/chat-allowance";
 import { useTahoeModalAccessibility } from "@/components/ui/tahoe-glass";
 import styles from "./deity.module.css";
 
@@ -43,6 +44,7 @@ export default function PlacesDeity(props: Props) {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [allowanceLimited, setAllowanceLimited] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [retryMessage, setRetryMessage] = useState<string | null>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -125,7 +127,7 @@ export default function PlacesDeity(props: Props) {
     // Leave room for map context even with multi-byte text and long itineraries.
     while (history.length && new TextEncoder().encode(JSON.stringify(history)).length > 36_000) history.shift();
     if (!retry) setMessages(current => [...current, { role: "user", content }]);
-    setDraft(""); setError(null); setRetryMessage(null); setBusy(true);
+    setDraft(""); setError(null); setAllowanceLimited(false); setRetryMessage(null); setBusy(true);
     const controller = new AbortController();
     controllerRef.current = controller;
     let timedOut = false;
@@ -140,7 +142,14 @@ export default function PlacesDeity(props: Props) {
         } }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Deity is unavailable right now. Please try again.");
+      if (!response.ok) {
+        if (isDailyAllowanceCode(result.code)) {
+          setAllowanceLimited(true);
+          setError(result.error);
+          return;
+        }
+        throw new Error(result.error || "Deity is unavailable right now. Please try again.");
+      }
       if (typeof result.message !== "string" || !Array.isArray(result.recommendations) || !Array.isArray(result.warnings)) {
         throw new Error("Deity couldn’t finish this response. Please try again.");
       }
@@ -240,7 +249,9 @@ export default function PlacesDeity(props: Props) {
           {!!message.reply?.warnings.length && <ul className={styles.warnings}>{message.reply.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul>}
         </article>)}
         {busy && <p className={styles.loading} role="status"><span /> Finding a good fit in the map’s collection…</p>}
-        {error && <div className={styles.error} role="alert"><p>{error}</p>{retryMessage && <button type="button" onClick={() => void send(retryMessage, true)}><RotateCcw size={14} /> Try again</button>}</div>}
+        {error && <div className={styles.error} role="alert"><p>{error}</p>{allowanceLimited
+          ? <a href={ALLOWANCE_CTA_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline", fontWeight: 600 }}>{ALLOWANCE_CTA_LABEL}</a>
+          : retryMessage && <button type="button" onClick={() => void send(retryMessage, true)}><RotateCcw size={14} /> Try again</button>}</div>}
       </div>
       <form className={styles.composer} onSubmit={event => { event.preventDefault(); void send(draft); }}>
         <label htmlFor="places-deity-message" className={styles.srOnly}>Ask Deity about places or plan an itinerary</label>

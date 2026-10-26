@@ -1,6 +1,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ChatAllowanceError, allowanceResponse } from '@/lib/deity/chat-allowance';
+import { openChatBudget, CHAT_MODEL, CHAT_OUTPUT_TOKENS, type ChatBudget } from '@/lib/deity/chat-budget-server';
+import { readChatRequest } from '@/lib/deity/chat-request';
 import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
 import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
@@ -17,6 +20,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
 const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+export const maxDuration = 90;
 
 // Category configuration with optimized thresholds
 const CATEGORY_CONFIG: Record<string, { files: string[], threshold: number }> = {
@@ -140,8 +144,10 @@ function calculateProfileCompleteness(contextData: any): number {
 // ... (existing imports)
 
 export async function POST(req: Request) {
+    let budget: ChatBudget | undefined;
     try {
-        const { message, category, history, disableTools } = await req.json();
+        const { message, category, history, disableTools } = await readChatRequest(req);
+        budget = await openChatBudget(req, 'chat');
 
         if (!message) {
             return new Response('Message is required', { status: 400 });
@@ -275,7 +281,8 @@ export async function POST(req: Request) {
             console.log(`Searching with category: ${detectedCategory || 'None'}, filters:`, filterFiles);
 
             // 1. Generate embedding for user query
-            const embeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: message }] }, outputDimensionality: 768 } as any);
+            budget.addEmbedding(message);
+            const embeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: message }] }, outputDimensionality: 768 } as any, { timeout: 10_000 });
             const embedding = embeddingResult.embedding.values;
 
             // 1b. Generate embedding for user profile (for re-ranking)
@@ -283,10 +290,11 @@ export async function POST(req: Request) {
             if (userId && userContext && userContext.length > 50) {
                 try {
                     const contextForEmbedding = userContext.substring(0, 1000);
-                    const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any);
+                    budget.addEmbedding(contextForEmbedding);
+                    const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any, { timeout: 10_000 });
                     profileEmbedding = profileEmbeddingResult.embedding.values;
                 } catch (err) {
-                    console.error("⚠️ Failed to generate profile embedding:", err);
+                    console.error("Profile embedding unavailable");
                 }
             }
 
@@ -372,7 +380,7 @@ export async function POST(req: Request) {
         const contextText = finalDocs?.map((doc: any) => {
             const sourceInfo = doc.metadata?.url || doc.metadata?.source || doc.metadata?.title || 'Unknown Source';
             // Explicitly mark as verified for the LLM
-            return `SOURCE/LINK: ${sourceInfo} [VERIFIED]\nCONTENT:\n${doc.content}`;
+            return `SOURCE/LINK: ${String(sourceInfo).slice(0, 2000)} [VERIFIED]\nCONTENT:\n${String(doc.content).slice(0, 12000)}`;
         }).join('\n\n---\n\n') || '';
 
         // --- DYNAMIC SYSTEM PROMPT ASSEMBLY (Phase 2) ---
@@ -393,8 +401,9 @@ export async function POST(req: Request) {
         // 4. Initialize Model with System Instruction AND Tools
         // Disable tools entirely for Guest Users to prevent any hallucinated profile updates, and save tokens!
         const modelOptions: any = {
-            model: "gemini-2.0-flash",
+            model: CHAT_MODEL,
             systemInstruction: systemPrompt,
+            generationConfig: { maxOutputTokens: CHAT_OUTPUT_TOKENS, thinkingConfig: { thinkingBudget: 0 } },
         };
         
         if (!disableTools && userId) {
@@ -423,13 +432,20 @@ export async function POST(req: Request) {
         });
 
         // 6. Generate Response Stream
+        const tokenCount = await model.countTokens({ contents: chatContents }, { timeout: 10_000 });
+        await budget.prepare(tokenCount.totalTokens, CHAT_OUTPUT_TOKENS);
+        const activeBudget = budget;
         const result = await model.generateContentStream({
             contents: chatContents
-        });
+        }, { timeout: 30_000, signal: AbortSignal.timeout(40_000) });
+        // The SDK aggregates the same stream in a separate promise; observe its
+        // rejection even if a disconnect makes the chunk iterator fail first.
+        void result.response.catch(() => undefined);
 
         // Create a readable stream for the response which handles Tool Calls
         const stream = new ReadableStream({
             async start(controller) {
+                try {
                 let fullResponse = '';
                 const collectedActions: any[] = [];
 
@@ -544,18 +560,29 @@ export async function POST(req: Request) {
                     }
                 }
 
+                const response = await result.response;
+                await activeBudget.finish(response.usageMetadata);
                 controller.close();
+                } catch {
+                    await activeBudget.finish();
+                    // Upstream errors can contain credential-bearing URLs. Never expose them.
+                    try { controller.error(new Error('The AI response was interrupted. Please try again later.')); } catch { /* Client disconnected. */ }
+                }
             }
         });
 
         return new Response(stream, {
             headers: {
                 'Content-Type': 'text/plain; charset=utf-8',
+                'Cache-Control': 'no-store',
+                'X-Content-Type-Options': 'nosniff',
             },
         });
 
-    } catch (err: any) {
-        console.error('API Error:', err);
-        return new Response(`Internal Server Error: ${err.message}`, { status: 500 });
+    } catch (err: unknown) {
+        await budget?.finish();
+        if (err instanceof ChatAllowanceError) return allowanceResponse(err);
+        console.error('Chat provider unavailable');
+        return Response.json({ error: 'AI chat is temporarily unavailable. Please try again later.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
     }
 }

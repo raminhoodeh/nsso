@@ -4,12 +4,14 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
 import { splitActionPayload, type DeityAction } from '@/lib/deity/actionParser';
+import { ALLOWANCE_CTA_URL, ALLOWANCE_CTA_LABEL, isDailyAllowanceCode, boundedChatHistory } from '@/lib/deity/chat-allowance';
 
 interface Message {
     id: string;
     role: 'user' | 'model';
     content: string;
     timestamp: number;
+    allowanceCta?: boolean;
     actions?: (DeityAction & { status?: 'applied' | 'rejected' })[]; // Actions extracted from this message
 }
 
@@ -473,7 +475,7 @@ Check out some of the areas I can help you with below.`;
         }]);
 
         try {
-            const history = messages.map(m => ({ role: m.role, content: m.content }));
+            const history = boundedChatHistory(messages);
             const { data: { session } } = await supabase.auth.getSession();
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
             if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
@@ -488,6 +490,13 @@ Check out some of the areas I can help you with below.`;
                 }),
             });
 
+            if (!response.ok) {
+                const failure = await response.json().catch(() => ({}));
+                setMessages(prev => prev.map(msg => msg.id === botMessageId ? {
+                    ...msg, content: failure.error || 'AI chat is temporarily unavailable.', allowanceCta: isDailyAllowanceCode(failure.code),
+                } : msg));
+                return;
+            }
             if (!response.body) throw new Error("No response body");
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
@@ -566,10 +575,7 @@ Check out some of the areas I can help you with below.`;
 
         try {
             // Prepare history for API
-            const history = messages.map(m => ({
-                role: m.role,
-                content: m.content
-            }));
+            const history = boundedChatHistory(messages);
 
             // Get auth session for personalization
             const { data: { session } } = await supabase.auth.getSession();
@@ -591,8 +597,11 @@ Check out some of the areas I can help you with below.`;
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
+                const failure = await response.json().catch(() => ({}));
+                setMessages(prev => [...prev, { id: (Date.now() + 2).toString(), role: 'model',
+                    content: failure.error || 'AI chat is temporarily unavailable.', timestamp: Date.now(),
+                    allowanceCta: isDailyAllowanceCode(failure.code) }]);
+                return;
             }
 
             if (!response.body) throw new Error("No response body");
@@ -829,6 +838,8 @@ Check out some of the areas I can help you with below.`;
                                         }`}
                                 >
                                     {renderMessage(msg.content)}
+                                    {msg.allowanceCta && <a href={ALLOWANCE_CTA_URL} target="_blank" rel="noopener noreferrer"
+                                        className="mt-3 block font-semibold text-cyan-300 underline underline-offset-4">{ALLOWANCE_CTA_LABEL}</a>}
                                 </article>
                             )}
                         </div>
@@ -978,6 +989,7 @@ Check out some of the areas I can help you with below.`;
                             id="deity-message-input"
                             type="text"
                             value={inputValue}
+                            maxLength={4000}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder={placeholders[placeholderIndex]}
                             autoComplete="off"
