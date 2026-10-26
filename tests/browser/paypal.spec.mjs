@@ -21,7 +21,7 @@ test.beforeAll(async () => {
             window.parsePayPal=parsePayPalInput;
             window.renderPayPal=props=>root.render(<PayPal {...props}/>);
             window.renderMany=props=>root.render(<>{props.map((p,i)=><PayPal key={i} {...p}/>)}</>);
-            window.renderEditor=(html,id='11111111-1111-4111-8111-111111111111')=>root.render(<Editor productId={id} initialHtml={html} onSaved={(html,config)=>window.saved.push({html,config})}/>);
+            window.renderEditor=(html,id='11111111-1111-4111-8111-111111111111')=>root.render(<Editor accountId="22222222-2222-4222-8222-222222222222" productId={id} initialHtml={html} getRevision={()=>0} refreshRevision={async()=>{}} onSaved={(html,config)=>window.saved.push({html,config})}/>);
             window.renderLink=href=>root.render(<SafeExternalLink href={href}>Portfolio</SafeExternalLink>);
             window.clear=()=>root.render(null);
         ` },
@@ -60,6 +60,44 @@ test('NCP checkout stays a native provider form even when obsolete price and suc
     await expect(page.getByRole('button', { name: 'Buy Now' })).toBeVisible();
     await expect(page.locator('input')).toHaveCount(0);
     expect(await page.evaluate(() => window.sdkLoaded || 0)).toBe(0);
+});
+
+test('unsupported named controls remain editable but cannot save or render a reinterpreted checkout', async ({ page }) => {
+    await fixture(page);
+    const named = ncp.replace('type="submit"', 'type="submit" name="merchant_choice"');
+    await render(page, { html: named });
+    await expect(page.getByText('Payment button unavailable. Please contact the seller.')).toBeVisible();
+    await expect(page.locator('form')).toHaveCount(0);
+    await page.evaluate(html => window.renderEditor(html), ncp);
+    const input = page.getByRole('textbox', { name: 'PayPal button code' });
+    await input.fill(named); await input.blur();
+    await expect(input).toHaveValue(named);
+    await expect(input).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByRole('status')).toContainText('Named submit or image controls are not supported');
+    await expect(page.getByRole('button', { name: 'Save payment button' })).toBeDisabled();
+    expect(await page.evaluate(() => window.saved)).toEqual([]);
+});
+
+test('a minimal committed payment receipt recovers the saved button without retaining raw source in the receipt', async ({ page }) => {
+    let operation, writes = 0;
+    await fixture(page, async route => {
+        if (route.request().url().includes('/api/profile/operations?')) {
+            await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ status: 'applied', operationId: operation.operationId, revision: 1, changes: [] }) });
+            return true;
+        }
+        if (!route.request().url().includes('/payment')) return false;
+        operation = route.request().postDataJSON(); writes++;
+        await route.abort('failed'); return true;
+    });
+    await page.evaluate(html => window.renderEditor(html), ncp);
+    const input = page.getByRole('textbox', { name: 'PayPal button code' });
+    await input.fill(ncp2); await input.blur();
+    await expect(page.getByRole('button', { name: 'Save payment button' })).toBeDisabled();
+    await expect.poll(() => page.evaluate(() => window.saved.length)).toBe(1);
+    expect(writes).toBe(1);
+    const saved = await page.evaluate(() => window.saved[0]);
+    expect(saved.html).toBe(ncp2);
+    expect(saved.config.action).toBe('https://www.paypal.com/ncp/payment/XY12CD34EF56G');
 });
 
 test('preview is inert and semantic URL rendering preserves invalid text without a clickable link', async ({ page }) => {
@@ -130,10 +168,11 @@ test('unmount during SDK loading prevents rendering into a removed component', a
 test('invalid editor drafts never persist, failed saves retain draft and last saved state, retry succeeds', async ({ page }) => {
     let requests = 0;
     await fixture(page, async route => {
+        if (route.request().url().includes('/api/profile/operations?')) { await route.fulfill({contentType:'application/json',body:JSON.stringify({status:'not_found',operationId:new URL(route.request().url()).searchParams.get('operationId'),revision:0})});return true;}
         if (!route.request().url().includes('/payment')) return false;
         requests++;
-        const { html } = route.request().postDataJSON();
-        await route.fulfill({ status: requests === 1 ? 503 : 200, contentType: 'application/json', body: JSON.stringify(requests === 1 ? { error: 'Payment settings were not saved. Your draft has been kept.' } : { success: true, config: { version: 1, kind: 'payment-form', action: html.includes('XY12') ? 'https://www.paypal.com/ncp/payment/XY12CD34EF56G' : 'https://www.paypal.com/ncp/payment/AB12CD34EF56G', fields: [], label: 'Buy Now' } }) });
+        const { html, operationId } = route.request().postDataJSON();
+        await route.fulfill({ status: requests === 1 ? 503 : 200, contentType: 'application/json', body: JSON.stringify(requests === 1 ? { error: 'Payment settings were not saved. Your draft has been kept.' } : { success: true, status:'applied', operationId, revision:1, config: { version: 1, kind: 'payment-form', action: html.includes('XY12') ? 'https://www.paypal.com/ncp/payment/XY12CD34EF56G' : 'https://www.paypal.com/ncp/payment/AB12CD34EF56G', fields: [], label: 'Buy Now' } }) });
         return true;
     });
     await page.evaluate(html => window.renderEditor(html), ncp);
@@ -144,10 +183,10 @@ test('invalid editor drafts never persist, failed saves retain draft and last sa
     expect(requests).toBe(0);
     await input.fill(ncp2);
     await input.blur();
-    await expect(page.getByRole('button', { name: 'Retry save' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Check status and retry' })).toBeEnabled();
     await expect(input).toHaveValue(ncp2);
     expect(await page.evaluate(() => window.saved)).toEqual([]);
-    await page.getByRole('button', { name: 'Retry save' }).click();
+    await page.getByRole('button', { name: 'Check status and retry' }).click();
     await expect(page.getByRole('button', { name: 'Save payment button' })).toBeDisabled();
     expect((await page.evaluate(() => window.saved)).map(saved => saved.html)).toEqual([ncp2]);
 });
@@ -158,9 +197,11 @@ test('typing while a save is pending preserves newer draft and leaves another sa
     let requested;
     const requestedPromise = new Promise(resolve => { requested = resolve; });
     await fixture(page, async route => {
+        if (route.request().url().includes('/api/profile/operations?')) { await route.fulfill({contentType:'application/json',body:JSON.stringify({status:'not_found',operationId:new URL(route.request().url()).searchParams.get('operationId'),revision:0})});return true;}
         if (!route.request().url().includes('/payment')) return false;
         requested(); await gate;
-        await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true, config: { version: 1, kind: 'payment-form', action: 'https://www.paypal.com/ncp/payment/XY12CD34EF56G', fields: [], label: 'Buy Now' } }) }); return true;
+        const {operationId}=route.request().postDataJSON();
+        await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true, status:'applied', operationId, revision:1, config: { version: 1, kind: 'payment-form', action: 'https://www.paypal.com/ncp/payment/XY12CD34EF56G', fields: [], label: 'Buy Now' } }) }); return true;
     });
     await page.evaluate(html => window.renderEditor(html), ncp);
     const input = page.getByRole('textbox', { name: 'PayPal button code' });

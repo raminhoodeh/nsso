@@ -192,6 +192,8 @@ function DashboardSidebarContent({
                     </TahoeGlassSurface>
                 )}
 
+                <TahoeGlassButton onClick={() => router.push('/dashboard/security')} radius={12} tone="light" className="min-h-11 w-full px-4 py-3 text-left text-white/80">Account security</TahoeGlassButton>
+
                 {/* Preview Profile */}
                 <TahoeGlassButton
                     onClick={() => router.push('/preview')}

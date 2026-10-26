@@ -47,12 +47,7 @@ export const DEITY_TOOLS: FunctionDeclaration[] = [
             properties: {
                 project_name: { type: SchemaType.STRING, description: "Name of the project" },
                 project_description: { type: SchemaType.STRING, description: "Description of what it does and the user's role" },
-                project_url: { type: SchemaType.STRING, description: "URL to the live project or repo", nullable: true },
-                technologies: {
-                    type: SchemaType.ARRAY,
-                    items: { type: SchemaType.STRING },
-                    description: "List of technologies used (e.g. React, Python)"
-                }
+                project_url: { type: SchemaType.STRING, description: "URL to the live project or repo", nullable: true }
             },
             required: ["project_name", "project_description"]
         }
@@ -65,7 +60,6 @@ export const DEITY_TOOLS: FunctionDeclaration[] = [
             properties: {
                 institution: { type: SchemaType.STRING, description: "University, School, or Issuing Body" },
                 degree: { type: SchemaType.STRING, description: "Degree name or Certification title" },
-                field: { type: SchemaType.STRING, description: "Field of study (optional)", nullable: true },
                 year: { type: SchemaType.NUMBER, description: "Year of completion/graduation" }
             },
             required: ["institution", "degree", "year"]

@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { fetchCurrentAccount } from '@/lib/current-account'
 import type { User } from '@/lib/types'
@@ -14,6 +15,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+    const router = useRouter()
+    const authSubject = useRef<string | null | undefined>(undefined)
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -49,6 +52,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         void fetchUser()
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             const nextOwner = session?.user.id ?? null
+            const previousSubject = authSubject.current
+            authSubject.current = nextOwner
+            if (previousSubject !== undefined && previousSubject !== nextOwner && _event !== 'INITIAL_SESSION') queueMicrotask(() => router.refresh())
             if (_event === 'SIGNED_OUT' || nextOwner !== currentOwner.current) {
                 ++generation.current
                 activeRequest.current?.abort()
@@ -64,7 +70,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             activeRequest.current?.abort()
             subscription.unsubscribe()
         }
-    }, [supabase, fetchUser])
+    }, [supabase, fetchUser, router])
 
     return <UserContext.Provider value={{ user, loading, error, refreshUser: fetchUser }}>
         {children}

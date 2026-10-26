@@ -55,12 +55,12 @@ export default function PreviewPage() {
             const [userData, profileData, linksData, contactsData, expResult, qualResult, projResult, prodResult] = await Promise.all([
                 fetchCurrentAccount().then(account => ({ data: account?.user ?? null })),
                 supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', authUser.id).single(),
-                supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
-                supabase.from('contacts').select('*').eq('user_id', authUser.id).order('created_at'),
-                supabase.from('experiences').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }),
-                supabase.from('qualifications').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }),
-                supabase.from('projects').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }),
-                supabase.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', authUser.id).order('created_at', { ascending: false }),
+                supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }).order('id'),
+                supabase.from('contacts').select('*').eq('user_id', authUser.id).order('display_order').order('created_at').order('id'),
+                supabase.from('experiences').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }).order('id'),
+                supabase.from('qualifications').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }).order('id'),
+                supabase.from('projects').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }).order('id'),
+                supabase.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', authUser.id).order('created_at', { ascending: false }).order('id'),
             ])
 
             if (userData.data) setUser(userData.data)

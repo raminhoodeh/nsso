@@ -7,21 +7,13 @@ import { readChatRequest } from '@/lib/deity/chat-request';
 import { isNssoProductQuestion } from '@/lib/deity/product-context';
 import { chatFailureDetails, type ChatPhase } from '@/lib/deity/chat-diagnostics';
 import { startChatWithRecovery } from '@/lib/deity/chat-recovery';
-import { createActionPayload } from '@/lib/deity/actionParser';
+import { createActionPayload, normalizeToolCall, type DeityAction } from '@/lib/deity/actionParser';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
 import { DEITY_TOOLS } from '@/lib/deity/tools';
 import { detectCategory, assembleSystemPrompt, detectSectionIntent, detectKnowledgeIntent } from '@/lib/deity/contextManager';
 import { assessLinkHealth } from '@/lib/deity/linkVerifier';
+import { reportRuntimeSignal } from '@/lib/server/runtime-signals';
 
-// Initialize Supabase logic
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
-
-const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 export const maxDuration = 90;
 
 // Category configuration with optimized thresholds
@@ -123,6 +115,11 @@ export async function POST(req: Request) {
         budget = await openChatBudget(req, 'chat');
         requestId = budget.requestId;
         phase = 'context';
+        // Build/import paths must not instantiate a privileged client or model.
+        // The configured allowance gate has already checked the required server settings.
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+        const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
+        const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
 
         // Optimization: Fast-track system follow-ups (Skip Search)
         const isSystemFollowUp = message.startsWith('[SYSTEM:');
@@ -233,7 +230,7 @@ export async function POST(req: Request) {
                         if (contextData.projects?.length > 0) ctx.push(`\nPROJECTS:\n` + contextData.projects.map((p: any) => `- ${p.project_name}: ${p.description}`).join('\n'));
                         if (contextData.products?.length > 0) ctx.push(`\nPRODUCTS:\n` + contextData.products.map((p: any) => `- ${p.name}: ${p.description}`).join('\n'));
                         if (contextData.qualifications?.length > 0) ctx.push(`\nQUALIFICATIONS:\n` + contextData.qualifications.map((q: any) => `- ${q.qualification_name} from ${q.institution}`).join('\n'));
-                        if (contextData.links?.length > 0) ctx.push(`\nLINKS:\n` + contextData.links.map((l: any) => `- ${l.link_name}: ${l.link_url}`).join('\n'));
+                        if (contextData.links?.length > 0) ctx.push(`\nLINKS (use only these owned IDs for edits):\n` + contextData.links.map((l: any) => `- [id: ${l.id}] ${l.link_name}: ${l.link_url}`).join('\n'));
                         if (contextData.contacts?.length > 0) ctx.push(`\nCONTACTS:\n` + contextData.contacts.map((c: any) => `- ${c.method}: ${c.value}`).join('\n'));
 
                         if (ctx.length > 0) {
@@ -416,7 +413,7 @@ export async function POST(req: Request) {
                 void (async () => {
                 let fullResponse = '';
                 try {
-                const collectedActions: any[] = [];
+                const collectedActions: DeityAction[] = [];
 
                 // Stream chunks as they arrive
                 for await (const chunk of result.stream) {
@@ -434,47 +431,9 @@ export async function POST(req: Request) {
                         calls.forEach(call => {
                             console.log('Deity tool call received', { requestId });
 
-                            // Map Tool Call back to DeityAction format for frontend
-                            const actionBox: any = { ...call.args };
-
-                            // Map function name to action type
-                            switch (call.name) {
-                                case 'update_profile_field':
-                                    actionBox.action = 'UPDATE_FIELD';
-                                    break;
-                                case 'add_experience':
-                                    actionBox.action = 'ADD_EXPERIENCE';
-                                    break;
-                                case 'add_project':
-                                    actionBox.action = 'ADD_PROJECT';
-                                    break;
-                                case 'add_qualification':
-                                    actionBox.action = 'ADD_QUALIFICATION';
-                                    break;
-                                case 'add_product':
-                                    actionBox.action = 'ADD_PRODUCT';
-                                    break;
-                                case 'add_link':
-                                    actionBox.action = 'ADD_LINK';
-                                    break;
-                                case 'update_link':
-                                    actionBox.action = 'UPDATE_LINK';
-                                    break;
-                                case 'remove_link':
-                                    actionBox.action = 'REMOVE_LINK';
-                                    break;
-                                case 'reorder_links':
-                                    actionBox.action = 'REORDER_LINKS';
-                                    break;
-                                case 'suggest_wording':
-                                    actionBox.action = 'SUGGEST_WORDING';
-                                    break;
-                                default:
-                                    // Unknown tool?
-                                    actionBox.action = call.name.toUpperCase();
-                            }
-
-                            collectedActions.push(actionBox);
+                            const proposal = normalizeToolCall(call.name, call.args);
+                            if (proposal && collectedActions.length < 20) collectedActions.push(proposal);
+                            else console.warn('Deity tool proposal rejected', { requestId, code: 'INVALID_PROFILE_PROPOSAL' });
                         });
                     }
                 }
@@ -541,6 +500,7 @@ export async function POST(req: Request) {
                         return;
                     }
                     const failure = chatFailureDetails(error, 'stream', requestId);
+                    reportRuntimeSignal('upstream_failed');
                     console.error('Deity chat failure', failure);
                     // Headers may already be sent. Finish with an explicit, safe message
                     // instead of a broken HTTP body that the UI mislabels as no connection.
@@ -576,8 +536,9 @@ export async function POST(req: Request) {
         if (req.signal.aborted) return Response.json({ error: 'This chat request was cancelled.', code: 'chat_cancelled' }, {
             status: 499, headers: { 'Cache-Control': 'no-store', 'X-Deity-Request-Id': requestId },
         });
-        if (err instanceof ChatAllowanceError) return allowanceResponse(err);
+        if (err instanceof ChatAllowanceError) { if(err.status>=500)reportRuntimeSignal('budget_unavailable'); return allowanceResponse(err); }
         const failure = chatFailureDetails(err, phase, requestId);
+        reportRuntimeSignal(phase==='allowance'?'budget_unavailable':'upstream_failed');
         console.error('Deity chat failure', failure);
         return Response.json({ error: failure.message, code: failure.code, requestId }, { status: 503,
             headers: { 'Cache-Control': 'no-store', 'X-Deity-Request-Id': requestId } });

@@ -27,7 +27,7 @@ export default function AdminPage() {
                 while (offset !== null) {
                     const response: Response = await fetch(`/api/admin/users?offset=${offset}`, { cache: 'no-store' })
                     if (response.status === 401) { router.push('/sign-in'); return }
-                    if (response.status === 403) { router.push('/dashboard'); return }
+                    if (response.status === 403) { const denied = await response.json(); router.push(denied.code === 'mfa_required' ? '/dashboard/security?next=/admin' : '/dashboard'); return }
                     if (!response.ok) throw new Error('Accounts unavailable')
                     const page: { users: UserWithProfile[]; currentUserId: string; nextOffset: number | null } = await response.json()
                     accounts.push(...page.users)

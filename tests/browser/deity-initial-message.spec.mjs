@@ -11,7 +11,7 @@ test.beforeAll(async () => {
             build.onResolve({ filter: /^@\/(?:components\/providers\/(?:UserProvider|ProfileProvider)|components\/ui\/Toast|lib\/supabase\/client)$/ }, args => ({ path: args.path, namespace: 'chat-fixture' }));
             build.onLoad({ filter: /.*/, namespace: 'chat-fixture' }, ({ path }) => ({ contents:
                 path.endsWith('UserProvider') ? `const user={id:'fixture-account',username:'fixture'}; export const useUser=()=>({user,loading:false});`
-                : path.endsWith('ProfileProvider') ? `const noop=async()=>false;const value={updateField:noop,addLink:noop,updateLink:noop,removeLink:noop,reorderLinks:noop,addExperience:noop,addProject:noop,addQualification:noop,addProduct:noop,undo:noop,canUndo:false,fastMode:false,setFastMode:noop};export const useProfile=()=>value;`
+                : path.endsWith('ProfileProvider') ? `const noop=async()=>false;const value={updateField:noop,addLink:noop,updateLink:noop,removeLink:noop,reorderLinks:noop,addExperience:noop,addProject:noop,addQualification:noop,addProduct:noop,undo:noop,canUndo:false,fastMode:false,setFastMode:noop,revision:0,getRevision:()=>0,refreshProfile:async()=>{},applyOperation:async()=>({status:'rejected',operationId:'fixture',revision:0,changes:[]})};export const useProfile=()=>value;`
                 : path.endsWith('Toast') ? `const showToast=()=>{};export const useToast=()=>({showToast});`
                 : `const client={auth:{getSession:async()=>({data:{session:null}})},from:()=>({select(){return this},eq(){return this},single:async()=>({data:{full_name:'Fixture Creator',bio:'Fixture bio'}})})};export const createClient=()=>client;`, loader: 'js' }));
         } }],

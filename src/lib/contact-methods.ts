@@ -1,0 +1,2 @@
+export const CONTACT_METHODS = ['Email','Phone','WhatsApp','Telegram','Signal','WeChat','Line','Discord','X','Instagram','LinkedIn','YouTube','TikTok','Twitch','Facebook','Snapchat','Pinterest','Reddit','GitHub','GitLab','Medium','Substack','Patreon','Ko-fi','Buy Me a Coffee','PayPal','Cash App','Venmo','Zelle','Location','Other'] as const
+export type ContactMethod = typeof CONTACT_METHODS[number]

@@ -1,4 +1,6 @@
 import 'server-only'
+import { randomUUID } from 'node:crypto'
+import { reportRuntimeSignal } from '@/lib/server/runtime-signals'
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient as createSessionClient } from '@/lib/supabase/server'
@@ -9,7 +11,7 @@ export class PermissionError extends Error {
     readonly status: 401 | 403 | 503
     readonly code: string
     constructor(status: 401 | 403 | 503, code: string) {
-        super(status === 401 ? 'Please sign in to continue.'
+        super(code === 'mfa_required' ? 'Verify your authenticator at /dashboard/security before continuing.' : status === 401 ? 'Please sign in to continue.'
             : status === 403 ? 'This account does not have permission for that action.'
                 : 'Access checks are temporarily unavailable. Please try again shortly.')
         this.status = status
@@ -58,14 +60,22 @@ export async function requirePermission(permission: AppPermission, request?: Req
     let actor
     try { actor = await supabase.auth.getUser() }
     catch { throw new PermissionError(503, 'permission_check_unavailable') }
+    if (actor.error && (actor.error.status === undefined || actor.error.status <= 0 || actor.error.status >= 500)) throw new PermissionError(503, 'permission_check_unavailable')
     if (actor.error || !actor.data.user) throw new PermissionError(401, 'authentication_required')
     if (!await hasPermission(actor.data.user.id, permission)) throw new PermissionError(403, 'permission_denied')
+    let assurance
+    try { assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel() }
+    catch { throw new PermissionError(503, 'permission_check_unavailable') }
+    if (assurance.error) throw new PermissionError(503, 'permission_check_unavailable')
+    // Current factors come from getUser's verified Auth response, not editable session metadata.
+    if (assurance.data.currentLevel !== 'aal2' || !actor.data.user.factors?.some(factor => factor.status === 'verified')) throw new PermissionError(403, 'mfa_required')
     return { user: actor.data.user, supabase }
 }
 
 export function permissionErrorResponse(error: unknown): Response | null {
     if (!(error instanceof PermissionError)) return null
-    return Response.json({ error: error.message, code: error.code }, {
-        status: error.status, headers: { 'Cache-Control': 'private, no-store' },
+    const requestId = error.status === 401 ? randomUUID() : reportRuntimeSignal(error.code === 'mfa_required' ? 'mfa_required' : error.status === 403 ? 'privilege_denied' : 'upstream_failed')
+    return Response.json({ requestId, error: error.message, code: error.code, ...(error.code === 'mfa_required' ? { next: '/dashboard/security' } : {}) }, {
+        status: error.status, headers: { 'Cache-Control': 'private, no-store', 'X-Request-ID': requestId },
     })
 }

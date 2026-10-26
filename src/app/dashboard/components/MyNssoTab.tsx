@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MyNssoConnection } from '@/lib/types'
 import NetworkTable from './NetworkTable'
 import NetworkingTimeline from './NetworkingTimeline'
@@ -36,17 +36,36 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
         setIsModalOpen(true)
     }
 
-    async function handleSaveNotes(id: string, notes: string) {
+    function closeModal() {
+        setIsModalOpen(false)
+        setSelectedConnection(null)
+    }
+
+    async function handleSaveNotes(id: string, notes: string): Promise<string | null> {
         try {
             await handleUpdateConnection(id, { notes })
             showToast('Notes saved', 'success')
-            setIsModalOpen(false)
-        } catch (error) {
-            showToast('Failed to save notes', 'error')
+            closeModal()
+            return null
+        } catch {
+            return 'Your notes could not be saved. Your draft is still here. Please try again.'
         }
     }
 
-
+    async function handleRemoveConnection(id: string): Promise<string | null> {
+        try {
+            const response = await fetch(`/api/my-nsso/connections/${id}`, { method: 'DELETE' })
+            if (!response.ok) return response.status === 429
+                ? 'Too many requests. Please wait a moment and try again.'
+                : 'This connection could not be removed. Your notes are still here. Please try again.'
+            setConnections(previous => previous.filter(connection => connection.id !== id))
+            closeModal()
+            showToast('Removed from My nsso', 'success')
+            return null
+        } catch {
+            return 'We could not confirm removal. Please check your connections before trying again.'
+        }
+    }
 
     // Load Connections
     const loadConnections = async () => {
@@ -58,8 +77,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
             } else {
                 showToast('Failed to load connections', 'error')
             }
-        } catch (error) {
-            console.error('Error loading connections:', error)
+        } catch {
             showToast('Failed to load connections', 'error')
         } finally {
             setLoading(false)
@@ -142,6 +160,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
                     <NetworkTable
                         connections={connections}
                         onUpdateConnection={handleUpdateConnection}
+                        onOpenNotes={openModal}
                     />
                 </div>
 
@@ -158,24 +177,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
                         <NetworkingTimeline
                             connections={connections}
-                            onOpenNotes={(conn) => {
-                                // We can reuse the modal logic from Table if we hoist the state up, 
-                                // OR simpler: Just define a shared update handler and let Timeline trigger it?
-                                // Actually Timeline opens Notes too. 
-                                // Since the Notes Modal is built into NetworkTable currently, 
-                                // we should probably extract the Modal to this parent level OR 
-                                // let Timeline have its own Modal (might duplicate code but simpler refactor).
-
-                                // Better UX: Hoist the modal state here to MyNssoTab so both children can open it.
-                                // However, simply for V1 speed, let's keep it simple.
-                                // If user clicks note in Timeline, we need to show a modal.
-                                // For now, let's just pass a "not implemented" toast or 
-                                // Actually, I should refactor NetworkTable to accept `isNotesOpen` etc if hoisting.
-
-                                // Let's create a shared modal here in MyNssoTab instead!
-                                // Refactoring decision: Yes, hoist modal state.
-                                openModal(conn)
-                            }}
+                            onOpenNotes={openModal}
                         />
                     </div>
                 )}
@@ -184,10 +186,12 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
             {/* Shared Notes Modal */}
             {selectedConnection && (
                 <NotesModal
+                    key={selectedConnection.id}
                     isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={closeModal}
                     connection={selectedConnection}
                     onSave={handleSaveNotes}
+                    onRemove={handleRemoveConnection}
                 />
             )}
         </div>
@@ -196,22 +200,55 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
 }
 
-// Extracted Modal Component (Same as inside NetworkTable roughly)
 interface NotesModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    connection: MyNssoConnection;
-    onSave: (id: string, notes: string) => Promise<void>;
+    isOpen: boolean
+    onClose: () => void
+    connection: MyNssoConnection
+    onSave: (id: string, notes: string) => Promise<string | null>
+    onRemove: (id: string) => Promise<string | null>
 }
 
-function NotesModal({ isOpen, onClose, connection, onSave }: NotesModalProps) {
+function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModalProps) {
     const [content, setContent] = useState(connection.notes || '')
     const [saving, setSaving] = useState(false)
+    const [removing, setRemoving] = useState(false)
+    const [confirmRemoval, setConfirmRemoval] = useState(false)
+    const [error, setError] = useState('')
+    const pending = useRef(false)
+    const busy = saving || removing
+
+    async function saveNotes() {
+        if (pending.current) return
+        pending.current = true
+        setSaving(true)
+        setError('')
+        try {
+            const message = await onSave(connection.id, content)
+            if (message) setError(message)
+        } finally {
+            pending.current = false
+            setSaving(false)
+        }
+    }
+
+    async function removeConnection() {
+        if (!confirmRemoval || pending.current) return
+        pending.current = true
+        setRemoving(true)
+        setError('')
+        try {
+            const message = await onRemove(connection.id)
+            if (message) setError(message)
+        } finally {
+            pending.current = false
+            setRemoving(false)
+        }
+    }
 
     return (
         <TahoeGlassDialog
             open={isOpen}
-            onOpenChange={(open) => { if (!open) onClose() }}
+            onOpenChange={(open) => { if (!open && !busy) onClose() }}
             portal={false}
             tone="light"
             semanticTint="dark"
@@ -219,43 +256,50 @@ function NotesModal({ isOpen, onClose, connection, onSave }: NotesModalProps) {
             aria-label={`Notes for ${connection.fullName}`}
             className="max-w-lg p-6"
         >
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-white">
-                            Notes for {connection.fullName}
-                        </h3>
-                        <TahoeGlassButton onClick={onClose} className="h-9 w-9 p-0" contentClassName="text-white/70" aria-label="Close notes dialog">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M18 6L6 18M6 6l12 12" />
-                            </svg>
-                        </TahoeGlassButton>
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-white">Notes for {connection.fullName}</h3>
+                <TahoeGlassButton onClick={onClose} disabled={busy} className="h-9 w-9 p-0" contentClassName="text-white/70" aria-label="Close notes dialog">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </TahoeGlassButton>
+            </div>
+            <TahoeGlassField label="Connection notes" visuallyHideLabel tone="light" surfaceClassName="p-0 mb-2" controlClassName="p-4 resize-none custom-scrollbar">
+                <textarea
+                    aria-label="Connection notes"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    disabled={busy}
+                    maxLength={3333}
+                    rows={8}
+                    placeholder="Add notes about your meeting, context, or follow-ups..."
+                    className="text-white placeholder:text-white/30"
+                />
+            </TahoeGlassField>
+            {error && <p role="alert" className="mb-3 text-sm text-rose-200">{error}</p>}
+            <div className="flex justify-between items-center text-xs text-white/40 gap-3">
+                <span>{content.length} / 3333 characters</span>
+                <TahoeGlassButton onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className="px-4 py-2" contentClassName="text-white font-semibold">
+                    {saving ? 'Saving...' : 'Save Notes'}
+                </TahoeGlassButton>
+            </div>
+            <div className="mt-5 pt-4 border-t border-white/10">
+                {confirmRemoval ? (
+                    <div className="space-y-3">
+                        <p className="text-sm text-white/80">
+                            Remove {connection.fullName} from your My nsso? This removes them from your list and deletes your private notes, including any unsaved notes. Their record of you stays unchanged.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            <TahoeGlassButton onClick={() => { void removeConnection() }} disabled={busy} className="px-4 py-2" contentClassName="text-rose-200">
+                                {removing ? 'Removing...' : 'Confirm removal'}
+                            </TahoeGlassButton>
+                            <TahoeGlassButton onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className="px-4 py-2">Keep connection</TahoeGlassButton>
+                        </div>
                     </div>
-
-                    <TahoeGlassField tone="light" surfaceClassName="p-0 mb-2" controlClassName="p-4 resize-none custom-scrollbar">
-                        <textarea
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            maxLength={3333}
-                            rows={8}
-                            placeholder="Add notes about your meeting, context, or follow-ups..."
-                            className="text-white placeholder:text-white/30"
-                        />
-                    </TahoeGlassField>
-
-                    <div className="flex justify-between items-center text-xs text-white/40">
-                        <span>{content.length} / 3333 characters</span>
-                        <TahoeGlassButton
-                            onClick={async () => {
-                                setSaving(true)
-                                await onSave(connection.id, content)
-                                setSaving(false)
-                            }}
-                            disabled={saving}
-                            className="px-4 py-2"
-                            contentClassName="text-white font-semibold"
-                        >
-                            {saving ? 'Saving...' : 'Save Notes'}
-                        </TahoeGlassButton>
-                    </div>
+                ) : (
+                    <TahoeGlassButton onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className="px-4 py-2" contentClassName="text-rose-200">Remove from My nsso</TahoeGlassButton>
+                )}
+            </div>
         </TahoeGlassDialog>
     )
 }

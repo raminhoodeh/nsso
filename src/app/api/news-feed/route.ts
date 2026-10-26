@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
+import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 
 export async function GET(request: Request) {
     const supabase = await createClient()
@@ -29,6 +31,7 @@ export async function GET(request: Request) {
             .order('created_at', { ascending: false })
             .limit(limit)
 
+        if (cursor && (!Number.isFinite(Date.parse(cursor)) || cursor.length > 40)) return NextResponse.json({ error: 'Invalid feed cursor.' }, { status: 400 })
         if (cursor) {
             query = query.lt('created_at', cursor)
         }
@@ -43,7 +46,7 @@ export async function GET(request: Request) {
         })
 
     } catch (error) {
-        console.error('Error fetching feed:', error)
+        console.error('Feed unavailable', { code: 'FEED_READ_FAILED' })
         return NextResponse.json({ error: 'Failed to fetch feed' }, { status: 500 })
     }
 }
@@ -52,13 +55,15 @@ export async function POST(request: Request) {
     const supabase = await createClient()
 
     try {
-        const { content } = await request.json()
+        assertSameOrigin(request)
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        const { content, ...extra } = await readBoundedJson(request, 16_384)
+        if (Object.keys(extra).length || typeof content !== 'string' || !content.trim() || content.length > 4000) return NextResponse.json({ error: 'Write a post of up to 4,000 characters.' }, { status: 400 })
         const { data, error } = await supabase
             .from('feed_posts')
             .insert({
@@ -75,7 +80,7 @@ export async function POST(request: Request) {
         return NextResponse.json(data)
 
     } catch (error) {
-        console.error('Error creating post:', error)
-        return NextResponse.json({ error: 'Failed to create post' }, { status: 500 })
+        console.error('Feed unavailable', { code: 'FEED_WRITE_FAILED' })
+        return permissionErrorResponse(error) ?? requestBodyErrorResponse(error) ?? NextResponse.json({ error: 'Your post could not be saved. Please retry.' }, { status: 503 })
     }
 }

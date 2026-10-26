@@ -16,6 +16,6 @@ test('chat display normalizes assistant text and labels, not user messages or li
   assert.match(source, /isAssistant \? normalizeNssoBrand\(text\) : text/);
   assert.match(source, /renderMessage\(msg.content, msg.role === 'model'\)/);
   assert.match(source, /displayText\(mdMatch\[1\]\)/);
-  assert.match(source, /href=\{mdMatch\[2\]\}/);
-  assert.match(source, /href=\{subPart\}/);
+  assert.match(source, /href=\{safeWebUrl\(mdMatch\[2\]\) \|\| undefined\}/);
+  assert.match(source, /href=\{safeWebUrl\(subPart\) \|\| undefined\}/);
 });

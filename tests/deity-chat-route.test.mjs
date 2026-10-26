@@ -13,6 +13,8 @@ Object.assign(process.env, {
   NSSO_CHAT_IP_HASH_SECRET: 'test-only-hmac-secret-longer-than-32-characters', VERCEL: '1',
 });
 const hooks = registerHooks({ resolve(specifier, context, next) {
+  if (specifier === 'server-only') return {url:'data:text/javascript,export {};',shortCircuit:true};
+  if (specifier === 'next/server') return next('next/server.js',context);
   if (specifier.startsWith('@/')) return next(new URL(`${specifier.slice(2)}.ts`, source).href, context);
   if (specifier.startsWith('.') && context.parentURL?.startsWith(source.href)) {
     const url = new URL(`${specifier}.ts`, context.parentURL);

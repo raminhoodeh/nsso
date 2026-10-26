@@ -4,7 +4,8 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical } from 'lucide-react'
 import Input from '@/components/ui/Input'
-import { Contact, ContactMethod } from '@/lib/types'
+import { Contact } from '@/lib/types'
+import { CONTACT_METHODS } from '@/lib/contact-methods'
 import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface Props {
@@ -12,8 +13,6 @@ interface Props {
     updateContact: (id: string, field: 'value' | 'method' | 'custom_method_name', value: string) => void
     removeContact: (id: string) => void
 }
-
-const CONTACT_METHODS: ContactMethod[] = ['Email', 'Phone', 'WhatsApp', 'Telegram', 'Signal', 'WeChat', 'Line', 'Discord', 'X', 'Instagram', 'LinkedIn', 'YouTube', 'TikTok', 'Twitch', 'Facebook', 'Snapchat', 'Pinterest', 'Reddit', 'GitHub', 'GitLab', 'Medium', 'Substack', 'Patreon', 'Ko-fi', 'Buy Me a Coffee', 'PayPal', 'Cash App', 'Venmo', 'Zelle', 'Other'] as ContactMethod[]
 
 export function SortableContactItem({ contact, updateContact, removeContact }: Props) {
     const {

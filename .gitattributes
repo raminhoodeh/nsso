@@ -1,0 +1,3 @@
+# Preserve the vendor license and the exact applied catalog-derived SQL export.
+public/vendor/vanta-0.5.24/LICENSE -text whitespace=cr-at-eol
+supabase/migrations/20261026152224_nsso_retrieval_bounds.sql whitespace=-blank-at-eol

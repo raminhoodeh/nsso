@@ -7,6 +7,7 @@ export async function GET() {
     try {
         const client = await createClient()
         const { data: { user: actor }, error: authError } = await client.auth.getUser()
+        if (authError && (authError.status === undefined || authError.status <= 0 || authError.status >= 500)) return Response.json({ error: 'Account verification is temporarily unavailable.' }, { status: 503, headers: privateHeaders })
         if (authError || !actor) return Response.json({ error: 'Please sign in.' }, { status: 401, headers: privateHeaders })
         let { data: account, error } = await client.rpc('get_current_account')
         if (!error && !account) ({ data: account, error } = await client.rpc('ensure_current_account'))

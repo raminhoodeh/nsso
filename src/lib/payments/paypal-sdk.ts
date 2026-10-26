@@ -26,6 +26,8 @@ export function loadPayPalHostedSdk(currency: PayPalCurrency, environment: { win
     url.search = new URLSearchParams({ 'client-id': 'ba', components: 'hosted-buttons', currency, intent: 'capture' }).toString()
     script.src = url.href
     script.async = true
+    const nonce = dom.querySelector<HTMLScriptElement>('script[nonce]')?.nonce
+    if (nonce) { script.nonce = nonce; script.setAttribute('data-csp-nonce', nonce) }
     script.setAttribute('data-namespace', namespace)
     script.setAttribute('data-nsso-paypal-config', key)
     const promise = new Promise<PayPalHostedSdk>((resolve, reject) => {

@@ -2,16 +2,17 @@
 
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState, useEffect, useRef, type KeyboardEvent } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Plus, X, ChevronDown, ChevronUp, Info, Upload, Loader2, Layout, Sparkles, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DraggableAttributes, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
-import { PRODUCT_CARD_SELECT } from '@/lib/payments/product-presentation'
+import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
+import type { EditableValues } from '@/lib/profile-mutations'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
+import { uploadProfileMedia } from '@/lib/profile-media-client'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface AdvancedModeCardProps {
@@ -48,7 +49,6 @@ function SortableItem({ id, children, className }: { id: string; children: (prop
 }
 
 export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
-    const [supabase] = useState(() => createClient())
     const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(null)
     const [activeSection, setActiveSection] = useState<ActiveSection>('experiences')
     // const [isLoading, setIsLoading] = useState(false) // Driven by provider now
@@ -89,7 +89,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         products: globalProducts,
         reorderExperiences,
         reorderQualifications,
-        reorderProjects
+        reorderProjects,
+        createEntity, patchEntity, removeEntity, refreshProfile, getRevision
     } = useProfile()
 
     // Sensors for Drag and Drop
@@ -159,6 +160,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // Selection States
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null) // For editing specific product
+    useEffect(() => { setSelectedProduct(current => current ? globalProducts.find(row => row.id === current.id) || null : null) }, [globalProducts])
 
     // Confirmation State
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; productId: string | null }>({
@@ -196,28 +198,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         setIsUploading(true)
 
         try {
-            // Upload
-            const pathPrefix = cropperTarget.type === 'project' ? 'projects' : 'products'
-            const fileName = `${userId}/${pathPrefix}/${crypto.randomUUID()}.jpg`
-
-            const { error: uploadError } = await supabase.storage
-                .from('portfolio-assets')
-                .upload(fileName, croppedBlob, { contentType: 'image/jpeg' })
-
-            if (uploadError) throw uploadError
-
-            const { data } = supabase.storage
-                .from('portfolio-assets')
-                .getPublicUrl(fileName)
-
-            const publicUrl = data.publicUrl
+            const {url:publicUrl}=await uploadProfileMedia(croppedBlob,cropperTarget.type,userId)
 
             // Update State & DB
             if (cropperTarget.type === 'project' && cropperTarget.id) {
-                await updateProject(cropperTarget.id, { project_photo_url: publicUrl })
+                if (!await updateProject(cropperTarget.id, { project_photo_url: publicUrl })) throw new Error('not_saved')
             } else if (cropperTarget.type === 'product' && selectedProduct) {
                 // If we are editing a selected product
-                await updateProduct(selectedProduct.id, { image_url: publicUrl })
+                if (!await updateProduct(selectedProduct.id, { image_url: publicUrl })) throw new Error('not_saved')
             }
             setCropperOpen(false)
             setCropperImage(null)
@@ -231,103 +219,45 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // --- handlers ---
 
-    // Experience Handlers
-    const addExperience = async () => {
-        const { data } = await supabase.from('experiences').insert({
-            user_id: userId,
-            company_name: '',
-            job_title: '',
-            start_year: new Date().getFullYear(),
-            end_year: null
-        }).select().single()
-        if (data) setExperiences([data, ...experiences])
-    }
+    // All editor writes share the authenticated, revisioned mutation gateway.
+    const addExperience = async () => { await createEntity('experience',{company_name:'',job_title:'',start_year:new Date().getFullYear(),end_year:null,description:''}) }
     const updateExperience = async (id: string, updates: Partial<Experience>) => {
-        // Optimistic update
-        setExperiences(experiences.map(e => e.id === id ? { ...e, ...updates } : e))
-        await supabase.from('experiences').update(updates).eq('id', id)
+        setExperiences(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        return patchEntity('experience',id,updates)
     }
-    const deleteExperience = async (id: string) => {
-        setExperiences(experiences.filter(e => e.id !== id))
-        await supabase.from('experiences').delete().eq('id', id)
-    }
-    const deleteQualification = async (id: string) => {
-        setQualifications(qualifications.filter(q => q.id !== id))
-        await supabase.from('qualifications').delete().eq('id', id)
-    }
-    const deleteProject = async (id: string) => {
-        setProjects(projects.filter(p => p.id !== id))
-        await supabase.from('projects').delete().eq('id', id)
-    }
-
-    // Qualification Handlers
-    const addQualification = async () => {
-        const { data } = await supabase.from('qualifications').insert({
-            user_id: userId,
-            institution: '',
-            qualification_name: '',
-            start_year: new Date().getFullYear(),
-            end_year: new Date().getFullYear()
-        }).select().single()
-        if (data) setQualifications([data, ...qualifications])
-    }
+    const deleteExperience = async (id: string) => { if (await removeEntity('experience',id)) setExperiences(current => current.filter(row => row.id !== id)) }
+    const addQualification = async () => { await createEntity('qualification',{institution:'',qualification_name:'',start_year:new Date().getFullYear(),end_year:new Date().getFullYear()}) }
     const updateQualification = async (id: string, updates: Partial<Qualification>) => {
-        setQualifications(qualifications.map(q => q.id === id ? { ...q, ...updates } : q))
-        await supabase.from('qualifications').update(updates).eq('id', id)
+        setQualifications(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        return patchEntity('qualification',id,updates)
     }
-
-    // Project Handlers
-    const addProject = async () => {
-        const { data } = await supabase.from('projects').insert({
-            user_id: userId,
-            project_name: '',
-            contribution: '',
-            description: '',
-            project_url: ''
-        }).select().single()
-        if (data) setProjects([data, ...projects])
-    }
+    const deleteQualification = async (id: string) => { if (await removeEntity('qualification',id)) setQualifications(current => current.filter(row => row.id !== id)) }
+    const addProject = async () => { await createEntity('project',{project_name:'',contribution:'',description:'',project_url:null}) }
     const updateProject = async (id: string, updates: Partial<Project>) => {
-        setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p))
-        await supabase.from('projects').update(updates).eq('id', id)
+        setProjects(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        return patchEntity('project',id,updates)
     }
-
-    // Product Handlers
+    const deleteProject = async (id: string) => { if (await removeEntity('project',id)) setProjects(current => current.filter(row => row.id !== id)) }
     const addProduct = async () => {
-        const { data } = await supabase.from('products').insert({
-            user_id: userId,
-            name: 'New Product',
-            price: '0',
-        }).select(PRODUCT_CARD_SELECT).single()
-        if (data) {
-            const created: Product = { ...data, paypal_html: null }
-            setProducts([...products, created])
-            setSelectedProduct(created) // Select the new draft immediately
-        }
+        const result = await createEntity('product',{name:'New Product',price:'0'})
+        const created = result.changes.find(change => change.entity === 'products' && change.row)?.row
+        if (result.status === 'applied' && created) setSelectedProduct({...created,paypal_html:null} as unknown as Product)
     }
-    const updateProduct = async (id: string, updates: Partial<Product>) => {
-        setProducts(products.map(p => p.id === id ? { ...p, ...updates } : p))
-        if (selectedProduct?.id === id) {
-            setSelectedProduct(prev => prev ? { ...prev, ...updates } : null)
-        }
-        await supabase.from('products').update(updates).eq('id', id)
+    const updateProduct = async (id: string, updates: EditableValues['product']) => {
+        setProducts(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        setSelectedProduct(current => current?.id === id ? {...current,...updates} : current)
+        return patchEntity('product',id,updates)
     }
-    const confirmDeleteProduct = (id: string) => {
-        setDeleteConfirmation({ isOpen: true, productId: id })
-    }
-
+    const confirmDeleteProduct = (id: string) => { setDeleteConfirmation({isOpen:true,productId:id}) }
     const executeDeleteProduct = async () => {
-        if (!deleteConfirmation.productId) return
-
         const id = deleteConfirmation.productId
-        setProducts(products.filter(p => p.id !== id))
-        if (selectedProduct?.id === id) setSelectedProduct(null)
-
-        setDeleteConfirmation({ isOpen: false, productId: null }) // Close immediately for UI
-
-        await supabase.from('products').delete().eq('id', id)
+        if (!id) return
+        if (await removeEntity('product',id)) {
+            setProducts(current => current.filter(row => row.id !== id))
+            setSelectedProduct(current => current?.id === id ? null : current)
+            setDeleteConfirmation({isOpen:false,productId:null})
+        }
     }
-
 
     // --- Render Helpers ---
 
@@ -678,6 +608,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         // Edit Product Form
         return (
             <div className="relative flex flex-col gap-4 pt-4 animate-fadeIn md:gap-6 md:pt-6">
+                <ProfileSaveStatus />
                 <div className="flex min-h-11 items-center justify-between gap-3 md:absolute md:right-0 md:top-[27px] md:z-10 md:min-h-0">
                     <span className="text-xs font-semibold uppercase tracking-widest text-white/55 md:hidden">Product details</span>
                     <TahoeGlassButton
@@ -865,10 +796,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 <PayPalCodeEditor
                                     key={selectedProduct.id}
                                     productId={selectedProduct.id}
+                                    accountId={userId}
+                                    getRevision={getRevision}
+                                    refreshRevision={refreshProfile}
                                     initialHtml={selectedProduct.paypal_html}
-                                    onSaved={(html, config) => {
+                                    onSaved={async (html, config) => {
                                         setProducts(current => current.map(item => item.id === selectedProduct.id ? { ...item, paypal_html: html, payment_config: config } : item))
                                         setSelectedProduct(current => current?.id === selectedProduct.id ? { ...current, paypal_html: html, payment_config: config } : current)
+                                        await refreshProfile()
                                     }}
                                 />
                             </div>
@@ -886,6 +821,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     return (
         <div className="flex flex-col gap-6" data-profile-editor-sections="split">
+            <ProfileSaveStatus />
             <section className="flex flex-col gap-3" data-editor-accordion="experience">
                 {renderPanelToggle(
                     'experience',

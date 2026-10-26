@@ -112,6 +112,9 @@ export function parsePayPalInput(value: unknown): PayPalParseResult {
     for (const input of descendants(form).filter(node => ['input', 'button'].includes(tag(node)))) {
         const type = (attribute(input, 'type') || (tag(input) === 'button' ? 'submit' : 'text')).toLowerCase()
         if (type === 'submit' || type === 'image') {
+            // A clicked named control contributes submitted values (or image
+            // coordinates). Dropping it could change the seller's checkout.
+            if (attribute(input, 'name')) return { ok: false, message: 'Named submit or image controls are not supported. Use a PayPal button without a named submit control; your last saved button has been kept.' }
             label = (attribute(input, 'value') || attribute(input, 'alt') || text(input) || label).trim().slice(0, 80) || label
         } else if (type === 'hidden') {
             fields.push({ name: attribute(input, 'name') || '', value: attribute(input, 'value') || '' })

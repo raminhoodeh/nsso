@@ -10,7 +10,10 @@ test.beforeAll(async () => {
         define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'isolated-session-backend', setup(builder) {
             builder.onResolve({ filter: /^@\/lib\/supabase\/client$/ }, () => ({ path: 'fixture-client', namespace: 'fixture-backend' }));
-            builder.onLoad({ filter: /.*/, namespace: 'fixture-backend' }, () => ({ contents: 'export const createClient = () => window.fixtureDatabase;', loader: 'js' }));
+            builder.onResolve({ filter: /^next\/navigation$/ }, () => ({ path: 'fixture-navigation', namespace: 'fixture-backend' }));
+            builder.onLoad({ filter: /.*/, namespace: 'fixture-backend' }, args => ({ contents: args.path === 'fixture-navigation'
+                ? 'export const useRouter = () => window.fixtureRouter;'
+                : 'export const createClient = () => window.fixtureDatabase;', loader: 'js' }));
         } }],
         stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';
@@ -19,18 +22,34 @@ test.beforeAll(async () => {
             import { ProfileProvider, useProfile } from './src/components/providers/ProfileProvider';
 
             window.fixtureActor = 'actor-a';
+            window.fixtureRefreshes = 0;
+            window.fixtureRouter = { refresh() { window.fixtureRefreshes++; } };
             window.fixtureMode = 'ok';
             window.pendingAccounts = [];
             window.pendingProfiles = [];
             window.deferNextAccount = false;
             window.deferProfileOwner = null;
             window.fixtureWrites = [];
+            window.fixtureSnapshots = {};
+            window.fixtureHistory = {};
+            window.holdOperations = false;
             const account = owner => ({ id: owner, username: owner, user_type: owner === 'actor-a' ? 'admin' : 'standard',
                 is_premium: true, deity_fast_mode: false, permissions: owner === 'actor-a' ? ['nsso:admin','razinflix:manage'] : [] });
             const tables = (table, owner) => table === 'profiles'
                 ? { user_id: owner, full_name: owner, bio: owner + ' saved bio', headline: owner + ' headline' }
                 : [{ id: owner + '-' + table, user_id: owner, name: owner + ' private ' + table }];
+            const snapshot = owner => window.fixtureSnapshots[owner] ||= {revision:0,profile:tables('profiles',owner),links:tables('links',owner),contacts:tables('contacts',owner),experiences:tables('experiences',owner),qualifications:tables('qualifications',owner),projects:tables('projects',owner),products:tables('products',owner)};
             window.fetch = async (url, init) => {
+                if (url.startsWith('/api/profile/operations')) {
+                    const owner=window.fixtureActor, body=JSON.parse(init.body);
+                    if (window.holdOperations) return new Promise(()=>{});
+                    const current=snapshot(owner), previous=structuredClone(current.profile);
+                    if (url.endsWith('/undo')) current.profile=window.fixtureHistory[body.originalOperationId];
+                    else for(const change of body.changes) current.profile={...current.profile,...change.patch};
+                    window.fixtureHistory[body.operationId]=previous;current.revision++;
+                    window.fixtureWrites.push({owner,body});
+                    return Response.json({status:'applied',operationId:body.operationId,revision:current.revision,changes:[{entity:'profile',id:owner,row:current.profile}]});
+                }
                 if (url !== '/api/me') throw new Error('Unexpected fixture fetch: ' + url);
                 const owner = window.fixtureActor;
                 if (window.fixtureMode === 'outage') return Response.json({error:'Fixture unavailable'}, {status:503});
@@ -49,7 +68,11 @@ test.beforeAll(async () => {
                 return Promise.resolve({data,error:null});
             }
             window.fixtureDatabase = {
-                auth: { onAuthStateChange(listener) { window.fixtureAuthListener = listener; return {data:{subscription:{unsubscribe(){}}}}; } },
+                auth: { onAuthStateChange(listener) {
+                    window.fixtureAuthListener = listener;
+                    queueMicrotask(() => listener('INITIAL_SESSION', {user:{id:window.fixtureActor}}));
+                    return {data:{subscription:{unsubscribe(){}}}};
+                } },
                 from(table) {
                     let owner = window.fixtureActor;
                     let patch;
@@ -67,6 +90,7 @@ test.beforeAll(async () => {
                 },
                 rpc(name,args) {
                     const owner = window.fixtureActor;
+                    if (name === 'get_profile_snapshot') return reply(structuredClone(snapshot(owner)),owner);
                     if (name === 'get_own_products') return reply(tables('products',owner),owner);
                     if (name === 'get_current_account') return reply(account(owner),owner);
                     if (name === 'update_account_settings') { window.fixtureWrites.push({owner,patch:args.p_patch}); return Promise.resolve({data:args.p_patch,error:null}); }
@@ -89,7 +113,8 @@ test.beforeAll(async () => {
                     <output data-testid="profile-loading">{String(profile.loading)}</output>
                     <output data-testid="fast-mode">{String(profile.fastMode)}</output>
                     <label>Draft bio<input aria-label="Draft bio" value={profile.profile?.bio || ''}
-                        onChange={event => { void profile.updateField('bio', event.target.value, false); }}/></label>
+                        onChange={event => { void profile.patchProfile({bio:event.target.value}); }}/></label>
+                    <button onClick={() => {void profile.patchProfile({headline:'Saved checkpoint'},true);}}>Save checkpoint</button>
                     <button disabled={!profile.canUndo} onClick={() => {void profile.undo();}}>Undo draft</button>
                     <button onClick={() => {void profile.setFastMode(!profile.fastMode);}}>Toggle Fast Mode</button>
                     <button onClick={() => {void user.refreshUser();}}>Refresh account</button>
@@ -114,6 +139,7 @@ async function fixture(page) {
     await expect(page.getByTestId('actor')).toHaveText('actor-a');
     await expect(page.getByRole('textbox',{name:'Draft bio'})).toHaveValue('actor-a saved bio');
     await expect(page.getByTestId('profile-loading')).toHaveText('false');
+    expect(await page.evaluate(() => window.fixtureRefreshes)).toBe(0);
 }
 
 test('logout and account switching clear the real profile draft, collections, Undo and Fast Mode', async ({page}) => {
@@ -128,16 +154,21 @@ test('logout and account switching clear the real profile draft, collections, Un
     await expect(page.getByRole('button',{name:'Undo draft'})).toBeDisabled();
     await expect(page.getByTestId('fast-mode')).toHaveText('false');
     await expect(page.getByTestId('snapshot')).not.toContainText('actor-a');
+    expect(await page.evaluate(() => window.fixtureRefreshes)).toBe(1);
     await page.evaluate(() => window.changeFixtureActor('actor-b'));
     await expect(page.getByTestId('actor')).toHaveText('actor-b');
     await expect(page.getByRole('textbox',{name:'Draft bio'})).toHaveValue('actor-b saved bio');
     await expect(page.getByRole('button',{name:'Undo draft'})).toBeDisabled();
     await expect(page.getByTestId('snapshot')).not.toContainText('actor-a');
     await expect(page.getByTestId('permissions')).toHaveText('[]');
+    expect(await page.evaluate(() => window.fixtureRefreshes)).toBe(2);
 });
 
 test('a same-account 503 preserves the real draft and Undo, removes capabilities and exposes successful retry', async ({page}) => {
     await fixture(page);
+    await page.getByRole('button',{name:'Save checkpoint'}).click();
+    await expect(page.getByRole('button',{name:'Undo draft'})).toBeEnabled();
+    await page.evaluate(() => {window.holdOperations=true;});
     await page.getByRole('textbox',{name:'Draft bio'}).fill('actor-a unsaved private draft');
     await page.evaluate(() => {window.fixtureMode='outage';});
     await page.getByRole('button',{name:'Refresh account'}).click();
@@ -151,6 +182,24 @@ test('a same-account 503 preserves the real draft and Undo, removes capabilities
     await expect(page.locator('div[role="status"]')).toHaveCount(0);
     await expect(page.getByTestId('permissions')).toContainText('nsso:admin');
     await expect(page.getByRole('textbox',{name:'Draft bio'})).toHaveValue('actor-a unsaved private draft');
+    expect(await page.evaluate(() => window.fixtureRefreshes)).toBe(0);
+});
+
+test('same-subject sign-in and token events preserve drafts without refreshing server routes', async ({page}) => {
+    await fixture(page);
+    await page.evaluate(() => {window.holdOperations=true;});
+    await page.getByRole('textbox',{name:'Draft bio'}).fill('actor-a unsaved private draft');
+    await page.evaluate(() => {
+        window.fixtureAuthListener('SIGNED_IN', {user:{id:'actor-a'}});
+        window.fixtureAuthListener('TOKEN_REFRESHED', {user:{id:'actor-a'}});
+    });
+    await expect(page.getByTestId('actor')).toHaveText('actor-a');
+    await expect(page.getByRole('textbox',{name:'Draft bio'})).toHaveValue('actor-a unsaved private draft');
+    expect(await page.evaluate(() => window.fixtureRefreshes)).toBe(0);
+    await page.evaluate(() => window.changeFixtureActor('actor-b'));
+    await expect(page.getByTestId('actor')).toHaveText('actor-b');
+    await expect(page.getByRole('textbox',{name:'Draft bio'})).toHaveValue('actor-b saved bio');
+    expect(await page.evaluate(() => window.fixtureRefreshes)).toBe(1);
 });
 
 test('late account A responses cannot replace account B even when the fixture transport ignores abort', async ({page}) => {

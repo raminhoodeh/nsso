@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "nsso agent context database/**",
     "private/**",
+    // Exact vendor bytes are checked against their pinned checksums.
+    "public/vendor/**",
     "future/**",
     // Separate project: deliberately excluded from the authorized nsso remediation.
     "src/app/dreamsea/**",

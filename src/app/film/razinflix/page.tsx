@@ -6,7 +6,7 @@ import MovieModal from '@/components/film/MovieModal';
 import MovieCard, { type Film } from '@/components/film/MovieCard';
 import AddFilmModal from '@/components/film/AddFilmModal';
 import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X, Pause, Play } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { createPublicReadClient } from '@/lib/supabase/public';
 import {
     TahoeBackdropHeader,
     TahoeGlassButton,
@@ -117,10 +117,7 @@ export default function RazinFlixPage() {
     useEffect(() => {
         const fetchFilms = async () => {
             try {
-                const supabase = createClient(
-                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-                );
+                const supabase = createPublicReadClient();
                 const { data, error } = await supabase
                     .from('razinflix_films')
                     .select('*')
@@ -137,8 +134,8 @@ export default function RazinFlixPage() {
                         setFeaturedFilms(shuffled.slice(0, 5));
                     }
                 }
-            } catch (err) {
-                console.error('Failed to load films from Supabase:', err);
+            } catch {
+                console.warn('Film catalog unavailable', { code: 'FILM_READ_FAILED' });
             } finally {
                 setIsLoading(false);
             }

@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Script from 'next/script'
 import { Cookie } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TahoeGlassButton, TahoeGlassDialog } from '@/components/ui/tahoe-glass'
@@ -38,28 +37,32 @@ function writeConsentCookie(value: Exclude<MetaPixelConsentState, 'unset'>) {
     document.cookie = `${META_PIXEL_CONSENT_COOKIE}=${value}; Max-Age=${META_PIXEL_CONSENT_MAX_AGE}; Path=/; SameSite=Lax${secure}`
 }
 
-function pixelBootstrap(pixelId: string) {
-    return `
-        !function(f,b,e,v,n,t,s){
-            if(f.fbq)return;
-            n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;
-            n.push=n;
-            n.loaded=!0;
-            n.version='2.0';
-            n.queue=[];
-            t=b.createElement(e);
-            t.async=!0;
-            t.src=v;
-            s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)
-        }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-        window.__nssoMetaPixelInitialized=window.__nssoMetaPixelInitialized||{};
-        if(!window.__nssoMetaPixelInitialized['${pixelId}']){
-            fbq('init','${pixelId}');
-            window.__nssoMetaPixelInitialized['${pixelId}']=true;
+function initializePixel(pixelId: string) {
+    // Bundled application code avoids an inline script and also works after a
+    // client-side transition from a cached static page with a hash-only CSP.
+    if (!window.fbq) {
+        const queue: MetaFbq = (...args) => {
+            if (queue.callMethod) queue.callMethod(...args)
+            else queue.queue!.push(args)
         }
-    `
+        queue.queue = []
+        queue.push = queue
+        queue.loaded = true
+        queue.version = '2.0'
+        window.fbq = queue
+        window._fbq = window._fbq || queue
+        const script = document.createElement('script')
+        script.src = 'https://connect.facebook.net/en_US/fbevents.js'
+        script.async = true
+        const nonce = document.querySelector<HTMLScriptElement>('script[nonce]')?.nonce
+        if (nonce) script.nonce = nonce
+        document.head.appendChild(script)
+    }
+    window.__nssoMetaPixelInitialized ||= {}
+    if (!window.__nssoMetaPixelInitialized[pixelId]) {
+        window.fbq('init', pixelId)
+        window.__nssoMetaPixelInitialized[pixelId] = true
+    }
 }
 
 export default function MetaPixelConsent({
@@ -89,8 +92,11 @@ export default function MetaPixelConsent({
     }, [])
 
     useEffect(() => {
-        if (consent === 'granted') trackPageView()
-    }, [consent, trackPageView])
+        if (consent === 'granted' && validPixelId) {
+            initializePixel(pixelId)
+            trackPageView()
+        }
+    }, [consent, trackPageView, pixelId, validPixelId])
 
     const chooseConsent = (choice: Exclude<MetaPixelConsentState, 'unset'>) => {
         writeConsentCookie(choice)
@@ -113,12 +119,6 @@ export default function MetaPixelConsent({
         <>
             {consent === 'granted' && (
                 <>
-                    <Script
-                        id={`meta-pixel-${pixelId}`}
-                        strategy="afterInteractive"
-                        onReady={trackPageView}
-                        dangerouslySetInnerHTML={{ __html: pixelBootstrap(pixelId) }}
-                    />
                     <noscript>
                         {/* Meta's no-JavaScript fallback must remain a direct tracking pixel. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -1,89 +1,42 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
+import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 
-export async function PATCH(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> }
-) {
+const headers = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
+        assertSameOrigin(request)
         const { id } = await params
-        const body = await request.json()
-        const { notes, location } = body
-
-        // Validate payload
-        // Allow updating either notes or location, or both
-        if (notes === undefined && location === undefined) {
-            return NextResponse.json(
-                { error: 'Nothing to update' },
-                { status: 400 }
-            )
-        }
-
-        if (notes && notes.length > 3333) {
-            return NextResponse.json(
-                { error: 'Notes exceed 3333 characters' },
-                { status: 400 }
-            )
-        }
-
-        const cookieStore = await cookies()
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                cookieStore.set(name, value, options)
-                            )
-                        } catch { }
-                    },
-                },
-            }
-        )
-
-        // Get authenticated user
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-        if (authError || !user) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        // Verify ownership (RLS handles this but good to be explicit/optimistic checks)
-        // We will just perform the update with the user_id filter
-        const updateData: any = { updated_at: new Date().toISOString() }
-        if (notes !== undefined) updateData.notes = notes
-        if (location !== undefined) updateData.location_name = location
-
-        const { error } = await supabase
-            .from('my_nsso')
-            .update(updateData)
-            .eq('id', id)
-            .eq('user_id', user.id) // Security check
-
-        if (error) {
-            console.error('Update connections error:', error)
-            return NextResponse.json(
-                { error: 'Failed to update connection' },
-                { status: 500 }
-            )
-        }
-
-        return NextResponse.json({ success: true })
-
+        if (!uuid.test(id)) return Response.json({ error: 'Choose a valid connection.' }, { status: 400, headers })
+        const client = await createClient()
+        const { data: { user }, error: authError } = await client.auth.getUser()
+        if (authError || !user) return Response.json({ error: 'Please sign in.' }, { status: 401, headers })
+        const body = await readBoundedJson(request, 16_384)
+        if (!Object.keys(body).length || Object.keys(body).some(key => !['notes','location'].includes(key))
+            || (body.notes !== undefined && (typeof body.notes !== 'string' || body.notes.length > 3333))
+            || (body.location !== undefined && (typeof body.location !== 'string' || body.location.length > 300))) return Response.json({ error: 'Use notes up to 3,333 characters and a location up to 300 characters.' }, { status: 400, headers })
+        const patch = { ...(body.notes !== undefined ? { notes: body.notes } : {}), ...(body.location !== undefined ? { location_name: body.location } : {}), updated_at: new Date().toISOString() }
+        const { data, error } = await client.from('my_nsso').update(patch).eq('id',id).eq('user_id',user.id).select('id').maybeSingle()
+        if (error) throw error
+        if (!data) return Response.json({ error: 'This connection is unavailable.' }, { status: 404, headers })
+        return Response.json({ success: true }, { headers })
     } catch (error) {
-        console.error('Unexpected error updating connection:', error)
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        )
+        return permissionErrorResponse(error) ?? requestBodyErrorResponse(error) ?? Response.json({ error: 'Your changes could not be saved. Please retry.' }, { status: 503, headers })
+    }
+}
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        assertSameOrigin(request)
+        const { id } = await params
+        if (!uuid.test(id)) return Response.json({ error: 'Choose a valid connection.' }, { status: 400, headers })
+        const client = await createClient()
+        const { data: { user }, error: authError } = await client.auth.getUser()
+        if (authError || !user) return Response.json({ error: 'Please sign in.' }, { status: 401, headers })
+        const { error } = await client.from('my_nsso').delete().eq('id',id).eq('user_id',user.id)
+        if (error) throw error
+        return Response.json({ success: true }, { headers })
+    } catch (error) {
+        return permissionErrorResponse(error) ?? Response.json({ error: 'This connection could not be removed. Please retry.' }, { status: 503, headers })
     }
 }

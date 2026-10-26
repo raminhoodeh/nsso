@@ -330,7 +330,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             }
 
             const vantaScript = document.createElement('script')
-            vantaScript.src = 'https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.clouds.min.js'
+            vantaScript.src = '/vendor/vanta-0.5.24/vanta.clouds.min.js'
             vantaScript.async = true
             listenForScript(vantaScript, initVanta)
             document.body.appendChild(vantaScript)
@@ -350,7 +350,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             }
 
             const threeScript = document.createElement('script')
-            threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js'
+            threeScript.src = '/vendor/three-r134/three.min.js'
             threeScript.async = true
             listenForScript(threeScript, loadVantaScript)
             document.body.appendChild(threeScript)

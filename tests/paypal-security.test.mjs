@@ -8,6 +8,7 @@ const source = new URL('../src/', import.meta.url);
 const sessionMock = `data:text/javascript,${encodeURIComponent('export const createClient = async () => globalThis.__paymentSession;')}`;
 const serviceMock = `data:text/javascript,${encodeURIComponent('export const createClient = () => {globalThis.__paymentCalls.push(["privileged"]);return globalThis.__paymentService;};')}`;
 const hooks = registerHooks({ resolve(specifier, context, next) {
+    if (specifier === 'next/server') return next('next/server.js', context);
     if (specifier === 'server-only') return { url: 'data:text/javascript,export {};', shortCircuit: true };
     if (specifier === '@/lib/supabase/server') return { url: sessionMock, shortCircuit: true };
     if (specifier === '@supabase/supabase-js') return { url: serviceMock, shortCircuit: true };
@@ -49,6 +50,19 @@ test('HostedButtons and classic forms become bounded, versioned data with their 
     assert.equal(parsePayPalInput('').config, null);
 });
 
+test('named submit and image controls fail explicitly instead of changing submitted fields', () => {
+    for (const control of [
+        '<input type="submit" name="merchant_choice" value="Buy">',
+        '<input type="image" name="submit" src="https://www.paypalobjects.com/button.png" alt="Buy">',
+        '<button name="amount" value="50">Buy</button>',
+    ]) {
+        const parsed = parsePayPalInput(ncp.replace('<input type="submit" value="Buy Now">', control));
+        assert.equal(parsed.ok, false);
+        assert.match(parsed.message, /Named submit or image controls are not supported/);
+    }
+    assert.equal(parsePayPalInput(ncp).ok, true, 'Existing unnamed NCP buttons keep their configured destination');
+});
+
 test('executable content, spoofed destinations, dynamic controls and ambiguous payment formats fail closed', () => {
     const invalid = [
         ncp.replace('<img ', '<img onerror="window.fixturePwned=1" '),
@@ -75,9 +89,13 @@ test('executable content, spoofed destinations, dynamic controls and ambiguous p
 test('rendering URL policy preserves ordinary links while blocking executable protocols, credentials and contact query injection', () => {
     assert.equal(safeWebUrl('https://example.test/a?q=1#part'), 'https://example.test/a?q=1#part');
     assert.equal(safeWebUrl('http://example.test/a'), 'http://example.test/a');
+    assert.equal(safeWebUrl('  https://example.test/a  '), 'https://example.test/a');
     for (const value of ['javascript:alert(1)', 'data:text/html,x', '//outside.test', '/relative', 'https://user:pass@example.test', 'https://example.test/a\\b', 'https://example.test/a\nb']) assert.equal(safeWebUrl(value), null);
     assert.equal(safeContactUrl('email', 'seller@example.test'), 'mailto:seller@example.test');
     assert.equal(safeContactUrl('email', 'seller@example.test?bcc=victim@example.test'), null);
+    assert.equal(safeContactUrl('Phone', '+971 (55) 294-4951'), 'tel:+971552944951');
+    assert.equal(safeContactUrl('Phone', '055 294 4951'), 'tel:0552944951');
+    for (const value of ['+971552944951;ext=2', '+971552944951?x=1', '+97155\n2944951', 'javascript:alert(1)']) assert.equal(safeContactUrl('Phone', value), null);
     assert.equal(safeContactUrl('WhatsApp', '+44 (123) 456-7890'), 'https://wa.me/441234567890');
     assert.equal(safeContactUrl('Telegram', '@fixture_user'), 'https://t.me/fixture_user');
     assert.equal(safeContactUrl('Telegram', 'fixture_user?start=attacker'), null);
@@ -109,19 +127,13 @@ beforeEach(() => {
             return query;
         },
     };
-    globalThis.__paymentService = { from(table) {
-        calls.push(['service-table', table]); let payload;
-        const query = {
-            update(value) { payload = value; calls.push(['update', value]); return query; },
-            eq(key, value) { calls.push(['write-eq', key, value]); return query; },
-            select(value) { calls.push(['write-select', value]); return query; },
-            single: async () => ({ data: saveError ? null : { id, payment_config: payload.payment_config }, error: saveError }),
-        };
-        return query;
-    } };
+    globalThis.__paymentService = { rpc: async (name, args) => {
+        calls.push(['payment-rpc',name,args]);
+        return {data:saveError ? null : {status:'applied',operationId:args.p_operation_id,revision:1,changes:[]},error:saveError};
+    },from:()=>assert.fail('Payment settings must use the atomic revisioned RPC')};
 });
 after(() => { process.env = originalEnv; });
-const request = body => new Request(`https://nsso.test/api/products/${id}/payment`, { method: 'POST', headers: { origin: 'https://nsso.test', 'content-type': 'application/json' }, body: JSON.stringify(body) });
+const request = body => new Request(`https://nsso.test/api/products/${id}/payment`, { method: 'POST', headers: { origin: 'https://nsso.test', 'x-nsso-account':actor, 'content-type': 'application/json' }, body: JSON.stringify({ operationId: crypto.randomUUID(), expectedRevision: 0, ...body }) });
 const invoke = req => POST(req, { params: Promise.resolve({ id }) });
 const deniedBody = () => new Proxy(request({ html: ncp }), { get(target, property) { if (property === 'body') assert.fail('Denied requests must not read the body'); return Reflect.get(target, property, target); } });
 
@@ -148,8 +160,9 @@ test('accepted owner edits persist raw compatibility data plus server-generated 
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('cache-control'), 'private, no-store');
     assert.deepEqual((await response.json()).config, parsePayPalInput(ncp).config);
-    assert.deepEqual(calls.find(call => call[0] === 'update')[1], { paypal_html: ncp, payment_config: parsePayPalInput(ncp).config });
-    assert.deepEqual(calls.filter(call => call[0] === 'write-eq'), [['write-eq', 'id', id], ['write-eq', 'user_id', actor]]);
+    const rpc=calls.find(call=>call[0]==='payment-rpc');
+    assert.equal(rpc[1],'save_product_payment_operation');
+    assert.deepEqual({...rpc[2],p_operation_id:'stable-operation'}, {p_user_id:actor,p_product_id:id,p_operation_id:'stable-operation',p_expected_revision:0,p_html:ncp,p_config:parsePayPalInput(ncp).config});
     saveError = { message: 'fixture private database detail' };
     const failed = await invoke(request({ html: ncp }));
     assert.equal(failed.status, 503);

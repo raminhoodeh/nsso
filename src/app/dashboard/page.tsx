@@ -22,7 +22,10 @@ import MyNssoTab from '@/app/dashboard/components/MyNssoTab'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { useProfile } from '@/components/providers/ProfileProvider'
+import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
+import type { ProfilePatch } from '@/lib/profile-mutations'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
+import { uploadProfileMedia } from '@/lib/profile-media-client'
 import { Sparkles } from 'lucide-react'
 import type { EarningsStats } from '@/lib/earnings'
 
@@ -54,6 +57,7 @@ function DashboardContent() {
         links,
         contacts,
         updateField: updateProfile,
+        patchProfile,
         updateLink,
         addLink,
         removeLink,
@@ -300,25 +304,10 @@ function DashboardContent() {
         setTimeout(() => setUrlCopied(false), 2000)
     }
 
-    const saveProfile = async () => {
-        if (!user) return
+    const saveProfile = async (patch: ProfilePatch) => {
         setSaving(true)
-
-        const { error } = await supabase
-            .from('profiles')
-            .upsert({
-                user_id: user.id,
-                full_name: fullName,
-                headline,
-                bio,
-                profile_pic_url: profilePicUrl,
-            })
-
-        if (error) {
-            showToast('Failed to save profile', 'error')
-        } else {
-            showToast('Profile saved!', 'success')
-        }
+        const success = await patchProfile(patch,true)
+        if (!success) showToast('This field was not saved. Your draft has been kept.', 'error')
         setSaving(false)
     }
 
@@ -342,30 +331,23 @@ function DashboardContent() {
         if (!user) return
         setIsUploading(true)
 
-        const fileExt = 'jpg' // Canvas toBlob usually is png or jpg, we default to jpg/png
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`
-
-        const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, croppedBlob, { upsert: true, contentType: 'image/jpeg' })
-
-        if (uploadError) {
-            showToast('Failed to upload image', 'error')
+        let publicUrl: string
+        try { publicUrl=(await uploadProfileMedia(croppedBlob,'avatar',user.id)).url }
+        catch (error) {
+            showToast(error instanceof Error ? error.message : 'The image was not uploaded. Your crop has been kept.', 'error')
             setIsUploading(false)
             return
         }
 
-        const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(fileName)
-
         setProfilePicUrl(publicUrl)
 
-        // Save immediately
-        await supabase
-            .from('profiles')
-            .upsert({ user_id: user.id, profile_pic_url: publicUrl })
-
+        // Only the returned committed operation can acknowledge this image change.
+        const committed = await patchProfile({profile_pic_url:publicUrl},true)
+        if (!committed) {
+            showToast('The image change was not saved. Your crop has been kept.', 'error')
+            setIsUploading(false)
+            return
+        }
         showToast('Profile picture updated!', 'success')
         setIsUploading(false)
         setCropperOpen(false)
@@ -525,6 +507,7 @@ function DashboardContent() {
                                 />
                             )}
 
+                            <ProfileSaveStatus />
                             {/* Profile Fields */}
                             <div className="lg:col-span-2 space-y-4">
 
@@ -534,8 +517,8 @@ function DashboardContent() {
                                     </div>
                                     <Input
                                         value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                        onBlur={saveProfile}
+                                        onChange={(e) => {setFullName(e.target.value);void updateProfile('full_name',e.target.value)}}
+                                        onBlur={() => {void saveProfile({full_name:fullName})}}
                                         placeholder="Your full name"
                                     />
                                 </div>
@@ -562,8 +545,8 @@ function DashboardContent() {
                                     </div>
                                     <Input
                                         value={headline}
-                                        onChange={(e) => setHeadline(e.target.value)}
-                                        onBlur={saveProfile}
+                                        onChange={(e) => {setHeadline(e.target.value);void updateProfile('headline',e.target.value)}}
+                                        onBlur={() => {void saveProfile({headline})}}
                                         placeholder="What you do"
                                         maxLength={120}
                                     />
@@ -591,11 +574,8 @@ function DashboardContent() {
                                     >
                                         <textarea
                                             value={bio}
-                                            onChange={(e) => setBio(e.target.value)}
-                                            onBlur={() => {
-                                                updateProfile('bio', bio);
-                                                saveProfile();
-                                            }}
+                                            onChange={(e) => {setBio(e.target.value);void updateProfile('bio',e.target.value)}}
+                                            onBlur={() => {void saveProfile({bio})}}
 
                                             placeholder="Need inspiration? Use this template: 'I am the [type of person] for [target customers] who want to [desired outcome]' and continue to elaborate on the experience of why you do this, how you do it, and what exactly is involved."
                                             rows={4}

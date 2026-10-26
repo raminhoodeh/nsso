@@ -32,9 +32,43 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm audit --audit-level=high
+      - run: npm run verify:secrets
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: npm run build
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      NSSO_CI_DIR: /tmp/nsso-security-ci-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node scripts/security/start-ci-database.mjs "$NSSO_CI_DIR"
+      - name: Prove fresh database authorization and transactional contracts
+        run: |
+          export NSSO_ALLOW_LOCAL_SECURITY_REHEARSAL=1
+          export NSSO_LOCAL_REHEARSAL_CONTAINER="supabase_db_$(basename "$NSSO_CI_DIR")"
+          node scripts/security/verify-fresh-project.mjs "$NSSO_CI_DIR/private/local-status.json" "$NSSO_CI_DIR/private/evidence"
+      - name: Prove a weakened policy fails the gate
+        run: |
+          export NSSO_ALLOW_LOCAL_SECURITY_REHEARSAL=1
+          export NSSO_LOCAL_REHEARSAL_CONTAINER="supabase_db_$(basename "$NSSO_CI_DIR")"
+          if NSSO_TEST_UNSAFE_POLICY=avatar node scripts/security/verify-fresh-project.mjs "$NSSO_CI_DIR/private/local-status.json" "$NSSO_CI_DIR/private/negative-evidence" --existing > "$NSSO_CI_DIR/private/negative-check.log" 2>&1; then
+            echo 'Authorization regression gate unexpectedly accepted an unsafe policy'
+            exit 1
+          fi
+          node -e "const fs=require('node:fs');if(!fs.readFileSync(process.argv[1],'utf8').includes('NSSO_NEGATIVE_CONTROL: anonymous avatar upload bypassed ownership RLS'))process.exit(1)" "$NSSO_CI_DIR/private/negative-check.log"
+          node scripts/security/verify-fresh-project.mjs "$NSSO_CI_DIR/private/local-status.json" "$NSSO_CI_DIR/private/after-negative-evidence" --existing
+      - name: Stop isolated services
+        if: always()
+        run: npx --yes supabase@2.122.0 stop --workdir "$NSSO_CI_DIR" > /dev/null 2>&1

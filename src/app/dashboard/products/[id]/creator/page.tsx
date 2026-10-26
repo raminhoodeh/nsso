@@ -1,14 +1,17 @@
 'use client'
 
-import { type ReactNode, useState, useEffect } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Product } from '@/lib/types'
+import type { EditableValues } from '@/lib/profile-mutations'
 import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2 } from 'lucide-react'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
+import { uploadProfileMedia } from '@/lib/profile-media-client'
 import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
+import { useProfile } from '@/components/providers/ProfileProvider'
+import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import {
     TahoeGlassButton,
     TahoeGlassField,
@@ -174,9 +177,9 @@ export default function SalesPageCreator() {
     const router = useRouter()
     const [supabase] = useState(() => createClient())
 
-    const [product, setProduct] = useState<Product | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
+    const {products,loading,patchEntity,refreshProfile,getRevision,mutationState} = useProfile()
+    const product = products.find(row => row.id === params.id) || null
+    const saving = mutationState.status === 'saving'
     const [copiedField, setCopiedField] = useState<string | null>(null)
     const [isUploading, setIsUploading] = useState(false)
 
@@ -186,29 +189,10 @@ export default function SalesPageCreator() {
 
     const productId = params.id as string
 
-    useEffect(() => {
-        if (!productId) return
-        const fetchProduct = async () => {
-            const { data } = await supabase.rpc('get_product_details', { p_product_id: productId })
-            if (data) {
-                if (!data.benefits) data.benefits = []
-                if (!data.testimonials) data.testimonials = []
-                setProduct(data)
-            }
-            setLoading(false)
-        }
-        fetchProduct()
-    }, [productId, supabase])
-
-    const updateProduct = async (updates: Partial<Product>) => {
-        if (!product) return
-        setProduct({ ...product, ...updates })
-        setSaving(true)
-        const { error } = await supabase.from('products').update(updates).eq('id', productId)
-        if (error) console.error('Error saving:', error)
-        setSaving(false)
+    const updateProduct = async (updates: EditableValues['product']) => {
+        if (!product) return false
+        return patchEntity('product',productId,updates)
     }
-
 
     const { showToast } = useToast()
 
@@ -239,20 +223,14 @@ export default function SalesPageCreator() {
             setIsUploading(false)
             return
         }
-        const filePath = `${actor.id}/products/${crypto.randomUUID()}.jpg`
-
-        const { error: uploadError } = await supabase.storage
-            .from('portfolio-assets')
-            .upload(filePath, croppedBlob, { contentType: 'image/jpeg' })
-
-        if (uploadError) {
-            showToast('The image was not uploaded. Your crop has been kept so you can retry.', 'error')
+        try {
+            const {url}=await uploadProfileMedia(croppedBlob,'product',actor.id)
+            if (!await updateProduct({image_url:url})) throw new Error('The image change was not saved. Your crop is kept for retry.')
+        } catch (error) {
+            showToast(error instanceof Error ? error.message : 'The image was not uploaded. Your crop has been kept.', 'error')
             setIsUploading(false)
             return
         }
-
-        const { data } = supabase.storage.from('portfolio-assets').getPublicUrl(filePath)
-        await updateProduct({ image_url: data.publicUrl })
         setIsUploading(false)
         setCropperOpen(false)
         setCropperImage(null)
@@ -290,7 +268,8 @@ export default function SalesPageCreator() {
             <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto">
 
                 <GlassCard refractive className="p-8 lg:p-12">
-                    {/* Header */}
+                    <ProfileSaveStatus />
+                {/* Header */}
                     <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">
                             <TahoeGlassButton
@@ -460,8 +439,11 @@ export default function SalesPageCreator() {
                                     <PayPalCodeEditor
                                         key={product.id}
                                         productId={product.id}
+                                        accountId={product.user_id}
+                                        getRevision={getRevision}
+                                        refreshRevision={refreshProfile}
                                         initialHtml={product.paypal_html}
-                                        onSaved={(html, config) => setProduct(current => current?.id === product.id ? { ...current, paypal_html: html, payment_config: config } : current)}
+                                        onSaved={refreshProfile}
                                     />
                                 </div>
                             </div>

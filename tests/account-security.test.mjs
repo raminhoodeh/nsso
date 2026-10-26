@@ -33,12 +33,12 @@ const secretFixture = 'private-diagnostic-fixture-never-echo';
 let actor, authError, account, bootstrap, accountError, rpcError, permitted, permissionError, adminRows, calls, connected;
 beforeEach(() => {
     Object.assign(process.env,{NEXT_PUBLIC_SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'fixture-only-not-a-secret'});
-    actor = {id:actorId,email:'verified-fixture@example.test',user_metadata:{user_type:'admin'}};
+    actor = {id:actorId,email:'verified-fixture@example.test',user_metadata:{user_type:'admin'},factors:[{id:'fixture-factor',status:'verified'}]};
     authError = null; permitted = true; permissionError = null; accountError = null; rpcError = null; adminRows = []; calls = []; connected = new Set();
     account = {id:actorId,email:'untrusted-copy@example.test',username:'fixture',is_premium:false,user_type:'admin',permissions:[]};
     bootstrap = {...account};
     globalThis.__accountSession = {
-        auth:{getUser:async () => ({data:{user:actor},error:authError})},
+        auth:{getUser:async () => ({data:{user:actor},error:authError}),mfa:{getAuthenticatorAssuranceLevel:async () => ({data:{currentLevel:'aal2'},error:null})}},
         from:() => assert.fail('Account endpoints must use bounded RPC contracts, never direct account or reciprocal row writes'),
         rpc(name,args) {
             calls.push(['user-rpc',name,args]);
@@ -244,3 +244,19 @@ test('feed preparation rejects unverified sessions and safely reports database o
     assert.equal(response.status,503); privateResponse(response);
     assert.doesNotMatch(await response.text(),new RegExp(secretFixture));
 });
+
+ test('privileged operations require a fresh verified factor and aal2 while ordinary account reads stay available', async () => {
+    globalThis.__accountSession.auth.mfa.getAuthenticatorAssuranceLevel = async () => ({data:{currentLevel:'aal1'},error:null});
+    const denied = await listAccounts(new Request('https://nsso.test/api/admin/users'));
+    assert.equal(denied.status,403); assert.equal((await denied.json()).code,'mfa_required');
+    assert.equal(rpcCalls('admin_list_accounts').length,0);
+    assert.equal((await me()).status,200);
+    globalThis.__accountSession.auth.mfa.getAuthenticatorAssuranceLevel = async () => ({data:{currentLevel:'aal2'},error:null});
+    actor.factors = [];
+    assert.equal((await listAccounts(new Request('https://nsso.test/api/admin/users'))).status,403);
+    assert.equal(rpcCalls('admin_list_accounts').length,0);
+ });
+ test('Auth outages keep account reads unavailable rather than reporting a logout', async () => {
+    authError = {status:0,name:'AuthRetryableFetchError',message:secretFixture};
+    const response = await me(); assert.equal(response.status,503); assert.equal((await response.text()).includes(secretFixture),false);
+ });

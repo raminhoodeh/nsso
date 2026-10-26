@@ -1,8 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { loadPublicProfile, loadPublicProfileMetadata, loadPublicProfileViewer } from '@/lib/public-profile'
 import { notFound } from 'next/navigation'
 import GlassCard from '@/components/profile/ProfileGlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
-import { PRODUCT_CARD_SELECT } from '@/lib/payments/product-presentation'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeContactUrl, safeWebUrl } from '@/lib/urls'
 import ShinyLink from '@/components/ui/ShinyLink'
@@ -33,23 +32,11 @@ interface PageProps {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { username } = await params
-    const supabase = await createClient()
-
-    const { data: user } = await supabase
-        .from('users')
-        .select('id')
-        .eq('username', username)
-        .single()
-
-    if (!user) {
+    const data = await loadPublicProfileMetadata(username)
+    if (!data) {
         return { title: 'Profile Not Found | nsso' }
     }
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, headline')
-        .eq('user_id', user.id)
-        .single()
+    const { profile } = data
 
     return {
         title: `${profile?.full_name || username} | nsso`,
@@ -64,57 +51,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PublicProfilePage({ params }: PageProps) {
     const { username } = await params
-    const supabase = await createClient()
     const isRaminProfile = username.toLowerCase() === 'ramin'
     const pixelId = isRaminProfile ? process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() : undefined
     const initialPixelConsent = isRaminProfile
         ? parseMetaPixelConsent((await cookies()).get(META_PIXEL_CONSENT_COOKIE)?.value)
         : 'unset'
 
-    // Find user by username
-    const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('id,username,is_premium,created_at')
-        .eq('username', username)
-        .single()
-
-    if (userError || !user) {
+    const data = await loadPublicProfile(username)
+    if (!data) {
         notFound()
     }
-
-    // Load profile, links, contacts, and V2 data
-    const [profileResult, linksResult, contactsResult, expResult, qualResult, projResult, prodResult] = await Promise.all([
-        supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', user.id).single(),
-        supabase.from('links').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
-        supabase.from('contacts').select('*').eq('user_id', user.id).order('created_at'),
-        supabase.from('experiences').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }),
-        supabase.from('qualifications').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }),
-        supabase.from('projects').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }),
-        supabase.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', user.id).order('created_at', { ascending: false }),
-    ])
-
-    // Check if the viewer is logged in and if they are already connected
-    const { data: { user: viewer } } = await supabase.auth.getUser()
-
-    let connectionExists = false
-    if (viewer) {
-        const { data: existingConnection } = await supabase
-            .from('my_nsso')
-            .select('id')
-            .eq('user_id', viewer.id)
-            .eq('connected_user_id', user.id)
-            .single()
-
-        connectionExists = !!existingConnection
-    }
-
-    const profile = profileResult.data
-    const links = linksResult.data || []
-    const contacts = contactsResult.data || []
-    const experiences = expResult.data || []
-    const qualifications = qualResult.data || []
-    const projects = projResult.data || []
-    const products = prodResult.data || []
+    const { user, profile, links, contacts, experiences, qualifications, projects, products } = data
+    const { viewer, connectionExists } = await loadPublicProfileViewer(user.id)
 
     // Check if viewer is the owner
     const isOwner = viewer?.id === user.id

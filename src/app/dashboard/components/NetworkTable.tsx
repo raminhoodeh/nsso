@@ -5,26 +5,21 @@ import { MyNssoConnection } from '@/lib/types'
 import { Search, ChevronDown, ChevronUp, MapPin, NotebookPen } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
 import Link from 'next/link'
-import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface NetworkTableProps {
     connections: MyNssoConnection[]
+    onOpenNotes: (connection: MyNssoConnection) => void
     onUpdateConnection: (id: string, data: { notes?: string, location?: string }) => Promise<void>
 }
 
 type SortField = 'date' | 'name' | 'location'
 type SortOrder = 'asc' | 'desc'
 
-export default function NetworkTable({ connections, onUpdateConnection }: NetworkTableProps) {
+export default function NetworkTable({ connections, onUpdateConnection, onOpenNotes }: NetworkTableProps) {
     const [searchQuery, setSearchQuery] = useState('')
     const [sortField, setSortField] = useState<SortField>('date')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-
-    // Notes Modal State
-    const [isNotesOpen, setIsNotesOpen] = useState(false)
-    const [selectedConnection, setSelectedConnection] = useState<MyNssoConnection | null>(null)
-    const [noteContent, setNoteContent] = useState('')
-    const [savingNote, setSavingNote] = useState(false)
 
     // Inline Location Editing State
     const [editingLocationId, setEditingLocationId] = useState<string | null>(null)
@@ -69,32 +64,13 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
         }
     }
 
-    const openNotes = (conn: MyNssoConnection) => {
-        setSelectedConnection(conn)
-        setNoteContent(conn.notes || '')
-        setIsNotesOpen(true)
-    }
-
-    const saveNotes = async () => {
-        if (!selectedConnection) return
-        setSavingNote(true)
-        try {
-            await onUpdateConnection(selectedConnection.id, { notes: noteContent })
-            showToast('Notes saved', 'success')
-            setIsNotesOpen(false)
-        } catch (error) {
-            showToast('Failed to save notes', 'error')
-        }
-        setSavingNote(false)
-    }
-
     const saveLocation = async (id: string) => {
         if (!editingLocationId) return
         try {
             await onUpdateConnection(id, { location: locationValue })
             showToast('Location updated', 'success')
             setEditingLocationId(null)
-        } catch (error) {
+        } catch {
             showToast('Failed to update location', 'error')
         }
     }
@@ -106,12 +82,6 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
             month: 'short',
             year: 'numeric'
         })
-    }
-
-    // Sort Icon
-    const SortIcon = ({ field }: { field: SortField }) => {
-        if (sortField !== field) return <div className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-30 transition-opacity" />
-        return sortOrder === 'asc' ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />
     }
 
     return (
@@ -255,7 +225,7 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                                 {/* Notes Button */}
                                 <td className="p-4">
                                     <TahoeGlassButton
-                                        onClick={() => openNotes(conn)}
+                                        onClick={() => onOpenNotes(conn)}
                                         className="p-2"
                                         contentClassName={conn.notes ? 'text-white/80' : 'text-white/40'}
                                         title={conn.notes ? "Edit Notes" : "Add Note"}
@@ -270,53 +240,6 @@ export default function NetworkTable({ connections, onUpdateConnection }: Networ
                 </table>
             </TahoeGlassSurface>
 
-            {/* Notes Modal */}
-            {selectedConnection && (
-                <TahoeGlassDialog
-                    open={isNotesOpen}
-                    onOpenChange={setIsNotesOpen}
-                    portal={false}
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.38}
-                    aria-label={`Notes for ${selectedConnection.fullName}`}
-                    className="max-w-lg p-6"
-                >
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-white">
-                                    Notes for {selectedConnection.fullName}
-                                </h3>
-                                <TahoeGlassButton onClick={() => setIsNotesOpen(false)} className="h-9 w-9 p-0" contentClassName="text-white/70" aria-label="Close notes dialog">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M18 6L6 18M6 6l12 12" />
-                                    </svg>
-                                </TahoeGlassButton>
-                            </div>
-
-                            <TahoeGlassField tone="light" surfaceClassName="p-0 mb-2" controlClassName="p-4 resize-none custom-scrollbar">
-                                <textarea
-                                    value={noteContent}
-                                    onChange={(e) => setNoteContent(e.target.value)}
-                                    maxLength={3333}
-                                    rows={8}
-                                    placeholder="Add notes about your meeting, context, or follow-ups..."
-                                    className="text-white placeholder:text-white/30"
-                                />
-                            </TahoeGlassField>
-
-                            <div className="flex justify-between items-center text-xs text-white/40">
-                                <span>{noteContent.length} / 3333 characters</span>
-                                <TahoeGlassButton
-                                    onClick={saveNotes}
-                                    disabled={savingNote}
-                                    className="px-4 py-2"
-                                    contentClassName="text-white font-semibold"
-                                >
-                                    {savingNote ? 'Saving...' : 'Save Notes'}
-                                </TahoeGlassButton>
-                            </div>
-                </TahoeGlassDialog>
-            )}
         </div>
     )
 }

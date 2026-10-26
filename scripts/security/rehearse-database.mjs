@@ -116,8 +116,8 @@ const product = ok(await service.from('products').insert({ user_id: owner.id, na
 ok(await owner.client.storage.from('avatars').upload(`${owner.id}/existing.png`, png, { contentType: 'image/png' }))
 ok(await owner.client.storage.from('portfolio-assets').upload('projects/legacy-owned.png', png, { contentType: 'image/png' }))
 
-apply('20261026133916_nsso_security_containment.sql')
-apply('20261026135050_nsso_product_projection.sql')
+apply('nsso_security_containment.sql')
+apply('nsso_product_projection.sql')
 sql(`INSERT INTO private.app_permissions(user_id,permission) VALUES(${literal(admin.id)},'nsso:admin'),(${literal(admin.id)},'razinflix:manage'),(${literal(film.id)},'razinflix:manage');`)
 await refreshSchema()
 
@@ -246,8 +246,8 @@ await check('actual storage API enforces avatar namespace and legacy asset owner
 
 // Simulate reviewed private canonical backfill before the public/raw grant cutover.
 ok(await service.from('products').update({ payment_config: { version: 1, kind: 'payment-form', action: 'https://www.paypal.com/ncp/payment/ABC123', fields: [], label: 'Pay with PayPal' } }).eq('id', product.id))
-apply('20261026135239_nsso_product_privacy_cutover.sql')
-apply('20261026135515_nsso_account_privacy_cutover.sql')
+apply('nsso_product_privacy_cutover.sql')
+apply('nsso_account_privacy_cutover.sql')
 await refreshSchema()
 
 await check('final public identity contains no private account or authority fields', async () => {
