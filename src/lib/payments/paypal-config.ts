@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify'
+import { parse, type DefaultTreeAdapterTypes } from 'parse5'
 import { safeWebUrl } from '../urls'
 
 export const PAYPAL_INPUT_LIMIT = 32768
@@ -57,54 +57,64 @@ export function validatePayPalConfig(value: unknown): value is PayPalConfig {
     return true
 }
 
-/** Parses an inert DOM, then emits data only. No part of this DOM is mounted. */
+type InertNode = DefaultTreeAdapterTypes.Node
+function descendants(root: InertNode): InertNode[] {
+    const nodes: InertNode[] = [], pending = [root]
+    while (pending.length) {
+        const node = pending.pop()!
+        nodes.push(node)
+        if ('childNodes' in node) pending.push(...[...node.childNodes].reverse())
+    }
+    return nodes
+}
+function tag(node: InertNode): string { return 'tagName' in node ? node.tagName : '' }
+function attribute(node: InertNode, name: string): string | null { return 'attrs' in node ? node.attrs.find(value => value.name === name)?.value ?? null : null }
+function text(node: InertNode): string { return descendants(node).filter(value => value.nodeName === '#text').map(value => (value as DefaultTreeAdapterTypes.TextNode).value).join('') }
+
+/** Inert syntax tree only: no browser DOM, script execution, resource loading or HTML output. */
 export function parsePayPalInput(value: unknown): PayPalParseResult {
     if (typeof value !== 'string' || value.length > PAYPAL_INPUT_LIMIT) return { ok: false, message: 'PayPal code must be text shorter than 32 KB.' }
     if (!value.trim()) return { ok: true, config: null, message: 'No PayPal button configured.' }
-    const document = DOMPurify.sanitize(value, {
-        RETURN_DOM: true,
-        WHOLE_DOCUMENT: true,
-        ALLOWED_TAGS: ['html', 'head', 'body', 'script', 'style', 'form', 'input', 'button', 'div', 'section', 'span', 'p', 'img', 'br', 'a'],
-        ALLOWED_ATTR: ['src', 'id', 'class', 'style', 'action', 'method', 'target', 'name', 'value', 'type', 'alt', 'border', 'href', 'rel'],
-    }) as HTMLElement
-    if (DOMPurify.removed.some(item => ('attribute' in item && /^(on|srcdoc|formaction)/i.test(item.attribute?.name || '')) || ('element' in item && /^(iframe|object|embed|svg|math|select|textarea)$/i.test(item.element?.nodeName || '')))) {
+    const nodes = descendants(parse(value))
+    const allowed = new Set(['html', 'head', 'body', 'script', 'style', 'form', 'input', 'button', 'div', 'section', 'span', 'p', 'img', 'br', 'a'])
+    if (nodes.some(node => (tag(node) && !allowed.has(tag(node))) || ('attrs' in node && node.attrs.some(attr => /^(on|srcdoc|formaction)/i.test(attr.name))))) {
         return { ok: false, message: 'Executable attributes or embedded content are not supported. Paste a standard PayPal button.' }
     }
     let currency: PayPalCurrency = 'GBP'
     const hostedIds: string[] = []
-    for (const script of document.querySelectorAll('script')) {
-        const src = script.getAttribute('src')
+    for (const script of nodes.filter(node => tag(node) === 'script')) {
+        const src = attribute(script, 'src')
         if (src) {
             const safe = safeWebUrl(src, { httpsOnly: true })
             if (!safe) return { ok: false, message: 'Only the standard PayPal SDK snippet is supported.' }
             const url = new URL(safe)
-            if (url.hostname !== 'www.paypal.com' || url.pathname !== '/sdk/js' || url.port || url.hash || script.textContent?.trim()) return { ok: false, message: 'Only the standard PayPal SDK snippet is supported.' }
+            if (url.hostname !== 'www.paypal.com' || url.pathname !== '/sdk/js' || url.port || url.hash || text(script).trim()) return { ok: false, message: 'Only the standard PayPal SDK snippet is supported.' }
             const requestedCurrency = url.searchParams.get('currency')
             if (requestedCurrency && !currencyIsValid(requestedCurrency)) return { ok: false, message: 'Unsupported PayPal currency.' }
             if (requestedCurrency) currency = requestedCurrency as PayPalCurrency
         } else {
-            const match = (script.textContent || '').match(/^\s*(?:window\.)?paypal\.HostedButtons\(\s*\{\s*hostedButtonId\s*:\s*(["'])([A-Z0-9]{1,64})\1\s*,?\s*\}\s*\)\.render\(\s*(["'])#[A-Za-z][\w:-]{0,100}\3\s*\)\s*;?\s*$/)
+            const match = text(script).match(/^\s*(?:window\.)?paypal\.HostedButtons\(\s*\{\s*hostedButtonId\s*:\s*(["'])([A-Z0-9]{1,64})\1\s*,?\s*\}\s*\)\.render\(\s*(["'])#[A-Za-z][\w:-]{0,100}\3\s*\)\s*;?\s*$/)
             if (!match) return { ok: false, message: 'Custom JavaScript is not supported. Paste the standard PayPal button snippet.' }
             hostedIds.push(match[2])
         }
     }
-    const forms = document.querySelectorAll('form')
+    const forms = nodes.filter(node => tag(node) === 'form')
     if (hostedIds.length) {
         if (hostedIds.length !== 1 || forms.length) return { ok: false, message: 'Paste one PayPal button at a time.' }
         return { ok: true, config: { version: 1, kind: 'hosted-button', hostedButtonId: hostedIds[0], currency }, message: 'Recognized PayPal Hosted Button. Checkout is handled by PayPal.' }
     }
     if (forms.length !== 1) return { ok: false, message: 'Paste a supported PayPal payment form or Hosted Button snippet.' }
     const form = forms[0]
-    const action = paymentAction(form.getAttribute('action'))
-    if (!action || (form.getAttribute('method') || 'get').toLowerCase() !== 'post') return { ok: false, message: 'Use a standard HTTPS PayPal payment form with method="post".' }
+    const action = paymentAction(attribute(form, 'action'))
+    if (!action || (attribute(form, 'method') || 'get').toLowerCase() !== 'post') return { ok: false, message: 'Use a standard HTTPS PayPal payment form with method="post".' }
     const fields: { name: string; value: string }[] = []
     let label = 'Pay with PayPal'
-    for (const input of form.querySelectorAll('input,button')) {
-        const type = (input.getAttribute('type') || (input.tagName.toLowerCase() === 'button' ? 'submit' : 'text')).toLowerCase()
+    for (const input of descendants(form).filter(node => ['input', 'button'].includes(tag(node)))) {
+        const type = (attribute(input, 'type') || (tag(input) === 'button' ? 'submit' : 'text')).toLowerCase()
         if (type === 'submit' || type === 'image') {
-            label = (input.getAttribute('value') || input.getAttribute('alt') || input.textContent || label).trim().slice(0, 80) || label
+            label = (attribute(input, 'value') || attribute(input, 'alt') || text(input) || label).trim().slice(0, 80) || label
         } else if (type === 'hidden') {
-            fields.push({ name: input.getAttribute('name') || '', value: input.getAttribute('value') || '' })
+            fields.push({ name: attribute(input, 'name') || '', value: attribute(input, 'value') || '' })
         } else return { ok: false, message: 'Custom form controls are not supported. Use a fixed PayPal payment button.' }
     }
     const config: PayPalConfig = { version: 1, kind: 'payment-form', action, fields, label }
