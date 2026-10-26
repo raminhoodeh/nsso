@@ -1,13 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { restoreUser } from '@/lib/auth-helpers'
+import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 
 export async function POST(
     request: Request,
     { params }: { params: Promise<{ postId: string }> }
 ) {
     try {
+        assertSameOrigin(request)
         const { postId } = await params
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(postId)) return NextResponse.json({ error: 'Invalid post.' }, { status: 400 })
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -54,8 +57,8 @@ export async function POST(
 
         return NextResponse.json({ success: true })
     } catch (error) {
-        console.error('Error liking post:', error)
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+        console.error('Feed unavailable', { code: 'FEED_LIKE_FAILED' })
+        return permissionErrorResponse(error) ?? NextResponse.json({ error: 'This action could not be saved. Please retry.' }, { status: 503 })
     }
 }
 
@@ -64,7 +67,9 @@ export async function DELETE(
     { params }: { params: Promise<{ postId: string }> }
 ) {
     try {
+        assertSameOrigin(request)
         const { postId } = await params
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(postId)) return NextResponse.json({ error: 'Invalid post.' }, { status: 400 })
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -84,7 +89,7 @@ export async function DELETE(
 
         return NextResponse.json({ success: true })
     } catch (error) {
-        console.error('Error unliking post:', error)
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+        console.error('Feed unavailable', { code: 'FEED_LIKE_FAILED' })
+        return permissionErrorResponse(error) ?? NextResponse.json({ error: 'This action could not be saved. Please retry.' }, { status: 503 })
     }
 }

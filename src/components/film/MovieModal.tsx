@@ -50,6 +50,7 @@ interface Film {
 
 interface MovieModalProps {
     film: Film;
+    canManage?: boolean;
     filmList: Film[];
     onClose: () => void;
     onNext: () => void;
@@ -60,7 +61,7 @@ interface MovieModalProps {
     onSearch?: (term: string) => void;
 }
 
-const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onDelete, onSearch }: MovieModalProps) => {
+const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onDelete, onSearch }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const closeRef = useRef<HTMLButtonElement>(null);
@@ -116,12 +117,10 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     }, []);
 
     // Edit State
-    const [isEditing, setIsEditing] = useState(false);
+    const [editingRequested, setIsEditing] = useState(false);
+    const isEditing = canManage && editingRequested;
     const [isSaving, setIsSaving] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [isEditAuthOpen, setIsEditAuthOpen] = useState(false);
-    const [editPassword, setEditPassword] = useState('');
-    const [editPasswordError, setEditPasswordError] = useState<string | null>(null);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [operationError, setOperationError] = useState<string | null>(null);
     const [editForm, setEditForm] = useState({
@@ -162,7 +161,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     }, [previewUrl]);
 
     const handleSave = async () => {
-        if (!film) return;
+        if (!film || !canManage) return;
         setIsSaving(true);
         try {
             const fd = new FormData();
@@ -207,7 +206,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
     };
 
     const handleDelete = async () => {
-        if (!film) return;
+        if (!film || !canManage) return;
         setIsDeleteConfirmOpen(false);
         setIsDeleting(true);
         try {
@@ -225,23 +224,6 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
             setOperationError(err instanceof Error ? err.message : 'Error deleting film.');
             setIsDeleting(false);
         }
-    };
-
-    const requestEditAccess = () => {
-        setEditPassword('');
-        setEditPasswordError(null);
-        setIsEditAuthOpen(true);
-    };
-
-    const confirmEditAccess = () => {
-        if (editPassword.trim().toLowerCase() !== 'azinam') {
-            setEditPasswordError('Incorrect password.');
-            return;
-        }
-        setIsEditAuthOpen(false);
-        setEditPassword('');
-        setEditPasswordError(null);
-        setIsEditing(true);
     };
 
     // Advanced "Similar Films" Similarity Matrix (Client-Side Jaccard Indexing)
@@ -277,7 +259,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
         setSimilarFilms(recommendations);
     }, [film, filmList]);
 
-    const nestedDialogOpen = isEditAuthOpen || isDeleteConfirmOpen || Boolean(operationError);
+    const nestedDialogOpen = isDeleteConfirmOpen || Boolean(operationError);
 
     // Modal keyboard navigation and focus containment. Nested Tahoe dialogs own
     // focus and Escape while open, including when portaled outside this subtree.
@@ -469,7 +451,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                     <div className={styles.details}>
                         
                         {/* Record controls remain reachable at every viewport size. */}
-                        <div className={styles.editActions}>
+                        {canManage && <div className={styles.editActions}>
                             {isEditing ? (
                                 <TahoeGlassSurface
                                     variant="menu"
@@ -489,7 +471,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                 </TahoeGlassSurface>
                             ) : (
                                 <TahoeGlassButton
-                                    onClick={requestEditAccess}
+                                    onClick={() => setIsEditing(true)}
                                     tone="light"
                                     semanticTint="dark"
                                     semanticTintOpacity={0.03}
@@ -500,7 +482,7 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                                     <Edit2 size={16} />
                                 </TahoeGlassButton>
                             )}
-                        </div>
+                        </div>}
 
                         <div className={styles.detailContent}>
                             {isEditing ? (
@@ -723,52 +705,6 @@ const MovieModal = ({ film, filmList = [], onClose, onNext, onPrev, onSelect, on
                 </div>
             </div>
 
-            <TahoeGlassDialog
-                open={isEditAuthOpen}
-                onOpenChange={(open) => {
-                    setIsEditAuthOpen(open);
-                    if (!open) {
-                        setEditPassword('');
-                        setEditPasswordError(null);
-                    }
-                }}
-                title="Edit film"
-                description="Enter the RazinFlix administrator password to edit this record."
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.045}
-                className={styles.nestedDialog}
-                overlayClassName={styles.nestedOverlay}
-                backdropClassName={styles.nestedBackdrop}
-            >
-                <form
-                    className="mt-5 space-y-4"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        confirmEditAccess();
-                    }}
-                >
-                    <TahoeGlassField label="Password" error={editPasswordError} tone="light" semanticTint="dark" semanticTintOpacity={0.025}>
-                        <input
-                            type="password"
-                            autoComplete="current-password"
-                            value={editPassword}
-                            onChange={(event) => {
-                                setEditPassword(event.target.value);
-                                setEditPasswordError(null);
-                            }}
-                        />
-                    </TahoeGlassField>
-                    <div className="flex justify-end gap-3">
-                        <TahoeGlassButton onClick={() => setIsEditAuthOpen(false)} tone="light" className="px-5 py-2.5" contentClassName="text-white">
-                            Cancel
-                        </TahoeGlassButton>
-                        <TahoeGlassButton type="submit" tone="light" semanticTint="dark" semanticTintOpacity={0.3} className="px-5 py-2.5" contentClassName="text-white">
-                            Continue
-                        </TahoeGlassButton>
-                    </div>
-                </form>
-            </TahoeGlassDialog>
 
             <TahoeGlassDialog
                 open={isDeleteConfirmOpen}

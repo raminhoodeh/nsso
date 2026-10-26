@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import GlassCard from '@/components/ui/GlassCard'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { useToast } from '@/components/ui/Toast'
@@ -14,7 +13,6 @@ interface UserWithProfile extends User {
 
 export default function AdminPage() {
     const router = useRouter()
-    const supabase = createClient()
     const { showToast } = useToast()
 
     const [users, setUsers] = useState<UserWithProfile[]>([])
@@ -23,82 +21,48 @@ export default function AdminPage() {
 
     useEffect(() => {
         const loadData = async () => {
-            const { data: { user: authUser } } = await supabase.auth.getUser()
-
-            if (!authUser) {
-                router.push('/sign-in')
-                return
-            }
-
-            setCurrentUserId(authUser.id)
-
-            // Check if current user is admin
-            const { data: currentUserData } = await supabase
-                .from('users')
-                .select('user_type')
-                .eq('id', authUser.id)
-                .single()
-
-            if (currentUserData?.user_type !== 'admin') {
-                showToast('Access denied. Admin only.', 'error')
-                router.push('/dashboard')
-                return
-            }
-
-            // Load all users with their profiles
-            const { data: usersData, error } = await supabase
-                .from('users')
-                .select(`
-          *,
-          profiles (full_name)
-        `)
-                .order('created_at', { ascending: false })
-
-            if (error) {
-                showToast('Failed to load users', 'error')
-            } else if (usersData) {
-                setUsers(usersData as UserWithProfile[])
-            }
+            try {
+                let offset: number | null = 0
+                const accounts: UserWithProfile[] = []
+                while (offset !== null) {
+                    const response: Response = await fetch(`/api/admin/users?offset=${offset}`, { cache: 'no-store' })
+                    if (response.status === 401) { router.push('/sign-in'); return }
+                    if (response.status === 403) { const denied = await response.json(); router.push(denied.code === 'mfa_required' ? '/dashboard/security?next=/admin' : '/dashboard'); return }
+                    if (!response.ok) throw new Error('Accounts unavailable')
+                    const page: { users: UserWithProfile[]; currentUserId: string; nextOffset: number | null } = await response.json()
+                    accounts.push(...page.users)
+                    setCurrentUserId(page.currentUserId)
+                    offset = page.nextOffset
+                }
+                setUsers(accounts)
+            } catch { showToast('Accounts could not be loaded. Please try again.', 'error') }
 
             setLoading(false)
         }
 
         loadData()
-    }, [supabase, router, showToast])
+    }, [router, showToast])
 
-    const toggleAdmin = async (userId: string, currentType: string) => {
-        const newType = currentType === 'admin' ? 'standard' : 'admin'
-
-        const { error } = await supabase
-            .from('users')
-            .update({ user_type: newType })
-            .eq('id', userId)
-
-        if (error) {
-            showToast('Failed to update user', 'error')
-        } else {
-            setUsers(users.map(u =>
-                u.id === userId ? { ...u, user_type: newType as 'standard' | 'admin' } : u
-            ))
-            showToast(`User ${newType === 'admin' ? 'promoted to' : 'removed from'} admin`, 'success')
-        }
+    const changePermission = async (userId: string, permission: 'nsso:admin' | 'razinflix:manage', granted: boolean) => {
+        try {
+            const response = await fetch('/api/admin/users', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, permission, granted }),
+            })
+            const result = await response.json()
+            if (!response.ok) throw new Error(result.error || 'Permission could not be saved.')
+            setUsers(current => current.map(account => {
+                if (account.id !== userId) return account
+                const permissions = new Set(account.permissions || [])
+                if (granted) permissions.add(permission)
+                else permissions.delete(permission)
+                return { ...account, permissions: [...permissions], user_type: permission === 'nsso:admin' ? (granted ? 'admin' : 'standard') : account.user_type }
+            }))
+            showToast('Permission saved.', 'success')
+        } catch (error) { showToast(error instanceof Error ? error.message : 'Permission could not be saved.', 'error') }
     }
-
-    const togglePremium = async (userId: string, currentPremium: boolean) => {
-        const { error } = await supabase
-            .from('users')
-            .update({ is_premium: !currentPremium })
-            .eq('id', userId)
-
-        if (error) {
-            showToast('Failed to update user', 'error')
-        } else {
-            setUsers(users.map(u =>
-                u.id === userId ? { ...u, is_premium: !currentPremium } : u
-            ))
-            showToast(`Premium ${!currentPremium ? 'granted' : 'revoked'}`, 'success')
-        }
-    }
+    const toggleAdmin = (userId: string, currentType: string) => changePermission(userId, 'nsso:admin', currentType !== 'admin')
+    const toggleFilmEditor = (userId: string, granted: boolean) => changePermission(userId, 'razinflix:manage', !granted)
 
     if (loading) {
         return (
@@ -116,7 +80,7 @@ export default function AdminPage() {
             <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto">
                 <GlassCard className="p-6 lg:p-8">
                     <h1 className="text-3xl font-bold text-white mb-2">Administrative Overview</h1>
-                    <p className="text-white/70 mb-8">Manage users and permissions</p>
+                    <p className="text-white/70 mb-8">Manage users and permissions. Premium access is free for everyone.</p>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -138,9 +102,9 @@ export default function AdminPage() {
                         </TahoeGlassSurface>
                         <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
                             <div className="text-3xl font-bold text-white">
-                                {users.filter(u => !u.is_premium).length}
+                                {users.filter(u => u.permissions?.includes('razinflix:manage')).length}
                             </div>
-                            <div className="text-white/50 text-sm">Free Users</div>
+                            <div className="text-white/50 text-sm">Film editors</div>
                         </TahoeGlassSurface>
                     </div>
 
@@ -153,7 +117,7 @@ export default function AdminPage() {
                                     <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Handle</th>
                                     <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Status</th>
                                     <th className="text-center text-white/50 text-sm font-medium py-3 px-4">Make Admin</th>
-                                    <th className="text-center text-white/50 text-sm font-medium py-3 px-4">Make Premium</th>
+                                    <th className="text-center text-white/50 text-sm font-medium py-3 px-4">RazinFlix editor</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -211,11 +175,11 @@ export default function AdminPage() {
                                         <td className="py-4 px-4">
                                             <div className="flex justify-center">
                                                 <TahoeGlassButton
-                                                    onClick={() => togglePremium(user.id, user.is_premium)}
+                                                    onClick={() => toggleFilmEditor(user.id, user.permissions?.includes('razinflix:manage') || false)}
                                                     role="switch"
-                                                    aria-checked={user.is_premium}
-                                                    aria-label={`Premium access for ${user.email}`}
-                                                    semanticTint={user.is_premium ? 'light' : 'dark'}
+                                                    aria-checked={user.permissions?.includes('razinflix:manage') || false}
+                                                    aria-label={`RazinFlix editing for ${user.email}`}
+                                                    semanticTint={user.permissions?.includes('razinflix:manage') ? 'light' : 'dark'}
                                                     className="h-7 w-14 p-0"
                                                     contentClassName="relative block h-full w-full"
                                                 >
@@ -223,7 +187,7 @@ export default function AdminPage() {
                                                         aria-hidden="true"
                                                         className={`
                               absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all
-                              ${user.is_premium ? 'left-8' : 'left-1'}
+                              ${user.permissions?.includes('razinflix:manage') ? 'left-8' : 'left-1'}
                             `}
                                                     />
                                                 </TahoeGlassButton>

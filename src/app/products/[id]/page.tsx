@@ -1,12 +1,16 @@
 'use client'
 
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { createPublicReadClient } from '@/lib/supabase/public'
+import { useUser } from '@/components/providers/UserProvider'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import { productCheckoutVisibility, productPageIsPublic } from '@/lib/payments/product-presentation'
+import { safeWebUrl } from '@/lib/urls'
 import {
     TahoeGlassButton,
     TahoeGlassSurface,
@@ -17,12 +21,14 @@ function ProductRouteContent({ children }: { children: ReactNode }) {
 }
 
 function PurchaseLink({ href }: { href: string }) {
+    const destination = safeWebUrl(href)
+    if (!destination) return <p className="text-xs text-white/70">Purchase link unavailable. Please contact the seller.</p>
     return (
         <TahoeGlassSurface
             as="a"
             variant="button"
             radius={12}
-            href={href}
+            href={destination}
             target="_blank"
             rel="noopener noreferrer"
             tone="light"
@@ -49,8 +55,10 @@ interface Product {
     video_url: string
     image_url: string
     purchase_link: string
-    paypal_html: string
-    success_url?: string
+    payment_config: unknown
+    paypal_active: boolean
+    purchase_link_active: boolean
+    sales_page_published?: boolean | null
 }
 
 interface Contact {
@@ -65,70 +73,104 @@ const CONTACT_DETAILS_HIDDEN_PRODUCT_IDS = new Set([
 
 export default function ProductSalesPage() {
     const params = useParams()
+    const productId = typeof params.id === 'string' ? params.id : ''
+    return <ProductSalesContent key={productId} productId={productId} />
+}
+
+function readProduct(value: unknown, productId: string): Product | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+    const row = value as Record<string, unknown>
+    if (row.id !== productId || typeof row.user_id !== 'string' || typeof row.name !== 'string') return null
+    return {
+        ...row,
+        benefits: Array.isArray(row.benefits) ? row.benefits.filter((item): item is string => typeof item === 'string') : [],
+        testimonials: Array.isArray(row.testimonials) ? row.testimonials.filter((item): item is { name: string; text: string } => item && typeof item.name === 'string' && typeof item.text === 'string') : [],
+    } as Product
+}
+
+function ProductSalesContent({ productId }: { productId: string }) {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const supabase = createClient()
-    const [product, setProduct] = useState<Product | null>(null)
-    const [userContacts, setUserContacts] = useState<Contact[]>([])
-    const [ownerUsername, setOwnerUsername] = useState<string>('')
-    const [isOwner, setIsOwner] = useState(false)
-    const [isPlatformOwner, setIsPlatformOwner] = useState(false)
+    const publicClient = useMemo(() => createPublicReadClient(), [])
+    const { user, loading: accountLoading, error: accountError } = useUser()
+    const verifiedAccountId = !accountLoading && !accountError ? user?.id ?? null : null
+    const [publicProduct, setPublicProduct] = useState<Product | null>(null)
+    const [publicLoading, setPublicLoading] = useState(true)
+    const [publicError, setPublicError] = useState(false)
+    const [ownerPreview, setOwnerPreview] = useState<{ accountId: string; product: Product | null; loading: boolean; error: boolean } | null>(null)
+    const [creator, setCreator] = useState<{ userId: string; contacts: Contact[]; username: string } | null>(null)
+    const [retry, setRetry] = useState(0)
     const [currentTestimonial, setCurrentTestimonial] = useState(0)
-    const [loading, setLoading] = useState(true)
+    const currentOwnerPreview = ownerPreview?.accountId === verifiedAccountId ? ownerPreview : null
+    const product = publicProduct ?? currentOwnerPreview?.product ?? null
+    const productOwnerId = product?.user_id
+    const isOwner = Boolean(product && verifiedAccountId === product.user_id)
+    const loading = publicLoading || (!publicProduct && currentOwnerPreview?.loading === true)
+    const loadError = !product && (publicError || currentOwnerPreview?.error)
+    const userContacts = creator?.userId === product?.user_id ? creator?.contacts ?? [] : []
+    const ownerUsername = creator?.userId === product?.user_id ? creator?.username ?? '' : ''
 
     useEffect(() => {
+        let active = true
+        const controller = new AbortController()
         const fetchData = async () => {
-            const productId = params.id as string
-
-            // Fetch product
-            const { data: productData } = await supabase
-                .from('products')
-                .select('*')
-                .eq('id', productId)
-                .single()
-
-            if (productData) {
-                setProduct(productData)
-
-                if (CONTACT_DETAILS_HIDDEN_PRODUCT_IDS.has(productId)) {
-                    setUserContacts([])
-                } else {
-                    // Fetch user contacts for contact details
-                    const { data: contactsData } = await supabase
-                        .from('contacts')
-                        .select('method, value, custom_method_name')
-                        .eq('user_id', productData.user_id)
-
-                    if (contactsData) {
-                        setUserContacts(contactsData)
-                    }
-                }
-
-                // Fetch owner's username and email to check platform ownership
-                const { data: userData } = await supabase
-                    .from('users')
-                    .select('username, email')
-                    .eq('id', productData.user_id)
-                    .single()
-
-                if (userData?.username) {
-                    setOwnerUsername(userData.username)
-                }
-
-                if (userData?.email === 'raminhoodeh@gmail.com') {
-                    setIsPlatformOwner(true)
-                }
-
-                // Check if current user is owner
-                const { data: { session } } = await supabase.auth.getSession()
-                setIsOwner(session?.user?.id === productData.user_id)
+            setPublicLoading(true); setPublicError(false); setPublicProduct(null)
+            try {
+                const { data, error } = await publicClient.rpc('get_product_details', { p_product_id: productId }).abortSignal(controller.signal)
+                if (error) throw error
+                const product = readProduct(data, productId)
+                if (active) setPublicProduct(product && productPageIsPublic(product) ? product : null)
+            } catch {
+                if (active) setPublicError(true)
+            } finally {
+                if (active) setPublicLoading(false)
             }
-
-            setLoading(false)
         }
+        void fetchData()
+        return () => { active = false; controller.abort() }
+    }, [productId, publicClient, retry])
 
-        fetchData()
-    }, [params.id, supabase])
+    useEffect(() => {
+        // Public rendering never waits for persisted Auth. Only a verified
+        // current account may attempt the owner-only draft fallback.
+        if (publicLoading || publicProduct || !verifiedAccountId) return
+        let active = true
+        const controller = new AbortController()
+        const accountId = verifiedAccountId
+        const timer = setTimeout(() => {
+            controller.abort()
+            if (active) setOwnerPreview({ accountId, product: null, loading: false, error: true })
+        }, 5_000)
+        const fetchOwnerPreview = async () => {
+            setOwnerPreview({ accountId, product: null, loading: true, error: false })
+            try {
+                const { data, error } = await createClient().rpc('get_product_details', { p_product_id: productId }).abortSignal(controller.signal)
+                if (error) throw error
+                const product = readProduct(data, productId)
+                if (active && !controller.signal.aborted) setOwnerPreview({ accountId, product: product?.user_id === accountId ? product : null, loading: false, error: false })
+            } catch {
+                if (active && !controller.signal.aborted) setOwnerPreview({ accountId, product: null, loading: false, error: true })
+            } finally { clearTimeout(timer) }
+        }
+        void fetchOwnerPreview()
+        return () => { active = false; clearTimeout(timer); controller.abort() }
+    }, [productId, publicLoading, publicProduct, verifiedAccountId, retry])
+
+    useEffect(() => {
+        if (!productOwnerId) return
+        let active = true
+        const controller = new AbortController(), userId = productOwnerId
+        void (async () => {
+            try {
+                const [contacts, owner] = await Promise.all([
+                    CONTACT_DETAILS_HIDDEN_PRODUCT_IDS.has(productId) ? Promise.resolve({ data: [] }) : publicClient.from('contacts').select('method,value,custom_method_name').eq('user_id', userId).abortSignal(controller.signal),
+                    publicClient.from('users').select('username').eq('id', userId).abortSignal(controller.signal).single(),
+                ])
+                if (active) setCreator({ userId, contacts: contacts.data ?? [], username: owner.data?.username ?? '' })
+            } catch { /* Public product remains usable if optional creator details fail. */ }
+        })()
+        return () => { active = false; controller.abort() }
+    }, [productOwnerId, productId, publicClient])
 
     // Auto-rotate testimonials
     useEffect(() => {
@@ -173,12 +215,12 @@ export default function ProductSalesPage() {
         )
     }
 
-    if (!product) {
+    if (!product || (!productPageIsPublic(product) && !isOwner)) {
         return (
             <ProductRouteContent>
                 <div className="relative z-[1] flex min-h-screen items-center justify-center">
                     <TahoeGlassSurface variant="card" tone="light" contentClassName="px-8 py-6 text-white/80">
-                        Product not found
+                        {loadError ? <div role="status" className="space-y-3 text-center"><p>This product could not be loaded. Please retry.</p><button type="button" onClick={() => setRetry(value => value + 1)} className="min-h-11 rounded-xl border border-white/30 px-4">Retry product</button></div> : 'Product not found'}
                     </TahoeGlassSurface>
                 </div>
             </ProductRouteContent>
@@ -186,10 +228,15 @@ export default function ProductSalesPage() {
     }
 
     const youtubeId = product.video_url ? extractYouTubeId(product.video_url) : null
+    const checkout = productCheckoutVisibility(product)
+    // An explicit preview must be inert before optional account verification
+    // finishes; it never grants access to an unpublished product.
+    const preview = searchParams.get('preview') === 'true' || (isOwner && product.sales_page_published === false)
 
     return (
         <ProductRouteContent>
         <main className="relative z-[1] min-h-screen p-4 md:p-8">
+            {preview && <p role="status" className="mb-4 rounded-xl bg-black/20 p-3 text-center text-sm text-white">Draft preview — checkout is disabled.</p>}
             <div className="max-w-[1400px] mx-auto">
                 {/* Golden Ratio Grid: 1.618fr 1fr */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
@@ -270,21 +317,20 @@ export default function ProductSalesPage() {
                             </p>
 
                             {/* Purchase Link Button */}
-                            {product.purchase_link && (
+                            {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    <PurchaseLink href={product.purchase_link} />
+                                    {preview ? <button type="button" disabled className="min-h-11 w-full rounded-xl bg-white/10 px-4">Preview only</button> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
                             {/* PayPal Button */}
-                            {product.paypal_html && (
+                            {checkout.paypal && !!product.payment_config && (
                                 <div className="w-full max-w-[280px] flex justify-center mt-2">
                                     <PayPalSmartButton 
-                                        html={product.paypal_html} 
-                                        isPlatformOwner={isPlatformOwner} 
+                                        config={product.payment_config}
+                                        preview={preview}
                                         price={product.price}
                                         productName={product.name}
-                                        successUrl={product.success_url}
                                     />
                                 </div>
                             )}
@@ -411,22 +457,21 @@ export default function ProductSalesPage() {
                             </p>
 
                             {/* Purchase Link Button */}
-                            {product.purchase_link && (
+                            {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    <PurchaseLink href={product.purchase_link} />
+                                    {preview ? <button type="button" disabled className="min-h-11 w-full rounded-xl bg-white/10 px-4">Preview only</button> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
                             {/* PayPal / Apple Pay */}
-                            {product.paypal_html && (
+                            {checkout.paypal && !!product.payment_config && (
                                 <div className="w-full max-w-[320px] flex justify-center mt-2">
                                         <PayPalSmartButton 
-                                            html={product.paypal_html} 
-                                            isPlatformOwner={isPlatformOwner} 
+                                            config={product.payment_config}
+                                            preview={preview}
                                             price={product.price}
                                             productName={product.name}
-                                            successUrl={product.success_url}
-                                        />
+                                            />
                                 </div>
                             )}
 

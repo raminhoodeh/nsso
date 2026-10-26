@@ -6,11 +6,10 @@ import MovieModal from '@/components/film/MovieModal';
 import MovieCard, { type Film } from '@/components/film/MovieCard';
 import AddFilmModal from '@/components/film/AddFilmModal';
 import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X, Pause, Play } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { createPublicReadClient } from '@/lib/supabase/public';
 import {
     TahoeBackdropHeader,
     TahoeGlassButton,
-    TahoeGlassDialog,
     TahoeGlassField,
     TahoeGlassProvider,
     TahoeGlassSurface,
@@ -20,6 +19,7 @@ import ConditionalNSSOAgent from '@/components/agent/ConditionalNSSOAgent';
 import { ToastViewport } from '@/components/ui/Toast';
 import modalStyles from '@/components/film/MovieModal.module.css';
 import styles from './razinflix.module.css';
+import { useUser } from '@/components/providers/UserProvider';
 
 type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
 
@@ -39,7 +39,7 @@ function matchesFilmSearch(film: Film, query: string) {
 export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<ViewMode>('category');
+    const [requestedViewMode, setViewMode] = useState<ViewMode>('category');
     const [selectedFilm, setSelectedFilm] = useState<Film | null>(null);
     const [featuredFilms, setFeaturedFilms] = useState<Film[]>([]);
     const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -51,15 +51,15 @@ export default function RazinFlixPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [brokenPosters, setBrokenPosters] = useState<Set<number>>(new Set());
     const [isCheckingPosters, setIsCheckingPosters] = useState(false);
-    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-    const [adminPassword, setAdminPassword] = useState('');
-    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const { user } = useUser();
+    const canManage = user?.permissions?.includes('razinflix:manage') === true;
+    const viewMode = !canManage && requestedViewMode === 'update_mode' ? 'category' : requestedViewMode;
 
     const heroTouchStart = useRef<{ x: number; y: number } | null>(null);
     const suppressHeroClick = useRef(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const searchQuery = searchTerm.trim().toLowerCase();
-    const previewsDisabled = Boolean(selectedFilm || isAddModalOpen || isPasswordDialogOpen);
+    const previewsDisabled = Boolean(selectedFilm || (canManage && isAddModalOpen));
 
     useEffect(() => {
         if (viewMode === 'update_mode' && !isCheckingPosters && films.length > 0) {
@@ -117,10 +117,7 @@ export default function RazinFlixPage() {
     useEffect(() => {
         const fetchFilms = async () => {
             try {
-                const supabase = createClient(
-                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-                );
+                const supabase = createPublicReadClient();
                 const { data, error } = await supabase
                     .from('razinflix_films')
                     .select('*')
@@ -137,8 +134,8 @@ export default function RazinFlixPage() {
                         setFeaturedFilms(shuffled.slice(0, 5));
                     }
                 }
-            } catch (err) {
-                console.error('Failed to load films from Supabase:', err);
+            } catch {
+                console.warn('Film catalog unavailable', { code: 'FILM_READ_FAILED' });
             } finally {
                 setIsLoading(false);
             }
@@ -202,22 +199,7 @@ export default function RazinFlixPage() {
         </button>
     );
 
-    const requestAddFilmAccess = () => {
-        setAdminPassword('');
-        setPasswordError(null);
-        setIsPasswordDialogOpen(true);
-    };
-
-    const confirmAddFilmAccess = () => {
-        if (adminPassword.trim().toLowerCase() !== 'azinam') {
-            setPasswordError('Incorrect password.');
-            return;
-        }
-        setIsPasswordDialogOpen(false);
-        setAdminPassword('');
-        setPasswordError(null);
-        setIsAddModalOpen(true);
-    };
+    const requestAddFilmAccess = () => { if (canManage) setIsAddModalOpen(true); };
 
     const handleFilmClick = (film: Film, list: Film[]) => {
         setSelectedFilm(film);
@@ -394,7 +376,7 @@ export default function RazinFlixPage() {
                 >
                     {/* Keep desktop controls in normal flow at tablet widths. */}
                     <div className="hidden shrink-0 items-center gap-2 md:flex">
-                        <TahoeGlassButton
+                        {canManage && (<TahoeGlassButton
                             onClick={requestAddFilmAccess}
                             tone="light"
                             semanticTint="dark"
@@ -403,7 +385,7 @@ export default function RazinFlixPage() {
                             contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
                         >
                             <Plus size={16} /> Add Film
-                        </TahoeGlassButton>
+                        </TahoeGlassButton>)}
                         {rotationControl}
                     </div>
 
@@ -458,14 +440,14 @@ export default function RazinFlixPage() {
                                 <option value="date_desc">Release Date (Newest)</option>
                                 <option value="rating_desc">Rating (Highest)</option>
                                 <option value="rating_asc">Rating (Lowest)</option>
-                                <option value="update_mode">Update Mode</option>
+                                {canManage && <option value="update_mode">Update Mode</option>}
                             </select>
                         </TahoeGlassField>
                     </div>
 
                     {/* Mobile Add Button Row (Under Search) */}
                     <div className="md:hidden w-full flex justify-end gap-2">
-                        <TahoeGlassButton
+                        {canManage && (<TahoeGlassButton
                             onClick={requestAddFilmAccess}
                             tone="light"
                             semanticTint="dark"
@@ -474,7 +456,7 @@ export default function RazinFlixPage() {
                             contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
                         >
                             <Plus size={16} /> Add Film
-                        </TahoeGlassButton>
+                        </TahoeGlassButton>)}
                         {rotationControl}
                     </div>
                 </nav>
@@ -663,78 +645,13 @@ export default function RazinFlixPage() {
                 © 2026 RazinFlix.
             </div>
 
-            <TahoeGlassDialog
-                open={isPasswordDialogOpen}
-                onOpenChange={(open) => {
-                    setIsPasswordDialogOpen(open);
-                    if (!open) {
-                        setAdminPassword('');
-                        setPasswordError(null);
-                    }
-                }}
-                title="Add a film"
-                description="Enter the RazinFlix administrator password to continue."
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.04}
-                className={modalStyles.nestedDialog}
-                overlayClassName={modalStyles.nestedOverlay}
-                backdropClassName={modalStyles.nestedBackdrop}
-            >
-                <form
-                    className="mt-5 space-y-4"
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        confirmAddFilmAccess();
-                    }}
-                >
-                    <TahoeGlassField
-                        label="Password"
-                        error={passwordError}
-                        surfaceClassName="p-0"
-                        controlClassName="min-h-11 px-3 py-2 text-base"
-                        tone="light"
-                        semanticTint="dark"
-                        semanticTintOpacity={0.025}
-                    >
-                        <input
-                            type="password"
-                            autoComplete="current-password"
-                            value={adminPassword}
-                            onChange={(event) => {
-                                setAdminPassword(event.target.value);
-                                setPasswordError(null);
-                            }}
-                        />
-                    </TahoeGlassField>
-                    <div className="flex justify-end gap-3">
-                        <TahoeGlassButton
-                            onClick={() => setIsPasswordDialogOpen(false)}
-                            tone="light"
-                            className="px-5 py-2.5"
-                            contentClassName="text-white"
-                        >
-                            Cancel
-                        </TahoeGlassButton>
-                        <TahoeGlassButton
-                            type="submit"
-                            tone="light"
-                            semanticTint="light"
-                            semanticTintOpacity={0.08}
-                            className="px-5 py-2.5"
-                            contentClassName="text-white"
-                        >
-                            Continue
-                        </TahoeGlassButton>
-                    </div>
-                </form>
-            </TahoeGlassDialog>
 
             {/* Modal */}
             {
                 selectedFilm && (
                     <MovieModal
                         film={selectedFilm}
+                        canManage={canManage}
                         filmList={films}
                         onClose={() => setSelectedFilm(null)}
                         onNext={handleNextFilm}
@@ -758,7 +675,7 @@ export default function RazinFlixPage() {
                 )
             }
 
-            {isAddModalOpen && (
+            {canManage && isAddModalOpen && (
                 <AddFilmModal 
                     onClose={() => setIsAddModalOpen(false)} 
                     onFilmAdded={(newFilm) => {

@@ -265,7 +265,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   }, [searchQuery]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef(selectedId);
-  selectedIdRef.current = selectedId;
+  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
   const [favourites, setFavourites] = useState<Set<string>>(new Set());
   const [favouritesOnly, setFavouritesOnly] = useState(false);
   const [clientNow, setClientNow] = useState<number | null>(() => {
@@ -609,8 +609,8 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           restriction: { latLngBounds: UAE_BOUNDS, strictBounds: false },
         });
         setMap(instance);
-      } catch (error) {
-        console.error("Unable to initialize Google Maps", error);
+      } catch {
+        console.error("Google Maps initialization failed");
         if (active) setMapError("Google Maps could not load. The place list still works.");
       }
     };
@@ -792,8 +792,8 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             })) || [],
         };
         if (active) setLiveDetails(details);
-      } catch (error) {
-        console.warn(`Unable to load live details for ${selectedPlace.name}`, error);
+      } catch {
+        console.warn("Google Places details unavailable");
         if (active) {
           setLiveDetails({
             selectionId: selectedPlace.id,

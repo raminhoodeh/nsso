@@ -2,15 +2,17 @@
 
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState, useEffect, useRef, type KeyboardEvent } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Plus, X, ChevronDown, ChevronUp, Info, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles, GripVertical } from 'lucide-react'
+import { Plus, X, ChevronDown, ChevronUp, Info, Upload, Loader2, Layout, Sparkles, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DraggableAttributes, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import DOMPurify from 'dompurify'
+import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
+import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
+import type { EditableValues } from '@/lib/profile-mutations'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
+import { uploadProfileMedia } from '@/lib/profile-media-client'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface AdvancedModeCardProps {
@@ -47,7 +49,6 @@ function SortableItem({ id, children, className }: { id: string; children: (prop
 }
 
 export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
-    const [supabase] = useState(() => createClient())
     const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(null)
     const [activeSection, setActiveSection] = useState<ActiveSection>('experiences')
     // const [isLoading, setIsLoading] = useState(false) // Driven by provider now
@@ -88,7 +89,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         products: globalProducts,
         reorderExperiences,
         reorderQualifications,
-        reorderProjects
+        reorderProjects,
+        createEntity, patchEntity, removeEntity, refreshProfile, getRevision
     } = useProfile()
 
     // Sensors for Drag and Drop
@@ -158,73 +160,13 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // Selection States
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null) // For editing specific product
+    useEffect(() => { setSelectedProduct(current => current ? globalProducts.find(row => row.id === current.id) || null : null) }, [globalProducts])
 
     // Confirmation State
     const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; productId: string | null }>({
         isOpen: false,
         productId: null
     })
-
-    // Security Verification State
-    const [verificationStatus, setVerificationStatus] = useState<'idle' | 'scanning' | 'secure' | 'unsafe'>('idle')
-    const [securityMessage, setSecurityMessage] = useState('')
-
-    // PayPal Security Check Effect
-    useEffect(() => {
-        // Reset status if no product selected or no HTML
-        if (!selectedProduct || !selectedProduct.paypal_html) {
-            setVerificationStatus('idle')
-            setSecurityMessage('')
-            return
-        }
-
-        // Only scan if status is idle (fresh input) or we just started editing
-        // We use a debounce to simulate scanning and prevent run-on
-        setVerificationStatus('scanning')
-        setSecurityMessage('Analyzing code security...')
-
-        const timer = setTimeout(() => {
-            const rawHtml = selectedProduct.paypal_html || ''
-
-            // Allow only PayPal forms and strict tags (Updated for Single Button support)
-            const clean = DOMPurify.sanitize(rawHtml, {
-                ALLOWED_TAGS: ['form', 'input', 'img', 'div', 'style', 'section', 'span'],
-                ALLOWED_ATTR: ['action', 'method', 'target', 'type', 'src', 'border', 'name', 'alt', 'value', 'class', 'style', 'id'],
-                ALLOWED_URI_REGEXP: /^(https:\/\/.*\.paypal\.com\/|https:\/\/www\.paypal\.com\/|https:\/\/www\.paypalobjects\.com\/)/
-            })
-
-            // Additional Check: Must target PayPal or use HostedButtons
-            const isPayPal = rawHtml.includes('paypal.com') || rawHtml.includes('paypal.HostedButtons')
-            const hasScript = rawHtml.includes('<script') || rawHtml.includes('javascript:')
-
-            // Smart Exception: PayPal JS SDK (Hosted Buttons)
-            // We allow scripts IF they match the strict Hosted Button pattern
-            const isHostedButton = /paypal\.HostedButtons\(\{\s*hostedButtonId:\s*"[A-Z0-9]+"/m.test(rawHtml)
-
-            // Single Button Exception: Allow style tags if they contain PayPal-like classes or structure
-            const isSingleButton = rawHtml.includes('<form') && rawHtml.includes('paypal.com/ncp/payment')
-
-            if ((clean !== rawHtml && !isHostedButton && !isSingleButton) || (hasScript && !isHostedButton) || !isPayPal) {
-                // If sanitization changed anything (ignoring our exceptions)
-                // Note: DOMPurify might strip styles if we are not careful, but we allowed them above
-                if (clean.length === 0 && !isHostedButton && !isSingleButton) {
-                    setVerificationStatus('unsafe')
-                    setSecurityMessage('Invalid code detected.')
-                } else if (!isPayPal) {
-                    setVerificationStatus('unsafe')
-                    setSecurityMessage('Code does not appear to be from PayPal.')
-                } else {
-                    setVerificationStatus('secure')
-                    setSecurityMessage('Verified Standard PayPal Button')
-                }
-            } else {
-                setVerificationStatus('secure')
-                setSecurityMessage(isHostedButton ? 'Verified Safe (Smart Button)' : 'Code verified: Safe from malicious scripts.')
-            }
-        }, 1500) // 1.5s "Branding" delay
-
-        return () => clearTimeout(timer)
-    }, [selectedProduct?.paypal_html])
 
     // Cropper State
 
@@ -256,139 +198,66 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         setIsUploading(true)
 
         try {
-            // Upload
-            const pathPrefix = cropperTarget.type === 'project' ? 'projects' : 'products'
-            const fileName = `${pathPrefix}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
-
-            const { error: uploadError } = await supabase.storage
-                .from('portfolio-assets')
-                .upload(fileName, croppedBlob, { contentType: 'image/jpeg' })
-
-            if (uploadError) throw uploadError
-
-            const { data } = supabase.storage
-                .from('portfolio-assets')
-                .getPublicUrl(fileName)
-
-            const publicUrl = data.publicUrl
+            const {url:publicUrl}=await uploadProfileMedia(croppedBlob,cropperTarget.type,userId)
 
             // Update State & DB
             if (cropperTarget.type === 'project' && cropperTarget.id) {
-                updateProject(cropperTarget.id, { project_photo_url: publicUrl })
+                if (!await updateProject(cropperTarget.id, { project_photo_url: publicUrl })) throw new Error('not_saved')
             } else if (cropperTarget.type === 'product' && selectedProduct) {
                 // If we are editing a selected product
-                updateProduct(selectedProduct.id, { image_url: publicUrl })
+                if (!await updateProduct(selectedProduct.id, { image_url: publicUrl })) throw new Error('not_saved')
             }
-
-        } catch (error) {
-            console.error('Error uploading image:', error)
-            alert('Error uploading image. Please try again.')
-        } finally {
-            setIsUploading(false)
             setCropperOpen(false)
             setCropperImage(null)
             setCropperTarget(null)
+        } catch {
+            alert('The image was not uploaded. Your crop has been kept so you can retry.')
+        } finally {
+            setIsUploading(false)
         }
     }
 
     // --- handlers ---
 
-    // Experience Handlers
-    const addExperience = async () => {
-        const { data } = await supabase.from('experiences').insert({
-            user_id: userId,
-            company_name: '',
-            job_title: '',
-            start_year: new Date().getFullYear(),
-            end_year: null
-        }).select().single()
-        if (data) setExperiences([data, ...experiences])
-    }
+    // All editor writes share the authenticated, revisioned mutation gateway.
+    const addExperience = async () => { await createEntity('experience',{company_name:'',job_title:'',start_year:new Date().getFullYear(),end_year:null,description:''}) }
     const updateExperience = async (id: string, updates: Partial<Experience>) => {
-        // Optimistic update
-        setExperiences(experiences.map(e => e.id === id ? { ...e, ...updates } : e))
-        await supabase.from('experiences').update(updates).eq('id', id)
+        setExperiences(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        return patchEntity('experience',id,updates)
     }
-    const deleteExperience = async (id: string) => {
-        setExperiences(experiences.filter(e => e.id !== id))
-        await supabase.from('experiences').delete().eq('id', id)
-    }
-    const deleteQualification = async (id: string) => {
-        setQualifications(qualifications.filter(q => q.id !== id))
-        await supabase.from('qualifications').delete().eq('id', id)
-    }
-    const deleteProject = async (id: string) => {
-        setProjects(projects.filter(p => p.id !== id))
-        await supabase.from('projects').delete().eq('id', id)
-    }
-
-    // Qualification Handlers
-    const addQualification = async () => {
-        const { data } = await supabase.from('qualifications').insert({
-            user_id: userId,
-            institution: '',
-            qualification_name: '',
-            start_year: new Date().getFullYear(),
-            end_year: new Date().getFullYear()
-        }).select().single()
-        if (data) setQualifications([data, ...qualifications])
-    }
+    const deleteExperience = async (id: string) => { if (await removeEntity('experience',id)) setExperiences(current => current.filter(row => row.id !== id)) }
+    const addQualification = async () => { await createEntity('qualification',{institution:'',qualification_name:'',start_year:new Date().getFullYear(),end_year:new Date().getFullYear()}) }
     const updateQualification = async (id: string, updates: Partial<Qualification>) => {
-        setQualifications(qualifications.map(q => q.id === id ? { ...q, ...updates } : q))
-        await supabase.from('qualifications').update(updates).eq('id', id)
+        setQualifications(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        return patchEntity('qualification',id,updates)
     }
-
-    // Project Handlers
-    const addProject = async () => {
-        const { data } = await supabase.from('projects').insert({
-            user_id: userId,
-            project_name: '',
-            contribution: '',
-            description: '',
-            project_url: ''
-        }).select().single()
-        if (data) setProjects([data, ...projects])
-    }
+    const deleteQualification = async (id: string) => { if (await removeEntity('qualification',id)) setQualifications(current => current.filter(row => row.id !== id)) }
+    const addProject = async () => { await createEntity('project',{project_name:'',contribution:'',description:'',project_url:null}) }
     const updateProject = async (id: string, updates: Partial<Project>) => {
-        setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p))
-        await supabase.from('projects').update(updates).eq('id', id)
+        setProjects(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        return patchEntity('project',id,updates)
     }
-
-    // Product Handlers
+    const deleteProject = async (id: string) => { if (await removeEntity('project',id)) setProjects(current => current.filter(row => row.id !== id)) }
     const addProduct = async () => {
-        const { data } = await supabase.from('products').insert({
-            user_id: userId,
-            name: 'New Product',
-            price: '0',
-        }).select().single()
-        if (data) {
-            setProducts([...products, data])
-            setSelectedProduct(data) // Select new product immediately
-        }
+        const result = await createEntity('product',{name:'New Product',price:'0'})
+        const created = result.changes.find(change => change.entity === 'products' && change.row)?.row
+        if (result.status === 'applied' && created) setSelectedProduct({...created,paypal_html:null} as unknown as Product)
     }
-    const updateProduct = async (id: string, updates: Partial<Product>) => {
-        setProducts(products.map(p => p.id === id ? { ...p, ...updates } : p))
-        if (selectedProduct?.id === id) {
-            setSelectedProduct(prev => prev ? { ...prev, ...updates } : null)
-        }
-        await supabase.from('products').update(updates).eq('id', id)
+    const updateProduct = async (id: string, updates: EditableValues['product']) => {
+        setProducts(current => current.map(row => row.id === id ? {...row,...updates} : row))
+        setSelectedProduct(current => current?.id === id ? {...current,...updates} : current)
+        return patchEntity('product',id,updates)
     }
-    const confirmDeleteProduct = (id: string) => {
-        setDeleteConfirmation({ isOpen: true, productId: id })
-    }
-
+    const confirmDeleteProduct = (id: string) => { setDeleteConfirmation({isOpen:true,productId:id}) }
     const executeDeleteProduct = async () => {
-        if (!deleteConfirmation.productId) return
-
         const id = deleteConfirmation.productId
-        setProducts(products.filter(p => p.id !== id))
-        if (selectedProduct?.id === id) setSelectedProduct(null)
-
-        setDeleteConfirmation({ isOpen: false, productId: null }) // Close immediately for UI
-
-        await supabase.from('products').delete().eq('id', id)
+        if (!id) return
+        if (await removeEntity('product',id)) {
+            setProducts(current => current.filter(row => row.id !== id))
+            setSelectedProduct(current => current?.id === id ? null : current)
+            setDeleteConfirmation({isOpen:false,productId:null})
+        }
     }
-
 
     // --- Render Helpers ---
 
@@ -739,6 +608,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         // Edit Product Form
         return (
             <div className="relative flex flex-col gap-4 pt-4 animate-fadeIn md:gap-6 md:pt-6">
+                <ProfileSaveStatus />
                 <div className="flex min-h-11 items-center justify-between gap-3 md:absolute md:right-0 md:top-[27px] md:z-10 md:min-h-0">
                     <span className="text-xs font-semibold uppercase tracking-widest text-white/55 md:hidden">Product details</span>
                     <TahoeGlassButton
@@ -796,7 +666,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Sales Page</label>
                             <div className="flex min-h-[64px] items-center gap-3 md:gap-4">
                                 <TahoeGlassButton
-                                    onClick={() => updateProduct(selectedProduct.id, { sales_page_active: !selectedProduct.sales_page_active })}
+                                    onClick={() => updateProduct(selectedProduct.id, { sales_page_active: !selectedProduct.sales_page_active, sales_page_published: !selectedProduct.sales_page_active })}
                                     role="switch"
                                     aria-checked={selectedProduct.sales_page_active}
                                     aria-label="Enable product sales page"
@@ -806,7 +676,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 >
                                     <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.sales_page_active ? 'left-6' : 'left-1'}`} />
                                 </TahoeGlassButton>
-                                {selectedProduct.sales_page_active && (
+                                {selectedProduct.sales_page_published == null && <span className="text-xs text-white/60">Legacy public URL. Choose publication status to change its visibility.</span>}
+                                {selectedProduct.sales_page_published == null && !selectedProduct.sales_page_active && <TahoeGlassButton onClick={() => updateProduct(selectedProduct.id, { sales_page_published: false, sales_page_active: false })} className="min-h-11 px-3" contentClassName="text-sm text-white/70">Unpublish legacy page</TahoeGlassButton>}
                                     <TahoeGlassButton
                                         onClick={() => window.open(`/dashboard/products/${selectedProduct.id}/creator`, '_blank')}
                                         className="min-h-11 min-w-0 flex-1 px-3 py-2 md:flex-none md:px-4"
@@ -815,7 +686,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         <Layout size={16} className="text-white/70" />
                                         <span className="text-left text-sm leading-tight text-white/70">Open Sales Page Creator</span>
                                     </TahoeGlassButton>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -923,42 +793,19 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     </TahoeGlassSurface>
                                 )}
 
-                                <TahoeGlassField
-                                    tone="light"
-                                    surfaceClassName={`p-0 ring-1 ${verificationStatus === 'scanning' ? 'ring-yellow-500/50' : verificationStatus === 'secure' ? 'ring-green-500/50' : verificationStatus === 'unsafe' ? 'ring-red-500/50' : 'ring-white/10'}`}
-                                    controlClassName="min-h-[112px] resize-none px-3 py-3 text-base font-mono md:min-h-[80px] md:p-2 md:text-xs"
-                                >
-                                    <textarea value={selectedProduct.paypal_html || ''} onChange={(e) => updateProduct(selectedProduct.id, { paypal_html: e.target.value })} placeholder="<form action=...>" className="text-white/80" />
-                                </TahoeGlassField>
-                                {/* Security Status Indicator Overlay */}
-                                {selectedProduct.paypal_html && (
-                                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 animate-in fade-in duration-300">
-                                        <div className="flex items-center gap-2">
-                                            {verificationStatus === 'scanning' && (
-                                                <>
-                                                    <Loader2 size={14} className="text-yellow-400 animate-spin" />
-                                                    <span className="text-yellow-400 text-xs font-medium tracking-wide">Scanning code...</span>
-                                                </>
-                                            )}
-                                            {verificationStatus === 'secure' && (
-                                                <>
-                                                    <ShieldCheck size={14} className="text-green-400" />
-                                                    <span className="text-green-400 text-xs font-medium tracking-wide">Verified Safe</span>
-                                                </>
-                                            )}
-                                            {verificationStatus === 'unsafe' && (
-                                                <>
-                                                    <ShieldAlert size={14} className="text-red-400" />
-                                                    <span className="text-red-400 text-xs font-medium tracking-wide">Unsafe content detected</span>
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-1 opacity-50">
-                                            <Lock size={10} className="text-white" />
-                                            <span className="text-[10px] uppercase tracking-widest text-white">nsso secure html verification</span>
-                                        </div>
-                                    </div>
-                                )}
+                                <PayPalCodeEditor
+                                    key={selectedProduct.id}
+                                    productId={selectedProduct.id}
+                                    accountId={userId}
+                                    getRevision={getRevision}
+                                    refreshRevision={refreshProfile}
+                                    initialHtml={selectedProduct.paypal_html}
+                                    onSaved={async (html, config) => {
+                                        setProducts(current => current.map(item => item.id === selectedProduct.id ? { ...item, paypal_html: html, payment_config: config } : item))
+                                        setSelectedProduct(current => current?.id === selectedProduct.id ? { ...current, paypal_html: html, payment_config: config } : current)
+                                        await refreshProfile()
+                                    }}
+                                />
                             </div>
                         )}
                     </TahoeGlassSurface>
@@ -974,6 +821,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     return (
         <div className="flex flex-col gap-6" data-profile-editor-sections="split">
+            <ProfileSaveStatus />
             <section className="flex flex-col gap-3" data-editor-accordion="experience">
                 {renderPanelToggle(
                     'experience',

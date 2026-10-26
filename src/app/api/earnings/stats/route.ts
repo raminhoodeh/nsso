@@ -9,6 +9,7 @@ interface EarningsStatsRow {
 }
 
 export async function GET() {
+    const headers = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
     try {
         const supabase = await createClient()
 
@@ -18,7 +19,7 @@ export async function GET() {
         if (authError || !user) {
             return Response.json(
                 { error: 'Unauthorized' },
-                { status: 401 }
+                { status: 401, headers }
             )
         }
 
@@ -28,10 +29,10 @@ export async function GET() {
             .single()
 
         if (error || !data) {
-            console.error('Error fetching earnings stats:', error)
+            console.error('Earnings unavailable', { code: 'EARNINGS_LOOKUP_FAILED' })
             return Response.json(
                 { error: 'Failed to fetch earnings stats' },
-                { status: 500 }
+                { status: 500, headers }
             )
         }
 
@@ -46,12 +47,12 @@ export async function GET() {
             paypalMeSlug: row.paypal_me_slug || null
         }
 
-        return Response.json(stats)
-    } catch (error) {
-        console.error('Unexpected error in earnings stats:', error)
+        return Response.json(stats, { headers })
+    } catch {
+        console.error('Earnings unavailable', { code: 'EARNINGS_LOOKUP_FAILED' })
         return Response.json(
             { error: 'Internal server error' },
-            { status: 500 }
+            { status: 500, headers }
         )
     }
 }

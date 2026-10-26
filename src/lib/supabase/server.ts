@@ -1,13 +1,18 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export async function createClient() {
+export async function createClient({ timeoutMs = 5_000, signal }: { timeoutMs?: number; signal?: AbortSignal } = {}) {
     const cookieStore = await cookies()
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
+            global: { fetch: (input, init) => {
+                const timeout = AbortSignal.timeout(timeoutMs)
+                const signals = [timeout, ...(init?.signal ? [init.signal] : []), ...(signal ? [signal] : [])]
+                return fetch(input, { ...init, signal: AbortSignal.any(signals) })
+            } },
             cookies: {
                 getAll() {
                     return cookieStore.getAll()

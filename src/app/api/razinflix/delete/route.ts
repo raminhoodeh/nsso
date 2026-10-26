@@ -1,34 +1,40 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { createPrivilegedClient, permissionErrorResponse, requirePermission } from '@/lib/server/permissions';
+import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request';
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
+        await requirePermission('razinflix:manage', request);
+        const body = await readBoundedJson(request);
         const { id } = body;
 
-        if (!id) return NextResponse.json({ error: 'Film ID is required.' }, { status: 400 });
+        if (!Number.isSafeInteger(Number(id)) || Number(id) < 1 || !['string', 'number'].includes(typeof id)) {
+            return NextResponse.json({ error: 'A valid film ID is required.' }, { status: 400 });
+        }
 
-        const { error: deleteError } = await supabase
+        const supabase = createPrivilegedClient();
+        const { data: deleted, error: deleteError } = await supabase
             .from('razinflix_films')
             .delete()
-            .eq('id', id);
+            .eq('id', Number(id))
+            .select('id')
+            .maybeSingle();
 
         if (deleteError) {
-            console.error('Delete Error:', deleteError);
-            return NextResponse.json({ error: 'Failed to delete database record.', details: deleteError.message }, { status: 500 });
+            console.error('RazinFlix delete failed', { code: 'DATABASE_WRITE_FAILED' });
+            return NextResponse.json({ error: 'The film could not be deleted. Please try again.' }, { status: 500 });
         }
+        if (!deleted) return NextResponse.json({ error: 'This film is no longer in the library.' }, { status: 404, headers: { 'Cache-Control': 'private, no-store' } });
 
         return NextResponse.json({ 
             success: true, 
             message: 'Database record deleted successfully.'
-        });
+        }, { headers: { 'Cache-Control': 'private, no-store' } });
 
-    } catch (error: any) {
-        console.error('RazinFlix API Delete Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const failure = permissionErrorResponse(error) || requestBodyErrorResponse(error);
+        if (failure) return failure;
+        console.error('RazinFlix delete failed', { code: 'INTERNAL_ERROR' });
+        return NextResponse.json({ error: 'The film could not be deleted. Please try again.' }, { status: 500 });
     }
 }

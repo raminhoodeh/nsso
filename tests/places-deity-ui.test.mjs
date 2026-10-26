@@ -22,7 +22,8 @@ test("assistant content is plain React text and recommendation links come from c
   assert.match(chat, /\{message\.content\}/);
   assert.match(chat, /props\.places\.find\(item => item\.id === pick\.placeId\)/);
   assert.match(chat, /if \(!place \|\| placeClosureNotice\(place\)\) return null/);
-  assert.match(chat, /activeEventsFor\(place, Date\.now\(\)\)/);
+  assert.match(chat, /activeEventsFor\(place, clientNow \?\? 0\)/);
+  assert.match(chat, /setInterval\(\(\) => setClientNow\(Date\.now\(\)\), 60_000\)/, 'expiry clock refreshes even while an answer remains open');
   assert.match(chat, /if \(pick\.eventId && !event\) return null/);
   assert.match(chat, /props\.onSelectPlace\(place\.id\)/);
 });

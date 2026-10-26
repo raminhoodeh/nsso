@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
-import { splitActionPayload, type DeityAction } from '@/lib/deity/actionParser';
+import { splitActionPayload, parseActionList, type DeityAction } from '@/lib/deity/actionParser';
+import { mutationMessage, type MutationResult } from '@/lib/profile-mutations';
+import { safeWebUrl } from '@/lib/urls';
 import { ALLOWANCE_CTA_URL, ALLOWANCE_CTA_LABEL, isDailyAllowanceCode, boundedChatHistory } from '@/lib/deity/chat-allowance';
 import { normalizeNssoBrand } from '@/lib/deity/brand';
 
@@ -14,8 +16,11 @@ interface Message {
     timestamp: number;
     allowanceCta?: boolean;
     responseError?: boolean;
-    actions?: (DeityAction & { status?: 'applied' | 'rejected' })[]; // Actions extracted from this message
+    actions?: Proposal[];
 }
+
+type ProposalStatus = 'proposed' | 'applying' | 'applied' | 'failed' | 'conflict' | 'outcomeUnknown' | 'rejected' | 'undone';
+interface Proposal extends DeityAction { operationId: string; expectedRevision: number; status: ProposalStatus; error?: string }
 
 interface AgentChatInterfaceProps {
     isFullScreen?: boolean;
@@ -76,7 +81,7 @@ import { useToast } from '@/components/ui/Toast';
 
 export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage }: AgentChatInterfaceProps) {
     const { user, loading } = useUser();
-    const { updateField, addLink, updateLink, removeLink, reorderLinks, addExperience, addProject, addQualification, addProduct, undo, canUndo, fastMode, setFastMode } = useProfile();
+    const { applyOperation, undo, canUndo, fastMode, setFastMode, revision, refreshProfile, getRevision, links } = useProfile();
     const { showToast } = useToast();
     const [messages, setMessages] = useState<Message[]>([]);
     const supabase = useMemo(() => createClient(), []);
@@ -85,7 +90,14 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const [showVennDiagram, setShowVennDiagram] = useState(false);
     const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
-    const [isTyping, setIsTyping] = useState(false); // For word-by-word animation
+    const [isTyping, setIsTyping] = useState(false);
+    const [actionPreview, setActionPreview] = useState<{operationId:string;text:string} | null>(null);
+    const applying = useRef(new Set<string>());
+    const activeRequest = useRef<AbortController | null>(null);
+    const alive = useRef(true);
+    const fastModeRef = useRef(fastMode);
+    useEffect(() => { fastModeRef.current = fastMode; }, [fastMode]);
+    useEffect(() => { alive.current = true; return () => { alive.current = false; activeRequest.current?.abort(); }; }, []);
 
     const placeholders = [
         "What is your dream?",
@@ -142,8 +154,8 @@ Check out some of the areas I can help you with below.`;
                         // Pop-up
                         introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
                     }
-                } catch (err) {
-                    console.error('Error fetching profile:', err);
+                } catch {
+                    console.error('Deity profile intro unavailable', {code:'PROFILE_INTRO_UNAVAILABLE'});
                     if (user.username) firstName = user.username;
                     // Fallback for introText if profile fetch fails
                     if (isFullScreen) {
@@ -197,16 +209,6 @@ Check out some of the areas I can help you with below.`;
         return () => clearInterval(interval);
     }, [placeholders.length]);
 
-    // Handle initial message from props
-    useEffect(() => {
-        if (initialMessage && hasInitialized) {
-            handleSendMessage(initialMessage);
-        }
-        // The send callback is intentionally excluded so one initial message
-        // cannot be replayed as chat state changes during streaming.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialMessage, hasInitialized]);
-
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -233,7 +235,7 @@ Check out some of the areas I can help you with below.`;
                 elements.push(
                     <a
                         key={`link-${i}`}
-                        href={mdMatch[2]}
+                        href={safeWebUrl(mdMatch[2]) || undefined}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200 transition-colors"
@@ -249,7 +251,7 @@ Check out some of the areas I can help you with below.`;
                         elements.push(
                             <a
                                 key={`url-${i}-${j}`}
-                                href={subPart}
+                                href={safeWebUrl(subPart) || undefined}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200 transition-colors break-all"
@@ -286,420 +288,124 @@ Check out some of the areas I can help you with below.`;
 
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-    // Safe year parser helper
-    const parseYear = (value: string | number | undefined | null): number | undefined => {
-        if (!value) return undefined;
-        if (typeof value === 'number') return value;
-        if (typeof value === 'string') {
-            const clean = value.replace(/[^0-9]/g, '');
-            if (!clean) return undefined;
-            return parseInt(clean, 10);
-        }
-        return undefined;
-    }
-
-    // Action execution with word-by-word animation
-    const executeAction = async (action: DeityAction): Promise<boolean> => {
-        console.log('⚡ executing action:', action);
-        if (action.action === 'UPDATE_FIELD' && action.target && action.value) {
-            const targetField = action.target.toLowerCase() as keyof ReturnType<typeof useProfile>['profile'];
-            console.log('📝 Update Field:', targetField, action.value);
-            setIsTyping(true);
-
-            if (fastMode) {
-                // Fast mode: instant update
-                const success = await updateField(targetField, action.value, true);
-                if (success) {
-                    showToast(`Deity updated your ${action.target}`, 'success');
-                } else {
-                    showToast(`Failed to update ${action.target}`, 'error');
-                }
-                setIsTyping(false);
-                return success;
-            } else {
-                // Review mode: word-by-word animation
-                const words = action.value.split(' ');
-                let currentText = '';
-
-                for (const word of words) {
-                    currentText += (currentText ? ' ' : '') + word;
-                    // Update local state only (persist=false)
-                    await updateField(targetField, currentText, false);
-                    await new Promise(resolve => setTimeout(resolve, 50)); // 50ms per word
-                }
-
-                // Final save to DB (persist=true)
-                const success = await updateField(targetField, action.value, true);
-
-                if (success) {
-                    showToast(`Deity updated your ${action.target}`, 'success');
-                } else {
-                    showToast(`Failed to update ${action.target}`, 'error');
-                }
-                setIsTyping(false);
-                return success;
-            }
-        } else if (action.action === 'ADD_LINK' && action.name && action.url) {
-            const success = await addLink(action.name, action.url);
-            if (success) {
-                showToast(`Added link: ${action.name}`, 'success');
-            } else {
-                showToast(`Failed to add link`, 'error');
-            }
-            return success;
-        } else if (action.action === 'UPDATE_LINK' && action.linkId) {
-            let success = false;
-            if (action.name) {
-                success = await updateLink(action.linkId, 'link_name', action.name);
-                if (success) showToast(`Renamed link to: ${action.name}`, 'success');
-            } else if (action.url) {
-                success = await updateLink(action.linkId, 'link_url', action.url);
-                if (success) showToast(`Updated link URL`, 'success');
-            }
-            if (!success) showToast(`Failed to update link`, 'error');
-            return success;
-        } else if (action.action === 'REMOVE_LINK' && action.id) {
-            const success = await removeLink(action.id);
-            if (success) {
-                showToast(`Removed link`, 'success');
-            } else {
-                showToast(`Failed to remove link`, 'error');
-            }
-            return success;
-        } else if (action.action === 'REORDER_LINKS' && action.order) {
-            const success = await reorderLinks(action.order);
-            if (success) {
-                showToast(`Reordered links`, 'success');
-            } else {
-                showToast(`Failed to reorder links`, 'error');
-            }
-            return success;
-        } else if (action.action === 'ADD_EXPERIENCE') {
-            const company = action.company || (action as any).company_name;
-            const title = action.title || (action as any).job_title;
-
-            if (company && title) {
-                const startYear = parseYear(action.startYear || (action as any).start_year) || new Date().getFullYear();
-                const endYear = parseYear(action.endYear || (action as any).end_year) || null; // Force null if undefined/NaN
-
-                console.log(`⚡ Adding experience: ${title} at ${company} (${startYear} - ${endYear})`);
-
-                const success = await addExperience(
-                    company,
-                    title,
-                    startYear,
-                    endYear,
-                    action.description
-                );
-                if (success) {
-                    showToast(`Added experience: ${title} at ${company}. Check your dashboard → Advanced Mode → Job titles`, 'success');
-                } else {
-                    showToast(`Failed to add experience (Check logs)`, 'error');
-                }
-                return success;
-            } else {
-                console.warn('⚠️ ADD_EXPERIENCE missing required fields:', action);
-                showToast(`Failed to add experience: Missing info`, 'error');
-                return false;
-            }
-
-        } else if (action.action === 'ADD_PROJECT' && action.project_name) { // Relaxed check: description not strictly required here if provider handles it
-            const success = await addProject(
-                action.project_name,
-                action.project_description, // Can be undefined
-                action.project_url
-            );
-            if (success) {
-                showToast(`Added project: ${action.project_name}. Check your dashboard → Advanced Mode → Projects`, 'success');
-            } else {
-                showToast(`Failed to add project`, 'error');
-            }
-            return success;
-        } else if (action.action === 'ADD_QUALIFICATION' && action.institution && action.degree) {
-            const year = parseYear(action.year) || new Date().getFullYear();
-
-            const success = await addQualification(
-                action.institution,
-                action.degree,
-                year
-            );
-            if (success) {
-                showToast(`Added qualification: ${action.degree}. Check your dashboard → Advanced Mode → Qualifications`, 'success');
-            } else {
-                showToast(`Failed to add qualification`, 'error');
-            }
-            return success;
-        } else if (action.action === 'ADD_PRODUCT' && action.product_name) { // Relaxed check
-            const success = await addProduct(
-                action.product_name,
-                action.product_description,
-                action.price,
-                action.purchase_url
-            );
-            if (success) {
-                showToast(`Added product: ${action.product_name}. Check your dashboard → Advanced Mode → Products`, 'success');
-            } else {
-                showToast(`Failed to add product`, 'error');
-            }
-            return success;
-        }
-        return false;
-    };
-
-
-    // Handle Apply button click
-    const handleApplyAction = async (messageId: string, actionIndex: number, action: DeityAction) => {
-        await executeAction(action);
-
-        setMessages(prev => prev.map(msg => {
-            if (msg.id === messageId && msg.actions) {
-                const newActions = [...msg.actions];
-                newActions[actionIndex] = { ...newActions[actionIndex], status: 'applied' };
-                return { ...msg, actions: newActions };
-            }
-            return msg;
-        }));
-
-        // Trigger follow-up suggestion
-        triggerFollowUp(action);
-    };
-
-    const triggerFollowUp = async (action?: DeityAction) => {
-        const actionDesc = action
-            ? (action.action === 'UPDATE_FIELD' && action.target ? action.target : 'profile')
-            : 'profile';
-
-        const botMessageId = (Date.now() + 100).toString();
-        setMessages(prev => [...prev, {
-            id: botMessageId,
-            role: 'model',
-            content: '',
-            timestamp: Date.now()
-        }]);
-
+    const applyProposals = useCallback(async (messageId: string, proposals: Proposal[]) => {
+        const first = proposals[0];
+        if (!first || applying.current.has(first.operationId)) return;
+        applying.current.add(first.operationId);
+        const setStatus = (status: ProposalStatus, result?: MutationResult) => setMessages(previous => previous.map(message => message.id === messageId ? {
+            ...message, actions: message.actions?.map(proposal => proposal.operationId === first.operationId
+                ? {...proposal,status,error:result && result.status !== 'applied' ? mutationMessage(result) : undefined}
+                : result?.status === 'applied' && proposal.status === 'proposed' && proposal.expectedRevision === first.expectedRevision ? {...proposal,expectedRevision:result.revision} : proposal),
+        } : message));
+        setStatus('applying');
         try {
-            const history = boundedChatHistory(messages);
-            const { data: { session } } = await supabase.auth.getSession();
-            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-            if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-            const response = await fetch('/api/deity/chat', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    message: `[SYSTEM: The user successfully updated their ${actionDesc}. 1. Acknowledge this confirming it's done. 2. Suggest ONE other specific profile section to improve next (e.g. Bio, Experience, Projects). Do NOT suggest updating ${actionDesc} again. Use text ONLY. Do NOT use any tools.]`,
-                    history,
-                    disableTools: true
-                }),
-            });
-
-            if (!response.ok) {
-                const failure = await response.json().catch(() => ({}));
-                setMessages(prev => prev.map(msg => msg.id === botMessageId ? {
-                    ...msg, content: failure.error || 'AI chat is temporarily unavailable.', responseError: true, allowanceCta: isDailyAllowanceCode(failure.code),
-                } : msg));
-                return;
-            }
-            if (!response.body) throw new Error("No response body");
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let accumulatedText = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                accumulatedText += decoder.decode(value);
-
-                const { message: messageText, actionsJson } = splitActionPayload(accumulatedText);
-
-                setMessages(prev => prev.map(msg =>
-                    msg.id === botMessageId ? { ...msg, content: messageText } : msg
-                ));
-
-                if (actionsJson) {
-                    try {
-                        const actionsParsed: DeityAction[] = JSON.parse(actionsJson);
-                        setMessages(prev => prev.map(msg =>
-                            msg.id === botMessageId ? { ...msg, actions: actionsParsed } : msg
-                        ));
-                    } catch (e) {
-                        console.error('Failed to parse actions in follow-up', e);
+            if (!fastModeRef.current && proposals.length === 1 && first.change.kind === 'profile.patch' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                const value = Object.values(first.change.patch).find(value => typeof value === 'string');
+                if (typeof value === 'string') {
+                    setIsTyping(true);
+                    const words = value.split(' ');
+                    for (let index = 1; index <= Math.min(words.length,40); index++) {
+                        setActionPreview({operationId:first.operationId,text:words.slice(0,index).join(' ')});
+                        await new Promise(resolve => setTimeout(resolve,20));
                     }
-                    break;
+                    setActionPreview({operationId:first.operationId,text:value});
                 }
             }
-        } catch (error) {
-            console.error('Error in follow-up:', error);
-            setMessages(prev => prev.map(msg => msg.id === botMessageId && !msg.content ? {
-                ...msg, content: "Deity couldn't finish that follow-up. Your profile action has not been repeated; please ask again if needed.", responseError: true,
-            } : msg));
+            if (!alive.current) return;
+            const result = await applyOperation(proposals.map(proposal => proposal.change), first.operationId, first.expectedRevision);
+            if (!alive.current) return;
+            setStatus(result.status === 'applied' ? 'applied' : result.status === 'conflict' ? 'conflict' : result.status === 'outcomeUnknown' ? 'outcomeUnknown' : 'failed', result);
+            if (result.status === 'applied') showToast('Profile updated', 'success');
+        } catch {
+            setStatus('failed',{status:'failed',operationId:first.operationId,revision:first.expectedRevision,changes:[]});
+        } finally {
+            applying.current.delete(first.operationId);
+            setIsTyping(false);
         }
-    };
+    }, [applyOperation, showToast]);
 
-    // Handle Reject button click
-    const handleRejectAction = (messageId: string, actionIndex: number) => {
-        // Mark action as rejected instead of removing
-        setMessages(prev => prev.map(msg => {
-            if (msg.id === messageId && msg.actions) {
-                const newActions = [...msg.actions];
-                newActions[actionIndex] = { ...newActions[actionIndex], status: 'rejected' };
-                return { ...msg, actions: newActions };
-            }
-            return msg;
-        }));
-        showToast('Suggestion rejected', 'info');
-    };
+    const handleApplyAction = useCallback(async (messageId: string, action: Proposal) => {
+        if (action.status === 'conflict') {
+            await refreshProfile();
+            const nextRevision = getRevision();
+            setMessages(previous => previous.map(message => message.id === messageId ? {...message,actions:message.actions?.map(proposal => proposal.operationId === action.operationId ? {...proposal,operationId:crypto.randomUUID(),expectedRevision:nextRevision,status:'proposed' as const,error:undefined} : proposal)} : message));
+            showToast('Latest profile loaded. Review the proposed change, then press Apply.', 'info');
+            return;
+        }
+        const group = messages.find(message => message.id === messageId)?.actions?.filter(proposal => proposal.operationId === action.operationId) || [action];
+        await applyProposals(messageId,group);
+    }, [refreshProfile,getRevision,messages,applyProposals,showToast]);
 
-    // Handle Undo button click
-    const handleUndo = () => {
-        undo();
-        showToast('Last change undone', 'success');
+    const handleRejectAction = (messageId: string, operationId: string) => {
+        setMessages(previous => previous.map(message => message.id === messageId ? {...message,actions:message.actions?.map(proposal => proposal.operationId === operationId ? {...proposal,status:'rejected' as const} : proposal)} : message));
     };
-
-    // Toggle fast mode
+    const handleUndo = async () => {
+        const result = await undo();
+        if (result.status === 'applied') {
+            setMessages(previous => previous.map(message => ({...message,actions:message.actions?.map(proposal => proposal.operationId === result.originalOperationId ? {...proposal,status:'undone' as const} : proposal)})));
+            showToast('Change undone and saved', 'success');
+        } else showToast(mutationMessage(result),'error');
+    };
     const toggleFastMode = async () => {
-        await setFastMode(!fastMode);
-        showToast(`Fast mode ${!fastMode ? 'enabled' : 'disabled'}`, 'success');
+        const success = await setFastMode(!fastMode);
+        showToast(success ? `Fast mode ${!fastMode ? 'enabled' : 'disabled'}` : 'Fast mode setting was not saved', success ? 'success' : 'error');
     };
 
-    const handleSendMessage = async (text: string) => {
+    const handleSendMessage = useCallback(async (text: string) => {
         if (!text.trim()) return;
-
-        // Autos-collapse categories to give more space
+        activeRequest.current?.abort();
+        const controller = new AbortController();
+        activeRequest.current = controller;
+        const requestRevision = revision;
         setIsCategoriesExpanded(false);
-
-        const newUserMessage: Message = {
-            id: Date.now().toString(),
-            role: 'user',
-            content: text,
-            timestamp: Date.now()
-        };
-
-        setMessages(prev => [...prev, newUserMessage]);
+        setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'user',content:text,timestamp:Date.now()}]);
         setInputValue('');
         setIsLoading(true);
-
         try {
-            // Prepare history for API
             const history = boundedChatHistory(messages);
-
-            // Get auth session for personalization
-            const { data: { session } } = await supabase.auth.getSession();
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-            };
-            if (session?.access_token) {
-                headers['Authorization'] = `Bearer ${session.access_token}`;
-            }
-
-            const response = await fetch('/api/deity/chat', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    message: text,
-                    category: activeCategory,
-                    history: history
-                }),
-            });
-
+            const {data:{session}} = await supabase.auth.getSession();
+            const headers: Record<string,string> = {'Content-Type':'application/json'};
+            if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+            const response = await fetch('/api/deity/chat',{method:'POST',headers,body:JSON.stringify({message:text,category:activeCategory,history}),signal:controller.signal});
             if (!response.ok) {
                 const failure = await response.json().catch(() => ({}));
-                setMessages(prev => [...prev, { id: (Date.now() + 2).toString(), role: 'model',
-                    content: failure.error || 'AI chat is temporarily unavailable.', timestamp: Date.now(), responseError: true,
-                    allowanceCta: isDailyAllowanceCode(failure.code) }]);
+                setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:failure.error || 'AI chat is temporarily unavailable.',timestamp:Date.now(),responseError:true,allowanceCta:isDailyAllowanceCode(failure.code)}]);
                 return;
             }
-
-            if (!response.body) throw new Error("No response body");
-
+            if (!response.body) throw new Error('No response body');
+            const botMessageId = crypto.randomUUID();
+            setMessages(previous => [...previous,{id:botMessageId,role:'model',content:'',timestamp:Date.now()}]);
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-
-            const botMessageId = (Date.now() + 1).toString();
-
-            // Add empty bot message to start streaming into
-            setMessages(prev => [...prev, {
-                id: botMessageId,
-                role: 'model',
-                content: '',
-                timestamp: Date.now()
-            }]);
-
-            let accumulatedText = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const chunk = decoder.decode(value);
-                accumulatedText += chunk;
-
-                // Check for action delimiter
-                const { message: messageText, actionsJson } = splitActionPayload(accumulatedText);
-
-                // Update message content (without action payload)
-                setMessages(prev => prev.map(msg =>
-                    msg.id === botMessageId ? { ...msg, content: messageText } : msg
-                ));
-
-                // If actions detected, parse and attach to message
-                if (actionsJson) {
-                    try {
-                        const actionsParsed: DeityAction[] = JSON.parse(actionsJson);
-                        console.log('✨ Deity actions parsed:', actionsParsed);
-
-                        // If fast mode, mark as applied immediately to prevent UI glitch
-                        const actionsWithStatus = fastMode
-                            ? actionsParsed.map(a => ({ ...a, status: 'applied' as const }))
-                            : actionsParsed;
-
-                        setMessages(prev => prev.map(msg =>
-                            msg.id === botMessageId ? { ...msg, actions: actionsWithStatus } : msg
-                        ));
-
-                        // Auto-execute if fast mode enabled
-                        if (fastMode && actionsParsed.length > 0) {
-                            for (let i = 0; i < actionsParsed.length; i++) {
-                                const action = actionsParsed[i];
-                                const success = await executeAction(action);
-
-                                if (!success) {
-                                    // Rollback status to rejected/failed in UI
-                                    setMessages(prev => prev.map(msg =>
-                                        msg.id === botMessageId && msg.actions ? {
-                                            ...msg,
-                                            actions: msg.actions.map((a, idx) =>
-                                                idx === i ? { ...a, status: 'rejected' as const } : a
-                                            )
-                                        } : msg
-                                    ));
-                                }
-                            }
-                            // Trigger follow-up after auto-execution (regardless of success/fail to keep flow moving? 
-                            // Or mainly if success. Let's trigger anyway as it might have partial success)
-                            triggerFollowUp();
-                        }
-                    } catch (e) {
-                        console.error('Failed to parse actions:', e);
-                    }
-                    break; // Stop reading after actions extracted
+            let accumulated = '';
+            try {
+                for (;;) {
+                    const {done,value} = await reader.read();
+                    if (done) break;
+                    accumulated += decoder.decode(value,{stream:true});
+                    const {message} = splitActionPayload(accumulated);
+                    setMessages(previous => previous.map(item => item.id === botMessageId ? {...item,content:message} : item));
                 }
+                accumulated += decoder.decode();
+            } finally { reader.releaseLock(); }
+            if (controller.signal.aborted) return;
+            const {message,actionsJson} = splitActionPayload(accumulated);
+            let parsed: DeityAction[] | null = [];
+            if (actionsJson) { try { parsed = parseActionList(JSON.parse(actionsJson)); } catch { parsed = null; } }
+            if (!parsed) {
+                setMessages(previous => previous.map(item => item.id === botMessageId ? {...item,content:message + '\n\nThat proposed change could not be read. Please ask me to try again.',responseError:true} : item));
+                return;
             }
+            const batchId = crypto.randomUUID();
+            const proposals: Proposal[] = parsed.map(action => ({...action,operationId:fastModeRef.current ? batchId : crypto.randomUUID(),expectedRevision:requestRevision,status:'proposed'}));
+            setMessages(previous => previous.map(item => item.id === botMessageId ? {...item,content:message,actions:proposals} : item));
+            if (fastModeRef.current && proposals.length) await applyProposals(botMessageId,proposals);
+        } catch {
+            if (!controller.signal.aborted) setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:'Deity could not finish that response. Please try again.',timestamp:Date.now(),responseError:true}]);
+        } finally { if (activeRequest.current === controller) setIsLoading(false); }
+    },[revision,messages,supabase,activeCategory,applyProposals]);
 
-        } catch (error) {
-            console.error('Error sending message:', error);
-            setMessages(prev => [...prev, {
-                id: (Date.now() + 2).toString(),
-                role: 'model',
-                content: "Deity couldn't finish that response. Please refresh this page and try again.",
-                responseError: true,
-                timestamp: Date.now()
-            }]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleCategoryClick = (category: string) => {
+    const handleCategoryClick = useCallback((category: string) => {
         setActiveCategory(category); // Set context for future messages
         setIsCategoriesExpanded(false);
 
@@ -727,7 +433,18 @@ Check out some of the areas I can help you with below.`;
             };
             setMessages(prev => [...prev, botMsg]);
         }, 600); // Small natural delay
-    };
+    }, []);
+
+    // Handle an initial prompt only when it changes or initialization completes.
+    // Declare this after the callbacks so it never reads an uninitialized const.
+    useEffect(() => {
+        if (initialMessage && hasInitialized) {
+            void handleSendMessage(initialMessage);
+        }
+        // The send callback is intentionally excluded so one initial message
+        // cannot be replayed as chat state changes during streaming.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialMessage, hasInitialized]);
 
     const iconButtonClass = 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#232b36] text-white/65 transition-colors hover:bg-[#2b3542] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none';
 
@@ -852,67 +569,19 @@ Check out some of the areas I can help you with below.`;
                         </div>
 
                         {msg.role === 'model' && msg.actions && msg.actions.length > 0 && (
-                            <div className="flex justify-start">
-                                <div className="flex max-w-[85%] flex-wrap gap-2">
-                                    {msg.actions.map((action, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`flex items-center gap-2 rounded-xl border bg-[#1b222c] px-3 py-2 text-sm ${action.status === 'applied'
-                                                ? 'border-green-500/30'
-                                                : action.status === 'rejected'
-                                                    ? 'border-red-500/20 opacity-60'
-                                                    : 'border-white/10'
-                                                }`}
-                                        >
-                                            <span className={`text-xs ${action.status === 'applied' ? 'text-green-200' : action.status === 'rejected' ? 'text-red-200/70' : 'text-white/60'}`}>
-                                                {action.action === 'UPDATE_FIELD' && `Update ${action.target}`}
-                                                {action.action === 'ADD_LINK' && `Add link: ${action.name}`}
-                                                {action.action === 'UPDATE_LINK' && `Rename to: ${action.name || 'update URL'}`}
-                                                {action.action === 'REMOVE_LINK' && 'Remove link'}
-                                                {action.action === 'REORDER_LINKS' && `Reorder ${action.order?.length} links`}
-                                                {action.action === 'ADD_EXPERIENCE' && `Add experience: ${action.company}`}
-                                                {action.action === 'ADD_PROJECT' && `Add project: ${action.project_name}`}
-                                                {action.action === 'ADD_QUALIFICATION' && `Add qualification: ${action.degree}`}
-                                                {action.action === 'ADD_PRODUCT' && `Add product: ${action.product_name}`}
-                                            </span>
-
-                                            {action.status === 'applied' ? (
-                                                <div role="status" className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-400">
-                                                    <Check size={14} />
-                                                    <span>Done, profile updated!</span>
-                                                </div>
-                                            ) : action.status === 'rejected' ? (
-                                                <div role="status" className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-400/70">
-                                                    <XCircle size={14} />
-                                                    <span>Rejected</span>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleApplyAction(msg.id, idx, action)}
-                                                        disabled={isTyping}
-                                                        aria-label="Apply suggested profile change"
-                                                        className="inline-flex items-center gap-1 rounded-full bg-[#12313a] px-3 py-1 text-xs font-medium text-cyan-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 disabled:opacity-40"
-                                                    >
-                                                        <Check size={14} />
-                                                        Apply
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRejectAction(msg.id, idx)}
-                                                        aria-label="Reject suggested profile change"
-                                                        className="inline-flex items-center gap-1 rounded-full bg-[#321d25] px-3 py-1 text-xs font-medium text-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-300"
-                                                    >
-                                                        <XCircle size={14} />
-                                                        Reject
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <div className="flex justify-start"><div className="flex max-w-[85%] flex-wrap gap-2">
+                                {msg.actions.map((action,idx) => <div key={`${action.operationId}-${idx}`} className="space-y-2 rounded-xl border border-white/10 bg-[#1b222c] px-3 py-2 text-sm">
+                                    <p className="text-xs text-white/70">{action.label}</p>
+                                    <details className="text-xs text-white/60"><summary>Review proposed values</summary><dl className="max-h-48 max-w-full overflow-auto whitespace-pre-wrap">{'patch' in action.change || 'values' in action.change ? Object.entries('patch' in action.change ? action.change.patch : action.change.values).map(([field,value])=><div key={field} className="mt-2"><dt className="capitalize text-white/80">{field.replaceAll('_',' ')}</dt><dd>{value===null || value==='' ? '(clear this value)' : String(value)}</dd></div>) : action.change.kind==='collection.reorder' ? <div><dt>New order</dt><dd>{action.change.order.map(id=>links?.find(link=>link.id===id)?.link_name || 'Saved link').join(' → ')}</dd></div> : action.change.kind==='link.remove' ? <div><dt>Remove link</dt><dd>{links?.find(link=>'id' in action.change && link.id===action.change.id)?.link_name || 'Selected link'}</dd></div> : null}</dl></details>
+                                    {actionPreview?.operationId === action.operationId && <p className="max-h-36 overflow-auto whitespace-pre-wrap text-xs text-white/75">{actionPreview.text}</p>}
+                                    {action.status === 'applied' ? <div role="status" className="flex items-center gap-1 text-xs text-green-300"><Check size={14}/>Done, profile updated!</div>
+                                    : action.status === 'undone' ? <p role="status" className="text-xs text-white/60">Undone and saved.</p>
+                                    : action.status === 'rejected' ? <p role="status" className="text-xs text-white/60">Rejected</p>
+                                    : action.status === 'applying' ? <p role="status" className="text-xs text-cyan-200">Saving change...</p>
+                                    : <><button type="button" disabled={isTyping} aria-label="Apply suggested profile change" onClick={() => {void handleApplyAction(msg.id,action)}} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-[#12313a] px-3 text-xs font-medium text-cyan-300 disabled:opacity-40"><Check size={14}/>{action.status === 'conflict' ? 'Refresh for review' : action.status === 'outcomeUnknown' ? 'Check save status' : action.status === 'failed' ? 'Retry' : 'Apply'}</button>{action.status!=='outcomeUnknown' && <button type="button" aria-label="Reject suggested profile change" onClick={() => handleRejectAction(msg.id,action.operationId)} className="ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-[#321d25] px-3 text-xs text-red-300"><XCircle size={14}/>Reject</button>}</>}
+                                    {action.error && <p role="status" className="max-w-md text-xs text-amber-200">{action.error}</p>}
+                                </div>)}
+                            </div></div>
                         )}
                     </div>
                 ))}

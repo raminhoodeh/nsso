@@ -1,14 +1,17 @@
 'use client'
 
-import { type ReactNode, useState, useEffect } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Product } from '@/lib/types'
-import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2, ShieldCheck, ShieldAlert, Lock } from 'lucide-react'
+import type { EditableValues } from '@/lib/profile-mutations'
+import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2 } from 'lucide-react'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
-import DOMPurify from 'dompurify'
+import { uploadProfileMedia } from '@/lib/profile-media-client'
+import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
+import { useProfile } from '@/components/providers/ProfileProvider'
+import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import {
     TahoeGlassButton,
     TahoeGlassField,
@@ -174,13 +177,11 @@ export default function SalesPageCreator() {
     const router = useRouter()
     const [supabase] = useState(() => createClient())
 
-    const [product, setProduct] = useState<Product | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
+    const {products,loading,patchEntity,refreshProfile,getRevision,mutationState} = useProfile()
+    const product = products.find(row => row.id === params.id) || null
+    const saving = mutationState.status === 'saving'
     const [copiedField, setCopiedField] = useState<string | null>(null)
     const [isUploading, setIsUploading] = useState(false)
-    const [verificationStatus, setVerificationStatus] = useState<'idle' | 'scanning' | 'secure' | 'unsafe'>('idle')
-    const [securityMessage, setSecurityMessage] = useState('')
 
     // Cropper State
     const [cropperOpen, setCropperOpen] = useState(false)
@@ -188,74 +189,10 @@ export default function SalesPageCreator() {
 
     const productId = params.id as string
 
-    useEffect(() => {
-        if (!productId) return
-        const fetchProduct = async () => {
-            const { data, error } = await supabase.from('products').select('*').eq('id', productId).single()
-            if (data) {
-                if (!data.benefits) data.benefits = []
-                if (!data.testimonials) data.testimonials = []
-                setProduct(data)
-            }
-            setLoading(false)
-        }
-        fetchProduct()
-    }, [productId, supabase])
-
-    // PayPal Security Check Effect
-    useEffect(() => {
-        if (!product || !product.paypal_html) {
-            setVerificationStatus('idle')
-            setSecurityMessage('')
-            return
-        }
-
-        setVerificationStatus('scanning')
-        setSecurityMessage('Analyzing code security...')
-
-        const timer = setTimeout(() => {
-            const rawHtml = product.paypal_html || ''
-
-            const clean = DOMPurify.sanitize(rawHtml, {
-                ALLOWED_TAGS: ['form', 'input', 'img', 'div', 'style', 'section', 'span'],
-                ALLOWED_ATTR: ['action', 'method', 'target', 'type', 'src', 'border', 'name', 'alt', 'value', 'class', 'style', 'id'],
-                ALLOWED_URI_REGEXP: /^(https:\/\/.*\.paypal\.com\/|https:\/\/www\.paypal\.com\/|https:\/\/www\.paypalobjects\.com\/)/
-            })
-
-            const isPayPal = rawHtml.includes('paypal.com') || rawHtml.includes('paypal.HostedButtons')
-            const hasScript = rawHtml.includes('<script') || rawHtml.includes('javascript:')
-            const isHostedButton = /paypal\.HostedButtons\(\{\s*hostedButtonId:\s*"[A-Z0-9]+"/m.test(rawHtml)
-            const isSingleButton = rawHtml.includes('<form') && rawHtml.includes('paypal.com/ncp/payment')
-
-            if ((clean !== rawHtml && !isHostedButton && !isSingleButton) || (hasScript && !isHostedButton) || !isPayPal) {
-                if (clean.length === 0 && !isHostedButton && !isSingleButton) {
-                    setVerificationStatus('unsafe')
-                    setSecurityMessage('Invalid code detected.')
-                } else if (!isPayPal) {
-                    setVerificationStatus('unsafe')
-                    setSecurityMessage('Code does not appear to be from PayPal.')
-                } else {
-                    setVerificationStatus('secure')
-                    setSecurityMessage('Verified Standard PayPal Button')
-                }
-            } else {
-                setVerificationStatus('secure')
-                setSecurityMessage(isHostedButton ? 'Verified Safe (Smart Button)' : 'Code verified: Safe from malicious scripts.')
-            }
-        }, 1500)
-
-        return () => clearTimeout(timer)
-    }, [product?.paypal_html])
-
-    const updateProduct = async (updates: Partial<Product>) => {
-        if (!product) return
-        setProduct({ ...product, ...updates })
-        setSaving(true)
-        const { error } = await supabase.from('products').update(updates).eq('id', productId)
-        if (error) console.error('Error saving:', error)
-        setSaving(false)
+    const updateProduct = async (updates: EditableValues['product']) => {
+        if (!product) return false
+        return patchEntity('product',productId,updates)
     }
-
 
     const { showToast } = useToast()
 
@@ -280,21 +217,20 @@ export default function SalesPageCreator() {
 
     const handleCropComplete = async (croppedBlob: Blob) => {
         setIsUploading(true)
-        const fileName = `${Math.random()}.jpg`
-        const filePath = `products/${fileName}`
-
-        const { error: uploadError } = await supabase.storage
-            .from('images')
-            .upload(filePath, croppedBlob, { contentType: 'image/jpeg' })
-
-        if (uploadError) {
-            console.error('Error uploading:', uploadError)
+        const { data: { user: actor }, error: authError } = await supabase.auth.getUser()
+        if (authError || !actor || !product || product.user_id !== actor.id) {
+            showToast('Please sign in as the product owner to upload an image.', 'error')
             setIsUploading(false)
             return
         }
-
-        const { data } = supabase.storage.from('images').getPublicUrl(filePath)
-        await updateProduct({ image_url: data.publicUrl })
+        try {
+            const {url}=await uploadProfileMedia(croppedBlob,'product',actor.id)
+            if (!await updateProduct({image_url:url})) throw new Error('The image change was not saved. Your crop is kept for retry.')
+        } catch (error) {
+            showToast(error instanceof Error ? error.message : 'The image was not uploaded. Your crop has been kept.', 'error')
+            setIsUploading(false)
+            return
+        }
         setIsUploading(false)
         setCropperOpen(false)
         setCropperImage(null)
@@ -332,7 +268,8 @@ export default function SalesPageCreator() {
             <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto">
 
                 <GlassCard refractive className="p-8 lg:p-12">
-                    {/* Header */}
+                    <ProfileSaveStatus />
+                {/* Header */}
                     <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">
                             <TahoeGlassButton
@@ -497,57 +434,17 @@ export default function SalesPageCreator() {
                                     />
                                 </TahoeGlassField>
 
-                                {/* PayPal HTML */}
                                 <div>
-                                    <TahoeGlassField
-                                        label="PayPal Button Code"
-                                        labelClassName="text-xs uppercase tracking-widest text-white/50"
-                                        tone="light"
-                                        semanticTint="dark"
-                                        semanticTintOpacity={0.12}
-                                        surfaceClassName={`px-4 py-4 ring-1 ${verificationStatus === 'scanning' ? 'ring-yellow-500/50' :
-                                            verificationStatus === 'secure' ? 'ring-green-500/50' :
-                                                verificationStatus === 'unsafe' ? 'ring-red-500/50' :
-                                                    'ring-white/10'
-                                            }`}
-                                        controlClassName="resize-none font-mono text-[13px] text-white/80 placeholder:text-white/45"
-                                    >
-                                        <textarea
-                                            value={product.paypal_html || ''}
-                                            onChange={(e) => updateProduct({ paypal_html: e.target.value })}
-                                            placeholder="<form action=...>"
-                                            rows={4}
-                                        />
-                                    </TahoeGlassField>
-                                    {/* Security Status Indicator */}
-                                    {product.paypal_html && (
-                                        <div className="mt-2 flex items-center justify-between animate-in fade-in duration-300">
-                                            <div className="flex items-center gap-2">
-                                                {verificationStatus === 'scanning' && (
-                                                    <>
-                                                        <Loader2 size={14} className="text-yellow-400 animate-spin" />
-                                                        <span className="text-yellow-400 text-xs font-medium tracking-wide">Scanning code...</span>
-                                                    </>
-                                                )}
-                                                {verificationStatus === 'secure' && (
-                                                    <>
-                                                        <ShieldCheck size={14} className="text-green-400" />
-                                                        <span className="text-green-400 text-xs font-medium tracking-wide">Verified Safe</span>
-                                                    </>
-                                                )}
-                                                {verificationStatus === 'unsafe' && (
-                                                    <>
-                                                        <ShieldAlert size={14} className="text-red-400" />
-                                                        <span className="text-red-400 text-xs font-medium tracking-wide">Unsafe content detected</span>
-                                                    </>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-1 opacity-50">
-                                                <Lock size={10} className="text-white" />
-                                                <span className="text-[10px] uppercase tracking-widest text-white">nsso secure html verification</span>
-                                            </div>
-                                        </div>
-                                    )}
+                                    <p className="mb-2 text-xs uppercase tracking-widest text-white/50">PayPal Button Code</p>
+                                    <PayPalCodeEditor
+                                        key={product.id}
+                                        productId={product.id}
+                                        accountId={product.user_id}
+                                        getRevision={getRevision}
+                                        refreshRevision={refreshProfile}
+                                        initialHtml={product.paypal_html}
+                                        onSaved={refreshProfile}
+                                    />
                                 </div>
                             </div>
                         </div>

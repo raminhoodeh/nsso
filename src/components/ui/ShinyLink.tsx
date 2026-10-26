@@ -1,6 +1,7 @@
 'use client'
 
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { safeWebUrl } from '@/lib/urls'
 
 interface ShinyLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
     href: string
@@ -9,6 +10,8 @@ interface ShinyLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
 }
 
 export default function ShinyLink({ href, children, className = '', ...props }: ShinyLinkProps) {
+    const destination = safeWebUrl(href)
+    if (!destination) return <span className={`block p-4 text-white/60 ${className}`} title="This saved link needs to be updated.">{children}</span>
     const {
         target = '_blank',
         rel = 'noopener noreferrer',
@@ -21,7 +24,7 @@ export default function ShinyLink({ href, children, className = '', ...props }: 
             as="a"
             variant="pill"
             radius="100px"
-            href={href}
+            href={destination}
             target={target}
             rel={rel}
             ref={(element) => {

@@ -322,6 +322,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                             </Link>
                                         )}
 
+                                        <Link href="/dashboard/security" onClick={() => setMobileMenuOpen(false)} className="flex min-h-12 items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-white">Account security</Link>
                                         <div className="border-t border-white/10 my-2" />
 
                                         <button

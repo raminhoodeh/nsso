@@ -4,7 +4,9 @@ import { registerHooks } from "node:module";
 import { readFile } from "node:fs/promises";
 
 const root = new URL("../src/lib/deity/", import.meta.url);
+globalThis.__budgetRuntimeSignals = [];
 const hooks = registerHooks({ resolve(specifier, context, next) {
+  if (specifier === '@/lib/server/runtime-signals') return { url: 'data:text/javascript,' + encodeURIComponent('export function reportRuntimeSignal(...args) { globalThis.__budgetRuntimeSignals.push(args); return "synthetic-signal-id"; }'), shortCircuit: true };
   if (context.parentURL?.startsWith(root.href) && specifier === "./chat-allowance") return next(new URL("chat-allowance.ts", root).href, context);
   return next(specifier, context);
 } });
@@ -61,6 +63,41 @@ test("failure and missing usage retain the reservation, never refund an unknown 
     assert.equal(calls.at(-1).args.p_confirmed, false);
     assert.equal(calls.at(-1).args.p_micros, calls[1].args.p_micros);
   }
+});
+test("settlement RPC errors emit one sanitized aggregate signal without retrying or releasing an uncertain reservation", async () => {
+  const originalError = console.error;
+  const diagnostics = [];
+  console.error = (...args) => diagnostics.push(args);
+  try {
+    for (const failure of ['returned', 'thrown']) {
+      globalThis.__budgetRuntimeSignals = [];
+      const calls = [];
+      const budget = new ChatBudget(async (name, args) => {
+        calls.push({ name, args });
+        if (name === 'finish_nsso_chat_budget') {
+          if (failure === 'thrown') throw new Error('PRIVATE_SETTLEMENT_PAYLOAD_TOKEN');
+          return { error: { message: 'PRIVATE_SETTLEMENT_PAYLOAD_TOKEN' }, data: null };
+        }
+        return { data: { allowed: true }, error: null };
+      }, 'a'.repeat(64), 'chat');
+      await budget.reserve(); await budget.prepare(90_000, 4096);
+      const reserved = calls.at(-1).args.p_micros;
+      await assert.doesNotReject(budget.finish());
+      await budget.finish({ promptTokenCount: 1, candidatesTokenCount: 1 });
+      const settlements = calls.filter(call => call.name === 'finish_nsso_chat_budget');
+      assert.equal(settlements.length, 1);
+      assert.equal(settlements[0].args.p_confirmed, false);
+      assert.equal(settlements[0].args.p_micros, reserved);
+      assert.deepEqual(globalThis.__budgetRuntimeSignals, [['budget_unavailable']]);
+    }
+    assert.doesNotMatch(JSON.stringify(diagnostics), /PRIVATE_SETTLEMENT_PAYLOAD_TOKEN/);
+  } finally { console.error = originalError; }
+});
+test("successful settlement does not emit an accounting failure signal", async () => {
+  globalThis.__budgetRuntimeSignals = [];
+  const { budget } = fake();
+  await budget.reserve(); await budget.finish({ promptTokenCount: 10, candidatesTokenCount: 2 });
+  assert.deepEqual(globalThis.__budgetRuntimeSignals, []);
 });
 test("token bounds cannot silently invalidate the cost ceiling", async () => {
   const { budget } = fake();

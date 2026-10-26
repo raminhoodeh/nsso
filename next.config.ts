@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
+  generateBuildId: async () => process.env.NSSO_BUILD_ID || null,
   images: {
     remotePatterns: [
       {

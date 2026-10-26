@@ -1,97 +1,35 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
-import { User } from '@supabase/supabase-js'
-
-interface QRScanHandlerProps {
-    scannedUserId: string
-    currentUser: User | null
-}
-
-export default function QRScanHandler({ scannedUserId, currentUser }: QRScanHandlerProps) {
+export default function QRScanHandler({ scannedUserId, currentUser }: { scannedUserId: string; currentUser: { id: string } | null }) {
     const searchParams = useSearchParams()
     const { showToast } = useToast()
-    const hasProcessed = useRef(false)
-
-    useEffect(() => {
-        const source = searchParams.get('source')
-
-        if (source === 'qr' && currentUser && !hasProcessed.current) {
-            hasProcessed.current = true // Prevent double fire
-
-            const handleConnection = async () => {
-                let locationName = ''
-
-                // 1. Try to get geolocation
-                if ('geolocation' in navigator) {
-                    try {
-                        // Request permission only first time logic is handled by browser
-                        // We set a timeout to fail fast if blocked or slow
-                        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-                            navigator.geolocation.getCurrentPosition(resolve, reject, {
-                                timeout: 5000,
-                                maximumAge: 60000
-                            })
-                        })
-
-                        // 2. Reverse Geocode (Simple client-side fetch to Nominatim)
-                        // Should be moved to server typically, but for V1 speed client is faster here
-                        // Or we send coords to API and API resolves name.
-                        // Let's send Lat/Long to API ideally? 
-                        // But our API expects location_name string currently.
-                        // Let's try to resolve name here quickly.
-
-                        const { latitude, longitude } = position.coords
-                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
-                        if (response.ok) {
-                            const data = await response.json()
-                            locationName = [
-                                data.address.city || data.address.town || data.address.village,
-                                data.address.country
-                            ].filter(Boolean).join(', ')
-                        }
-                    } catch (error) {
-                        // Permission denied or unavailable, ignore
-                        console.warn('Geolocation failed or denied', error)
-                    }
-                }
-
-                // 3. Create Connection via API
-                try {
-                    const res = await fetch('/api/my-nsso/connect', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            scannedUserId,
-                            location: locationName
-                        })
-                    })
-
-                    if (res.ok) {
-                        const data = await res.json()
-                        const msg = data.isNewConnection
-                            ? `Added ${data.scannedUser?.username || 'user'} to My nsso`
-                            : `Updated connection with ${data.scannedUser?.username || 'user'}`
-
-                        showToast(msg, 'success')
-                    } else {
-                        // silently fail or warn?
-                        // If it's self-scan, API returns error 400
-                        const errorData = await res.json()
-                        if (errorData.error) {
-                            showToast(errorData.error, 'error')
-                        }
-                    }
-                } catch (e) {
-                    console.error('Connection failed', e)
-                }
-            }
-
-            handleConnection()
-        }
-    }, [searchParams, currentUser, scannedUserId, showToast])
-
-    return null // Invisible component
+    const [dismissed, setDismissed] = useState(false)
+    const [busy, setBusy] = useState(false)
+    const [location, setLocation] = useState('')
+    const inFlight = useRef(false)
+    const eligible = searchParams.get('source') === 'qr' && currentUser && currentUser.id !== scannedUserId
+    async function connect(event: React.FormEvent) {
+        event.preventDefault()
+        if (inFlight.current) return
+        inFlight.current = true; setBusy(true)
+        try {
+            const response = await fetch('/api/my-nsso/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scannedUserId, location: location.trim() }) })
+            const data = await response.json()
+            if (!response.ok || data.success !== true) throw new Error('Connection unavailable')
+            showToast(data.isNewConnection ? 'Added to My nsso' : 'This person is already in My nsso', 'success')
+            setDismissed(true)
+        } catch { showToast('Your connection could not be saved. Please retry.', 'error') }
+        finally { setBusy(false); inFlight.current = false }
+    }
+    if (!eligible || dismissed) return null
+    return <aside aria-label="Save scanned profile" className="fixed inset-x-4 bottom-5 z-[90] mx-auto max-w-md rounded-2xl border border-white/20 bg-slate-950 p-5 text-white shadow-xl">
+        <form onSubmit={connect} className="space-y-3">
+            <p>Add this person to My nsso? You will both see the connection; your notes stay private.</p>
+            <label className="block text-sm">Where did you meet? (optional)<input maxLength={300} value={location} onChange={event => setLocation(event.target.value)} placeholder="For example, Dubai conference" className="mt-2 w-full rounded-lg bg-slate-800 p-3 text-base" /></label>
+            <div className="flex gap-3"><button disabled={busy} className="min-h-11 rounded-lg border border-white/30 px-4">{busy ? 'Adding…' : 'Add to My nsso'}</button><button type="button" onClick={() => setDismissed(true)} className="min-h-11 px-4">Not now</button></div>
+        </form>
+    </aside>
 }

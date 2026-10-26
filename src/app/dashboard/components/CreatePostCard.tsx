@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useUser } from '@/components/providers/UserProvider'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import Image from 'next/image'
 import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+
+import { feedRequestError } from '@/lib/feed-client'
 
 interface CreatePostCardProps {
     onPostCreated: (post: any) => void
@@ -17,25 +19,29 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
     const [content, setContent] = useState('')
     const [isExpanded, setIsExpanded] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
+    const pending = useRef(false)
+    const contentRef = useRef(content)
 
     const avatarUrl = profile?.profile_pic_url || user?.avatar_url
     const displayName = profile?.full_name || user?.full_name || user?.username
 
     const handleSubmit = async () => {
-        if (!content.trim()) return
-
+        if (!content.trim() || pending.current) return
+        const submittedContent = content
+        pending.current = true
+        setError('')
         setLoading(true)
         try {
             const response = await fetch('/api/news-feed', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content }),
+                body: JSON.stringify({ content: submittedContent }),
             })
 
             if (response.ok) {
                 const newPost = await response.json()
-                // The API returns the post, but might be missing relations (user)
-                // We fake the user relation for optimistic UI if needed
+                // Add display relations only after the server confirms the post was saved.
                 onPostCreated({
                     ...newPost,
                     user: {
@@ -48,12 +54,15 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
                     likes: [],
                     _count: { feed_comments: 0 }
                 })
-                setContent('')
-                setIsExpanded(false)
+                setContent(current => current === submittedContent ? '' : current)
+                if (contentRef.current === submittedContent) setIsExpanded(false)
+            } else {
+                setError(feedRequestError(response.status, 'post'))
             }
-        } catch (error) {
-            console.error('Failed to post', error)
+        } catch {
+            setError(feedRequestError(0, 'post'))
         } finally {
+            pending.current = false
             setLoading(false)
         }
     }
@@ -91,16 +100,20 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
                         <div className="space-y-3">
                             <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="min-h-[100px] p-4 text-base resize-none">
                                 <textarea
+                                    aria-label="Your post"
+                                    maxLength={4000}
                                     value={content}
-                                    onChange={(e) => setContent(e.target.value)}
+                                    onChange={(e) => { contentRef.current = e.target.value; setContent(e.target.value) }}
                                     autoFocus
                                     placeholder="What are you working on?"
                                     className="text-white placeholder:text-white/40"
                                 />
                             </TahoeGlassField>
+                            {error && <p role="alert" className="text-sm text-rose-200">{error}</p>}
                             <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
                                 <TahoeGlassButton
                                     onClick={() => setIsExpanded(false)}
+                                    disabled={loading}
                                     className="px-4 py-1.5"
                                     contentClassName="text-white/70"
                                 >

@@ -1,188 +1,89 @@
-/**
- * Deity Action Parser
- * Extracts structured JSON commands from LLM streaming responses
- */
+import { isProfileChange, type ProfileChange } from '../profile-mutations'
 
-export type DeityActionType =
-    | 'UPDATE_FIELD'
-    | 'ADD_LINK'
-    | 'UPDATE_LINK'
-    | 'REMOVE_LINK'
-    | 'REORDER_LINKS'
-    | 'ADD_EXPERIENCE'
-    | 'ADD_PROJECT'
-    | 'ADD_QUALIFICATION'
-    | 'ADD_PRODUCT'
-    | 'SUGGEST_WORDING'
+/** Model output is a proposal. Actor, revision and operation IDs are supplied by trusted application code. */
+export interface DeityAction { version: 1; change: ProfileChange; label: string; reasoning?: string }
+export interface ParsedResponse { message: string; actions: DeityAction[] }
+const plain = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
+const string = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0
+const exact = (value: Record<string, unknown>, allowed: string[]) => Object.keys(value).every(key => allowed.includes(key))
 
-export interface DeityAction {
-    action: DeityActionType
-
-    // For UPDATE_FIELD
-    target?: 'bio' | 'headline' | 'full_name'
-    value?: string
-    isPlaceholder?: boolean
-
-    // For ADD_LINK / UPDATE_LINK
-    name?: string
-    url?: string
-    linkId?: string
-
-    // For REMOVE_LINK
-    id?: string
-
-    // For REORDER_LINKS
-    order?: string[] // Array of link IDs in desired order
-
-    // For ADD_EXPERIENCE
-    company?: string
-    title?: string
-    description?: string
-    years?: string
-    startYear?: number
-    endYear?: number | null
-
-    // For ADD_PROJECT
-    project_name?: string
-    project_description?: string
-    project_url?: string
-    technologies?: string[]
-
-    // For ADD_QUALIFICATION
-    institution?: string
-    degree?: string
-    field?: string
-    year?: number
-
-    // For ADD_PRODUCT
-    product_name?: string
-    product_description?: string
-    price?: string
-    purchase_url?: string
-
-    // For SUGGEST_WORDING
-    original?: string
-    improved?: string
-    reasoning?: string
-
-    // Metadata
-    timestamp?: number
+export function isValidAction(value: unknown): value is DeityAction {
+    if (!plain(value) || value.version !== 1 || !exact(value, ['version', 'change', 'label', 'reasoning']) || typeof value.label !== 'string' || !value.label.trim() || value.label.length > 300 || (value.reasoning !== undefined && (typeof value.reasoning !== 'string' || value.reasoning.length > 1000))) return false
+    if (!isProfileChange(value.change)) return false
+    const change = value.change
+    if (change.kind === 'profile.patch') return Object.keys(change.patch).every(key => ['full_name', 'headline', 'bio'].includes(key))
+    if (change.kind === 'link.add') return string(change.values.link_name) && string(change.values.link_url)
+    if (change.kind === 'link.patch') return Object.keys(change.patch).every(key => ['link_name', 'link_url'].includes(key))
+    if (change.kind === 'link.remove' || (change.kind === 'collection.reorder' && change.collection === 'links')) return true
+    if (change.kind === 'experience.add') return string(change.values.company_name) && string(change.values.job_title)
+    if (change.kind === 'qualification.add') return string(change.values.institution) && string(change.values.qualification_name)
+    if (change.kind === 'project.add') return string(change.values.project_name) && string(change.values.description)
+    if (change.kind === 'product.add') return Object.keys(change.values).every(key => ['name', 'description', 'price', 'purchase_link'].includes(key)) && string(change.values.name) && string(change.values.description)
+    return false
 }
 
-export interface ParsedResponse {
-    message: string // The conversational text
-    actions: DeityAction[] // Extracted actions
+/** Explicit compatibility mapping from the declared Gemini tools to one persisted schema. */
+export function normalizeToolCall(name: string, args: unknown): DeityAction | null {
+    if (!plain(args)) return null
+    let change: ProfileChange
+    let label: string
+    switch (name) {
+        case 'update_profile_field':
+        case 'suggest_wording': {
+            const wording = name === 'suggest_wording'
+            if (!exact(args, wording ? ['target', 'original', 'improved', 'reasoning'] : ['target', 'value', 'reasoning']) || !['full_name', 'headline', 'bio'].includes(String(args.target))) return null
+            const value = wording ? args.improved : args.value
+            if (typeof value !== 'string') return null
+            change = { kind: 'profile.patch', patch: { [String(args.target)]: value } }
+            label = `Update ${String(args.target).replace('_', ' ')}`
+            break
+        }
+        case 'add_link':
+            if (!exact(args, ['name', 'url']) || !string(args.name) || !string(args.url)) return null
+            change = { kind: 'link.add', values: { link_name: args.name, link_url: args.url } }; label = `Add link: ${args.name}`; break
+        case 'update_link': {
+            if (!exact(args, ['linkId', 'name', 'url']) || typeof args.linkId !== 'string') return null
+            const patch = { ...(typeof args.name === 'string' ? { link_name: args.name } : {}), ...(typeof args.url === 'string' ? { link_url: args.url } : {}) }
+            change = { kind: 'link.patch', id: args.linkId, patch }; label = 'Update link'; break
+        }
+        case 'remove_link':
+            if (!exact(args, ['id']) || typeof args.id !== 'string') return null
+            change = { kind: 'link.remove', id: args.id }; label = 'Remove link'; break
+        case 'reorder_links':
+            if (!exact(args, ['order']) || !Array.isArray(args.order)) return null
+            change = { kind: 'collection.reorder', collection: 'links', order: args.order as string[] }; label = 'Reorder links'; break
+        case 'add_experience':
+            if (!exact(args, ['company', 'title', 'startYear', 'endYear', 'description']) || !string(args.company) || !string(args.title)) return null
+            change = { kind: 'experience.add', values: { company_name: args.company, job_title: args.title, start_year: args.startYear as number | null, end_year: args.endYear === undefined ? null : args.endYear as number | null, ...(args.description !== undefined ? { description: args.description as string } : {}) } }; label = `Add experience: ${args.title}`; break
+        case 'add_project':
+            if (!exact(args, ['project_name', 'project_description', 'project_url']) || !string(args.project_name) || !string(args.project_description)) return null
+            change = { kind: 'project.add', values: { project_name: args.project_name, contribution: 'Creator', description: args.project_description, project_url: args.project_url === undefined ? null : args.project_url as string | null } }; label = `Add project: ${args.project_name}`; break
+        case 'add_qualification':
+            if (!exact(args, ['institution', 'degree', 'year']) || !string(args.institution) || !string(args.degree)) return null
+            change = { kind: 'qualification.add', values: { institution: args.institution, qualification_name: args.degree, start_year: args.year as number | null, end_year: args.year as number | null } }; label = `Add qualification: ${args.degree}`; break
+        case 'add_product':
+            if (!exact(args, ['product_name', 'product_description', 'price', 'purchase_url']) || !string(args.product_name) || !string(args.product_description)) return null
+            change = { kind: 'product.add', values: { name: args.product_name, description: args.product_description, price: args.price === undefined ? null : args.price as string | null, purchase_link: args.purchase_url === undefined ? null : args.purchase_url as string | null } }; label = `Add product: ${args.product_name}`; break
+        default: return null
+    }
+    const proposal = { version: 1, change, label, ...(typeof args.reasoning === 'string' ? { reasoning: args.reasoning } : {}) }
+    return isValidAction(proposal) ? proposal : null
 }
 
-/**
- * Extract Deity action commands from LLM response
- * Actions are embedded as JSON blocks in triple backticks
- */
+export function parseActionList(value: unknown): DeityAction[] | null {
+    return Array.isArray(value) && value.length <= 20 && value.every(isValidAction) ? value : null
+}
 export function extractActions(fullResponse: string): DeityAction[] {
     const actions: DeityAction[] = []
-
-    // Match JSON blocks in triple backticks: ```json\n{...}\n```
-    const regex = /```json\s*\n({[\s\S]*?})\s*\n```/g
-    let match
-
-    while ((match = regex.exec(fullResponse)) !== null) {
-        try {
-            const actionObj = JSON.parse(match[1])
-
-            // Validate it has required 'action' field
-            if (actionObj.action) {
-                actions.push({
-                    ...actionObj,
-                    timestamp: Date.now()
-                })
-            }
-        } catch (e) {
-            console.error('Failed to parse Deity action:', e)
-            console.error('Attempted to parse:', match[1])
-        }
+    for (const match of fullResponse.matchAll(/```json\s*\n([\s\S]*?)\s*\n```/g)) {
+        try { const value: unknown = JSON.parse(match[1]); if (isValidAction(value)) actions.push(value) } catch { /* Invalid text is never an instruction. */ }
     }
-
-    return actions
+    return actions.slice(0, 20)
 }
-
-/**
- * Parse full response into message + actions
- * Strips action blocks from the conversational message
- */
-export function parseResponse(fullResponse: string): ParsedResponse {
-    const actions = extractActions(fullResponse)
-
-    // Remove JSON blocks from message to avoid displaying them twice
-    const message = fullResponse.replace(/```json\s*\n{[\s\S]*?}\s*\n```/g, '').trim()
-
-    return {
-        message,
-        actions
-    }
-}
-
-/**
- * Create the special delimiter payload for streaming
- * This is appended at the end of the response stream
- */
-export function createActionPayload(actions: DeityAction[]): string {
-    if (actions.length === 0) return ''
-
-    return `\n__DEITY_ACTIONS__\n${JSON.stringify(actions)}\n`
-}
-
-/**
- * Check if a chunk contains the action delimiter
- */
-export function containsActionDelimiter(text: string): boolean {
-    return text.includes('__DEITY_ACTIONS__')
-}
-
-/**
- * Split accumulated text into message and action payload
- */
+export function parseResponse(fullResponse: string): ParsedResponse { return { message: fullResponse.replace(/```json\s*\n[\s\S]*?\s*\n```/g, '').trim(), actions: extractActions(fullResponse) } }
+export function createActionPayload(actions: DeityAction[]): string { return actions.length && parseActionList(actions) ? `\n__DEITY_ACTIONS__\n${JSON.stringify(actions)}\n` : '' }
+export function containsActionDelimiter(text: string): boolean { return text.includes('__DEITY_ACTIONS__') }
 export function splitActionPayload(text: string): { message: string; actionsJson: string | null } {
-    if (!containsActionDelimiter(text)) {
-        return { message: text, actionsJson: null }
-    }
-
-    const parts = text.split('__DEITY_ACTIONS__')
-    return {
-        message: parts[0],
-        actionsJson: parts[1] || null
-    }
-}
-
-/**
- * Validate action object has required fields
- */
-export function isValidAction(action: any): action is DeityAction {
-    if (!action || typeof action !== 'object') return false
-    if (!action.action || typeof action.action !== 'string') return false
-
-    // Type-specific validation
-    switch (action.action) {
-        case 'UPDATE_FIELD':
-            return !!action.target && !!action.value
-        case 'ADD_LINK':
-            return !!action.name && !!action.url
-        case 'UPDATE_LINK':
-            return !!action.linkId && (!!action.name || !!action.url)
-        case 'REMOVE_LINK':
-            return !!action.id
-        case 'REORDER_LINKS':
-            return Array.isArray(action.order) && action.order.length > 0
-        case 'ADD_EXPERIENCE':
-            return !!action.company && !!action.title
-        case 'ADD_PROJECT':
-            return !!action.project_name && !!action.project_description
-        case 'ADD_QUALIFICATION':
-            return !!action.institution && !!action.degree
-        case 'ADD_PRODUCT':
-            return !!action.product_name && !!action.product_description
-        case 'SUGGEST_WORDING':
-            return !!action.target && !!action.improved
-        default:
-            return false
-    }
+    const position = text.indexOf('__DEITY_ACTIONS__')
+    return position < 0 ? { message: text, actionsJson: null } : { message: text.slice(0, position), actionsJson: text.slice(position + '__DEITY_ACTIONS__'.length).trim() || null }
 }

@@ -40,6 +40,12 @@ function historyText(message: Message, places: DubaiPlace[]) {
 
 export default function PlacesDeity(props: Props) {
   const { open, compact, onOpenChange } = props;
+  const [clientNow, setClientNow] = useState<number | null>(null);
+  useEffect(() => {
+    setClientNow(Date.now());
+    const timer = window.setInterval(() => setClientNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -167,7 +173,7 @@ export default function PlacesDeity(props: Props) {
   function placeCard(pick: PlacesChatRecommendation, index: number, timeLabel?: string) {
     const place = props.places.find(item => item.id === pick.placeId);
     if (!place || placeClosureNotice(place)) return null;
-    const event = pick.eventId ? activeEventsFor(place, Date.now()).find(item => item.id === pick.eventId && item.status === "scheduled") : null;
+    const event = pick.eventId ? activeEventsFor(place, clientNow ?? 0).find(item => item.id === pick.eventId && item.status === "scheduled") : null;
     if (pick.eventId && !event) return null;
     if (compact && timeLabel) return <div key={`${pick.placeId}-${index}`} className={styles.compactStop}>
       <button type="button" className={styles.stopMapButton}

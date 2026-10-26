@@ -1,6 +1,9 @@
+import type { PayPalConfig } from './payments/paypal-config'
+
 export type UserType = 'standard' | 'admin'
 export type AuthProvider = 'google' | 'apple' | 'microsoft' | 'github' | 'email'
-export type ContactMethod = 'Email' | 'WhatsApp' | 'Phone' | 'Telegram' | 'Location' | 'Other'
+export type { ContactMethod } from './contact-methods'
+import type { ContactMethod } from './contact-methods'
 export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due'
 
 export interface User {
@@ -15,6 +18,7 @@ export interface User {
     user_type: UserType
     is_premium: boolean
     created_at: string
+    permissions?: Array<'nsso:admin' | 'razinflix:manage'>
 }
 
 export interface Profile {
@@ -93,14 +97,16 @@ export interface Product {
     purchase_link_active: boolean
     paypal_html: string | null
     paypal_active: boolean
+    payment_config?: PayPalConfig | null
     created_at: string
     // Sales Page Fields
     sales_page_active: boolean
-    headline?: string
-    tagline?: string
-    intro_text?: string
-    value_proposition?: string
-    video_url?: string
+    sales_page_published?: boolean | null
+    headline?: string | null
+    tagline?: string | null
+    intro_text?: string | null
+    value_proposition?: string | null
+    video_url?: string | null
     benefits?: string[]
     testimonials?: { name: string; text: string }[]
 }

@@ -1,9 +1,11 @@
 import { formatDistanceToNow } from 'date-fns'
 import Image from 'next/image'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+
+import { feedRequestError } from '@/lib/feed-client'
 
 interface FeedPost {
     id: string
@@ -52,6 +54,10 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
     const [liked, setLiked] = useState(post.likes.some(l => l.user_id === currentUserId))
     const [likeCount, setLikeCount] = useState(post.likes.length)
 
+    const [liking, setLiking] = useState(false)
+    const [likeError, setLikeError] = useState('')
+    const likePending = useRef(false)
+
     // Comments State
     const [showComments, setShowComments] = useState(false)
     const [comments, setComments] = useState<Comment[]>([])
@@ -59,6 +65,10 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
     const [commentCount, setCommentCount] = useState(post._count?.feed_comments || 0)
     const [newComment, setNewComment] = useState('')
     const [submittingComment, setSubmittingComment] = useState(false)
+
+    const commentPending = useRef(false)
+    const [commentError, setCommentError] = useState('')
+    const [commentsError, setCommentsError] = useState('')
 
     // Helper data extraction
     // Handle array or object just in case PostgREST behaves differently
@@ -77,60 +87,77 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
     const username = post.user.username
 
     const handleLike = async () => {
-        // Optimistic update
+        if (likePending.current) return
+        likePending.current = true
+        setLiking(true)
+        setLikeError('')
         const newLiked = !liked
         setLiked(newLiked)
         setLikeCount(prev => newLiked ? prev + 1 : prev - 1)
 
         try {
-            await fetch(`/api/news-feed/${post.id}/like`, { method: newLiked ? 'POST' : 'DELETE' })
-        } catch (error) {
-            // Revert
-            setLiked(!newLiked)
-            setLikeCount(prev => newLiked ? prev - 1 : prev + 1)
+            const response = await fetch(`/api/news-feed/${post.id}/like`, { method: newLiked ? 'POST' : 'DELETE' })
+            if (response.ok) return
+            setLikeError(feedRequestError(response.status, 'like'))
+        } catch {
+            setLikeError(feedRequestError(0, 'like'))
+        } finally {
+            likePending.current = false
+            setLiking(false)
+        }
+        // Revert optimistic state for failed HTTP responses as well as network failures.
+        setLiked(!newLiked)
+        setLikeCount(prev => newLiked ? prev - 1 : prev + 1)
+    }
+
+    const loadComments = async () => {
+        setCommentsLoading(true)
+        setCommentsError('')
+        try {
+            const res = await fetch(`/api/news-feed/${post.id}/comments`)
+            if (!res.ok) {
+                setCommentsError(feedRequestError(res.status, 'comments'))
+                return
+            }
+            const data = await res.json()
+            setComments(data)
+        } catch {
+            setCommentsError(feedRequestError(0, 'comments'))
+        } finally {
+            setCommentsLoading(false)
         }
     }
 
-    const toggleComments = async () => {
-        if (!showComments && comments.length === 0) {
-            setCommentsLoading(true)
-            try {
-                const res = await fetch(`/api/news-feed/${post.id}/comments`)
-                if (res.ok) {
-                    const data = await res.json()
-                    setComments(data)
-                }
-            } catch (error) {
-                console.error('Failed to load comments', error)
-            } finally {
-                setCommentsLoading(false)
-            }
-        }
+    const toggleComments = () => {
+        if (!showComments && comments.length === 0 && !commentsLoading) void loadComments()
         setShowComments(!showComments)
     }
 
     const handlePostComment = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!newComment.trim()) return
-
+        if (!newComment.trim() || commentPending.current) return
+        const submittedContent = newComment
+        commentPending.current = true
+        setCommentError('')
         setSubmittingComment(true)
         try {
             const res = await fetch(`/api/news-feed/${post.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: newComment }),
+                body: JSON.stringify({ content: submittedContent }),
             })
-
-            if (res.ok) {
-                const comment = await res.json()
-                setComments(prev => [...prev, comment])
-                setCommentCount(prev => prev + 1)
-                setNewComment('')
+            if (!res.ok) {
+                setCommentError(feedRequestError(res.status, 'comment'))
+                return
             }
-        } catch (error) {
-            console.error('Failed to post comment', error)
-            alert("Failed to post comment. You may need to refresh your session.")
+            const comment = await res.json()
+            setComments(prev => [...prev, comment])
+            setCommentCount(prev => prev + 1)
+            setNewComment(current => current === submittedContent ? '' : current)
+        } catch {
+            setCommentError(feedRequestError(0, 'comment'))
         } finally {
+            commentPending.current = false
             setSubmittingComment(false)
         }
     }
@@ -311,6 +338,8 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
             <div className="flex items-center gap-6 pt-3 border-t border-white/10">
                 <TahoeGlassButton
                     onClick={handleLike}
+                    disabled={liking}
+                    aria-busy={liking}
                     className="px-3 py-2"
                     contentClassName={`text-sm ${liked ? 'text-pink-400' : 'text-white/55'}`}
                     aria-pressed={liked}
@@ -341,9 +370,17 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                 </TahoeGlassButton>
             </div>
 
+            {likeError && <p role="alert" className="mt-2 text-sm text-rose-200">{likeError}</p>}
+
             {/* Comments Section */}
             {showComments && (
                 <div className="mt-4 pt-4 border-t border-white/10 space-y-4 animate-in fade-in slide-in-from-top-2">
+                    {commentsError && (
+                        <div role="alert" className="text-sm text-rose-200">
+                            <p>{commentsError}</p>
+                            <TahoeGlassButton onClick={() => { void loadComments() }} disabled={commentsLoading} className="mt-2 px-3 py-2">Retry loading comments</TahoeGlassButton>
+                        </div>
+                    )}
                     {commentsLoading ? (
                         <div className="flex justify-center p-4">
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white/60"></div>
@@ -388,6 +425,8 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                 <TahoeGlassField label="Comment" visuallyHideLabel tone="light" radius={9999} className="flex-1" surfaceClassName="px-4 py-2">
                                     <input
                                         type="text"
+                                        aria-label="Comment"
+                                        maxLength={4000}
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         placeholder="Let's collaborate on this"
@@ -403,6 +442,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                     Post
                                 </TahoeGlassButton>
                             </form>
+                            {commentError && <p role="alert" className="text-sm text-rose-200">{commentError}</p>}
                         </div>
                     )}
                 </div>

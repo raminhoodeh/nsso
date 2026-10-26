@@ -8,6 +8,7 @@ export async function GET(request: Request) {
         const sort = searchParams.get('sort') || 'date'
         const order = searchParams.get('order') || 'desc'
         const search = searchParams.get('search') || ''
+        if (search.length > 200 || !['date','location','name'].includes(sort) || !['asc','desc'].includes(order)) return NextResponse.json({ error: 'Choose a valid filter.' }, { status: 400, headers: { 'Cache-Control': 'private, no-store' } })
 
         const cookieStore = await cookies()
         const supabase = createServerClient(
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
                     )
                 )
             `)
-            .eq('user_id', user.id)
+            .eq('user_id', user.id).limit(1000)
 
         // Apply sorting
         if (sort === 'date') {
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
         const { data, error } = await query
 
         if (error) {
-            console.error('Error fetching connections:', error)
+            console.error('Connections unavailable', { code: 'CONNECTION_READ_FAILED' })
             return NextResponse.json(
                 { error: 'Failed to fetch connections' },
                 { status: 500 }
@@ -125,9 +126,9 @@ export async function GET(request: Request) {
             })
         }
 
-        return NextResponse.json({ connections })
+        return NextResponse.json({ connections }, { headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } })
     } catch (error) {
-        console.error('Unexpected error fetching connections:', error)
+        console.error('Connections unavailable', { code: 'CONNECTION_READ_FAILED' })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
