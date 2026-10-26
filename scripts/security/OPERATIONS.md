@@ -8,6 +8,8 @@ Ramin Hoodeh owns production access, response and recovery. Ordinary users retai
 
 Use the pinned Node version and deterministic `npm ci`. Require audit, secret scan, lint, type checking, behavior tests, rendered browser fixtures, real local Auth/Data API/Storage authorization tests and the production build. The build verifies static inline CSP hashes in two passes while dynamic SSR receives fresh nonces; no script `unsafe-inline` is permitted. Google Maps alone requires provider-documented `unsafe-eval`. Never skip a failed gate or re-enable a dangerous fallback to make a check green.
 
+Browser CI uses the digest-pinned [official Playwright image](https://playwright.dev/docs/ci#via-containers), including its browser and system libraries. Keep the image version and digest aligned with `@playwright/test` when updating dependencies. All tests still run; the image replaces a repeated OS-package download step, not a verification gate.
+
 Only reviewed forward migrations belong in the live ledger. The guarded bootstrap is for an empty isolated project, never production. Apply additive contracts, deploy compatible callers, verify, then restrict the obsolete direct-write contracts. Verify the actual deployed revision from `/api/health` against the expected Git commit and check the migration ledger; a push alone is not deployment. Roll back to a compatible safe application or ship a forward fix. Never restore broad account writes, anonymous privileged RPCs, public private fields or raw HTML rendering.
 
 ## Monitoring and response
