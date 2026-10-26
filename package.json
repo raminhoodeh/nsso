@@ -12,7 +12,9 @@
     "test:mobile-deity": "node --test tests/mobile-deity-overlay.test.js",
     "test:mobile-dashboard": "node --test tests/mobile-dashboard-ux.test.js",
     "test:home-media": "node --test tests/home-vision-player.test.js",
-    "ingest:razinflix-new-2026": "node --experimental-strip-types scripts/ingest-razinflix-new-2026.mjs"
+    "ingest:razinflix-new-2026": "node --experimental-strip-types scripts/ingest-razinflix-new-2026.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.js tests/*.test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -20,7 +22,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@google/generative-ai": "^0.24.1",
     "@googlemaps/js-api-loader": "^2.1.1",
-    "@polar-sh/sdk": "^0.41.5",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
@@ -53,7 +54,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
-    "pdf-lib": "^1.17.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

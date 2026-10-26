@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
-import { formatEarnings, type EarningsStats } from '@/lib/earnings'
+import type { EarningsStats } from '@/lib/earnings'
 import { useUI } from '@/components/providers/UIProvider'
 import ReferralsTable from './ReferralsTable'
 import Skeleton from '@/components/ui/Skeleton'
@@ -50,7 +50,7 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
         }
 
         loadStats()
-    }, [initialData])
+    }, [initialData, showToast])
 
     const copyReferralCode = () => {
         if (stats?.referralCode) {
@@ -113,11 +113,11 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
     return (
         <div className="space-y-6">
             <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px]">
-                <h2 className="text-2xl font-bold text-white mb-12 lg:mb-8">Referral & Payout Management</h2>
+                <h2 className="text-2xl font-bold text-white mb-12 lg:mb-8">Referral records & payout details</h2>
 
                 {/* Section 1: Referral Identity */}
                 <div className="mb-10 pb-10 border-b border-white/10">
-                    <h3 className="text-xl font-bold text-white mb-4">Your Referral Code</h3>
+                    <h3 className="text-xl font-bold text-white mb-4">Archived referral code</h3>
 
                     {/* Two-column layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -163,50 +163,17 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
 
                             {/* Earnings Page Link */}
                             <p className="text-white/60 text-sm">
-                                Check out our <a href="/earnings" target="_blank" rel="noopener noreferrer" className="text-white underline hover:no-underline">Earnings landing page</a> for more information
+                                Check out our <a href="/earnings" target="_blank" rel="noopener noreferrer" className="text-white underline hover:no-underline">Referral programme status</a> for more information
                             </p>
                         </div>
 
-                        {/* Right Column: Annotation Text and Resource Links */}
                         <div className="space-y-4">
-                            {/* Annotation Text */}
                             <p className="text-white/70 text-sm leading-relaxed">
-                                Whenever users get their nsso.me/ domain and use this discount code, you receive <strong className="text-white">40%</strong> of their subscription fee, forever. Check out the below resources to learn how to pitch nsso.me/
+                                Premium profile access is currently free. Paid subscriptions and new subscription-based referral commissions are paused.
                             </p>
-
-                            {/* Resource Buttons */}
-                            <div className="flex flex-wrap gap-3">
-                                <TahoeGlassSurface
-                                    as="a"
-                                    variant="button"
-                                    href="https://youtu.be/n9-WjzJlq-Q"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    tone="light"
-                                    className="px-4 py-2"
-                                    contentClassName="inline-flex items-center gap-2 text-white text-sm font-medium"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                    Video Pitch
-                                </TahoeGlassSurface>
-                                <TahoeGlassSurface
-                                    as="a"
-                                    variant="button"
-                                    href="https://docs.google.com/document/d/1qWvjW8vHbGdvdI33AwqB1dtAwyHlGA5Y/edit?usp=sharing&ouid=101610035816693766218&rtpof=true&sd=true"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    tone="light"
-                                    className="px-4 py-2"
-                                    contentClassName="inline-flex items-center gap-2 text-white text-sm font-medium"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                    Pitch CONTEXT
-                                </TahoeGlassSurface>
-                            </div>
+                            <p className="text-white/70 text-sm leading-relaxed">
+                                This code and your referral records are retained for reference. Your PayPal payout details can still be updated below.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -216,14 +183,14 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Left Column: Total Users */}
                         <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="p-6">
-                            <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Total nsso.me/ users</h4>
+                            <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Recorded active referrals</h4>
                             <p className="text-4xl font-bold text-white">{stats?.activeReferrals || 0}</p>
                         </TahoeGlassSurface>
 
-                        {/* Right Column: Expected Earnings */}
+                        {/* Programme status */}
                         <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="p-6">
-                            <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Expected earnings in next payroll</h4>
-                            <p className="text-4xl font-bold text-white">{formatEarnings(stats?.expectedEarnings || 0)}</p>
+                            <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">New referral commissions</h4>
+                            <p className="text-2xl font-bold text-white">Paused</p>
                         </TahoeGlassSurface>
                     </div>
                 </div>

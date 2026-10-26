@@ -1,6 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import type { EarningsStats } from '@/lib/earnings'
 
 interface EarningsStatsRow {
@@ -12,31 +10,13 @@ interface EarningsStatsRow {
 
 export async function GET() {
     try {
-        const cookieStore = await cookies()
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                cookieStore.set(name, value, options)
-                            )
-                        } catch { }
-                    },
-                },
-            }
-        )
+        const supabase = await createClient()
 
         // Get authenticated user
         const { data: { user }, error: authError } = await supabase.auth.getUser()
 
         if (authError || !user) {
-            return NextResponse.json(
+            return Response.json(
                 { error: 'Unauthorized' },
                 { status: 401 }
             )
@@ -47,9 +27,9 @@ export async function GET() {
             .rpc('get_user_earnings_stats', { user_uuid: user.id })
             .single()
 
-        if (error) {
+        if (error || !data) {
             console.error('Error fetching earnings stats:', error)
-            return NextResponse.json(
+            return Response.json(
                 { error: 'Failed to fetch earnings stats' },
                 { status: 500 }
             )
@@ -60,14 +40,16 @@ export async function GET() {
         const stats: EarningsStats = {
             referralCode: row.referral_code || '',
             activeReferrals: Number.parseInt(String(row.active_referrals ?? 0), 10) || 0,
-            expectedEarnings: Number.parseFloat(String(row.expected_earnings ?? 0)) || 0,
+            // The old RPC projects revenue from referral counts, not settled payments.
+            // Keep historical referral data, but free accounts generate no subscription income.
+            expectedEarnings: 0,
             paypalMeSlug: row.paypal_me_slug || null
         }
 
-        return NextResponse.json(stats)
+        return Response.json(stats)
     } catch (error) {
         console.error('Unexpected error in earnings stats:', error)
-        return NextResponse.json(
+        return Response.json(
             { error: 'Internal server error' },
             { status: 500 }
         )

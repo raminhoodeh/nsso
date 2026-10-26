@@ -255,7 +255,7 @@ test('the profile bio provides four times the mobile writing capacity', () => {
 
 test('profile Ask Deity controls have clear field spacing and compact chrome', () => {
     const profileFieldsStart = dashboardPageSource.indexOf('{/* Profile Fields */}')
-    const profileFieldsEnd = dashboardPageSource.indexOf('{/* Username availability indicator */}', profileFieldsStart)
+    const profileFieldsEnd = dashboardPageSource.indexOf('{/* Free profile URL */}', profileFieldsStart)
     const profileFieldsMarkup = dashboardPageSource.slice(profileFieldsStart, profileFieldsEnd)
 
     assert.ok(profileFieldsStart >= 0 && profileFieldsEnd > profileFieldsStart)

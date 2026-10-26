@@ -1,15 +1,3 @@
-// Earnings utility functions and constants
-
-export const PREMIUM_PRICE = 8.00; // £8 per month
-export const COMMISSION_RATE = 0.40; // 40% commission
-
-/**
- * Calculate expected monthly earnings based on active referrals
- */
-export function calculateExpectedEarnings(activeReferralCount: number): number {
-    return activeReferralCount * PREMIUM_PRICE * COMMISSION_RATE;
-}
-
 /**
  * Format earnings amount as currency string
  */

@@ -5,7 +5,6 @@ import { UIProvider } from "@/components/providers/UIProvider";
 import { UserProvider } from "@/components/providers/UserProvider";
 import { ProfileProvider } from "@/components/providers/ProfileProvider";
 import NSSOTahoeGlassEnvironment from "@/components/providers/NSSOTahoeGlassEnvironment";
-import Web3Provider from "@/components/providers/Web3Provider";
 
 import ReferralTracker from "@/components/ReferralTracker";
 export const metadata: Metadata = {
@@ -40,24 +39,22 @@ export default function RootLayout({
       <body className="antialiased min-h-screen" suppressHydrationWarning>
         {/* UI State Provider */}
         <UIProvider>
-          <Web3Provider>
-            <UserProvider>
-              <ProfileProvider>
-                <NSSOTahoeGlassEnvironment>
-                  <ReferralTracker />
+          <UserProvider>
+            <ProfileProvider>
+              <NSSOTahoeGlassEnvironment>
+                <ReferralTracker />
 
-                  {/* Toast Notifications Provider */}
-                  <ToastProvider>
-                    <GlobalTahoeSurfaceBoundary>
-                      <AuthenticatedLayoutWrapper>
-                        {children}
-                      </AuthenticatedLayoutWrapper>
-                    </GlobalTahoeSurfaceBoundary>
-                  </ToastProvider>
-                </NSSOTahoeGlassEnvironment>
-              </ProfileProvider>
-            </UserProvider>
-          </Web3Provider>
+                {/* Toast Notifications Provider */}
+                <ToastProvider>
+                  <GlobalTahoeSurfaceBoundary>
+                    <AuthenticatedLayoutWrapper>
+                      {children}
+                    </AuthenticatedLayoutWrapper>
+                  </GlobalTahoeSurfaceBoundary>
+                </ToastProvider>
+              </NSSOTahoeGlassEnvironment>
+            </ProfileProvider>
+          </UserProvider>
         </UIProvider>
       </body>
     </html>

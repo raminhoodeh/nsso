@@ -12,7 +12,6 @@ import AddToMyNssoButton from '@/components/ui/AddToMyNssoButton'
 import QRScanHandler from '@/components/logic/QRScanHandler'
 import type { Metadata } from 'next'
 import Header from '@/components/layout/Header'
-import InrosProfileCanvas from '@/components/profile/InrosProfileCanvas'
 import ExpandableBio from '@/components/profile/ExpandableBio'
 import { getProfileBioPreview } from '@/components/profile/profileBio'
 import {
@@ -185,22 +184,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
 
             {/* Profile Content */}
-            {isPlatformOwner ? (
-                <InrosProfileCanvas 
-                    user={user}
-                    viewer={viewer}
-                    profile={profile}
-                    links={links}
-                    contacts={contacts}
-                    experiences={experiences}
-                    qualifications={qualifications}
-                    projects={projects}
-                    products={products}
-                    connectionExists={connectionExists}
-                    isOwner={isOwner}
-                    isPlatformOwner={isPlatformOwner}
-                />
-            ) : (
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} space-y-12 lg:space-y-20`}>
 
                 {/* 1. Identity & Resume Section */}
@@ -493,7 +476,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     <CreateProfileButton />
                 </div>
             </div >
-            )}
             </main >
         </>
     )

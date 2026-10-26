@@ -1,41 +1,25 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { validateProfileUsername } from '@/lib/profile-username'
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
-    const username = searchParams.get('username')
-
-    if (!username) {
-        return NextResponse.json({ error: 'Username required' }, { status: 400 })
-    }
-
-    // Validate username format (alphanumeric, underscores, hyphens, 3-30 chars)
-    const usernameRegex = /^[a-zA-Z0-9_-]{3,30}$/
-    if (!usernameRegex.test(username)) {
-        return NextResponse.json({
-            available: false,
-            reason: 'Username must be 3-30 characters, alphanumeric with underscores or hyphens only'
-        })
-    }
-
-    // Check reserved words
-    const reservedWords = ['admin', 'api', 'www', 'app', 'dashboard', 'preview', 'sign-in', 'sign-up', 'reset-password', 'set-password', 'auth', 'settings', 'profile']
-    if (reservedWords.includes(username.toLowerCase())) {
-        return NextResponse.json({ available: false, reason: 'This username is reserved' })
+    const validated = validateProfileUsername(searchParams.get('username'))
+    if ('error' in validated) {
+        return Response.json({ available: false, reason: validated.error })
     }
 
     const supabase = await createClient()
-
-    // Check if username is already taken
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error } = await supabase
         .from('users')
         .select('id')
-        .eq('username', username.toLowerCase())
-        .single()
+        .eq('username', validated.username)
+        .maybeSingle()
 
-    if (existingUser) {
-        return NextResponse.json({ available: false, reason: 'Username is already taken' })
+    if (error) {
+        return Response.json({ available: false, reason: 'Failed to check username availability' }, { status: 500 })
     }
 
-    return NextResponse.json({ available: true })
+    return Response.json(existingUser
+        ? { available: false, reason: 'Username is already taken' }
+        : { available: true })
 }

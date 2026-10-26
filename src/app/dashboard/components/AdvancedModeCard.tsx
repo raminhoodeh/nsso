@@ -1148,7 +1148,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     </TahoeGlassSurface>
                                 </TahoeGlassSurface>
                                 <TahoeGlassSurface variant="popover" radius={16} tone="light" className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full p-3 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100 pointer-events-none" contentClassName="text-xs leading-relaxed text-white/80">
-                                    Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals
+                                    Wallet sign-in and crypto payments are planned for a future release.
                                 </TahoeGlassSurface>
                             </div>
 

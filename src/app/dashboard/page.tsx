@@ -7,17 +7,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Header from '@/components/layout/Header'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
-import GlassButton from '@/components/ui/GlassButton'
 import {
     TahoeGlassButton,
-    TahoeGlassDialog,
     TahoeGlassField,
     TahoeGlassSurface
 } from '@/components/ui/tahoe-glass'
-import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { SortableContactItem } from './components/SortableContactItem'
 import Input from '@/components/ui/Input'
-import { Plus, X, Upload, Loader2, CreditCard, Copy, Check } from 'lucide-react'
+import { Loader2, Copy, Check } from 'lucide-react'
 import AdvancedModeCard from '@/app/dashboard/components/AdvancedModeCard'
 import EarningsTab from '@/app/dashboard/components/EarningsTab'
 
@@ -25,7 +22,6 @@ import MyNssoTab from '@/app/dashboard/components/MyNssoTab'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { useProfile } from '@/components/providers/ProfileProvider'
-import type { User, Profile, Link, Contact, ContactMethod } from '@/lib/types'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { Sparkles } from 'lucide-react'
 import type { EarningsStats } from '@/lib/earnings'
@@ -47,8 +43,6 @@ import {
 } from '@dnd-kit/sortable'
 import { SortableLinkItem } from './components/SortableLinkItem'
 
-const CONTACT_METHODS: ContactMethod[] = ['Email', 'WhatsApp', 'Phone', 'Telegram', 'Location', 'Other']
-
 function DashboardContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -68,7 +62,6 @@ function DashboardContent() {
         addContact,
         removeContact,
         reorderContacts,
-        loading: profileLoading
     } = useProfile()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -102,8 +95,6 @@ function DashboardContent() {
     const [saving, setSaving] = useState(false)
     // URL-based state for navigation
     const currentView = searchParams.get('view') || 'profile'
-    const [showPolarModal, setShowPolarModal] = useState(false)
-    const [showDowngradeModal, setShowDowngradeModal] = useState(false)
     const [urlCopied, setUrlCopied] = useState(false)
 
     // PREFETCH STATES & REFS
@@ -166,14 +157,11 @@ function DashboardContent() {
     const [cropperImage, setCropperImage] = useState<string | null>(null)
     const [isUploading, setIsUploading] = useState(false)
 
-    // Premium/Username validation state
-    const [desiredUsername, setDesiredUsername] = useState('')
-
+    // Username validation state
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
     const [usernameError, setUsernameError] = useState('')
     const [checkingUsername, setCheckingUsername] = useState(false)
-    const [processingCheckout, setProcessingCheckout] = useState(false)
-    const [processingDowngrade, setProcessingDowngrade] = useState(false)
+    const [updatingUsername, setUpdatingUsername] = useState(false)
 
     // Load user data
     useEffect(() => {
@@ -212,23 +200,6 @@ function DashboardContent() {
         loadData()
     }, [supabase, router])
 
-    // Update loading state when profile loading finishes
-    useEffect(() => {
-        if (!profileLoading && !loading) {
-            // Profile loaded
-        }
-    }, [profileLoading, loading])
-
-    // Check for upgrade success
-    // Check for upgrade success
-    useEffect(() => {
-        if (searchParams.get('upgraded') === 'true') {
-            showToast('You are now Premium! Username claimed.', 'success')
-            // Clean URL
-            router.replace('/dashboard')
-        }
-    }, [searchParams, router, showToast])
-
     // Sync local customDomain state with user context when loaded
     useEffect(() => {
         if (user?.username) {
@@ -259,81 +230,45 @@ function DashboardContent() {
         }
     }, [loading, profileCompleteness, showToast])
 
-    // Username availability check (debounced)
-    // Username availability check (debounced)
+    // Cancel stale checks so availability always belongs to the current input.
     useEffect(() => {
-        const usernameToCheck = user?.is_premium ? customDomain : desiredUsername
+        setUsernameAvailable(null)
+        setUsernameError('')
+        setCheckingUsername(false)
+        if (!customDomain || customDomain === user?.username) return
 
-        // If nothing entered, or if premium user hasn't changed their name, reset state
-        if (!usernameToCheck || (user?.is_premium && usernameToCheck === user.username)) {
-            setUsernameAvailable(null)
-            setUsernameError('')
-            return
-        }
-
+        const controller = new AbortController()
         const timer = setTimeout(async () => {
             setCheckingUsername(true)
             try {
-                const response = await fetch(`/api/check-username?username=${usernameToCheck}`)
+                const response = await fetch(`/api/check-username?username=${encodeURIComponent(customDomain)}`, {
+                    signal: controller.signal,
+                })
                 const data = await response.json()
-                setUsernameAvailable(data.available)
-                setUsernameError(data.reason || '')
+                if (!controller.signal.aborted) {
+                    setUsernameAvailable(response.ok && data.available)
+                    setUsernameError(data.reason || data.error || '')
+                }
             } catch {
-                setUsernameError('Failed to check username')
-                setUsernameAvailable(false)
+                if (!controller.signal.aborted) {
+                    setUsernameError('Failed to check username')
+                    setUsernameAvailable(false)
+                }
+            } finally {
+                if (!controller.signal.aborted) setCheckingUsername(false)
             }
-            setCheckingUsername(false)
         }, 500)
 
-        return () => clearTimeout(timer)
-    }, [desiredUsername, customDomain, user?.is_premium, user?.username])
-
-    // Handle Free Domain Claim
-    const handleClaimFreeDomain = async () => {
-        if (!desiredUsername || !usernameAvailable) return
-        setProcessingCheckout(true)
-
-        try {
-            const response = await fetch('/api/claim-free-domain', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ desiredUsername }),
-            })
-
-            let data
-            const responseText = await response.text()
-            try {
-                data = JSON.parse(responseText)
-            } catch (e) {
-                console.error('API Response was not JSON:', responseText)
-                data = { error: 'Server returned invalid response' }
-            }
-
-            if (response.ok && data.success) {
-                showToast(`Domain claimed! Welcome to Premium.`, 'success')
-                // Refresh user state to reflect premium status immediately
-                await refreshUser()
-                // Force a reload to ensure all premium UI elements are visible if needed, 
-                // or just rely on state. Let's rely on state.
-                // Actually, refreshUser might happen too fast before DB propagation in some cases? 
-                // Let's reload to be safe and ensure fresh data
-                window.location.reload()
-            } else {
-                console.error('Claim Error Data:', data)
-                console.error('Claim Response Status:', response.status, response.statusText)
-                showToast(data.error || 'Failed to claim domain', 'error')
-            }
-        } catch (err) {
-            console.error('Claim Exception:', err)
-            showToast('Failed to claim domain. Please try again.', 'error')
+        return () => {
+            clearTimeout(timer)
+            controller.abort()
         }
-        setProcessingCheckout(false)
-    }
+    }, [customDomain, user?.username])
 
-    // Handle username update for premium users
+    // Profile URLs are available to every signed-in user for free.
     const handleUpdateUsername = async () => {
         if (!customDomain || customDomain === user?.username || !usernameAvailable) return
-        setProcessingCheckout(true)
+        setUpdatingUsername(true)
         try {
             const response = await fetch('/api/update-username', {
                 method: 'POST',
@@ -341,7 +276,7 @@ function DashboardContent() {
                 body: JSON.stringify({ username: customDomain }),
             })
             const data = await response.json()
-            if (data.success) {
+            if (response.ok && data.success) {
                 showToast('Username updated successfully!', 'success')
 
                 // Refresh global user context to update Header immediately
@@ -352,34 +287,12 @@ function DashboardContent() {
         } catch {
             showToast('Failed to update username', 'error')
         }
-        setProcessingCheckout(false)
+        setUpdatingUsername(false)
     }
-
-    // Handle downgrade
-    const handleDowngrade = async () => {
-        setProcessingDowngrade(true)
-        try {
-            const response = await fetch('/api/cancel-subscription', {
-                method: 'POST',
-            })
-            const data = await response.json()
-
-            if (data.success) {
-                showToast('Your subscription will cancel at the end of the billing period', 'success')
-                setShowDowngradeModal(false)
-            } else {
-                showToast(data.error || 'Failed to cancel subscription', 'error')
-            }
-        } catch {
-            showToast('Failed to cancel subscription', 'error')
-        }
-        setProcessingDowngrade(false)
-    }
-
 
     // Save profile changes
     const handleCopyUrl = () => {
-        const domain = user?.is_premium ? customDomain : desiredUsername
+        const domain = user?.username
         if (!domain) return
         navigator.clipboard.writeText(`nsso.me/${domain}`)
         setUrlCopied(true)
@@ -457,13 +370,6 @@ function DashboardContent() {
         setIsUploading(false)
         setCropperOpen(false)
         setCropperImage(null)
-    }
-
-    // Copy profile URL
-    const copyProfileUrl = () => {
-        const url = `${window.location.origin}/${user?.username}`
-        navigator.clipboard.writeText(url)
-        showToast('Profile URL copied!', 'success')
     }
 
     // DND Sensors
@@ -703,159 +609,62 @@ function DashboardContent() {
                             </div>
                         </div>
 
-                        {/* Domain Section - Figma Exact Design */}
+                        {/* Free profile URL */}
                         <div className="mt-8 pt-8 border-t border-white/10">
                             <div className="flex items-center gap-3 mb-4">
-                                <h3 className="text-xl font-bold text-white">Domain name</h3>
-                                {user?.is_premium && (
-                                    <TahoeGlassSurface variant="pill" tone="light" className="px-3 py-1" contentClassName="flex items-center justify-center">
-                                        <span className="font-medium text-[12px] text-white/96 leading-[16px]" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                                            Premium
-                                        </span>
-                                    </TahoeGlassSurface>
-                                )}
+                                <h3 className="text-xl font-bold text-white">Profile URL</h3>
+                                <TahoeGlassSurface variant="pill" tone="light" className="px-3 py-1" contentClassName="flex items-center justify-center">
+                                    <span className="text-xs font-medium text-white/95">Premium · Free</span>
+                                </TahoeGlassSurface>
                             </div>
 
-                            <div className="space-y-4">
-                                {/* Flex container for Input + Quote */}
-                                <div className="flex flex-col lg:flex-row items-center gap-4 w-full">
-                                    {/* Figma Domain Input with integrated CLAIM IT button */}
-                                    <TahoeGlassSurface variant="recessed" radius={12} tone="light" className="w-full lg:flex-1 h-[54px]" contentClassName="flex h-full w-full items-center px-2">
-                                        {/* Prefix text - nsso.me/ */}
-                                        <span
-                                            className="shrink-0 pl-2 text-[18px] font-medium text-white/96 sm:text-[22px]"
-                                            style={{
-                                                fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                fontWeight: 510
-                                            }}
-                                        >
-                                            nsso.me/
-                                        </span>
-
-                                        {/* Input field */}
-                                        <input
-                                            type="text"
-                                            value={user?.is_premium ? customDomain : desiredUsername}
-                                            onChange={(e) => {
-                                                if (user?.is_premium) {
-                                                    setCustomDomain(e.target.value)
-                                                } else {
-                                                    setDesiredUsername(e.target.value)
-                                                }
-                                            }}
-                                            placeholder="yourname"
-                                            className="min-w-0 flex-1 border-none bg-transparent text-[18px] font-medium text-white outline-none placeholder:text-white/50 sm:text-[22px]"
-                                            style={{
-                                                fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                fontWeight: 510
-                                            }}
-                                        />
-
-                                        {/* Copy Button */}
-                                        <TahoeGlassButton
-                                            onClick={handleCopyUrl}
-                                            className="mr-1 h-11 w-11 p-0"
-                                            contentClassName="text-white/70"
-                                            title="Copy URL"
-                                            aria-label="Copy profile URL"
-                                        >
-                                            {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
-                                        </TahoeGlassButton>
-
-                                        {/* Actions Section inside Input - Desktop Only */}
-                                        <div className="relative z-10 hidden md:flex items-center gap-2 mr-1.5 shrink-0">
-                                            {/* Always show button, content changes based on state */}
-                                                <TahoeGlassButton
-                                                    onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
-                                                    disabled={
-                                                        (!user?.is_premium && !usernameAvailable) ||
-                                                        processingCheckout ||
-                                                        (user?.is_premium && !customDomain) ||
-                                                        (user?.is_premium && customDomain === user?.username) ||
-                                                        (!user?.is_premium && !desiredUsername)
-                                                    }
-                                                    className="h-[42px] px-6"
-                                                    contentClassName="text-white/95"
-                                                >
-                                                        {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
-                                                        <span
-                                                            className="text-[16px] font-semibold text-white/96 tracking-wide"
-                                                            style={{
-                                                                fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                                fontWeight: 590
-                                                            }}
-                                                        >
-                                                            {processingCheckout
-                                                                ? (user?.is_premium ? 'Updating...' : 'Claiming...')
-                                                                : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
-                                                            }
-                                                        </span>
-                                                </TahoeGlassButton>
-
-                                        </div>
-
-                                    </TahoeGlassSurface>
-
-                                    {/* Quote Section - Now sitting to the right */}
-                                    <div className="hidden lg:flex items-center h-[54px] shrink-0">
-                                        <p className="text-white/80 text-sm italic font-bold leading-tight">
-                                            "nsso is the most beautiful way to present yourself online" <span className="font-normal not-italic">- <a href="https://www.instagram.com/ramin.nsso" target="_blank" rel="noopener noreferrer" className="hover:underline">Ramin Hoodeh</a></span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Mobile Actions Row (Below Input) */}
-                                <div className="flex md:hidden items-center gap-3 w-full">
-                                    {/* Primary Action Button (Mobile) */}
-                                    {(!user?.is_premium || (user?.is_premium && customDomain !== user.username)) && (
-                                            <TahoeGlassButton
-                                                onClick={user?.is_premium ? handleUpdateUsername : handleClaimFreeDomain}
-                                                disabled={
-                                                    (!user?.is_premium && !usernameAvailable) ||
-                                                    processingCheckout ||
-                                                    (user?.is_premium && !customDomain) ||
-                                                    (!user?.is_premium && !desiredUsername)
-                                                }
-                                                className="h-11 flex-1 px-6"
-                                                contentClassName="text-white/95"
-                                            >
-                                                    {processingCheckout && <Loader2 className="w-4 h-4 animate-spin" />}
-                                                    <span
-                                                        className="text-[16px] font-semibold text-white/96 tracking-wide"
-                                                        style={{
-                                                            fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                                                            fontWeight: 590
-                                                        }}
-                                                    >
-                                                        {processingCheckout
-                                                            ? (user?.is_premium ? 'Updating...' : 'Claiming...')
-                                                            : (user?.is_premium ? 'UPDATE' : 'CLAIM IT')
-                                                        }
-                                                    </span>
-                                            </TahoeGlassButton>
-                                    )}
-                                </div>
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                                <TahoeGlassSurface variant="recessed" radius={12} tone="light" className="h-[54px] w-full md:flex-1" contentClassName="flex h-full w-full items-center px-2">
+                                    <span className="shrink-0 pl-2 text-[18px] font-medium text-white/95 sm:text-[22px]">nsso.me/</span>
+                                    <input
+                                        type="text"
+                                        value={customDomain}
+                                        onChange={(event) => setCustomDomain(event.target.value)}
+                                        placeholder="yourname"
+                                        aria-label="Profile username"
+                                        autoCapitalize="none"
+                                        autoCorrect="off"
+                                        className="min-w-0 flex-1 border-none bg-transparent text-[18px] font-medium text-white outline-none placeholder:text-white/50 sm:text-[22px]"
+                                    />
+                                    <TahoeGlassButton
+                                        onClick={handleCopyUrl}
+                                        disabled={!user?.username}
+                                        className="mr-1 h-11 w-11 p-0"
+                                        contentClassName="text-white/70"
+                                        title="Copy saved profile URL"
+                                        aria-label="Copy saved profile URL"
+                                    >
+                                        {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+                                    </TahoeGlassButton>
+                                </TahoeGlassSurface>
+                                <TahoeGlassButton
+                                    onClick={handleUpdateUsername}
+                                    disabled={updatingUsername || !usernameAvailable || !customDomain || customDomain === user?.username}
+                                    className="h-11 shrink-0 px-6"
+                                    contentClassName="text-white/95"
+                                >
+                                    {updatingUsername && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    {updatingUsername ? 'Updating...' : 'Update URL'}
+                                </TahoeGlassButton>
                             </div>
+                            {customDomain && customDomain !== user?.username && (
+                                <div className="mt-2" aria-live="polite">
+                                    {checkingUsername ? (
+                                        <p className="text-white/50 text-sm">Checking availability...</p>
+                                    ) : usernameAvailable === true ? (
+                                        <p className="text-green-400 text-sm">✓ This username is available!</p>
+                                    ) : usernameAvailable === false ? (
+                                        <p className="text-red-400 text-sm">✗ {usernameError || 'Username not available'}</p>
+                                    ) : null}
+                                </div>
+                            )}
+                            <p className="mt-4 text-white/60 text-sm">Premium profile access and your nsso.me URL are currently free.</p>
                         </div>
-
-                        {/* Username availability indicator */}
-                        {((!user?.is_premium && desiredUsername) || (user?.is_premium && customDomain !== user?.username && customDomain)) && (
-                            <div className="mt-2 pl-1">
-                                {checkingUsername ? (
-                                    <p className="text-white/50 text-sm">Checking availability...</p>
-                                ) : usernameAvailable === true ? (
-                                    <p className="text-green-400 text-sm">✓ This username is available!</p>
-                                ) : usernameAvailable === false ? (
-                                    <p className="text-red-400 text-sm">✗ {usernameError || 'Username not available'}</p>
-                                ) : null}
-                            </div>
-                        )}
-
-                        <p className="mt-4 text-white/60 text-sm">
-                            {user?.is_premium
-                                ? `Your custom URL is free for 1 year: nsso.me/${customDomain}`
-                                : 'Your custom URL is free for 1 year:'}
-                        </p>
                     </GlassCard>
                 )}
 
@@ -863,7 +672,7 @@ function DashboardContent() {
 
                 {/* Earnings Tab Content */}
                 {currentView === 'earnings' && <EarningsTab initialData={prefetchedEarnings || undefined} />}
-                {currentView === 'my-nsso' && <MyNssoTab />}
+                {currentView === 'my-nsso' && <MyNssoTab initialData={prefetchedMyNsso || undefined} />}
 
 
                 {/* Only show Links, Contact, and Advanced Mode cards on "Your Profile" tab */}
@@ -981,44 +790,6 @@ function DashboardContent() {
                 }
             </div >
 
-            <TahoeGlassDialog
-                open={showDowngradeModal}
-                onOpenChange={setShowDowngradeModal}
-                portal={false}
-                title="Cancel Subscription?"
-                titleClassName="text-2xl font-bold text-white text-center"
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.38}
-                className="max-w-md p-8"
-            >
-                            <div className="text-center mb-6">
-                                <div className="text-5xl mb-4">⚠️</div>
-                                <p className="text-white/70 mb-4">
-                                    Your subscription will remain active until the end of your current billing period.
-                                </p>
-                                <p className="text-red-400 font-medium">
-                                    After that, you will lose your custom URL (nsso.me/{customDomain}) and it may be claimed by someone else.
-                                </p>
-                            </div>
-                            <div className="flex gap-4">
-                                <GlassButton
-                                    variant="secondary"
-                                    fullWidth
-                                    onClick={() => setShowDowngradeModal(false)}
-                                >
-                                    Keep Premium
-                                </GlassButton>
-                                <GlassButton
-                                    variant="primary"
-                                    fullWidth
-                                    onClick={handleDowngrade}
-                                    disabled={processingDowngrade}
-                                >
-                                    {processingDowngrade ? 'Processing...' : 'Cancel Subscription'}
-                                </GlassButton>
-                            </div>
-            </TahoeGlassDialog>
         </main >
     )
 }

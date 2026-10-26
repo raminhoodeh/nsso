@@ -11,7 +11,6 @@ interface ReferredUser {
     username: string | null
     status: string
     activated_at: string | null
-    is_premium: boolean
 }
 
 export default function ReferralsTable() {
@@ -34,32 +33,6 @@ export default function ReferralsTable() {
         loadReferrals()
     }, [supabase])
 
-    // Helper to calculate total value
-    const calculateTotalValue = (activatedAt: string | null) => {
-        if (!activatedAt) return '£0.00';
-
-        const start = new Date(activatedAt);
-        const now = new Date();
-
-        // Calculate difference in months
-        let months = (now.getFullYear() - start.getFullYear()) * 12;
-        months -= start.getMonth();
-        months += now.getMonth();
-
-        // Ensure at least 1 month if it's the current month, assuming upfront payment
-        // Adjust logic: if active, count current month.
-        // Or if strictly time based:
-        if (months <= 0) months = 1;
-
-        // Value = Months * £8.00 * 40% = Months * £3.20
-        const value = months * 3.20;
-
-        return new Intl.NumberFormat('en-GB', {
-            style: 'currency',
-            currency: 'GBP'
-        }).format(value);
-    }
-
     if (loading) {
         return (
             <GlassCard className="p-6 lg:p-8 mt-6">
@@ -70,8 +43,8 @@ export default function ReferralsTable() {
 
     return (
         <GlassCard className="p-6 lg:p-8 mt-6">
-            <h2 className="text-2xl font-bold text-white mb-2">Referred Users</h2>
-            <p className="text-white/70 mb-8">Track your referrals and earnings history</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Referral history</h2>
+            <p className="text-white/70 mb-8">Previously recorded referrals. New subscription-based commissions are paused.</p>
 
             <div className="overflow-x-auto">
                 <table className="w-full">
@@ -79,9 +52,8 @@ export default function ReferralsTable() {
                         <tr className="border-b border-white/10">
                             <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Full Name</th>
                             <th className="text-left text-white/50 text-sm font-medium py-3 px-4">nsso.me URL</th>
-                            <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Status</th>
-                            <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Sign-up Date</th>
-                            <th className="text-right text-white/50 text-sm font-medium py-3 px-4">Total Value</th>
+                            <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Recorded status</th>
+                            <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Recorded activation</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -104,15 +76,9 @@ export default function ReferralsTable() {
                                     )}
                                 </td>
                                 <td className="py-4 px-4">
-                                    {user.is_premium ? (
-                                        <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-yellow-200 text-xs font-medium">
-                                            Active
-                                        </TahoeGlassSurface>
-                                    ) : (
-                                        <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-red-200 text-xs font-medium">
-                                            Inactive
-                                        </TahoeGlassSurface>
-                                    )}
+                                    <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-white/80 text-xs font-medium">
+                                        {user.status || 'Recorded'}
+                                    </TahoeGlassSurface>
                                 </td>
                                 <td className="py-4 px-4">
                                     <div className="text-white/80 text-sm">
@@ -126,11 +92,6 @@ export default function ReferralsTable() {
                                         }
                                     </div>
                                 </td>
-                                <td className="py-4 px-4 text-right">
-                                    <div className="text-green-400 font-medium font-mono">
-                                        {calculateTotalValue(user.activated_at)}
-                                    </div>
-                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -139,7 +100,7 @@ export default function ReferralsTable() {
 
             {referrals.length === 0 && (
                 <div className="text-center py-12 text-white/50">
-                    No referred users yet. Share your code to start earning!
+                    No referral records yet.
                 </div>
             )}
         </GlassCard>

@@ -266,7 +266,7 @@ export default function HomePage() {
                     label="Integrate web3 wallet"
                     status="soon"
                     stackClassName="z-[20] hover:z-20"
-                    tooltip="Allow customers to pay for your products & services using crypto, available February 2026 subject to regulatory approvals"
+                    tooltip="Wallet sign-in and crypto payments are planned for a future release."
                   />
                   <FeatureTeaser
                     label="Connect Facebook Pixel"
@@ -387,12 +387,12 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
-          <Link href="/earnings" className="block">
+          <Link href={user ? '/dashboard' : '/sign-up'} className="block">
             <ProfileGlassCard className="p-6 cursor-pointer hover:scale-[1.02] transition-transform h-full">
               <h3 className="text-xl font-bold text-white mb-3">Monetise</h3>
               <div className="h-px w-full bg-white/10 mb-4" />
               <p className="text-white/70 text-sm">
-                Do you have an engaged following? See our nsso earnings programme
+                Showcase your products and services with purchase links and PayPal buttons.
               </p>
             </ProfileGlassCard>
           </Link>

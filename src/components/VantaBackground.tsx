@@ -1,10 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTahoeGlassControls, useTahoeGlassDiagnostics } from '@/components/providers/TahoeGlassProvider'
-import { VantaPerformanceManager, BackgroundPhase } from '@/lib/vanta/VantaPerformanceManager'
-import { VantaVideoRecorder } from '@/lib/vanta/VantaVideoRecorder'
 import {
     getDashboardAppleMobileSnapshot,
     getDashboardServerSnapshot,
@@ -129,11 +127,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
     } = useTahoeGlassControls()
 
     const vantaRef = useRef<HTMLDivElement>(null)
-    const canvasRef = useRef<HTMLCanvasElement | null>(null)
-    const videoRef = useRef<HTMLVideoElement | null>(null)
     const vantaEffect = useRef<VantaEffect | null>(null)
-    const performanceManager = useRef<VantaPerformanceManager | null>(null)
-    const videoRecorder = useRef<VantaVideoRecorder | null>(null)
     const backendRef = useRef(backend)
     const statusRef = useRef(status)
     const reducedMotionRef = useRef(reducedMotion)
@@ -174,23 +168,6 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             else resumeAfterCurrentFrameRef.current = true
         }
     }), [resumeVanta, subscribeSceneFrameRequests])
-
-    const [, setCurrentPhase] = useState<BackgroundPhase>('webgl')
-    const [isRollback, setIsRollback] = useState(false)
-
-    // Check rollback mode on mount
-    useEffect(() => {
-        if (typeof window === 'undefined') return
-
-        const urlParams = new URLSearchParams(window.location.search)
-        const rollbackFromUrl = urlParams.get('vanta_rollback') === 'true'
-        const rollbackFromStorage = localStorage.getItem('nsso_vanta_rollback') === 'true'
-
-        if (rollbackFromUrl || rollbackFromStorage) {
-            setIsRollback(true)
-            console.warn('⚠️ Vanta optimization disabled (rollback mode)')
-        }
-    }, [])
 
     // Initialize Vanta
     useEffect(() => {
@@ -312,7 +289,6 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                             effect.renderer?.domElement ??
                             vantaRef.current.querySelector('canvas')
                         if (canvas instanceof HTMLCanvasElement) {
-                            canvasRef.current = canvas
                             onCanvasChangeRef.current?.(canvas)
                             // The Tahoe renderer already polls for this canvas
                             // while it initializes. Restart only after a real
@@ -391,119 +367,17 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             onCanvasChangeRef.current?.(null)
             pausedForReducedMotionRef.current = false
             resumeAfterCurrentFrameRef.current = false
-            canvasRef.current = null
             if (vantaEffect.current) {
                 vantaEffect.current.afterRender = undefined
                 vantaEffect.current.destroy()
                 vantaEffect.current = null
-            }
-            if (performanceManager.current) {
-                performanceManager.current.destroy()
-            }
-            if (videoRecorder.current) {
-                videoRecorder.current.destroy()
             }
             // Cleanup scripts? Usually not necessary or safe as other components might need them, 
             // but in a SPA we usually leave them. Vanta destroy handles the canvas.
         }
     // Recreate when reduced-motion changes so its RAF lifecycle is restarted
     // from a clean, deterministic frame.
-    }, [isRollback, reducedMotion])
-
-    // Initialize optimization system
-    function initializeOptimization() {
-        if (!vantaEffect.current) return
-
-        // Find canvas element created by Vanta
-        const canvas = vantaRef.current?.querySelector('canvas')
-        if (!canvas) {
-            console.warn('[Vanta] Canvas not found, skipping optimization')
-            return
-        }
-        canvasRef.current = canvas as HTMLCanvasElement
-
-        // Create video element
-        const video = document.createElement('video')
-        video.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            z-index: -1;
-            display: none;
-        `
-        video.muted = true
-        video.playsInline = true
-        video.loop = true
-        document.body.appendChild(video)
-        videoRef.current = video
-
-        // Initialize performance manager
-        performanceManager.current = new VantaPerformanceManager(
-            vantaEffect.current,
-            handlePhaseChange
-        )
-
-        // Initialize video recorder
-        videoRecorder.current = new VantaVideoRecorder(
-            canvasRef.current,
-            video
-        )
-
-        // Start recording after 2s (give Vanta time to initialize)
-        setTimeout(() => {
-            if (videoRecorder.current) {
-                videoRecorder.current.record({
-                    duration: 10000, // 10 second loop
-                    fps: 30
-                })
-            }
-        }, 2000)
-
-        console.log('[Vanta] Optimization initialized')
-    }
-
-    // Handle phase changes
-    const handlePhaseChange = (phase: BackgroundPhase) => {
-        setCurrentPhase(phase)
-
-        switch (phase) {
-            case 'video':
-                // Hide WebGL canvas, show video
-                if (canvasRef.current) {
-                    canvasRef.current.style.display = 'none'
-                }
-                if (videoRef.current) {
-                    videoRef.current.style.display = 'block'
-                    videoRecorder.current?.play()
-                }
-                break
-
-            case 'webgl':
-                // Show WebGL canvas, hide video
-                if (canvasRef.current) {
-                    canvasRef.current.style.display = 'block'
-                }
-                if (videoRef.current) {
-                    videoRef.current.style.display = 'none'
-                    videoRecorder.current?.pause()
-                }
-                break
-
-            case 'static':
-                // Hide everything, show gradient fallback
-                if (canvasRef.current) {
-                    canvasRef.current.style.display = 'none'
-                }
-                if (videoRef.current) {
-                    videoRef.current.style.display = 'none'
-                }
-                // Static gradient will show through (defined below)
-                break
-        }
-    }
+    }, [reducedMotion])
 
     // Handle visibility changes and resize when pathname changes
     useEffect(() => {
@@ -532,7 +406,7 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                 }}
             />
 
-            {/* Vanta WebGL container (managed by Vanta and performance manager) */}
+            {/* Vanta WebGL container */}
             <div
                 ref={vantaRef}
                 id="vanta-bg"

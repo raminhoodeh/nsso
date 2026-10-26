@@ -1,22 +1,70 @@
-# Gemini AI Categorization & Enrichment Pipeline
+# RazinFlix Film Enrichment Pipeline
 
-## 1. System Objective
-A backend architecture designed to completely automate and enforce high-fidelity metadata formatting organically—utilizing Google Generative AI (Gemini 2.5 Flash), Google Cloud Vision OCR, and the YouTube Data API v3 dynamically.
+## Objective
 
-## 2. Ingestion Engine Pipeline (`/api/razinflix/add`)
-When an Admin adds a film, the pipeline fires 3 core asynchronous tasks:
+The add-film workflow accepts only a title and an optional four-digit release year. It prioritises correctness over silently saving partial or incorrect records: a film is written only after RazinFlix has resolved a high-confidence canonical release, a TMDB poster, and a playable YouTube trailer.
 
-### 1. YouTube Trailer Resolution
-- Hits the **YouTube Data API v3** querying for `{Title} {Year} official trailer -review -reaction` to isolate studio-verified trailers instantly, natively populating the `trailer_key`.
+## Resolution Pipeline
 
-### 2. Google Vision API OCR Parsing
-- Checks TMDB poster payload using Google Cloud Vision REST. Runs `TEXT_DETECTION` to semantically evaluate whether the English-text `Title` actually appears physically written inside the `.jpg` poster image matrix, guaranteeing high-resolution native English posters and explicitly skipping blank generic TMDB artwork.
+### 1. Input Normalisation
 
-### 3. Gemini 2.5 Flash Autonomous Taxonomic Grounding
-- Overrides and deprecates TMDB's generic genres entirely.
-- Executes `gemini-2.5-flash` natively to synthetically evaluate the film title and exact TMDB description, explicitly generating an atmospheric 2-sentence structural plot.
-- Synthesizes and grounds the results perfectly into one of the **14 specific RazinFlix Categories**, generating zero "Recently Added" generic taxonomies. 
+RazinFlix preserves the user's wording while generating conservative fallback queries. Generic suffixes such as `movie`, `film`, and `trailer` are removed only for fallback searches, so `Crystal Triangle movie` can resolve to `Crystal Triangle` without breaking real titles such as `Scary Movie`.
 
-## 3. Dedicated Scripts (`/scripts/`)
-- **`cleanup-categories.mjs`**: Autonomous Node pipeline built with Gemini 2.5 Flash that reads arbitrary or abandoned Postgres categories, selects the closest taxonomic fit out of our predefined list of 14, and dynamically patches (`POST`) the database records back to full health.
-- **`resolve_dups.py`**: Local backend script executing `SequenceMatcher` Levenshtein-distance fuzzing and token overlap checks. Detects rogue duplicates directly against the Supabase POSTGREST tables. It evaluates identical string matches (e.g. `Bladerunner 2049` vs `Blade Runner 2049`) and dynamically scrubs the poorest resolution database entry via data-quality scoring equations (Poster validation + description string lengths).
+If the title is shared by multiple releases, the request is rejected with candidate suggestions and the user is asked for the release year. RazinFlix does not guess between remakes.
+
+### 2. Canonical TMDB Match
+
+The resolver searches each title variant with and without the supplied year, deduplicates TMDB results, and scores every candidate using:
+
+- exact, prefix, token-overlap, and edit-distance title similarity;
+- exact or near release-year agreement;
+- poster availability;
+- a small popularity and vote-count tie-breaker.
+
+Low-confidence and ambiguous matches are rejected. The winning TMDB movie ID then becomes the source of truth for the canonical title, original title, release year, overview, rating, genres, countries, credits, alternate titles, posters, and linked videos.
+
+### 3. Poster Selection
+
+Posters come from the resolved TMDB movie record, not from a text-image search. The selector ranks TMDB's primary and alternate posters by language, community rating, resolution, and theatrical poster aspect ratio. Placeholder images are never saved.
+
+### 4. Trailer Resolution
+
+Trailer resolution uses three guarded stages:
+
+1. **TMDB videos:** Prefer playable YouTube trailers already attached to the canonical TMDB movie ID. This is the most precise source because the video-to-film relationship has already been curated.
+2. **YouTube Data API:** When TMDB has no usable video, search with the canonical and shortest alternate titles. Results are restricted to embeddable videos, expanded to multiple candidates, validated through `videos.list`, and ranked by title similarity, year, trailer wording, channel, duration, and negative terms such as `review`, `reaction`, `full movie`, and `fan made`.
+3. **Google Custom Search:** An optional final fallback searches only YouTube watch pages, extracts real video IDs, scores them using the same rules, and verifies availability through YouTube oEmbed.
+
+The old implementation reused the Gemini key for YouTube and Google Search. Those APIs can have different enablement and key restrictions, so the new pipeline uses dedicated credentials.
+
+### 5. Metadata and Category
+
+TMDB supplies the factual metadata. Gemini may rewrite the verified TMDB overview without adding facts and selects one RazinFlix category. If Gemini is unavailable or returns invalid JSON, the original overview and a deterministic genre-based category are used. Japanese animation is categorised deterministically from TMDB's country and animation genre metadata.
+
+### 6. Strict Write Gate and Repair
+
+No database write occurs until the canonical film, poster, and playable trailer have all passed validation. Errors include machine-readable codes and candidate suggestions rather than being converted into empty fields.
+
+Before inserting, RazinFlix compares the canonical and alternate titles against same-year records. Re-adding a previously incomplete entry updates that record in place, which repairs records such as `crystal triangle movie (1987)` without creating duplicates.
+
+## Required Environment Variables
+
+- `TMDB_API_KEY`: TMDB v3 API key used for movie matching and canonical metadata.
+- `GOOGLE_GENERATIVE_AI_API_KEY`: Gemini key used only for grounded description formatting and category selection.
+- `YOUTUBE_API_KEY`: Dedicated Google Cloud key with YouTube Data API v3 enabled. This provides the highest-coverage trailer fallback.
+- `GOOGLE_SEARCH_API_KEY`: Optional dedicated key with Custom Search JSON API enabled.
+- `GOOGLE_SEARCH_ENGINE_ID`: Optional programmable search-engine ID paired with `GOOGLE_SEARCH_API_KEY`.
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL.
+- `SUPABASE_SERVICE_ROLE_KEY`: Server-only key used for film inserts and repairs.
+
+The YouTube and Google Search keys should be restricted to their respective APIs. A Gemini-only key must not be reused for either service.
+
+## Verification
+
+Run the focused regression suite from the app directory:
+
+```bash
+node --experimental-strip-types --test scripts/test-razinflix-enrichment.mjs
+```
+
+The suite includes a live, read-only TMDB check proving that `crystal triangle movie (1987)` resolves to TMDB movie `69840`, poster `iZv6QX67sB4FUcplRhGK1fb996g.jpg`, director Seiji Okuda, and YouTube trailer `99YuIQFIKwE`.
