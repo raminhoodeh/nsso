@@ -13,7 +13,7 @@ export class ChatAllowanceError extends Error {
         : code === "chat_prompt_too_large" || code === "invalid_chat_request"
           ? "That message or conversation is too long or could not be read. Please start a shorter chat."
         : code === "chat_origin_denied"
-          ? "Please open AI chat from NSSO."
+          ? "Please open AI chat from nsso."
         : code === "chat_busy"
           ? "Please wait a minute before sending another message."
           : "Paid AI chat is temporarily unavailable. Please try again later.");

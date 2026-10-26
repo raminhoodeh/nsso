@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 const serviceUrl = new URL("../src/lib/deity/places-service.ts", import.meta.url);
 const hooks = registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (context.parentURL === serviceUrl.href && ["../places-events", "../places-business-status", "./chat-allowance"].includes(specifier)) {
+    if (context.parentURL === serviceUrl.href && ["../places-events", "../places-business-status", "./chat-allowance", "./brand"].includes(specifier)) {
       return nextResolve(new URL(`${specifier}.ts`, serviceUrl).href, context);
     }
     return nextResolve(specifier, context);
@@ -100,6 +100,21 @@ test("structured replies resolve known places and ignore model-provided warnings
   assert.equal(result.recommendations[0].placeId, "museum");
   assert.equal("action" in result, false);
   assert.match(result.warnings[0], /not live-checked/);
+});
+
+test("Places uses lowercase nsso in prompts and visible replies without changing IDs", () => {
+  const prompt = buildPlacesPrompt({ message: "Ideas" }, knowledge, now);
+  assert.match(prompt.system, /Always write the product name as "nsso" in lowercase/);
+  const result = validatePlacesReply(reply({ message: "NSSO recommends art.",
+    recommendations: [{ placeId: "museum", reason: "An Nsso suggestion." }],
+    itinerary: { title: "NSSO date", summary: "Plan with NSSO.", stops: [{ placeId: "cafe", reason: "NSSO suggests coffee.", timeLabel: "Afternoon" }] },
+  }), knowledge, now);
+  assert.equal(result.message, "nsso recommends art.");
+  assert.equal(result.recommendations[0].reason, "An nsso suggestion.");
+  assert.equal(result.recommendations[0].placeId, "museum");
+  assert.equal(result.itinerary.title, "nsso date");
+  assert.equal(result.itinerary.summary, "Plan with nsso.");
+  assert.equal(result.itinerary.stops[0].reason, "nsso suggests coffee.");
 });
 
 test("hallucinated, closed, seasonal, non-fixed and expired event-only places never become map actions", () => {

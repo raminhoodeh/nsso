@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
 import { splitActionPayload, type DeityAction } from '@/lib/deity/actionParser';
 import { ALLOWANCE_CTA_URL, ALLOWANCE_CTA_LABEL, isDailyAllowanceCode, boundedChatHistory } from '@/lib/deity/chat-allowance';
+import { normalizeNssoBrand } from '@/lib/deity/brand';
 
 interface Message {
     id: string;
@@ -214,7 +215,8 @@ Check out some of the areas I can help you with below.`;
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const renderMessage = (content: string) => {
+    const renderMessage = (content: string, isAssistant: boolean) => {
+        const displayText = (text: string) => isAssistant ? normalizeNssoBrand(text) : text;
         // Strip JSON action blocks from display
         const cleanContent = content.replace(/```json\s*\n{[\s\S]*?}\s*\n```/g, '').trim();
 
@@ -236,7 +238,7 @@ Check out some of the areas I can help you with below.`;
                         rel="noopener noreferrer"
                         className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200 transition-colors"
                     >
-                        {mdMatch[1]}
+                        {displayText(mdMatch[1])}
                     </a>
                 );
             } else {
@@ -263,11 +265,11 @@ Check out some of the areas I can help you with below.`;
                             if (boldMatch) {
                                 elements.push(
                                     <strong key={`bold-${i}-${j}-${k}`} className="font-bold text-white">
-                                        {boldMatch[1]}
+                                        {displayText(boldMatch[1])}
                                     </strong>
                                 );
                             } else if (boldPart) {
-                                elements.push(<span key={`text-${i}-${j}-${k}`}>{boldPart}</span>);
+                                elements.push(<span key={`text-${i}-${j}-${k}`}>{displayText(boldPart)}</span>);
                             }
                         });
                     }
@@ -842,7 +844,7 @@ Check out some of the areas I can help you with below.`;
                                         : 'bg-[#222a35] text-white/90'
                                         }`}
                                 >
-                                    {renderMessage(msg.content)}
+                                    {renderMessage(msg.content, msg.role === 'model')}
                                     {msg.allowanceCta && <a href={ALLOWANCE_CTA_URL} target="_blank" rel="noopener noreferrer"
                                         className="mt-3 block font-semibold text-cyan-300 underline underline-offset-4">{ALLOWANCE_CTA_LABEL}</a>}
                                 </article>
@@ -979,7 +981,7 @@ Check out some of the areas I can help you with below.`;
                             aria-controls="deity-database-tooltip"
                             aria-describedby={showVennDiagram ? 'deity-database-tooltip' : undefined}
                         >
-                            NSSO DATABASE
+                            nsso DATABASE
                         </button>
                     </div>
                 </div>
@@ -1021,7 +1023,7 @@ Check out some of the areas I can help you with below.`;
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/nsso-venn-diagram.jpg"
-                        alt="NSSO Agent vs ChatGPT Venn Diagram"
+                        alt="nsso Agent vs ChatGPT Venn Diagram"
                         className="block max-h-[calc(90vh-1rem)] max-w-[calc(90vw-1rem)] rounded-xl object-contain"
                     />
                 </div>,

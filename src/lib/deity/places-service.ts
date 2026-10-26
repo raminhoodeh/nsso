@@ -3,6 +3,7 @@ import type { DatePlan, PlaceVisitGuide } from "../places-editorial";
 import { activeEventsFor } from "../places-events";
 import { placeClosureNotice } from "../places-business-status";
 import { ChatAllowanceError, allowanceResponse } from "./chat-allowance";
+import { NSSO_BRAND_RULE, normalizeNssoBrand } from "./brand";
 import type { PlacesChatRequest, PlacesChatResponse, PlacesChatRecommendation, PlacesChatHistoryItem } from "./places-types";
 
 const MAX_BODY_BYTES = 65_536;
@@ -114,7 +115,8 @@ export function buildPlacesPrompt(input: PlacesChatRequest, knowledge: PlacesKno
     dateStyle: "full", timeStyle: "short", timeZone: "Asia/Dubai",
   }).format(now);
   return {
-    system: `You are Deity, NSSO's thoughtful Places companion for planning dates and days out in the UAE. This is the Places-only version of the existing NSSO assistant. Be warm, concise and practical, not generic. Help couples decide where to go and make realistic itineraries from the catalog below.
+    system: `You are Deity, nsso's thoughtful Places companion for planning dates and days out in the UAE. This is the Places-only version of the existing nsso assistant. Be warm, concise and practical, not generic. Help couples decide where to go and make realistic itineraries from the catalog below.
+${NSSO_BRAND_RULE}
 SERVER TIME: ${new Date(now).toISOString()}; Dubai local time: ${dubaiNow}; timezone Asia/Dubai (UTC+04:00).
 BOUNDARIES:
 - Only recommend actual catalog place IDs with recommendable:true. Never invent a venue, address, event, ID, opening time, ticket, price or current availability. Do not recommend closed or season-unconfirmed places even if the user asks for desert cafes. You may explain their recorded status honestly without including them in recommendations/stops.
@@ -139,7 +141,7 @@ function outputText(value: unknown, maximum: number, field: string) {
     const result = text(value, maximum, field);
     // Rendered as plain text by the client; reject links/actions rather than inventing destinations.
     if (/<\/?(?:script|iframe|img)\b|https?:\/\//i.test(result)) throw new Error("Unexpected markup or URL");
-    return result;
+    return normalizeNssoBrand(result);
   } catch { throw new PlacesChatError(502, "Deity couldn't verify that reply. Please try a simpler request."); }
 }
 
@@ -266,7 +268,7 @@ export function createPlacesChatHandler(knowledge: PlacesKnowledge, provider: Pl
     try {
       const origin = request.headers.get("origin");
       if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== new URL(request.url).origin)) {
-        return json({ error: "Open Deity from the NSSO Places page." }, 403);
+        return json({ error: "Open Deity from the nsso Places page." }, 403);
       }
       const input = parsePlacesChatRequest(await boundedJson(request));
       const now = clock();

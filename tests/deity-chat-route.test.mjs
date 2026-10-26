@@ -71,7 +71,8 @@ test('real route answers the reported guest question with the budgeted, supporte
   assert.match(generation.path, /gemini-2\.5-flash:/);
   assert.equal(generation.body.generationConfig.thinkingConfig.thinkingBudget, 0);
   assert.equal(generation.body.generationConfig.maxOutputTokens, 2048);
-  assert.match(JSON.stringify(generation.body.systemInstruction), /AUTHORITATIVE NSSO PRODUCT IDENTITY/);
+  assert.match(JSON.stringify(generation.body.systemInstruction), /AUTHORITATIVE nsso PRODUCT IDENTITY/);
+  assert.match(JSON.stringify(generation.body.systemInstruction), /Always write the product name as/);
   assert.deepEqual(generation.body.contents, [{ role: 'user', parts: [{ text: 'what is nsso?' }] }]);
   assert.equal(calls.filter(c => c.path.endsWith('/reserve_nsso_chat_budget')).length, 2);
   assert.equal(calls.find(c => c.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, true);
@@ -155,6 +156,7 @@ test('NSSO product-question routing is narrow and facts remain aligned with the 
   for (const q of ['Recommend design books', 'Find investors for my nsso startup', 'Explain neural networks']) assert.equal(isNssoProductQuestion(q), false, q);
   assert.match(NSSO_PRODUCT_CONTEXT, /new sovereign self online/);
   assert.match(NSSO_PRODUCT_CONTEXT, /coming soon/);
+  assert.doesNotMatch(NSSO_PRODUCT_CONTEXT, /\bNSSO\b/);
 });
 test('display-only greetings and previous error messages never steer the next conversation turn', () => {
   assert.deepEqual(boundedChatHistory([
