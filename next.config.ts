@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   generateBuildId: async () => process.env.NSSO_BUILD_ID || null,
+  // Send the small Tailwind stylesheet with the document so first paint does
+  // not wait for a second network round trip. Client navigation keeps CSS links.
+  experimental: {
+    inlineCss: true,
+  },
   images: {
     remotePatterns: [
       {
