@@ -92,6 +92,14 @@ test('marketing choices stay explicit and keyboard accessible before any provide
     await page.evaluate(() => window.renderMeta('unset'))
     const dialog = page.getByRole('dialog', { name: 'Marketing privacy' })
     await expect(dialog).toBeVisible()
+    // A high semanticTintOpacity alone is capped by the shared glass surface.
+    // All reading/choice content must have an actually opaque local backing.
+    const readingSurface = dialog.locator('[data-marketing-privacy-backing]')
+    await expect(readingSurface).toHaveCSS('background-color', 'rgb(8, 12, 20)')
+    await expect(readingSurface.getByRole('heading', { name: 'Marketing privacy' })).toBeVisible()
+    await expect(readingSurface.getByRole('link', { name: 'Read the tracking notice' })).toBeVisible()
+    await expect(readingSurface.getByRole('button', { name: 'Decline', exact: true })).toBeVisible()
+    await expect(readingSurface.getByRole('button', { name: 'Allow', exact: true })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Read the tracking notice' })).toBeFocused()
     await page.keyboard.press('Escape')
     await expect(dialog).toBeVisible()

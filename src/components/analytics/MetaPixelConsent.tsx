@@ -143,53 +143,56 @@ export default function MetaPixelConsent({
                     radius={24}
                     tone="light"
                     semanticTint="dark"
-                    semanticTintOpacity={0.94}
+                    semanticTintOpacity={0.42}
                     overlayClassName="z-[6000] items-end justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
                     backdropClassName="bg-black/60"
-                    className="max-w-2xl p-5 text-white sm:p-6"
+                    className="max-w-2xl p-px text-white"
                 >
-                    <div className="flex items-start gap-4">
-                        <Cookie aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-white/70" />
-                        <div className="min-w-0 flex-1">
-                            <h2 id="meta-privacy-title" className="text-base font-semibold">
-                                Marketing privacy
-                            </h2>
-                            <p className="mt-2 text-sm leading-6 text-white/90">
-                                Ramin&apos;s profile can use Meta Pixel to measure advertising performance. It stays off unless you allow marketing tracking.
-                            </p>
-                            <Link
-                                href="/ramin/privacy"
-                                className="mt-2 inline-flex min-h-11 items-center text-sm text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
-                            >
-                                Read the tracking notice
-                            </Link>
+                    {/* The shared glass tint is capped at 42%; privacy copy needs a solid reading surface. */}
+                    <div data-marketing-privacy-backing className="rounded-[23px] p-5 sm:p-6" style={{ backgroundColor: 'rgb(8, 12, 20)' }}>
+                        <div className="flex items-start gap-4">
+                            <Cookie aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-white/70" />
+                            <div className="min-w-0 flex-1">
+                                <h2 id="meta-privacy-title" className="text-base font-semibold">
+                                    Marketing privacy
+                                </h2>
+                                <p className="mt-2 text-sm leading-6 text-white/90">
+                                    Ramin&apos;s profile can use Meta Pixel to measure advertising performance. It stays off unless you allow marketing tracking.
+                                </p>
+                                <Link
+                                    href="/ramin/privacy"
+                                    className="mt-2 inline-flex min-h-11 items-center text-sm text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
+                                >
+                                    Read the tracking notice
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                    <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                        <TahoeGlassButton
-                            type="button"
-                            onClick={() => chooseConsent('denied')}
-                            radius={12}
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.08}
-                            className="min-h-11 px-5 py-2.5 text-sm font-medium text-white transition-colors"
-                            contentClassName="text-inherit"
-                        >
-                            Decline
-                        </TahoeGlassButton>
-                        <TahoeGlassButton
-                            type="button"
-                            onClick={() => chooseConsent('granted')}
-                            radius={12}
-                            tone="light"
-                            semanticTint="light"
-                            semanticTintOpacity={0.12}
-                            className="min-h-11 px-5 py-2.5 text-sm font-semibold text-white transition-colors"
-                            contentClassName="text-inherit"
-                        >
-                            Allow
-                        </TahoeGlassButton>
+                        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <TahoeGlassButton
+                                type="button"
+                                onClick={() => chooseConsent('denied')}
+                                radius={12}
+                                tone="light"
+                                semanticTint="dark"
+                                semanticTintOpacity={0.08}
+                                className="min-h-11 px-5 py-2.5 text-sm font-medium text-white transition-colors"
+                                contentClassName="text-inherit"
+                            >
+                                Decline
+                            </TahoeGlassButton>
+                            <TahoeGlassButton
+                                type="button"
+                                onClick={() => chooseConsent('granted')}
+                                radius={12}
+                                tone="light"
+                                semanticTint="light"
+                                semanticTintOpacity={0.12}
+                                className="min-h-11 px-5 py-2.5 text-sm font-semibold text-white transition-colors"
+                                contentClassName="text-inherit"
+                            >
+                                Allow
+                            </TahoeGlassButton>
+                        </div>
                     </div>
                 </TahoeGlassDialog>
             ) : (
