@@ -95,7 +95,7 @@ test("foreign origins are rejected even before storage configuration", async () 
 test("all production paid AI paths claim shared budget and hard-bound output", async () => {
   const paths = ["../src/app/api/deity/chat/route.ts", "../src/app/api/deity/places/route.ts", "../src/app/api/razinflix/add/route.ts"];
   for (const path of paths) assert.match(await readFile(new URL(path, import.meta.url), "utf8"), /openChatBudget/);
-  const sql = await readFile(new URL("../supabase/migrations/20261026095931_guest_ai_allowance.sql", import.meta.url), "utf8");
+  const sql = await readFile(new URL("../supabase/migrations/20261026100323_guest_ai_allowance.sql", import.meta.url), "utf8");
   assert.match(sql, /ip_used \+ delta > 300000/); assert.match(sql, /global_used \+ delta > 3000000/);
   assert.match(sql, /pg_advisory_xact_lock/); assert.doesNotMatch(sql, /security definer/i);
   assert.match(sql, /enable row level security/); assert.match(sql, /from public,anon,authenticated/);

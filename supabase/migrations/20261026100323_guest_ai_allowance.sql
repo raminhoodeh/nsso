@@ -1,4 +1,5 @@
--- Shared paid-AI accounting. Only the backend service role can access these objects.
+-- Shared paid-AI accounting. Version matches the applied production migration ledger.
+-- Only the backend service role can access these objects.
 create table public.nsso_chat_budget_daily (
   usage_day date not null,
   subject text not null,
