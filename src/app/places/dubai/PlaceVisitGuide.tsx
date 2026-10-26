@@ -12,7 +12,7 @@ export default function PlaceVisitGuide({ place, places, onPair }: {
   if (!guide) return null;
   const pairings = guide.pairWithPlaceIds.flatMap(id => places.find(item => item.id === id) || []);
   return <section className={styles.guide} aria-label="Plan your visit">
-    <header><BookOpen size={17} aria-hidden="true" /><h3>Make a date of it</h3><span>NSSO idea</span></header>
+    <header><BookOpen size={17} aria-hidden="true" /><h3>Make a date of it</h3><span>nsso idea</span></header>
     <p className={styles.idea}>{guide.dateIdea}</p>
     <dl>{guide.practicalities.map(note => <div key={note.label}><dt>{note.label}</dt><dd>{note.text}</dd></div>)}</dl>
     {pairings.length > 0 && <div className={styles.pairings}><h4>Pair it with</h4>{pairings.map(pair => <button key={pair.id} type="button" onClick={() => onPair(pair)}><span>{pair.name}</span><ArrowUpRight size={16} aria-hidden="true" /></button>)}</div>}

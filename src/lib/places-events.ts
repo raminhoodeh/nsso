@@ -25,7 +25,7 @@ export function eventCalendarDescription(event: DubaiEvent, place: DubaiPlace) {
     `Venue: ${place.name}. ${place.address}`,
     `Official information: ${event.sourceUrl}`,
     event.bookingUrl ? `Tickets / programme: ${event.bookingUrl}` : null,
-    "NSSO map: https://www.nsso.me/places/dubai"].filter(Boolean).join("\n\n");
+    "nsso map: https://www.nsso.me/places/dubai"].filter(Boolean).join("\n\n");
 }
 
 export function googleCalendarUrl(event: DubaiEvent, place: DubaiPlace) {
