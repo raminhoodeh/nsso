@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { createHash, randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { parse } from 'parse5'
+import { verifyHomepageCriticalCss } from '../performance/homepage-critical-css.mjs'
 
 export function inlineScriptHashes(html) {
     const hashes = new Set()
@@ -141,10 +142,13 @@ async function build() {
         const actual = final.manifest
         assertHashCoverage(actual, approved)
         if (JSON.stringify(first.proof.expectedRoutes) !== JSON.stringify(final.proof.expectedRoutes) || first.proof.output !== final.proof.output) throw new Error('Static page inventory/output adapter changed between CSP passes')
+        const homepageCss = await verifyHomepageCriticalCss(repo, final.proof)
         await mkdir(resolve(repo, '.next/security'), { recursive: true })
         await writeFile(resolve(repo, '.next/security/static-csp-hashes.json'), JSON.stringify(actual, null, 2) + '\n')
         await writeFile(resolve(repo, '.next/security/csp-build-proof.json'), JSON.stringify(final.proof, null, 2) + '\n')
+        await writeFile(resolve(repo, '.next/security/homepage-critical-css.json'), JSON.stringify(homepageCss, null, 2) + '\n')
         console.log(`Verified CSP coverage for ${final.proof.expectedRoutes.length} expected static pages across ${final.proof.artifacts.length} ${final.proof.output} HTML artifacts (${Object.keys(actual.routes).length} route policies); dynamic SSR uses request nonces.`)
+        console.log(`Verified inline critical CSS before the homepage heading in ${homepageCss.artifacts.length} served HTML artifact(s).`)
     } finally {
         // The compiled proxy embeds JSON; keep generated hashes in .next, not source control.
         await writeFile(source, original)
