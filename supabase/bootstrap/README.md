@@ -18,6 +18,8 @@ node scripts/security/verify-fresh-project.mjs \
 
 The startup script pins Supabase CLI 2.122.0, configures an isolated local project, enables local TOTP and disables automatic seeds. It refuses an existing stack and keeps local credentials/logs outside the repository in files with mode 0600. The proof imports this baseline, creates synthetic Auth actors, exercises real Auth/Data API/Storage authorization and restores a synthetic dump into a separate database for concurrent journal/retry/Undo/limiter tests. It never calls paid model providers or accepts remote API/database URLs.
 
+Supported Auth deletion is a required positive regression test, including cleanup of public identity, profile collections, private settings, revisions, journal and media registry. Both operation-first and deletion-first schedules are forced locally. Runtime account/journal functions lock the Auth parent with `FOR KEY SHARE` before advisory locks719/730; only genuine missing-parent deletion cascades skip child journaling. Ordinary owner removal and Undo remain tested. No managed Auth deletion trigger is shipped, and cleanup API errors fail the gate rather than being ignored.
+
 The negative control deliberately adds an unsafe anonymous avatar policy **only in that isolated stack**. The command below must fail with `NSSO_NEGATIVE_CONTROL: anonymous avatar upload bypassed ownership RLS`. The policy is removed in `finally`; CI requires both the failure and the marker rather than treating every process error as proof.
 
 ```sh

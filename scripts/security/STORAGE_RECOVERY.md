@@ -45,6 +45,10 @@ The proof creates genuinely owned legacy uploads through Auth/Storage APIs, take
 
 Under the final policies, **owners and foreign users both lose direct Storage INSERT/UPDATE**. Replacement uses the application boundary: validated JPEG bytes go to a new server-generated path, the service-only registry binds that object to the verified actor, and the owner's authenticated journal commits the new profile/project URL. The proof tests that path against the recovered database, rejects foreign mutations, retains old readable bytes and preserves verified legacy-owner DELETE. A one-path synthetic fixture policy is removed before the dump; final restored policies are never weakened to make replacement pass.
 
+The rehearsal writes private `timing.json` with UTC capture checkpoints, object/byte counts and monotonic phase durations. `recoveryThroughAcceptanceMs` measures local database creation/restore, forward-schema reconciliation, isolated service startup, byte/checksum/ownership restoration and final application-policy acceptance. It excludes backup capture and cleanup. This is a measured synthetic fixture recovery time, not a production recovery objective or service-level commitment; production volume, infrastructure provisioning and incident coordination need separate allowance.
+
+The recoverable checkpoint is the last **coordinated database and complete encrypted object snapshot** with its separately protected key and matching catalog. Record both capture times and coordinate writes during capture. Scheduled database backups alone do not establish object-byte freshness. Object snapshots in this workflow are manual; no automatic daily object backup or 24-hour recovery-point guarantee is established by this tool.
+
 The drill cleans up only its own fixtures and temporary recovered database/containers. It never accepts a remote project or fabricates production user JWTs. API restoration may change system timestamps/version as described above; a successful byte restore alone does not prove that the current application mutation contracts still work.
 
 ## Official references

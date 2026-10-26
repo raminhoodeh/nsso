@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { isIP } from "node:net";
 import { createClient } from "@supabase/supabase-js";
 import { ChatAllowanceError } from "./chat-allowance";
+import { reportRuntimeSignal } from "@/lib/server/runtime-signals";
 
 // Micro-USD rates: Flash 2.5 text input $0.30/M; output including thinking $2.50/M.
 // Embeddings are conservatively charged at the text-input rate, with UTF-8 bytes as an upper bound.
@@ -80,8 +81,11 @@ export class ChatBudget {
     const micros = confirmed ? Math.ceil(numbers[0]! * INPUT_RATE + (numbers[1]! + numbers[2]!) * OUTPUT_RATE + this.embeddingMicros) : this.reserved;
     try {
       const { error } = await this.rpc("finish_nsso_chat_budget", { p_request_id: this.id, p_micros: micros, p_confirmed: confirmed });
-      if (error) console.error("Chat budget settlement unavailable; reservation retained");
-    } catch { console.error("Chat budget settlement unavailable; reservation retained"); }
+      if (error) throw new Error("Budget settlement unavailable");
+    } catch {
+      console.error("Chat budget settlement unavailable; reservation retained");
+      reportRuntimeSignal('budget_unavailable');
+    }
   }
 }
 

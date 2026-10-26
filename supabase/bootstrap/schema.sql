@@ -309,7 +309,7 @@ CREATE FUNCTION private.ensure_account_for(p_user_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$ DECLARE a auth.users%ROWTYPE; v_code text; BEGIN
- SELECT * INTO a FROM auth.users WHERE id=p_user_id;
+ SELECT * INTO a FROM auth.users WHERE id=p_user_id FOR KEY SHARE;
  IF NOT FOUND THEN RAISE EXCEPTION 'Account identity missing' USING ERRCODE='23503'; END IF;
  PERFORM pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_user_id::text,719));
  INSERT INTO public.users(id,username,is_premium)
@@ -357,6 +357,7 @@ CREATE FUNCTION private.lock_external_profile_write() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$ BEGIN
+ IF TG_OP='DELETE' AND auth.uid() IS NOT NULL AND NOT EXISTS(SELECT 1 FROM auth.users WHERE id=auth.uid()) THEN RETURN NULL; END IF;
  IF auth.uid() IS NOT NULL AND current_setting('nsso.journal_actor',true) IS DISTINCT FROM auth.uid()::text THEN PERFORM private.profile_lock(auth.uid()); END IF;
  RETURN NULL;
 END $$;
@@ -446,6 +447,10 @@ CREATE FUNCTION private.profile_lock(p_user_id uuid) RETURNS bigint
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO ''
     AS $$ DECLARE v bigint; BEGIN
+ -- All runtime paths acquire the parent key before719/730. Auth DELETE can
+ -- then finish without competing with a child journal FK insert.
+ PERFORM 1 FROM auth.users WHERE id=p_user_id FOR KEY SHARE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Account unavailable' USING ERRCODE='42501'; END IF;
  -- Account provisioning already takes719 before its profile INSERT triggers730.
  -- Every journal/status/payment/manual path must take those locks in that order.
  PERFORM pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_user_id::text,719));
@@ -679,6 +684,9 @@ BEGIN
  IF TG_OP<>'INSERT' THEN before_row:=to_jsonb(OLD)-'embedding'; END IF;
  IF TG_OP<>'DELETE' THEN after_row:=to_jsonb(NEW)-'embedding'; END IF;
  u:=coalesce((after_row->>'user_id')::uuid,(before_row->>'user_id')::uuid);
+ -- Only genuine Auth-parent cascades are omitted. Ordinary owner removals keep
+ -- their before-image/revision/Undo contract while their Auth parent exists.
+ IF TG_OP='DELETE' AND NOT EXISTS(SELECT 1 FROM auth.users WHERE id=u) THEN RETURN NULL; END IF;
  IF TG_OP='UPDATE' AND ((after_row->'user_id') IS DISTINCT FROM (before_row->'user_id') OR (after_row->'id') IS DISTINCT FROM (before_row->'id')) THEN RAISE EXCEPTION 'Profile identity is immutable' USING ERRCODE='42501'; END IF;
  IF before_row IS NOT DISTINCT FROM after_row OR current_setting('nsso.journal_actor',true)=u::text THEN RETURN NULL; END IF;
  rev:=private.profile_lock(u)+1; op:=gen_random_uuid(); item:=CASE WHEN entity='profile' THEN u ELSE coalesce((after_row->>'id')::uuid,(before_row->>'id')::uuid) END;

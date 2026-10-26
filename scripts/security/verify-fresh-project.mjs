@@ -12,6 +12,7 @@ import {execFileSync,spawnSync} from 'node:child_process'
 import {randomUUID,createHash} from 'node:crypto'
 import {createClient} from '@supabase/supabase-js'
 import sharp from 'sharp'
+import {verifyAuthCascades} from './auth-cascade-proof.mjs'
 
 if(process.env.NSSO_ALLOW_LOCAL_SECURITY_REHEARSAL!=='1')throw Error('Explicit local rehearsal opt-in required')
 const [statusFile,evidenceArg,existing]=process.argv.slice(2)
@@ -154,6 +155,10 @@ try{
   try{sql('ALTER TABLE public.projects DISABLE ROW LEVEL SECURITY');assert.deepEqual(await healthy(),{healthy:false})}finally{sql('ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY')}
   try{sql("CREATE POLICY nsso_ci_health_drift ON storage.objects FOR UPDATE TO authenticated USING(false) WITH CHECK(false)");assert.deepEqual(await healthy(),{healthy:false})}finally{sql('DROP POLICY nsso_ci_health_drift ON storage.objects')}
   assert.deepEqual(await healthy(),{healthy:true})
+ })
+ await check('supported Auth deletion cleans journal/media rows and is safe with both concurrent operation schedules',async()=>{
+  const checks=await verifyAuthCascades({config,container,sql});assert.equal(checks.length,3)
+  writeFileSync(resolve(evidence,'auth-cascade-checks.json'),JSON.stringify({checks},null,2),{mode:0o600})
  })
  await check('fresh bootstrap refuses existing data instead of resetting it',async()=>{
   const result=spawnSync('docker',['exec','-i',container,'psql','-X','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{input:readFileSync(resolve(repo,'supabase/bootstrap/schema.sql')),encoding:'utf8'});assert.notEqual(result.status,0);assert.match(result.stderr,/requires empty application schemas/)

@@ -30,6 +30,7 @@ const restored=spawnSync('docker',['exec','-i',container,'pg_restore','-U','supa
 writeFileSync(resolve(evidence,'clone.log'),restored.stderr||'',{mode:0o600});assert.equal(restored.status,0)
 function migration(suffix){const files=readdirSync(resolve(repo,'supabase/migrations')).filter(x=>x.endsWith('_'+suffix+'.sql'));assert.equal(files.length,1);sql(readFileSync(resolve(repo,'supabase/migrations',files[0]),'utf8'))}
 if(sql("SELECT to_regprocedure('public.apply_profile_operation(jsonb)') IS NOT NULL")!=='t')migration('profile_operation_journal')
+if(!gateway)migration('nsso_profile_auth_cascade')
 const runtimeFiles=readdirSync(resolve(repo,'supabase/migrations')).filter(x=>x.endsWith('_nsso_runtime_limits.sql'))
 if(runtimeFiles.length===1&&sql("SELECT to_regprocedure('public.consume_nsso_request_limit(text,text)') IS NOT NULL")!=='t')sql(readFileSync(resolve(repo,'supabase/migrations',runtimeFiles[0]),'utf8'))
 if(sql("SELECT to_regprocedure('public.intelligent_search(public.vector,text,public.vector,double precision,integer,text[],integer)') IS NOT NULL")==='t'&&sql("SELECT to_regprocedure('private.validate_retrieval_request(public.vector,double precision,integer,text,text[],integer,public.vector)') IS NOT NULL")!=='t')migration('nsso_retrieval_bounds')

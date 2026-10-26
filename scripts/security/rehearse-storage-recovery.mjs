@@ -9,6 +9,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
+import { performance } from 'node:perf_hooks'
 import sharp from 'sharp'
 import { backupStorage, verifyStorage, STORAGE_CATALOG_QUERY } from './storage-recovery.mjs'
 
@@ -34,6 +35,14 @@ const restoredRest = `nsso-media-rest-${Date.now().toString(36)}`
 const origin = 'http://127.0.0.1:55834'
 const keyFile = resolve(evidence, 'recovery.key'), directory = resolve(evidence, 'media')
 const results = []
+const drillStarted = performance.now()
+const timing = { scope: 'Synthetic local paired database and empty-Storage recovery; not a production SLO', startedAt: new Date().toISOString(), phases: [] }
+let phase, recoveryStarted
+function beginPhase(name) {
+    const now = performance.now(), at = new Date().toISOString()
+    if (phase) { phase.completedAt = at; phase.durationMs = Number((now - phase.started).toFixed(2)); delete phase.started }
+    phase = { name, startedAt: at, started: now }; timing.phases.push(phase)
+}
 function sql(query, db = 'postgres') {
     return execFileSync('docker', ['exec', '-i', container, 'psql', '-X', '-U', 'postgres', '-d', db, '-v', 'ON_ERROR_STOP=1', '-At'], { input: query, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }).trim()
 }
@@ -46,6 +55,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
 const actors = []
 let storageStarted = false, restStarted = false, databaseCreated = false
 try {
+    beginPhase('synthetic_fixture_setup')
     for (const name of ['owner', 'other']) {
         const email = `${name}-${Date.now()}@nsso-storage-rehearsal.invalid`, password = 'Synthetic-local-only-471!'
         const user = ok(await service.auth.admin.createUser({ email, password, email_confirm: true })).user
@@ -60,9 +70,12 @@ try {
     sql(`CREATE POLICY nsso_recovery_legacy_fixture ON storage.objects FOR INSERT TO authenticated WITH CHECK(bucket_id IN ('avatars','portfolio-assets') AND name='${owner.id}/recovery-fixture.png' AND (SELECT auth.uid())='${owner.id}'::uuid)`)
     try { for (const path of paths) ok(await owner.client.storage.from(path.bucket).upload(path.name, png, { contentType: 'image/png', cacheControl: '120', metadata: { caption: 'Synthetic recovery fixture', nested: { retained: true } } })) }
     finally { sql('DROP POLICY nsso_recovery_legacy_fixture ON storage.objects') }
+    beginPhase('paired_media_capture')
     const catalog = JSON.parse(sql(STORAGE_CATALOG_QUERY))
+    timing.catalogCapturedAt = new Date().toISOString()
     await check('encrypted byte snapshot captures original ownership and user metadata', async () => {
         const result = await backupStorage({ directory, keyFile, client: service, sourceUrl: config.API_URL, catalog })
+        timing.snapshot = { objects: result.objects, bytes: result.bytes, buckets: result.buckets }
         assert.equal(result.ownershipCaptured, true)
         for (const path of paths) {
             const row = catalog.objects.find(row => row.bucket_id === path.bucket && row.name === path.name)
@@ -72,12 +85,18 @@ try {
     })
     // Use normal whole-database backup/restore. No SQL INSERT/UPDATE/DELETE is
     // performed against Storage catalog tables to repair an object's owner.
+    beginPhase('paired_database_capture')
+    timing.databaseCaptureStartedAt = new Date().toISOString()
     const dump = execFileSync('docker', ['exec', container, 'pg_dump', '-U', 'postgres', '-d', 'postgres', '-Fc'], { maxBuffer: 64 * 1024 * 1024 })
     await writeFile(resolve(evidence, 'synthetic-storage-recovery.dump'), dump, { mode: 0o600 })
+    timing.databaseCapturedAt = new Date().toISOString(); timing.databaseDumpBytes = dump.length
+    beginPhase('database_restore')
+    recoveryStarted = performance.now(); timing.recoveryStartedAt = new Date().toISOString()
     sql(`CREATE DATABASE ${database} TEMPLATE template0;`); databaseCreated = true
     const restored = spawnSync('docker', ['exec', '-i', container, 'pg_restore', '-U', 'supabase_admin', '-d', database, '--exit-on-error'], { input: dump, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 })
     await writeFile(resolve(evidence, 'database-restore.log'), restored.stderr || '', { mode: 0o600 })
     assert.equal(restored.status, 0, 'Synthetic database restore failed; inspect private evidence')
+    beginPhase('forward_schema_reconciliation')
     const migrations = await readdir(resolve(repo, 'supabase/migrations'))
     async function apply(suffix) {
         const matching = migrations.filter(file => file.endsWith('_' + suffix + '.sql')); assert.equal(matching.length, 1)
@@ -91,8 +110,10 @@ try {
     ]) if (sql(`SELECT to_regprocedure('${signature}') IS NULL`, database) === 't') await apply(suffix)
     await apply('nsso_safe_schema_defaults')
     await apply('nsso_payment_receipt_minimization')
+    await apply('nsso_profile_auth_cascade')
     await apply('nsso_profile_write_cutover')
     await apply('nsso_media_write_cutover')
+    beginPhase('isolated_data_and_storage_startup')
     const original = JSON.parse(execFileSync('docker', ['inspect', storage], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 }))[0]
     const environment = original.Config.Env.map(entry => {
         const split = entry.indexOf('='), name = entry.slice(0, split), value = entry.slice(split + 1)
@@ -136,15 +157,18 @@ try {
             } },
     })
     const recovered = recoveredClient()
+    beginPhase('empty_backend_and_catalog_acceptance')
     await check('database restore retains owners while an empty Storage backend has no bytes', async () => {
         assert.deepEqual(JSON.parse(sql(STORAGE_CATALOG_QUERY, database)), catalog)
         assert.ok((await recovered.storage.from(paths[0].bucket).download(paths[0].name)).error)
     })
+    beginPhase('byte_restore_and_checksum_metadata_acceptance')
     await check('Storage API restores every byte and preserves database ownership plus user metadata', async () => {
         const result = await verifyStorage({ directory, keyFile, restoreClient: recovered, readCatalog: () => JSON.parse(sql(STORAGE_CATALOG_QUERY, database)) })
         assert.equal(result.ownershipVerified, true); assert.equal(result.userMetadataVerified, true)
         assert.equal(result.objects, catalog.objects.length)
     })
+    beginPhase('final_policy_and_app_replacement_acceptance')
     await check('final policies deny raw owner writes but permit owner app-mediated replacement; foreign edits fail', async () => {
         const ownerClient = recoveredClient(owner.token), otherClient = recoveredClient(other.token)
         assert.deepEqual(ok(await recovered.rpc('nsso_security_health')), { healthy: true })
@@ -175,15 +199,29 @@ try {
             assert.equal(ok(await ownerClient.storage.from(path.bucket).remove([path.name])).length, 1)
         }
     })
+    timing.recoveryAcceptedAt = new Date().toISOString()
+    timing.recoveryThroughAcceptanceMs = Number((performance.now() - recoveryStarted).toFixed(2))
+    timing.checks = results.length
     await writeFile(resolve(evidence, 'checks.json'), JSON.stringify({ checks: results, objects: catalog.objects.length, ownershipVerified: true, systemTimestampsPreserved: false }, null, 2), { mode: 0o600 })
     console.log(`Completed ${results.length} local ownership-aware media recovery checks.`)
 } finally {
+    beginPhase('synthetic_fixture_cleanup')
     if (storageStarted) execFileSync('docker', ['stop', restoredStorage], { encoding: 'utf8' })
     if (restStarted) execFileSync('docker', ['stop', restoredRest], { encoding: 'utf8' })
     if (databaseCreated) sql(`DROP DATABASE ${database};`)
     // Remove only files/accounts created by this opt-in local fixture, through APIs.
+    const cleanupFailures = []
     for (const actor of actors) {
-        for (const bucket of ['avatars', 'portfolio-assets']) await service.storage.from(bucket).remove([`${actor.id}/recovery-fixture.png`])
-        await service.auth.admin.deleteUser(actor.id)
+        for (const bucket of ['avatars', 'portfolio-assets']) {
+            const result = await service.storage.from(bucket).remove([`${actor.id}/recovery-fixture.png`])
+            if (result.error) cleanupFailures.push(result.error)
+        }
+        const deleted = await service.auth.admin.deleteUser(actor.id)
+        if (deleted.error) cleanupFailures.push(deleted.error)
     }
+    const finished = performance.now(), finishedAt = new Date().toISOString()
+    phase.completedAt = finishedAt; phase.durationMs = Number((finished - phase.started).toFixed(2)); delete phase.started
+    timing.finishedAt = finishedAt; timing.totalDrillMs = Number((finished - drillStarted).toFixed(2)); timing.cleanupSucceeded = cleanupFailures.length === 0
+    await writeFile(resolve(evidence, 'timing.json'), JSON.stringify(timing, null, 2), { mode: 0o600 })
+    if (cleanupFailures.length) throw new AggregateError(cleanupFailures, 'Synthetic Storage/Auth cleanup failed; errors are never ignored')
 }
