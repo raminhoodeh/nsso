@@ -1,5 +1,5 @@
 
-import { FunctionDeclaration, SchemaType } from "@google/generative-ai";
+import { type FunctionDeclaration, SchemaType } from "@google/generative-ai";
 
 export const DEITY_TOOLS: FunctionDeclaration[] = [
     {

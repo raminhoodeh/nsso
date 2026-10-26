@@ -12,6 +12,7 @@ interface Message {
     content: string;
     timestamp: number;
     allowanceCta?: boolean;
+    responseError?: boolean;
     actions?: (DeityAction & { status?: 'applied' | 'rejected' })[]; // Actions extracted from this message
 }
 
@@ -493,7 +494,7 @@ Check out some of the areas I can help you with below.`;
             if (!response.ok) {
                 const failure = await response.json().catch(() => ({}));
                 setMessages(prev => prev.map(msg => msg.id === botMessageId ? {
-                    ...msg, content: failure.error || 'AI chat is temporarily unavailable.', allowanceCta: isDailyAllowanceCode(failure.code),
+                    ...msg, content: failure.error || 'AI chat is temporarily unavailable.', responseError: true, allowanceCta: isDailyAllowanceCode(failure.code),
                 } : msg));
                 return;
             }
@@ -527,6 +528,9 @@ Check out some of the areas I can help you with below.`;
             }
         } catch (error) {
             console.error('Error in follow-up:', error);
+            setMessages(prev => prev.map(msg => msg.id === botMessageId && !msg.content ? {
+                ...msg, content: "Deity couldn't finish that follow-up. Your profile action has not been repeated; please ask again if needed.", responseError: true,
+            } : msg));
         }
     };
 
@@ -599,7 +603,7 @@ Check out some of the areas I can help you with below.`;
             if (!response.ok) {
                 const failure = await response.json().catch(() => ({}));
                 setMessages(prev => [...prev, { id: (Date.now() + 2).toString(), role: 'model',
-                    content: failure.error || 'AI chat is temporarily unavailable.', timestamp: Date.now(),
+                    content: failure.error || 'AI chat is temporarily unavailable.', timestamp: Date.now(), responseError: true,
                     allowanceCta: isDailyAllowanceCode(failure.code) }]);
                 return;
             }
@@ -684,7 +688,8 @@ Check out some of the areas I can help you with below.`;
             setMessages(prev => [...prev, {
                 id: (Date.now() + 2).toString(),
                 role: 'model',
-                content: "I'm having trouble connecting right now. Please try again later.",
+                content: "Deity couldn't finish that response. Please refresh this page and try again. No automatic retry was made.",
+                responseError: true,
                 timestamp: Date.now()
             }]);
         } finally {

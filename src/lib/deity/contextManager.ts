@@ -4,6 +4,7 @@ import {
     qualificationsGuidancePrompt,
     productsGuidancePrompt
 } from './deepSectionPrompts';
+import { NSSO_PRODUCT_CONTEXT } from './product-context';
 
 // Keywords for Category Detection (Expanded)
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -365,6 +366,7 @@ After you complete ANY profile update (UPDATE_FIELD, ADD_LINK, ADD_EXPERIENCE, A
 
     // 4. Final Assembly
     return `
+${NSSO_PRODUCT_CONTEXT}
 ${KNOWLEDGE_OVERVIEW}
 You are "Deity", a smart onboarding agent and persistent AI Thought Partner helping ${userName} build their New Sovereign Self profile and achieve sovereignty through clarity.
 You are warm, grounded, supportive, and you KNOW ${userName} through their nsso profile.
@@ -384,7 +386,7 @@ CONTEXT FROM KNOWLEDGE BASE:
 ${contextText}
 
 CRITICAL INSTRUCTIONS:
-- ALWAYS reference ${userName}'s unique profile details in your responses to make them feel seen and understood
+- Reference ${userName}'s profile details only when they are present and relevant to the question
 - Connect recommendations to their specific experiences, projects, products, or stated goals
 - If they ask about career advice, reference their actual headline and experience
 - When recommending resources, ALWAYS provide at least 3 specific recommendations from the knowledge base

@@ -4,6 +4,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ChatAllowanceError, allowanceResponse } from '@/lib/deity/chat-allowance';
 import { openChatBudget, CHAT_MODEL, CHAT_OUTPUT_TOKENS, type ChatBudget } from '@/lib/deity/chat-budget-server';
 import { readChatRequest } from '@/lib/deity/chat-request';
+import { isNssoProductQuestion } from '@/lib/deity/product-context';
+import { chatFailureDetails, type ChatPhase } from '@/lib/deity/chat-diagnostics';
 import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
 import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
@@ -145,9 +147,14 @@ function calculateProfileCompleteness(contextData: any): number {
 
 export async function POST(req: Request) {
     let budget: ChatBudget | undefined;
+    let phase: ChatPhase = 'request';
+    let requestId = crypto.randomUUID() as string;
     try {
         const { message, category, history, disableTools } = await readChatRequest(req);
+        phase = 'allowance';
         budget = await openChatBudget(req, 'chat');
+        requestId = budget.requestId;
+        phase = 'context';
 
         if (!message) {
             return new Response('Message is required', { status: 400 });
@@ -157,7 +164,8 @@ export async function POST(req: Request) {
         const isSystemFollowUp = message.startsWith('[SYSTEM:');
 
         // Auto-detect category
-        const detectedCategory = category || detectCategory(message);
+        const productQuestion = isNssoProductQuestion(message);
+        const detectedCategory = productQuestion ? null : category || detectCategory(message);
 
         // Detect User Intent (Profile vs Knowledge)
         const intents = detectSectionIntent(message, history || []);
@@ -178,7 +186,10 @@ export async function POST(req: Request) {
         let threshold = 0.4; // Default threshold
         let skipSearch = false; // Flag to skip RAG
 
-        if (detectedCategory && CATEGORY_CONFIG[detectedCategory]) {
+        if (productQuestion) {
+            // Similarity search over third-party resources cannot establish our product's identity.
+            skipSearch = true;
+        } else if (detectedCategory && CATEGORY_CONFIG[detectedCategory]) {
             // User specified a category or auto-detected knowledge topic - use its filters
             filterFiles = CATEGORY_CONFIG[detectedCategory].files;
             threshold = CATEGORY_CONFIG[detectedCategory].threshold;
@@ -281,6 +292,7 @@ export async function POST(req: Request) {
             console.log(`Searching with category: ${detectedCategory || 'None'}, filters:`, filterFiles);
 
             // 1. Generate embedding for user query
+            phase = 'query_embedding';
             budget.addEmbedding(message);
             const embeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: message }] }, outputDimensionality: 768 } as any, { timeout: 10_000 });
             const embedding = embeddingResult.embedding.values;
@@ -289,16 +301,18 @@ export async function POST(req: Request) {
             let profileEmbedding = null;
             if (userId && userContext && userContext.length > 50) {
                 try {
+                    phase = 'profile_embedding';
                     const contextForEmbedding = userContext.substring(0, 1000);
                     budget.addEmbedding(contextForEmbedding);
                     const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any, { timeout: 10_000 });
                     profileEmbedding = profileEmbeddingResult.embedding.values;
                 } catch (err) {
-                    console.error("Profile embedding unavailable");
+                    console.error('Deity optional profile embedding unavailable', chatFailureDetails(err, 'profile_embedding', requestId));
                 }
             }
 
             // Primary Search
+            phase = 'retrieval';
             const { data: primaryResults, error: primaryError } = await supabase.rpc('intelligent_search', {
                 query_embedding: embedding,
                 query_text: message,
@@ -345,6 +359,7 @@ export async function POST(req: Request) {
         let finalDocs = documents.slice(0, 5);
 
         // --- PHASE 4: GROUNDED VERIFICATION (High-Performance "Fail-Open") ---
+        phase = 'link_checks';
         try {
             // Extract URLs from metadata
             const urlsToCheck: string[] = [];
@@ -432,9 +447,12 @@ export async function POST(req: Request) {
         });
 
         // 6. Generate Response Stream
+        phase = 'count_tokens';
         const tokenCount = await model.countTokens({ contents: chatContents }, { timeout: 10_000 });
+        phase = 'completion_allowance';
         await budget.prepare(tokenCount.totalTokens, CHAT_OUTPUT_TOKENS);
         const activeBudget = budget;
+        phase = 'generation';
         const result = await model.generateContentStream({
             contents: chatContents
         }, { timeout: 30_000, signal: AbortSignal.timeout(40_000) });
@@ -445,8 +463,8 @@ export async function POST(req: Request) {
         // Create a readable stream for the response which handles Tool Calls
         const stream = new ReadableStream({
             async start(controller) {
-                try {
                 let fullResponse = '';
+                try {
                 const collectedActions: any[] = [];
 
                 // Stream chunks as they arrive
@@ -562,11 +580,18 @@ export async function POST(req: Request) {
 
                 const response = await result.response;
                 await activeBudget.finish(response.usageMetadata);
+                if (!fullResponse.trim() && collectedActions.length === 0) throw new Error('Empty provider response');
                 controller.close();
-                } catch {
+                } catch (error) {
                     await activeBudget.finish();
-                    // Upstream errors can contain credential-bearing URLs. Never expose them.
-                    try { controller.error(new Error('The AI response was interrupted. Please try again later.')); } catch { /* Client disconnected. */ }
+                    const failure = chatFailureDetails(error, 'stream', requestId);
+                    console.error('Deity chat failure', failure);
+                    // Headers may already be sent. Finish with an explicit, safe message
+                    // instead of a broken HTTP body that the UI mislabels as no connection.
+                    try {
+                        controller.enqueue(new TextEncoder().encode(`${fullResponse ? '\n\n' : ''}${failure.message}`));
+                        controller.close();
+                    } catch { /* Client disconnected; retain the reservation and diagnostic. */ }
                 }
             }
         });
@@ -576,13 +601,16 @@ export async function POST(req: Request) {
                 'Content-Type': 'text/plain; charset=utf-8',
                 'Cache-Control': 'no-store',
                 'X-Content-Type-Options': 'nosniff',
+                'X-Deity-Request-Id': requestId,
             },
         });
 
     } catch (err: unknown) {
         await budget?.finish();
         if (err instanceof ChatAllowanceError) return allowanceResponse(err);
-        console.error('Chat provider unavailable');
-        return Response.json({ error: 'AI chat is temporarily unavailable. Please try again later.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+        const failure = chatFailureDetails(err, phase, requestId);
+        console.error('Deity chat failure', failure);
+        return Response.json({ error: failure.message, code: failure.code, requestId }, { status: 503,
+            headers: { 'Cache-Control': 'no-store', 'X-Deity-Request-Id': requestId } });
     }
 }

@@ -45,6 +45,8 @@ export class ChatBudget {
     this.rpc = rpc; this.ipHash = ipHash; this.route = route; this.id = id;
   }
 
+  get requestId() { return this.id; }
+
   async reserve(micros = 10_000) {
     const { data, error } = await this.rpc("reserve_nsso_chat_budget", {
       p_ip_hash: this.ipHash, p_request_id: this.id, p_route: this.route, p_micros: micros,

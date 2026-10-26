@@ -24,6 +24,9 @@ export async function readChatRequest(request: Request) {
   const history = data.history ?? [];
   if (!Array.isArray(history) || history.length > 10 || history.some(m => !m || !["user", "model"].includes(m.role)
     || typeof m.content !== "string" || m.content.length > 2000)) throw new ChatAllowanceError("invalid_chat_request", 400);
+  // UI greetings and clipped leading model turns are not prior user conversations.
+  const firstUser = history.findIndex(m => m.role === 'user');
+  const conversation = firstUser < 0 ? [] : history.slice(firstUser);
   return { message: data.message as string, category: data.category as string | undefined,
-    history: history as { role: "user" | "model"; content: string }[], disableTools: data.disableTools === true };
+    history: conversation as { role: "user" | "model"; content: string }[], disableTools: data.disableTools === true };
 }

@@ -32,8 +32,9 @@ export function allowanceResponse(error: ChatAllowanceError): Response {
   }, { status: error.status, headers: { "Cache-Control": "no-store", "Retry-After": String(seconds) } });
 }
 
-export function boundedChatHistory<T extends { role: string; content: string }>(messages: T[]) {
-  const history = messages.filter(m => m.content.trim()).slice(-10).map(m => ({ role: m.role, content: m.content.slice(0, 2000) }));
+export function boundedChatHistory<T extends { role: string; content: string; id?: string; responseError?: boolean; allowanceCta?: boolean }>(messages: T[]) {
+  const history = messages.filter(m => m.content.trim() && !['welcome', 'tip'].includes(m.id || '') && !m.responseError && !m.allowanceCta)
+    .slice(-10).map(m => ({ role: m.role, content: m.content.slice(0, 2000) }));
   while (new TextEncoder().encode(JSON.stringify(history)).length > 36_000) history.shift();
   return history;
 }
