@@ -19,33 +19,47 @@ test.beforeAll(async () => {
 
 test('the real browser factory preserves an expired credential on Auth429 while verification fails closed and native HTTP is capped', async ({ page, context }) => {
     const now = 1_798_000_000_000
-    await page.clock.install({ time: new Date(now) })
+    await page.clock.install({ time: new Date(now - 60_000) })
     const user = { id: '11111111-1111-4111-8111-111111111111', aud: 'authenticated', role: 'authenticated', email: 'fixture@example.invalid', app_metadata: {}, user_metadata: {}, created_at: '2026-10-26T00:00:00Z' }
     const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url'), expiry = Math.floor(now / 1000) - 60
     const access = encode({ alg: 'HS256', typ: 'JWT' }) + '.' + encode({ sub: user.id, exp: expiry, aud: 'authenticated', role: 'authenticated' }) + '.synthetic-signature'
     const value = 'base64-' + encode({ access_token: access, refresh_token: 'synthetic-refresh', expires_at: expiry, expires_in: 3600, token_type: 'bearer', user })
     await context.addCookies([{ name: 'sb-auth-fixture-auth-token', value, domain: 'nsso.test', path: '/', secure: true, sameSite: 'Lax' }])
     const requests = [], errors = []
+    let releaseResponse
+    const responseGate = new Promise(resolve => { releaseResponse = resolve })
     page.on('pageerror', error => errors.push(error.message))
-    await page.route('**/*', route => {
+    await page.route('**/*', async route => {
         const url = new URL(route.request().url())
         if (url.origin === 'https://nsso.test') return route.fulfill({ contentType: 'text/html', body: '<div id="fixture"></div>' })
         expect(url.origin).toBe('https://auth-fixture.supabase.co')
         expect(url.pathname).toBe('/auth/v1/token')
         expect(url.searchParams.get('grant_type')).toBe('refresh_token')
         requests.push({ path: url.pathname, method: route.request().method() })
+        await responseGate
         return route.fulfill({ status: 429, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '{"message":"Synthetic Auth throttle"}' })
     })
     await page.goto('https://nsso.test/fixture')
+    await page.clock.pauseAt(new Date(now))
+    const refreshResponse = page.waitForResponse(response => response.url().startsWith('https://auth-fixture.supabase.co/auth/v1/token?'))
     await page.addScriptTag({ content: bundle })
     await expect.poll(() => requests.length).toBe(1)
-    // Native fetch is untouched. Fake time advances only the pinned SDK's
-    // existing internal backoff; all outgoing requests use Chromium's fetch.
+    expect(await page.evaluate(() => window.fixtureResult)).toBeUndefined()
+    releaseResponse()
+    const response = await refreshResponse
+    expect(response.status()).toBe(429)
+    // Dispatch does not imply native response delivery on a busy CI host.
+    // The circuit deliberately cancels the 429 body, so do not await its drain.
+    // Start backoff time after headers arrive; runFor preserves the SDK's exact
+    // subsecond timer deadlines instead of rounding each retry up to a second.
+    // Native fetch is untouched, and the paused clock stays inside the default
+    // 60-second cooldown throughout initialization and explicit verification.
     for (let step = 0; step < 56; step++) {
         if (await page.evaluate(() => Boolean(window.fixtureResult))) break
-        await page.clock.fastForward(1000)
+        await page.clock.runFor(1000)
     }
     await expect.poll(() => page.evaluate(() => window.fixtureResult)).toEqual({ status: 503, verifiedUser: false })
+    expect(await page.evaluate(() => Date.now()) - now).toBeLessThan(60_000)
     expect(requests).toEqual([{ path: '/auth/v1/token', method: 'POST' }])
     expect(await page.evaluate(() => window.fixtureEvents.includes('SIGNED_OUT'))).toBe(false)
     const cookie = (await context.cookies()).find(cookie => cookie.name === 'sb-auth-fixture-auth-token')
