@@ -1,6 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { isTransientAuthError } from '@/lib/auth-errors'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+
+const privateHeaders = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 
 export async function GET(request: Request) {
     try {
@@ -10,33 +12,16 @@ export async function GET(request: Request) {
         const search = searchParams.get('search') || ''
         if (search.length > 200 || !['date','location','name'].includes(sort) || !['asc','desc'].includes(order)) return NextResponse.json({ error: 'Choose a valid filter.' }, { status: 400, headers: { 'Cache-Control': 'private, no-store' } })
 
-        const cookieStore = await cookies()
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                cookieStore.set(name, value, options)
-                            )
-                        } catch { }
-                    },
-                },
-            }
-        )
+        const supabase = await createClient()
 
         // Get authenticated user
         const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+        if (isTransientAuthError(authError)) return NextResponse.json({ error: 'Connections are temporarily unavailable. Please retry.' }, { status: 503, headers: privateHeaders })
         if (authError || !user) {
             return NextResponse.json(
                 { error: 'Unauthorized' },
-                { status: 401 }
+                { status: 401, headers: privateHeaders }
             )
         }
 
@@ -83,7 +68,7 @@ export async function GET(request: Request) {
             console.error('Connections unavailable', { code: 'CONNECTION_READ_FAILED' })
             return NextResponse.json(
                 { error: 'Failed to fetch connections' },
-                { status: 500 }
+                { status: 503, headers: privateHeaders }
             )
         }
 
@@ -127,11 +112,11 @@ export async function GET(request: Request) {
         }
 
         return NextResponse.json({ connections }, { headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } })
-    } catch (error) {
+    } catch {
         console.error('Connections unavailable', { code: 'CONNECTION_READ_FAILED' })
         return NextResponse.json(
             { error: 'Internal server error' },
-            { status: 500 }
+            { status: 503, headers: privateHeaders }
         )
     }
 }

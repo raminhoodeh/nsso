@@ -1,17 +1,26 @@
 import test, { after } from 'node:test'
 import assert from 'node:assert/strict'
 import { registerHooks } from 'node:module'
+import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
+const source = new URL('../src/', import.meta.url)
+const previousEnvironment = { ...process.env }
+Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: 'https://configured-fixture.supabase.co', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'synthetic-anonymous-key' })
 const moduleUrl = text => `data:text/javascript,${encodeURIComponent(text)}`
 const hooks = registerHooks({ resolve(specifier, context, next) {
-    if (specifier === '@supabase/ssr') return { url: moduleUrl('export const createServerClient=(url,key,options)=>({options});'), shortCircuit: true }
+    if (specifier === '@supabase/ssr') return { url: moduleUrl('export const createServerClient=(url,key,options)=>({options,auth:{getUser:async()=>({data:{user:null},error:null})}});'), shortCircuit: true }
     if (specifier === 'next/headers') return { url: moduleUrl('export const cookies=async()=>({getAll:()=>[],set(){}});'), shortCircuit: true }
+    if (specifier.startsWith('.') && context.parentURL?.startsWith(source.href)) {
+        const url = new URL(specifier + '.ts', context.parentURL)
+        if (existsSync(fileURLToPath(url))) return next(url.href, context)
+    }
     return next(specifier, context)
 } })
 const { createClient } = await import('../src/lib/supabase/server.ts')
 hooks.deregister()
 const previousFetch = globalThis.fetch
-after(() => { globalThis.fetch = previousFetch })
+after(() => { globalThis.fetch = previousFetch; process.env = previousEnvironment })
 
 test('server database transport adds a timeout while preserving caller cancellation and cookie adapters', async () => {
     const calls = []

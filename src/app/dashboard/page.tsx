@@ -3,8 +3,9 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { validateProfileUsername } from '@/lib/profile-username'
 import Header from '@/components/layout/Header'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import {
@@ -25,7 +26,7 @@ import { useProfile } from '@/components/providers/ProfileProvider'
 import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import type { ProfilePatch } from '@/lib/profile-mutations'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
-import { uploadProfileMedia } from '@/lib/profile-media-client'
+import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
 import { Sparkles } from 'lucide-react'
 import type { EarningsStats } from '@/lib/earnings'
 
@@ -47,13 +48,22 @@ import {
 import { SortableLinkItem } from './components/SortableLinkItem'
 
 function DashboardContent() {
-    const router = useRouter()
+    const { user, loading, error, refreshUser } = useUser()
+    const [claimOwner, setClaimOwner] = useState<string | null>(null)
+    if (user && !claimOwner) setClaimOwner(user.id)
+    if (loading || (user && !claimOwner)) return <main className="min-h-screen flex items-center justify-center text-white"><p role="status">Loading your account…</p></main>
+    if (!user) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><button type="button" onClick={() => { void refreshUser() }}>Retry account</button></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main>
+    return <DashboardForAccount key={user.id} allowClaim={claimOwner === user.id} />
+}
+
+function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
     const searchParams = useSearchParams()
-    const supabase = createClient()
     const { showToast } = useToast()
     const { user, refreshUser } = useUser()
     const {
         profile,
+        loading,
+        refreshProfile,
         links,
         contacts,
         updateField: updateProfile,
@@ -74,7 +84,9 @@ function DashboardContent() {
     const [headline, setHeadline] = useState('')
     const [bio, setBio] = useState('') // Local state for bio to prevent spam
     const [profilePicUrl, setProfilePicUrl] = useState('')
-    const [customDomain, setCustomDomain] = useState('')
+    const claimIntent = validateProfileUsername(allowClaim ? searchParams.get('claim') : null)
+    const [customDomain, setCustomDomain] = useState(() => 'username' in claimIntent ? claimIntent.username : user?.username || '')
+    const savedUsername = useRef(user?.username)
 
 
     // Calculate profile completeness
@@ -92,9 +104,7 @@ function DashboardContent() {
         return Math.round((filled / fields.length) * 100)
     })()
 
-    // UI state
-    // Initial loading state combines auth check and profile fetch
-    const [loading, setLoading] = useState(true)
+    // UI state follows the account-scoped authoritative profile provider.
 
     const [saving, setSaving] = useState(false)
     // URL-based state for navigation
@@ -106,54 +116,19 @@ function DashboardContent() {
     const [prefetchedEarnings, setPrefetchedEarnings] = useState<EarningsStats | null>(null)
     const [prefetchedMyNsso, setPrefetchedMyNsso] = useState<any>(null)
 
-    // Eager Background Prefetching
+    // Each account owns its prefetch lifetime; an old account response is ignored.
     useEffect(() => {
-
-
-        // 2. Prefetch Earnings
-        const loadEarnings = async () => {
+        const controller = new AbortController()
+        let active = true
+        async function prefetch(path: string, publish: (value: any) => void) {
             try {
-                const res = await fetch('/api/earnings/stats')
-                if (res.ok) {
-                    const data = await res.json()
-                    setPrefetchedEarnings(data)
-                }
-            } catch (err) {
-                console.error('Background earnings fetch failed', err)
-            }
+                const response = await fetch(path, { signal: controller.signal, cache: 'no-store' })
+                if (response.ok) { const data = await response.json(); if (active) publish(data) }
+            } catch { /* The selected tab exposes its own retry state. */ }
         }
-
-        // 3. Prefetch My nsso
-        const loadMyNsso = async () => {
-            try {
-                const res = await fetch('/api/my-nsso/connections?sort=date&order=desc')
-                if (res.ok) {
-                    const data = await res.json()
-                    setPrefetchedMyNsso(data)
-                }
-            } catch (err) {
-                console.error('Background my-nsso fetch failed', err)
-            }
-        }
-
-        // 4. Warm up Deity Agent (Preload Code)
-        // This triggers the network request for the heavy chunk automatically
-        const warmUpDeity = () => {
-            import('@/components/agent/AgentChatInterface')
-                .then(() => console.log('Deity Agent Ready (Warmed Up)'))
-                .catch(err => console.error('Deity Warmup Failed', err))
-        }
-
-        // Execute after a small delay to prioritize main content paint
-        const timer = setTimeout(() => {
-            loadEarnings()
-            warmUpDeity()
-        }, 1000)
-
-        // Start MyNsso fetch immediately (user priority)
-        loadMyNsso()
-
-        return () => clearTimeout(timer)
+        void prefetch('/api/my-nsso/connections?sort=date&order=desc', setPrefetchedMyNsso)
+        const timer = setTimeout(() => { void prefetch('/api/earnings/stats', setPrefetchedEarnings) }, 1000)
+        return () => { active = false; controller.abort(); clearTimeout(timer) }
     }, [])
 
     // Cropper State
@@ -167,49 +142,13 @@ function DashboardContent() {
     const [checkingUsername, setCheckingUsername] = useState(false)
     const [updatingUsername, setUpdatingUsername] = useState(false)
 
-    // Load user data
+    // Initial claim intent stays editable; later confirmed username changes update it.
     useEffect(() => {
-        const loadData = async () => {
-            const { data: { user: authUser } } = await supabase.auth.getUser()
-
-            if (!authUser) {
-                router.push('/sign-in')
-                return
-            }
-
-            // Parallel Fetching
-            const [
-                { data: userData },
-                { data: profileData },
-            ] = await Promise.all([
-                supabase.from('users').select('id,username').eq('id', authUser.id).single(),
-                supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', authUser.id).single(),
-            ])
-
-            if (userData) {
-                setCustomDomain(userData.username || '')
-            }
-
-            if (profileData) {
-                setFullName(profileData.full_name || '')
-                setHeadline(profileData.headline || '')
-                setBio(profileData.bio || '')
-                setProfilePicUrl(profileData.profile_pic_url || '')
-
-            }
-
-            setLoading(false)
+        if (savedUsername.current !== user?.username) {
+            savedUsername.current = user?.username
+            setCustomDomain(user?.username || '')
         }
-
-        loadData()
-    }, [supabase, router])
-
-    // Sync local customDomain state with user context when loaded
-    useEffect(() => {
-        if (user?.username) {
-            setCustomDomain(user.username)
-        }
-    }, [user])
+    }, [user?.username])
 
     // Sync local state with profile provider updates (e.g. from Deity)
     useEffect(() => {
@@ -217,8 +156,9 @@ function DashboardContent() {
             if (profile.bio !== bio && !saving) setBio(profile.bio || '')
             if (profile.headline !== headline && !saving) setHeadline(profile.headline || '')
             if (profile.full_name !== fullName && !saving) setFullName(profile.full_name || '')
+            if (profile.profile_pic_url !== profilePicUrl && !isUploading) setProfilePicUrl(profile.profile_pic_url || '')
         }
-    }, [profile?.bio, profile?.headline, profile?.full_name])
+    }, [profile?.bio, profile?.headline, profile?.full_name, profile?.profile_pic_url])
 
     // Proactive Nudge: Suggest asking Deity if profile is incomplete
     useEffect(() => {
@@ -298,10 +238,10 @@ function DashboardContent() {
     const handleCopyUrl = () => {
         const domain = user?.username
         if (!domain) return
-        navigator.clipboard.writeText(`nsso.me/${domain}`)
-        setUrlCopied(true)
-        showToast('Profile URL copied!', 'success')
-        setTimeout(() => setUrlCopied(false), 2000)
+        void navigator.clipboard.writeText(`https://nsso.me/${domain}`).then(() => {
+            setUrlCopied(true); showToast('Profile URL copied!', 'success')
+            setTimeout(() => setUrlCopied(false), 2000)
+        }).catch(() => showToast('The URL could not be copied. You can select and copy it above.', 'error'))
     }
 
     const saveProfile = async (patch: ProfilePatch) => {
@@ -327,31 +267,28 @@ function DashboardContent() {
     }
 
     // Handle Cropped Upload
-    const handleCropComplete = async (croppedBlob: Blob) => {
+    const handleCropComplete = async (croppedBlob: Blob, signal: AbortSignal) => {
         if (!user) return
         setIsUploading(true)
 
-        let publicUrl: string
-        try { publicUrl=(await uploadProfileMedia(croppedBlob,'avatar',user.id)).url }
-        catch (error) {
-            showToast(error instanceof Error ? error.message : 'The image was not uploaded. Your crop has been kept.', 'error')
+        try {
+            await runProfileMediaAttempt(async attemptSignal => {
+                const {url:publicUrl}=await uploadProfileMedia(croppedBlob,'avatar',user.id,attemptSignal)
+                if (attemptSignal.aborted) return
+                // Only the returned committed operation can acknowledge this image change.
+                const committed = await patchProfile({profile_pic_url:publicUrl},true)
+                if (attemptSignal.aborted) return
+                if (!committed) throw new Error('The image change was not saved. Your crop has been kept.')
+                setProfilePicUrl(publicUrl)
+                showToast('Profile picture updated!', 'success')
+                setCropperOpen(false)
+                setCropperImage(null)
+            }, { signal })
+        } catch (error) {
+            if (!signal.aborted) showToast(error instanceof Error ? error.message : 'The image was not uploaded. Your crop has been kept.', 'error')
+        } finally {
             setIsUploading(false)
-            return
         }
-
-        setProfilePicUrl(publicUrl)
-
-        // Only the returned committed operation can acknowledge this image change.
-        const committed = await patchProfile({profile_pic_url:publicUrl},true)
-        if (!committed) {
-            showToast('The image change was not saved. Your crop has been kept.', 'error')
-            setIsUploading(false)
-            return
-        }
-        showToast('Profile picture updated!', 'success')
-        setIsUploading(false)
-        setCropperOpen(false)
-        setCropperImage(null)
     }
 
     // DND Sensors
@@ -395,6 +332,8 @@ function DashboardContent() {
             </main>
         )
     }
+
+    if (!profile) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center"><p role="alert">Your profile could not be loaded. Please retry before editing.</p><button type="button" onClick={() => { void refreshProfile() }}>Retry profile</button></div></main>
 
     return (
         <main className="min-h-screen pb-12">
@@ -513,9 +452,12 @@ function DashboardContent() {
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between mb-1 ml-1">
-                                        <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">FULL NAME</label>
+                                        <label htmlFor="profile-full-name" className="block text-white/50 text-xs font-bold uppercase tracking-wider">FULL NAME</label>
                                     </div>
                                     <Input
+                                        id="profile-full-name"
+                                        name="name"
+                                        autoComplete="name"
                                         value={fullName}
                                         onChange={(e) => {setFullName(e.target.value);void updateProfile('full_name',e.target.value)}}
                                         onBlur={() => {void saveProfile({full_name:fullName})}}
@@ -525,7 +467,7 @@ function DashboardContent() {
 
                                 <div className="space-y-4">
                                     <div className="mb-3 ml-1 flex items-center justify-between gap-3">
-                                        <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">HEADLINE</label>
+                                        <label htmlFor="profile-headline" className="block text-white/50 text-xs font-bold uppercase tracking-wider">HEADLINE</label>
                                         <div className="flex items-center gap-3">
                                             {/* Character Counter */}
                                             <span className="text-white/40 text-[10px] font-medium">
@@ -544,6 +486,8 @@ function DashboardContent() {
                                         </div>
                                     </div>
                                     <Input
+                                        id="profile-headline"
+                                        name="headline"
                                         value={headline}
                                         onChange={(e) => {setHeadline(e.target.value);void updateProfile('headline',e.target.value)}}
                                         onBlur={() => {void saveProfile({headline})}}
@@ -554,7 +498,7 @@ function DashboardContent() {
 
                                 <div>
                                     <div className="mb-3 ml-1 flex items-center justify-between gap-3">
-                                        <label className="block text-white/50 text-xs font-bold uppercase tracking-wider">BIO</label>
+                                        <label htmlFor="profile-bio" className="block text-white/50 text-xs font-bold uppercase tracking-wider">BIO</label>
                                         <TahoeGlassButton
                                             onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me write my bio..." }
@@ -573,6 +517,8 @@ function DashboardContent() {
                                         data-mobile-bio-field="expanded"
                                     >
                                         <textarea
+                                            id="profile-bio"
+                                            name="bio"
                                             value={bio}
                                             onChange={(e) => {setBio(e.target.value);void updateProfile('bio',e.target.value)}}
                                             onBlur={() => {void saveProfile({bio})}}

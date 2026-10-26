@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/Toast'
 
 export default function ResetPasswordPage() {
     const supabase = createClient()
+    const pending = useRef(false)
     const { showToast } = useToast()
 
     const [email, setEmail] = useState('')
@@ -20,20 +21,14 @@ export default function ResetPasswordPage() {
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault()
-        setLoading(true)
-        setError('')
-
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/set-password`,
-        })
-
-        if (error) {
-            setError(error.message)
-            setLoading(false)
-        } else {
-            setSent(true)
-            showToast('Reset link sent!', 'success')
-        }
+        if (pending.current) return
+        pending.current = true; setLoading(true); setError('')
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/set-password` })
+            if (error) { setError(error.message); return }
+            setSent(true); showToast('Check your email for a reset link.', 'success')
+        } catch { setError('The reset email could not be requested. Your email is kept; please try again.') }
+        finally { pending.current = false; setLoading(false) }
     }
 
     if (sent) {
@@ -65,7 +60,7 @@ export default function ResetPasswordPage() {
                             Check your email
                         </h1>
                         <p className="text-slate-950/80 mb-6">
-                            We've sent a password reset link to <strong>{email}</strong>
+                            If an account exists for <strong>{email.trim()}</strong>, a password reset link is on its way.
                         </p>
                         <Link href="/sign-in">
                             <GlassButton variant="secondary" fullWidth tone="dark">
@@ -113,6 +108,8 @@ export default function ResetPasswordPage() {
                 <form onSubmit={handleResetPassword} className="space-y-4">
                     <Input
                         type="email"
+                        label="Email address"
+                        autoComplete="email"
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -121,7 +118,7 @@ export default function ResetPasswordPage() {
                     />
 
                     {error && (
-                        <p className="text-rose-950 font-medium text-sm text-center">{error}</p>
+                        <p role="alert" className="text-rose-950 font-medium text-sm text-center">{error}</p>
                     )}
 
                     <GlassButton

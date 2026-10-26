@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { registerHooks } from 'node:module'
 import { performance } from 'node:perf_hooks'
+import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
 const source = new URL('../src/', import.meta.url)
 const moduleUrl = text => `data:text/javascript,${encodeURIComponent(text)}`
@@ -10,6 +12,10 @@ const hooks = registerHooks({ resolve(specifier, context, next) {
     if (specifier === 'next/headers') return { url: moduleUrl('export const cookies=async()=>globalThis.__viewerCookies;'), shortCircuit: true }
     if (specifier.startsWith('@/')) return next(new URL(specifier.slice(2) + '.ts', source).href, context)
     if (specifier === '../urls') return next(new URL('lib/urls.ts', source).href, context)
+    if (specifier.startsWith('.') && context.parentURL?.startsWith(source.href)) {
+        const url = new URL(specifier + '.ts', context.parentURL)
+        if (existsSync(fileURLToPath(url))) return next(url.href, context)
+    }
     return next(specifier, context)
 } })
 const { loadPublicProfileViewer } = await import('../src/lib/public-profile.ts')

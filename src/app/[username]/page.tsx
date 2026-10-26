@@ -116,7 +116,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             </div>
 
             {/* Logic Handlers */}
-            <QRScanHandler scannedUserId={user.id} currentUser={viewer} />
+            <QRScanHandler key={`${viewer?.id ?? 'guest'}:${user.id}`} scannedUserId={user.id} currentUser={viewer} />
 
             {/* Profile Content */}
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} space-y-12 lg:space-y-20`}>
@@ -150,6 +150,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             {user.id !== viewer?.id && (
                                 <div className="flex justify-center lg:justify-start">
                                     <AddToMyNssoButton
+                                        key={`${viewer?.id ?? 'guest'}:${user.id}`}
                                         profileUserId={user.id}
                                         isLoggedIn={!!viewer}
                                         initialIsConnected={connectionExists}

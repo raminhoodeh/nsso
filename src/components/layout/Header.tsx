@@ -8,12 +8,14 @@ import { cn } from '@/lib/utils'
 import GlassButton from '@/components/ui/GlassButton'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
+import { boundedClientRead } from '@/lib/client-read'
 import { useState, useEffect, useCallback } from 'react'
 import { LogOut } from 'lucide-react'
 import {
     TahoeBackdropHeader,
     TahoeGlassButton,
-    TahoeGlassDialog
+    TahoeGlassDialog,
+    TahoeGlassSurface
 } from '@/components/ui/tahoe-glass'
 
 interface HeaderProps {
@@ -30,6 +32,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const pathname = usePathname()
     const router = useRouter()
     const { showToast } = useToast()
+    const [signingOut, setSigningOut] = useState(false)
     const [mobileMenuState, setMobileMenuState] = useState({ open: false, pathname })
     const mobileMenuOpen = mobileMenuState.open && mobileMenuState.pathname === pathname
     const setMobileMenuOpen = useCallback((open: boolean) => {
@@ -78,16 +81,32 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     }, [mobileMenuOpen])
 
     const handleSignOut = async () => {
-        await supabase.auth.signOut()
-        window.location.href = '/'
+        if (signingOut) return
+        setSigningOut(true)
+        try {
+            // A deadline does not replay or claim rollback of the SDK request.
+            const { error } = await boundedClientRead(() => supabase.auth.signOut())
+            if (error) throw error
+            window.location.href = '/'
+        } catch {
+            showToast('Sign-out could not be confirmed. Please try again.', 'error')
+            setSigningOut(false)
+        }
     }
 
-    const copyProfileUrl = () => {
+    const copyProfileUrl = async () => {
         const targetUsername = username || user?.username
-        if (!targetUsername) return
+        if (!targetUsername) {
+            showToast('Choose a profile name before sharing your URL.', 'info')
+            return
+        }
         const url = `${window.location.origin}/${targetUsername}`
-        navigator.clipboard.writeText(url)
-        showToast('Profile URL copied to clipboard!', 'success')
+        try {
+            await navigator.clipboard.writeText(url)
+            showToast('Profile URL copied to clipboard!', 'success')
+        } catch {
+            showToast('Could not copy the profile URL. Please try again.', 'error')
+        }
     }
 
     // Determine content based on variant
@@ -167,11 +186,11 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 {/* COMPLETELY HIDDEN ON DESKTOP IF LOGGED IN */}
                 <div className="hidden md:flex items-center gap-4">
                     {!user && (
-                        <Link href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}>
-                            <GlassButton variant="secondary" size="sm">
-                                SIGN IN / SIGN UP
-                            </GlassButton>
-                        </Link>
+                        <TahoeGlassSurface as="a" variant="button" href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}
+                            tone="light" className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white"
+                            contentClassName="text-center text-white">
+                            SIGN IN / SIGN UP
+                        </TahoeGlassSurface>
                     )}
                 </div>
 
@@ -215,6 +234,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {user && !isAdmin && (
                         <TahoeGlassButton
                             onClick={handleSignOut}
+                            disabled={signingOut}
                             radius={8}
                             className="h-11 w-11 p-0 text-white/80 transition-colors hover:text-white"
                             contentClassName="text-inherit"
@@ -327,13 +347,11 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
                                         <button
                                             type="button"
-                                            onClick={() => {
-                                                handleSignOut()
-                                                setMobileMenuOpen(false)
-                                            }}
+                                            onClick={() => { void handleSignOut() }}
+                                            disabled={signingOut}
                                             className="min-h-12 w-full rounded-xl border border-red-300/15 bg-[#21191e] px-4 py-3 text-left font-medium text-red-300 outline-none transition-colors hover:bg-[#2b1e24] focus-visible:ring-2 focus-visible:ring-red-200/80"
                                         >
-                                            Sign Out
+                                            {signingOut ? 'Signing out…' : 'Sign Out'}
                                         </button>
                                     </div>
                                 </div>
@@ -342,11 +360,11 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
                     {/* Mobile - Not logged in (Default Mode Only) */}
                     {!isOwnerMode && showAuthButtons && !user && (
-                        <Link href="/sign-in">
-                            <GlassButton variant="secondary" size="sm">
-                                SIGN IN / SIGN UP
-                            </GlassButton>
-                        </Link>
+                        <TahoeGlassSurface as="a" variant="button" href="/sign-in"
+                            tone="light" className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white"
+                            contentClassName="text-center text-white">
+                            SIGN IN / SIGN UP
+                        </TahoeGlassSurface>
                     )}
                 </div>
             </nav>

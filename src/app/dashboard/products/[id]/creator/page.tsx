@@ -8,7 +8,8 @@ import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2 } from 
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
-import { uploadProfileMedia } from '@/lib/profile-media-client'
+import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
+import { boundedClientRead } from '@/lib/client-read'
 import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
@@ -180,6 +181,7 @@ export default function SalesPageCreator() {
     const {products,loading,patchEntity,refreshProfile,getRevision,mutationState} = useProfile()
     const product = products.find(row => row.id === params.id) || null
     const saving = mutationState.status === 'saving'
+    const saved = mutationState.status === 'saved'
     const [copiedField, setCopiedField] = useState<string | null>(null)
     const [isUploading, setIsUploading] = useState(false)
 
@@ -196,12 +198,15 @@ export default function SalesPageCreator() {
 
     const { showToast } = useToast()
 
-    const copyPrompt = (type: keyof typeof PROMPTS) => {
-        const text = PROMPTS[type]
-        navigator.clipboard.writeText(text)
-        setCopiedField(type)
-        showToast('Prompt ready for Deity', 'success')
-        setTimeout(() => setCopiedField(null), 2000)
+    const copyPrompt = async (type: keyof typeof PROMPTS) => {
+        try {
+            await navigator.clipboard.writeText(PROMPTS[type])
+            setCopiedField(type)
+            showToast('Prompt ready for Deity', 'success')
+            setTimeout(() => setCopiedField(null), 2000)
+        } catch {
+            showToast('The prompt could not be copied. Please try again.', 'error')
+        }
     }
 
 
@@ -215,25 +220,25 @@ export default function SalesPageCreator() {
         reader.readAsDataURL(file)
     }
 
-    const handleCropComplete = async (croppedBlob: Blob) => {
+    const handleCropComplete = async (croppedBlob: Blob, signal: AbortSignal) => {
         setIsUploading(true)
-        const { data: { user: actor }, error: authError } = await supabase.auth.getUser()
-        if (authError || !actor || !product || product.user_id !== actor.id) {
-            showToast('Please sign in as the product owner to upload an image.', 'error')
-            setIsUploading(false)
-            return
-        }
         try {
-            const {url}=await uploadProfileMedia(croppedBlob,'product',actor.id)
-            if (!await updateProduct({image_url:url})) throw new Error('The image change was not saved. Your crop is kept for retry.')
-        } catch (error) {
-            showToast(error instanceof Error ? error.message : 'The image was not uploaded. Your crop has been kept.', 'error')
+            await runProfileMediaAttempt(async attemptSignal => {
+                const { data: { user: actor }, error: authError } = await boundedClientRead(() => supabase.auth.getUser(), { signal: attemptSignal })
+                if (attemptSignal.aborted) return
+                if (authError || !actor || !product || product.user_id !== actor.id) throw new Error('Please sign in as the product owner to upload an image.')
+                const {url}=await uploadProfileMedia(croppedBlob,'product',actor.id,attemptSignal)
+                if (attemptSignal.aborted) return
+                if (!await updateProduct({image_url:url})) throw new Error('The image change was not saved. Your crop is kept for retry.')
+                if (attemptSignal.aborted) return
+                setCropperOpen(false)
+                setCropperImage(null)
+            }, { signal })
+        } catch {
+            if (!signal.aborted) showToast('The image save could not be confirmed. Your crop has been kept; check your profile before retrying.', 'error')
+        } finally {
             setIsUploading(false)
-            return
         }
-        setIsUploading(false)
-        setCropperOpen(false)
-        setCropperImage(null)
     }
 
     if (loading) {
@@ -297,13 +302,14 @@ export default function SalesPageCreator() {
                                     </>
                                 ) : (
                                     <>
-                                        <div className="w-2 h-2 rounded-full bg-[#32D74B]" />
-                                        Saved
+                                        <div className={`w-2 h-2 rounded-full ${saved ? 'bg-[#32D74B]' : 'bg-yellow-500'}`} />
+                                        {saved ? 'Saved' : 'Not saved'}
                                     </>
                                 )}
                             </TahoeGlassSurface>
                             <TahoeGlassButton
-                                onClick={() => router.push(`/products/${productId}?source=creator`)}
+                                onClick={() => router.push(`/products/${productId}?source=creator&preview=true`)}
+                                disabled={!saved || isUploading}
                                 className="h-[48px] w-full px-4 py-0 md:h-[32px] md:w-auto"
                                 contentClassName="text-[13px] font-bold !text-white"
                             >
@@ -789,7 +795,8 @@ export default function SalesPageCreator() {
                                 Edit Profile
                             </TahoeGlassButton>
                             <TahoeGlassButton
-                                onClick={() => router.push(`/products/${productId}?source=creator`)}
+                                onClick={() => router.push(`/products/${productId}?source=creator&preview=true`)}
+                                disabled={!saved || isUploading}
                                 className="min-h-[54px] flex-1 px-6 py-0 md:h-[44px] md:min-h-0"
                                 contentClassName="font-bold !text-white"
                             >

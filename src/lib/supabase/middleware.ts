@@ -1,6 +1,9 @@
+import { isTransientAuthError } from '@/lib/auth-errors'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { hasPermission } from '@/lib/server/permissions'
+import { createAuthFetch } from './auth-fetch'
+import { boundedClientRead } from '../client-read'
 
 export async function updateSession(request: NextRequest, requestHeaders: Headers = new Headers(request.headers)) {
     let supabaseResponse = NextResponse.next({
@@ -16,6 +19,9 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
+            global: { fetch: createAuthFetch(process.env.NEXT_PUBLIC_SUPABASE_URL!, (input, init) => fetch(input, {
+                ...init, signal: init?.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(5_000)]) : AbortSignal.timeout(5_000),
+            })) },
             cookies: {
                 getAll() {
                     return request.cookies.getAll()
@@ -38,8 +44,8 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
 
     let user
     try {
-        const result = await supabase.auth.getUser()
-        if (result.error && (result.error.status === undefined || result.error.status <= 0 || result.error.status >= 500) && protectedRoute) throw new Error('Auth unavailable')
+        const result = await boundedClientRead(() => supabase.auth.getUser(), { timeoutMs: 5_000 })
+        if (isTransientAuthError(result.error) && protectedRoute) throw new Error('Auth unavailable')
         user = result.data.user
     } catch {
         if (protectedRoute) {

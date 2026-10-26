@@ -1,3 +1,4 @@
+import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
@@ -9,6 +10,7 @@ export async function POST(request: Request) {
         assertSameOrigin(request)
         const client = await createClient()
         const { data: { user }, error: authError } = await client.auth.getUser()
+        if (isTransientAuthError(authError)) return Response.json({ error: 'Account verification is temporarily unavailable. Please retry.' }, { status: 503, headers })
         if (authError || !user) return Response.json({ error: 'Please sign in to connect.' }, { status: 401, headers })
         const body = await readBoundedJson(request, 2048)
         if (typeof body.scannedUserId !== 'string' || !uuid.test(body.scannedUserId) || body.scannedUserId === user.id

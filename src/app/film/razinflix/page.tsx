@@ -49,6 +49,8 @@ export default function RazinFlixPage() {
     const [scrolled, setScrolled] = useState(false);
     const [films, setFilms] = useState<Film[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [catalogError, setCatalogError] = useState<string | null>(null);
+    const [catalogAttempt, setCatalogAttempt] = useState(0);
     const [brokenPosters, setBrokenPosters] = useState<Set<number>>(new Set());
     const [isCheckingPosters, setIsCheckingPosters] = useState(false);
     const { user } = useUser();
@@ -115,33 +117,41 @@ export default function RazinFlixPage() {
     }, [viewMode, films, isCheckingPosters]);
 
     useEffect(() => {
+        let active = true;
+        const controller = new AbortController();
         const fetchFilms = async () => {
+            setIsLoading(true);
+            setCatalogError(null);
             try {
                 const supabase = createPublicReadClient();
                 const { data, error } = await supabase
                     .from('razinflix_films')
                     .select('*')
-                    .order('id', { ascending: true });
+                    .order('id', { ascending: true })
+                    .abortSignal(controller.signal);
                 
                 if (error) throw error;
+                if (!active) return;
                 if (data) {
                     const loadedFilms = data as Film[];
                     setFilms(loadedFilms);
                     // Select 5 random featured films with a trailer
                     const filmsWithTrailers = loadedFilms.filter(film => film.trailer_key);
-                    if (filmsWithTrailers.length > 0) {
-                        const shuffled = filmsWithTrailers.sort(() => 0.5 - Math.random());
-                        setFeaturedFilms(shuffled.slice(0, 5));
-                    }
+                    const shuffled = filmsWithTrailers.sort(() => 0.5 - Math.random());
+                    setFeaturedFilms(shuffled.slice(0, 5));
+                    setFeaturedIndex(0);
                 }
             } catch {
+                if (!active || controller.signal.aborted) return;
                 console.warn('Film catalog unavailable', { code: 'FILM_READ_FAILED' });
+                setCatalogError('Films could not load. Please try again.');
             } finally {
-                setIsLoading(false);
+                if (active) setIsLoading(false);
             }
         };
-        fetchFilms();
-    }, []);
+        void fetchFilms();
+        return () => { active = false; controller.abort(); };
+    }, [catalogAttempt]);
 
     useEffect(() => {
         // Cache the five scene images before they enter the rotation.
@@ -599,6 +609,13 @@ export default function RazinFlixPage() {
                         <Loader2 className="animate-spin mb-4" size={48} />
                         <p className="font-medium tracking-wide">Loading from Razin database...</p>
                     </div>
+                ) : catalogError ? (
+                    <div role="alert" className="mx-auto mt-32 flex max-w-lg flex-col items-center gap-4 px-6 text-center text-gray-200">
+                        <p>{catalogError}</p>
+                        <button type="button" onClick={() => setCatalogAttempt(attempt => attempt + 1)} className="min-h-11 rounded-xl border border-white/30 px-5 py-2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Try again</button>
+                    </div>
+                ) : films.length === 0 ? (
+                    <p role="status" className="mt-32 px-6 text-center text-gray-300">No films are available yet.</p>
                 ) : viewMode === 'category' ? (
                     <>
                         {Object.entries(categories)
@@ -659,11 +676,15 @@ export default function RazinFlixPage() {
                         onSelect={handleSimilarFilmClick}
                         onUpdate={(updatedFilm) => {
                             setFilms(prev => prev.map(f => f.id === updatedFilm.id ? updatedFilm : f));
+                            setFeaturedFilms(prev => prev.map(f => f.id === updatedFilm.id ? updatedFilm : f).filter(f => f.trailer_key));
+                            if (!updatedFilm.trailer_key) setFeaturedIndex(0);
                             setModalContext(prev => ({ ...prev, list: prev.list.map(f => f.id === updatedFilm.id ? updatedFilm : f) }));
                             setSelectedFilm(updatedFilm);
                         }}
                         onDelete={(id) => {
                             setFilms(prev => prev.filter(f => f.id !== id));
+                            setFeaturedFilms(prev => prev.filter(f => f.id !== id));
+                            setFeaturedIndex(0);
                             setModalContext(prev => ({ list: prev.list.filter(f => f.id !== id), index: 0 }));
                         }}
                         onSearch={(term) => {

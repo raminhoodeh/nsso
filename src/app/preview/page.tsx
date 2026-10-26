@@ -1,23 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
-import { createClient } from '@/lib/supabase/client'
-import { fetchCurrentAccount } from '@/lib/current-account'
+import { useUser } from '@/components/providers/UserProvider'
+import { useProfile } from '@/components/providers/ProfileProvider'
+import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import GlassCard from '@/components/profile/ProfileGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
-import { PRODUCT_CARD_SELECT } from '@/lib/payments/product-presentation'
+import { productCheckoutVisibility } from '@/lib/payments/product-presentation'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeWebUrl } from '@/lib/urls'
-import ShinyLink from '@/components/ui/ShinyLink'
 import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
-import type { User, Profile, Link as LinkItem, Contact } from '@/lib/types'
 import {
     PROFILE_COLLECTION_GRID_CLASS,
     PROFILE_COLLECTION_SECTION_CLASS,
@@ -28,65 +27,25 @@ import { getProfileBioPreview } from '@/components/profile/profileBio'
 
 export default function PreviewPage() {
     const router = useRouter()
-    // Fix infinite re-render loop by stabilizing the supabase client
-    const [supabase] = useState(() => createClient())
     const { showToast } = useToast()
-
-    const [user, setUser] = useState<User | null>(null)
-    const [profile, setProfile] = useState<Profile | null>(null)
-    const [links, setLinks] = useState<LinkItem[]>([])
-    const [contacts, setContacts] = useState<Contact[]>([])
-    const [experiences, setExperiences] = useState<any[]>([])
-    const [qualifications, setQualifications] = useState<any[]>([])
-    const [projects, setProjects] = useState<any[]>([])
-    const [products, setProducts] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
+    const { user, loading: accountLoading, error: accountError, refreshUser } = useUser()
+    const { profile, links, contacts, experiences, qualifications, projects, products, loading: profileLoading, refreshProfile } = useProfile()
 
     useEffect(() => {
-        const loadData = async () => {
-            const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (!accountLoading && !accountError && !user) router.push('/sign-in')
+    }, [accountLoading, accountError, user, router])
 
-            if (!authUser) {
-                router.push('/sign-in')
-                return
-            }
-
-            // Load all user data
-            const [userData, profileData, linksData, contactsData, expResult, qualResult, projResult, prodResult] = await Promise.all([
-                fetchCurrentAccount().then(account => ({ data: account?.user ?? null })),
-                supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', authUser.id).single(),
-                supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }).order('id'),
-                supabase.from('contacts').select('*').eq('user_id', authUser.id).order('display_order').order('created_at').order('id'),
-                supabase.from('experiences').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }).order('id'),
-                supabase.from('qualifications').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }).order('id'),
-                supabase.from('projects').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }).order('id'),
-                supabase.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', authUser.id).order('created_at', { ascending: false }).order('id'),
-            ])
-
-            if (userData.data) setUser(userData.data)
-            if (profileData.data) setProfile(profileData.data)
-            if (linksData.data) setLinks(linksData.data)
-            if (contactsData.data) setContacts(contactsData.data)
-            if (expResult.data) setExperiences(expResult.data)
-            if (qualResult.data) setQualifications(qualResult.data)
-            if (projResult.data) setProjects(projResult.data)
-            if (prodResult.data) setProducts(prodResult.data)
-
-            setLoading(false)
+    const copyProfileUrl = async () => {
+        if (!user?.username) return
+        try {
+            await navigator.clipboard.writeText(`${window.location.origin}/${user.username}`)
+            showToast('Profile URL copied!', 'success')
+        } catch {
+            showToast('Your profile URL could not be copied. Please try again.', 'error')
         }
-
-        loadData()
-        // Explicitly exclude supabase from dependencies to prevent infinite loop
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router])
-
-    const copyProfileUrl = () => {
-        const url = `${window.location.origin}/${user?.username}`
-        navigator.clipboard.writeText(url)
-        showToast('Profile URL copied!', 'success')
     }
 
-    if (loading) {
+    if (accountLoading || (user && profileLoading) || (!user && !accountError)) {
         return (
             <main className="min-h-screen flex items-center justify-center">
                 <div className="text-white text-xl text-center">
@@ -94,6 +53,15 @@ export default function PreviewPage() {
                 </div>
             </main>
         )
+    }
+
+    if (!user || !profile || profile.user_id !== user.id) {
+        return <main className="flex min-h-screen items-center justify-center px-6">
+            <GlassCard className="max-w-lg p-6 text-center text-white">
+                <p>Your profile preview could not be loaded. Your editing draft has been kept.</p>
+                <GlassButton className="mt-4" onClick={() => { void refreshUser(); void refreshProfile() }}>Retry preview</GlassButton>
+            </GlassCard>
+        </main>
     }
 
     return (
@@ -127,6 +95,8 @@ export default function PreviewPage() {
 
             {/* Profile Content */}
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[120px] pb-40`}>
+                <p role="status" className="mb-4 rounded-xl bg-black/20 p-3 text-sm text-white/80">Profile preview — checkout is disabled. Unsaved changes are not yet public.</p>
+                <ProfileSaveStatus />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     {/* Left Column - Primary Identity */}
@@ -355,10 +325,11 @@ export default function PreviewPage() {
                         <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
                         <div className={PROFILE_COLLECTION_GRID_CLASS}>
                             {products.map(product => {
+                                const checkout = productCheckoutVisibility(product)
                                 const ProductWrapper = product.sales_page_active && product.sales_page_published !== false ? Link : 'div'
                                 // Fix TS error by explicitly typing or checking
                                 const wrapperProps = product.sales_page_active && product.sales_page_published !== false
-                                    ? { href: `/products/${product.id}`, className: "block flex-grow cursor-pointer transition-opacity hover:opacity-80" }
+                                    ? { href: `/products/${product.id}?preview=true`, className: "block flex-grow cursor-pointer transition-opacity hover:opacity-80" }
                                     : { className: "block flex-grow" }
 
                                 return (
@@ -390,19 +361,14 @@ export default function PreviewPage() {
 
                                         {/* Action Buttons */}
                                         <div className="space-y-3 mt-auto">
-                                            {product.purchase_link_active && product.purchase_link && (
+                                            {checkout.purchaseUrl && (
                                                 <div className="w-full flex justify-center">
-                                                    <ShinyLink
-                                                        href={product.purchase_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="w-[11.625rem]"
-                                                    >
+                                                    <GlassButton disabled className="w-[11.625rem]">
                                                         Link to Purchase
-                                                    </ShinyLink>
+                                                    </GlassButton>
                                                 </div>
                                             )}
-                                            {product.paypal_active && product.payment_config && (
+                                            {checkout.paypal && product.payment_config && (
                                                 <div className="w-full flex justify-center">
                                                     <PayPalSmartButton config={product.payment_config} preview />
                                                 </div>

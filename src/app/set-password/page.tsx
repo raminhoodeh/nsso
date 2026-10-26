@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { isTransientAuthError } from '@/lib/auth-errors'
+import { boundedClientRead } from '@/lib/client-read'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -21,42 +23,45 @@ export default function SetPasswordPage() {
     const [checkingSession, setCheckingSession] = useState(true)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [sessionError, setSessionError] = useState('')
+    const [sessionAttempt, setSessionAttempt] = useState(0)
+    const [sessionRetryable, setSessionRetryable] = useState(false)
+    const pending = useRef(false)
 
     useEffect(() => {
+        let active = true
+        setCheckingSession(true); setSessionError(''); setSessionRetryable(false)
         const checkSession = async () => {
-            const hashParams = new URLSearchParams(window.location.hash.slice(1))
-            const accessToken = hashParams.get('access_token')
-            const refreshToken = hashParams.get('refresh_token')
-
-            if (accessToken && refreshToken) {
-                const { error: sessionError } = await supabase.auth.setSession({
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                })
-
-                window.history.replaceState(null, '', window.location.pathname)
-
-                if (sessionError) {
-                    router.replace('/sign-in?error=password-link')
+            try {
+                const hashParams = new URLSearchParams(window.location.hash.slice(1))
+                if (hashParams.has('error') || new URLSearchParams(window.location.search).has('error')) {
+                    window.history.replaceState(null, '', window.location.pathname)
+                    if (active) setSessionError('This password link has expired or could not be verified. Request a new link below.')
                     return
                 }
-            }
-
-            const { data } = await supabase.auth.getUser()
-
-            if (!data.user) {
-                router.replace('/sign-in?error=password-link')
-                return
-            }
-
-            setCheckingSession(false)
+                const accessToken = hashParams.get('access_token'), refreshToken = hashParams.get('refresh_token')
+                if (accessToken && refreshToken) {
+                    const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+                    window.history.replaceState(null, '', window.location.pathname)
+                    if (error) { if (active) setSessionError('This password link has expired or could not be verified. Request a new link below.'); return }
+                }
+                const { data, error } = await boundedClientRead(() => supabase.auth.getUser())
+                if (!active) return
+                if (isTransientAuthError(error)) {
+                    setSessionRetryable(true); setSessionError('Your secure link could not be checked. Please retry when your connection is available.')
+                } else if (error || !data.user) {
+                    setSessionError('This password link has expired or could not be verified. Request a new link below.')
+                }
+            } catch { if (active) { setSessionRetryable(true); setSessionError('Your secure link could not be checked. Please retry when your connection is available.') } }
+            finally { if (active) setCheckingSession(false) }
         }
-
         void checkSession()
-    }, [router, supabase.auth])
+        return () => { active = false }
+    }, [supabase, sessionAttempt])
 
     const handleSetPassword = async (event: React.FormEvent) => {
         event.preventDefault()
+        if (pending.current) return
         setError('')
 
         if (password.length < 8) {
@@ -69,18 +74,14 @@ export default function SetPasswordPage() {
             return
         }
 
-        setLoading(true)
-        const { error: updateError } = await supabase.auth.updateUser({ password })
-
-        if (updateError) {
-            setError(updateError.message)
-            setLoading(false)
-            return
-        }
-
-        showToast('Password saved.', 'success')
-        router.replace('/dashboard')
-        router.refresh()
+        pending.current = true; setLoading(true)
+        try {
+            const { error } = await supabase.auth.updateUser({ password })
+            if (error) { setError(error.message); return }
+            showToast('Password saved.', 'success')
+            router.replace('/dashboard'); router.refresh()
+        } catch { setError('Your password could not be saved. Please try again; your entries are kept.') }
+        finally { pending.current = false; setLoading(false) }
     }
 
     return (
@@ -115,10 +116,13 @@ export default function SetPasswordPage() {
 
                 {checkingSession ? (
                     <p className="text-slate-950/80 text-center">Checking your secure link...</p>
+                ) : sessionError ? (
+                    <div className="space-y-4 text-center"><p role="alert">{sessionError}</p>{sessionRetryable && <button type="button" className="underline min-h-11" onClick={() => setSessionAttempt(value => value + 1)}>Retry secure link</button>}<p><Link href="/reset-password" className="underline">Request a new password reset link</Link></p></div>
                 ) : (
                     <form onSubmit={handleSetPassword} className="space-y-4">
                         <Input
                             type="password"
+                            label="New password"
                             placeholder="New password"
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
@@ -129,6 +133,7 @@ export default function SetPasswordPage() {
                         />
                         <Input
                             type="password"
+                            label="Confirm new password"
                             placeholder="Confirm new password"
                             value={confirmPassword}
                             onChange={(event) => setConfirmPassword(event.target.value)}
@@ -139,7 +144,7 @@ export default function SetPasswordPage() {
                         />
 
                         {error && (
-                            <p className="text-rose-950 font-medium text-sm text-center">{error}</p>
+                            <p role="alert" className="text-rose-950 font-medium text-sm text-center">{error}</p>
                         )}
 
                         <GlassButton

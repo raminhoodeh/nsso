@@ -8,7 +8,13 @@ export class ProfileMutationClient {
     private controller = new AbortController()
     private readonly send: typeof fetch
     private readonly accountId?: string
-    constructor(revision: number, send: typeof fetch = fetch, accountId?: string) { this.revision = revision; this.send = send; this.accountId = accountId }
+    constructor(revision: number, send: typeof fetch = fetch, accountId?: string) {
+        this.revision = revision
+        // Native browser fetch rejects a class instance as its Window receiver.
+        // Call the captured transport as a function, preserving injected transports.
+        this.send = (input, init) => send(input, init)
+        this.accountId = accountId
+    }
     activate() { if (this.controller.signal.aborted) this.controller = new AbortController() }
     setRevision(revision: number) { this.revision = Math.max(this.revision, revision) }
     dispose() { this.controller.abort(); this.requests.clear() }

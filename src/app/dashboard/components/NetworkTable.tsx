@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { MyNssoConnection } from '@/lib/types'
 import { Search, ChevronDown, ChevronUp, MapPin, NotebookPen } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
@@ -24,6 +24,8 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
     // Inline Location Editing State
     const [editingLocationId, setEditingLocationId] = useState<string | null>(null)
     const [locationValue, setLocationValue] = useState('')
+    const [savingLocation, setSavingLocation] = useState(false)
+    const locationPending = useRef(false)
 
     const { showToast } = useToast()
 
@@ -65,14 +67,15 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
     }
 
     const saveLocation = async (id: string) => {
-        if (!editingLocationId) return
+        if (!editingLocationId || locationPending.current) return
+        locationPending.current = true; setSavingLocation(true)
         try {
             await onUpdateConnection(id, { location: locationValue })
             showToast('Location updated', 'success')
             setEditingLocationId(null)
         } catch {
-            showToast('Failed to update location', 'error')
-        }
+            showToast('Your location could not be saved. Your draft is kept; please retry.', 'error')
+        } finally { locationPending.current = false; setSavingLocation(false) }
     }
 
     // Format Date: "21 Jan 2026"
@@ -194,23 +197,28 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
                                             <TahoeGlassField label={`Location for ${conn.fullName}`} visuallyHideLabel tone="light" className="w-[200px]" surfaceClassName="px-2 py-1">
                                                 <input
                                                     autoFocus
+                                                    maxLength={300}
+                                                    disabled={savingLocation}
                                                     type="text"
                                                     value={locationValue}
                                                     onChange={(e) => setLocationValue(e.target.value)}
                                                     onBlur={() => saveLocation(conn.id)}
-                                                    onKeyDown={(e) => e.key === 'Enter' && saveLocation(conn.id)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveLocation(conn.id) } if (e.key === 'Escape' && !locationPending.current) setEditingLocationId(null) }}
                                                     className="text-white text-sm"
                                                     placeholder="Where did you meet?"
                                                 />
                                             </TahoeGlassField>
                                         ) : (
-                                            <span
+                                            <button
+                                                type="button"
+                                                disabled={savingLocation}
+                                                aria-label={`Edit location for ${conn.fullName}`}
                                                 className={`cursor-pointer hover:text-white/80 transition-colors ${!conn.location ? 'text-white/30 italic decoration-dashed underline underline-offset-4 decoration-white/20' : 'text-white/70'}`}
-                                                onClick={() => !conn.location && (() => { setEditingLocationId(conn.id); setLocationValue(''); })()}
-                                                title={!conn.location ? "Click to add location" : ""}
+                                                onClick={() => { setEditingLocationId(conn.id); setLocationValue(conn.location || '') }}
+                                                title="Edit meeting location"
                                             >
                                                 {conn.location || 'Add location...'}
-                                            </span>
+                                            </button>
                                         )}
                                     </div>
                                 </td>

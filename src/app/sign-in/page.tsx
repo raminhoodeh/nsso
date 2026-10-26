@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { authCallbackUrl, authDestination, authErrorMessage } from '@/lib/auth-journey'
 import { createClient } from '@/lib/supabase/client'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
@@ -18,8 +19,10 @@ const providers = [
 
 type Provider = typeof providers[number]['name']
 
-export default function SignInPage() {
+function SignInForm() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const pending = useRef(false)
     const supabase = createClient()
     const { showToast } = useToast()
 
@@ -27,44 +30,33 @@ export default function SignInPage() {
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const nextPath = authDestination(new URLSearchParams(searchParams.toString()), 'https://nsso.me')
 
     const handleEmailSignIn = async (e: React.FormEvent) => {
         e.preventDefault()
-        setLoading(true)
-        setError('')
-
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        })
-
-        if (error) {
-            setError(error.message)
-            setLoading(false)
-        } else if (data.user) {
+        if (pending.current) return
+        pending.current = true
+        setLoading(true); setError('')
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+            if (error) { setError(error.message); return }
+            if (!data.user) { setError('Sign-in could not be confirmed. Please try again.'); return }
             const { error: setupError } = await supabase.rpc('ensure_current_account')
-            if (setupError) {
-                setError('Your account could not be prepared. Please try signing in again.')
-                setLoading(false)
-                return
-            }
-
+            if (setupError) { setError('Your account could not be prepared. Please try signing in again.'); return }
             showToast('Welcome back!', 'success')
-            router.push('/dashboard')
-        }
+            router.replace(nextPath); router.refresh()
+        } catch { setError('Sign-in is temporarily unavailable. Your details are kept; please try again.') }
+        finally { pending.current = false; setLoading(false) }
     }
 
     const handleSSOSignIn = async (provider: Provider) => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-            },
-        })
-
-        if (error) {
-            setError(error.message)
-        }
+        if (pending.current) return
+        pending.current = true; setLoading(true); setError('')
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: authCallbackUrl(window.location.origin, nextPath) } })
+            if (error) setError(error.message)
+        } catch { setError('Sign-in is temporarily unavailable. Please try again.') }
+        finally { pending.current = false; setLoading(false) }
     }
 
     return (
@@ -107,6 +99,7 @@ export default function SignInPage() {
                             key={provider.name}
                             variant="secondary"
                             fullWidth
+                            disabled={loading}
                             onClick={() => handleSSOSignIn(provider.name)}
                             tone="dark"
                             className="justify-center"
@@ -130,6 +123,8 @@ export default function SignInPage() {
                 <form onSubmit={handleEmailSignIn} className="space-y-4">
                     <Input
                         type="email"
+                        label="Email address"
+                        autoComplete="email"
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -139,6 +134,8 @@ export default function SignInPage() {
 
                     <Input
                         type="password"
+                        label="Password"
+                        autoComplete="current-password"
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -146,8 +143,8 @@ export default function SignInPage() {
                         required
                     />
 
-                    {error && (
-                        <p className="text-rose-950 font-medium text-sm text-center">{error}</p>
+                    {(error || authErrorMessage(searchParams.get('error'))) && (
+                        <p role="alert" className="text-rose-950 font-medium text-sm text-center">{error || authErrorMessage(searchParams.get('error'))}</p>
                     )}
 
                     <GlassButton
@@ -175,7 +172,7 @@ export default function SignInPage() {
                 <div className="text-center mt-6 pt-6 border-t border-black/10">
                     <span className="text-slate-950/80">Don't have an account? </span>
                     <Link
-                        href="/sign-up"
+                        href={`/sign-up?next=${encodeURIComponent(nextPath)}`}
                         className="text-slate-950 font-semibold hover:underline"
                     >
                         Sign Up
@@ -184,4 +181,8 @@ export default function SignInPage() {
             </TahoeBackdropSurface>
         </main>
     )
+}
+
+export default function SignInPage() {
+    return <Suspense fallback={<main className="min-h-screen flex items-center justify-center"><p>Loading sign-in…</p></main>}><SignInForm /></Suspense>
 }

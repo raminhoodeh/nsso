@@ -12,7 +12,8 @@ import type { EditableValues } from '@/lib/profile-mutations'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
-import { uploadProfileMedia } from '@/lib/profile-media-client'
+import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
+import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 
 interface AdvancedModeCardProps {
@@ -49,6 +50,7 @@ function SortableItem({ id, children, className }: { id: string; children: (prop
 }
 
 export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
+    const { showToast } = useToast()
     const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(null)
     const [activeSection, setActiveSection] = useState<ActiveSection>('experiences')
     // const [isLoading, setIsLoading] = useState(false) // Driven by provider now
@@ -193,25 +195,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     }
 
     // Final Upload after Crop
-    const handleCropComplete = async (croppedBlob: Blob) => {
+    const handleCropComplete = async (croppedBlob: Blob, signal: AbortSignal) => {
         if (!cropperTarget) return
         setIsUploading(true)
 
         try {
-            const {url:publicUrl}=await uploadProfileMedia(croppedBlob,cropperTarget.type,userId)
-
-            // Update State & DB
-            if (cropperTarget.type === 'project' && cropperTarget.id) {
-                if (!await updateProject(cropperTarget.id, { project_photo_url: publicUrl })) throw new Error('not_saved')
-            } else if (cropperTarget.type === 'product' && selectedProduct) {
-                // If we are editing a selected product
-                if (!await updateProduct(selectedProduct.id, { image_url: publicUrl })) throw new Error('not_saved')
-            }
-            setCropperOpen(false)
-            setCropperImage(null)
-            setCropperTarget(null)
-        } catch {
-            alert('The image was not uploaded. Your crop has been kept so you can retry.')
+            await runProfileMediaAttempt(async attemptSignal => {
+                const {url:publicUrl}=await uploadProfileMedia(croppedBlob,cropperTarget.type,userId,attemptSignal)
+                if (attemptSignal.aborted) return
+                if (cropperTarget.type === 'project' && cropperTarget.id) {
+                    if (!await updateProject(cropperTarget.id, { project_photo_url: publicUrl })) throw new Error('The image change was not saved. Your crop has been kept.')
+                } else if (cropperTarget.type === 'product' && cropperTarget.id) {
+                    if (!await updateProduct(cropperTarget.id, { image_url: publicUrl })) throw new Error('The image change was not saved. Your crop has been kept.')
+                } else throw new Error('Reopen the image editor before uploading.')
+                if (attemptSignal.aborted) return
+                setCropperOpen(false)
+                setCropperImage(null)
+                setCropperTarget(null)
+            }, { signal })
+        } catch (error) {
+            if (!signal.aborted) showToast(error instanceof Error ? error.message : 'The image save could not be confirmed. Your crop has been kept.', 'error')
         } finally {
             setIsUploading(false)
         }
@@ -354,26 +357,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="text-white font-medium placeholder:text-white/40" />
+                                                    <input type="text" aria-label="Company" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" value={exp.job_title} onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })} placeholder="e.g. Senior Product Designer" className="text-white font-medium placeholder:text-white/40" />
+                                                    <input type="text" aria-label="Role" value={exp.job_title} onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })} placeholder="e.g. Senior Product Designer" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 md:gap-4">
                                                 <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
                                                     <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                        <input type="number" value={exp.start_year} onChange={(e) => updateExperience(exp.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
+                                                        <input type="number" aria-label="Experience start year" value={exp.start_year} onChange={(e) => updateExperience(exp.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
                                                 <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
                                                     <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                        <input type="number" value={exp.end_year || ''} placeholder="Present" onChange={(e) => updateExperience(exp.id, { end_year: e.target.value ? parseInt(e.target.value) : null })} className="text-white/80" />
+                                                        <input type="number" aria-label="Experience end year" value={exp.end_year || ''} placeholder="Present" onChange={(e) => updateExperience(exp.id, { end_year: e.target.value ? parseInt(e.target.value) : null })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
                                             </div>
@@ -443,26 +446,26 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="text-white font-medium placeholder:text-white/40" />
+                                                    <input type="text" aria-label="Institution" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" value={qual.qualification_name} onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })} placeholder="e.g. MSc Computer Science" className="text-white font-medium placeholder:text-white/40" />
+                                                    <input type="text" aria-label="Qualification" value={qual.qualification_name} onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })} placeholder="e.g. MSc Computer Science" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 md:gap-4">
                                                 <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Start Year</label>
                                                     <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                        <input type="number" value={qual.start_year} onChange={(e) => updateQualification(qual.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
+                                                        <input type="number" aria-label="Qualification start year" value={qual.start_year} onChange={(e) => updateQualification(qual.id, { start_year: parseInt(e.target.value) })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
                                                 <div className="min-w-0">
                                                     <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">End Year</label>
                                                     <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                        <input type="number" value={qual.end_year} onChange={(e) => updateQualification(qual.id, { end_year: parseInt(e.target.value) })} className="text-white/80" />
+                                                        <input type="number" aria-label="Qualification end year" value={qual.end_year} onChange={(e) => updateQualification(qual.id, { end_year: parseInt(e.target.value) })} className="text-white/80" />
                                                     </TahoeGlassField>
                                                 </div>
                                             </div>
@@ -532,25 +535,25 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="text-white font-medium placeholder:text-white/40" />
+                                                    <input type="text" aria-label="Project name" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="text-white font-medium placeholder:text-white/40" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" value={proj.contribution} onChange={(e) => updateProject(proj.id, { contribution: e.target.value })} placeholder="e.g. Lead UI/UX Designer" className="text-white/80 placeholder:text-white/20" />
+                                                    <input type="text" aria-label="Your contribution" value={proj.contribution} onChange={(e) => updateProject(proj.id, { contribution: e.target.value })} placeholder="e.g. Lead UI/UX Designer" className="text-white/80 placeholder:text-white/20" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project URL (Optional)</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="url" value={proj.project_url || ''} onChange={(e) => updateProject(proj.id, { project_url: e.target.value })} placeholder="e.g. https://example.com" className="text-white/80 placeholder:text-white/20" />
+                                                    <input type="url" aria-label="Project URL (optional)" value={proj.project_url || ''} onChange={(e) => updateProject(proj.id, { project_url: e.target.value })} placeholder="e.g. https://example.com" className="text-white/80 placeholder:text-white/20" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Description</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="p-3 min-h-[88px] resize-none md:min-h-[60px]">
-                                                    <textarea value={proj.description || ''} onChange={(e) => updateProject(proj.id, { description: e.target.value })} placeholder="Describe the project..." className="text-base text-white/70 placeholder:text-white/20 md:text-sm" />
+                                                    <textarea aria-label="Project description" value={proj.description || ''} onChange={(e) => updateProject(proj.id, { description: e.target.value })} placeholder="Describe the project..." className="text-base text-white/70 placeholder:text-white/20 md:text-sm" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
@@ -625,14 +628,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Product Name</label>
                         <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2 md:pr-12">
-                            <input type="text" value={selectedProduct.name} onChange={(e) => updateProduct(selectedProduct.id, { name: e.target.value })} className="text-xl font-bold text-white placeholder:text-white/20 min-[390px]:text-2xl" />
+                            <input type="text" aria-label="Product name" value={selectedProduct.name} onChange={(e) => updateProduct(selectedProduct.id, { name: e.target.value })} className="text-xl font-bold text-white placeholder:text-white/20 min-[390px]:text-2xl" />
                         </TahoeGlassField>
                     </div>
 
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Price (include the currency)</label>
                         <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                            <input type="text" value={selectedProduct.price || ''} onChange={(e) => updateProduct(selectedProduct.id, { price: e.target.value })} placeholder="e.g. $50 or Free" className="text-lg font-medium text-white placeholder:text-white/20 min-[390px]:text-xl" />
+                            <input type="text" aria-label="Price (include the currency)" value={selectedProduct.price || ''} onChange={(e) => updateProduct(selectedProduct.id, { price: e.target.value })} placeholder="e.g. $50 or Free" className="text-lg font-medium text-white placeholder:text-white/20 min-[390px]:text-xl" />
                         </TahoeGlassField>
                     </div>
 
@@ -693,7 +696,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     <div>
                         <label className="text-xs text-white/40 uppercase tracking-widest mb-1 block">Description</label>
                         <TahoeGlassField tone="light" surfaceClassName="p-0" controlClassName="min-h-[144px] resize-none px-3 py-3 md:min-h-[100px] md:p-4">
-                            <textarea value={selectedProduct.description || ''} onChange={(e) => updateProduct(selectedProduct.id, { description: e.target.value })} className="text-base text-white/80 md:text-sm" placeholder="Describe your offering..." />
+                            <textarea aria-label="Product description" value={selectedProduct.description || ''} onChange={(e) => updateProduct(selectedProduct.id, { description: e.target.value })} className="text-base text-white/80 md:text-sm" placeholder="Describe your offering..." />
                         </TahoeGlassField>
                     </div>
 
@@ -715,7 +718,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         </div>
                         {selectedProduct.purchase_link_active && (
                             <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:p-2">
-                                <input type="url" value={selectedProduct.purchase_link || ''} onChange={(e) => updateProduct(selectedProduct.id, { purchase_link: e.target.value })} placeholder="https://..." className="text-base text-white/80 md:text-sm" />
+                                <input type="url" aria-label="Purchase link" value={selectedProduct.purchase_link || ''} onChange={(e) => updateProduct(selectedProduct.id, { purchase_link: e.target.value })} placeholder="https://..." className="text-base text-white/80 md:text-sm" />
                             </TahoeGlassField>
                         )}
                     </TahoeGlassSurface>

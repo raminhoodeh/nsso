@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useSyncExternalStore } from 'react';
+import { Suspense, useState, useSyncExternalStore } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ import ComingSoonBadge from '@/components/ui/ComingSoonBadge';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { useUser } from '@/components/providers/UserProvider';
+import { boundedClientRead } from '@/lib/client-read';
 import { TahoeBackdropSurface, TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass';
 import {
     getDashboardDesktopLayoutSnapshot,
@@ -67,6 +68,7 @@ function DashboardSidebarContent({
     const supabase = createClient();
     const { showToast } = useToast();
     const { user } = useUser();
+    const [signingOut, setSigningOut] = useState(false);
     const isAdmin = user?.user_type === 'admin';
 
     const currentView = searchParams.get('view') || 'profile';
@@ -81,16 +83,27 @@ function DashboardSidebarContent({
     };
 
     const handleSignOut = async () => {
-        await supabase.auth.signOut();
-        window.location.href = '/';
+        if (signingOut) return;
+        setSigningOut(true);
+        try {
+            // Release the control on an uncertain timeout without replaying logout.
+            const { error } = await boundedClientRead(() => supabase.auth.signOut());
+            if (error) throw error;
+            window.location.href = '/';
+        } catch {
+            showToast('Sign-out could not be confirmed. Please try again.', 'error');
+            setSigningOut(false);
+        }
     };
 
-    const copyProfileUrl = () => {
+    const copyProfileUrl = async () => {
         const targetUsername = user?.username;
-        if (!targetUsername) return;
+        if (!targetUsername) { showToast('Choose a profile name before sharing your URL.', 'info'); return; }
         const url = `${window.location.origin}/${targetUsername}`;
-        navigator.clipboard.writeText(url);
-        showToast('Profile URL copied to clipboard!', 'success');
+        try {
+            await navigator.clipboard.writeText(url);
+            showToast('Profile URL copied to clipboard!', 'success');
+        } catch { showToast('Could not copy the profile URL. Please try again.', 'error'); }
     };
 
     return (
@@ -221,6 +234,7 @@ function DashboardSidebarContent({
                 {/* Sign Out */}
                 <TahoeGlassButton
                     onClick={handleSignOut}
+                    disabled={signingOut}
                     radius={12}
                     tone="light"
                     semanticTint="dark"
@@ -229,7 +243,7 @@ function DashboardSidebarContent({
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <LogOut size={18} className="group-hover:text-red-300 transition-colors" />
-                    <span className="font-medium text-[14px]">Sign Out</span>
+                    <span className="font-medium text-[14px]">{signingOut ? 'Signing out…' : 'Sign Out'}</span>
                 </TahoeGlassButton>
             </div>
         </TahoeBackdropSurface>

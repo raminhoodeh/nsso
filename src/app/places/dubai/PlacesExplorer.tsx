@@ -36,7 +36,7 @@ import {
   useTahoeModalAccessibility,
   type TahoeGlassWebGLSource,
 } from "@/components/ui/tahoe-glass";
-import { ToastViewport } from "@/components/ui/Toast";
+import { ToastViewport, toast } from "@/components/ui/Toast";
 import styles from "./places.module.css";
 import PlacesNavigation from "./PlacesNavigation";
 import EventsAgenda from "./EventsAgenda";
@@ -136,6 +136,7 @@ const DATABASE_ONLY_MAP_STYLES: google.maps.MapTypeStyle[] = [
   },
 ];
 const STORAGE_KEY = "nsso-uae-place-favourites";
+const DETAILS_TIMEOUT_MS = 8_000;
 let mapsConfigured = false;
 
 function proxiedPlacePhoto(url: string) {
@@ -561,12 +562,15 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
 
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as string[];
-      setFavourites(new Set(stored));
+      const stored: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      const knownIds = new Set(payload.places.map(place => place.id));
+      setFavourites(new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === "string" && knownIds.has(id)) : []));
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
+      // Browser storage may be unavailable in private/embedded contexts. The
+      // explorer and in-memory saved places remain usable in that case.
+      try { localStorage.removeItem(STORAGE_KEY); } catch { /* Optional persistence. */ }
     }
-  }, []);
+  }, [payload.places]);
 
   useEffect(() => {
     if (!apiKey) {
@@ -746,55 +750,64 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     setFailedPhotoUrls(new Set());
 
     let active = true;
+    const controller = new AbortController();
+    const deadline = window.setTimeout(() => controller.abort(), DETAILS_TIMEOUT_MS);
+    const canceled = new Promise<never>((_resolve, reject) => {
+      controller.signal.addEventListener("abort", () => reject(new Error("Place details unavailable")), { once: true });
+    });
     const loadDetails = async () => {
       setDetailsLoading(true);
       setLiveDetails(null);
       try {
-        if (!selectedPlace.placeId) {
-          setLiveDetails({
+        const loadProviderDetails = async (): Promise<LiveDetails> => {
+          if (!selectedPlace.placeId) return {
             selectionId: selectedPlace.id,
             address: selectedPlace.address,
             mapsUri: selectedPlace.googleMapsSearchUri,
             placeId: null,
             photos: [],
             dataAttributions: [],
+          };
+          const { Place } = await importLibrary("places");
+          // The SDK cannot abort fetchFields. Stop waiting at our deadline and
+          // never start a stale provider lookup after a delayed SDK import.
+          controller.signal.throwIfAborted();
+          const place = new Place({
+            id: selectedPlace.placeId,
+            requestedLanguage: "en",
+            requestedRegion: "AE",
           });
-          return;
-        }
-        const { Place } = await importLibrary("places");
-        const place = new Place({
-          id: selectedPlace.placeId,
-          requestedLanguage: "en",
-          requestedRegion: "AE",
-        });
-        await place.fetchFields({ fields: ["formattedAddress", "photos", "googleMapsURI"] });
-        const details: LiveDetails = {
-          selectionId: selectedPlace.id,
-          address: place.formattedAddress || selectedPlace.address,
-          mapsUri: place.googleMapsURI || selectedPlace.googleMapsSearchUri,
-          placeId: place.id || selectedPlace.placeId,
-          photos:
-            place.photos?.slice(0, 10).map((photo) => ({
-              // Google photo URLs are transient. Keep them in memory only and request
-              // the actual image when a visitor advances through the gallery.
-              url: photo.getURI(window.matchMedia("(max-width: 900px)").matches ? { maxWidth: 720, maxHeight: 540 } : { maxWidth: 1440, maxHeight: 1080 }),
-              credits: photo.authorAttributions.map((credit) => ({
-                displayName: credit.displayName,
-                uri: credit.uri,
-              })),
-              googleMapsUri: photo.googleMapsURI,
-              flagContentUri: photo.flagContentURI,
-            })) || [],
-          dataAttributions:
-            place.attributions?.map((attribution) => ({
-              provider: attribution.provider || "data provider",
-              uri: attribution.providerURI,
-            })) || [],
+          await place.fetchFields({ fields: ["formattedAddress", "photos", "googleMapsURI"] });
+          controller.signal.throwIfAborted();
+          return {
+            selectionId: selectedPlace.id,
+            address: place.formattedAddress || selectedPlace.address,
+            mapsUri: place.googleMapsURI || selectedPlace.googleMapsSearchUri,
+            placeId: place.id || selectedPlace.placeId,
+            photos:
+              place.photos?.slice(0, 10).map((photo) => ({
+                // Google photo URLs are transient. Keep them in memory only and request
+                // the actual image when a visitor advances through the gallery.
+                url: photo.getURI(window.matchMedia("(max-width: 900px)").matches ? { maxWidth: 720, maxHeight: 540 } : { maxWidth: 1440, maxHeight: 1080 }),
+                credits: photo.authorAttributions.map((credit) => ({
+                  displayName: credit.displayName,
+                  uri: credit.uri,
+                })),
+                googleMapsUri: photo.googleMapsURI,
+                flagContentUri: photo.flagContentURI,
+              })) || [],
+            dataAttributions:
+              place.attributions?.map((attribution) => ({
+                provider: attribution.provider || "data provider",
+                uri: attribution.providerURI,
+              })) || [],
+          };
         };
+        const details = await Promise.race([loadProviderDetails(), canceled]);
         if (active) setLiveDetails(details);
       } catch {
-        console.warn("Google Places details unavailable");
         if (active) {
+          console.warn("Google Places details unavailable");
           setLiveDetails({
             selectionId: selectedPlace.id,
             address: selectedPlace.address,
@@ -805,6 +818,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
           });
         }
       } finally {
+        window.clearTimeout(deadline);
         if (active) setDetailsLoading(false);
       }
     };
@@ -812,6 +826,8 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
     void loadDetails();
     return () => {
       active = false;
+      window.clearTimeout(deadline);
+      controller.abort();
     };
   }, [selectedPlace]);
 
@@ -888,14 +904,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   }, [selectedPlace, deityOpen]);
 
   const toggleFavourite = useCallback((placeId: string) => {
-    setFavourites((current) => {
-      const next = new Set(current);
-      if (next.has(placeId)) next.delete(placeId);
-      else next.add(placeId);
+    const next = new Set(favourites);
+    if (next.has(placeId)) next.delete(placeId);
+    else next.add(placeId);
+    setFavourites(next);
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
-      return next;
-    });
-  }, []);
+    } catch {
+      toast("Changes to saved places will last for this visit only.", "info");
+    }
+  }, [favourites]);
 
   const surpriseMe = () => {
     if (!filteredPlaces.length) return;

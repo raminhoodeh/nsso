@@ -152,3 +152,26 @@ test('free access reports no projected subscription income and retains referral 
   });
   assert.deepEqual(calls, [['rpc', 'get_user_earnings_stats', { user_uuid: 'signed-in-user' }]]);
 });
+
+
+test('a transient Auth outage does not masquerade as a logout or attempt a username mutation', async () => {
+  for (const endpoint of [claim, update]) {
+    const calls = database({ user: null, authError: { status: 0, message: 'PRIVATE_AUTH_FAILURE' } });
+    const response = await endpoint(request({ username: 'kept-name', desiredUsername: 'kept-name' }));
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('cache-control'), 'private, no-store');
+    assert.doesNotMatch(await response.text(), /PRIVATE_AUTH_FAILURE/);
+    assert.deepEqual(calls, []);
+  }
+});
+
+
+test('Auth429 preserves the free-claim session boundary and never attempts a claim', async () => {
+  for (const endpoint of [claim, update]) {
+    const calls = database({ authError: { status: 429, message: 'PRIVATE_AUTH_FAILURE' } });
+    const response = await endpoint(request({ username: 'kept-name', desiredUsername: 'kept-name' }));
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('cache-control'), 'private, no-store');
+    assert.deepEqual(calls, []);
+  }
+});

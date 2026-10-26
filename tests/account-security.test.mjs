@@ -10,6 +10,7 @@ const emptyModule = `data:text/javascript,${encodeURIComponent('export {};')}`;
 const sessionModule = `data:text/javascript,${encodeURIComponent('export const createClient = async () => globalThis.__accountSession;')}`;
 const serviceModule = `data:text/javascript,${encodeURIComponent('export const createClient = () => globalThis.__accountService;')}`;
 const hooks = registerHooks({ resolve(specifier,context,next) {
+    if (specifier === 'next/server') return next('next/server.js',context);
     if (specifier === 'server-only') return {url:emptyModule,shortCircuit:true};
     if (specifier === '@/lib/supabase/server') return {url:sessionModule,shortCircuit:true};
     if (specifier === '@supabase/supabase-js') return {url:serviceModule,shortCircuit:true};
@@ -24,6 +25,8 @@ const { GET: me } = await import(new URL('app/api/me/route.ts',source));
 const { POST: settings } = await import(new URL('app/api/me/settings/route.ts',source));
 const { GET: listAccounts, POST: changePermission } = await import(new URL('app/api/admin/users/route.ts',source));
 const { POST: connect } = await import(new URL('app/api/my-nsso/connect/route.ts',source));
+const { GET: connections } = await import(new URL('app/api/my-nsso/connections/route.ts',source));
+const { PATCH: patchConnection, DELETE: deleteConnection } = await import(new URL('app/api/my-nsso/connections/[id]/route.ts',source));
 const { POST: processFeed } = await import(new URL('app/api/cron/process-feed/route.ts',source));
 hooks.deregister();
 
@@ -260,3 +263,41 @@ test('feed preparation rejects unverified sessions and safely reports database o
     authError = {status:0,name:'AuthRetryableFetchError',message:secretFixture};
     const response = await me(); assert.equal(response.status,503); assert.equal((await response.text()).includes(secretFixture),false);
  });
+
+
+test('network Auth outages are retryable503 responses with private caching and no body/database mutation', async () => {
+    authError = {status:0,message:secretFixture}; actor = null;
+    const params = {params:Promise.resolve({id:targetId})};
+    for (const endpoint of [
+        () => connect(neverRead('/api/my-nsso/connect')),
+        () => connections(new Request('https://nsso.test/api/my-nsso/connections')),
+        () => patchConnection(neverRead('/api/my-nsso/connections/'+targetId),params),
+        () => deleteConnection(new Request('https://nsso.test/api/my-nsso/connections/'+targetId,{method:'DELETE'}),params),
+    ]) {
+        const response = await endpoint(); assert.equal(response.status,503); privateResponse(response);
+        assert.doesNotMatch(await response.text(),new RegExp(secretFixture));
+    }
+    assert.deepEqual(calls,[]);
+});
+
+
+test('Auth429 becomes temporary account unavailability before any account or privileged work', async () => {
+    authError = {status:429,message:secretFixture};
+    for (const endpoint of [() => me(), () => listAccounts(new Request('https://nsso.test/api/admin/users'))]) {
+        const response = await endpoint(); assert.equal(response.status,503); privateResponse(response);
+        assert.doesNotMatch(await response.text(),new RegExp(secretFixture));
+    }
+    assert.deepEqual(calls,[]);
+});
+
+test('network Auth429 never reads a mutation body or treats a valid actor as logged out', async () => {
+    authError = {status:429,message:secretFixture};
+    const params = {params:Promise.resolve({id:targetId})};
+    for (const endpoint of [
+        () => connect(neverRead('/api/my-nsso/connect')),
+        () => connections(new Request('https://nsso.test/api/my-nsso/connections')),
+        () => patchConnection(neverRead('/api/my-nsso/connections/'+targetId),params),
+        () => deleteConnection(new Request('https://nsso.test/api/my-nsso/connections/'+targetId,{method:'DELETE'}),params),
+    ]) { const response = await endpoint(); assert.equal(response.status,503); privateResponse(response); }
+    assert.deepEqual(calls,[]);
+});

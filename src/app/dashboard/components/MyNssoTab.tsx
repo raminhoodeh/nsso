@@ -8,6 +8,7 @@ import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import { useUI } from '@/components/providers/UIProvider'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { boundedClientRead } from '@/lib/client-read'
 
 interface MyNssoTabProps {
     initialData?: {
@@ -20,6 +21,8 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
     const { showToast } = useToast()
     const [connections, setConnections] = useState<MyNssoConnection[]>(initialData?.connections || [])
     const [loading, setLoading] = useState(!initialData)
+    const [loadError, setLoadError] = useState('')
+    const connectionRead = useRef<AbortController | null>(null)
 
     // Handle background dimming
     useEffect(() => {
@@ -67,27 +70,30 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
         }
     }
 
-    // Load Connections
-    const loadConnections = async () => {
+    const loadConnections = async (signal?: AbortSignal) => {
+        connectionRead.current?.abort()
+        const controller = new AbortController()
+        connectionRead.current = controller
+        const lifetime = signal ? AbortSignal.any([controller.signal, signal]) : controller.signal
+        setLoadError('')
         try {
-            const response = await fetch('/api/my-nsso/connections?sort=date&order=desc')
-            if (response.ok) {
-                const data = await response.json()
-                setConnections(data.connections)
-            } else {
-                showToast('Failed to load connections', 'error')
-            }
+            const data = await boundedClientRead(async readSignal => {
+                const response = await fetch('/api/my-nsso/connections?sort=date&order=desc', { signal: readSignal, cache: 'no-store' })
+                if (!response.ok) throw new Error('unavailable')
+                const body = await response.json()
+                if (!Array.isArray(body.connections)) throw new Error('invalid response')
+                return body
+            }, { signal: lifetime })
+            if (!lifetime.aborted) setConnections(data.connections)
         } catch {
-            showToast('Failed to load connections', 'error')
-        } finally {
-            setLoading(false)
-        }
+            if (!lifetime.aborted) setLoadError('Your connections could not be loaded. Your saved notes have not changed.')
+        } finally { if (!lifetime.aborted) setLoading(false) }
     }
 
     useEffect(() => {
-        if (!initialData) {
-            loadConnections()
-        }
+        const controller = new AbortController()
+        if (!initialData) void loadConnections(controller.signal)
+        return () => { controller.abort(); connectionRead.current?.abort() }
     }, [initialData])
 
     // Update Connection Handler
@@ -126,6 +132,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
     return (
         <div className="space-y-6">
+            {loadError && <div role="alert" className="rounded-xl border border-white/20 p-4 text-white"><p>{loadError}</p><button type="button" className="mt-3 min-h-11 underline" onClick={() => { void loadConnections() }}>Retry connections</button></div>}
             <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px]">
                 {/* Header Section */}
                 <div className="text-left space-y-2 mb-10">

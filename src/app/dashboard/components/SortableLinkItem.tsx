@@ -6,6 +6,7 @@ import { GripVertical } from 'lucide-react'
 import Input from '@/components/ui/Input'
 import { Link } from '@/lib/types'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { safeWebUrl } from '@/lib/urls'
 
 interface Props {
     link: Link
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
+    const validUrl = Boolean(safeWebUrl(link.link_url))
+    const urlStatus = validUrl ? 'Valid URL format; destination not checked' : link.link_url ? 'Invalid URL format' : 'Missing URL'
     const {
         attributes,
         listeners,
@@ -48,6 +51,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
             <div
                 {...attributes}
                 {...listeners}
+                aria-label={`Drag to reorder ${link.link_name || 'link'}`}
                 className="hidden md:flex items-center justify-center cursor-move text-white/30 hover:text-white/70 transition-colors -ml-2 p-2 touch-none select-none"
             >
                 <GripVertical size={20} />
@@ -57,6 +61,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
             <div
                 {...attributes}
                 {...listeners}
+                aria-label={`Drag to reorder ${link.link_name || 'link'}`}
                 className="-mx-3 -mt-3 mb-1 flex min-h-11 cursor-move touch-none select-none items-center justify-center border-b border-white/10 py-1 text-white/30 transition-colors hover:text-white/70 sm:-mx-4 sm:-mt-4 md:hidden"
             >
                 <GripVertical size={16} />
@@ -64,6 +69,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
 
             <div className="w-full md:flex-1">
                 <Input
+                    aria-label="Link name"
                     value={link.link_name}
                     onChange={(e) => updateLink(link.id, 'link_name', e.target.value)}
                     placeholder="Link name (e.g. Portfolio)"
@@ -72,16 +78,23 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
             <div className="flex w-full items-center gap-2 sm:gap-4 md:flex-1">
                 {/* Validation Status Indicator */}
                 <div
+                    role="img"
+                    aria-label={urlStatus}
                     className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{
-                        backgroundColor: link.link_url && link.link_url.startsWith('http')
+                        backgroundColor: validUrl
                             ? 'rgb(34, 197, 94)' // green for valid
                             : 'rgb(239, 68, 68)' // red for invalid/empty
                     }}
-                    title={link.link_url && link.link_url.startsWith('http') ? 'Valid URL' : 'Invalid or missing URL'}
+                    title={urlStatus}
                 />
                 <div className="flex-1 min-w-0">
                     <Input
+                        type="url"
+                        inputMode="url"
+                        autoComplete="url"
+                        spellCheck={false}
+                        aria-label="Link URL"
                         value={link.link_url}
                         onChange={(e) => updateLink(link.id, 'link_url', e.target.value)}
                         placeholder="https://..."
