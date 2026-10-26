@@ -1,0 +1,161 @@
+import { test, expect } from '@playwright/test'
+import { build } from 'esbuild'
+import { fileURLToPath } from 'node:url'
+
+const root = fileURLToPath(new URL('../../', import.meta.url))
+let bundle
+test.beforeAll(async () => {
+  const result = await build({
+    absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
+    define: { 'process.env.NODE_ENV': '"test"' },
+    plugins: [{name:'isolated-home-boundaries',setup(builder) {
+      builder.onResolve({filter:/^(next\/(navigation|image|link)|@\/lib\/supabase\/client|@\/components\/providers\/UserProvider|@\/components\/ui\/Toast|@\/components\/ui\/tahoe-glass|@\/components\/profile\/ProfileGlassCard|@\/components\/home\/HomeVisionPlayer|@\/lib\/tahoe-glass\/dashboard-backdrop-policy)$/}, args => ({path:args.path,namespace:'fixture'}))
+      builder.onLoad({filter:/.*/,namespace:'fixture'}, ({path}) => {
+        const contents = path === 'next/navigation' ? 'export const useRouter=()=>window.fixtureRouter;export const usePathname=()=>window.fixturePath;export const useSearchParams=()=>new URLSearchParams();'
+          : path.endsWith('dashboard-backdrop-policy') ? 'export const getDashboardDesktopLayoutSnapshot=()=>true;export const getDashboardDirectBackdropSnapshot=()=>false;export const getDashboardServerSnapshot=()=>false;export const subscribeDashboardBackdropPolicy=()=>()=>{};'
+          : path === '@/lib/supabase/client' ? 'export const createClient=()=>window.fixtureAuth;'
+          : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:window.fixtureUser});'
+          : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:(message,type)=>window.fixtureToasts.push({message,type})});'
+          : path === 'next/image' ? "import React from 'react';export default function Image({priority,fill,...props}){return <img {...props}/>};"
+          : path === 'next/link' ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>};"
+          : path.endsWith('tahoe-glass') ? `import React from 'react';
+              export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,...props}){return <Tag {...props}>{children}</Tag>}
+              export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
+              export function TahoeBackdropSurface({backdropEnabled,...props}){return <TahoeGlassSurface {...props}/>}
+              export function TahoeBackdropHeader({displacementProfile,materialLighting,...props}){return <TahoeGlassSurface {...props}/>}
+              export function TahoeGlassDialog({open}){return open?<div role="dialog"/>:null}`
+          : path.endsWith('HomeVisionPlayer') ? "import React from 'react';export default ()=> <div>Vision player fixture</div>;"
+          : "import React from 'react';export default ({children})=><div>{children}</div>;"
+        return {contents,loader:'tsx',resolveDir:root}
+      })
+    }}],
+    stdin:{resolveDir:root,loader:'tsx',contents:`
+      import React from 'react';import {createRoot} from 'react-dom/client';
+      import Home from './src/app/page';import Header from './src/components/layout/Header';import Sidebar from './src/components/layout/DashboardSidebar';
+      window.fixtureUser=null;window.fixturePath='/preview';window.fixtureToasts=[];window.fixtureDestinations=[];
+      window.fixtureRouter={push:path=>window.fixtureDestinations.push(path),replace:path=>window.fixtureDestinations.push(path),prefetch(){}};
+      window.fixtureSessionMode='guest';window.fixtureSignOutMode='error';window.fixtureSignOutCalls=0;window.fixtureCopied=[];window.fixtureClipboardMode='pending';
+      window.fixtureAuth={auth:{
+        async getSession(){if(window.fixtureSessionMode==='error')throw Error('Synthetic Auth outage');if(window.fixtureSessionMode==='pending')return new Promise(resolve=>window.fixtureResolveSession=resolve);return {data:{session:window.fixtureSessionMode==='signed-in'?{user:{id:'actor-a'}}:null},error:null}},
+        async signOut(){window.fixtureSignOutCalls++;if(window.fixtureSignOutMode==='throw')throw Error('Synthetic sign-out outage');if(window.fixtureSignOutMode==='pending')return new Promise(resolve=>window.fixtureResolveSignOut=resolve);return {error:{message:'Synthetic sign-out failure'}}}
+      }};
+      Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText(text){window.fixtureCopied.push(text);if(window.fixtureClipboardMode==='error')return Promise.reject(Error('Denied'));return new Promise(resolve=>window.fixtureResolveCopy=resolve)}}});
+      window.IntersectionObserver=class{constructor(callback){window.fixtureIntersection=callback}observe(){}disconnect(){}};
+      const root=createRoot(document.getElementById('root'));
+      window.fixtureRender=screen=>root.render(screen==='home'?<Home/>:screen==='sidebar'?<Sidebar/>:<Header/>);
+    `}
+  })
+  bundle=result.outputFiles[0].text
+})
+
+async function fixture(page, screen='home', options={}) {
+  const errors=[]
+  page.on('pageerror', error=>errors.push(error.message))
+  const videoRequests=[]
+  await page.route('https://nsso.test/**', route => {
+    const path=new URL(route.request().url()).pathname
+    if(path==='/')return route.fulfill({contentType:'text/html',body:'<div id="root"></div><script src="/fixture.js"></script>'})
+    if(path==='/fixture.js')return route.fulfill({contentType:'application/javascript',body:bundle})
+    if(path==='/homepage-video.mp4'){videoRequests.push(path);return route.abort()}
+    return route.fulfill({status:204,body:''})
+  })
+  await page.goto('https://nsso.test/')
+  await page.evaluate(({screen,options})=>{Object.assign(window,options);window.fixtureRender(screen)},{screen,options})
+  await expect(page.getByRole(screen==='sidebar'?'complementary':'navigation')).toBeVisible()
+  return {errors,videoRequests}
+}
+
+test('sign-in navigation is a single semantic link without a nested button', async({page})=>{
+  await fixture(page)
+  const links=page.getByRole('link',{name:'SIGN IN / SIGN UP',exact:true})
+  expect(await links.count()).toBeGreaterThan(0)
+  await expect(links.first()).toHaveAttribute('href','/sign-in')
+  await expect(links.first().locator('button')).toHaveCount(0)
+})
+
+test('claim keeps the requested name and offers retry after an Auth rejection',async({page})=>{
+  const {errors}=await fixture(page)
+  await page.getByRole('textbox',{name:'Profile name'}).first().fill('my-name')
+  await page.evaluate(()=>window.fixtureSessionMode='error')
+  await page.getByRole('button',{name:'CLAIM IT',exact:true}).first().click()
+  await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('error')
+  await expect(page.getByRole('textbox',{name:'Profile name'}).first()).toHaveValue('my-name')
+  await expect(page.getByRole('button',{name:'CLAIM IT',exact:true}).first()).toBeEnabled()
+  await page.evaluate(()=>window.fixtureSessionMode='guest')
+  await page.getByRole('textbox',{name:'Profile name'}).first().press('Enter')
+  await expect.poll(()=>page.evaluate(()=>window.fixtureDestinations.at(-1))).toBe('/sign-up?name=my-name')
+  expect(errors).toEqual([])
+})
+
+test('a signed-in home visitor keeps their name intent for explicit claiming',async({page})=>{
+  await fixture(page)
+  await page.evaluate(()=>window.fixtureSessionMode='signed-in')
+  await page.getByRole('textbox',{name:'Profile name'}).first().fill('chosen-name')
+  await page.getByRole('button',{name:'CLAIM IT',exact:true}).first().click()
+  await expect.poll(()=>page.evaluate(()=>window.fixtureDestinations.at(-1))).toBe('/dashboard?claim=chosen-name')
+})
+
+test('a late claim session cannot override navigation away from home',async({page})=>{
+  await fixture(page)
+  await page.getByRole('textbox',{name:'Profile name'}).first().fill('kept-name')
+  await page.evaluate(()=>window.fixtureSessionMode='pending')
+  await page.getByRole('button',{name:'CLAIM IT',exact:true}).first().click()
+  await expect(page.getByRole('textbox',{name:'Profile name'}).first()).toBeDisabled()
+  await page.evaluate(()=>window.fixtureRender('header'))
+  await expect(page.getByRole('textbox',{name:'Profile name'})).toHaveCount(0)
+  await page.evaluate(()=>window.fixtureResolveSession({data:{session:null},error:null}))
+  await page.waitForTimeout(50)
+  expect(await page.evaluate(()=>window.fixtureDestinations)).toEqual([])
+})
+
+for (const screen of ['header','sidebar']) test(screen+' copy waits for the clipboard and reports a denied copy truthfully',async({page})=>{
+  await fixture(page,screen,{fixtureUser:{id:'actor-a',username:'actor-a',user_type:'standard'}})
+  const copy = page.getByRole('button',{name:screen==='sidebar'?'Copy profile link':/Copy profile URL/})
+  await copy.click()
+  expect(await page.evaluate(()=>window.fixtureToasts)).toEqual([])
+  await page.evaluate(()=>window.fixtureResolveCopy())
+  await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('success')
+  expect(await page.evaluate(()=>window.fixtureCopied.at(-1))).toBe('https://nsso.test/actor-a')
+  await page.evaluate(()=>window.fixtureClipboardMode='error')
+  await copy.click()
+  await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('error')
+})
+
+for(const screen of ['header','sidebar'])for(const mode of ['error','throw'])test(screen+' failed sign-out stays retryable: '+mode,async({page})=>{
+  const {errors}=await fixture(page,screen,{fixtureUser:{id:'actor-a',username:'actor-a',user_type:'standard'},fixtureSignOutMode:mode})
+  const signOut=page.getByRole('button',{name:'Sign Out',exact:true})
+  await signOut.click()
+  await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('error')
+  await expect(signOut).toBeEnabled()
+  expect(errors).toEqual([])
+})
+
+for(const screen of ['header','sidebar'])test(screen+' stalled sign-out recovers without a late false navigation',async({page})=>{
+  await page.clock.install()
+  await fixture(page,screen,{fixtureUser:{id:'actor-a',username:'actor-a',user_type:'standard'},fixtureSignOutMode:'pending'})
+  let navigations=0
+  page.on('framenavigated',frame=>{if(frame===page.mainFrame())navigations++})
+  await page.evaluate(()=>window.fixtureDocumentSentinel='same-document')
+  const signOut=page.getByRole('button',{name:'Sign Out',exact:true})
+  await signOut.click()
+  await page.clock.fastForward(8100)
+  await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('error')
+  await expect(signOut).toBeEnabled()
+  await page.evaluate(()=>window.fixtureResolveSignOut({error:null}))
+  await page.clock.fastForward(100)
+  await page.waitForTimeout(100)
+  await expect(page).toHaveURL('https://nsso.test/')
+  expect(navigations).toBe(0)
+  expect(await page.evaluate(()=>window.fixtureDocumentSentinel)).toBe('same-document')
+  expect(await page.evaluate(()=>window.fixtureSignOutCalls)).toBe(1)
+})
+
+test('decorative video waits for visibility and blocked playback does not reject globally',async({page})=>{
+  const {errors,videoRequests}=await fixture(page)
+  await expect(page.locator('video')).toHaveAttribute('preload','none')
+  expect(videoRequests).toEqual([])
+  await page.evaluate(()=>window.fixtureIntersection([{isIntersecting:true}]))
+  await expect.poll(()=>videoRequests.length).toBeGreaterThan(0)
+  await page.waitForTimeout(100)
+  expect(errors).toEqual([])
+})

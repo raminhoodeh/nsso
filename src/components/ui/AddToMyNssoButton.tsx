@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 
@@ -21,16 +21,18 @@ export default function AddToMyNssoButton({
     const { showToast } = useToast()
     const [isConnected, setIsConnected] = useState(initialIsConnected)
     const [loading, setLoading] = useState(false)
+    const pending = useRef(false)
 
     const handleClick = async () => {
         // 1. Handle Logged Out State
         if (!isLoggedIn) {
-            router.push('/sign-in')
+            router.push(`/sign-in?next=${encodeURIComponent(window.location.pathname + window.location.search)}`)
             return
         }
 
         // 2. Handle Already Connected State (Optional: currently disabled button but just in case)
-        if (isConnected) return
+        if (isConnected || pending.current) return
+        pending.current = true
 
         // 3. Add Connection Logic
         setLoading(true)
@@ -46,17 +48,16 @@ export default function AddToMyNssoButton({
 
             const data = await response.json()
 
-            if (response.ok) {
+            if (response.ok && data.success === true) {
                 setIsConnected(true)
-                showToast('Added to My nsso', 'success')
+                showToast(data.isNewConnection ? 'Added to My nsso' : 'This person is already in My nsso', 'success')
             } else {
                 throw new Error(data.error || 'Failed to add connection')
             }
-        } catch (error) {
-            console.error('Failed to add connection:', error)
-            showToast('Failed to add connection', 'error')
+        } catch {
+            showToast('The connection could not be saved. Please retry.', 'error')
         } finally {
-            setLoading(false)
+            pending.current = false; setLoading(false)
         }
     }
 

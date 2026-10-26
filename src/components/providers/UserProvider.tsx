@@ -74,8 +74,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     return <UserContext.Provider value={{ user, loading, error, refreshUser: fetchUser }}>
         {children}
-        {error && user && <div role="status" className="fixed inset-x-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[100] mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-white/20 bg-slate-950 px-4 py-3 text-sm text-white shadow-xl">
-            <p className="flex-1">{error}</p>
+        {error && <div role="status" className="fixed inset-x-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[100] mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-white/20 bg-slate-950 px-4 py-3 text-sm text-white shadow-xl">
+            <p className="flex-1">{user ? error : 'Your account could not be loaded. Please retry.'}</p>
             <button type="button" onClick={() => { void fetchUser() }} className="min-h-11 rounded-xl border border-white/30 px-3">Retry</button>
         </div>}
     </UserContext.Provider>

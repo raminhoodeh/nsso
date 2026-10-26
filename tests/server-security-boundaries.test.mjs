@@ -236,3 +236,13 @@ test('Auth outage preserves refreshed cookies and private cache on protected pag
     assert.equal(response.headers.get('cache-control'),'private, no-store');
     assert.equal((await response.text()).includes('AuthRetryableFetchError'),false);
 });
+
+
+test('Auth429 on a protected page preserves refreshed cookies and shows a retry instead of sign-in', async () => {
+    globalThis.__securitySession.auth.getUser = async () => ({data:{user:null},error:{status:429,message:'PRIVATE_AUTH_THROTTLE'}});
+    const response = await updateSession(new NextRequest('https://nsso.test/dashboard'));
+    assert.equal(response.status,503); assert.equal(response.headers.get('location'),null);
+    assert.match(response.headers.get('set-cookie'),/refreshed-session=test-only-cookie/);
+    assert.equal(response.headers.get('cache-control'),'private, no-store');
+    assert.doesNotMatch(await response.text(),/PRIVATE_AUTH_THROTTLE/);
+});

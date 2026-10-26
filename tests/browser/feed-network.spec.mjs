@@ -29,16 +29,16 @@ test.beforeAll(async () => {
             import FeedItemCard from './src/app/dashboard/components/FeedItemCard';
             import CreatePostCard from './src/app/dashboard/components/CreatePostCard';
             import MyNssoTab from './src/app/dashboard/components/MyNssoTab';
-            const connections=[{id:'${alice}',connectedUserId:'alice',username:'alice',fullName:'Alice Fixture',headline:null,profilePicUrl:null,dateMet:'2026-10-01',location:'',notes:'Alice saved notes'},{id:'${blair}',connectedUserId:'blair',username:'blair',fullName:'Blair Fixture',headline:null,profilePicUrl:null,dateMet:'2026-10-02',location:'',notes:'Blair saved notes'}];
+            const connections=[{id:'${alice}',connectedUserId:'alice',username:'alice',fullName:'Alice Fixture',headline:null,profilePicUrl:null,dateMet:'2026-10-01',location:window.fixtureExistingLocation || '',notes:'Alice saved notes'},{id:'${blair}',connectedUserId:'blair',username:'blair',fullName:'Blair Fixture',headline:null,profilePicUrl:null,dateMet:'2026-10-02',location:'',notes:'Blair saved notes'}];
             window.fixtureToasts=[];window.fixtureCreated=[];
             const post={id:'${postId}',user_id:'${actor}',type:'manual',content:'Original fixture post',metadata:{},created_at:'2026-10-01T12:00:00Z',user:{username:'fixture',profile:{full_name:'Fixture Creator',profile_pic_url:null}},likes:[],_count:{feed_comments:0}};
-            createRoot(document.getElementById('root')).render(<React.StrictMode><section data-testid="composer"><CreatePostCard onPostCreated={post=>window.fixtureCreated.push(post)}/></section><section data-testid="feed"><FeedItemCard post={post} currentUserId="${actor}"/></section><section data-testid="network"><MyNssoTab initialData={{connections}}/></section></React.StrictMode>);
+            createRoot(document.getElementById('root')).render(<React.StrictMode><section data-testid="composer"><CreatePostCard onPostCreated={post=>window.fixtureCreated.push(post)}/></section><section data-testid="feed"><FeedItemCard post={post} currentUserId="${actor}"/></section><section data-testid="network"><MyNssoTab initialData={window.fixtureNoNetworkSeed ? undefined : {connections}}/></section></React.StrictMode>);
         ` },
     });
     bundle = result.outputFiles[0].text;
 });
-async function fixture(page) {
-    const state = { likeStatus: 200, commentStatus: 200, postStatus: 200, deleteStatus: 200, patchStatus: 200, commentsStatus: 200, requests: [], comments: [], memberships: [alice, blair], reciprocalMemberships: ['their-record-of-me'], hold: null };
+async function fixture(page, { noNetworkSeed = false, existingLocation = '', networkStatus = 200 } = {}) {
+    const state = { networkStatus, likeStatus: 200, commentStatus: 200, postStatus: 200, deleteStatus: 200, patchStatus: 200, commentsStatus: 200, requests: [], comments: [], memberships: [alice, blair], reciprocalMemberships: ['their-record-of-me'], hold: null };
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.route('**/*', async route => {
         const request = route.request(), url = new URL(request.url()), method = request.method();
@@ -60,8 +60,9 @@ async function fixture(page) {
             if (state.hold?.kind === 'post') await state.hold.promise;
             return json(state.postStatus, state.postStatus === 200 ? { id: 'saved-post', content: request.postDataJSON().content } : { error: 'PRIVATE_UPSTREAM_ERROR_DO_NOT_RENDER' });
         }
+        if (url.pathname === '/api/my-nsso/connections') { if (state.hold?.kind === 'network') await state.hold.promise; return json(state.networkStatus, state.networkStatus === 200 ? { connections: [] } : { error: 'PRIVATE_UPSTREAM_ERROR_DO_NOT_RENDER' }); }
         if (url.pathname.startsWith('/api/my-nsso/connections/')) {
-            if (method === 'PATCH') return json(state.patchStatus, { success: state.patchStatus === 200 });
+            if (method === 'PATCH') { if (state.hold?.kind === 'location') await state.hold.promise; return json(state.patchStatus, { success: state.patchStatus === 200 }); }
             expect(method).toBe('DELETE');
             if (state.deleteStatus === 200) state.memberships = state.memberships.filter(id => id !== url.pathname.split('/').at(-1));
             return json(state.deleteStatus, state.deleteStatus === 200 ? { success: true } : { error: 'PRIVATE_UPSTREAM_ERROR_DO_NOT_RENDER' });
@@ -69,6 +70,7 @@ async function fixture(page) {
         throw new Error('Unexpected fixture request ' + method + ' ' + url.href);
     });
     await page.goto('https://nsso.test/fixture');
+    await page.evaluate(({ noNetworkSeed, existingLocation }) => { window.fixtureNoNetworkSeed = noNetworkSeed; window.fixtureExistingLocation = existingLocation; }, { noNetworkSeed, existingLocation });
     await page.addScriptTag({ content: bundle });
     await expect(page.getByTestId('feed')).toContainText('Original fixture post');
     return state;
@@ -189,4 +191,51 @@ test('notes state resets by connection and failed saves keep the current draft',
     await expect(dialog.getByRole('button', { name: 'Save Notes', exact: true })).toBeEnabled();
     state.patchStatus = 200;await dialog.getByRole('button', { name: 'Save Notes', exact: true }).click();
     await expect(dialog).toHaveCount(0);
+});
+
+
+test('network loading failure is visible and retries without inventing an empty successful network', async ({ page }) => {
+    const state = await fixture(page, { noNetworkSeed: true, networkStatus: 503 });
+    const network = page.getByTestId('network');
+    await expect(network.getByRole('alert')).toContainText('Your connections could not be loaded');
+    await expect(network).not.toContainText('PRIVATE_UPSTREAM_ERROR');
+    state.networkStatus = 200;
+    await network.getByRole('button', { name: 'Retry connections', exact: true }).click();
+    await expect(network.getByRole('alert')).toHaveCount(0);
+    await expect(network).toContainText('No connections found.');
+});
+
+test('an existing meeting location is keyboard editable; duplicate Enter/blur cannot double-save', async ({ page }) => {
+    const state = await fixture(page, { existingLocation: 'Original conference' });
+    const network = page.getByTestId('network');
+    await network.getByRole('button', { name: 'Edit location for Alice Fixture', exact: true }).click();
+    const input = network.getByRole('textbox', { name: 'Location for Alice Fixture', exact: true });
+    await expect(input).toHaveValue('Original conference');
+    await input.fill('Corrected meeting place');
+    const release = hold(state, 'location');
+    await input.press('Enter');
+    await expect(input).toBeDisabled();
+    await expect(network.getByRole('button', { name: 'Edit location for Blair Fixture', exact: true })).toBeDisabled();
+    await page.getByRole('heading', { name: 'My nsso Network', exact: true }).click();
+    expect(state.requests.filter(r => r.method === 'PATCH')).toHaveLength(1);
+    release();
+    await expect(network.getByRole('button', { name: 'Edit location for Alice Fixture', exact: true })).toHaveText('Corrected meeting place');
+    expect(state.requests.filter(r => r.method === 'PATCH').map(r => JSON.parse(r.body))).toEqual([{ location: 'Corrected meeting place' }]);
+});
+
+
+test('a stalled connection reload reaches a bounded retry state and ignores its late response', async ({ page }) => {
+    await page.clock.install();
+    const state = await fixture(page, { noNetworkSeed: true, networkStatus: 503 });
+    const network = page.getByTestId('network');
+    await expect(network.getByRole('alert')).toBeVisible();
+    const release = hold(state, 'network'); state.networkStatus = 200;
+    await network.getByRole('button', { name: 'Retry connections', exact: true }).click();
+    await expect.poll(() => state.requests.filter(r => r.path === '/api/my-nsso/connections').length).toBe(2);
+    await page.clock.fastForward(8100);
+    await expect(network.getByRole('alert')).toContainText('Your connections could not be loaded');
+    release();
+    await expect(network.getByRole('alert')).toBeVisible();
+    await network.getByRole('button', { name: 'Retry connections', exact: true }).click();
+    await expect(network.getByRole('alert')).toHaveCount(0);
 });

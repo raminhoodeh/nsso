@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useUser } from './UserProvider'
 import type { Profile, Link, Contact, Experience, Qualification, Project, Product } from '@/lib/types'
 import { ProfileMutationClient } from '@/lib/profile-mutation-client'
+import { boundedClientRead } from '@/lib/client-read'
 import { mutationMessage, rowCollections, type EditableValues, type MutationDelta, type MutationResult, type ProfileChange, type ProfileEntity, type ProfilePatch, type RowKind } from '@/lib/profile-mutations'
 import { validateLinks as validateLinksUtil, type LinkValidation } from '@/lib/deity/linkValidator'
 
@@ -14,6 +15,7 @@ type PendingCreate = { operationId: string; changes: ProfileChange[]; status?: M
 const emptySnapshot = (): OwnerSnapshot => ({ revision: 0, profile: null, links: [], contacts: [], experiences: [], qualifications: [], projects: [], products: [] })
 interface ProfileContextType extends OwnerSnapshot {
     loading: boolean
+    loadError: string | null
     updateField: (field: keyof Profile, value: string, persist?: boolean) => Promise<boolean>
     patchProfile: (patch: ProfilePatch, immediate?: boolean) => Promise<boolean>
     addLink: (name: string, url: string) => Promise<boolean>
@@ -88,12 +90,14 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
     const pendingOrders = useRef(new Map<'links'|'contacts'|'experiences'|'qualifications'|'projects',{order:string[];operationId:string;status?:MutationResult['status']}>())
     const [client] = useState(() => new ProfileMutationClient(0,fetch,user?.id))
     const [loading, setLoading] = useState(true)
+    const [loadError, setLoadError] = useState<string | null>(null)
     const [fastMode, setFastModeState] = useState(false)
     const [history, setHistory] = useState<string[]>([])
     const undoAttempt = useRef<{ original: string; operationId: string } | null>(null)
     const [mutationState, setMutationState] = useState<ProfileContextType['mutationState']>({ status: 'saved', message: '' })
     const mounted = useRef(true)
     const generation = useRef(0)
+    const activeRead = useRef<AbortController | null>(null)
     const publish = useCallback(() => {
         const overlays: MutationDelta[] = Array.from(drafts.current.values()).map(draft => ({ entity: draft.entity, id: draft.id, row: { id: draft.id, ...draft.patch } }))
         for (const [entity,pending] of pendingOrders.current) pending.order.forEach((id,display_order) => overlays.push({entity,id,row:{id,display_order}}))
@@ -103,20 +107,32 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
     const refreshProfile = useCallback(async () => {
         if (!user?.id) { setLoading(false); return }
         const current = ++generation.current
+        activeRead.current?.abort()
+        const controller = new AbortController()
+        activeRead.current = controller
+        if (!canonical.current.profile) setLoading(true)
         try {
-            const [result, account] = await Promise.all([supabase.rpc('get_profile_snapshot'), supabase.rpc('get_current_account')])
+            const [result, account] = await boundedClientRead(signal => Promise.all([
+                supabase.rpc('get_profile_snapshot').abortSignal(signal),
+                supabase.rpc('get_current_account').abortSignal(signal),
+            ]), { signal: controller.signal })
             if (!mounted.current || current !== generation.current) return
             if (result.error || !result.data || !Number.isSafeInteger(result.data.revision)) throw new Error('unavailable')
             if (result.data.revision >= canonical.current.revision) canonical.current = result.data as OwnerSnapshot
             client.setRevision(result.data.revision)
             setFastModeState(Boolean(account.data?.deity_fast_mode))
+            setLoadError(null)
             publish()
-        } catch { if (mounted.current && current === generation.current) setMutationState({ status: 'failed', message: 'Your profile could not be refreshed. Your draft has been kept.' }) }
-        finally { if (mounted.current && current === generation.current) setLoading(false) }
+        } catch { if (mounted.current && current === generation.current) setLoadError('Your profile could not be refreshed. Your draft has been kept.') }
+        finally {
+            if (activeRead.current === controller) activeRead.current = null
+            if (mounted.current && current === generation.current) setLoading(false)
+        }
     }, [user?.id, supabase, client, publish])
 
     useEffect(() => { mounted.current = true; client.activate(); void refreshProfile(); return () => {
         mounted.current = false; generation.current++; client.dispose()
+        activeRead.current?.abort(); activeRead.current = null
         for (const draft of drafts.current.values()) { if (draft.timer) clearTimeout(draft.timer); draft.waiters.forEach(resolve => resolve(false)) }
         drafts.current.clear()
         pendingCreates.current.clear()
@@ -295,7 +311,7 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
     const completenessFields=[has(snapshot.profile?.full_name),has(snapshot.profile?.headline),has(snapshot.profile?.bio),has(snapshot.profile?.profile_pic_url),snapshot.links.length>0,snapshot.contacts.length>0,snapshot.experiences.length>0,snapshot.qualifications.length>0,snapshot.projects.length>0,snapshot.products.length>0]
     const profileCompleteness=completenessFields.reduce((score,filled,index)=>score+(filled?[10,10,20,10,10,10,10,5,5,10][index]:0),0)
 
-    return <ProfileContext.Provider value={{ ...snapshot, loading, mutationState, retryPending, patchProfile, updateField, patchEntity, createEntity, removeEntity, applyOperation, refreshProfile, getRevision: () => client.revision, undo, canUndo: history.length > 0, fastMode, setFastMode, profileCompleteness,
+    return <ProfileContext.Provider value={{ ...snapshot, loading, loadError, mutationState, retryPending, patchProfile, updateField, patchEntity, createEntity, removeEntity, applyOperation, refreshProfile, getRevision: () => client.revision, undo, canUndo: history.length > 0, fastMode, setFastMode, profileCompleteness,
         addLink: async (link_name, link_url) => (await createEntity('link', { link_name, link_url })).status === 'applied',
         updateLink: (id, field, value) => patchEntity('link', id, { [field]: value }), removeLink: id => removeEntity('link', id), reorderLinks: ids => reorder('links', ids), validateLinks: () => validateLinksUtil(snapshot.links.map(link => ({ id: link.id, url: link.link_url }))),
         addContact: async () => (await createEntity('contact', { method: 'Email', value: '', custom_method_name: null })).status === 'applied', updateContact: (id, field, value) => patchEntity('contact', id, { [field]: value }), removeContact: id => removeEntity('contact', id), reorderContacts: ids => reorder('contacts', ids),

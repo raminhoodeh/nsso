@@ -1,3 +1,4 @@
+import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
@@ -11,6 +12,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         if (!uuid.test(id)) return Response.json({ error: 'Choose a valid connection.' }, { status: 400, headers })
         const client = await createClient()
         const { data: { user }, error: authError } = await client.auth.getUser()
+        if (isTransientAuthError(authError)) return Response.json({ error: 'Account verification is temporarily unavailable. Please retry.' }, { status: 503, headers })
         if (authError || !user) return Response.json({ error: 'Please sign in.' }, { status: 401, headers })
         const body = await readBoundedJson(request, 16_384)
         if (!Object.keys(body).length || Object.keys(body).some(key => !['notes','location'].includes(key))
@@ -32,6 +34,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
         if (!uuid.test(id)) return Response.json({ error: 'Choose a valid connection.' }, { status: 400, headers })
         const client = await createClient()
         const { data: { user }, error: authError } = await client.auth.getUser()
+        if (isTransientAuthError(authError)) return Response.json({ error: 'Account verification is temporarily unavailable. Please retry.' }, { status: 503, headers })
         if (authError || !user) return Response.json({ error: 'Please sign in.' }, { status: 401, headers })
         const { error } = await client.from('my_nsso').delete().eq('id',id).eq('user_id',user.id)
         if (error) throw error

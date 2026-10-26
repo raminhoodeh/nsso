@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Cropper from 'react-easy-crop'
 import { X, ZoomIn } from 'lucide-react'
 import {
@@ -9,17 +9,22 @@ import {
     TahoeGlassField,
 } from '@/components/ui/tahoe-glass'
 import getCroppedImg from '@/lib/canvasUtils'
+import { runProfileMediaAttempt } from '@/lib/profile-media-client'
 
 interface ImageCropperModalProps {
     isOpen: boolean
     onClose: () => void
     imageSrc: string
     aspectRatio: number // e.g. 1 or 16/9
-    onCropComplete: (croppedBlob: Blob) => void
+    onCropComplete: (croppedBlob: Blob, signal: AbortSignal) => void | Promise<void>
     loading?: boolean
 }
 
-export default function ImageCropperModal({
+export default function ImageCropperModal(props: ImageCropperModalProps) {
+    return <ImageCropperContent key={props.imageSrc} {...props} />
+}
+
+function ImageCropperContent({
     isOpen,
     onClose,
     imageSrc,
@@ -31,6 +36,11 @@ export default function ImageCropperModal({
     const [zoom, setZoom] = useState(1)
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
     const [processing, setProcessing] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const processingRef = useRef(false)
+    const activeAttempt = useRef<AbortController | null>(null)
+    const busy = processing || loading
+    useEffect(() => () => { activeAttempt.current?.abort() }, [])
 
     const onCropChange = (crop: { x: number; y: number }) => {
         setCrop(crop)
@@ -45,23 +55,31 @@ export default function ImageCropperModal({
     }, [])
 
     const handleSave = async () => {
-        if (!croppedAreaPixels || !imageSrc) return
+        if (!croppedAreaPixels || !imageSrc || processingRef.current || loading) return
+        processingRef.current = true
+        const controller = new AbortController()
+        activeAttempt.current = controller
         setProcessing(true)
+        setError(null)
         try {
-            const croppedImageBlob = await getCroppedImg(imageSrc, croppedAreaPixels)
-            if (croppedImageBlob) {
-                onCropComplete(croppedImageBlob)
-            }
-        } catch (e) {
-            console.error(e)
+            await runProfileMediaAttempt(async signal => {
+                const croppedImageBlob = await getCroppedImg(imageSrc, croppedAreaPixels)
+                if (signal.aborted) return
+                if (!croppedImageBlob) throw new Error('empty_crop')
+                await onCropComplete(croppedImageBlob, signal)
+            }, { signal: controller.signal })
+        } catch {
+            if (!controller.signal.aborted) setError('The image could not be prepared or its save confirmed. Your crop is still here; check your profile before retrying.')
         } finally {
+            if (activeAttempt.current === controller) activeAttempt.current = null
+            processingRef.current = false
             setProcessing(false)
         }
     }
 
     const handleOpenChange = useCallback((open: boolean) => {
-        if (!open) onClose()
-    }, [onClose])
+        if (!open && !busy && !processingRef.current) onClose()
+    }, [onClose, busy])
 
     return (
         <TahoeGlassDialog
@@ -80,6 +98,7 @@ export default function ImageCropperModal({
                 <h2 id="image-cropper-title" className="text-xl font-bold text-white">Crop Image</h2>
                 <TahoeGlassButton
                     onClick={onClose}
+                    disabled={busy}
                     aria-label="Close image cropper"
                     tone="light"
                     semanticTint="dark"
@@ -126,14 +145,18 @@ export default function ImageCropperModal({
                             min={1}
                             max={3}
                             step={0.1}
+                            disabled={busy}
                             onChange={(e) => setZoom(Number(e.target.value))}
                         />
                     </TahoeGlassField>
                 </div>
 
+                {error && <p role="alert" className="text-sm text-white/90">{error}</p>}
+
                 <div className="flex gap-4">
                     <TahoeGlassButton
                         onClick={onClose}
+                        disabled={busy}
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.04}
@@ -144,14 +167,14 @@ export default function ImageCropperModal({
                     </TahoeGlassButton>
                     <TahoeGlassButton
                         onClick={handleSave}
-                        disabled={processing || loading}
+                        disabled={busy || !croppedAreaPixels}
                         tone="light"
                         semanticTint="light"
                         semanticTintOpacity={0.07}
                         className="flex-1 border border-white/20 px-5 py-3"
                         contentClassName="text-white"
                     >
-                        {processing || loading ? 'Processing...' : 'Apply Crop'}
+                        {busy ? 'Processing...' : 'Apply Crop'}
                     </TahoeGlassButton>
                 </div>
             </div>

@@ -142,7 +142,10 @@ export default function MetaPixelConsent({
                     closeOnPointerDownOutside={false}
                     radius={24}
                     tone="light"
-                    overlayClassName="z-[100] items-end justify-center p-4"
+                    semanticTint="dark"
+                    semanticTintOpacity={0.94}
+                    overlayClassName="z-[6000] items-end justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+                    backdropClassName="bg-black/60"
                     className="max-w-2xl p-5 text-white sm:p-6"
                 >
                     <div className="flex items-start gap-4">
@@ -151,12 +154,12 @@ export default function MetaPixelConsent({
                             <h2 id="meta-privacy-title" className="text-base font-semibold">
                                 Marketing privacy
                             </h2>
-                            <p className="mt-2 text-sm leading-6 text-white/70">
+                            <p className="mt-2 text-sm leading-6 text-white/90">
                                 Ramin&apos;s profile can use Meta Pixel to measure advertising performance. It stays off unless you allow marketing tracking.
                             </p>
                             <Link
                                 href="/ramin/privacy"
-                                className="mt-2 inline-block text-sm text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
+                                className="mt-2 inline-flex min-h-11 items-center text-sm text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
                             >
                                 Read the tracking notice
                             </Link>

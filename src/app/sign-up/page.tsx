@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useRef, useState, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { authCallbackUrl, authDestination } from '@/lib/auth-journey'
 import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
@@ -21,6 +22,7 @@ type Provider = typeof providers[number]['name']
 
 function SignUpForm() {
     const router = useRouter()
+    const pending = useRef(false)
     const searchParams = useSearchParams()
     const reservedName = searchParams.get('name') || ''
     const supabase = createClient()
@@ -31,54 +33,50 @@ function SignUpForm() {
     const [confirmPassword, setConfirmPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const nextPath = authDestination(new URLSearchParams(searchParams.toString()), 'https://nsso.me')
 
     const handleEmailSignUp = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (pending.current) return
 
         if (password !== confirmPassword) {
             setError('Passwords do not match')
             return
         }
 
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters')
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters')
             return
         }
 
-        setLoading(true)
-        setError('')
-
-        const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: `${window.location.origin}/auth/callback`,
-                data: {
-                    reserved_name: reservedName,
-                },
-            },
-        })
-
-        if (error) {
-            setError(error.message)
-            setLoading(false)
-        } else {
-            showToast('Check your email to confirm your account!', 'success')
-            router.push('/sign-in')
-        }
+        pending.current = true; setLoading(true); setError('')
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email: email.trim(), password,
+                options: { emailRedirectTo: authCallbackUrl(window.location.origin, nextPath), data: { reserved_name: reservedName } },
+            })
+            if (error) { setError(error.message); return }
+            if (data.session) {
+                const { error: setupError } = await supabase.rpc('ensure_current_account')
+                if (setupError) { setError('Your account was created, but your profile could not be prepared. Please sign in to retry.'); return }
+                showToast('Your account is ready.', 'success')
+                router.replace(nextPath); router.refresh()
+            } else {
+                showToast('Check your email to confirm your account!', 'success')
+                router.push(`/sign-in?next=${encodeURIComponent(nextPath)}`)
+            }
+        } catch { setError('Account creation is temporarily unavailable. Your details are kept; please try again.') }
+        finally { pending.current = false; setLoading(false) }
     }
 
     const handleSSOSignUp = async (provider: Provider) => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider,
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-            },
-        })
-
-        if (error) {
-            setError(error.message)
-        }
+        if (pending.current) return
+        pending.current = true; setLoading(true); setError('')
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: authCallbackUrl(window.location.origin, nextPath) } })
+            if (error) setError(error.message)
+        } catch { setError('Sign-in is temporarily unavailable. Please try again.') }
+        finally { pending.current = false; setLoading(false) }
     }
 
     return (
@@ -120,8 +118,9 @@ function SignUpForm() {
                         tone="dark"
                         className="mb-6 px-4 py-3 text-center"
                     >
-                        <p className="text-slate-950/80 text-sm">Reserving:</p>
+                        <p className="text-slate-950/80 text-sm">Requested profile URL:</p>
                         <p className="text-slate-950 font-semibold">nsso.me/{reservedName}</p>
+                        <p className="text-sm text-slate-950/70">Check availability and save it after signing in.</p>
                     </TahoeGlassSurface>
                 )}
 
@@ -132,6 +131,7 @@ function SignUpForm() {
                             key={provider.name}
                             variant="secondary"
                             fullWidth
+                            disabled={loading}
                             onClick={() => handleSSOSignUp(provider.name)}
                             tone="dark"
                             className="justify-center"
@@ -155,6 +155,8 @@ function SignUpForm() {
                 <form onSubmit={handleEmailSignUp} className="space-y-4">
                     <Input
                         type="email"
+                        label="Email address"
+                        autoComplete="email"
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -164,6 +166,9 @@ function SignUpForm() {
 
                     <Input
                         type="password"
+                        label="Password"
+                        autoComplete="new-password"
+                        minLength={8}
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -173,6 +178,9 @@ function SignUpForm() {
 
                     <Input
                         type="password"
+                        label="Confirm password"
+                        autoComplete="new-password"
+                        minLength={8}
                         placeholder="Confirm Password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -181,7 +189,7 @@ function SignUpForm() {
                     />
 
                     {error && (
-                        <p className="text-rose-950 font-medium text-sm text-center">{error}</p>
+                        <p role="alert" className="text-rose-950 font-medium text-sm text-center">{error}</p>
                     )}
 
                     <GlassButton
@@ -199,7 +207,7 @@ function SignUpForm() {
                 <div className="text-center mt-6 pt-6 border-t border-black/10">
                     <span className="text-slate-950/80">Already have an account? </span>
                     <Link
-                        href="/sign-in"
+                        href={`/sign-in?next=${encodeURIComponent(nextPath)}`}
                         className="text-slate-950 font-semibold hover:underline"
                     >
                         Sign In

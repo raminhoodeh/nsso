@@ -16,7 +16,7 @@ test.beforeAll(async()=>{
         import SaveStatus from './src/components/profile/ProfileSaveStatus';
         window.fixtureState={revision:0,profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Original headline',bio:'Original bio',profile_pic_url:null},links:[{id:'${linkA}',user_id:'${actor}',link_name:'First',link_url:'https://first.test',display_order:0},{id:'${linkB}',user_id:'${actor}',link_name:'Second',link_url:'https://second.test',display_order:1}],contacts:[],experiences:[],qualifications:[],projects:[],products:[]};
         window.fixtureJournal={};window.fixturePosts=[];window.fixtureToasts=[];window.fixtureActions=[];window.fixtureMode='applied';window.fixtureFastMode=false;window.fixtureChatCalls=0;
-        window.fixtureDatabase={auth:{getSession:async()=>({data:{session:null}})},from:()=>({select(){return this},eq(){return this},single:async()=>({data:window.fixtureState.profile})}),rpc:async name=>({data:name==='get_profile_snapshot'?structuredClone(window.fixtureState):name==='get_current_account'?{deity_fast_mode:window.fixtureFastMode}:{},error:null})};
+        window.fixtureDatabase={auth:{getSession:async()=>({data:{session:null}})},from:()=>({select(){return this},eq(){return this},single:async()=>({data:window.fixtureState.profile})}),rpc:name=>({abortSignal:async()=>({data:name==='get_profile_snapshot'?structuredClone(window.fixtureState):name==='get_current_account'?{deity_fast_mode:window.fixtureFastMode}:{},error:null})})};
         const actualFetch=window.fetch.bind(window);
         window.fetch=async(url,init)=>{
             if(url!=='/api/deity/chat')return actualFetch(url,init);

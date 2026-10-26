@@ -1,3 +1,4 @@
+import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { validateProfileUsername } from '@/lib/profile-username'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
@@ -9,6 +10,7 @@ export async function updateFreeProfileUsername(request: Request, field: 'userna
         assertSameOrigin(request)
         const supabase = await createClient()
         const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (isTransientAuthError(authError)) return Response.json({ error: 'Account verification is temporarily unavailable. Please retry.' }, { status: 503, headers })
         if (authError || !user) return Response.json({ error: 'Unauthorized' }, { status: 401, headers })
         const body = await readBoundedJson(request, 2048)
         const validated = validateProfileUsername(body[field])

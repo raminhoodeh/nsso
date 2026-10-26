@@ -87,6 +87,26 @@ test('marketing provider stays off until consent and loads without inline-script
     expect(await page.evaluate(() => window.violations)).toEqual([])
 })
 
+test('marketing choices stay explicit and keyboard accessible before any provider request', async ({ page }) => {
+    const requests = await fixture(page)
+    await page.evaluate(() => window.renderMeta('unset'))
+    const dialog = page.getByRole('dialog', { name: 'Marketing privacy' })
+    await expect(dialog).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Read the tracking notice' })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeVisible()
+    expect(requests.some(url => url.includes('facebook'))).toBe(false)
+    await page.getByRole('button', { name: 'Decline', exact: true }).click()
+    await expect(dialog).toHaveCount(0)
+    expect(requests.some(url => url.includes('facebook'))).toBe(false)
+    await page.getByRole('button', { name: 'Privacy choices', exact: true }).click()
+    await expect(dialog).toBeVisible()
+    await page.getByRole('button', { name: 'Allow', exact: true }).click()
+    await page.waitForFunction(() => window.pixelLoaded)
+    await expect(dialog).toHaveCount(0)
+    expect(await page.evaluate(() => window.violations)).toEqual([])
+})
+
 test('map provider scripts are allowed only on the map page without contacting live Maps services', async ({ page }) => {
     await fixture(page, '/places/dubai', '<script src="https://maps.googleapis.com/maps/api/js?fixture=1"></script>')
     await page.waitForFunction(() => window.mapProviderLoaded)

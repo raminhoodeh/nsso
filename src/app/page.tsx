@@ -10,6 +10,8 @@ import { useUser } from '@/components/providers/UserProvider'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { useToast } from '@/components/ui/Toast'
+import { boundedClientRead } from '@/lib/client-read'
 
 
 
@@ -78,7 +80,7 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
   )
 }
 
-function ClaimItButton({ onClick, className }: { onClick: () => void; className?: string }) {
+function ClaimItButton({ onClick, className, disabled = false }: { onClick: () => void; className?: string; disabled?: boolean }) {
   return (
     <div
       className={cn('rounded-[12px] p-[0.75px]', className)}
@@ -89,7 +91,8 @@ function ClaimItButton({ onClick, className }: { onClick: () => void; className?
       <button
         type="button"
         onClick={onClick}
-        className="relative flex h-[42px] w-[133px] items-center justify-center rounded-[12px] outline-none transition-all hover:scale-[1.02] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        disabled={disabled}
+        className="relative flex min-h-11 w-[133px] items-center justify-center rounded-[12px] outline-none transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}
       >
         <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[12px] bg-[rgba(255,255,255,0.06)] mix-blend-luminosity" />
@@ -101,7 +104,7 @@ function ClaimItButton({ onClick, className }: { onClick: () => void; className?
             fontWeight: 590
           }}
         >
-          CLAIM IT
+          {disabled ? 'OPENING…' : 'CLAIM IT'}
         </span>
       </button>
     </div>
@@ -112,11 +115,15 @@ export default function HomePage() {
   const router = useRouter()
   const { user } = useUser()
   const [reservedName, setReservedName] = useState('')
+  const [claiming, setClaiming] = useState(false)
+  const claimRequest = useRef(0)
+  const { showToast } = useToast()
   const supabase = useMemo(() => createClient(), [])
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Redirect authenticated users to dashboard (unless they clicked the logo)
   useEffect(() => {
+    let cancelled = false
     const checkAuthAndRedirect = async () => {
       const hashParams = new URLSearchParams(window.location.hash.slice(1))
       const accessToken = hashParams.get('access_token')
@@ -128,13 +135,20 @@ export default function HomePage() {
         && refreshToken
         && (authType === 'invite' || authType === 'recovery')
       ) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        })
-
-        window.history.replaceState(null, '', window.location.pathname)
-        router.replace(error ? '/sign-in?error=password-link' : '/set-password')
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          if (cancelled) return
+          window.history.replaceState(null, '', window.location.pathname)
+          router.replace(error ? '/sign-in?error=password-link' : '/set-password')
+        } catch {
+          if (!cancelled) {
+            window.history.replaceState(null, '', window.location.pathname)
+            router.replace('/sign-in?error=password-link')
+          }
+        }
         return
       }
 
@@ -144,13 +158,16 @@ export default function HomePage() {
 
       // Only redirect if NOT a logo click
       if (!viewHome) {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          router.push('/dashboard')
+        try {
+          const { data: { session }, error } = await boundedClientRead(() => supabase.auth.getSession())
+          if (!cancelled && !error && session) router.replace('/dashboard')
+        } catch {
+          // Public discovery remains usable during an Auth network outage.
         }
       }
     }
     void checkAuthAndRedirect()
+    return () => { cancelled = true; claimRequest.current++ }
   }, [router, supabase])
 
   // Lazy load video when it enters viewport
@@ -162,7 +179,7 @@ export default function HomePage() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            video.play()
+            void video.play().catch(() => { /* A blocked decorative autoplay is harmless. */ })
           } else {
             video.pause()
           }
@@ -176,18 +193,23 @@ export default function HomePage() {
   }, [])
 
   const handleClaimIt = async () => {
-    // Check if user is logged in
-    const { data: { session } } = await supabase.auth.getSession()
-
-    if (session) {
-      router.push('/dashboard')
-      return
-    }
-
-    if (reservedName.trim()) {
-      router.push(`/sign-up?name=${encodeURIComponent(reservedName.trim())}`)
-    } else {
-      router.push('/sign-up')
+    if (claiming) return
+    const request = ++claimRequest.current
+    setClaiming(true)
+    try {
+      const { data: { session }, error } = await boundedClientRead(() => supabase.auth.getSession())
+      if (request !== claimRequest.current) return
+      if (error) throw error
+      const name = reservedName.trim()
+      if (session) {
+        router.push(name ? `/dashboard?claim=${encodeURIComponent(name)}` : '/dashboard')
+      } else {
+        router.push(name ? `/sign-up?name=${encodeURIComponent(name)}` : '/sign-up')
+      }
+    } catch {
+      if (request === claimRequest.current) showToast('Could not open profile setup. Your chosen name is kept. Please try again.', 'error')
+    } finally {
+      if (request === claimRequest.current) setClaiming(false)
     }
   }
 
@@ -284,6 +306,7 @@ export default function HomePage() {
             <video
               ref={videoRef}
               src="/homepage-video.mp4"
+              preload="none"
               loop
               muted
               playsInline
@@ -330,6 +353,7 @@ export default function HomePage() {
                 aria-label="Profile name"
                 type="text"
                 value={reservedName}
+                disabled={claiming}
                 onChange={(e) => setReservedName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
                 placeholder="yourname"
@@ -341,6 +365,7 @@ export default function HomePage() {
               />
               <ClaimItButton
                 onClick={handleClaimIt}
+                disabled={claiming}
                 className="relative z-10 mr-1.5 shrink-0"
               />
             </TahoeGlassSurface>
@@ -368,6 +393,7 @@ export default function HomePage() {
                 aria-label="Profile name"
                 type="text"
                 value={reservedName}
+                disabled={claiming}
                 onChange={(e) => setReservedName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
                 placeholder="yourname"
@@ -381,7 +407,7 @@ export default function HomePage() {
 
             {/* Button - centered below */}
             <div className="flex justify-center">
-              <ClaimItButton onClick={handleClaimIt} />
+              <ClaimItButton onClick={handleClaimIt} disabled={claiming} />
             </div>
           </div>
         </div>

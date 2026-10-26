@@ -1,3 +1,4 @@
+import { isTransientAuthError } from '@/lib/auth-errors'
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, createPrivilegedClient, permissionErrorResponse } from '@/lib/server/permissions'
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
         assertSameOrigin(request)
         const session = await createClient()
         const { data: { user }, error: authError } = await session.auth.getUser()
-        if (authError && (authError.status === undefined || authError.status <= 0 || authError.status >= 500)) return respond({ error: 'Image uploads are temporarily unavailable. Your crop has been kept.' }, 503)
+        if (isTransientAuthError(authError)) return respond({ error: 'Image uploads are temporarily unavailable. Your crop has been kept.' }, 503)
         if (authError || !user) return respond({ error: 'Please sign in to upload an image.' }, 401)
         // A stale tab may not upload account A's draft into account B's namespace.
         if (request.headers.get('x-nsso-account') !== user.id) return respond({ error: 'Your account changed. Reopen the image editor before uploading.', code: 'ACCOUNT_CHANGED' }, 409)

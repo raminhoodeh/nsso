@@ -123,3 +123,12 @@ test('dropped registration replies reconcile the same object, while unknown outc
     assert.equal(calls.filter(call => call[0] === 'upload').length, 1)
     registrations = calls.filter(call => call[0] === 'rpc'); assert.equal(registrations.length, 2)
 })
+
+
+test('Auth429 preserves the crop and denies work before bytes, quota or Storage access', async () => {
+    globalThis.__mediaSession.auth.getUser = async () => ({ data: { user: actor }, error: { status: 429, message: 'PRIVATE_AUTH_THROTTLE' } });
+    const response = await POST(unreadable({ origin: 'https://nsso.test', 'X-Nsso-Account': actorId }));
+    assert.equal(response.status, 503); assert.equal(response.headers.get('cache-control'), 'private, no-store');
+    const text = await response.text(); assert.match(text, /crop has been kept/); assert.doesNotMatch(text, /PRIVATE_AUTH_THROTTLE/);
+    assert.deepEqual(calls, []); assert.deepEqual(globalThis.__mediaQuotaChecks, []);
+});
