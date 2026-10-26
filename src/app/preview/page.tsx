@@ -7,9 +7,13 @@ import { ExternalLink } from 'lucide-react'
 import ProfileQRCodeToggle from '@/components/ui/ProfileQRCodeToggle'
 import CreateProfileButton from '@/components/ui/CreateProfileButton'
 import { createClient } from '@/lib/supabase/client'
+import { fetchCurrentAccount } from '@/lib/current-account'
 import GlassCard from '@/components/profile/ProfileGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import { PRODUCT_CARD_SELECT } from '@/lib/payments/product-presentation'
+import SafeExternalLink from '@/components/ui/SafeExternalLink'
+import { safeWebUrl } from '@/lib/urls'
 import ShinyLink from '@/components/ui/ShinyLink'
 import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
@@ -49,14 +53,14 @@ export default function PreviewPage() {
 
             // Load all user data
             const [userData, profileData, linksData, contactsData, expResult, qualResult, projResult, prodResult] = await Promise.all([
-                supabase.from('users').select('*').eq('id', authUser.id).single(),
-                supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
+                fetchCurrentAccount().then(account => ({ data: account?.user ?? null })),
+                supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', authUser.id).single(),
                 supabase.from('links').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
                 supabase.from('contacts').select('*').eq('user_id', authUser.id).order('created_at'),
                 supabase.from('experiences').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }),
                 supabase.from('qualifications').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }),
                 supabase.from('projects').select('*').eq('user_id', authUser.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }),
-                supabase.from('products').select('*').eq('user_id', authUser.id).order('created_at', { ascending: false }),
+                supabase.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', authUser.id).order('created_at', { ascending: false }),
             ])
 
             if (userData.data) setUser(userData.data)
@@ -182,7 +186,7 @@ export default function PreviewPage() {
                             <div className="space-y-3 block lg:hidden !mt-10">
 
                                 {links.map((link) => (
-                                    <a
+                                    <SafeExternalLink
                                         key={link.id}
                                         href={link.link_url}
                                         target="_blank"
@@ -197,7 +201,7 @@ export default function PreviewPage() {
                                                 <span className="text-white/50">→</span>
                                             </div>
                                         </GlassCard>
-                                    </a>
+                                    </SafeExternalLink>
                                 ))}
                             </div>
                         )}
@@ -269,7 +273,7 @@ export default function PreviewPage() {
                             <div className="space-y-3">
 
                                 {links.map((link) => (
-                                    <a
+                                    <SafeExternalLink
                                         key={link.id}
                                         href={link.link_url}
                                         target="_blank"
@@ -284,7 +288,7 @@ export default function PreviewPage() {
                                                 <span className="text-white/50">→</span>
                                             </div>
                                         </GlassCard>
-                                    </a>
+                                    </SafeExternalLink>
                                 ))}
                             </div>
                         )}
@@ -314,9 +318,10 @@ export default function PreviewPage() {
                         <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Projects</h2>
                         <div className={PROFILE_COLLECTION_GRID_CLASS}>
                             {projects.map((project) => {
-                                const Wrapper = project.project_url ? 'a' : 'div'
-                                const wrapperProps = project.project_url ? {
-                                    href: project.project_url,
+                                const projectUrl = safeWebUrl(project.project_url)
+                                const Wrapper = projectUrl ? 'a' : 'div'
+                                const wrapperProps = projectUrl ? {
+                                    href: projectUrl,
                                     target: '_blank',
                                     rel: 'noopener noreferrer',
                                     className: 'block h-full cursor-pointer transition-opacity hover:opacity-80'
@@ -350,9 +355,9 @@ export default function PreviewPage() {
                         <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
                         <div className={PROFILE_COLLECTION_GRID_CLASS}>
                             {products.map(product => {
-                                const ProductWrapper = product.sales_page_active ? Link : 'div'
+                                const ProductWrapper = product.sales_page_active && product.sales_page_published !== false ? Link : 'div'
                                 // Fix TS error by explicitly typing or checking
-                                const wrapperProps = product.sales_page_active
+                                const wrapperProps = product.sales_page_active && product.sales_page_published !== false
                                     ? { href: `/products/${product.id}`, className: "block flex-grow cursor-pointer transition-opacity hover:opacity-80" }
                                     : { className: "block flex-grow" }
 
@@ -397,9 +402,9 @@ export default function PreviewPage() {
                                                     </ShinyLink>
                                                 </div>
                                             )}
-                                            {product.paypal_active && product.paypal_html && (
+                                            {product.paypal_active && product.payment_config && (
                                                 <div className="w-full flex justify-center">
-                                                    <PayPalSmartButton html={product.paypal_html} />
+                                                    <PayPalSmartButton config={product.payment_config} preview />
                                                 </div>
                                             )}
                                         </div>

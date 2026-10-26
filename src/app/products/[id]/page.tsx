@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import { productCheckoutVisibility, productPageIsPublic } from '@/lib/payments/product-presentation'
+import { safeWebUrl } from '@/lib/urls'
 import {
     TahoeGlassButton,
     TahoeGlassSurface,
@@ -17,12 +19,14 @@ function ProductRouteContent({ children }: { children: ReactNode }) {
 }
 
 function PurchaseLink({ href }: { href: string }) {
+    const destination = safeWebUrl(href)
+    if (!destination) return <p className="text-xs text-white/70">Purchase link unavailable. Please contact the seller.</p>
     return (
         <TahoeGlassSurface
             as="a"
             variant="button"
             radius={12}
-            href={href}
+            href={destination}
             target="_blank"
             rel="noopener noreferrer"
             tone="light"
@@ -49,8 +53,10 @@ interface Product {
     video_url: string
     image_url: string
     purchase_link: string
-    paypal_html: string
-    success_url?: string
+    payment_config: unknown
+    paypal_active: boolean
+    purchase_link_active: boolean
+    sales_page_published?: boolean | null
 }
 
 interface Contact {
@@ -72,7 +78,6 @@ export default function ProductSalesPage() {
     const [userContacts, setUserContacts] = useState<Contact[]>([])
     const [ownerUsername, setOwnerUsername] = useState<string>('')
     const [isOwner, setIsOwner] = useState(false)
-    const [isPlatformOwner, setIsPlatformOwner] = useState(false)
     const [currentTestimonial, setCurrentTestimonial] = useState(0)
     const [loading, setLoading] = useState(true)
 
@@ -81,11 +86,7 @@ export default function ProductSalesPage() {
             const productId = params.id as string
 
             // Fetch product
-            const { data: productData } = await supabase
-                .from('products')
-                .select('*')
-                .eq('id', productId)
-                .single()
+            const { data: productData } = await supabase.rpc('get_product_details', { p_product_id: productId })
 
             if (productData) {
                 setProduct(productData)
@@ -104,19 +105,15 @@ export default function ProductSalesPage() {
                     }
                 }
 
-                // Fetch owner's username and email to check platform ownership
+                // Only public creator identity is needed for the profile link.
                 const { data: userData } = await supabase
                     .from('users')
-                    .select('username, email')
+                    .select('username')
                     .eq('id', productData.user_id)
                     .single()
 
                 if (userData?.username) {
                     setOwnerUsername(userData.username)
-                }
-
-                if (userData?.email === 'raminhoodeh@gmail.com') {
-                    setIsPlatformOwner(true)
                 }
 
                 // Check if current user is owner
@@ -173,7 +170,7 @@ export default function ProductSalesPage() {
         )
     }
 
-    if (!product) {
+    if (!product || (!productPageIsPublic(product) && !isOwner)) {
         return (
             <ProductRouteContent>
                 <div className="relative z-[1] flex min-h-screen items-center justify-center">
@@ -186,10 +183,13 @@ export default function ProductSalesPage() {
     }
 
     const youtubeId = product.video_url ? extractYouTubeId(product.video_url) : null
+    const checkout = productCheckoutVisibility(product)
+    const preview = isOwner && (product.sales_page_published === false || searchParams.get('preview') === 'true')
 
     return (
         <ProductRouteContent>
         <main className="relative z-[1] min-h-screen p-4 md:p-8">
+            {preview && <p role="status" className="mb-4 rounded-xl bg-black/20 p-3 text-center text-sm text-white">Draft preview — checkout is disabled.</p>}
             <div className="max-w-[1400px] mx-auto">
                 {/* Golden Ratio Grid: 1.618fr 1fr */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
@@ -270,21 +270,20 @@ export default function ProductSalesPage() {
                             </p>
 
                             {/* Purchase Link Button */}
-                            {product.purchase_link && (
+                            {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    <PurchaseLink href={product.purchase_link} />
+                                    {preview ? <button type="button" disabled className="min-h-11 w-full rounded-xl bg-white/10 px-4">Preview only</button> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
                             {/* PayPal Button */}
-                            {product.paypal_html && (
+                            {checkout.paypal && !!product.payment_config && (
                                 <div className="w-full max-w-[280px] flex justify-center mt-2">
                                     <PayPalSmartButton 
-                                        html={product.paypal_html} 
-                                        isPlatformOwner={isPlatformOwner} 
+                                        config={product.payment_config}
+                                        preview={preview}
                                         price={product.price}
                                         productName={product.name}
-                                        successUrl={product.success_url}
                                     />
                                 </div>
                             )}
@@ -411,22 +410,21 @@ export default function ProductSalesPage() {
                             </p>
 
                             {/* Purchase Link Button */}
-                            {product.purchase_link && (
+                            {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    <PurchaseLink href={product.purchase_link} />
+                                    {preview ? <button type="button" disabled className="min-h-11 w-full rounded-xl bg-white/10 px-4">Preview only</button> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
                             {/* PayPal / Apple Pay */}
-                            {product.paypal_html && (
+                            {checkout.paypal && !!product.payment_config && (
                                 <div className="w-full max-w-[320px] flex justify-center mt-2">
                                         <PayPalSmartButton 
-                                            html={product.paypal_html} 
-                                            isPlatformOwner={isPlatformOwner} 
+                                            config={product.payment_config}
+                                            preview={preview}
                                             price={product.price}
                                             productName={product.name}
-                                            successUrl={product.success_url}
-                                        />
+                                            />
                                 </div>
                             )}
 

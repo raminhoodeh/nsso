@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
 import { splitActionPayload, type DeityAction } from '@/lib/deity/actionParser';
@@ -68,6 +68,13 @@ const CATEGORY_QUESTIONS: Record<string, string[]> = {
         "What films should I watch for business motivation?"
     ]
 };
+
+function parseYear(value: string | number | undefined | null): number | undefined {
+    if (!value) return undefined;
+    if (typeof value === 'number') return value;
+    const clean = value.replace(/[^0-9]/g, '');
+    return clean ? parseInt(clean, 10) : undefined;
+}
 
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/components/providers/UserProvider';
@@ -197,16 +204,6 @@ Check out some of the areas I can help you with below.`;
         return () => clearInterval(interval);
     }, [placeholders.length]);
 
-    // Handle initial message from props
-    useEffect(() => {
-        if (initialMessage && hasInitialized) {
-            handleSendMessage(initialMessage);
-        }
-        // The send callback is intentionally excluded so one initial message
-        // cannot be replayed as chat state changes during streaming.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialMessage, hasInitialized]);
-
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -286,20 +283,8 @@ Check out some of the areas I can help you with below.`;
 
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-    // Safe year parser helper
-    const parseYear = (value: string | number | undefined | null): number | undefined => {
-        if (!value) return undefined;
-        if (typeof value === 'number') return value;
-        if (typeof value === 'string') {
-            const clean = value.replace(/[^0-9]/g, '');
-            if (!clean) return undefined;
-            return parseInt(clean, 10);
-        }
-        return undefined;
-    }
-
     // Action execution with word-by-word animation
-    const executeAction = async (action: DeityAction): Promise<boolean> => {
+    const executeAction = useCallback(async (action: DeityAction): Promise<boolean> => {
         console.log('⚡ executing action:', action);
         if (action.action === 'UPDATE_FIELD' && action.target && action.value) {
             const targetField = action.target.toLowerCase() as keyof ReturnType<typeof useProfile>['profile'];
@@ -444,27 +429,10 @@ Check out some of the areas I can help you with below.`;
             return success;
         }
         return false;
-    };
+    }, [fastMode, updateField, showToast, addLink, updateLink, removeLink, reorderLinks, addExperience, addProject, addQualification, addProduct]);
 
 
-    // Handle Apply button click
-    const handleApplyAction = async (messageId: string, actionIndex: number, action: DeityAction) => {
-        await executeAction(action);
-
-        setMessages(prev => prev.map(msg => {
-            if (msg.id === messageId && msg.actions) {
-                const newActions = [...msg.actions];
-                newActions[actionIndex] = { ...newActions[actionIndex], status: 'applied' };
-                return { ...msg, actions: newActions };
-            }
-            return msg;
-        }));
-
-        // Trigger follow-up suggestion
-        triggerFollowUp(action);
-    };
-
-    const triggerFollowUp = async (action?: DeityAction) => {
+    const triggerFollowUp = useCallback(async (action?: DeityAction) => {
         const actionDesc = action
             ? (action.action === 'UPDATE_FIELD' && action.target ? action.target : 'profile')
             : 'profile';
@@ -534,6 +502,23 @@ Check out some of the areas I can help you with below.`;
                 ...msg, content: "Deity couldn't finish that follow-up. Your profile action has not been repeated; please ask again if needed.", responseError: true,
             } : msg));
         }
+    }, [messages, supabase]);
+
+    // Handle Apply button click
+    const handleApplyAction = async (messageId: string, actionIndex: number, action: DeityAction) => {
+        await executeAction(action);
+
+        setMessages(prev => prev.map(msg => {
+            if (msg.id === messageId && msg.actions) {
+                const newActions = [...msg.actions];
+                newActions[actionIndex] = { ...newActions[actionIndex], status: 'applied' };
+                return { ...msg, actions: newActions };
+            }
+            return msg;
+        }));
+
+        // Trigger follow-up suggestion
+        triggerFollowUp(action);
     };
 
     // Handle Reject button click
@@ -562,7 +547,7 @@ Check out some of the areas I can help you with below.`;
         showToast(`Fast mode ${!fastMode ? 'enabled' : 'disabled'}`, 'success');
     };
 
-    const handleSendMessage = async (text: string) => {
+    const handleSendMessage = useCallback(async (text: string) => {
         if (!text.trim()) return;
 
         // Autos-collapse categories to give more space
@@ -697,9 +682,9 @@ Check out some of the areas I can help you with below.`;
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [messages, supabase, activeCategory, fastMode, executeAction, triggerFollowUp]);
 
-    const handleCategoryClick = (category: string) => {
+    const handleCategoryClick = useCallback((category: string) => {
         setActiveCategory(category); // Set context for future messages
         setIsCategoriesExpanded(false);
 
@@ -727,7 +712,18 @@ Check out some of the areas I can help you with below.`;
             };
             setMessages(prev => [...prev, botMsg]);
         }, 600); // Small natural delay
-    };
+    }, []);
+
+    // Handle an initial prompt only when it changes or initialization completes.
+    // Declare this after the callbacks so it never reads an uninitialized const.
+    useEffect(() => {
+        if (initialMessage && hasInitialized) {
+            void handleSendMessage(initialMessage);
+        }
+        // The send callback is intentionally excluded so one initial message
+        // cannot be replayed as chat state changes during streaming.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialMessage, hasInitialized]);
 
     const iconButtonClass = 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#232b36] text-white/65 transition-colors hover:bg-[#2b3542] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none';
 

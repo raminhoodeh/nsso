@@ -8,6 +8,10 @@ const advancedModeSource = fs.readFileSync(
     path.join(process.cwd(), 'src/app/dashboard/components/AdvancedModeCard.tsx'),
     'utf8'
 )
+const paypalEditorSource = fs.readFileSync(
+    path.join(process.cwd(), 'src/components/payments/PayPalCodeEditor.tsx'),
+    'utf8'
+)
 const bottomNavSource = fs.readFileSync(
     path.join(process.cwd(), 'src/components/layout/DashboardBottomNav.tsx'),
     'utf8'
@@ -174,10 +178,10 @@ test('mobile advanced editors reserve writing room without changing desktop dens
 
     assert.match(advancedModeSource, /md:absolute md:right-0 md:top-\[27px\][^>]*>[\s\S]*?Product details/)
     assert.match(advancedModeSource, /min-h-\[144px\] resize-none[^"\n]*md:min-h-\[100px\]/)
-    assert.match(advancedModeSource, /min-h-\[112px\] resize-none[^"\n]*md:min-h-\[80px\]/)
+    assert.match(paypalEditorSource, /min-h-\[112px\] resize-none[^"\n]*md:min-h-\[80px\]/)
     assert.match(advancedModeSource, /text-base text-white\/70[^"\n]*md:text-sm/)
     assert.match(advancedModeSource, /text-base text-white\/80 md:text-sm/)
-    assert.match(advancedModeSource, /text-base font-mono[^"\n]*md:text-xs/)
+    assert.match(paypalEditorSource, /text-base font-mono[^"\n]*md:text-xs/)
 
     const mobileSwitchTargets = advancedModeSource.match(
         /className="h-11 w-14 shrink-0 p-0"/g

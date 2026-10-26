@@ -1,3 +1,5 @@
+import type { PayPalConfig } from './payments/paypal-config'
+
 export type UserType = 'standard' | 'admin'
 export type AuthProvider = 'google' | 'apple' | 'microsoft' | 'github' | 'email'
 export type ContactMethod = 'Email' | 'WhatsApp' | 'Phone' | 'Telegram' | 'Location' | 'Other'
@@ -15,6 +17,7 @@ export interface User {
     user_type: UserType
     is_premium: boolean
     created_at: string
+    permissions?: Array<'nsso:admin' | 'razinflix:manage'>
 }
 
 export interface Profile {
@@ -93,9 +96,11 @@ export interface Product {
     purchase_link_active: boolean
     paypal_html: string | null
     paypal_active: boolean
+    payment_config?: PayPalConfig | null
     created_at: string
     // Sales Page Fields
     sales_page_active: boolean
+    sales_page_published?: boolean | null
     headline?: string
     tagline?: string
     intro_text?: string

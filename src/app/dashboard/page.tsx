@@ -178,8 +178,8 @@ function DashboardContent() {
                 { data: userData },
                 { data: profileData },
             ] = await Promise.all([
-                supabase.from('users').select('*').eq('id', authUser.id).single(),
-                supabase.from('profiles').select('*').eq('user_id', authUser.id).single(),
+                supabase.from('users').select('id,username').eq('id', authUser.id).single(),
+                supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', authUser.id).single(),
             ])
 
             if (userData) {

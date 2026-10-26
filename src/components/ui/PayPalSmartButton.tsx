@@ -1,228 +1,62 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { resolvePayPalConfig } from '@/lib/payments/paypal-config'
+import { loadPayPalHostedSdk } from '@/lib/payments/paypal-sdk'
 
 interface PayPalSmartButtonProps {
-    html: string
+    html?: string | null
+    config?: unknown
+    preview?: boolean
+    // Retained for caller compatibility. These never override PayPal's order or delivery.
     isPlatformOwner?: boolean
     price?: string
     productName?: string
     successUrl?: string
 }
 
-declare global {
-    interface Window {
-        paypal: any;
-        __paypal_script_promise__?: Promise<unknown>;
-    }
-}
-
-export default function PayPalSmartButton({ 
-    html, 
-    isPlatformOwner = false,
-    price,
-    productName,
-    successUrl
-}: PayPalSmartButtonProps) {
+export default function PayPalSmartButton({ html, config, preview = false }: PayPalSmartButtonProps) {
+    const payment = useMemo(() => resolvePayPalConfig(config, html || ''), [config, html])
     const containerRef = useRef<HTMLDivElement>(null)
-    const [isSdkReady, setIsSdkReady] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const [failedAttempt, setFailedAttempt] = useState<string | null>(null)
+    const [retry, setRetry] = useState(0)
+    const hostedId = payment?.kind === 'hosted-button' ? payment.hostedButtonId : null
+    const currency = payment?.kind === 'hosted-button' ? payment.currency : 'GBP'
+    const attempt = `${hostedId}|${currency}|${retry}`
+    const failed = failedAttempt === attempt
 
-    // Ensure html is a string to prevent crashes if data is malformed
-    const safeHtml = typeof html === 'string' ? html : ''
-
-    // 1. Smart Extraction: Look for Hosted Button ID
-    // Matches: hostedButtonId: "XYZ" or 'XYZ'
-    const idMatch = safeHtml.match(/hostedButtonId:\s*["']([A-Z0-9]+)["']/)
-    const hostedButtonId = idMatch ? idMatch[1] : null
-
-    // Determine Mode
-    const useAdvancedCheckout = isPlatformOwner && Boolean(successUrl) && Boolean(price)
-
-    // 2. Load SDK Effect
     useEffect(() => {
-        // Only load SDK if we have a hosted button OR are using advanced checkout
-        if (!hostedButtonId && !useAdvancedCheckout) return
-
-        // If SDK is already loaded and available
-        if (typeof window !== 'undefined') {
-            if (useAdvancedCheckout && window.paypal?.Buttons) {
-                setIsSdkReady(true)
-                return
-            } else if (!useAdvancedCheckout && window.paypal?.HostedButtons) {
-                setIsSdkReady(true)
-                return
-            }
+        if (!hostedId || preview) return
+        let cancelled = false
+        let close: (() => void) | undefined
+        const container = containerRef.current
+        loadPayPalHostedSdk(currency).then(async sdk => {
+            if (cancelled || !container) return
+            container.replaceChildren()
+            const button = sdk.HostedButtons({ hostedButtonId: hostedId })
+            close = button.close?.bind(button)
+            await button.render(container)
+        }).catch(() => {
+            if (!cancelled) setFailedAttempt(attempt)
+        })
+        return () => {
+            cancelled = true
+            close?.()
+            container?.replaceChildren()
         }
+    }, [hostedId, currency, preview, retry, attempt])
 
-        // Singleton loader pattern to prevent multiple script injections (Race Condition Fix)
-        if (!window.__paypal_script_promise__) {
-            window.__paypal_script_promise__ = new Promise((resolve, reject) => {
-                // If script tag already exists (from another component or previous session), wait for it
-                if (document.querySelector('script[src*="paypal.com/sdk/js"]')) {
-                    const interval = setInterval(() => {
-                        if (useAdvancedCheckout && window.paypal?.Buttons) {
-                            clearInterval(interval)
-                            resolve(true)
-                        } else if (!useAdvancedCheckout && window.paypal?.HostedButtons) {
-                            clearInterval(interval)
-                            resolve(true)
-                        }
-                    }, 200)
-                    setTimeout(() => {
-                        clearInterval(interval)
-                    }, 10000)
-                    return
-                }
-
-                const script = document.createElement('script')
-                const clientId = isPlatformOwner 
-                    ? (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'ba') 
-                    : 'ba'
-                
-                // If Advanced Checkout, load buttons. Otherwise load hosted-buttons.
-                const components = useAdvancedCheckout ? 'buttons' : 'hosted-buttons'
-                script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=${components}&currency=GBP&enable-funding=applepay`
-                script.async = true
-                script.onload = () => resolve(true)
-                script.onerror = (err) => {
-                    console.error("PayPal SDK Loading Error:", err)
-                    reject(err)
-                }
-                document.body.appendChild(script)
-            })
-        }
-
-        window.__paypal_script_promise__
-            .then(() => setIsSdkReady(true))
-            .catch(err => {
-                console.error("PayPal SDK failed to load globally:", err)
-                setError("Payment system unavailable")
-            })
-
-    }, [hostedButtonId, isPlatformOwner, useAdvancedCheckout])
-
-    // 3. Render Instance Effect
-    useEffect(() => {
-        if (!isSdkReady || !window.paypal || !containerRef.current) return
-        if (!hostedButtonId && !useAdvancedCheckout) return
-
-        // Clear container first
-        containerRef.current.innerHTML = ''
-
-        try {
-            if (useAdvancedCheckout && window.paypal.Buttons) {
-                // MODERN ADVANCED CHECKOUT (Apple Pay Supported via DB Redirect)
-                const { value, currency } = parsePrice(price || '0')
-                
-                const renderPromise = window.paypal.Buttons({
-                    style: {
-                        layout: 'vertical',
-                        color: 'gold',
-                        shape: 'rect',
-                        label: 'pay',
-                        height: 50,
-                        tagline: false
-                    },
-                    createOrder: (data: any, actions: any) => {
-                        return actions.order.create({
-                            purchase_units: [{
-                                description: productName || 'Digital Product',
-                                amount: {
-                                    currency_code: currency,
-                                    value: value
-                                }
-                            }]
-                        });
-                    },
-                    onApprove: (data: any, actions: any) => {
-                        return actions.order.capture().then(function(details: any) {
-                            if (successUrl) {
-                                window.location.href = successUrl;
-                            }
-                        });
-                    },
-                    onError: (err: any) => {
-                        console.error("PayPal Advanced Checkout Error:", err);
-                        // Let users retry natively
-                    }
-                }).render(containerRef.current)
-
-                if (renderPromise && renderPromise.catch) {
-                    renderPromise.catch((err: any) => {
-                        console.error("PayPal Advanced Checkout render failed:", err)
-                        if (containerRef.current) {
-                            containerRef.current.innerHTML = '<div class="text-red-500 text-xs text-center py-4">Wait, check PayPal</div>'
-                        }
-                    })
-                }
-
-            } else if (hostedButtonId && window.paypal.HostedButtons) {
-                // LEGACY HOSTED BUTTON
-                const renderPromise = window.paypal.HostedButtons({
-                    hostedButtonId: hostedButtonId,
-                }).render(containerRef.current)
-
-                if (renderPromise && renderPromise.catch) {
-                    renderPromise.catch((err: any) => {
-                        console.error("PayPal button render failed (async):", err)
-                        if (containerRef.current) {
-                            containerRef.current.innerHTML = '<div class="text-red-500 text-xs">Button Error</div>'
-                        }
-                    })
-                }
-            }
-        } catch (err) {
-            console.error("PayPal Smart Render Error (sync):", err)
-            if (containerRef.current) {
-                containerRef.current.innerHTML = '<div class="text-red-500 text-xs">Button Error</div>'
-            }
-        }
-
-    }, [hostedButtonId, isSdkReady, useAdvancedCheckout, price, productName, successUrl])
-
-    if (error) {
-        return <div className="text-red-400 text-xs text-center py-2">{error}</div>
-    }
-
-    // SCENARIO A: Found a Hosted Button ID OR Advanced Checkout Enabled (Smart Engine)
-    if (hostedButtonId || useAdvancedCheckout) {
+    if (!payment) return html || config ? <p className="py-2 text-center text-xs text-white/70">Payment button unavailable. Please contact the seller.</p> : null
+    const buttonClass = 'min-h-11 w-full rounded-md border border-amber-400/50 bg-[#ffc439] px-5 py-3 text-center font-semibold text-black disabled:cursor-default disabled:opacity-75'
+    if (preview) return <div className="w-full max-w-[320px]"><button type="button" disabled className={buttonClass}>{payment.kind === 'payment-form' ? payment.label : 'Pay with PayPal'}</button><p className="mt-2 text-xs text-white/60">Preview only — no payment is started.</p></div>
+    if (payment.kind === 'payment-form') {
         return (
-            <div className="w-full flex justify-center">
-                <div
-                    ref={containerRef}
-                    className="w-full max-w-[320px] z-10 relative transition-opacity duration-500"
-                />
-            </div>
+            <form action={payment.action} method="post" target="_top" className="w-full max-w-[320px]" data-paypal-kind="payment-form">
+                {payment.fields.map(field => <input key={field.name} type="hidden" name={field.name} value={field.value} />)}
+                <button type="submit" className={buttonClass}>{payment.label}</button>
+            </form>
         )
     }
-
-    // SCENARIO B: Form-based PayPal button (e.g. Platform Owner fallback when NO successUrl is passed)
-    if (safeHtml.includes('<form')) {
-        return (
-            <div
-                className="w-full flex justify-center"
-                dangerouslySetInnerHTML={{ __html: safeHtml }}
-            />
-        )
-    }
-
-    // SCENARIO C: Junk text -> Render Nothing
-    return null
-}
-
-function parsePrice(priceStr: string) {
-    if (!priceStr) return { currency: 'GBP', value: '0.00' }
-    let currency = 'GBP'
-    if (priceStr.includes('$')) currency = 'USD'
-    if (priceStr.includes('€')) currency = 'EUR'
-    
-    // Extract numerical value
-    const numericStr = priceStr.replace(/[^0-9.]/g, '')
-    const value = parseFloat(numericStr)
-    
-    return { 
-        currency, 
-        value: isNaN(value) ? '0.00' : value.toFixed(2) 
-    }
+    if (failed) return <div role="status" className="py-2 text-center text-xs text-white/70"><p>PayPal could not load.</p><button type="button" className="mt-2 min-h-11 px-3 underline" onClick={() => setRetry(value => value + 1)}>Retry PayPal</button></div>
+    return <div ref={containerRef} className="relative z-10 w-full max-w-[320px]" data-paypal-kind="hosted-button" />
 }

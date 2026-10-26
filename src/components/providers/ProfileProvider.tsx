@@ -1,9 +1,10 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useUser } from './UserProvider'
 import type { Profile, Link, Contact, Experience, Qualification, Project, Product } from '@/lib/types'
+import { PRODUCT_CARD_SELECT } from '@/lib/payments/product-presentation'
 import { validateLinks as validateLinksUtil, type LinkValidation } from '@/lib/deity/linkValidator'
 
 // Profile snapshot for undo history
@@ -75,6 +76,12 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
     const { user } = useUser()
+    // Identity changes unmount every private collection, pending draft and Undo entry.
+    return <AccountProfileProvider key={user?.id ?? 'signed-out'}>{children}</AccountProfileProvider>
+}
+
+function AccountProfileProvider({ children }: { children: ReactNode }) {
+    const { user } = useUser()
     const supabase = createClient()
 
     // State
@@ -91,100 +98,43 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     // Undo stack (session-based, not persisted)
     const [history, setHistory] = useState<ProfileSnapshot[]>([])
 
-    // Load profile data
+    const loadGeneration = useRef(0)
+    // Fetch an owner-scoped snapshot together; ignore stale or unmounted loads.
     const loadProfileData = async (userId: string) => {
+        const generation = ++loadGeneration.current
         setLoading(true)
-
         try {
-            // Load profile
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('user_id', userId)
-                .single()
-
-            if (profileData) setProfile(profileData)
-
-            // Load links
-            const { data: linksData } = await supabase
-                .from('links')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: true })
-
-            if (linksData) setLinks(linksData)
-
-            // Load contacts
-            const { data: contactsData } = await supabase
-                .from('contacts')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: true })
-
-            if (contactsData) setContacts(contactsData)
-
-            // Load experiences
-            const { data: experiencesData } = await supabase
-                .from('experiences')
-                .select('*')
-                .eq('user_id', userId)
-                .order('display_order', { ascending: true })
-                .order('start_year', { ascending: false })
-
-            if (experiencesData) setExperiences(experiencesData)
-
-            // Load qualifications
-            const { data: qualificationsData } = await supabase
-                .from('qualifications')
-                .select('*')
-                .eq('user_id', userId)
-                .order('display_order', { ascending: true })
-                .order('end_year', { ascending: false })
-
-            if (qualificationsData) setQualifications(qualificationsData)
-
-            // Load projects
-            const { data: projectsData } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('user_id', userId)
-                .order('display_order', { ascending: true })
-                .order('created_at', { ascending: false })
-
-            if (projectsData) setProjects(projectsData)
-
-            // Load products
-            const { data: productsData } = await supabase
-                .from('products')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false })
-
-            if (productsData) setProducts(productsData)
-
-            // Load fast mode preference
-            const { data: userData } = await supabase
-                .from('users')
-                .select('deity_fast_mode')
-                .eq('id', userId)
-                .single()
-
-            if (userData) setFastModeState(userData.deity_fast_mode || false)
-
-        } catch (error) {
-            console.error('Error loading profile data:', error)
+            const results = await Promise.all([
+                supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', userId).single(),
+                supabase.from('links').select('*').eq('user_id', userId).order('display_order').order('created_at'),
+                supabase.from('contacts').select('*').eq('user_id', userId).order('display_order').order('created_at'),
+                supabase.from('experiences').select('*').eq('user_id', userId).order('display_order').order('start_year', { ascending: false }),
+                supabase.from('qualifications').select('*').eq('user_id', userId).order('display_order').order('end_year', { ascending: false }),
+                supabase.from('projects').select('*').eq('user_id', userId).order('display_order').order('created_at', { ascending: false }),
+                supabase.rpc('get_own_products'),
+                supabase.rpc('get_current_account'),
+            ])
+            if (generation !== loadGeneration.current) return
+            if (results.some(result => result.error)) throw new Error('Profile unavailable')
+            setProfile(results[0].data)
+            setLinks(results[1].data || [])
+            setContacts(results[2].data || [])
+            setExperiences(results[3].data || [])
+            setQualifications(results[4].data || [])
+            setProjects(results[5].data || [])
+            setProducts(results[6].data || [])
+            setFastModeState(Boolean(results[7].data?.deity_fast_mode))
+        } catch {
+            // Retain this account's draft. Never substitute another identity's cached data.
         } finally {
-            setLoading(false)
+            if (generation === loadGeneration.current) setLoading(false)
         }
     }
 
-    // Load data when user changes
     useEffect(() => {
-        if (user?.id) {
-            loadProfileData(user.id)
-        } else {
-            setLoading(false)
-        }
+        if (user?.id) void loadProfileData(user.id)
+        else setLoading(false)
+        return () => { ++loadGeneration.current }
     }, [user?.id])
 
     // Calculate profile completeness
@@ -592,11 +542,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
                 price: price || '0',
                 purchase_link: url || ''
             })
-            .select()
+            .select(PRODUCT_CARD_SELECT)
             .single()
 
         if (data && !error) {
-            setProducts(prev => [data, ...prev])
+            setProducts(prev => [{ ...data, paypal_html: null }, ...prev])
             return true
         }
 
@@ -750,13 +700,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
         setFastModeState(enabled)
 
-        const { error } = await supabase
-            .from('users')
-            .update({ deity_fast_mode: enabled })
-            .eq('id', user.id)
+        const { error } = await supabase.rpc('update_account_settings', { p_patch: { deity_fast_mode: enabled } })
 
         if (error) {
-            console.error('Error updating fast mode:', error)
+            console.error('Fast Mode preference could not be saved.')
             setFastModeState(!enabled) // Revert
         }
     }

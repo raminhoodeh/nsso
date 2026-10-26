@@ -96,9 +96,8 @@ export function extractActions(fullResponse: string): DeityAction[] {
                     timestamp: Date.now()
                 })
             }
-        } catch (e) {
-            console.error('Failed to parse Deity action:', e)
-            console.error('Attempted to parse:', match[1])
+        } catch {
+            console.error('Deity action rejected', { code: 'INVALID_ACTION_JSON' })
         }
     }
 

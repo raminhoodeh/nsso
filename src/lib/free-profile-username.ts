@@ -1,62 +1,29 @@
 import { createClient } from '@/lib/supabase/server'
 import { validateProfileUsername } from '@/lib/profile-username'
+import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
+import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 
 export async function updateFreeProfileUsername(request: Request, field: 'username' | 'desiredUsername') {
+    const headers = { 'Cache-Control': 'private, no-store' }
     try {
+        assertSameOrigin(request)
         const supabase = await createClient()
         const { data: { user }, error: authError } = await supabase.auth.getUser()
-        if (authError || !user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        if (authError || !user) return Response.json({ error: 'Unauthorized' }, { status: 401, headers })
+        const body = await readBoundedJson(request, 2048)
+        const validated = validateProfileUsername(body[field])
+        if ('error' in validated) return Response.json({ error: validated.error }, { status: 400, headers })
+        // The database derives the owner from Auth and claims atomically. No billing occurs.
+        const { data, error } = await supabase.rpc('claim_profile_username', { p_username: validated.username })
+        if (error) {
+            if (error.code === '23505') return Response.json({ error: 'Username is already taken' }, { status: 409, headers })
+            if (error.code === '22023') return Response.json({ error: 'This username is invalid or reserved' }, { status: 400, headers })
+            return Response.json({ error: 'The username could not be saved. Please retry.' }, { status: 503, headers })
         }
-
-        let body: unknown
-        try {
-            body = await request.json()
-        } catch {
-            return Response.json({ error: 'Invalid JSON request' }, { status: 400 })
-        }
-
-        const value = body && typeof body === 'object' ? (body as Record<string, unknown>)[field] : undefined
-        const validated = validateProfileUsername(value)
-        if ('error' in validated) {
-            return Response.json({ error: validated.error }, { status: 400 })
-        }
-        const { username } = validated
-
-        const { data: existingUser, error: lookupError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('username', username)
-            .maybeSingle()
-
-        if (lookupError) {
-            console.error('Username availability check failed:', lookupError)
-            return Response.json({ error: 'Failed to check username availability' }, { status: 500 })
-        }
-        if (existingUser && existingUser.id !== user.id) {
-            return Response.json({ error: 'Username is already taken' }, { status: 409 })
-        }
-
-        // Premium access is free. The legacy flag is retained for existing clients;
-        // claiming a name creates no subscription, billing event or referral revenue.
-        const { error: updateError } = await supabase
-            .from('users')
-            .update({ username, is_premium: true })
-            .eq('id', user.id)
-            .select('id')
-            .single()
-
-        if (updateError) {
-            if (updateError.code === '23505') {
-                return Response.json({ error: 'Username is already taken' }, { status: 409 })
-            }
-            console.error('Username update failed:', updateError)
-            return Response.json({ error: 'Failed to update username' }, { status: 500 })
-        }
-
-        return Response.json({ success: true, username })
+        if (!data?.success || data.username !== validated.username) return Response.json({ error: 'The username could not be confirmed.' }, { status: 503, headers })
+        return Response.json({ success: true, username: data.username }, { headers })
     } catch (error) {
-        console.error('Free profile username error:', error)
-        return Response.json({ error: 'Internal server error' }, { status: 500 })
+        return permissionErrorResponse(error) ?? requestBodyErrorResponse(error)
+            ?? Response.json({ error: 'The username could not be saved. Please retry.' }, { status: 503, headers })
     }
 }

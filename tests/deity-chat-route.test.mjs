@@ -30,9 +30,10 @@ hooks.deregister();
 const realFetch = globalThis.fetch;
 let mode;
 let calls;
+let providerAborted;
 const privateText = 'AQ.SHOULD_NEVER_LEAK_or_log_private_prompt';
 beforeEach(() => {
-  mode = 'success'; calls = [];
+  mode = 'success'; calls = []; providerAborted = false;
   globalThis.fetch = async (url, init) => {
     const path = new URL(String(url)).pathname;
     const body = init?.body ? JSON.parse(init.body) : undefined;
@@ -40,10 +41,19 @@ beforeEach(() => {
     if (path.endsWith('/reserve_nsso_chat_budget')) return Response.json(mode === 'quota'
       ? { allowed: false, code: 'daily_ip_allowance_exhausted' } : { allowed: true });
     if (path.endsWith('/finish_nsso_chat_budget')) return Response.json(null);
-    if (path.endsWith('/intelligent_search')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv' } }]);
+    if (path.endsWith('/intelligent_search')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
     if (path.endsWith(':embedContent')) return Response.json({ embedding: { values: Array(768).fill(0.01) } });
     if (path.endsWith(':countTokens')) return Response.json({ totalTokens: 500 });
     if (path.endsWith(':streamGenerateContent')) {
+      if (mode === 'pending_headers') return new Promise((_resolve, reject) => {
+        init.signal.addEventListener('abort', () => { providerAborted = true; reject(new DOMException('Fixture cancelled', 'AbortError')); }, { once: true });
+      });
+      if (mode === 'hanging_stream') {
+        return new Response(new ReadableStream({ start(controller) {
+          init.signal.addEventListener('abort', () => { providerAborted = true; controller.error(new DOMException('Fixture cancelled', 'AbortError')); }, { once: true });
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ candidates: [{ index: 0, content: { role: 'model', parts: [{ text: 'Partial fixture response' }] } }] })}\n\n`));
+        } }), { headers: { 'content-type': 'text/event-stream' } });
+      }
       if (mode === 'retired') return Response.json({ error: { code: 404, message: `Model retired ${privateText}` } }, { status: 404 });
       if (mode === 'always_busy' || (mode === 'busy_once' && calls.filter(c => c.path.endsWith(':streamGenerateContent')).length === 1)) {
         return Response.json({ error: { code: 503, message: `Busy ${privateText}` } }, { status: 503 });
@@ -57,9 +67,9 @@ beforeEach(() => {
   };
 });
 after(() => { globalThis.fetch = realFetch; process.env = previousEnv; });
-const request = (patch = {}) => new Request('https://www.nsso.me/api/deity/chat', { method: 'POST',
+const request = (patch = {}, signal) => new Request('https://www.nsso.me/api/deity/chat', { method: 'POST',
   headers: { 'content-type': 'application/json', origin: 'https://www.nsso.me', 'x-vercel-forwarded-for': '192.0.2.100' },
-  body: JSON.stringify({ message: 'what is nsso?', history: [], ...patch }) });
+  body: JSON.stringify({ message: 'what is nsso?', history: [], ...patch }), signal });
 
 test('real route answers the reported guest question with the budgeted, supported model and product facts', async () => {
   const response = await POST(request({ history: [{ role: 'model', content: 'Welcome. Let me help with your bio.' }, { role: 'model', content: 'Tip: write your bio.' }] }));
@@ -106,6 +116,8 @@ test('normal resource questions retain retrieval and authentic conversation turn
   assert.equal(response.status, 200); await response.text();
   assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search')).length, 1);
   assert.equal(calls.find(c => c.path.endsWith(':streamGenerateContent')).body.contents.length, 3);
+  assert.equal(calls.some(c => c.path === '/books'), false, 'Corpus URLs must never trigger a server health fetch');
+  assert.match(JSON.stringify(calls.find(c => c.path.endsWith(':streamGenerateContent')).body.systemInstruction), /NOT LIVE-VERIFIED/);
 });
 test('the original daily allowance still blocks all provider calls with the LinkedIn CTA', async () => {
   mode = 'quota';
@@ -171,4 +183,66 @@ test('diagnostics disclose only an allowlisted phase, provider status and opaque
   assert.ok(!JSON.stringify(result).includes(privateText));
   assert.equal(chatFailureDetails({ status: 402 }, 'generation', 'ref').code, 'chat_provider_access_unavailable');
   assert.equal(chatFailureDetails({ status: 'private' }, 'generation', 'ref').upstreamStatus, undefined);
+});
+
+
+test('a request cancelled before starting consumes no allowance and calls no provider', async () => {
+  const abort = new AbortController(); abort.abort();
+  const response = await POST(request({}, abort.signal));
+  assert.equal(response.status, 499);
+  assert.equal((await response.json()).code, 'chat_cancelled');
+  assert.deepEqual(calls, []);
+});
+
+test('request disconnect aborts an active provider stream and conservatively settles once', async () => {
+  mode = 'hanging_stream';
+  const abort = new AbortController();
+  const response = await POST(request({}, abort.signal));
+  const reader = response.body.getReader();
+  assert.match(new TextDecoder().decode((await reader.read()).value), /Partial fixture/);
+  abort.abort();
+  const ended = await Promise.race([reader.read(), new Promise((_resolve, reject) => setTimeout(() => reject(new Error('Cancellation did not end response')), 1000))]);
+  assert.equal(ended.done, true);
+  assert.equal(providerAborted, true);
+  const settlements = calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget'));
+  assert.equal(settlements.length, 1);
+  assert.equal(settlements[0].body.p_confirmed, false);
+  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+});
+
+test('response cancellation aborts upstream work without requiring request.signal to change', async () => {
+  mode = 'hanging_stream';
+  const response = await POST(request());
+  const reader = response.body.getReader(); await reader.read();
+  await reader.cancel();
+  assert.equal(providerAborted, true);
+  const settlements = calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget'));
+  assert.equal(settlements.length, 1);
+  assert.equal(settlements[0].body.p_confirmed, false);
+});
+
+test('disconnect while awaiting provider headers aborts the request and retains its reservation', async () => {
+  mode = 'pending_headers';
+  const abort = new AbortController();
+  const pending = POST(request({}, abort.signal));
+  for (let attempt = 0; attempt < 100 && !calls.some(call => call.path.endsWith(':streamGenerateContent')); attempt++) await new Promise(resolve => setTimeout(resolve, 1));
+  assert.ok(calls.some(call => call.path.endsWith(':streamGenerateContent')));
+  abort.abort();
+  const response = await pending;
+  assert.equal(response.status, 499);
+  assert.equal(providerAborted, true);
+  assert.equal(calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget'))[0].body.p_confirmed, false);
+  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+});
+
+test('cancellation during the pre-stream retry pause never reserves or starts a second attempt', async () => {
+  mode = 'busy_once';
+  const abort = new AbortController();
+  const pending = POST(request({}, abort.signal));
+  for (let attempt = 0; attempt < 100 && !calls.some(call => call.path.endsWith('/finish_nsso_chat_budget')); attempt++) await new Promise(resolve => setTimeout(resolve, 1));
+  abort.abort();
+  assert.equal((await pending).status, 499);
+  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+  assert.equal(calls.filter(call => call.path.endsWith('/reserve_nsso_chat_budget')).length, 2);
+  assert.equal(calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget')).length, 1);
 });

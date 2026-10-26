@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { openChatBudget, CHAT_MODEL, type ChatBudget } from '@/lib/deity/chat-budget-server';
+import { createPrivilegedClient, permissionErrorResponse, requirePermission } from '@/lib/server/permissions';
+import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request';
 
 import {
     buildSearchTitleVariants,
@@ -137,14 +138,17 @@ function rowTitleAliases(title: string): Set<string> {
 
 export async function POST(request: Request) {
     try {
+        await requirePermission('razinflix:manage', request);
         let input: FilmLookupInput;
         try {
-            input = await request.json() as FilmLookupInput;
-        } catch {
+            input = await readBoundedJson(request) as unknown as FilmLookupInput;
+        } catch (error) {
+            const bodyError = requestBodyErrorResponse(error);
+            if (bodyError) return bodyError;
             throw new FilmEnrichmentError('INVALID_REQUEST', 'Enter a film title.', 400);
         }
 
-        if (!input.title || typeof input.title !== 'string') {
+        if (!input.title || typeof input.title !== 'string' || input.title.trim().length > 300) {
             throw new FilmEnrichmentError('INVALID_TITLE', 'Enter a film title.', 400);
         }
 
@@ -177,22 +181,12 @@ export async function POST(request: Request) {
             request,
         );
 
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (!supabaseUrl || !supabaseKey) {
-            throw new FilmEnrichmentError(
-                'DATABASE_NOT_CONFIGURED',
-                'The RazinFlix database is not configured.',
-                500,
-            );
-        }
-
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        const supabase = createPrivilegedClient();
         const { data: existingRows, error: existingLookupError } = await supabase
             .from('razinflix_films')
             .select('id,title,year')
             .eq('year', film.year);
-        if (existingLookupError) console.error('Existing film lookup failed:', existingLookupError);
+        if (existingLookupError) throw new FilmEnrichmentError('DATABASE_LOOKUP_FAILED', 'The film library could not be checked. Please try again.', 503);
 
         const canonicalAliases = matchingAliases(film);
         const existingFilm = ((existingRows ?? []) as ExistingFilm[]).find(row => {
@@ -216,7 +210,7 @@ export async function POST(request: Request) {
         const { data, error } = await query.select().single();
 
         if (error) {
-            console.error('Supabase film write failed:', error);
+            console.error('RazinFlix film write failed', { code: 'DATABASE_WRITE_FAILED' });
             throw new FilmEnrichmentError(
                 'DATABASE_WRITE_FAILED',
                 'The film was matched correctly but could not be saved.',
@@ -238,23 +232,27 @@ export async function POST(request: Request) {
                 trailerTitle: trailerResolution.trailer.title,
                 trailerConfidence: trailerResolution.trailer.confidence,
             },
-        });
+        }, { headers: { 'Cache-Control': 'private, no-store' } });
     } catch (error) {
+        const denied = permissionErrorResponse(error);
+        if (denied) return denied;
         if (error instanceof FilmEnrichmentError) {
+            const safeDetails = { ...error.details };
+            delete safeDetails.diagnostics;
             return NextResponse.json(
                 {
                     error: error.message,
                     code: error.code,
-                    ...(error.details ?? {}),
+                    ...safeDetails,
                 },
-                { status: error.status },
+                { status: error.status, headers: { 'Cache-Control': 'private, no-store' } },
             );
         }
 
-        console.error('Add Film API Error:', error);
+        console.error('RazinFlix add failed', { code: 'INTERNAL_ERROR' });
         return NextResponse.json(
             { error: 'RazinFlix could not complete the film lookup. Try again shortly.', code: 'INTERNAL_ERROR' },
-            { status: 500 },
+            { status: 500, headers: { 'Cache-Control': 'private, no-store' } },
         );
     }
 }

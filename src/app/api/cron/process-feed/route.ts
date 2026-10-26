@@ -1,24 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { assertSameOrigin, createPrivilegedClient, permissionErrorResponse } from '@/lib/server/permissions'
 
 export async function POST(req: Request) {
-    const supabase = await createClient()
-
-    // For manual testing by the user, we check for a logged-in user and process *their* feed.
-    // In production, this would be a CRON job iterating over all users.
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const headers = { 'Cache-Control': 'private, no-store' }
+    try {
+        assertSameOrigin(req)
+        const supabase = await createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError || !user) return Response.json({ error: 'Please sign in.' }, { status: 401, headers })
+        // This manual operation can aggregate only the verified caller's feed.
+        // The privileged function is never given a subject from request data.
+        const { error } = await createPrivilegedClient().rpc('process_daily_feed_aggregation', { target_user_id: user.id })
+        if (error) return Response.json({ error: 'Feed updates could not be prepared. Please retry.' }, { status: 503, headers })
+        return Response.json({ success: true, message: 'Feed updates prepared.' }, { headers })
+    } catch (error) {
+        return permissionErrorResponse(error) ?? Response.json({ error: 'Feed updates could not be prepared. Please retry.' }, { status: 503, headers })
     }
-
-    const { error } = await supabase.rpc('process_daily_feed_aggregation', {
-        target_user_id: user.id
-    })
-
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true, message: 'Feed aggregated successfully' })
 }

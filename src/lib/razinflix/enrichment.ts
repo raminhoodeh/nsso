@@ -504,8 +504,7 @@ export async function resolveTmdbFilm(
         .map(result => result.value);
 
     if (!successfulResponses.length) {
-        const reason = responses.find(result => result.status === 'rejected');
-        console.error('TMDB lookup failed:', reason?.status === 'rejected' ? reason.reason : 'Unknown error');
+        console.error('RazinFlix enrichment unavailable', { code: 'TMDB_LOOKUP_FAILED' });
         throw new FilmEnrichmentError(
             'TMDB_UNAVAILABLE',
             'The movie database could not be reached. Try again shortly.',
@@ -567,8 +566,8 @@ export async function resolveTmdbFilm(
             fetcher,
             'TMDB movie details',
         );
-    } catch (error) {
-        console.error('TMDB detail lookup failed:', error);
+    } catch {
+        console.error('RazinFlix enrichment unavailable', { code: 'TMDB_DETAILS_FAILED' });
         throw new FilmEnrichmentError(
             'TMDB_DETAILS_UNAVAILABLE',
             `RazinFlix matched “${best.movie.title}” but could not retrieve its verified metadata.`,
@@ -605,8 +604,8 @@ export async function resolveTmdbFilm(
                 'TMDB videos',
             );
             videos = videoData.results ?? [];
-        } catch (error) {
-            console.warn('TMDB video fallback failed:', error);
+        } catch {
+            console.warn('RazinFlix enrichment unavailable', { code: 'TMDB_VIDEO_UNAVAILABLE' });
         }
     }
 
@@ -699,8 +698,8 @@ export async function verifyPosterUrl(
             throw new Error(`Poster returned ${response.status} ${contentType || 'without a content type'}.`);
         }
         await response.body?.cancel().catch(() => undefined);
-    } catch (error) {
-        console.error('Poster verification failed:', error);
+    } catch {
+        console.error('RazinFlix enrichment unavailable', { code: 'POSTER_UNAVAILABLE' });
         throw new FilmEnrichmentError(
             'POSTER_UNAVAILABLE',
             'RazinFlix matched the film, but its poster could not be loaded. Nothing was saved.',
@@ -963,8 +962,8 @@ export async function resolveTrailer(
             const youtubeTrailer = await resolveYoutubeApiTrailer(film, credentials.youtubeApiKey, fetcher);
             if (youtubeTrailer) return { trailer: youtubeTrailer, diagnostics };
             diagnostics.push('YouTube returned no high-confidence trailer candidate.');
-        } catch (error) {
-            console.error('YouTube trailer fallback failed:', error);
+        } catch {
+            console.error('RazinFlix enrichment unavailable', { code: 'YOUTUBE_UNAVAILABLE' });
             diagnostics.push('The YouTube Data API rejected or failed the fallback search.');
         }
     } else {
@@ -981,8 +980,8 @@ export async function resolveTrailer(
             );
             if (googleTrailer) return { trailer: googleTrailer, diagnostics };
             diagnostics.push('Google Search returned no high-confidence trailer candidate.');
-        } catch (error) {
-            console.error('Google trailer fallback failed:', error);
+        } catch {
+            console.error('RazinFlix enrichment unavailable', { code: 'SEARCH_UNAVAILABLE' });
             diagnostics.push('Google Custom Search rejected or failed the fallback search.');
         }
     }

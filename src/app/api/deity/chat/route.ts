@@ -7,12 +7,11 @@ import { readChatRequest } from '@/lib/deity/chat-request';
 import { isNssoProductQuestion } from '@/lib/deity/product-context';
 import { chatFailureDetails, type ChatPhase } from '@/lib/deity/chat-diagnostics';
 import { startChatWithRecovery } from '@/lib/deity/chat-recovery';
-import { extractActions, createActionPayload } from '@/lib/deity/actionParser';
-import { findProfileUrl, detectPlatform, suggestLinkNameForPlatform } from '@/lib/deity/webSearch';
+import { createActionPayload } from '@/lib/deity/actionParser';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
 import { DEITY_TOOLS } from '@/lib/deity/tools';
-import { detectCategory, assembleSystemPrompt, detectSectionIntent, detectKnowledgeIntent, CATEGORY_KEYWORDS } from '@/lib/deity/contextManager';
-import { verifyLinks } from '@/lib/deity/linkVerifier';
+import { detectCategory, assembleSystemPrompt, detectSectionIntent, detectKnowledgeIntent } from '@/lib/deity/contextManager';
+import { assessLinkHealth } from '@/lib/deity/linkVerifier';
 
 // Initialize Supabase logic
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -71,52 +70,6 @@ const CATEGORY_CONFIG: Record<string, { files: string[], threshold: number }> = 
     }
 };
 
-// Helper: Extract keywords from text for relevance scoring
-function extractKeywords(text: string): string[] {
-    const stopwords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with'];
-    return text.split(/\s+/)
-        .filter(word => word.length > 3 && !stopwords.includes(word.toLowerCase()))
-        .slice(0, 10);
-}
-
-// Helper: Calculate diversity score (penalize documents from same source)
-function calculateDiversity(doc: any, allDocs: any[]): number {
-    const sameSource = allDocs.filter(d => d.metadata?.source === doc.metadata?.source);
-    return 1 / Math.sqrt(sameSource.length);
-}
-
-// Helper: Calculate user relevance (boost if doc mentions user's work/interests)  
-function calculateUserRelevance(doc: any, userContext: string): number {
-    if (!userContext || !doc.content) return 0;
-    const keywords = extractKeywords(userContext);
-    const matches = keywords.filter(kw =>
-        doc.content.toLowerCase().includes(kw.toLowerCase())
-    );
-    return matches.length / Math.max(keywords.length, 1);
-}
-
-// Helper: Re-rank documents by combined scoring
-function rerankDocuments(docs: any[], query: string, userContext: string) {
-    if (!docs || docs.length === 0) return [];
-
-    return docs
-        .map(doc => ({
-            ...doc,
-            diversityScore: calculateDiversity(doc, docs),
-            userRelevance: calculateUserRelevance(doc, userContext)
-        }))
-        .sort((a, b) => {
-            // Weighted: 50% search score, 20% diversity, 30% user relevance
-            const scoreA = (a.combined_score || a.similarity || 0) * 0.5 +
-                a.diversityScore * 0.2 +
-                a.userRelevance * 0.3;
-            const scoreB = (b.combined_score || b.similarity || 0) * 0.5 +
-                b.diversityScore * 0.2 +
-                b.userRelevance * 0.3;
-            return scoreB - scoreA;
-        });
-}
-
 // Helper: Calculate profile completeness (0-100)
 function calculateProfileCompleteness(contextData: any): number {
     if (!contextData) return 0;
@@ -151,16 +104,25 @@ export async function POST(req: Request) {
     let phase: ChatPhase = 'request';
     let requestId = crypto.randomUUID() as string;
     const deadline = Date.now() + 80_000;
+    const upstream = new AbortController();
+    let consumerCancelled = false;
+    const abortForRequest = () => upstream.abort(new DOMException('Chat request cancelled', 'AbortError'));
+    const deadlineTimer = setTimeout(() => upstream.abort(new DOMException('Chat deadline reached', 'TimeoutError')), 80_000);
+    const cleanup = () => {
+        clearTimeout(deadlineTimer);
+        req.signal.removeEventListener('abort', abortForRequest);
+    };
+    if (req.signal.aborted) abortForRequest();
+    else req.signal.addEventListener('abort', abortForRequest, { once: true });
+    const providerSignal = (timeout: number) => AbortSignal.any([upstream.signal, AbortSignal.timeout(timeout)]);
     try {
+        upstream.signal.throwIfAborted();
         const { message, category, history, disableTools } = await readChatRequest(req);
+        upstream.signal.throwIfAborted();
         phase = 'allowance';
         budget = await openChatBudget(req, 'chat');
         requestId = budget.requestId;
         phase = 'context';
-
-        if (!message) {
-            return new Response('Message is required', { status: 400 });
-        }
 
         // Optimization: Fast-track system follow-ups (Skip Search)
         const isSystemFollowUp = message.startsWith('[SYSTEM:');
@@ -225,14 +187,13 @@ export async function POST(req: Request) {
 
                 if (user && !authError) {
                     userId = user.id;
-                    console.log("✅ Authenticated User ID:", userId);
 
                     const { data: fetchedContext, error: contextError } = await supabase.rpc('get_agent_context', {
                         user_uuid: userId
                     });
 
                     if (contextError) {
-                        console.error("❌ Error fetching user context:", contextError);
+                        console.error('Deity context unavailable', { code: 'PROFILE_CONTEXT_UNAVAILABLE', requestId });
                     } else if (fetchedContext) {
                         contextData = fetchedContext;
 
@@ -281,7 +242,7 @@ export async function POST(req: Request) {
                     }
                 }
             } catch (err) {
-                console.error('Error in user context fetching block:', err);
+                console.error('Deity context unavailable', chatFailureDetails(err, 'context', requestId));
             }
         }
 
@@ -291,12 +252,12 @@ export async function POST(req: Request) {
 
         // ONLY perform search if not skipped
         if (!skipSearch) {
-            console.log(`Searching with category: ${detectedCategory || 'None'}, filters:`, filterFiles);
+            console.log('Deity retrieval started', { requestId });
 
             // 1. Generate embedding for user query
             phase = 'query_embedding';
             budget.addEmbedding(message);
-            const embeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: message }] }, outputDimensionality: 768 } as any, { timeout: 10_000 });
+            const embeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: message }] }, outputDimensionality: 768 } as any, { timeout: 10_000, signal: providerSignal(10_000) });
             const embedding = embeddingResult.embedding.values;
 
             // 1b. Generate embedding for user profile (for re-ranking)
@@ -306,7 +267,7 @@ export async function POST(req: Request) {
                     phase = 'profile_embedding';
                     const contextForEmbedding = userContext.substring(0, 1000);
                     budget.addEmbedding(contextForEmbedding);
-                    const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any, { timeout: 10_000 });
+                    const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any, { timeout: 10_000, signal: providerSignal(10_000) });
                     profileEmbedding = profileEmbeddingResult.embedding.values;
                 } catch (err) {
                     console.error('Deity optional profile embedding unavailable', chatFailureDetails(err, 'profile_embedding', requestId));
@@ -328,7 +289,7 @@ export async function POST(req: Request) {
             if (!primaryError && primaryResults) {
                 documents = primaryResults;
             } else {
-                console.error("❌ Primary search failed:", primaryError);
+                console.error('Deity retrieval unavailable', { code: 'RETRIEVAL_UNAVAILABLE', requestId });
             }
 
             // Soft-Filter Logic
@@ -351,53 +312,22 @@ export async function POST(req: Request) {
                 }
             }
 
-            if (documents.length > 0) {
-                console.log('First match source:', documents[0].metadata?.source);
-            }
         }
 
         // 3. Select final documents (Intelligent Search already ranked them by relevance)
         // We skip the old 'rerankDocuments' function because it doesn't use vector-based profile similarity.
-        let finalDocs = documents.slice(0, 5);
+        const finalDocs = documents.slice(0, 5);
 
-        // --- PHASE 4: GROUNDED VERIFICATION (High-Performance "Fail-Open") ---
+        // Assess format without contacting corpus-controlled URLs. Link health and
+        // source facts are not live-verified by retrieval.
         phase = 'link_checks';
-        try {
-            // Extract URLs from metadata
-            const urlsToCheck: string[] = [];
-            finalDocs.forEach((doc: any) => {
-                const url = doc.metadata?.url || doc.metadata?.link;
-                if (url && url.startsWith('http')) {
-                    urlsToCheck.push(url);
-                }
-            });
-
-            if (urlsToCheck.length > 0) {
-                console.log(`🔍 Verifying ${urlsToCheck.length} links (Fail-Open)...`);
-                const deadLinks = await verifyLinks(urlsToCheck);
-
-                if (deadLinks.size > 0) {
-                    console.log(`⚠️ Filtering out ${deadLinks.size} dead links:`, Array.from(deadLinks));
-                    // Filter out docs with dead links OR strip the link from the doc
-                    finalDocs = finalDocs.filter((doc: any) => {
-                        const url = doc.metadata?.url || doc.metadata?.link;
-                        if (!url) return true; // No link, keep content
-                        return !deadLinks.has(url); // Remove if link is dead
-                    });
-                } else {
-                    console.log("✅ All links valid (or timed out/fail-open).");
-                }
-            }
-        } catch (verErr) {
-            console.error("⚠️ Link verification failed (bypassing):", verErr);
-            // Fail-Open: Do nothing, use docs as is
-        }
 
         // 4. Construct System Prompt
         const contextText = finalDocs?.map((doc: any) => {
-            const sourceInfo = doc.metadata?.url || doc.metadata?.source || doc.metadata?.title || 'Unknown Source';
-            // Explicitly mark as verified for the LLM
-            return `SOURCE/LINK: ${String(sourceInfo).slice(0, 2000)} [VERIFIED]\nCONTENT:\n${String(doc.content).slice(0, 12000)}`;
+            const link = doc.metadata?.url || doc.metadata?.link;
+            const sourceInfo = link && assessLinkHealth(link) === 'unverified' ? link
+                : doc.metadata?.source || doc.metadata?.title || 'Unknown Source';
+            return `SOURCE/LINK: ${String(sourceInfo).slice(0, 2000)} [CURATED SOURCE; LINK HEALTH AND FACTS NOT LIVE-VERIFIED]\nCONTENT:\n${String(doc.content).slice(0, 12000)}`;
         }).join('\n\n---\n\n') || '';
 
         // --- DYNAMIC SYSTEM PROMPT ASSEMBLY (Phase 2) ---
@@ -450,16 +380,20 @@ export async function POST(req: Request) {
 
         // 6. Generate Response Stream
         phase = 'count_tokens';
-        const tokenCount = await model.countTokens({ contents: chatContents }, { timeout: 10_000 });
+        const tokenCount = await model.countTokens({ contents: chatContents }, { timeout: 10_000, signal: providerSignal(10_000) });
         phase = 'completion_allowance';
         await budget.prepare(tokenCount.totalTokens, CHAT_OUTPUT_TOKENS);
         phase = 'generation';
         const result = await startChatWithRecovery({
-            generate: () => model.generateContentStream({ contents: chatContents },
-                { timeout: 30_000, signal: AbortSignal.timeout(40_000) }),
+            generate: () => {
+                upstream.signal.throwIfAborted();
+                return model.generateContentStream({ contents: chatContents },
+                    { timeout: 30_000, signal: providerSignal(40_000) });
+            },
             budget,
             deadline,
             reserveRetry: async () => {
+                upstream.signal.throwIfAborted();
                 console.warn('Deity transient provider 503; one separately budgeted retry', { requestId });
                 phase = 'allowance';
                 budget = await openChatBudget(req, 'chat');
@@ -476,13 +410,17 @@ export async function POST(req: Request) {
 
         // Create a readable stream for the response which handles Tool Calls
         const stream = new ReadableStream({
-            async start(controller) {
+            start(controller) {
+                // Return immediately so stream cancellation can abort the producer
+                // even while its asynchronous iterator is waiting for another chunk.
+                void (async () => {
                 let fullResponse = '';
                 try {
                 const collectedActions: any[] = [];
 
                 // Stream chunks as they arrive
                 for await (const chunk of result.stream) {
+                    upstream.signal.throwIfAborted();
                     // Handle Text
                     const chunkText = chunk.text();
                     if (chunkText) {
@@ -494,7 +432,7 @@ export async function POST(req: Request) {
                     const calls = chunk.functionCalls();
                     if (calls && calls.length > 0) {
                         calls.forEach(call => {
-                            console.log("🛠️ Tool Call Detected:", call.name);
+                            console.log('Deity tool call received', { requestId });
 
                             // Map Tool Call back to DeityAction format for frontend
                             const actionBox: any = { ...call.args };
@@ -598,6 +536,10 @@ export async function POST(req: Request) {
                 controller.close();
                 } catch (error) {
                     await activeBudget.finish();
+                    if (consumerCancelled || req.signal.aborted) {
+                        try { controller.close(); } catch { /* The consumer already cancelled. */ }
+                        return;
+                    }
                     const failure = chatFailureDetails(error, 'stream', requestId);
                     console.error('Deity chat failure', failure);
                     // Headers may already be sent. Finish with an explicit, safe message
@@ -606,8 +548,16 @@ export async function POST(req: Request) {
                         controller.enqueue(new TextEncoder().encode(`${fullResponse ? '\n\n' : ''}${failure.message}`));
                         controller.close();
                     } catch { /* Client disconnected; retain the reservation and diagnostic. */ }
-                }
-            }
+                } finally { cleanup(); }
+                })();
+            },
+            async cancel() {
+                consumerCancelled = true;
+                upstream.abort(new DOMException('Chat response cancelled', 'AbortError'));
+                cleanup();
+                // Reservation remains charged when final provider usage is unknown.
+                await activeBudget.finish();
+            },
         });
 
         return new Response(stream, {
@@ -620,7 +570,12 @@ export async function POST(req: Request) {
         });
 
     } catch (err: unknown) {
+        upstream.abort();
+        cleanup();
         await budget?.finish();
+        if (req.signal.aborted) return Response.json({ error: 'This chat request was cancelled.', code: 'chat_cancelled' }, {
+            status: 499, headers: { 'Cache-Control': 'no-store', 'X-Deity-Request-Id': requestId },
+        });
         if (err instanceof ChatAllowanceError) return allowanceResponse(err);
         const failure = chatFailureDetails(err, phase, requestId);
         console.error('Deity chat failure', failure);

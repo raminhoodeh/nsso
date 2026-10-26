@@ -5,6 +5,7 @@ import { registerHooks } from 'node:module';
 const serverMock = `data:text/javascript,${encodeURIComponent('export const createClient = async () => globalThis.__freeProfileSupabase;')}`;
 const hooks = registerHooks({
   resolve(specifier, context, nextResolve) {
+    if (specifier === 'server-only') return { url: 'data:text/javascript,export {}', shortCircuit: true };
     if (specifier === '@/lib/supabase/server') return { url: serverMock, shortCircuit: true };
     if (specifier.startsWith('@/lib/')) {
       return nextResolve(new URL(`../src/lib/${specifier.slice(6)}.ts`, import.meta.url).href, context);
@@ -42,6 +43,10 @@ function database({ user = { id: 'signed-in-user' }, authError = null, existing 
     },
     rpc(name, args) {
       calls.push(['rpc', name, args]);
+      if (name === 'claim_profile_username') {
+        const conflict = existing && existing.id !== user?.id;
+        return { data: { success: true, username: args.p_username }, error: updateError || (conflict ? { code: '23505' } : null) };
+      }
       return { single: async () => ({ data: stats, error: null }) };
     },
   };
@@ -83,9 +88,7 @@ test('a free account can claim or update its name without a subscription or admi
     const response = await endpoint(request({ [field]: 'My-Free_Name' }));
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { success: true, username: 'my-free_name' });
-    assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'username' && call[2] === 'my-free_name'));
-    assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'id' && call[2] === 'signed-in-user'));
-    assert.deepEqual(calls.find(call => call[0] === 'update'), ['update', { username: 'my-free_name', is_premium: true }]);
+    assert.deepEqual(calls, [['rpc', 'claim_profile_username', { p_username: 'my-free_name' }]], 'The database must derive ownership; the route cannot choose an actor or write role fields');
   }
 });
 
@@ -111,7 +114,7 @@ test('another account cannot be overwritten, including a database uniqueness rac
 
     calls = database({ updateError: { code: '23505' } });
     assert.equal((await endpoint(request({ [field]: 'raced-name' }))).status, 409);
-    assert.ok(calls.some(call => call[0] === 'eq' && call[1] === 'id' && call[2] === 'signed-in-user'));
+    assert.deepEqual(calls, [['rpc', 'claim_profile_username', { p_username: 'raced-name' }]]);
   }
 });
 
@@ -123,8 +126,21 @@ test('reclaiming the signed-in account name is idempotent and grants free access
 
 test('malformed JSON receives a client error', async () => {
   database();
-  const response = await update(new Request('https://nsso.test/api/update-username', { method: 'POST', body: '{broken' }));
+  const response = await update(new Request('https://nsso.test/api/update-username', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{broken' }));
   assert.equal(response.status, 400);
+});
+
+test('cross-origin and oversized username mutations are denied without database work', async () => {
+  let calls = database();
+  let response = await claim(new Request('https://nsso.test/api/claim-free-domain', {
+    method: 'POST', headers: { origin: 'https://attacker.invalid', 'content-type': 'application/json' }, body: JSON.stringify({ desiredUsername: 'safe-name' }),
+  }));
+  assert.equal(response.status, 403);
+  assert.deepEqual(calls, []);
+  calls = database();
+  response = await claim(request({ desiredUsername: 'x'.repeat(4096) }));
+  assert.equal(response.status, 413);
+  assert.deepEqual(calls, []);
 });
 
 test('free access reports no projected subscription income and retains referral history', async () => {

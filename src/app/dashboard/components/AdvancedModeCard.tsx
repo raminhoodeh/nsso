@@ -3,11 +3,12 @@
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState, useEffect, useRef, type KeyboardEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, X, ChevronDown, ChevronUp, Info, Upload, Loader2, ShieldCheck, ShieldAlert, Lock, Layout, Sparkles, GripVertical } from 'lucide-react'
+import { Plus, X, ChevronDown, ChevronUp, Info, Upload, Loader2, Layout, Sparkles, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DraggableAttributes, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import DOMPurify from 'dompurify'
+import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
+import { PRODUCT_CARD_SELECT } from '@/lib/payments/product-presentation'
 import { Experience, Qualification, Project, Product } from '@/lib/types'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
@@ -165,67 +166,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         productId: null
     })
 
-    // Security Verification State
-    const [verificationStatus, setVerificationStatus] = useState<'idle' | 'scanning' | 'secure' | 'unsafe'>('idle')
-    const [securityMessage, setSecurityMessage] = useState('')
-
-    // PayPal Security Check Effect
-    useEffect(() => {
-        // Reset status if no product selected or no HTML
-        if (!selectedProduct || !selectedProduct.paypal_html) {
-            setVerificationStatus('idle')
-            setSecurityMessage('')
-            return
-        }
-
-        // Only scan if status is idle (fresh input) or we just started editing
-        // We use a debounce to simulate scanning and prevent run-on
-        setVerificationStatus('scanning')
-        setSecurityMessage('Analyzing code security...')
-
-        const timer = setTimeout(() => {
-            const rawHtml = selectedProduct.paypal_html || ''
-
-            // Allow only PayPal forms and strict tags (Updated for Single Button support)
-            const clean = DOMPurify.sanitize(rawHtml, {
-                ALLOWED_TAGS: ['form', 'input', 'img', 'div', 'style', 'section', 'span'],
-                ALLOWED_ATTR: ['action', 'method', 'target', 'type', 'src', 'border', 'name', 'alt', 'value', 'class', 'style', 'id'],
-                ALLOWED_URI_REGEXP: /^(https:\/\/.*\.paypal\.com\/|https:\/\/www\.paypal\.com\/|https:\/\/www\.paypalobjects\.com\/)/
-            })
-
-            // Additional Check: Must target PayPal or use HostedButtons
-            const isPayPal = rawHtml.includes('paypal.com') || rawHtml.includes('paypal.HostedButtons')
-            const hasScript = rawHtml.includes('<script') || rawHtml.includes('javascript:')
-
-            // Smart Exception: PayPal JS SDK (Hosted Buttons)
-            // We allow scripts IF they match the strict Hosted Button pattern
-            const isHostedButton = /paypal\.HostedButtons\(\{\s*hostedButtonId:\s*"[A-Z0-9]+"/m.test(rawHtml)
-
-            // Single Button Exception: Allow style tags if they contain PayPal-like classes or structure
-            const isSingleButton = rawHtml.includes('<form') && rawHtml.includes('paypal.com/ncp/payment')
-
-            if ((clean !== rawHtml && !isHostedButton && !isSingleButton) || (hasScript && !isHostedButton) || !isPayPal) {
-                // If sanitization changed anything (ignoring our exceptions)
-                // Note: DOMPurify might strip styles if we are not careful, but we allowed them above
-                if (clean.length === 0 && !isHostedButton && !isSingleButton) {
-                    setVerificationStatus('unsafe')
-                    setSecurityMessage('Invalid code detected.')
-                } else if (!isPayPal) {
-                    setVerificationStatus('unsafe')
-                    setSecurityMessage('Code does not appear to be from PayPal.')
-                } else {
-                    setVerificationStatus('secure')
-                    setSecurityMessage('Verified Standard PayPal Button')
-                }
-            } else {
-                setVerificationStatus('secure')
-                setSecurityMessage(isHostedButton ? 'Verified Safe (Smart Button)' : 'Code verified: Safe from malicious scripts.')
-            }
-        }, 1500) // 1.5s "Branding" delay
-
-        return () => clearTimeout(timer)
-    }, [selectedProduct?.paypal_html])
-
     // Cropper State
 
     // Cropper State
@@ -258,7 +198,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
         try {
             // Upload
             const pathPrefix = cropperTarget.type === 'project' ? 'projects' : 'products'
-            const fileName = `${pathPrefix}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
+            const fileName = `${userId}/${pathPrefix}/${crypto.randomUUID()}.jpg`
 
             const { error: uploadError } = await supabase.storage
                 .from('portfolio-assets')
@@ -274,20 +214,18 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
             // Update State & DB
             if (cropperTarget.type === 'project' && cropperTarget.id) {
-                updateProject(cropperTarget.id, { project_photo_url: publicUrl })
+                await updateProject(cropperTarget.id, { project_photo_url: publicUrl })
             } else if (cropperTarget.type === 'product' && selectedProduct) {
                 // If we are editing a selected product
-                updateProduct(selectedProduct.id, { image_url: publicUrl })
+                await updateProduct(selectedProduct.id, { image_url: publicUrl })
             }
-
-        } catch (error) {
-            console.error('Error uploading image:', error)
-            alert('Error uploading image. Please try again.')
-        } finally {
-            setIsUploading(false)
             setCropperOpen(false)
             setCropperImage(null)
             setCropperTarget(null)
+        } catch {
+            alert('The image was not uploaded. Your crop has been kept so you can retry.')
+        } finally {
+            setIsUploading(false)
         }
     }
 
@@ -360,10 +298,11 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             user_id: userId,
             name: 'New Product',
             price: '0',
-        }).select().single()
+        }).select(PRODUCT_CARD_SELECT).single()
         if (data) {
-            setProducts([...products, data])
-            setSelectedProduct(data) // Select new product immediately
+            const created: Product = { ...data, paypal_html: null }
+            setProducts([...products, created])
+            setSelectedProduct(created) // Select the new draft immediately
         }
     }
     const updateProduct = async (id: string, updates: Partial<Product>) => {
@@ -796,7 +735,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Sales Page</label>
                             <div className="flex min-h-[64px] items-center gap-3 md:gap-4">
                                 <TahoeGlassButton
-                                    onClick={() => updateProduct(selectedProduct.id, { sales_page_active: !selectedProduct.sales_page_active })}
+                                    onClick={() => updateProduct(selectedProduct.id, { sales_page_active: !selectedProduct.sales_page_active, sales_page_published: !selectedProduct.sales_page_active })}
                                     role="switch"
                                     aria-checked={selectedProduct.sales_page_active}
                                     aria-label="Enable product sales page"
@@ -806,7 +745,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 >
                                     <span aria-hidden="true" className={`absolute top-1 h-4 w-4 bg-white rounded-full transition-all ${selectedProduct.sales_page_active ? 'left-6' : 'left-1'}`} />
                                 </TahoeGlassButton>
-                                {selectedProduct.sales_page_active && (
+                                {selectedProduct.sales_page_published == null && <span className="text-xs text-white/60">Legacy public URL. Choose publication status to change its visibility.</span>}
+                                {selectedProduct.sales_page_published == null && !selectedProduct.sales_page_active && <TahoeGlassButton onClick={() => updateProduct(selectedProduct.id, { sales_page_published: false, sales_page_active: false })} className="min-h-11 px-3" contentClassName="text-sm text-white/70">Unpublish legacy page</TahoeGlassButton>}
                                     <TahoeGlassButton
                                         onClick={() => window.open(`/dashboard/products/${selectedProduct.id}/creator`, '_blank')}
                                         className="min-h-11 min-w-0 flex-1 px-3 py-2 md:flex-none md:px-4"
@@ -815,7 +755,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                         <Layout size={16} className="text-white/70" />
                                         <span className="text-left text-sm leading-tight text-white/70">Open Sales Page Creator</span>
                                     </TahoeGlassButton>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -923,42 +862,15 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                     </TahoeGlassSurface>
                                 )}
 
-                                <TahoeGlassField
-                                    tone="light"
-                                    surfaceClassName={`p-0 ring-1 ${verificationStatus === 'scanning' ? 'ring-yellow-500/50' : verificationStatus === 'secure' ? 'ring-green-500/50' : verificationStatus === 'unsafe' ? 'ring-red-500/50' : 'ring-white/10'}`}
-                                    controlClassName="min-h-[112px] resize-none px-3 py-3 text-base font-mono md:min-h-[80px] md:p-2 md:text-xs"
-                                >
-                                    <textarea value={selectedProduct.paypal_html || ''} onChange={(e) => updateProduct(selectedProduct.id, { paypal_html: e.target.value })} placeholder="<form action=...>" className="text-white/80" />
-                                </TahoeGlassField>
-                                {/* Security Status Indicator Overlay */}
-                                {selectedProduct.paypal_html && (
-                                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 animate-in fade-in duration-300">
-                                        <div className="flex items-center gap-2">
-                                            {verificationStatus === 'scanning' && (
-                                                <>
-                                                    <Loader2 size={14} className="text-yellow-400 animate-spin" />
-                                                    <span className="text-yellow-400 text-xs font-medium tracking-wide">Scanning code...</span>
-                                                </>
-                                            )}
-                                            {verificationStatus === 'secure' && (
-                                                <>
-                                                    <ShieldCheck size={14} className="text-green-400" />
-                                                    <span className="text-green-400 text-xs font-medium tracking-wide">Verified Safe</span>
-                                                </>
-                                            )}
-                                            {verificationStatus === 'unsafe' && (
-                                                <>
-                                                    <ShieldAlert size={14} className="text-red-400" />
-                                                    <span className="text-red-400 text-xs font-medium tracking-wide">Unsafe content detected</span>
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-1 opacity-50">
-                                            <Lock size={10} className="text-white" />
-                                            <span className="text-[10px] uppercase tracking-widest text-white">nsso secure html verification</span>
-                                        </div>
-                                    </div>
-                                )}
+                                <PayPalCodeEditor
+                                    key={selectedProduct.id}
+                                    productId={selectedProduct.id}
+                                    initialHtml={selectedProduct.paypal_html}
+                                    onSaved={(html, config) => {
+                                        setProducts(current => current.map(item => item.id === selectedProduct.id ? { ...item, paypal_html: html, payment_config: config } : item))
+                                        setSelectedProduct(current => current?.id === selectedProduct.id ? { ...current, paypal_html: html, payment_config: config } : current)
+                                    }}
+                                />
                             </div>
                         )}
                     </TahoeGlassSurface>

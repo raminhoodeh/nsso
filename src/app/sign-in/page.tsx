@@ -42,25 +42,11 @@ export default function SignInPage() {
             setError(error.message)
             setLoading(false)
         } else if (data.user) {
-            // Check if user record exists, if not create it
-            const { data: existingUser } = await supabase
-                .from('users')
-                .select('id')
-                .eq('id', data.user.id)
-                .single()
-
-            if (!existingUser) {
-                // Create user record
-                const username = data.user.id.replace(/-/g, '').slice(0, 10)
-                await supabase.from('users').insert({
-                    id: data.user.id,
-                    email: data.user.email,
-                    auth_provider: 'email',
-                    username: username,
-                })
-                await supabase.from('profiles').insert({
-                    user_id: data.user.id,
-                })
+            const { error: setupError } = await supabase.rpc('ensure_current_account')
+            if (setupError) {
+                setError('Your account could not be prepared. Please try signing in again.')
+                setLoading(false)
+                return
             }
 
             showToast('Welcome back!', 'success')

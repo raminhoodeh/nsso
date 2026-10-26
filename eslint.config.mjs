@@ -15,6 +15,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "nsso agent context database/**",
     "private/**",
+    "future/**",
+    // Separate project: deliberately excluded from the authorized nsso remediation.
+    "src/app/dreamsea/**",
     "liquid-glass-js-main/**",
     "liquid-logo-main/**",
     "src/lib/liquid-glass/**",

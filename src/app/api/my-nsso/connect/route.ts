@@ -1,184 +1,32 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
+import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export async function POST(request: Request) {
+    const headers = { 'Cache-Control': 'private, no-store' }
     try {
-        const body = await request.json()
-        const { scannedUserId, location } = body
-
-        if (!scannedUserId) {
-            return NextResponse.json(
-                { error: 'Scanned user ID is required' },
-                { status: 400 }
-            )
+        assertSameOrigin(request)
+        const client = await createClient()
+        const { data: { user }, error: authError } = await client.auth.getUser()
+        if (authError || !user) return Response.json({ error: 'Please sign in to connect.' }, { status: 401, headers })
+        const body = await readBoundedJson(request, 2048)
+        if (typeof body.scannedUserId !== 'string' || !uuid.test(body.scannedUserId) || body.scannedUserId === user.id
+            || (body.location !== undefined && (typeof body.location !== 'string' || body.location.length > 300))) {
+            return Response.json({ error: 'Choose a valid person and location.' }, { status: 400, headers })
         }
-
-        const cookieStore = await cookies()
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        try {
-                            cookiesToSet.forEach(({ name, value, options }) =>
-                                cookieStore.set(name, value, options)
-                            )
-                        } catch { }
-                    },
-                },
-            }
-        )
-
-        // Get authenticated user (the scanner)
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-        if (authError || !user) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        // Prevent self-scanning connection
-        if (user.id === scannedUserId) {
-            return NextResponse.json(
-                { error: 'You cannot add yourself to My nsso' },
-                { status: 400 }
-            )
-        }
-
-        // Verify scanned user exists
-        const { data: scannedUser, error: fetchError } = await supabase
-            .from('users')
-            .select('id, username')
-            .eq('id', scannedUserId)
-            .single()
-
-        if (fetchError || !scannedUser) {
-            return NextResponse.json(
-                { error: 'User not found' },
-                { status: 404 }
-            )
-        }
-
-        const timestamp = new Date().toISOString()
-        const locationName = location || ''
-
-        // Create bidirectional connections
-        // 1. Scanner -> Scanned
-        const { error: insertError1 } = await supabase
-            .from('my_nsso')
-            .upsert({
-                user_id: user.id,
-                connected_user_id: scannedUserId,
-                date_met: timestamp,
-                location_name: locationName,
-                updated_at: timestamp
-                // notes are preserved on upsert if we don't include them in the update set?
-                // Default upsert behavior in Supabase/Postgres: 
-                // We typically specify `onConflict` columns. 
-                // Implicitly, passing the whole object replaces values. 
-                // However, we WANT to preserve notes.
-                // Supabase `.upsert` replaces the row usually. 
-                // We should use text-based upsert configuration or simply check if exists first?
-                // Or better: Use `onConflict` with `ignoreDuplicates: false` (default)
-                // But we want to UPDATE date_met and location_name, but KEEP notes.
-                // Standard .upsert() might overwrite 'notes' with default/null if not provided?
-                // Let's check docs or behavior.
-                // Actually, if we provide `notes` as undefined, it might not update it if using JSON?
-                // No, typically it updates the row.
-            }, {
-                onConflict: 'user_id, connected_user_id',
-                ignoreDuplicates: false
-            })
-
-        // Optimized approach: Check if exists to preserve notes, OR use a more specific query?
-        // Actually, Supabase upsert will overwrite fields provided. If we don't provide notes, 
-        // will it set it to null/default? 
-        // Postgres `ON CONFLICT DO UPDATE SET ...`
-        // Supabase client constructs this. If we pass object `{a:1, b:2}`, it sets a=1, b=2.
-        // If we want to preserve `notes`, we have to be careful.
-
-        // Let's do a smart update:
-        // 1. Check if connection exists.
-        const { data: existing } = await supabase
-            .from('my_nsso')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('connected_user_id', scannedUserId)
-            .single()
-
-        if (existing) {
-            // Update specific fields only (preserving notes)
-            await supabase.from('my_nsso')
-                .update({
-                    date_met: timestamp,
-                    location_name: locationName,
-                    updated_at: timestamp
-                })
-                .eq('id', existing.id)
-        } else {
-            // Insert new
-            await supabase.from('my_nsso')
-                .insert({
-                    user_id: user.id,
-                    connected_user_id: scannedUserId,
-                    date_met: timestamp,
-                    location_name: locationName,
-                })
-        }
-
-        // 2. Scanned -> Scanner (Bidirectional)
-        // Repeat logic for the other direction
-        const { data: existingReverse } = await supabase
-            .from('my_nsso')
-            .select('id')
-            .eq('user_id', scannedUserId)
-            .eq('connected_user_id', user.id)
-            .single()
-
-        if (existingReverse) {
-            await supabase.from('my_nsso')
-                .update({
-                    date_met: timestamp,
-                    location_name: locationName,
-                    updated_at: timestamp
-                })
-                .eq('id', existingReverse.id)
-        } else {
-            // Optimization: We can insert both in parallel but let's keep it safe sequence
-            await supabase.from('my_nsso')
-                .insert({
-                    user_id: scannedUserId,
-                    connected_user_id: user.id,
-                    date_met: timestamp,
-                    location_name: locationName,
-                })
-        }
-        // Note: For the 'reverse' connection, arguably we might NOT want to overwrite the location/date 
-        // if *that* user considers the meeting different? 
-        // But the spec says "When the user navigates to "My nsso" it's the list of nsso users they've scanned... 
-        // then "if i scan one person's QR code then i'm automatically also added to their My nsso and they're added to my My nsso."
-        // We will synchronize the stamp for both for simplicity as per "Contextual Stamp" logic.
-
-        return NextResponse.json({
-            success: true,
-            isNewConnection: !existing,
-            scannedUser: {
-                username: scannedUser.username
-            }
+        const { data, error } = await client.rpc('connect_my_nsso', {
+            p_connected_user_id: body.scannedUserId, p_location_name: body.location || '',
         })
-
+        if (error) {
+            if (error.code === 'P0002') return Response.json({ error: 'This profile is unavailable.' }, { status: 404, headers })
+            if (['22023', '23503'].includes(error.code)) return Response.json({ error: 'The connection details are invalid.' }, { status: 400, headers })
+            return Response.json({ error: 'The connection could not be saved. Please retry.' }, { status: 503, headers })
+        }
+        if (!data?.success) return Response.json({ error: 'The connection could not be confirmed.' }, { status: 503, headers })
+        return Response.json(data, { headers })
     } catch (error) {
-        console.error('Connection error:', error)
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        )
+        return permissionErrorResponse(error) ?? requestBodyErrorResponse(error)
+            ?? Response.json({ error: 'The connection could not be saved. Please retry.' }, { status: 503, headers })
     }
 }

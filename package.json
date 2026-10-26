@@ -14,7 +14,8 @@
     "test:home-media": "node --test tests/home-vision-player.test.js",
     "ingest:razinflix-new-2026": "node --experimental-strip-types scripts/ingest-razinflix-new-2026.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.js tests/*.test.mjs"
+    "test": "node --test tests/*.test.js tests/*.test.mjs",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -22,39 +23,39 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@google/generative-ai": "^0.24.1",
     "@googlemaps/js-api-loader": "^2.1.1",
-    "@solana/wallet-adapter-base": "^0.9.27",
-    "@solana/wallet-adapter-react": "^0.15.39",
-    "@solana/wallet-adapter-react-ui": "^0.9.39",
-    "@solana/wallet-adapter-wallets": "^0.19.37",
-    "@solana/web3.js": "^1.98.4",
-    "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.88.0",
+    "@supabase/ssr": "0.8.0",
+    "@supabase/supabase-js": "2.88.0",
     "@tanstack/react-query": "^5.90.12",
     "clsx": "^2.1.1",
-    "csv-parse": "^6.1.0",
+    "csv-parse": "7.0.3",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "framer-motion": "^13.1.1",
-    "isomorphic-dompurify": "^2.30.0",
+    "isomorphic-dompurify": "4.6.0",
     "lucide-react": "^0.562.0",
     "nanoid": "^5.1.6",
-    "next": "16.0.10",
+    "next": "16.4.3",
     "qrcode.react": "^4.2.0",
-    "react": "19.2.1",
-    "react-dom": "19.2.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "react-easy-crop": "^5.5.6",
     "tailwind-merge": "^3.4.0",
-    "viem": "^2.43.3",
-    "wagmi": "^3.1.3"
+    "dompurify": "3.4.17",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "eslint": "^9",
-    "eslint-config-next": "16.0.10",
+    "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@playwright/test": "1.64.1",
+    "esbuild": "0.28.2"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

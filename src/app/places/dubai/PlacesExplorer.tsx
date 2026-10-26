@@ -265,7 +265,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   }, [searchQuery]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef(selectedId);
-  selectedIdRef.current = selectedId;
+  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
   const [favourites, setFavourites] = useState<Set<string>>(new Set());
   const [favouritesOnly, setFavouritesOnly] = useState(false);
   const [clientNow, setClientNow] = useState<number | null>(() => {

@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import GlassCard from '@/components/profile/ProfileGlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import { PRODUCT_CARD_SELECT } from '@/lib/payments/product-presentation'
+import SafeExternalLink from '@/components/ui/SafeExternalLink'
+import { safeContactUrl, safeWebUrl } from '@/lib/urls'
 import ShinyLink from '@/components/ui/ShinyLink'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import Link from 'next/link'
@@ -71,7 +74,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     // Find user by username
     const { data: user, error: userError } = await supabase
         .from('users')
-        .select('*')
+        .select('id,username,is_premium,created_at')
         .eq('username', username)
         .single()
 
@@ -81,13 +84,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     // Load profile, links, contacts, and V2 data
     const [profileResult, linksResult, contactsResult, expResult, qualResult, projResult, prodResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('user_id', user.id).single(),
+        supabase.from('profiles').select('user_id,full_name,headline,bio,profile_pic_url').eq('user_id', user.id).single(),
         supabase.from('links').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('created_at', { ascending: true }),
         supabase.from('contacts').select('*').eq('user_id', user.id).order('created_at'),
         supabase.from('experiences').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }),
         supabase.from('qualifications').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }),
         supabase.from('projects').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }),
-        supabase.from('products').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', user.id).order('created_at', { ascending: false }),
     ])
 
     // Check if the viewer is logged in and if they are already connected
@@ -116,28 +119,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
     // Check if viewer is the owner
     const isOwner = viewer?.id === user.id
     
-    // Check if this profile belongs to the platform owner (determines PayPal SDK routing)
-    const isPlatformOwner = user.email === 'raminhoodeh@gmail.com'
 
     // Helper to render contact item with smart linking
     const renderContactItem = (contact: any) => {
         const method = contact.method === 'Other' ? contact.custom_method_name : contact.method
-        let href = ''
-        let isExternal = false
-
-        switch (contact.method.toLowerCase()) {
-            case 'email':
-                href = `mailto:${contact.value}`
-                break
-            case 'whatsapp':
-                href = `https://wa.me/${contact.value.replace(/\D/g, '')}`
-                isExternal = true
-                break
-            case 'telegram':
-                href = `https://t.me/${contact.value.replace('@', '')}`
-                isExternal = true
-                break
-        }
+        const href = safeContactUrl(contact.method, contact.value)
+        const isExternal = !!href?.startsWith('https:')
 
         const content = (
             <div className="text-white flex items-center justify-center lg:justify-start gap-2">
@@ -250,7 +237,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             <div className="space-y-3 block lg:hidden !mt-10">
 
                                 {links.map((link) => (
-                                    <a
+                                    <SafeExternalLink
                                         key={link.id}
                                         href={link.link_url}
                                         target="_blank"
@@ -265,7 +252,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                 <span className="text-white/50">→</span>
                                             </div>
                                         </GlassCard>
-                                    </a>
+                                    </SafeExternalLink>
                                 ))}
                             </div>
                         )}
@@ -333,7 +320,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                 <div className="space-y-3">
 
                                     {links.map((link) => (
-                                        <a
+                                        <SafeExternalLink
                                             key={link.id}
                                             href={link.link_url}
                                             target="_blank"
@@ -348,7 +335,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                     <span className="text-white/50">→</span>
                                                 </div>
                                             </GlassCard>
-                                        </a>
+                                        </SafeExternalLink>
                                     ))}
                                 </div>
                             )
@@ -363,9 +350,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Projects</h2>
                             <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {projects.map((project) => {
-                                    const Wrapper = project.project_url ? 'a' : 'div'
-                                    const wrapperProps = project.project_url ? {
-                                        href: project.project_url,
+                                    const projectUrl = safeWebUrl(project.project_url)
+                                    const Wrapper = projectUrl ? 'a' : 'div'
+                                    const wrapperProps = projectUrl ? {
+                                        href: projectUrl,
                                         target: '_blank',
                                         rel: 'noopener noreferrer',
                                         className: 'block h-full cursor-pointer transition-opacity hover:opacity-80'
@@ -401,8 +389,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
                             <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {products.map(product => {
-                                    const ProductWrapper = product.sales_page_active ? Link : 'div'
-                                    const wrapperProps = product.sales_page_active
+                                    const ProductWrapper = product.sales_page_active && product.sales_page_published !== false ? Link : 'div'
+                                    const wrapperProps = product.sales_page_active && product.sales_page_published !== false
                                         ? { href: `/products/${product.id}`, className: "block flex-grow cursor-pointer transition-opacity hover:opacity-80" }
                                         : { className: "block flex-grow" }
 
@@ -448,11 +436,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                         </ShinyLink>
                                                     </div>
                                                 )}
-                                                {product.paypal_active && product.paypal_html && (
+                                                {product.paypal_active && product.payment_config && (
                                                     <div className="w-full flex justify-center">
                                                         <PayPalSmartButton 
-                                                            html={product.paypal_html} 
-                                                            isPlatformOwner={isPlatformOwner} 
+                                                            config={product.payment_config}
                                                             price={product.price}
                                                             productName={product.name}
                                                         />

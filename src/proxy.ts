@@ -12,8 +12,8 @@ export const config = {
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
-         * - public folder
+         * - known public video/PDF assets (including range requests)
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|(?:homepage-video|nsso-homepage-profile-demo|nsso-vision-ukYfrg0ZNbA)\\.mp4$|deck\\.pdf$|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }
