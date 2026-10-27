@@ -38,7 +38,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
     const creatingRef = useRef(false)
     const [creationError, setCreationError] = useState('')
     const [creationLocked, setCreationLocked] = useState(false)
-    const creationIntent = useRef<{ operationId: string | null } | null>(null)
+    const creationIntent = useRef<{ operationId: string | null; origin: Element | null } | null>(null)
     const creationPosition = useRef<InsertionPosition>('top')
     const [retrying, setRetrying] = useState(false)
     const retryingRef = useRef(false)
@@ -105,7 +105,8 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
 
     // The mutation provider reports verified receipts even when retry was triggered elsewhere.
     useEffect(() => {
-        const operationId = creationIntent.current?.operationId
+        const intent = creationIntent.current
+        const operationId = intent?.operationId
         const result = operationId ? productCreationResults?.[operationId] : null
         if (!creationLocked || result?.status !== 'applied') return
         const row = result.changes.find(change => change.entity === 'products' && change.row)?.row
@@ -114,9 +115,11 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         setCreationLocked(false)
         setCreationName('')
         setCreationError('')
-        focusRequest.current = { kind: 'editor' }
-        setSelectedId(row.id)
-        setView('editor')
+        if (navigation.current.view === 'create' && navigation.current.expanded) {
+            focusRequest.current = { kind: 'editor', origin: intent?.origin }
+            setSelectedId(row.id)
+            setView('editor')
+        } else if (navigation.current.view === 'create') setView('list')
     }, [creationLocked, productCreationResults])
 
     function rememberListPosition() {
@@ -158,7 +161,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         const origin = document.activeElement
         setCreating(true)
         setCreationError('')
-        creationIntent.current = { operationId: null }
+        creationIntent.current = { operationId: null, origin }
         try {
             const result = await createEntity('product', { name, price: null }, creationPosition.current)
             if (!mounted.current) return
@@ -176,7 +179,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
                     setView('list')
                 }
             } else {
-                creationIntent.current = { operationId: result.operationId }
+                creationIntent.current = { operationId: result.operationId, origin }
                 setCreationLocked(true)
                 setCreationError('Adding this offering was not confirmed. Your name has been kept. Check the save status before trying again.')
             }
@@ -193,6 +196,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
 
     async function retrySaves() {
         if (retryingRef.current) return
+        if (creationIntent.current && navigation.current.view === 'create') creationIntent.current.origin = document.activeElement
         retryingRef.current = true
         setRetrying(true)
         try {

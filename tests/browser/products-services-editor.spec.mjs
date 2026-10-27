@@ -52,7 +52,7 @@ test.beforeAll(async () => {
             snapshot={products:Array.from({length:count},(_,index)=>offering(index+1)),experiences:[],qualifications:[],projects:[],loading:false,loadError:null,mutationState:{status:'saved',message:''},getRevision:()=>snapshot.revision??0,
                 patchEntity:async(kind,id,patch)=>{window.fixtureWrites.push({kind:'patch',entity:kind,id,patch});window.fixturePendingPatch={id,patch};emit({products:snapshot.products.map(item=>item.id===id?{...item,...patch}:item),mutationState:{status:'saving',message:'Saving changes…'}});return settlePatch(window.fixturePendingPatch)},
                 retryPending:async()=>{if(!window.fixturePendingPatch)return;emit({mutationState:{status:'saving',message:'Saving changes…'}});await settlePatch(window.fixturePendingPatch)},
-                createEntity:async(kind,values,position='bottom')=>{window.fixtureWrites.push({kind:'create',entity:kind,values,position});emit({mutationState:{status:'saving',message:'Saving changes…'}});if(window.fixtureHoldCreate)await new Promise(resolve=>{window.fixtureReleaseCreate=resolve});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureCreateFails){emit({mutationState:{status:'failed',message:'Offering could not be created.'}});return{status:'rejected',changes:[]}}const row={...offering(100),...values,id:'created-offering-'+window.fixtureWrites.filter(write=>write.kind==='create').length};emit({products:position==='top'?[row,...snapshot.products]:[...snapshot.products,row],mutationState:{status:'saved',message:''}});return{status:'applied',operationId:'fixture-create',revision:1,changes:[{entity:'products',id:row.id,row}]}},
+                createEntity:async(kind,values,position='bottom')=>{window.fixtureWrites.push({kind:'create',entity:kind,values,position});emit({mutationState:{status:'saving',message:'Saving changes…'}});if(window.fixtureHoldCreate)await new Promise(resolve=>{window.fixtureReleaseCreate=resolve});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureCreateFails){emit({mutationState:{status:'failed',message:'Offering could not be created.'}});return{status:'rejected',operationId:'fixture-create',changes:[]}}const row={...offering(100),...values,id:'created-offering-'+window.fixtureWrites.filter(write=>write.kind==='create').length};emit({products:position==='top'?[row,...snapshot.products]:[...snapshot.products,row],mutationState:{status:'saved',message:''}});return{status:'applied',operationId:'fixture-create',revision:1,changes:[{entity:'products',id:row.id,row}]}},
                 removeEntity:async(kind,id)=>{window.fixtureWrites.push({kind:'remove',entity:kind,id});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureDeleteFails)return false;emit({products:snapshot.products.filter(item=>item.id!==id)});return true},
                 refreshProfile:async()=>true,reorderExperiences:async()=>true,reorderQualifications:async()=>true,reorderProjects:async()=>true};
             const fallback={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'offerings-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
@@ -168,6 +168,28 @@ for (const destination of ['another offering', 'collapsed section']) {
         expect((await writes(page)).filter(write => write.kind === 'create')).toHaveLength(1)
     })
 }
+
+test('a reconciled creation receipt does not replace another offering the user chose while retry was unresolved', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await mount(page)
+    await page.getByRole('button', { name: 'Add product or service', exact: true }).click()
+    await page.getByRole('textbox', { name: 'Offering name', exact: true }).fill('Reconciled synthetic offering')
+    await page.evaluate(() => { window.fixtureCreateFails = true })
+    await page.getByRole('button', { name: 'Add to public profile', exact: true }).click()
+    await expect(page.getByRole('alert')).toBeVisible()
+    await choose(page, 2).click()
+    const field = page.getByRole('textbox', { name: 'Product name', exact: true })
+    await field.focus()
+    const before = await page.evaluate(() => scrollY)
+    await page.evaluate(() => {
+        const row = { ...window.fixtureSnapshot().products[0], id: 'receipt-created-offering', name: 'Reconciled synthetic offering' }
+        window.fixtureUpdate({ products: [row, ...window.fixtureSnapshot().products], productCreationResults: { 'fixture-create': { status: 'applied', changes: [{ entity: 'products', id: row.id, row }] } } })
+    })
+    await expect(choose(page, 2)).toHaveAttribute('aria-current', 'true')
+    await expect(field).toHaveValue('Fixture offering 2')
+    await expect(field).toBeFocused()
+    expect(await page.evaluate(() => scrollY)).toBe(before)
+})
 
 test('top and bottom offering controls retain their intended position through named creation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
