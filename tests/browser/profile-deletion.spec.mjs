@@ -293,7 +293,10 @@ test('Admin navigation requires both an eligible email and server-issued permiss
         if (await menuTrigger.isVisible()) await menuTrigger.click()
         await expect(page.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(visible ? 1 : 0)
         await expect(page.getByText('Account security', { exact: true })).toHaveCount(0)
-        if (email === 'troy@nsso.me' && testInfo.project.name.includes('mobile')) await page.screenshot({ path: root + `private/test-results/account-release-screenshots/${testInfo.project.name}-authorized-admin-menu.png` })
+        if (email === 'troy@nsso.me' && testInfo.project.name.includes('mobile')) {
+            await page.getByRole('dialog', { name: 'Menu', exact: true }).evaluate(element => Promise.all(element.getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {}))))
+            await page.screenshot({ path: root + `private/test-results/account-release-screenshots/${testInfo.project.name}-authorized-admin-menu.png` })
+        }
         if (await menuTrigger.isVisible()) await page.keyboard.press('Escape')
     }
 })
