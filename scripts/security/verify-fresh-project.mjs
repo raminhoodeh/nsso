@@ -14,6 +14,8 @@ import {createClient} from '@supabase/supabase-js'
 import sharp from 'sharp'
 import {verifyAuthCascades} from './auth-cascade-proof.mjs'
 import {verifyAccountDeletion} from './account-deletion-proof.mjs'
+import {verifyProfileInsertion} from './profile-insertion-proof.mjs'
+import {verifyInsertionUpgrade} from './profile-insertion-upgrade-proof.mjs'
 
 if(process.env.NSSO_ALLOW_LOCAL_SECURITY_REHEARSAL!=='1')throw Error('Explicit local rehearsal opt-in required')
 const [statusFile,evidenceArg,existing]=process.argv.slice(2)
@@ -148,6 +150,12 @@ try{
   ok(await service.from('products').update({sales_page_published:false}).eq('id',product.id));assert.equal(ok(await anon.rpc('get_product_details',{p_product_id:product.id})),null)
   denied(await owner.client.from('profiles').update({headline:'Bypass journal'}).eq('user_id',owner.id))
   denied(await owner.client.from('links').insert({user_id:owner.id,link_name:'Bypass',link_url:''}))
+ })
+ await check('top and bottom insertion is durable, replay-safe, undoable and owner-scoped for all six collections',async()=>{
+  await verifyProfileInsertion({owner,other,anon})
+ })
+ await check('forward insertion migration preserves mixed NULL legacy ordering and all authored content',async()=>{
+  verifyInsertionUpgrade({sql,repo,owner})
  })
  await check('final health detects column grants, disabled profile RLS and Storage write-policy drift',async()=>{
   const healthy=()=>service.rpc('nsso_security_health').then(ok)

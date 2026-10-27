@@ -204,10 +204,23 @@ function ProductSalesContent({ productId }: { productId: string }) {
         return match && match[2].length === 11 ? match[2] : null
     }
 
+    // The standalone product route has no account bottom bar. A failed or
+    // pending product read must still leave an explicit, safe way out without
+    // trusting a creator id, return URL, or unverified session from the query.
+    const recoveryNavigation = <TahoeGlassButton
+        onClick={() => router.push(verifiedAccountId ? '/dashboard' : '/')}
+        className="min-h-11 px-4 py-2"
+        contentClassName="gap-2 text-[15px] font-semibold !text-white"
+    >
+        <ChevronLeft size={16} />
+        {verifiedAccountId ? 'Back to profile editor' : 'Back to nsso'}
+    </TahoeGlassButton>
+
     if (loading) {
         return (
             <ProductRouteContent>
-                <div className="relative z-[1] flex min-h-screen items-center justify-center">
+                <div className="relative z-[1] flex min-h-screen flex-col items-center justify-center gap-5 p-5">
+                    {recoveryNavigation}
                     <TahoeGlassSurface variant="pill" tone="light" contentClassName="px-6 py-3 text-white/80">
                         Loading...
                     </TahoeGlassSurface>
@@ -219,7 +232,8 @@ function ProductSalesContent({ productId }: { productId: string }) {
     if (!product || (!productPageIsPublic(product) && !isOwner)) {
         return (
             <ProductRouteContent>
-                <div className="relative z-[1] flex min-h-screen items-center justify-center">
+                <div className="relative z-[1] flex min-h-screen flex-col items-center justify-center gap-5 p-5">
+                    {recoveryNavigation}
                     <TahoeGlassSurface variant="card" tone="light" contentClassName="px-8 py-6 text-white/80">
                         {loadError ? <div role="status" className="space-y-3 text-center"><p>This product could not be loaded. Please retry.</p><button type="button" onClick={() => setRetry(value => value + 1)} className="min-h-11 rounded-xl border border-white/30 px-4">Retry product</button></div> : 'Product not found'}
                     </TahoeGlassSurface>

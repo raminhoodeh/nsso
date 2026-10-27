@@ -52,7 +52,7 @@ test.beforeAll(async () => {
             snapshot={products:Array.from({length:count},(_,index)=>offering(index+1)),experiences:[],qualifications:[],projects:[],loading:false,loadError:null,mutationState:{status:'saved',message:''},getRevision:()=>snapshot.revision??0,
                 patchEntity:async(kind,id,patch)=>{window.fixtureWrites.push({kind:'patch',entity:kind,id,patch});window.fixturePendingPatch={id,patch};emit({products:snapshot.products.map(item=>item.id===id?{...item,...patch}:item),mutationState:{status:'saving',message:'Saving changes…'}});return settlePatch(window.fixturePendingPatch)},
                 retryPending:async()=>{if(!window.fixturePendingPatch)return;emit({mutationState:{status:'saving',message:'Saving changes…'}});await settlePatch(window.fixturePendingPatch)},
-                createEntity:async(kind,values)=>{window.fixtureWrites.push({kind:'create',entity:kind,values});emit({mutationState:{status:'saving',message:'Saving changes…'}});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureCreateFails){emit({mutationState:{status:'failed',message:'Offering could not be created.'}});return{status:'rejected',changes:[]}}const row={...offering(100),...values,id:'created-offering'};emit({products:[...snapshot.products,row],mutationState:{status:'saved',message:''}});return{status:'applied',operationId:'fixture-create',revision:1,changes:[{entity:'products',id:row.id,row}]}},
+                createEntity:async(kind,values,position='bottom')=>{window.fixtureWrites.push({kind:'create',entity:kind,values,position});emit({mutationState:{status:'saving',message:'Saving changes…'}});if(window.fixtureHoldCreate)await new Promise(resolve=>{window.fixtureReleaseCreate=resolve});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureCreateFails){emit({mutationState:{status:'failed',message:'Offering could not be created.'}});return{status:'rejected',changes:[]}}const row={...offering(100),...values,id:'created-offering-'+window.fixtureWrites.filter(write=>write.kind==='create').length};emit({products:position==='top'?[row,...snapshot.products]:[...snapshot.products,row],mutationState:{status:'saved',message:''}});return{status:'applied',operationId:'fixture-create',revision:1,changes:[{entity:'products',id:row.id,row}]}},
                 removeEntity:async(kind,id)=>{window.fixtureWrites.push({kind:'remove',entity:kind,id});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureDeleteFails)return false;emit({products:snapshot.products.filter(item=>item.id!==id)});return true},
                 refreshProfile:async()=>true,reorderExperiences:async()=>true,reorderQualifications:async()=>true,reorderProjects:async()=>true};
             const fallback={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'offerings-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
@@ -129,6 +129,75 @@ test('creation cancellation is write-free and a failed named creation retains th
     await expect(page.getByRole('alert')).toBeVisible()
     await expect(page.getByRole('textbox', { name: 'Offering name', exact: true })).toHaveValue('Synthetic coaching session')
     expect(await page.evaluate(() => window.fixtureSnapshot().products)).toEqual([])
+})
+
+for (const destination of ['another offering', 'collapsed section']) {
+    test(`a delayed creation preserves navigation and focus in ${destination}`, async ({ page }) => {
+        await page.setViewportSize({ width: 1440, height: 900 })
+        await mount(page)
+        await page.getByRole('button', { name: 'Add product or service', exact: true }).click()
+        await page.getByRole('textbox', { name: 'Offering name', exact: true }).fill('Delayed synthetic offering')
+        await page.evaluate(() => { window.fixtureHoldCreate = true })
+        await page.getByRole('button', { name: 'Add to public profile', exact: true }).click()
+        await expect.poll(() => page.evaluate(() => window.fixtureWrites.filter(write => write.kind === 'create').length)).toBe(1)
+        let target
+        if (destination === 'another offering') {
+            await choose(page, 2).click()
+            target = page.getByRole('textbox', { name: 'Product name', exact: true })
+            await target.focus()
+            await expect(target).toHaveValue('Fixture offering 2')
+        } else {
+            target = productToggle(page)
+            await target.click()
+            await target.focus()
+            await expect(target).toHaveAttribute('aria-expanded', 'false')
+        }
+        const before = await page.evaluate(() => scrollY)
+        await page.evaluate(() => window.fixtureReleaseCreate())
+        await expect.poll(() => page.evaluate(() => window.fixtureSnapshot().products.some(product => product.name === 'Delayed synthetic offering'))).toBe(true)
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+        await expect(target).toBeFocused()
+        expect(await page.evaluate(() => scrollY)).toBe(before)
+        if (destination === 'another offering') await expect(target).toHaveValue('Fixture offering 2')
+        else {
+            await expect(target).toHaveAttribute('aria-expanded', 'false')
+            await target.click()
+            await expect(page.getByRole('button', { name: 'Edit Delayed synthetic offering', exact: true })).toBeVisible()
+            await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveCount(0)
+        }
+        expect((await writes(page)).filter(write => write.kind === 'create')).toHaveLength(1)
+    })
+}
+
+test('top and bottom offering controls retain their intended position through named creation', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await mount(page, { count: 18 })
+    const original = await page.evaluate(() => window.fixtureSnapshot().products.map(item => item.id))
+    await page.getByRole('button', { name: 'Add product or service', exact: true }).click()
+    expect(await writes(page)).toEqual([])
+    await page.getByRole('textbox', { name: 'Offering name', exact: true }).fill('Top synthetic offering')
+    await page.getByRole('button', { name: 'Add to public profile', exact: true }).click()
+    await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue('Top synthetic offering')
+    await expect(page.getByRole('heading', { name: 'Top synthetic offering', exact: true })).toBeFocused()
+    await page.getByRole('button', { name: 'Back to your offerings', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Edit Top synthetic offering', exact: true })).toBeFocused()
+    const bottom = page.getByRole('button', { name: 'Add product or service at bottom', exact: true })
+    await bottom.scrollIntoViewIfNeeded()
+    const before = await page.evaluate(() => window.scrollY)
+    await bottom.click()
+    await expect(page.getByRole('textbox', { name: 'Offering name', exact: true })).toBeFocused()
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await expect(bottom).toBeFocused()
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeCloseTo(before, 0)
+    expect(await writes(page)).toHaveLength(1)
+    await bottom.click()
+    await page.getByRole('textbox', { name: 'Offering name', exact: true }).fill('Bottom synthetic offering')
+    await page.getByRole('button', { name: 'Add to public profile', exact: true }).click()
+    await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue('Bottom synthetic offering')
+    await expect(page.getByRole('heading', { name: 'Bottom synthetic offering', exact: true })).toBeFocused()
+    const rows = await page.evaluate(() => window.fixtureSnapshot().products.map(item => item.id))
+    expect(rows).toEqual(['created-offering-1', ...original, 'created-offering-2'])
+    expect((await writes(page)).filter(write => write.kind === 'create').map(write => write.position)).toEqual(['top', 'bottom'])
 })
 
 test('overview items are explicit edit actions and do not expose row deletion', async ({ page }, testInfo) => {

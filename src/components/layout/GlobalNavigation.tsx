@@ -2,13 +2,13 @@
 
 import { useUser } from '@/components/providers/UserProvider';
 import DashboardSidebar from '@/components/layout/DashboardSidebar';
-import DashboardBottomNav from '@/components/layout/DashboardBottomNav';
+import Header from '@/components/layout/Header';
 import { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import {
     routeSuppressesAuthenticatedNavigation,
     routeUsesDashboardSidebar,
-    routeUsesMobileProfileMenu,
+    routeNeedsGlobalAccountHeader,
 } from '@/lib/tahoe-glass/route-boundaries';
 
 
@@ -30,7 +30,7 @@ function GlobalNavigationContent() {
     return (
         <>
             {usesDashboardSidebar && <DashboardSidebar />}
-            {!routeUsesMobileProfileMenu(pathname) && <DashboardBottomNav />}
+            {routeNeedsGlobalAccountHeader(pathname) && <Header />}
         </>
     );
 }

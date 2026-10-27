@@ -1,13 +1,14 @@
 'use client'
 
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
-import { useState, useEffect, useRef, type KeyboardEvent } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react'
 import { Plus, X, ChevronDown, ChevronUp, Upload, Loader2, Sparkles, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DraggableAttributes, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import ConfirmDeleteDialog from './ConfirmDeleteDialog'
 import { Experience, Qualification, Project } from '@/lib/types'
+import type { EditableValues } from '@/lib/profile-mutations'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
@@ -21,7 +22,10 @@ interface AdvancedModeCardProps {
 
 type ActiveSection = 'experiences' | 'qualifications' | 'projects'
 type ExpandedPanel = 'experience' | 'products' | null
+type ExperienceKind = 'experience' | 'qualification' | 'project'
+type InsertionPosition = 'top' | 'bottom'
 const ACTIVE_SECTION_ORDER: ActiveSection[] = ['experiences', 'qualifications', 'projects']
+const SECTION_FOR_KIND: Record<ExperienceKind, ActiveSection> = { experience: 'experiences', qualification: 'qualifications', project: 'projects' }
 
 interface SortableItemRenderProps {
     attributes: DraggableAttributes
@@ -54,6 +58,15 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const [activeSection, setActiveSection] = useState<ActiveSection>('experiences')
     // const [isLoading, setIsLoading] = useState(false) // Driven by provider now
     const [isUploading, setIsUploading] = useState(false)
+    const [adding, setAdding] = useState<ExperienceKind | null>(null)
+    const addingRef = useRef(false)
+    const primaryFields = useRef(new Map<string, HTMLInputElement>())
+    const [newField, setNewField] = useState<{ section: ActiveSection; id: string; origin: Element | null; generation: number } | null>(null)
+    const activeEditor = useRef({ expandedPanel, activeSection, generation: 0 })
+    useLayoutEffect(() => {
+        const previous = activeEditor.current
+        activeEditor.current = { expandedPanel, activeSection, generation: previous.generation + Number(previous.expandedPanel !== expandedPanel || previous.activeSection !== activeSection) }
+    }, [expandedPanel, activeSection])
     const sectionTabRefs = useRef<Record<ActiveSection, HTMLButtonElement | null>>({
         experiences: null,
         qualifications: null,
@@ -136,6 +149,29 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const [qualifications, setQualifications] = useState<Qualification[]>([])
     const [projects, setProjects] = useState<Project[]>([])
 
+    useEffect(() => {
+        if (!newField) return
+        if (expandedPanel !== 'experience' || activeSection !== newField.section || activeEditor.current.generation !== newField.generation) {
+            const frame = requestAnimationFrame(() => setNewField(null))
+            return () => cancelAnimationFrame(frame)
+        }
+        const field = primaryFields.current.get(newField.id)
+        if (!field) return
+        const frame = requestAnimationFrame(() => {
+            const active = document.activeElement
+            // The closed Deity shell stays mounted to preserve conversation
+            // state. Only an active modal, or a user who moved away from the
+            // originating Add control, should cancel this one-time focus.
+            const modal = document.querySelector('dialog:modal') || Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')).some(element => !element.closest('[hidden],[inert],[aria-hidden="true"]') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+            if (field.isConnected && !field.closest('[hidden],[inert],[aria-hidden="true"]') && !modal && activeEditor.current.generation === newField.generation && (active === newField.origin || active === document.body)) {
+                field.focus({ preventScroll: true })
+                field.scrollIntoView({ block: 'nearest', behavior: 'instant' })
+            }
+            setNewField(null)
+        })
+        return () => cancelAnimationFrame(frame)
+    }, [newField, expandedPanel, activeSection, experiences, qualifications, projects])
+
     // Sync with Global State (Deity Updates)
     useEffect(() => {
         if (globalExperiences) {
@@ -206,19 +242,40 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     // --- handlers ---
 
     // All editor writes share the authenticated, revisioned mutation gateway.
-    const addExperience = async () => { await createEntity('experience',{company_name:'',job_title:'',start_year:new Date().getFullYear(),end_year:null,description:''}) }
+    const addItem = async <K extends ExperienceKind>(kind: K, values: EditableValues[K], position: InsertionPosition) => {
+        // aria-disabled keeps keyboard focus in place; the guard blocks repeat activation.
+        if (addingRef.current) return
+        const origin = document.activeElement
+        const generation = activeEditor.current.generation
+        addingRef.current = true
+        setAdding(kind)
+        try {
+            const result = await createEntity(kind, values, position)
+            const section = SECTION_FOR_KIND[kind]
+            const row = result.changes.find(change => change.entity === section && change.row)?.row
+            if (result.status === 'applied' && typeof row?.id === 'string' && activeEditor.current.expandedPanel === 'experience' && activeEditor.current.activeSection === section && activeEditor.current.generation === generation) {
+                setNewField({ section, id: row.id, origin, generation })
+            }
+        } catch {
+            showToast('Adding this item could not be confirmed. Check the save status before trying again.', 'error')
+        } finally {
+            addingRef.current = false
+            setAdding(null)
+        }
+    }
+    const addExperience = (position: InsertionPosition) => addItem('experience',{company_name:'',job_title:'',start_year:new Date().getFullYear(),end_year:null,description:''},position)
     const updateExperience = async (id: string, updates: Partial<Experience>) => {
         setExperiences(current => current.map(row => row.id === id ? {...row,...updates} : row))
         return patchEntity('experience',id,updates)
     }
     const deleteExperience = (id: string) => { const row = experiences.find(item => item.id === id); setDeleteTarget({ type: 'experience', id, name: row?.company_name ? `experience at ${row.company_name}` : 'experience' }) }
-    const addQualification = async () => { await createEntity('qualification',{institution:'',qualification_name:'',start_year:new Date().getFullYear(),end_year:new Date().getFullYear()}) }
+    const addQualification = (position: InsertionPosition) => addItem('qualification',{institution:'',qualification_name:'',start_year:new Date().getFullYear(),end_year:new Date().getFullYear()},position)
     const updateQualification = async (id: string, updates: Partial<Qualification>) => {
         setQualifications(current => current.map(row => row.id === id ? {...row,...updates} : row))
         return patchEntity('qualification',id,updates)
     }
     const deleteQualification = (id: string) => { const row = qualifications.find(item => item.id === id); setDeleteTarget({ type: 'qualification', id, name: row?.qualification_name || 'qualification' }) }
-    const addProject = async () => { await createEntity('project',{project_name:'',contribution:'',description:'',project_url:null}) }
+    const addProject = (position: InsertionPosition) => addItem('project',{project_name:'',contribution:'',description:'',project_url:null},position)
     const updateProject = async (id: string, updates: Partial<Project>) => {
         setProjects(current => current.map(row => row.id === id ? {...row,...updates} : row))
         return patchEntity('project',id,updates)
@@ -273,9 +330,9 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
 
     // Render Experiences Editor
     const renderExperiences = () => (
-        <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
+        <div className="flex flex-col gap-4 md:gap-6 md:pt-6">
             {/* Header */}
-            <div className="mb-2 grid grid-cols-[minmax(0,1fr)_44px] items-start gap-3">
+            <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Job titles</h4>
                     <TahoeGlassButton
@@ -289,7 +346,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton onClick={addExperience} className="h-11 w-11 shrink-0 p-0 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add experience">
+                <TahoeGlassButton type="button" onClick={() => { void addExperience('top') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add experience">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
@@ -327,7 +384,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" aria-label="Company" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="text-white font-medium placeholder:text-white/60" />
+                                                    <input ref={node => { if (node) primaryFields.current.set(exp.id, node); else primaryFields.current.delete(exp.id) }} type="text" aria-label="Company" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
@@ -359,13 +416,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </div>
                 </SortableContext>
             </DndContext>
+            {experiences.length > 0 && <TahoeGlassButton type="button" onClick={() => { void addExperience('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} aria-label="Add experience at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add experience</TahoeGlassButton>}
         </div>
     )
 
     // Render Qualifications Editor
     const renderQualifications = () => (
-        <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
-            <div className="mb-2 grid grid-cols-[minmax(0,1fr)_44px] items-start gap-3">
+        <div className="flex flex-col gap-4 md:gap-6 md:pt-6">
+            <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Qualifications</h4>
                     <TahoeGlassButton
@@ -379,7 +437,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton onClick={addQualification} className="h-11 w-11 shrink-0 p-0 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add qualification">
+                <TahoeGlassButton type="button" onClick={() => { void addQualification('top') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add qualification">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
@@ -416,7 +474,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" aria-label="Institution" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="text-white font-medium placeholder:text-white/60" />
+                                                    <input ref={node => { if (node) primaryFields.current.set(qual.id, node); else primaryFields.current.delete(qual.id) }} type="text" aria-label="Institution" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
@@ -448,13 +506,14 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </div>
                 </SortableContext>
             </DndContext>
+            {qualifications.length > 0 && <TahoeGlassButton type="button" onClick={() => { void addQualification('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} aria-label="Add qualification at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add qualification</TahoeGlassButton>}
         </div>
     )
 
     // Render Projects Editor
     const renderProjects = () => (
-        <div className="flex flex-col gap-4 pt-4 md:gap-6 md:pt-6">
-            <div className="mb-2 grid grid-cols-[minmax(0,1fr)_44px] items-start gap-3">
+        <div className="flex flex-col gap-4 md:gap-6 md:pt-6">
+            <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Projects</h4>
                     <TahoeGlassButton
@@ -468,7 +527,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton onClick={addProject} className="h-11 w-11 shrink-0 p-0 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add project">
+                <TahoeGlassButton type="button" onClick={() => { void addProject('top') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add project">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
@@ -505,7 +564,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
                                                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" aria-label="Project name" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="text-white font-medium placeholder:text-white/60" />
+                                                    <input ref={node => { if (node) primaryFields.current.set(proj.id, node); else primaryFields.current.delete(proj.id) }} type="text" aria-label="Project name" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
                                                 </TahoeGlassField>
                                             </div>
                                             <div>
@@ -556,6 +615,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </div>
                 </SortableContext>
             </DndContext>
+            {projects.length > 0 && <TahoeGlassButton type="button" onClick={() => { void addProject('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} aria-label="Add project at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add project</TahoeGlassButton>}
         </div>
     )
 

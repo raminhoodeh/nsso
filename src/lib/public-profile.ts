@@ -22,7 +22,7 @@ export async function loadPublicProfile(username: string) {
         client.from('experiences').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('start_year', { ascending: false }).order('id'),
         client.from('qualifications').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('end_year', { ascending: false }).order('id'),
         client.from('projects').select('*').eq('user_id', user.id).order('display_order', { ascending: true }).order('created_at', { ascending: false }).order('id'),
-        client.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', user.id).order('created_at', { ascending: false }).order('id'),
+        client.from('products').select(PRODUCT_CARD_SELECT).eq('user_id', user.id).order('display_order').order('created_at', { ascending: false }).order('id'),
     ])
     return { user, profile: profile.data, links: links.data ?? [], contacts: contacts.data ?? [], experiences: experiences.data ?? [], qualifications: qualifications.data ?? [], projects: projects.data ?? [], products: products.data ?? [] }
 }

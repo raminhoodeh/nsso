@@ -8,22 +8,23 @@ let bundle
 test.beforeAll(async () => {
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'preview-fixture', setup(builder) {
-            builder.onResolve({ filter: /^(?:next\/(?:navigation|link)|@\/lib\/supabase\/client|@\/components\/(?:providers\/(?:UserProvider|ProfileProvider)|ui\/(?:Toast|CreateProfileButton|tahoe-glass)))$/ }, args => ({ path: args.path, namespace: 'fixture' }))
+            builder.onResolve({ filter: /^(?:next\/(?:navigation|image|link)|@\/lib\/supabase\/client|@\/components\/(?:providers\/(?:UserProvider|ProfileProvider)|ui\/(?:Toast|CreateProfileButton|tahoe-glass)))$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path === 'next/navigation' ? 'export const useRouter=()=>window.fixtureRouter;'
-                    : path === 'next/link' ? 'import React from "react";export default ({href,children,...props})=><a href={href} {...props}>{children}</a>;'
+                path === 'next/navigation' ? 'export const useRouter=()=>window.fixtureRouter;export const usePathname=()=>"/preview";export const useSearchParams=()=>new URLSearchParams();'
+                    : path === 'next/image' ? 'export default ({priority,fill,...props})=><img {...props}/>;'
+                    : path === 'next/link' ? 'import React from "react";export default ({href,children,onClick,...props})=><a href={href} {...props} onClick={event=>{onClick?.(event);if(!event.defaultPrevented){event.preventDefault();window.fixtureRouter.push(href)}}}>{children}</a>;'
                         : path.endsWith('UserProvider') ? 'import {useSyncExternalStore} from "react";export const useUser=()=>useSyncExternalStore(window.fixtureSubscribe,()=>window.fixtureAccount);'
                             : path.endsWith('ProfileProvider') ? 'import {useSyncExternalStore} from "react";export const useProfile=()=>useSyncExternalStore(window.fixtureSubscribe,()=>window.fixtureProfile);'
                                 : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:(message,type)=>window.fixtureToasts.push({message,type})});'
                                     : path.endsWith('CreateProfileButton') ? 'export default ()=>null;'
-                                        : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,role,tabIndex,onClick,onKeyDown,...props})=><Tag href={href} role={role} tabIndex={tabIndex} onClick={onClick} onKeyDown={onKeyDown} aria-label={props["aria-label"]} aria-pressed={props["aria-pressed"]}>{children}</Tag>;export const TahoeBackdropHeader=({children,...props})=><header>{children}</header>;export const TahoeGlassButton=({children,onClick,disabled,...props})=><button onClick={onClick} disabled={disabled} aria-label={props["aria-label"]}>{children}</button>;'
-                                            : 'export const createClient=()=>{throw new Error("Preview must reuse the current account/profile contracts")};' }))
+                                        : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,role,tabIndex,onClick,onKeyDown,...props})=><Tag href={href} role={role} tabIndex={tabIndex} onClick={onClick} onKeyDown={onKeyDown} aria-label={props["aria-label"]} aria-pressed={props["aria-pressed"]}>{children}</Tag>;export const TahoeBackdropHeader=({children,...props})=><header>{children}</header>;export const TahoeGlassButton=({children,onClick,disabled,...props})=><button onClick={onClick} disabled={disabled} aria-label={props["aria-label"]}>{children}</button>;export const TahoeGlassDialog=({open,children,...props})=>open?<div role="dialog" aria-label={props["aria-label"]}>{children}</div>:null;'
+                                            : 'export const createClient=()=>({auth:{signOut:async()=>{window.fixtureAuthCalls++;return{error:null}}}});' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';import {createRoot} from 'react-dom/client';import Preview from './src/app/preview/page';
             window.fixtureListeners=new Set();window.fixtureSubscribe=fn=>{window.fixtureListeners.add(fn);return()=>window.fixtureListeners.delete(fn)};
-            window.fixtureRouter={push:path=>window.fixtureNavigation.push(path)};
+            window.fixtureRouter={push:path=>window.fixtureNavigation.push(path),prefetch(){}};
             window.updatePreviewFixture=(account,profile)=>{if(account)window.fixtureAccount=account;if(profile)window.fixtureProfile=profile;window.fixtureListeners.forEach(fn=>fn())};
-            window.fixtureRefreshes=0;window.fixtureNavigation=[];window.fixtureToasts=[];
+            window.fixtureRefreshes=0;window.fixtureNavigation=[];window.fixtureToasts=[];window.fixtureAuthCalls=0;
             window.fixtureAccount={user:{id:'${actor}',username:'fixture'},loading:false,error:null,refreshUser:async()=>{window.fixtureRefreshes++}};
             window.fixtureProfile={profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Current draft headline',bio:'Current local bio',profile_pic_url:'/avatar.jpg'},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'£12',description:'Offering',sales_page_active:true,sales_page_published:true,purchase_link_active:true,purchase_link:'https://seller.example.test/pay',paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'}}],loading:false,mutationState:{status:'saved',message:''},refreshProfile:async()=>{window.fixtureRefreshes++},retryPending:async()=>{window.fixtureRefreshes++}};
             createRoot(document.getElementById('root')).render(<Preview/>);
@@ -60,8 +61,10 @@ test('profile preview uses autosaved content, shows no banner, and explains chec
     await expect(page.getByRole('link', { name: 'Fixture offer' })).toHaveAttribute('href', '/products/product-fixture?preview=true')
     await page.getByRole('button', { name: "Show Fixture creator's QR code" }).press('Enter')
     await expect(page.getByRole('button', { name: "Show Fixture creator's profile photo" })).toHaveAttribute('aria-pressed', 'true')
-    await page.getByRole('button', { name: '← Edit Profile', exact: true }).press('Enter')
-    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual(['/dashboard'])
+    await page.getByRole('button', { name: 'Open account menu', exact: true }).press('Enter')
+    await page.getByRole('link', { name: 'Edit Profile', exact: true }).press('Enter')
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual(['/dashboard?view=profile'])
+    expect(await page.evaluate(() => window.fixtureAuthCalls)).toBe(0)
     expect(errors).toEqual([]); expect(unexpected).toEqual([])
 })
 
@@ -90,5 +93,5 @@ test('clipboard failures are reported without a false success toast', async ({ p
     await fixture(page)
     await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw new Error('Synthetic denied clipboard') } } }))
     await page.getByRole('button', { name: 'Copy page URL', exact: true }).click()
-    await expect.poll(() => page.evaluate(() => window.fixtureToasts)).toEqual([{ message: 'Your profile URL could not be copied. Please try again.', type: 'error' }])
+    await expect.poll(() => page.evaluate(() => window.fixtureToasts)).toEqual([{ message: 'Could not copy the profile URL. Please try again.', type: 'error' }])
 })

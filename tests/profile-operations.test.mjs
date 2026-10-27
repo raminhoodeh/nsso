@@ -41,6 +41,14 @@ test('strict operation schema rejects model authority, unknown fields, malformed
     ])assert.equal(isProfileChange(change),false,JSON.stringify(change).slice(0,160));
     assert.equal(isProfileChange({kind:'profile.patch',patch:{bio:'',headline:null}}),true);
     assert.equal(isProfileChange({kind:'link.add',values:{link_name:'',link_url:''}}),true,'Blank manual rows remain editable drafts');
+    for(const position of ['top','bottom']) {
+        const change={kind:'link.add',values:{link_name:'',link_url:''},position};
+        assert.equal(isProfileChange(change),true);
+        assert.deepEqual(normalizeProfileChange(change),change);
+    }
+    for(const position of [null,'middle',0,{},undefined])assert.equal(isProfileChange({kind:'link.add',values:{link_name:'',link_url:''},position}),false);
+    assert.equal(isProfileChange({kind:'link.patch',id,patch:{link_name:'Updated'},position:'top'}),false);
+    assert.equal(isProfileChange({kind:'product.add',values:{name:'Named offering',display_order:-999}}),false);
     assert.equal(isProfileChange({kind:'contact.patch',id,patch:{method:'LinkedIn'}}),true);
     assert.deepEqual(normalizeProfileChange({kind:'link.patch',id,patch:{link_url:' https://EXAMPLE.test/portfolio '}}),{kind:'link.patch',id,patch:{link_url:'https://example.test/portfolio'}});
 });

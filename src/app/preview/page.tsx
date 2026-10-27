@@ -16,9 +16,8 @@ import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
 import { productCheckoutVisibility } from '@/lib/payments/product-presentation'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeWebUrl } from '@/lib/urls'
-import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
-import NssoTopBar, { NSSO_TOPBAR_CONTENT_CLASS } from '@/components/layout/NssoTopBar'
+import Header from '@/components/layout/Header'
 import {
     PROFILE_COLLECTION_GRID_CLASS,
     PROFILE_COLLECTION_SECTION_CLASS,
@@ -29,74 +28,37 @@ import { getProfileBioPreview } from '@/components/profile/profileBio'
 
 export default function PreviewPage() {
     const router = useRouter()
-    const { showToast } = useToast()
     const { user, loading: accountLoading, error: accountError, refreshUser } = useUser()
     const { profile, links, contacts, experiences, qualifications, projects, products, loading: profileLoading, refreshProfile } = useProfile()
 
     useEffect(() => {
         if (!accountLoading && !accountError && !user) router.push('/sign-in')
     }, [accountLoading, accountError, user, router])
-
-    const copyProfileUrl = async () => {
-        if (!user?.username) return
-        try {
-            await navigator.clipboard.writeText(`${window.location.origin}/${user.username}`)
-            showToast('Profile URL copied!', 'success')
-        } catch {
-            showToast('Your profile URL could not be copied. Please try again.', 'error')
-        }
-    }
+    const header = !accountLoading && user ? <Header username={user.username || undefined} /> : null
 
     if (accountLoading || (user && profileLoading) || (!user && !accountError)) {
-        return (
+        return <>{header}
             <main className="min-h-screen flex items-center justify-center">
                 <div className="text-white text-xl text-center">
                     All of you...<br />all in one place
                 </div>
             </main>
-        )
+        </>
     }
 
     if (!user || !profile || profile.user_id !== user.id) {
-        return <main className="flex min-h-screen items-center justify-center px-6">
+        return <>{header}<main className="flex min-h-screen items-center justify-center px-6 pt-28">
             <GlassCard className="max-w-lg p-6 text-center text-white">
                 <p>Your profile preview could not be loaded. Your editing draft has been kept.</p>
                 <GlassButton className="mt-4" onClick={() => { void refreshUser(); void refreshProfile() }}>Retry preview</GlassButton>
             </GlassCard>
-        </main>
+        </main></>
     }
 
     return (
-        <main className="min-h-screen">
-            {/* Navigation Bar */}
-            <NssoTopBar
-                className="md:hidden"
-                contentClassName="h-full w-full"
-            >
-                <nav className={NSSO_TOPBAR_CONTENT_CLASS} aria-label="Profile preview">
-                    <GlassButton
-                        variant="ghost"
-                        size="sm"
-                        tone="dark"
-                        className="min-h-11"
-                        onClick={() => router.push('/dashboard')}
-                    >
-                        ← Edit Profile
-                    </GlassButton>
-                    <GlassButton
-                        variant="ghost"
-                        size="sm"
-                        tone="dark"
-                        className="min-h-11"
-                        onClick={copyProfileUrl}
-                    >
-                        Copy page URL
-                    </GlassButton>
-                </nav>
-            </NssoTopBar>
-
+        <>{header}<main className="min-h-screen">
             {/* Profile Content */}
-            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[calc(120px+env(safe-area-inset-top))] md:pt-[120px] pb-40`}>
+            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[calc(120px+env(safe-area-inset-top))] md:pt-[120px] pb-16`}>
                 <ProfileSaveStatus />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
@@ -388,6 +350,6 @@ export default function PreviewPage() {
                 </div>
 
             </div>
-        </main>
+        </main></>
     )
 }

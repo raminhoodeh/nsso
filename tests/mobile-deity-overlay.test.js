@@ -50,7 +50,7 @@ test("the Deity interface is a calm opaque surface rather than nested glass", ()
   );
   assert.match(
     interfaceSource,
-    /pb-\[max\(1\.5rem,env\(safe-area-inset-bottom\)\)\]/,
+    /pb-\[max\(0\.5rem,env\(safe-area-inset-bottom\)\)\]/,
   );
 });
 

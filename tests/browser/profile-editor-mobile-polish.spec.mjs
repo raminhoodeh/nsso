@@ -14,9 +14,9 @@ function sourceFiles(directory) {
 }
 
 test.beforeAll(async () => {
-    const candidates = ['src/app/dashboard/page.tsx', ...sourceFiles('src/app/dashboard/components'), ...sourceFiles('src/components/ui'), ...sourceFiles('src/components/layout')]
+    const candidates = ['src/app/dashboard/page.tsx', 'src/app/preview/page.tsx', ...sourceFiles('src/app/dashboard/components'), ...sourceFiles('src/components/ui'), ...sourceFiles('src/components/layout')]
         .flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
-    const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
+    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\n:root{--mobile-bottom-safe-space:8px;--mobile-bottom-nav-height:80px}body{margin:0;background:linear-gradient(130deg,#385a6b,#b9abbb);color:white;font-family:Arial}button,input,textarea,select{font:inherit}#fixture-outside{height:100px}#fixture-outside button{min-height:44px}'
     const result = await build({
         absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
@@ -40,28 +40,172 @@ test.beforeAll(async () => {
             import React,{useState} from 'react';import{createRoot}from'react-dom/client';
             import{TahoeGlassEngineContext}from'./src/components/providers/TahoeGlassProvider';
             import Dashboard from './src/app/dashboard/page';import Header from './src/components/layout/Header';
+            import Preview from './src/app/preview/page';import {routeNeedsGlobalAccountHeader} from './src/lib/tahoe-glass/route-boundaries';
             import GlobalNavigation from './src/components/layout/GlobalNavigation';import AuthenticatedLayout from './src/components/layout/AuthenticatedLayoutWrapper';
-            window.routeSubscribers=new Set();window.destinations=[];window.toasts=[];window.deleted=[];window.reordered=[];window.deityEvents=[];window.signOuts=0;
+            window.routeSubscribers=new Set();window.destinations=[];window.toasts=[];window.deleted=[];window.created=[];window.reordered=[];window.deityEvents=[];window.signOuts=0;window.fixtureRowScrolls=[];
+            const nativeScrollIntoView=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=function(options){const row=this.closest('[data-profile-item-id]');if(row)window.fixtureRowScrolls.push({id:row.getAttribute('data-profile-item-id'),options});return nativeScrollIntoView.call(this,options)};
             window.fixtureUser={id:'qa',username:'fixture',email:window.fixtureOptions.admin?'raminhoodeh@gmail.com':'fixture@example.invalid',permissions:window.fixtureOptions.admin?['nsso:admin']:[],user_type:window.fixtureOptions.admin?'admin':'standard'};
             window.fixtureNavigate=target=>{window.destinations.push(target);history.pushState({},'',target);window.routeSubscribers.forEach(fn=>fn())};
-            window.addEventListener('open-deity-chat',()=>window.deityEvents.push({menuPresent:!!document.querySelector('[role=dialog]'),bodyPosition:document.body.style.position,inert:document.getElementById('root').inert}));
+            window.addEventListener('open-deity-chat',()=>window.deityEvents.push({menuPresent:!!document.querySelector('[data-mobile-account-menu]'),bodyPosition:document.body.style.position,inert:document.getElementById('root').inert}));
             function App(){const [,update]=useState(0);const refresh=()=>update(value=>value+1);const profile=window.fixtureProfile||={
-                profile:window.fixtureOptions.profileState==='error'?null:{full_name:'Fixture Name',headline:'Builder',bio:'A fixture biography.',profile_pic_url:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'},loading:window.fixtureOptions.profileState==='loading',profileCompleteness:100,
+                profile:window.fixtureOptions.profileState==='error'?null:{user_id:'qa',full_name:'Fixture Name',headline:'Builder',bio:'A fixture biography.',profile_pic_url:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 384 384"><rect width="384" height="384" fill="#9abfd1"/><circle cx="192" cy="142" r="66" fill="#e2b8a1"/><path d="M60 384v-32a132 132 0 0 1 264 0v32" fill="#334e68"/></svg>')},loading:window.fixtureOptions.profileState==='loading',profileCompleteness:100,
+                experiences:[],qualifications:[],projects:[],products:[],
                 links:[{id:'link-1',link_name:'Portfolio',link_url:'https://example.test/portfolio'},{id:'link-2',link_name:'Writing',link_url:'https://example.test/writing'}],
                 contacts:[{id:'contact-1',method:'Email',value:'test@example.invalid'},{id:'contact-2',method:'Phone',value:'+123456789'}],
                 updateField:async()=>true,patchProfile:async()=>true,refreshProfile:async()=>{},addLink:()=>{},addContact:()=>{},
+                createEntity:async(kind,values,position)=>{
+                    const id='qa-created-'+(window.created.length+1);const entity=kind==='link'?'links':'contacts';window.created.push({kind,position,id,values});
+                    const finish=()=>{if(window.fixtureCreateMode==='failed')return{status:'failed',changes:[]};const row={...values,id,user_id:'qa'};profile[entity]=position==='top'?[row,...profile[entity]]:[...profile[entity],row];refresh();return{status:'applied',changes:[{entity,id,row}]}};
+                    if(window.fixtureCreateMode==='pending')return new Promise(resolve=>window.resolveFixtureCreate=()=>resolve(finish()));
+                    return finish();
+                },
                 updateLink:(id,field,value)=>{profile.links=profile.links.map(row=>row.id===id?{...row,[field]:value}:row);refresh()},
                 updateContact:(id,field,value)=>{profile.contacts=profile.contacts.map(row=>row.id===id?{...row,[field]:value}:row);refresh()},
                 removeLink:async id=>{window.deleted.push({type:'link',id});profile.links=profile.links.filter(row=>row.id!==id);refresh();return true},
                 removeContact:async id=>{window.deleted.push({type:'contact',id});profile.contacts=profile.contacts.filter(row=>row.id!==id);refresh();return true},
                 reorderLinks:ids=>{window.reordered.push({type:'link',ids});profile.links=ids.map(id=>profile.links.find(row=>row.id===id));refresh()},
                 reorderContacts:ids=>{window.reordered.push({type:'contact',ids});profile.contacts=ids.map(id=>profile.contacts.find(row=>row.id===id));refresh()}
-            };return <><AuthenticatedLayout>{window.fixtureOptions.content==='dashboard'?<Dashboard/>:<><Header/><main style={{paddingTop:120,minHeight:1600}}>Other route content</main></>}</AuthenticatedLayout><GlobalNavigation/><div id="fixture-outside"><button>Outside focus target</button></div></>};
+            };return <><AuthenticatedLayout>{window.fixtureOptions.content==='dashboard'?<Dashboard/>:window.fixtureOptions.content==='preview'?<Preview/>:<>{!routeNeedsGlobalAccountHeader(location.pathname)&&<Header variant={window.fixtureOptions.content==='owner'?'owner':'default'} username="fixture"/>}<main style={{paddingTop:120,minHeight:1600}}>Other route content</main></>}</AuthenticatedLayout><GlobalNavigation/><div data-fixture-closed-deity role="dialog" aria-label="Synthetic Deity" aria-modal="true" aria-hidden="true" inert={true} style={{position:'fixed',inset:0,opacity:0,pointerEvents:'none'}}><textarea aria-label="Synthetic Deity message"/></div><div id="fixture-outside"><button>Outside focus target</button></div></>};
             const fallback={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'layout-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
             createRoot(document.getElementById('root')).render(<TahoeGlassEngineContext.Provider value={fallback}><App/></TahoeGlassEngineContext.Provider>);
         ` },
     })
     bundle = result.outputFiles[0].text
+})
+
+test('top and bottom Add controls insert Links and Contact at the chosen edge and immediately focus the new field', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const [kind, label, entity, fieldName] of [
+        ['link', 'Add link', 'links', 'Link name'],
+        ['contact', 'Add contact method', 'contacts', 'Email contact details'],
+    ]) {
+        await mount(page)
+        await expect(page.locator('[data-fixture-closed-deity]')).toHaveAttribute('inert', '')
+        const original = await page.evaluate(entity => window.fixtureProfile[entity].map(row => row.id), entity)
+        for (const position of ['top', 'bottom']) {
+            const button = page.getByRole('button', { name: label + (position === 'bottom' ? ' at bottom' : ''), exact: true })
+            await button.press(position === 'top' ? 'Enter' : 'Space')
+            const created = await page.evaluate(() => window.created.at(-1))
+            expect(created).toMatchObject({ kind, position })
+            const field = page.locator(`[data-profile-item-id="${created.id}"]`).getByRole('textbox', { name: fieldName, exact: true })
+            await expect(field).toBeFocused()
+            const box = await field.boundingBox()
+            expect(box.y).toBeGreaterThanOrEqual(88)
+            expect(box.y + box.height).toBeLessThanOrEqual(844)
+            const order = await page.evaluate(entity => window.fixtureProfile[entity].map(row => row.id), entity)
+            expect(position === 'top' ? order[0] : order.at(-1)).toBe(created.id)
+            expect(order.filter(id => original.includes(id))).toEqual(original)
+            await field.fill(position + ' synthetic ' + kind)
+            await expect(field).toHaveValue(position + ' synthetic ' + kind)
+        }
+        expect(await page.evaluate(() => window.reordered)).toEqual([])
+        expect(await page.evaluate(() => window.deleted)).toEqual([])
+    }
+})
+
+test('in-flight additions prevent duplicate clicks and failed additions neither invent a row nor steal field focus', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await mount(page)
+    await page.evaluate(() => { window.fixtureCreateMode = 'pending' })
+    const add = page.getByRole('button', { name: 'Add link', exact: true })
+    await add.press('Enter')
+    await expect(add).toHaveAttribute('aria-busy', 'true')
+    await expect(add).toHaveAttribute('aria-disabled', 'true')
+    await expect(add).toBeFocused()
+    await expect(page.getByRole('button', { name: 'Add link at bottom', exact: true })).toHaveAttribute('aria-disabled', 'true')
+    await expect(page.getByRole('button', { name: 'Add contact method', exact: true })).toHaveAttribute('aria-disabled', 'true')
+    await add.press('Enter')
+    expect(await page.evaluate(() => window.created.length)).toBe(1)
+    await page.evaluate(() => window.resolveFixtureCreate())
+    await expect(page.locator('[data-profile-item-id="qa-created-1"]').getByRole('textbox', { name: 'Link name', exact: true })).toBeFocused()
+    await expect(add).not.toHaveAttribute('aria-busy', 'true')
+    await page.evaluate(() => { window.fixtureCreateMode = 'failed' })
+    await add.press('Enter')
+    await expect(add).not.toHaveAttribute('aria-busy', 'true')
+    await expect(page.locator('[data-profile-item-id="qa-created-2"]')).toHaveCount(0)
+    await expect(add).toBeFocused()
+    expect(await page.evaluate(() => window.fixtureProfile.links.map(row => row.id))).toEqual(['qa-created-1', 'link-1', 'link-2'])
+})
+
+for (const destination of ['field', 'menu', 'view', 'deity', 'native-modal']) test(`a delayed Add receipt never steals focus after selecting ${destination}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+        await mount(page)
+        await page.evaluate(() => { window.fixtureCreateMode = 'pending' })
+        const add = page.getByRole('button', { name: 'Add link', exact: true })
+        await add.press('Enter')
+        await expect(add).toHaveAttribute('aria-busy', 'true')
+        if (destination === 'field') await page.getByRole('textbox', { name: 'HEADLINE', exact: true }).focus()
+        else if (destination === 'menu') await openMenu(page, true)
+        else if (destination === 'view') await page.evaluate(() => window.fixtureNavigate('/dashboard?view=my-nsso'))
+        else if (destination === 'deity') await page.evaluate(() => {
+            const shell = document.querySelector('[data-fixture-closed-deity]')
+            shell.removeAttribute('inert'); shell.setAttribute('aria-hidden', 'false'); shell.style.opacity = '1'; shell.style.pointerEvents = 'auto'
+            shell.querySelector('textarea').focus()
+        })
+        else await page.evaluate(() => {
+            const dialog = document.createElement('dialog')
+            dialog.innerHTML = '<button id="synthetic-native-modal-focus">Native modal focus target</button>'
+            document.body.append(dialog); dialog.showModal()
+        })
+        // WebKit can finish its own focus/keyboard scroll after focus(). Track
+        // app-requested row scrolling instead of confusing that native settling
+        // with a late receipt stealing focus or calling scrollIntoView().
+        const before = await page.evaluate(() => ({ rowScrolls: window.fixtureRowScrolls.length, active: document.activeElement?.getAttribute('id'), label: document.activeElement?.getAttribute('aria-label') }))
+        await page.evaluate(() => window.resolveFixtureCreate())
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+        expect(await page.evaluate(() => ({ rowScrolls: window.fixtureRowScrolls.length, active: document.activeElement?.getAttribute('id'), label: document.activeElement?.getAttribute('aria-label') }))).toEqual(before)
+        if (destination === 'field') await expect(page.getByRole('textbox', { name: 'HEADLINE', exact: true })).toBeFocused()
+        else if (destination === 'menu') {
+            await expect(page.getByRole('button', { name: 'Close menu', exact: true })).toBeFocused()
+            await page.keyboard.press('Escape')
+            await expect(page.getByRole('button', { name: 'Open account menu', exact: true })).toBeFocused()
+        } else if (destination === 'view') {
+            await expect(page).toHaveURL('https://nsso.test/dashboard?view=my-nsso')
+            await page.evaluate(() => window.fixtureNavigate('/dashboard?view=profile'))
+            const row = page.locator('[data-profile-item-id="qa-created-1"]')
+            await expect(row).toHaveCount(1)
+            await expect(row.getByRole('textbox', { name: 'Link name', exact: true })).not.toBeFocused()
+        } else if (destination === 'deity') await expect(page.getByRole('textbox', { name: 'Synthetic Deity message', exact: true })).toBeFocused()
+        else await expect(page.getByRole('button', { name: 'Native modal focus target', exact: true })).toBeFocused()
+        expect(await page.evaluate(() => window.created.length)).toBe(1)
+        expect(await page.evaluate(() => window.fixtureProfile.links[0].id)).toBe('qa-created-1')
+})
+
+test('identity card has one compact top-right Ask Deity control and a generously sized mobile photo', async ({ page }, testInfo) => {
+    for (const width of testInfo.project.name === 'desktop' ? [1440] : [320, 390, 430]) {
+        await page.setViewportSize({ width, height: 900 })
+        await mount(page)
+        const header = page.locator('[data-profile-identity-header]')
+        const card = header.locator('xpath=..')
+        const ask = card.getByRole('button', { name: 'Ask Deity', exact: true })
+        await expect(ask).toHaveCount(1)
+        const [headingBox, askBox] = await Promise.all([header.getByRole('heading', { name: 'Hey, wonderful', exact: true }).boundingBox(), ask.boundingBox()])
+        expect(askBox.x).toBeGreaterThanOrEqual(headingBox.x + headingBox.width)
+        expect(Math.abs(headingBox.y + headingBox.height / 2 - askBox.y - askBox.height / 2)).toBeLessThanOrEqual(1)
+        const photoBox = await card.getByRole('button', { name: 'Upload profile picture', exact: true }).boundingBox()
+        expect(photoBox.width).toBeGreaterThanOrEqual(250)
+        expect(Math.abs(photoBox.width - photoBox.height)).toBeLessThanOrEqual(1)
+        const askPadding = await ask.evaluate(element => [getComputedStyle(element).paddingLeft, getComputedStyle(element).paddingRight])
+        expect(askPadding).toEqual(width < 640 ? ['8px', '8px'] : ['12px', '12px'])
+        await ask.press('Enter')
+        expect(await page.evaluate(() => window.deityEvents.length)).toBe(1)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        await page.screenshot({ path: testInfo.outputPath(`identity-one-deity-large-photo-${width}.png`) })
+    }
+})
+
+test('subtitle-free mobile section titles are vertically centred beside their add controls without an empty subtitle gutter', async ({ page }) => {
+    for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 844 })
+        await mount(page)
+        for (const [title, addName] of [['Links', 'Add link'], ['Contact', 'Add contact method']]) {
+            const heading = page.getByRole('heading', { name: title, exact: true })
+            const [headingBox, addBox] = await Promise.all([heading.boundingBox(), page.getByRole('button', { name: addName, exact: true }).boundingBox()])
+            expect(Math.abs(headingBox.y + headingBox.height / 2 - addBox.y - addBox.height / 2)).toBeLessThanOrEqual(1)
+        }
+        await expect(page.getByText('Add your contact methods and social profiles.', { exact: true })).toHaveCount(0)
+        await expect(page.getByText('Where can people find you or your work online?', { exact: true })).not.toBeVisible()
+    }
 })
 
 async function mount(page, { path = '/dashboard', admin = false, content = 'dashboard', profileState = 'ready' } = {}) {
@@ -174,15 +318,19 @@ test('Deity starts only after modal isolation is released and News Feed remains 
     expect(await page.evaluate(() => window.signOuts)).toBe(0)
 })
 
-test('profile editing loses only its mobile bottom bar; nested tools, desktop sidebar and other route policies remain intact', async ({ page }) => {
+test('mobile core routes use one account menu instead of bottom navigation; desktop sidebar and route-owned experiences remain intact', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     for (const path of ['/dashboard', '/dashboard/?view=my-nsso']) {
         await mount(page, { path, content: 'navigation' })
         await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
     }
-    for (const path of ['/preview', '/dashboard/security', '/dashboard/products/product/sales-page']) {
+    for (const path of ['/preview', '/dashboard/security', '/dashboard/products/product/sales-page', '/admin', '/?view=home']) {
         await mount(page, { path, content: 'navigation' })
-        await expect(page.getByRole('navigation', { name: 'Dashboard', exact: true })).toBeVisible()
+        await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
+        await expect(page.locator('[data-nsso-topbar]')).toHaveCount(1)
+        await expect(page.getByRole('button', { name: 'Open account menu', exact: true })).toBeVisible()
+        await openMenu(page, true)
+        await page.keyboard.press('Escape')
     }
     await mount(page, { path: '/film/razinflix', content: 'navigation' })
     await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
@@ -201,6 +349,104 @@ test('profile editing loses only its mobile bottom bar; nested tools, desktop si
     await mount(page)
     await expect(page.locator('[data-fixture-sidebar]')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Open account menu' })).not.toBeVisible()
+})
+
+test('preview keeps the editor topbar material with copy followed by an accessible account menu and no checkout banner', async ({ page }, testInfo) => {
+    const widths = testInfo.project.name === 'desktop' ? [1440, 768] : [390, 320]
+    for (const width of widths) {
+        await page.setViewportSize({ width, height: 900 })
+        await mount(page)
+        const material = await page.locator('[data-nsso-topbar]').evaluate(element => ({
+            classes: element.className.split(' ').filter(name => !['lg:hidden', 'md:hidden'].includes(name)).sort(),
+            coating: getComputedStyle(element, '::after').backgroundImage,
+            tint: getComputedStyle(element, '::after').opacity,
+        }))
+        await mount(page, { path: '/preview', content: 'preview' })
+        await expect(page.getByRole('heading', { name: "I'm Fixture Name", exact: true })).toBeVisible()
+        await expect(page.locator('[data-nsso-topbar]')).toHaveCount(1)
+        await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
+        await expect(page.getByText(/Profile preview — checkout is disabled|Unsaved changes are not yet public/)).toHaveCount(0)
+        await expect(page.getByText('Checkout is disabled during profile preview', { exact: true })).toHaveCount(0)
+        const current = await page.locator('[data-nsso-topbar]').evaluate(element => ({
+            classes: element.className.split(' ').filter(name => !['lg:hidden', 'md:hidden'].includes(name)).sort(),
+            coating: getComputedStyle(element, '::after').backgroundImage,
+            tint: getComputedStyle(element, '::after').opacity,
+        }))
+        expect(current).toEqual(material)
+        expect(current.coating).toContain('linear-gradient')
+        const copy = page.getByRole('button', { name: 'Copy page URL', exact: true })
+        const trigger = page.getByRole('button', { name: 'Open account menu', exact: true })
+        await expect(copy).toBeVisible()
+        await expect(trigger).toBeVisible()
+        const [copyBox, triggerBox] = await Promise.all([copy.boundingBox(), trigger.boundingBox()])
+        expect(triggerBox.x).toBeGreaterThanOrEqual(copyBox.x + copyBox.width)
+        await trigger.focus()
+        const dialog = await openMenu(page, true)
+        await expect(dialog.getByRole('link', { name: 'Preview Profile', exact: true })).toHaveAttribute('aria-current', 'page')
+        await page.keyboard.press('Escape')
+        await expect(trigger).toBeFocused()
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        await page.screenshot({ path: testInfo.outputPath(`preview-shared-nav-${width}.png`) })
+        await (await openMenu(page, true)).getByRole('link', { name: 'Edit Profile', exact: true }).press('Enter')
+        expect(await page.evaluate(() => window.destinations)).toEqual(['/dashboard?view=profile'])
+    }
+})
+
+test('profile and preview QR face contains only the code in an equally padded opaque square', async ({ page }, testInfo) => {
+    for (const width of testInfo.project.name === 'desktop' ? [1440] : [390, 320]) {
+        await page.setViewportSize({ width, height: 900 })
+        await mount(page, { path: '/preview', content: 'preview' })
+        const photo = page.getByRole('button', { name: "Show Fixture Name's QR code", exact: true })
+        await photo.focus()
+        await page.keyboard.press('Enter')
+        const qr = page.getByRole('button', { name: "Show Fixture Name's profile photo", exact: true })
+        await expect(qr).toHaveAttribute('aria-pressed', 'true')
+        await expect(qr.getByText('Tap to show QR', { exact: true })).toHaveCount(0)
+        const plate = qr.locator('[data-profile-qr-plate]')
+        await expect(plate.getByRole('img', { name: "Fixture Name's profile QR code", exact: true })).toHaveCount(1)
+        await expect(plate.locator('span:not(.sr-only)')).toHaveCount(0)
+        await expect(plate.getByText('Tap for photo', { exact: true })).toHaveCount(0)
+        const padding = await plate.evaluate(element => {
+            const style = getComputedStyle(element)
+            return { padding: [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft], background: style.backgroundColor, width: element.clientWidth, height: element.clientHeight }
+        })
+        expect(padding.padding).toEqual(['20px', '20px', '20px', '20px'])
+        expect(padding.width).toBe(padding.height)
+        expect(padding.background).toBe('rgb(255, 255, 255)')
+        await plate.evaluate(element => Promise.all(element.parentElement.getAnimations().map(animation => animation.finished.catch(() => {}))))
+        await page.screenshot({ path: testInfo.outputPath(`profile-qr-${width}.png`) })
+        await qr.press('Space')
+        await expect(photo).toHaveAttribute('aria-pressed', 'false')
+    }
+})
+
+test('the signed-in public profile keeps copy and menu controls without resurrecting a bottom bar', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await mount(page, { path: '/fixture', content: 'owner' })
+    await expect(page.locator('[data-nsso-topbar]')).toHaveCount(1)
+    await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
+    const copy = page.getByRole('button', { name: 'Copy page URL', exact: true })
+    await expect(copy).toBeVisible()
+    const trigger = page.getByRole('button', { name: 'Open account menu', exact: true })
+    expect((await trigger.boundingBox()).x).toBeGreaterThan((await copy.boundingBox()).x)
+    const dialog = await openMenu(page, true)
+    await expect(dialog.getByRole('link', { name: 'Edit Profile', exact: true })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(trigger).toBeFocused()
+})
+
+test('loading or failed preview keeps a verified account menu so editing remains reachable', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const profileState of ['loading', 'error']) {
+        await mount(page, { path: '/preview', content: 'preview', profileState })
+        await expect(page.locator('[data-nsso-topbar]')).toHaveCount(1)
+        await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
+        await expect(page.getByRole('heading', { name: "I'm Fixture Name", exact: true })).toHaveCount(0)
+        if (profileState === 'error') await expect(page.getByRole('button', { name: 'Retry preview', exact: true })).toBeVisible()
+        const dialog = await openMenu(page, true)
+        await dialog.getByRole('link', { name: 'Edit Profile', exact: true }).press('Enter')
+        expect(await page.evaluate(() => window.destinations)).toEqual(['/dashboard?view=profile'])
+    }
 })
 
 test('mobile link and contact controls share a toolbar above full-width fields and retain confirmed deletion', async ({ page }, testInfo) => {

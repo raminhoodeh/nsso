@@ -264,7 +264,7 @@ body {
 @media (max-width: 768px) {
   html {
     scroll-padding-top: 104px;
-    scroll-padding-bottom: calc(var(--mobile-bottom-nav-height) + 16px);
+    scroll-padding-bottom: 16px;
   }
 
   .text-large-title {

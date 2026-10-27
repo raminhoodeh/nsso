@@ -269,7 +269,7 @@ export default function SalesPageCreator() {
         <main className="relative z-[1] min-h-screen pb-32 md:pb-12">
             {/* Header Removed to avoid duplicate logo */}
 
-            <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto">
+            <div className="pt-[120px] lg:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto">
 
                 <GlassCard refractive className="p-8 lg:p-12">
                 {/* Header */}

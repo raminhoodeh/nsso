@@ -40,6 +40,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
 
     return (<>
         <TahoeGlassSurface
+            data-profile-item-id={link.id}
             ref={setNodeRef}
             style={style}
             variant="card"

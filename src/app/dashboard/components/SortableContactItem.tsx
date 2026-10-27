@@ -38,6 +38,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
 
     return (<>
         <TahoeGlassSurface
+            data-profile-item-id={contact.id}
             ref={setNodeRef}
             style={style}
             variant="card"

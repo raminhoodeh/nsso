@@ -16,8 +16,8 @@ const productsEditorSource = fs.readFileSync(
     path.join(process.cwd(), 'src/app/dashboard/components/ProductsServicesEditor.tsx'),
     'utf8'
 )
-const bottomNavSource = fs.readFileSync(
-    path.join(process.cwd(), 'src/components/layout/DashboardBottomNav.tsx'),
+const globalNavigationSource = fs.readFileSync(
+    path.join(process.cwd(), 'src/components/layout/GlobalNavigation.tsx'),
     'utf8'
 )
 const headerSource = fs.readFileSync(
@@ -34,10 +34,6 @@ const toastSource = fs.readFileSync(
 )
 const layoutSource = fs.readFileSync(
     path.join(process.cwd(), 'src/app/layout.tsx'),
-    'utf8'
-)
-const globalStylesSource = fs.readFileSync(
-    path.join(process.cwd(), 'src/app/globals.css'),
     'utf8'
 )
 const authenticatedLayoutSource = fs.readFileSync(
@@ -179,9 +175,9 @@ test('mobile advanced editors reserve writing room without changing desktop dens
     assert.equal(stackedYearRows.length, 2, 'experience and qualification years stack on narrow phones')
 
     const sectionHeaders = advancedModeSource.match(
-        /grid grid-cols-\[minmax\(0,1fr\)_44px\] items-start gap-3/g
+        /grid grid-cols-\[minmax\(0,1fr\)_44px\] items-center gap-3/g
     ) || []
-    assert.equal(sectionHeaders.length, 3, 'editor headings cannot squeeze their add buttons')
+    assert.equal(sectionHeaders.length, 3, 'subtitle-free editor headings stay centered beside their add buttons')
     assert.match(advancedModeSource, /py-2\.5 md:py-2/)
     assert.match(advancedModeSource, /min-h-\[88px\] resize-none md:min-h-\[60px\]/)
 
@@ -205,29 +201,12 @@ test('the split products card retains its existing CRUD and editor paths', () =>
     assert.match(productsEditorSource, /Add to public profile/)
 })
 
-test('the bottom bar shares the header backdrop engine and owns real safe-area space', () => {
-    assert.match(bottomNavSource, /<TahoeBackdropSurface/)
-    assert.doesNotMatch(bottomNavSource, /<TahoeGlassSurface/)
-    assert.doesNotMatch(bottomNavSource, /<TahoeGlassButton/)
-    assert.match(bottomNavSource, /semanticTint="dark"/)
-    assert.match(bottomNavSource, /semanticTintOpacity=\{0\.42\}/)
-    assert.match(bottomNavSource, /displacementProfile="prism-bottom"/)
-    assert.match(bottomNavSource, /materialLighting="uniform"/)
-    assert.match(bottomNavSource, /data-mobile-nav-material="dark-refractive"/)
-    assert.match(bottomNavSource, /contentClassName="w-full bg-\[#080c14\]\/40"/)
-    assert.match(bottomNavSource, /border-white\/10 bg-black\/\[0\.12\]/)
-    assert.match(bottomNavSource, /text-white\/80/)
-    assert.doesNotMatch(bottomNavSource, /pb-safe/)
-    assert.match(bottomNavSource, /--mobile-bottom-safe-space/)
-    assert.match(bottomNavSource, /env\(safe-area-inset-left\)/)
-    assert.match(bottomNavSource, /env\(safe-area-inset-right\)/)
-    assert.match(bottomNavSource, /z-\[5000\]/)
-    assert.match(bottomNavSource, /\{item\.label\}/)
-    assert.match(bottomNavSource, /h-14 w-full/)
+test('the account menu replaces the retired bottom bar without leaving blank navigation space', () => {
+    assert.doesNotMatch(globalNavigationSource, /DashboardBottomNav/)
+    assert.match(globalNavigationSource, /routeNeedsGlobalAccountHeader\(pathname\) && <Header \/>/)
+    assert.doesNotMatch(authenticatedLayoutSource, /mobile-bottom-nav-height/)
+    assert.match(authenticatedLayoutSource, /aboveBottomNav=\{false\}/)
     assert.match(layoutSource, /viewportFit: "cover"/)
-    assert.match(globalStylesSource, /--mobile-bottom-safe-space: max\(8px, env\(safe-area-inset-bottom\)\)/)
-    assert.match(globalStylesSource, /--mobile-bottom-nav-height:/)
-    assert.match(authenticatedLayoutSource, /--mobile-bottom-nav-height/)
 })
 
 test('mobile header and dashboard content fit narrow and notched viewports', () => {
@@ -241,7 +220,7 @@ test('mobile header and dashboard content fit narrow and notched viewports', () 
     assert.match(headerSource, /min-\[360px\]:hidden[^>]*>Preview</)
     assert.match(headerSource, /hidden min-\[360px\]:inline[^>]*>Preview Profile</)
     assert.match(headerSource, /min-\[360px\]:hidden[^>]*>Copy URL</)
-    assert.match(headerSource, /hidden min-\[360px\]:inline[^>]*>Copy profile URL</)
+    assert.match(headerSource, /hidden min-\[360px\]:inline[^>]*>Copy page URL</)
     assert.match(headerSource, /gap-2 min-\[360px\]:gap-3/)
     assert.match(dashboardPageSource, /pt-\[calc\(120px\+env\(safe-area-inset-top\)\)\]/)
     assert.match(dashboardPageSource, /pl-\[max\(16px,env\(safe-area-inset-left\)\)\]/)
@@ -262,7 +241,7 @@ test('the profile bio provides four times the mobile writing capacity', () => {
     assert.match(bioFieldMarkup, /rows=\{4\}/, 'desktop keeps the existing four-row intrinsic size')
 })
 
-test('profile Ask Deity controls have clear field spacing and compact chrome', () => {
+test('identity fields reserve space without repeating Ask Deity actions', () => {
     const profileFieldsStart = dashboardPageSource.indexOf('{/* Profile Fields */}')
     const profileFieldsEnd = dashboardPageSource.indexOf('{/* Free profile URL */}', profileFieldsStart)
     const profileFieldsMarkup = dashboardPageSource.slice(profileFieldsStart, profileFieldsEnd)
@@ -271,13 +250,9 @@ test('profile Ask Deity controls have clear field spacing and compact chrome', (
     assert.equal(
         (profileFieldsMarkup.match(/className="mb-3 ml-1 flex items-center justify-between gap-3"/g) || []).length,
         2,
-        'Headline and Bio each reserve space between their action and field'
+        'Headline and Bio each reserve clear label spacing'
     )
-    assert.equal(
-        (profileFieldsMarkup.match(/className="min-h-11 min-w-11 px-1\.5 py-0\.5"/g) || []).length,
-        2,
-        'both field actions keep a 44px target with reduced internal padding'
-    )
+    assert.doesNotMatch(profileFieldsMarkup, /Ask Deity/)
     assert.doesNotMatch(profileFieldsMarkup, /-my-2/)
 })
 
@@ -311,10 +286,10 @@ test('nested dashboard cards use one concentric radius system', () => {
     assert.match(productsEditorSource, /Coming soon/)
 })
 
-test('mobile notifications clear the bottom bar and use an opaque readable token', () => {
+test('mobile notifications respect the safe area and use an opaque readable token', () => {
     assert.match(
         toastSource,
-        /bottom-\[calc\(var\(--mobile-bottom-nav-height\)\+12px\)\]/
+        /bottom-\[max\(1rem,env\(safe-area-inset-bottom\)\)\]/
     )
     assert.match(toastSource, /w-\[calc\(100%_-_2rem\)\]/)
     assert.match(toastSource, /z-\[9999\]/)

@@ -28,10 +28,16 @@ export function routeUsesDashboardSidebar(pathname: string): boolean {
   return normalized === "/dashboard" || normalized.startsWith("/dashboard/");
 }
 
-// The profile editor owns a mobile header menu. Its nested tools do not all
-// render that header, so retain their existing bottom navigation for now.
+// Core editing and preview routes use the same account menu, never a second
+// bottom bar. Nested tools receive the shared header from GlobalNavigation.
 export function routeUsesMobileProfileMenu(pathname: string): boolean {
-  return normalizedPathname(pathname) === "/dashboard";
+  const normalized = normalizedPathname(pathname);
+  return normalized === "/preview" || routeUsesDashboardSidebar(normalized);
+}
+
+export function routeNeedsGlobalAccountHeader(pathname: string): boolean {
+  const normalized = normalizedPathname(pathname);
+  return normalized === "/" || normalized === "/admin" || normalized.startsWith("/dashboard/");
 }
 
 export function routeOwnsTahoeScene(pathname: string): boolean {
