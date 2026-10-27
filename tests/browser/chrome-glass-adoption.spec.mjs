@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { createHash } from 'node:crypto'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
@@ -144,11 +145,22 @@ test('390 to 1440 to 390 restores byte-identical legacy SVG fields', async ({ pa
             const surface = page.getByTestId(name)
             await expect(surface).toHaveAttribute('data-tahoe-refraction-backend', 'svg-live-dom')
             await expect.poll(() => surface.evaluate(element => element.nextElementSibling?.querySelector('feImage')?.getAttribute('href')?.startsWith('data:image/png'))).toBe(true)
-            fields.push(await surface.evaluate(element => ({
+            // Mobile stays on the same backend through every resize. Its
+            // backend flag cannot signal completion of the next RAF's map.
+            await expect.poll(() => surface.evaluate(element => {
+                const image = element.nextElementSibling?.querySelector('feImage')
+                const rect = element.getBoundingClientRect()
+                return Number(image?.getAttribute('width')) === Math.max(1, Math.round(rect.width)) &&
+                    Number(image?.getAttribute('height')) === Math.max(1, Math.round(rect.height))
+            })).toBe(true)
+            const snapshot = await surface.evaluate(element => ({
                 field: element.nextElementSibling.querySelector('feImage').getAttribute('href'),
                 filter: getComputedStyle(element).backdropFilter,
                 radius: getComputedStyle(element).borderRadius,
-            })))
+            }))
+            // Preserve exact-byte comparison without dumping giant PNGs into
+            // CI logs if a genuine optical regression changes the field.
+            fields.push({ ...snapshot, field: createHash('sha256').update(snapshot.field).digest('hex') })
         }
         return fields
     }
@@ -157,7 +169,7 @@ test('390 to 1440 to 390 restores byte-identical legacy SVG fields', async ({ pa
     await expectPolicy(page, testInfo.project.name === 'desktop')
     await page.setViewportSize({ width: 390, height: 844 })
     await expectPolicy(page, false)
-    expect(await legacyFields()).toEqual(before)
+    await expect.poll(legacyFields).toEqual(before)
     expect(await page.evaluate(() => window.__glassDuplicates)).toEqual([])
 })
 
