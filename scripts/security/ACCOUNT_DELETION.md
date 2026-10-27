@@ -14,6 +14,8 @@ Partial byte removal or an upstream failure is explicitly uncertain: some images
 
 Clearing the browser's own account and navigating home happens only after a matching account/operation receipt. Another identity signing in during a request must not have its cookies or local session cleared by a late response. Existing access JWTs remain cryptographically valid until expiry, but parent checks and revoked obsolete write grants prevent profile resurrection; Auth hard deletion prevents new refresh sessions.
 
+Receipt actor hashes use a domain-separated HMAC with the existing `NSSO_CHAT_IP_HASH_SECRET`. A future rotation must explicitly reconcile outstanding fences and retained receipts first; changing that secret alone would break their retry identity. This release does not rotate or migrate credentials.
+
 ## Release and verification
 
 Apply the additive forward migration before deploying its compatible callers. The guarded bootstrap contains the identical contract for an empty isolated project only. Release in two phases: first deploy the reserved-media handlers with `NSSO_ACCOUNT_DELETION_ENABLED=false` and `NEXT_PUBLIC_ACCOUNT_DELETION_ENABLED=false`; prove the exact custom-domain cutover and wait at least 120 seconds, exceeding the old upload runtime. Then deploy the same reviewed revision with both flags `true`. The DELETE endpoint defaults closed unless the private server flag is explicitly `true`. Verify that superseded immutable deployment URLs require Vercel authentication and that no public custom domain still serves an unsafe older handler. Do not enable deletion if that protection or drain cannot be demonstrated. Never run the synthetic proofs against production or test by modifying a customer's account.

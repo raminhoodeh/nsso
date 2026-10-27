@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
@@ -8,6 +8,27 @@ import sharp from 'sharp'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const productId = '33333333-3333-4333-8333-333333333333'
 let bundle, css
+const needsSoftwareWebGL = process.platform === 'linux'
+
+// Match the existing real-Vanta geometry suite: CI has no hardware GPU, so
+// select ANGLE's actual software renderer rather than its platform default.
+// WebKit retains its own renderer and never receives Chromium-only switches.
+const test = base.extend({
+    launchOptions: async ({ browserName }, provide) => {
+        await provide(browserName === 'chromium' && needsSoftwareWebGL ? {
+            args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+        } : {})
+    },
+})
+
+test.beforeEach(async ({ browserName }, testInfo) => {
+    // The integrated fixture compiles Vanta's initial cloud shader, then real
+    // product Tahoe programs across two route cycles while keeping that canvas.
+    // The pinned amd64 image completed those assertions in 64 seconds under CPU
+    // emulation, so bound this software-only fixture at 75 seconds, not the suite.
+    // Hardware Chrome/WebKit retain their normal 30-second test deadline.
+    if (browserName === 'chromium' && needsSoftwareWebGL) testInfo.setTimeout(75_000)
+})
 
 // Real product rendering, real Tahoe provider/surfaces and the pinned Vanta
 // assets run together. Only account/data and Next's router are synthetic.
@@ -47,8 +68,9 @@ test.beforeAll(async () => {
 })
 
 async function mount(page) {
-    const errors = [], unexpected = [], requests = []
+    const errors = [], unexpected = [], requests = [], consoleMessages = []
     page.on('pageerror', error => errors.push(error.message))
+    page.on('console', message => consoleMessages.push(`${message.type()}: ${message.text()}`))
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.route('**/*', async route => {
         const url = new URL(route.request().url())
@@ -64,15 +86,37 @@ async function mount(page) {
         return route.abort()
     })
     await page.goto('https://nsso.test/presentation-fixture')
-    await page.waitForFunction(() => document.querySelector('#vanta-bg canvas'))
+    const renderer = await page.evaluate(() => {
+        const canvas = document.createElement('canvas')
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+        if (!gl) return { available: false, userAgent: navigator.userAgent }
+        const debug = gl.getExtension('WEBGL_debug_renderer_info')
+        const result = { available: true, version: gl.getParameter(gl.VERSION), renderer: gl.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : gl.RENDERER) }
+        gl.getExtension('WEBGL_lose_context')?.loseContext()
+        return result
+    })
+    expect(renderer.available, JSON.stringify({ renderer, errors, consoleMessages })).toBe(true)
+    try {
+        // Bound initial software shader compilation without retrying a broken
+        // assertion or permitting a static/no-WebGL substitute to pass.
+        await expect(page.locator('#vanta-bg canvas')).toHaveCount(1, { timeout: 15_000 })
+        await page.waitForFunction(() => {
+            const canvas = document.querySelector('#vanta-bg canvas')
+            const sourceRenderer = window.VANTA?.current?.renderer
+            return canvas?.width > 0 && canvas?.height > 0 && sourceRenderer?.domElement === canvas && sourceRenderer.info.render.calls > 0
+        }, null, { timeout: 15_000 })
+    } catch (error) {
+        throw new Error(`${error.message}\nProduct scene startup: ${JSON.stringify({ renderer, errors, consoleMessages })}`)
+    }
     await page.evaluate(() => { window.fixtureCanvas = document.querySelector('#vanta-bg canvas') })
     return { errors, unexpected, requests }
 }
 
-test('profile-to-product transition keeps one live blue scene and readable purchase context', async ({ page }, testInfo) => {
+test('profile-to-product transition keeps one live blue scene and readable purchase context', async ({ page, browserName }, testInfo) => {
+    const paintDeadline = browserName === 'chromium' && needsSoftwareWebGL ? 15_000 : 5_000
     const { errors, unexpected, requests } = await mount(page)
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     const support = page.locator('[data-product-purchase-support]:visible')
     await expect(support).toHaveCount(1)
     await support.scrollIntoViewIfNeeded()
@@ -103,16 +147,17 @@ test('profile-to-product transition keeps one live blue scene and readable purch
     expect(data[1]).toBeGreaterThan(data[0] + 5)
     await page.getByRole('button', { name: 'Back to Profile', exact: true }).click()
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
     expect(errors).toEqual([])
     expect(unexpected).toEqual([])
 })
 
-test('styled preview explains a keyboard checkout attempt without starting a payment or showing a top banner', async ({ page }, testInfo) => {
+test('styled preview explains a keyboard checkout attempt without starting a payment or showing a top banner', async ({ page, browserName }, testInfo) => {
+    const paintDeadline = browserName === 'chromium' && needsSoftwareWebGL ? 15_000 : 5_000
     const { errors, unexpected, requests } = await mount(page)
     await page.evaluate(id => window.fixtureNavigate('/products/' + id, true), productId)
-    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     await expect(page.getByRole('status')).toHaveCount(0)
     await expect(page.getByText('Draft preview — checkout is disabled.', { exact: true })).toHaveCount(0)
     await page.getByRole('button', { name: 'Buy Now', exact: true }).filter({ visible: true }).press('Enter')
