@@ -3,48 +3,80 @@
 import { useEffect, useRef, useState } from 'react'
 import { parsePayPalInput, type PayPalConfig } from '@/lib/payments/paypal-config'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import SectionHelp from '@/app/dashboard/components/SectionHelp'
 
 interface Props {
     productId: string
     accountId: string
     initialHtml: string | null
-    onSaved: (html: string, config: PayPalConfig | null) => void | Promise<void>
+    onSaved: (html: string, config: PayPalConfig | null) => void | boolean | Promise<void | boolean>
     getRevision: () => number
-    refreshRevision: () => Promise<void>
+    refreshRevision: () => Promise<void | boolean>
+    /** Keep the editor mounted while navigating, but do not render an inactive preview. */
+    active?: boolean
+    onSavingChange?: (saving: boolean) => void
 }
 
 /** Invalid drafts remain editable locally; the last valid public button stays unchanged. */
-export default function PayPalCodeEditor({ productId, accountId, initialHtml, onSaved, getRevision, refreshRevision }: Props) {
+export default function PayPalCodeEditor({ productId, accountId, initialHtml, onSaved, getRevision, refreshRevision, active = true, onSavingChange }: Props) {
     const [draft, setDraft] = useState(initialHtml || '')
-    const [state, setState] = useState<'saved' | 'saving' | 'error' | 'conflict'>('saved')
+    const [state, setState] = useState<'saved' | 'saving' | 'refreshing' | 'error' | 'conflict'>('saved')
     const [serverMessage, setServerMessage] = useState('')
     const [savedValue, setSavedValue] = useState(initialHtml || '')
     const savedHtml = useRef(initialHtml || '')
     const pending = useRef(false)
     const saveId = useRef(0)
     const controller = useRef<AbortController | null>(null)
-    const currentProduct = useRef(productId)
+    const currentIdentity = useRef(`${accountId}:${productId}`)
+    const draftValue = useRef(initialHtml || '')
     const attempt = useRef<{ html: string; operationId: string; expectedRevision: number } | null>(null)
+    const savingCallback = useRef(onSavingChange)
+    const busyReporter = useRef<((saving: boolean) => void) | undefined>(undefined)
     const parsed = parsePayPalInput(draft)
 
+    useEffect(() => { savingCallback.current = onSavingChange }, [onSavingChange])
+
+    const notifyPending = (value: boolean) => {
+        pending.current = value
+        if (value) {
+            busyReporter.current = savingCallback.current
+            busyReporter.current?.(true)
+        } else {
+            busyReporter.current?.(false)
+            busyReporter.current = undefined
+        }
+    }
+
     useEffect(() => {
-        if (productId !== currentProduct.current || (!pending.current && draft === savedHtml.current)) {
-            if (productId !== currentProduct.current) {
+        const identity = `${accountId}:${productId}`
+        if (identity !== currentIdentity.current || (!pending.current && draftValue.current === savedHtml.current)) {
+            if (identity !== currentIdentity.current) {
                 controller.current?.abort()
                 saveId.current++
                 pending.current = false
+                busyReporter.current?.(false)
+                busyReporter.current = undefined
                 attempt.current = null
             }
-            currentProduct.current = productId
+            currentIdentity.current = identity
             savedHtml.current = initialHtml || ''
+            draftValue.current = initialHtml || ''
             setSavedValue(initialHtml || '')
             setDraft(initialHtml || '')
             setState('saved')
             setServerMessage('')
         }
-    }, [productId, initialHtml, draft])
+        // Prop refreshes may update a pristine editor, but never replace unsaved input.
+        // Draft changes are deliberately not a dependency: a confirmed save must not
+        // restore an old initialHtml value while its profile refresh is in flight.
+    }, [accountId, productId, initialHtml])
 
-    useEffect(() => () => { controller.current?.abort(); saveId.current++ }, [])
+    useEffect(() => () => {
+        controller.current?.abort()
+        saveId.current++
+        busyReporter.current?.(false)
+        busyReporter.current = undefined
+    }, [])
 
     const save = async () => {
         if (!parsed.ok || draft === savedHtml.current || pending.current || state === 'conflict') return
@@ -55,7 +87,7 @@ export default function PayPalCodeEditor({ productId, accountId, initialHtml, on
         attempt.current = operation
         controller.current = new AbortController()
         const signal = controller.current.signal
-        pending.current = true
+        notifyPending(true)
         setState('saving')
         setServerMessage('')
         try {
@@ -84,22 +116,55 @@ export default function PayPalCodeEditor({ productId, accountId, initialHtml, on
             if (result.status !== 'applied') throw new Error('The save result is not confirmed. Check its status before retrying; your draft has been kept.')
             savedHtml.current = html
             setSavedValue(html)
-            await onSaved(html, parsed.config)
+            // The verified receipt is authoritative even if refreshing the profile
+            // afterwards fails. Never replay an already applied payment operation.
             attempt.current = null
-            setState('saved')
+            setServerMessage('Payment button saved. Updating profile...')
+            try {
+                if (await onSaved(html, parsed.config) === false) throw new Error('Profile refresh was not confirmed.')
+                if (!signal.aborted && version === saveId.current) setServerMessage('Payment button saved.')
+            } catch {
+                if (!signal.aborted && version === saveId.current) {
+                    setServerMessage('Payment button saved. The profile could not refresh; reload to see the latest profile.')
+                }
+            }
+            if (!signal.aborted && version === saveId.current) setState('saved')
         } catch (error) {
             if (signal.aborted || version !== saveId.current) return
             setState('error')
             setServerMessage(error instanceof Error ? error.message : 'The payment button was not saved. Please retry.')
-        } finally { if (version === saveId.current) pending.current = false }
+        } finally { if (version === saveId.current) notifyPending(false) }
     }
+
+    const refreshForReview = async () => {
+        if (pending.current) return
+        const version = ++saveId.current
+        notifyPending(true)
+        setState('refreshing')
+        setServerMessage('Loading the latest payment settings...')
+        try {
+            if (await refreshRevision() === false) throw new Error('Refresh was not confirmed.')
+            if (version !== saveId.current) return
+            attempt.current = null
+            setState('saved')
+            setServerMessage('Latest settings loaded. Review your draft, then choose Save payment button to publish it.')
+        } catch {
+            if (version !== saveId.current) return
+            setState('conflict')
+            setServerMessage('Could not load the latest settings. Your draft is kept. Try Refresh for review again.')
+        } finally {
+            if (version === saveId.current) notifyPending(false)
+        }
+    }
+
+    const unsaved = draft !== savedValue
+    const statusMessage = serverMessage || (state === 'saving' ? 'Saving payment button...' : parsed.message)
 
     return (
         <div className="space-y-3">
             <textarea
                 value={draft}
-                onChange={event => { setDraft(event.target.value); setServerMessage('') }}
-                onBlur={() => { void save() }}
+                onChange={event => { draftValue.current = event.target.value; setDraft(event.target.value); setServerMessage('') }}
                 maxLength={32768}
                 rows={3}
                 aria-label="PayPal button code"
@@ -108,13 +173,15 @@ export default function PayPalCodeEditor({ productId, accountId, initialHtml, on
                 placeholder="Paste the payment button code from PayPal"
             />
             <p role="status" className={`text-xs ${parsed.ok ? 'text-white/70' : 'text-amber-200'}`}>
-                {serverMessage || (state === 'saving' ? 'Saving payment button...' : draft !== savedValue && parsed.ok ? `${parsed.message} Unsaved changes.` : parsed.message)}
+                {statusMessage}{unsaved && state !== 'saving' && state !== 'refreshing' ? ' Unsaved changes.' : ''}
             </p>
-            <button type="button" disabled={!parsed.ok || state === 'saving' || draft === savedValue} onClick={() => { if (state === 'conflict') { void refreshRevision().then(() => { attempt.current = null; setState('saved'); setServerMessage('Latest settings loaded. Review your draft, then press Save payment button to keep it.') }) } else void save() }} className="min-h-11 rounded-xl border border-white/20 bg-white/10 px-4 text-sm text-white disabled:opacity-40">
-                {state === 'saving' ? 'Saving...' : state === 'conflict' ? 'Refresh for review' : state === 'error' ? 'Check status and retry' : 'Save payment button'}
-            </button>
-            {parsed.ok && parsed.config && <PayPalSmartButton config={parsed.config} preview />}
-            <p className="text-xs leading-relaxed text-white/60">PayPal controls the recipient, checkout and delivery configured in your PayPal account. This preview does not verify payment or merchant identity.</p>
+            <div className="flex flex-wrap items-center gap-2">
+                <button type="button" disabled={!parsed.ok || state === 'saving' || state === 'refreshing' || !unsaved} onClick={() => { if (state === 'conflict') void refreshForReview(); else void save() }} className="min-h-11 rounded-xl border border-white/20 bg-white/10 px-4 text-sm text-white disabled:opacity-40">
+                    {state === 'saving' ? 'Saving...' : state === 'refreshing' ? 'Refreshing...' : state === 'conflict' ? 'Refresh for review' : state === 'error' ? 'Check status and retry' : 'Save payment button'}
+                </button>
+                <SectionHelp title="PayPal checkout">PayPal sets the price, recipient, checkout and delivery in your PayPal account. Save publishes this button. The preview does not start or verify a payment or merchant identity.</SectionHelp>
+            </div>
+            {active && parsed.ok && parsed.config && <PayPalSmartButton config={parsed.config} preview />}
         </div>
     )
 }
