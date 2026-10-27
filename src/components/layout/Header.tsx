@@ -29,6 +29,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const isAdmin = user?.user_type === 'admin'
     const supabase = createClient()
     const pathname = usePathname()
+    const lightHome = pathname === '/'
     const router = useRouter()
     const { showToast } = useToast()
     const [signingOut, setSigningOut] = useState(false)
@@ -142,6 +143,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             contentClassName="h-full w-full"
             displacementProfile="prism-top"
             materialLighting="uniform"
+            tone={lightHome ? 'dark' : 'inherit'}
         >
             <nav className="relative z-[60] mx-auto flex h-[calc(88px+env(safe-area-inset-top))] max-w-[1800px] items-center justify-between pb-0 pl-[max(12px,env(safe-area-inset-left))] pr-[max(12px,env(safe-area-inset-right))] pt-[env(safe-area-inset-top)] sm:pl-[max(24px,env(safe-area-inset-left))] sm:pr-[max(24px,env(safe-area-inset-right))] lg:px-10">
 
@@ -186,8 +188,9 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 <div className="hidden md:flex items-center gap-4">
                     {!user && (
                         <TahoeGlassSurface as="a" variant="button" href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}
-                            tone="light" className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white"
-                            contentClassName="text-center text-white">
+                            tone={lightHome ? 'dark' : 'light'} semanticTint={lightHome ? 'light' : 'none'} semanticTintOpacity={0.2}
+                            className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                            contentClassName={lightHome ? 'text-center text-slate-950' : 'text-center text-white'}>
                             SIGN IN / SIGN UP
                         </TahoeGlassSurface>
                     )}
@@ -343,8 +346,9 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {/* Mobile - Not logged in (Default Mode Only) */}
                     {!isOwnerMode && showAuthButtons && !user && (
                         <TahoeGlassSurface as="a" variant="button" href="/sign-in"
-                            tone="light" className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-white"
-                            contentClassName="text-center text-white">
+                            tone={lightHome ? 'dark' : 'light'} semanticTint={lightHome ? 'light' : 'none'} semanticTintOpacity={0.2}
+                            className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                            contentClassName={lightHome ? 'text-center text-slate-950' : 'text-center text-white'}>
                             SIGN IN / SIGN UP
                         </TahoeGlassSurface>
                     )}

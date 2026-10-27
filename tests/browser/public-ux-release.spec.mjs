@@ -12,7 +12,7 @@ test.beforeAll(async () => {
         path === 'next/navigation' ? 'export const useRouter=()=>({push:path=>window.fixtureDestinations.push(path)});'
           : path === 'next/link' ? 'import React from "react";export default ({children,...props})=><a {...props}>{children}</a>;'
             : path.endsWith('supabase/client') ? 'export const createClient=()=>({auth:{getSession:async()=>{if(window.fixtureAuthError)throw Error("Synthetic outage");return {data:{session:null},error:null}}}});'
-              : 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,...props})=><Tag {...props}>{children}</Tag>;export const TahoeGlassButton=props=><TahoeGlassSurface as="button" {...props}/>;export const TahoeGlassDialog=({open,children,...props})=>open?<div role="dialog" aria-labelledby={props["aria-labelledby"]}>{children}</div>:null;' }))
+              : 'import React from "react";export {TahoeGlassField} from "./src/components/ui/tahoe-glass/TahoeGlassField";export const TahoeGlassSurface=({as:Tag="div",children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,displacementProfile,materialLighting,...props})=><Tag {...props}>{children}</Tag>;export const TahoeGlassButton=props=><TahoeGlassSurface as="button" {...props}/>;export const TahoeBackdropSurface=props=><TahoeGlassSurface {...props}/>;export const TahoeGlassDialog=({open,children,...props})=>open?<div role="dialog" aria-labelledby={props["aria-labelledby"]}>{children}</div>:null;' }))
     } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
       import React from 'react';import {createRoot} from 'react-dom/client';
       import Claim from './src/components/home/HomeProfileClaim';import Demo from './src/components/home/HomeProfileDemo';import Player from './src/components/home/HomeVisionPlayer';
@@ -122,6 +122,23 @@ test('reduced motion keeps the decorative video unloaded until explicit play and
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.evaluate(() => window.fixtureIntersection([{ isIntersecting: false }, { isIntersecting: true }]))
   expect(await page.evaluate(() => window.fixturePlayCalls)).toBe(1)
+})
+
+test('the inline profile demo keeps its clear label while playback and error feedback remain actionable', async ({ page }) => {
+  const { errors } = await fixture(page, 'demo')
+  const label = page.getByText('A demo of a nsso profile', { exact: true })
+  await expect(label).toBeVisible()
+  await expect(page.locator('figure')).toHaveAccessibleName('nsso profile preview')
+  await expect(page.locator('video')).not.toHaveAttribute('src')
+  await expect(page.locator('video')).toHaveAttribute('preload', 'none')
+  await page.getByRole('button', { name: 'Play profile preview' }).click()
+  await expect(page.getByRole('button', { name: 'Pause profile preview' })).toBeVisible()
+  await expect(label).toBeVisible()
+  await page.locator('video').evaluate(element => element.dispatchEvent(new Event('error')))
+  await expect(label).toBeVisible()
+  await expect(page.getByRole('status')).toContainText('Preview unavailable')
+  await expect(page.getByRole('button', { name: 'Play profile preview' })).toBeVisible()
+  expect(errors).toEqual([])
 })
 
 test('video failures expose an actionable retry and an independent YouTube fallback', async ({ page }) => {

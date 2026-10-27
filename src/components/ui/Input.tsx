@@ -48,7 +48,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
             labelClassName={`mb-2 text-[13px] font-medium ${tone === 'dark' ? 'text-slate-950/70' : 'text-white/70'}`}
             error={error || undefined}
             tone={tone}
-            surfaceClassName={`${error ? 'ring-2 ring-red-400' : ''} ${className}`}
+            surfaceClassName={`focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 ${tone === 'dark' ? 'focus-within:outline-slate-950/60' : 'focus-within:outline-white/80'} ${error ? 'ring-2 ring-red-400' : ''} ${className}`}
             controlClassName={`
                 flex-1 border-none py-0 text-[17px] font-medium leading-[22px]
                 text-inherit placeholder:text-current/70
