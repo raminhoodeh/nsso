@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
 import { splitActionPayload, parseActionList, type DeityAction } from '@/lib/deity/actionParser';
@@ -101,6 +101,10 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const databaseDialogRef = useRef<HTMLDialogElement>(null);
     const databaseTriggerRef = useRef<HTMLButtonElement>(null);
     const shellRef = useRef<HTMLElement>(null);
+    const headerRef = useRef<HTMLElement>(null);
+    const categoryToggleRef = useRef<HTMLDivElement>(null);
+    const categoryOptionsRef = useRef<HTMLDivElement>(null);
+    const composerAreaRef = useRef<HTMLDivElement>(null);
     const alive = useRef(true);
     const fastModeRef = useRef(fastMode);
     useEffect(() => { fastModeRef.current = fastMode; }, [fastMode]);
@@ -220,12 +224,35 @@ Check out some of the areas I can help you with below.`;
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
+    const fitComposer = useCallback(() => {
+        const shell = shellRef.current;
         const composer = composerRef.current;
-        if (!composer) return;
+        const header = headerRef.current;
+        const toggle = categoryToggleRef.current;
+        const options = categoryOptionsRef.current;
+        const area = composerAreaRef.current;
+        if (!shell || !composer || !header || !toggle || !options || !area) return;
+        const shellHeight = shell.getBoundingClientRect().height;
+        if (!shellHeight) return;
+        // The standalone route has site navigation above the chat. On a short
+        // viewport the actual chat pane can be much smaller than 100dvh.
+        const compact = shellHeight < 400;
+        const minimal = shellHeight < 240;
+        shell.dataset.compact = String(compact);
+        shell.dataset.minimal = String(minimal);
+        const areaStyle = getComputedStyle(area);
+        const composerPadding = parseFloat(areaStyle.paddingTop) + parseFloat(areaStyle.paddingBottom);
+        const messagePadding = minimal ? 0 : compact ? 24 : 48;
+        const available = Math.max(56, shellHeight - header.offsetHeight - toggle.offsetHeight - composerPadding - messagePadding - 1);
+        const expanded = !minimal && options.getAttribute('aria-hidden') === 'false';
+        const categoryHeight = expanded ? Math.min(220, Math.max(0, available - 56)) : 0;
+        options.style.maxHeight = `${categoryHeight}px`;
+        const limit = Math.min(160, Math.max(56, available - categoryHeight));
         composer.style.height = 'auto';
-        composer.style.height = `${Math.min(composer.scrollHeight, 160)}px`;
-    }, [inputValue]);
+        composer.style.height = `${Math.min(composer.scrollHeight + 2, limit)}px`;
+    }, []);
+
+    useLayoutEffect(() => { fitComposer(); }, [inputValue, isCategoriesExpanded, fitComposer]);
 
     // Fit the visible viewport when a phone keyboard opens or browser chrome changes.
     useEffect(() => {
@@ -246,8 +273,13 @@ Check out some of the areas I can help you with below.`;
                 shell.parentElement.style.top = `${viewport?.offsetTop ?? 0}px`;
                 shell.parentElement.style.height = `${viewport?.height ?? window.innerHeight}px`;
             }
+            fitComposer();
         };
         fitViewport();
+        const resizeObserver = new ResizeObserver(fitComposer);
+        for (const element of [shellRef.current, headerRef.current, categoryToggleRef.current, composerAreaRef.current]) {
+            if (element) resizeObserver.observe(element);
+        }
         viewport?.addEventListener('resize', fitViewport);
         viewport?.addEventListener('scroll', fitViewport);
         window.addEventListener('resize', fitViewport);
@@ -255,8 +287,9 @@ Check out some of the areas I can help you with below.`;
             viewport?.removeEventListener('resize', fitViewport);
             viewport?.removeEventListener('scroll', fitViewport);
             window.removeEventListener('resize', fitViewport);
+            resizeObserver.disconnect();
         };
-    }, [isFullScreen]);
+    }, [isFullScreen, fitComposer]);
 
     useEffect(() => {
         const dialog = databaseDialogRef.current;
@@ -516,12 +549,12 @@ Check out some of the areas I can help you with below.`;
             aria-label="Deity assistant"
             data-deity-surface="opaque"
             style={{ borderRadius: isFullScreen ? 0 : '32px 0 0 32px' }}
-            className={`relative isolate flex min-h-0 flex-col overflow-hidden bg-[#11161d] text-white max-md:!rounded-none ${isFullScreen
+            className={`group/deity relative isolate flex min-h-0 flex-col overflow-hidden bg-[#11161d] text-white max-md:!rounded-none ${isFullScreen
                 ? 'h-full w-full border-none'
                 : 'h-dvh w-full border border-white/10'
                 }`}
         >
-            <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#171d26] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:p-6">
+            <header ref={headerRef} className={`flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#171d26] px-4 pb-3 group-data-[compact=true]/deity:pb-2 ${isFullScreen ? 'pt-3 group-data-[compact=true]/deity:pt-2' : 'pt-[max(0.75rem,env(safe-area-inset-top))] group-data-[compact=true]/deity:pt-[max(0.5rem,env(safe-area-inset-top))]'} md:p-6`}>
                 <div className="flex items-center gap-3 md:gap-4">
                     <span className="block h-9 w-9 overflow-hidden rounded-full bg-[#232b36] md:h-10 md:w-10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -610,7 +643,7 @@ Check out some of the areas I can help you with below.`;
                 role="log"
                 aria-live="polite"
                 aria-relevant="additions text"
-                className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10"
+                className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 group-data-[compact=true]/deity:p-3 group-data-[minimal=true]/deity:py-0"
             >
                 {messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col gap-2">
@@ -665,8 +698,8 @@ Check out some of the areas I can help you with below.`;
             </div>
 
             <footer className="w-full shrink-0 border-t border-white/10 bg-[#171d26]">
-                <div className="px-6 pb-2 pt-4 transition-all duration-300">
-                    <div className="mb-3 flex flex-col items-center gap-2">
+                <div ref={categoryToggleRef} className="px-6 pb-2 pt-4 group-data-[compact=true]/deity:px-4 group-data-[compact=true]/deity:py-1 group-data-[minimal=true]/deity:hidden">
+                    <div className="mb-3 flex flex-col items-center gap-2 group-data-[compact=true]/deity:mb-0">
                         <button
                             type="button"
                             onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
@@ -681,10 +714,11 @@ Check out some of the areas I can help you with below.`;
                 </div>
 
                 <div
+                    ref={categoryOptionsRef}
                     id="deity-category-options"
                     aria-hidden={!isCategoriesExpanded}
                     inert={!isCategoriesExpanded}
-                    className={`overflow-y-auto overscroll-contain transition-all duration-300 ease-in-out motion-reduce:transition-none ${isCategoriesExpanded ? 'max-h-[min(220px,30dvh)] opacity-100' : 'max-h-0 opacity-0'}`}
+                    className={`overflow-y-auto overscroll-contain transition-opacity duration-150 motion-reduce:transition-none group-data-[minimal=true]/deity:hidden ${isCategoriesExpanded ? 'max-h-[min(220px,30dvh)] opacity-100' : 'max-h-0 opacity-0'}`}
                 >
                     <div className="flex flex-wrap justify-center gap-2 overflow-y-auto px-4 pb-2 scrollbar-none">
                         {Object.keys(CATEGORY_QUESTIONS).map(cat => (
@@ -715,7 +749,7 @@ Check out some of the areas I can help you with below.`;
                     </div>
                 </div>
 
-                <div className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
+                <div ref={composerAreaRef} className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2 group-data-[compact=true]/deity:px-4 group-data-[compact=true]/deity:pb-[max(0.5rem,env(safe-area-inset-bottom))] group-data-[compact=true]/deity:pt-1">
                     <form
                         onSubmit={(e) => { e.preventDefault(); if (!isLoading) void handleSendMessage(inputValue); }}
                         className="group relative"
