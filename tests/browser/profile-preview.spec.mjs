@@ -16,7 +16,7 @@ test.beforeAll(async () => {
                             : path.endsWith('ProfileProvider') ? 'import {useSyncExternalStore} from "react";export const useProfile=()=>useSyncExternalStore(window.fixtureSubscribe,()=>window.fixtureProfile);'
                                 : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:(message,type)=>window.fixtureToasts.push({message,type})});'
                                     : path.endsWith('CreateProfileButton') ? 'export default ()=>null;'
-                                        : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,role,tabIndex,onClick,onKeyDown,...props})=><Tag href={href} role={role} tabIndex={tabIndex} onClick={onClick} onKeyDown={onKeyDown} aria-label={props["aria-label"]} aria-pressed={props["aria-pressed"]}>{children}</Tag>;export const TahoeGlassButton=({children,onClick,disabled,...props})=><button onClick={onClick} disabled={disabled} aria-label={props["aria-label"]}>{children}</button>;'
+                                        : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,role,tabIndex,onClick,onKeyDown,...props})=><Tag href={href} role={role} tabIndex={tabIndex} onClick={onClick} onKeyDown={onKeyDown} aria-label={props["aria-label"]} aria-pressed={props["aria-pressed"]}>{children}</Tag>;export const TahoeBackdropHeader=({children,...props})=><header>{children}</header>;export const TahoeGlassButton=({children,onClick,disabled,...props})=><button onClick={onClick} disabled={disabled} aria-label={props["aria-label"]}>{children}</button>;'
                                             : 'export const createClient=()=>{throw new Error("Preview must reuse the current account/profile contracts")};' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';import {createRoot} from 'react-dom/client';import Preview from './src/app/preview/page';
@@ -46,6 +46,7 @@ async function fixture(page) {
 
 test('profile preview uses the current draft and keeps both checkout paths inert', async ({ page }) => {
     const { errors, unexpected } = await fixture(page)
+    await expect(page.getByRole('navigation', { name: 'Profile preview' })).toBeVisible()
     await expect(page.getByRole('heading', { name: "I'm Fixture creator" })).toBeVisible()
     await expect(page.getByText('Current local bio')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Link to Purchase', exact: true })).toBeDisabled()
@@ -55,6 +56,8 @@ test('profile preview uses the current draft and keeps both checkout paths inert
     await expect(page.getByRole('link', { name: 'Fixture offer' })).toHaveAttribute('href', '/products/product-fixture?preview=true')
     await page.getByRole('button', { name: "Show Fixture creator's QR code" }).press('Enter')
     await expect(page.getByRole('button', { name: "Show Fixture creator's profile photo" })).toHaveAttribute('aria-pressed', 'true')
+    await page.getByRole('button', { name: '← Edit Profile', exact: true }).press('Enter')
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual(['/dashboard'])
     expect(errors).toEqual([]); expect(unexpected).toEqual([])
 })
 

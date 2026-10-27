@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import GlassButton from '@/components/ui/GlassButton'
+import NssoTopBar, { NSSO_TOPBAR_CONTENT_CLASS } from '@/components/layout/NssoTopBar'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { boundedClientRead } from '@/lib/client-read'
@@ -13,7 +14,6 @@ import { routeUsesMobileProfileMenu } from '@/lib/tahoe-glass/route-boundaries'
 import { useState, useEffect, useCallback, Suspense, type ReactNode } from 'react'
 import { ChevronRight, Eye, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, ShieldCheck, Sparkles, UserRound, UsersRound, X } from 'lucide-react'
 import {
-    TahoeBackdropHeader,
     TahoeGlassButton,
     TahoeGlassDialog,
     TahoeGlassSurface
@@ -108,7 +108,6 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const supabase = createClient()
     const pathname = usePathname()
     const usesProfileEditorMenu = routeUsesMobileProfileMenu(pathname)
-    const lightHome = pathname === '/'
     const router = useRouter()
     const { showToast } = useToast()
     const [signingOut, setSigningOut] = useState(false)
@@ -220,6 +219,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
         <GlassButton
             variant="ghost"
             size="sm"
+            tone="dark"
             onClick={copyProfileUrl}
             className="min-h-11 px-3 min-[360px]:px-4"
         >
@@ -230,8 +230,10 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
         <TahoeGlassButton
             onClick={() => router.push('/preview')}
             className="min-h-11 px-3 py-2 text-sm font-medium transition-all min-[360px]:px-4 hover:scale-[1.02] active:scale-[0.98]"
-            contentClassName="text-white"
-            tone="light"
+            contentClassName="text-slate-950"
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.2}
         >
             <span className="min-[360px]:hidden">Preview</span>
             <span className="hidden min-[360px]:inline">Preview Profile</span>
@@ -239,15 +241,11 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     )
 
     return (
-        <TahoeBackdropHeader
-            radius="0 0 24px 24px"
-            className={cn("fixed top-0 left-0 right-0 z-[5000]", user && (usesProfileEditorMenu ? "lg:hidden" : "md:hidden"), className)}
+        <NssoTopBar
+            className={cn(user && (usesProfileEditorMenu ? "lg:hidden" : "md:hidden"), className)}
             contentClassName="h-full w-full"
-            displacementProfile="prism-top"
-            materialLighting="uniform"
-            tone={lightHome ? 'dark' : 'inherit'}
         >
-            <nav className="relative z-[60] mx-auto flex h-[calc(88px+env(safe-area-inset-top))] max-w-[1800px] items-center justify-between pb-0 pl-[max(12px,env(safe-area-inset-left))] pr-[max(12px,env(safe-area-inset-right))] pt-[env(safe-area-inset-top)] sm:pl-[max(24px,env(safe-area-inset-left))] sm:pr-[max(24px,env(safe-area-inset-right))] lg:px-10">
+            <nav className={NSSO_TOPBAR_CONTENT_CLASS}>
 
                 {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
                 {isOwnerMode ? (
@@ -290,9 +288,9 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 <div className="hidden md:flex items-center gap-4">
                     {!user && (
                         <TahoeGlassSurface as="a" variant="button" href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}
-                            tone={lightHome ? 'dark' : 'light'} semanticTint={lightHome ? 'light' : 'none'} semanticTintOpacity={0.2}
+                            tone="dark" semanticTint="light" semanticTintOpacity={0.2}
                             className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
-                            contentClassName={lightHome ? 'text-center text-slate-950' : 'text-center text-white'}>
+                            contentClassName="text-center text-slate-950">
                             SIGN IN / SIGN UP
                         </TahoeGlassSurface>
                     )}
@@ -309,9 +307,11 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         <TahoeGlassButton
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             radius={8}
-                            className="h-11 w-11 p-0 text-white transition-colors"
-                            contentClassName="text-white"
-                            tone="light"
+                            className="h-11 w-11 p-0 text-slate-950 transition-colors"
+                            contentClassName="text-slate-950"
+                            tone="dark"
+                            semanticTint="light"
+                            semanticTintOpacity={0.2}
                             aria-label="Open account menu"
                             aria-expanded={mobileMenuOpen}
                             aria-controls="mobile-account-menu"
@@ -371,9 +371,9 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {/* Mobile - Not logged in (Default Mode Only) */}
                     {!isOwnerMode && showAuthButtons && !user && (
                         <TahoeGlassSurface as="a" variant="button" href="/sign-in"
-                            tone={lightHome ? 'dark' : 'light'} semanticTint={lightHome ? 'light' : 'none'} semanticTintOpacity={0.2}
+                            tone="dark" semanticTint="light" semanticTintOpacity={0.2}
                             className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
-                            contentClassName={lightHome ? 'text-center text-slate-950' : 'text-center text-white'}>
+                            contentClassName="text-center text-slate-950">
                             SIGN IN / SIGN UP
                         </TahoeGlassSurface>
                     )}
@@ -394,6 +394,6 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     animation: slide-in-right 0.3s ease-out;
                 }
             `}</style>
-        </TahoeBackdropHeader>
+        </NssoTopBar>
     )
 }

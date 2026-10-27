@@ -24,6 +24,10 @@ const headerSource = fs.readFileSync(
     path.join(process.cwd(), 'src/components/layout/Header.tsx'),
     'utf8'
 )
+const topBarSource = fs.readFileSync(
+    path.join(process.cwd(), 'src/components/layout/NssoTopBar.tsx'),
+    'utf8'
+)
 const toastSource = fs.readFileSync(
     path.join(process.cwd(), 'src/components/ui/Toast.tsx'),
     'utf8'
@@ -227,11 +231,13 @@ test('the bottom bar shares the header backdrop engine and owns real safe-area s
 })
 
 test('mobile header and dashboard content fit narrow and notched viewports', () => {
-    assert.match(headerSource, /displacementProfile="prism-top"/)
-    assert.match(headerSource, /materialLighting="uniform"/)
-    assert.match(headerSource, /h-\[calc\(88px\+env\(safe-area-inset-top\)\)\]/)
-    assert.match(headerSource, /pl-\[max\(12px,env\(safe-area-inset-left\)\)\]/)
-    assert.match(headerSource, /pr-\[max\(12px,env\(safe-area-inset-right\)\)\]/)
+    assert.match(headerSource, /<NssoTopBar/)
+    assert.match(headerSource, /className=\{NSSO_TOPBAR_CONTENT_CLASS\}/)
+    assert.match(topBarSource, /displacementProfile="prism-top"/)
+    assert.match(topBarSource, /materialLighting="uniform"/)
+    assert.match(topBarSource, /h-\[calc\(88px\+env\(safe-area-inset-top\)\)\]/)
+    assert.match(topBarSource, /pl-\[max\(12px,env\(safe-area-inset-left\)\)\]/)
+    assert.match(topBarSource, /pr-\[max\(12px,env\(safe-area-inset-right\)\)\]/)
     assert.match(headerSource, /min-\[360px\]:hidden[^>]*>Preview</)
     assert.match(headerSource, /hidden min-\[360px\]:inline[^>]*>Preview Profile</)
     assert.match(headerSource, /min-\[360px\]:hidden[^>]*>Copy URL</)
