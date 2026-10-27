@@ -181,16 +181,16 @@ export default function HomePage() {
         </LightGlassPanel>
       </section>
 
-      <div data-home-actions-layout="true" className="mx-auto grid max-w-6xl gap-y-16 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-x-10">
-        <section className="mx-auto w-full min-w-0 max-w-2xl lg:max-w-none" aria-labelledby="home-claim-title">
-          <LightGlassPanel chromiumAppearance="light" className="home-sky-glass p-6 sm:p-8 lg:p-10">
+      <div data-home-actions-layout="true" className="mx-auto grid max-w-6xl gap-y-16 px-5 sm:px-8 lg:grid-cols-2 lg:items-stretch lg:gap-x-10">
+        <section className="mx-auto w-full min-w-0 max-w-2xl lg:col-start-2 lg:row-start-1 lg:max-w-none" aria-labelledby="home-claim-title">
+          <LightGlassPanel chromiumAppearance="light" data-home-claim-card="true" className="home-sky-glass p-6 sm:p-8 lg:h-full lg:p-10" contentClassName="h-full w-full lg:flex lg:flex-col lg:justify-center">
             <h2 id="home-claim-title" className="mb-8 text-center text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">Your whole story in one profile</h2>
             <HomeProfileClaim />
           </LightGlassPanel>
         </section>
 
-        <section className="mx-auto w-full min-w-0 max-w-4xl lg:max-w-none" aria-label="Explore nsso">
-          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1">
+        <section className="mx-auto w-full min-w-0 max-w-4xl lg:col-start-1 lg:row-start-1 lg:max-w-none" aria-label="Explore nsso">
+          <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2 lg:h-full lg:grid-cols-1 lg:grid-rows-2">
             <Link href={user ? '/dashboard' : '/sign-up'} className="block">
               <LightGlassPanel chromiumAppearance="light" data-home-offer-card="monetise" className="home-sky-glass h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
                 <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">

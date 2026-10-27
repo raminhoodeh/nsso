@@ -574,11 +574,6 @@ const COS_SPREAD = Math.cos(1.08);
 const COS_DIFFUSE = Math.cos(1.08 * 0.65);
 const COS_SIDE = Math.cos(0.98);
 
-interface MapCanvases {
-  field: HTMLCanvasElement | null;
-  overlay: HTMLCanvasElement | null;
-}
-
 const pixelScale = (w: number, h: number) =>
   Math.min(Math.max(window.devicePixelRatio || 1, 1), 2, Math.sqrt(262_144 / Math.max(1, w * h)));
 
@@ -588,170 +583,213 @@ function mapSize(w: number, h: number, scale: number) {
   return { width, height };
 }
 
-/** Render both planes at exact size. The expensive per-pixel pass. */
-function renderCanvases(
-  w: number, h: number, radius: number, bezel: number, dark: boolean, tint?: [number, number, number]
-): MapCanvases {
+/** The full displacement plane remains under its existing 262,144-pixel cap. */
+function renderField(w: number, h: number, radius: number, bezel: number): HTMLCanvasElement | null {
   try {
     const outline = squircleOutline(w, h, radius);
-    const hw = w / 2, hh = h / 2, p = outline.extent;
+    const hw = w / 2, hh = h / 2;
     const bz = Math.max(1, Math.min(bezel, hw, hh));
     const k = pixelScale(w, h);
     const { width: mw, height: mh } = mapSize(w, h, k);
-
     const fieldCanvas = document.createElement("canvas");
     fieldCanvas.width = mw;
     fieldCanvas.height = mh;
     const fctx = fieldCanvas.getContext("2d");
-    if (!fctx) return { field: null, overlay: null };
+    if (!fctx) return null;
     const fimg = fctx.createImageData(mw, mh);
-
-    // The overlay canvas pads 2px beyond the shape: the side shade and half
-    // the specular stroke live in that outside band (dom/index.ts x-2 w+4).
-    const pad = 2;
-    const bw = w + pad * 2, bh = h + pad * 2;
-    const ok = pixelScale(bw, bh);
-    const { width: omw, height: omh } = mapSize(bw, bh, ok);
-    const overlayCanvas = document.createElement("canvas");
-    overlayCanvas.width = omw;
-    overlayCanvas.height = omh;
-    const octx = overlayCanvas.getContext("2d");
-    if (!octx) return { field: null, overlay: null };
-    const oimg = octx.createImageData(omw, omh);
-
-    for (let pass = 0; pass < 2; pass++) {
-      const isField = pass === 0;
-      const cw = isField ? w : bw, ch = isField ? h : bh;
-      const scale = isField ? k : ok;
-      const width = isField ? mw : omw, height = isField ? mh : omh;
-      const img = isField ? fimg : oimg;
-      const data = img.data;
-      const aa = 1;
-      for (let j = 0; j < height; j++) {
-        const py = (j + 0.5) / scale - ch / 2;
-        for (let i = 0; i < width; i++) {
-          const px = (i + 0.5) / scale - cw / 2;
-          const { d, nx, ny } = outlineField(px, py, outline);
-          const o = (j * width + i) * 4;
-          if (isField) {
-            const coverage = sat(0.5 - d / aa);
-            // Deep interior: neutral displacement, full coverage.
-            if (d < -(bz + 4)) {
-              data[o] = 128; data[o + 1] = 128; data[o + 2] = 128; data[o + 3] = 255;
-              continue;
-            }
-            // core/optics.ts: circular falloff, full at the lip.
-            const depth = sat(-d / bz);
-            const edge = 1 - sat(sqrt((2 - depth) * depth));
-            data[o] = Math.round(255 * (0.5 - nx * edge * 0.5));
-            data[o + 1] = Math.round(255 * (0.5 - ny * edge * 0.5));
-            data[o + 2] = 128;
-            data[o + 3] = Math.round(255 * coverage);
-          } else {
-            // Overlay plane: skip clearly-empty pixels quickly. qx/qy are
-            // distances beyond the INNER frame (inset by the corner extent
-            // p); the boundary lies up to p further out, so the true distance
-            // is at least max(qx, qy) - p.
-            const qx = Math.abs(px) - (hw - p), qy = Math.abs(py) - (hh - p);
-            if (Math.max(qx, qy) - p > pad + 6) continue;
-            const coverage = sat(0.5 - d / aa);
-            const directional = pow(sat((Math.abs(ny) - COS_SPREAD) / (1 - COS_SPREAD)), 1.25);
-            const diffuseDir = pow(sat((Math.abs(ny) - COS_DIFFUSE) / (1 - COS_DIFFUSE)), 1.25);
-            const stroke = sat((d + 0.9) / aa + 0.5) * sat(0.5 - d / aa);
-            let specular = directional * stroke;
-            specular = specular / (1 + 0.5 * (1 - specular));
-            const diffuse = diffuseDir * 0.18 * pow(1 - sat(-d / 4.5), 2) * coverage;
-            const highlight = sat(specular * (dark ? 0.82 : 1) + diffuse * (dark ? 0.4 : 1));
-            const adjusted = d - 0.5;
-            const falloff = 1 - sat(-adjusted / 0.5);
-            const ramp = (falloff > 0 ? 1 : 0) * 0.25 + falloff * 0.75;
-            const outlineBand =
-              ramp * sat((adjusted + 0.5) / aa + 0.5) * sat(-adjusted / aa + 0.5);
-            const wx = sat((nx - COS_SIDE) / (1 - COS_SIDE)) * outlineBand;
-            const wy = sat((-nx - COS_SIDE) / (1 - COS_SIDE)) * outlineBand;
-            const shade =
-              (wx / (1 + 0.4 * (1 - wx)) + wy / (1 + 0.4 * (1 - wy))) * (dark ? 0.6 : 0.48);
-            const alpha = highlight + shade * (1 - highlight);
-            if (alpha <= 0.002) continue;
-            if (tint) {
-              const base = highlight / Math.max(alpha, 1e-5);
-              data[o] = Math.round(255 * Math.min(1, base * (0.45 + 0.55 * tint[0])));
-              data[o + 1] = Math.round(255 * Math.min(1, base * (0.45 + 0.55 * tint[1])));
-              data[o + 2] = Math.round(255 * Math.min(1, base * (0.45 + 0.55 * tint[2])));
-              data[o + 3] = Math.round(255 * alpha);
-            } else {
-              const light = ((dark ? 0.82 : 1) * highlight) / Math.max(alpha, 1e-5);
-              data[o] = data[o + 1] = data[o + 2] = Math.round(255 * Math.min(1, light));
-              data[o + 3] = Math.round(255 * alpha);
-            }
-          }
+    const data = fimg.data;
+    for (let j = 0; j < mh; j++) {
+      const py = (j + 0.5) / k - h / 2;
+      for (let i = 0; i < mw; i++) {
+        const px = (i + 0.5) / k - w / 2;
+        const { d, nx, ny } = outlineField(px, py, outline);
+        const o = (j * mw + i) * 4;
+        const coverage = sat(0.5 - d);
+        if (d < -(bz + 4)) {
+          data[o] = 128; data[o + 1] = 128; data[o + 2] = 128; data[o + 3] = 255;
+          continue;
         }
+        const depth = sat(-d / bz);
+        const edge = 1 - sat(sqrt((2 - depth) * depth));
+        data[o] = Math.round(255 * (0.5 - nx * edge * 0.5));
+        data[o + 1] = Math.round(255 * (0.5 - ny * edge * 0.5));
+        data[o + 2] = 128;
+        data[o + 3] = Math.round(255 * coverage);
       }
-      (isField ? fctx : octx).putImageData(img, 0, 0);
     }
-    return { field: fieldCanvas, overlay: overlayCanvas };
+    fctx.putImageData(fimg, 0, 0);
+    return fieldCanvas;
   } catch {
-    return { field: null, overlay: null };
+    return null;
   }
 }
 
 // --------------------------------------------------------------------------
-// Capsule 3-slice baking — dom/map-image.ts:13-17. Beyond two heights, a
-// capsule's ends don't depend on its width: bake once at 3×height and slice
-// the caps, stretching only the uniform middle.
+// High-density rim atlas. Corners stay at device resolution, straight edges
+// stretch once, and the transparent center is never painted or allocated at
+// the full card size. Geometry is evaluated against the ORIGINAL outline:
+// compressing a capsule first would otherwise change its corner budget.
 // --------------------------------------------------------------------------
 
-const bakeCache = new Map<string, MapCanvases>();
+const RIM_PAD = 2;
+const RIM_REACH = 6;
+const RIM_MAX_PIXELS = 1_048_576;
+const RIM_CACHE_MAX_PIXELS = 4 * RIM_MAX_PIXELS;
+
+interface RimAtlasSampling {
+  cssWidth: number;
+  cssHeight: number;
+  pixelWidth: number;
+  pixelHeight: number;
+  scale: number;
+  sliceX: number;
+  sliceY: number;
+  pixelSliceX: number;
+  pixelSliceY: number;
+}
+
+interface RimAtlas extends RimAtlasSampling {
+  url: string;
+}
+
+function rimAtlasSampling(w: number, h: number, radius: number, requestedDpr: number): RimAtlasSampling {
+  const extent = squircleOutline(w, h, radius).extent;
+  const bw = w + RIM_PAD * 2, bh = h + RIM_PAD * 2;
+  const sliceX = Math.min(Math.ceil(extent) + RIM_PAD + RIM_REACH, (bw - 1) / 2);
+  const sliceY = Math.min(Math.ceil(extent) + RIM_PAD + RIM_REACH, (bh - 1) / 2);
+  const cssWidth = Math.min(bw, sliceX * 2 + 8);
+  const cssHeight = Math.min(bh, sliceY * 2 + 8);
+  const preferred = Math.min(4, Math.max(1, Math.ceil(requestedDpr || 1)));
+  const scale = Math.min(preferred, Math.sqrt(RIM_MAX_PIXELS / (cssWidth * cssHeight)));
+  const pixelWidth = Math.max(1, Math.min(RIM_MAX_PIXELS, Math.floor(cssWidth * scale)));
+  const pixelHeight = Math.max(1, Math.min(Math.floor(cssHeight * scale), Math.floor(RIM_MAX_PIXELS / pixelWidth)));
+  const scaleX = pixelWidth / cssWidth, scaleY = pixelHeight / cssHeight;
+  return {
+    cssWidth, cssHeight, pixelWidth, pixelHeight,
+    scale: Math.min(scaleX, scaleY), sliceX, sliceY,
+    pixelSliceX: sliceX * scaleX, pixelSliceY: sliceY * scaleY,
+  };
+}
+
+/** Keep both corners unscaled; only an edge's uniform middle is compressed. */
+function rimSourcePosition(position: number, atlasLength: number, originalLength: number, slice: number): number {
+  if (position < slice) return position;
+  if (position >= atlasLength - slice) return position + originalLength - atlasLength;
+  return slice + (position - slice) * (originalLength - slice * 2) / (atlasLength - slice * 2);
+}
+
+/** Conservative absolute-X bounds for pixels within the rim's reach. A
+ * nearest corner segment must intersect this row's +/-6px Y band, and its
+ * nearest point must be within 6px in X too. Mirror symmetry lets one top
+ * corner cover all four. The final distance/lighting calculation is unchanged. */
+function rimRowBounds(py: number, outline: SquircleOutline): [number, number] | null {
+  const hw = outline.width / 2, hh = outline.height / 2;
+  const reach = RIM_REACH + 1e-7;
+  const absY = Math.abs(py);
+  // Horizontal straight edges can light the whole row; avoid narrowing it.
+  if (Math.abs(absY - hh) <= reach) return [0, Infinity];
+  let min = Infinity, max = -Infinity;
+  if (absY <= hh - outline.extent + reach) min = max = hw;
+  const run = outline.corners[0];
+  const y = -absY;
+  for (let k = 0; k < run.length / 4 - 1; k++) {
+    const x1 = run[4 * k]!, y1 = run[4 * k + 1]!;
+    const x2 = run[4 * k + 4]!, y2 = run[4 * k + 5]!;
+    if (y < Math.min(y1, y2) - reach || y > Math.max(y1, y2) + reach) continue;
+    min = Math.min(min, x1, x2);
+    max = Math.max(max, x1, x2);
+  }
+  return min === Infinity ? null : [Math.max(0, min - reach), max + reach];
+}
+
+function renderRimAtlas(w: number, h: number, radius: number, dark: boolean, tint?: [number, number, number]): RimAtlas | null {
+  try {
+    const sampling = rimAtlasSampling(w, h, radius, window.devicePixelRatio || 1);
+    const { cssWidth, cssHeight, pixelWidth, pixelHeight, sliceX, sliceY } = sampling;
+    const outline = squircleOutline(w, h, radius);
+    const canvas = document.createElement("canvas");
+    canvas.width = pixelWidth;
+    canvas.height = pixelHeight;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+    const image = context.createImageData(pixelWidth, pixelHeight);
+    const data = image.data;
+    const scaleX = pixelWidth / cssWidth, scaleY = pixelHeight / cssHeight;
+    for (let j = 0; j < pixelHeight; j++) {
+      const py = rimSourcePosition((j + 0.5) / scaleY, cssHeight, h + RIM_PAD * 2, sliceY) - h / 2 - RIM_PAD;
+      const bounds = rimRowBounds(py, outline);
+      if (!bounds) continue;
+      for (let i = 0; i < pixelWidth; i++) {
+        const atlasX = (i + 0.5) / scaleX, atlasY = (j + 0.5) / scaleY;
+        // CSS border-image omits the center; leave those pixels transparent.
+        if (atlasX >= sliceX && atlasX < cssWidth - sliceX && atlasY >= sliceY && atlasY < cssHeight - sliceY) continue;
+        const px = rimSourcePosition(atlasX, cssWidth, w + RIM_PAD * 2, sliceX) - w / 2 - RIM_PAD;
+        if (Math.abs(px) < bounds[0] || Math.abs(px) > bounds[1]) continue;
+        const { d, nx, ny } = outlineField(px, py, outline);
+        if (d < -RIM_REACH || d > RIM_PAD) continue;
+        const coverage = sat(0.5 - d);
+        const directional = pow(sat((Math.abs(ny) - COS_SPREAD) / (1 - COS_SPREAD)), 1.25);
+        const diffuseDir = pow(sat((Math.abs(ny) - COS_DIFFUSE) / (1 - COS_DIFFUSE)), 1.25);
+        const stroke = sat(d + 0.9 + 0.5) * sat(0.5 - d);
+        let specular = directional * stroke;
+        specular = specular / (1 + 0.5 * (1 - specular));
+        const diffuse = diffuseDir * 0.18 * pow(1 - sat(-d / 4.5), 2) * coverage;
+        const highlight = sat(specular * (dark ? 0.82 : 1) + diffuse * (dark ? 0.4 : 1));
+        const adjusted = d - 0.5;
+        const falloff = 1 - sat(-adjusted / 0.5);
+        const ramp = (falloff > 0 ? 1 : 0) * 0.25 + falloff * 0.75;
+        const outlineBand = ramp * sat(adjusted + 0.5 + 0.5) * sat(-adjusted + 0.5);
+        const wx = sat((nx - COS_SIDE) / (1 - COS_SIDE)) * outlineBand;
+        const wy = sat((-nx - COS_SIDE) / (1 - COS_SIDE)) * outlineBand;
+        const shade = (wx / (1 + 0.4 * (1 - wx)) + wy / (1 + 0.4 * (1 - wy))) * (dark ? 0.6 : 0.48);
+        const alpha = highlight + shade * (1 - highlight);
+        if (alpha <= 0.002) continue;
+        const o = (j * pixelWidth + i) * 4;
+        if (tint) {
+          const base = highlight / Math.max(alpha, 1e-5);
+          data[o] = Math.round(255 * Math.min(1, base * (0.45 + 0.55 * tint[0])));
+          data[o + 1] = Math.round(255 * Math.min(1, base * (0.45 + 0.55 * tint[1])));
+          data[o + 2] = Math.round(255 * Math.min(1, base * (0.45 + 0.55 * tint[2])));
+        } else {
+          const light = ((dark ? 0.82 : 1) * highlight) / Math.max(alpha, 1e-5);
+          data[o] = data[o + 1] = data[o + 2] = Math.round(255 * Math.min(1, light));
+        }
+        data[o + 3] = Math.round(255 * alpha);
+      }
+    }
+    context.putImageData(image, 0, 0);
+    return { ...sampling, url: canvas.toDataURL("image/png") };
+  } catch {
+    return null;
+  }
+}
+
+// Capsule displacement keeps its existing three-slice geometry and hard cap.
+const bakeCache = new Map<string, HTMLCanvasElement>();
 
 function capsuleShape(w: number, h: number, radius: number): boolean {
   return radius >= Math.min(w, h) / 2 - 0.75 && w >= h * 2;
 }
 
-function slicedURLs(
-  baked: MapCanvases, w: number, h: number
-): { field: string; overlay: string } {
+function slicedFieldURL(source: HTMLCanvasElement, w: number, h: number): string {
   const cap = h / 2;
-  /** Slice one plane. `sourcePad` is the pad already baked into the source
-   * canvas (0 for the field, 2 for the overlay); `destPad` the destination's.
-   * Caps stay unstretched; only the uniform middle stretches, running half a
-   * pixel under each cap so slices never seam. */
-  const bake = (source: HTMLCanvasElement, sourcePad: number, destPad: number): HTMLCanvasElement => {
-    const cw = w + destPad * 2, ch = h + destPad * 2;
-    const scale = pixelScale(cw, ch);
-    const canvas = document.createElement("canvas");
-    const dimensions = mapSize(cw, ch, scale);
-    canvas.width = dimensions.width;
-    canvas.height = dimensions.height;
-    const ctx = canvas.getContext("2d")!;
-    const sh = source.height;
-    const sk = sh / (h + sourcePad * 2); // baked canvas scale
-    const startX = sourcePad * sk;
-    const capPx = cap * sk;
-    const destCap = cap * scale;
-    const startDest = destPad * scale;
-    // Each cap carries its pad with it: source [0, pad + cap] lands on
-    // destination [0, pad + cap], so the overlay's outside band (the outer
-    // half of the specular stroke and the side shade) stays registered with
-    // the shape. Drawing the cap without its pad shifted the left cap out by
-    // the pad width and notched the rim where it met the middle slice.
-    // The slices meet edge to edge on whole destination pixels. Overlapping
-    // them (to hide seams) paints the translucent rim twice at each join and
-    // leaves bright dots on the overlay.
-    const capSrc = startX + capPx;
-    const capDest = Math.round(startDest + destCap);
-    const midDest = Math.max(1, canvas.width - 2 * capDest);
-    ctx.drawImage(source, 0, 0, capSrc, sh, 0, 0, capDest, canvas.height);
-    ctx.drawImage(source, capSrc, 0, Math.max(1, source.width - 2 * capSrc), sh, capDest, 0, midDest, canvas.height);
-    ctx.drawImage(
-      source, source.width - capSrc, 0, capSrc, sh,
-      canvas.width - capDest, 0, capDest, canvas.height
-    );
-    return canvas;
-  };
-  return {
-    field: baked.field ? bake(baked.field, 0, 0).toDataURL("image/png") : "",
-    overlay: baked.overlay ? bake(baked.overlay, 2, 2).toDataURL("image/png") : "",
-  };
+  const scale = pixelScale(w, h);
+  const canvas = document.createElement("canvas");
+  const dimensions = mapSize(w, h, scale);
+  canvas.width = dimensions.width;
+  canvas.height = dimensions.height;
+  const ctx = canvas.getContext("2d")!;
+  const sh = source.height;
+  const capSrc = (h / 2) * (sh / h);
+  const capDest = Math.round(cap * scale);
+  const midDest = Math.max(1, canvas.width - 2 * capDest);
+  ctx.drawImage(source, 0, 0, capSrc, sh, 0, 0, capDest, canvas.height);
+  ctx.drawImage(source, capSrc, 0, Math.max(1, source.width - 2 * capSrc), sh, capDest, 0, midDest, canvas.height);
+  ctx.drawImage(
+    source, source.width - capSrc, 0, capSrc, sh,
+    canvas.width - capDest, 0, capDest, canvas.height
+  );
+  return canvas.toDataURL("image/png");
 }
 
 // --------------------------------------------------------------------------
@@ -759,7 +797,7 @@ function slicedURLs(
 // --------------------------------------------------------------------------
 
 const fieldCache = new Map<string, string>();
-const overlayCache = new Map<string, string>();
+const overlayCache = new Map<string, RimAtlas>();
 const CACHE_LIMIT = 64;
 
 function remember(cache: Map<string, string>, key: string, make: () => string): string {
@@ -785,28 +823,35 @@ function fieldURL(w: number, h: number, radius: number, o: PlaneOptions): string
   return remember(fieldCache, `${w}x${h}r${radius}b${o.bezel}d${window.devicePixelRatio}`, () => {
     if (capsuleShape(w, h, radius)) {
       const baked = capsuleBake(h, radius, o);
-      if (baked.field) return slicedURLs(baked, w, h).field;
+      if (baked) return slicedFieldURL(baked, w, h);
     }
-    return renderCanvases(w, h, radius, o.bezel, o.dark, o.tint).field?.toDataURL("image/png") ?? "";
+    return renderField(w, h, radius, o.bezel)?.toDataURL("image/png") ?? "";
   });
 }
 
-function overlayURL(w: number, h: number, radius: number, o: PlaneOptions): string {
-  return remember(overlayCache, `${w}x${h}r${radius}b${o.bezel}${o.dark ? "d" : "l"}${o.tint ?? ""}d${window.devicePixelRatio}`, () => {
-    if (capsuleShape(w, h, radius)) {
-      const baked = capsuleBake(h, radius, o);
-      if (baked.overlay) return slicedURLs(baked, w, h).overlay;
-    }
-    return renderCanvases(w, h, radius, o.bezel, o.dark, o.tint).overlay?.toDataURL("image/png") ?? "";
-  });
+function overlayURL(w: number, h: number, radius: number, o: PlaneOptions): RimAtlas | null {
+  const key = `${w}x${h}r${radius}${o.dark ? "d" : "l"}${o.tint ?? ""}d${window.devicePixelRatio}`;
+  const cached = overlayCache.get(key);
+  if (cached) return cached;
+  const atlas = renderRimAtlas(w, h, radius, o.dark, o.tint);
+  if (!atlas) return null;
+  overlayCache.set(key, atlas);
+  let pixels = [...overlayCache.values()].reduce((total, entry) => total + entry.pixelWidth * entry.pixelHeight, 0);
+  while (overlayCache.size > CACHE_LIMIT || pixels > RIM_CACHE_MAX_PIXELS) {
+    const oldest = overlayCache.keys().next().value!;
+    const entry = overlayCache.get(oldest)!;
+    pixels -= entry.pixelWidth * entry.pixelHeight;
+    overlayCache.delete(oldest);
+  }
+  return atlas;
 }
 
-function capsuleBake(h: number, radius: number, o: PlaneOptions): MapCanvases {
-  const key = `bake|h${h}|r${radius}|b${o.bezel}|${o.dark ? "d" : "l"}|${o.tint ?? ""}|d${window.devicePixelRatio}`;
+function capsuleBake(h: number, radius: number, o: PlaneOptions): HTMLCanvasElement | null {
+  const key = `bake|h${h}|r${radius}|b${o.bezel}|d${window.devicePixelRatio}`;
   let baked = bakeCache.get(key);
   if (!baked) {
-    // Overlay tint/dark matter, field only geometry; bake once with both.
-    baked = renderCanvases(h * 3, h, radius, o.bezel, o.dark, o.tint);
+    baked = renderField(h * 3, h, radius, o.bezel) ?? undefined;
+    if (!baked) return null;
     if (bakeCache.size > 16) bakeCache.delete(bakeCache.keys().next().value!);
     bakeCache.set(key, baked);
   }
@@ -1156,7 +1201,7 @@ function attachInteraction(element: HTMLElement, motion: () => GlassMotion): { d
 
 interface MapState {
   field: string;
-  overlay: string;
+  overlay: RimAtlas | null;
   clip: string;
   w: number;
   h: number;
@@ -1232,15 +1277,15 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
           heldFilter = null;
         }
         setMap((prev) => {
-          const id = `frost|${w}|${h}|${radius}|${appearance}|${material}|${tint ?? ""}`;
-          return prev && prev.filterId === id
+          const id = `frost|${w}|${h}|${radius}|${appearance}|${material}|${tint ?? ""}|d${window.devicePixelRatio}`;
+          return prev && prev.filterId === id && prev.overlay === overlay
             ? prev
             : { field: "", overlay, clip: outline.polygon, w, h, filterId: id };
         });
         return;
       }
       const field = fieldURL(w, h, radius, planes);
-      const filterId = `lgf${w}x${h}r${radius}b${bz}f${Math.round(amount * 10)}${appearance === "dark" ? "d" : "l"}${material === "regular" ? "R" : "C"}${tint ?? ""}p${Math.round(dispersion * 100)}${nested ? "n" : ""}`
+      const filterId = `lgf${w}x${h}r${radius}b${bz}f${Math.round(amount * 10)}${appearance === "dark" ? "d" : "l"}${material === "regular" ? "R" : "C"}${tint ?? ""}p${Math.round(dispersion * 100)}${nested ? "n" : ""}d${Math.round((window.devicePixelRatio || 1) * 1000)}`
         .replace(/[^a-zA-Z0-9-]/g, "");
       if (field) {
         const markup = filterMarkup({
@@ -1256,7 +1301,7 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
         heldFilter = null;
       }
       setMap((prev) =>
-        prev && prev.filterId === filterId
+        prev && prev.filterId === filterId && prev.field === field && prev.overlay === overlay
           ? prev
           : { field, overlay, clip: outline.polygon, w, h, filterId }
       );
@@ -1301,14 +1346,29 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
       build(w, h, radius);
     };
 
-    const observer = new ResizeObserver(() => {
+    const scheduleMeasure = () => {
       if (!raf) raf = requestAnimationFrame(measure);
-    });
+    };
+    const observer = new ResizeObserver(scheduleMeasure);
+    let densityQuery: MediaQueryList | null = null;
+    const watchDensity = () => {
+      densityQuery?.removeEventListener("change", densityChanged);
+      densityQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+      densityQuery.addEventListener("change", densityChanged);
+    };
+    const densityChanged = () => {
+      watchDensity();
+      scheduleMeasure();
+    };
     measure();
     observer.observe(lens);
+    watchDensity();
+    window.addEventListener("resize", scheduleMeasure);
     return () => {
       disposed = true;
       observer.disconnect();
+      densityQuery?.removeEventListener("change", densityChanged);
+      window.removeEventListener("resize", scheduleMeasure);
       cancelAnimationFrame(raf);
       cancelAnimationFrame(fluidRaf);
       if (heldFilter) releaseFilter(heldFilter);
@@ -1364,21 +1424,34 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
       />
       {map ? (
         <>
-          {/* Overlay plane: the shader's rim light, its own alpha the mask. */}
-          <span
+          {/* The original rim lighting, sampled densely in a compact atlas.
+           * CSS stretches only the straight edges; corners never upscale. */}
+          {map.overlay ? <span
             aria-hidden
+            data-liquid-glass-rim="nine-slice"
+            data-liquid-glass-rim-width={map.overlay.pixelWidth}
+            data-liquid-glass-rim-height={map.overlay.pixelHeight}
+            data-liquid-glass-rim-scale={map.overlay.scale}
+            data-liquid-glass-rim-css-width={map.overlay.cssWidth}
+            data-liquid-glass-rim-css-height={map.overlay.cssHeight}
+            data-liquid-glass-rim-slice={`${map.overlay.pixelSliceY} ${map.overlay.pixelSliceX}`}
             style={{
               position: "absolute",
               inset: -2,
               zIndex: -1,
               pointerEvents: "none",
-              backgroundImage: `url(${map.overlay})`,
-              backgroundSize: "100% 100%",
-              backgroundRepeat: "no-repeat",
+              boxSizing: "border-box",
+              borderStyle: "solid",
+              borderColor: "transparent",
+              borderWidth: `${map.overlay.sliceY}px ${map.overlay.sliceX}px`,
+              borderImageSource: `url(${map.overlay.url})`,
+              borderImageSlice: `${map.overlay.pixelSliceY} ${map.overlay.pixelSliceX}`,
+              borderImageWidth: 1,
+              borderImageRepeat: "stretch",
               transform: fluidTransform,
               transformOrigin: "0 0",
             }}
-          />
+          /> : null}
           {/* Fills (fallback path; the filter bakes regular when refracting).
            * Dark appearance gets a veil so light/dark read distinctly. */}
           {!refracting && (material === "regular" || dark) ? (
