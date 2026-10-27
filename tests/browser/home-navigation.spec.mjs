@@ -71,7 +71,7 @@ async function fixture(page, screen='home', options={}) {
   const videoRequests=[]
   await page.route('https://nsso.test/**', route => {
     const path=new URL(route.request().url()).pathname
-    if(path==='/')return route.fulfill({contentType:'text/html',body:'<div id="root"></div><script src="/fixture.js"></script>'})
+    if(path==='/')return route.fulfill({contentType:'text/html',body:'<meta name="viewport" content="width=device-width,initial-scale=1"><div id="root"></div><script src="/fixture.js"></script>'})
     if(path==='/fixture.js')return route.fulfill({contentType:'application/javascript',body:bundle})
     if(path==='/api/check-username')return route.fulfill({contentType:'application/json',body:JSON.stringify({available:true})})
     if(path==='/homepage-video.mp4'){videoRequests.push(path);return route.abort()}
@@ -144,6 +144,7 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
       return {
         intro: rect('[data-home-intro]'), demo: rect('[data-home-intro] figure'), story: rect('[data-home-story]'),
         claim: rect('[data-home-actions-layout] > section[aria-labelledby]'), offers: rect('[data-home-actions-layout] > section[aria-label]'),
+        claimCard: rect('[data-home-claim-card]'), monetiseCard: rect('[data-home-offer-card="monetise"]'), exampleCard: rect('[data-home-offer-card="example-profile"]'),
         headlineParts: [...document.querySelectorAll('[data-home-hero] h1 > span')].map(el => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, right: r.right } }),
         tagline: rect('[data-home-intro] h2 + p'),
         contact: rect('[data-home-contact]'), vision: rect('[data-home-vision]'),
@@ -170,7 +171,11 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
       expect(layout.headlineParts[1].right).toBeLessThanOrEqual(width)
       expect(layout.demo.right).toBeLessThan(layout.story.left)
       expect(Math.min(layout.demo.bottom, layout.story.bottom)).toBeGreaterThan(Math.max(layout.demo.top, layout.story.top))
-      expect(layout.claim.right).toBeLessThan(layout.offers.left)
+      expect(layout.offers.right).toBeLessThan(layout.claim.left)
+      expect(Math.abs(layout.monetiseCard.top - layout.claimCard.top)).toBeLessThanOrEqual(1)
+      expect(Math.abs(layout.exampleCard.bottom - layout.claimCard.bottom)).toBeLessThanOrEqual(1)
+      expect(layout.monetiseCard.bottom).toBeLessThan(layout.exampleCard.top)
+      expect(Math.abs(layout.monetiseCard.height - layout.exampleCard.height)).toBeLessThanOrEqual(1)
       if (width === 1440) expect(layout.intro.width).toBeGreaterThan(1000)
     } else {
       expect(layout.bottomPadding).toBe(96)
@@ -178,6 +183,12 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
       expect(layout.headlineParts[0].bottom).toBeLessThanOrEqual(layout.headlineParts[1].top + 2)
       expect(layout.demo.bottom).toBeLessThanOrEqual(layout.story.top)
       expect(layout.claim.bottom).toBeLessThanOrEqual(layout.offers.top)
+      if (width >= 768) {
+        expect(layout.monetiseCard.right).toBeLessThan(layout.exampleCard.left)
+        expect(Math.abs(layout.monetiseCard.top - layout.exampleCard.top)).toBeLessThanOrEqual(1)
+      } else {
+        expect(layout.monetiseCard.bottom).toBeLessThanOrEqual(layout.exampleCard.top)
+      }
       expect(layout.demo.top - layout.tagline.bottom).toBeLessThanOrEqual(24)
     }
   }
