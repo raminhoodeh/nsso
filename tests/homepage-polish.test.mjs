@@ -81,7 +81,7 @@ test('one light intro contains the heading, inline demo, then both approved body
     const story = marked(home, 'data-home-story')
     assert.ok(tagline && title)
     assert.equal(demos.length, 1)
-    assert.ok(tagline.pos < title.pos && title.pos < demos[0].pos && demos[0].pos < story.pos)
+    assert.ok(title.pos < tagline.pos && tagline.pos < demos[0].pos && demos[0].pos < story.pos)
     assert.ok(story.pos > intro.pos && story.end < intro.end, 'Body copy must stay inside the same intro panel.')
     const paragraphs = elements(story).filter(node => tag(node, home) === 'p')
     assert.equal(paragraphs.length, 2)

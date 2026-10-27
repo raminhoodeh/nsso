@@ -10,7 +10,7 @@ Hossain Jahed's **Apple Tahoe Liquid Glass Button** component:
 - Author: <https://21st.dev/@jahed>
 - Marketplace terms: <https://21st.dev/terms> (reviewed 27 October 2026)
 
-The homepage footer retains a visible link to the original component. NSSO's
+Component provenance is retained in this notice. NSSO's
 adaptation keeps its own semantic surfaces, accessibility behavior, contrast
 layers and browser-routing policy. The marketplace's preview images and demo
 background assets are not included in this release.

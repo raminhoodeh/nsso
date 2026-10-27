@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Pause, Play } from 'lucide-react'
+import GlassButton from '@/components/ui/GlassButton'
 
 /** Decorative demo: no media URL is attached until it is visible and motion is allowed. */
 export default function HomeProfileDemo() {
@@ -37,15 +38,17 @@ export default function HomeProfileDemo() {
   }
 
   return (
-    <figure className="mx-auto w-full max-w-[440px] space-y-3" aria-label="nsso profile preview">
-      <figcaption className="text-center text-sm font-semibold text-slate-950">A demo of a nsso profile</figcaption>
+    <figure className="relative mx-auto w-full max-w-[440px]" aria-label="nsso profile preview">
       <div className="relative aspect-[10/13] overflow-hidden rounded-[24px] bg-slate-950 shadow-lg">
-        <video ref={videoRef} poster="/homepage-profile-demo-poster.jpg" preload="none" loop muted playsInline aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" onPlay={() => { setPlaying(true); setNotice('') }} onPause={() => setPlaying(false)} onError={() => { setPlaying(false); setNotice('Preview unavailable. Explore the example profile below.') }} />
+        <video ref={videoRef} poster="/homepage-profile-demo-poster.jpg" preload="none" loop muted playsInline aria-hidden="true" className="absolute inset-0 h-full w-full origin-center scale-[1.18] object-cover" onPlay={() => { setPlaying(true); setNotice('') }} onPause={() => setPlaying(false)} onError={() => { setPlaying(false); setNotice('Preview unavailable. Explore the example profile below.') }} />
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/75 to-transparent p-4 pt-12">
-          <p className="text-sm leading-relaxed text-white" role="status">{notice || (!loaded ? 'Play to explore the profile.' : '')}</p>
-          <button type="button" onClick={toggle} aria-label={playing ? 'Pause profile preview' : 'Play profile preview'} className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-white/40 bg-slate-950/80 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">{playing ? <Pause size={20} /> : <Play size={20} />}</button>
+          <div className="min-w-0 flex-1 pb-8">
+            <p className="text-sm leading-relaxed text-white" role="status">{notice || (!loaded ? 'Play to explore the profile.' : '')}</p>
+          </div>
+          <GlassButton type="button" variant="secondary" tone="dark" onClick={toggle} aria-label={playing ? 'Pause profile preview' : 'Play profile preview'} className="h-11 w-11 shrink-0 p-0">{playing ? <Pause size={20} /> : <Play size={20} />}</GlassButton>
         </div>
       </div>
+      <figcaption className="pointer-events-none absolute bottom-4 left-4 right-[76px] text-sm font-semibold leading-6 text-white">nsso profile demo</figcaption>
     </figure>
   )
 }
