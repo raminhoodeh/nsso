@@ -27,6 +27,7 @@ const { NSSO_PRODUCT_CONTEXT, isNssoProductQuestion } = await import(new URL('li
 const { chatFailureDetails } = await import(new URL('lib/deity/chat-diagnostics.ts', source));
 const { boundedChatHistory } = await import(new URL('lib/deity/chat-allowance.ts', source));
 const { startChatWithRecovery } = await import(new URL('lib/deity/chat-recovery.ts', source));
+const { splitActionPayload, parseActionList } = await import(new URL('lib/deity/actionParser.ts', source));
 hooks.deregister();
 
 const realFetch = globalThis.fetch;
@@ -34,6 +35,9 @@ let mode;
 let calls;
 let providerAborted;
 const privateText = 'AQ.SHOULD_NEVER_LEAK_or_log_private_prompt';
+const fixtureOwnerId = '11111111-1111-4111-8111-111111111111';
+const fixtureLinkId = '22222222-2222-4222-8222-222222222222';
+const invalidProposalMessage = 'Deity could not prepare a valid profile change. Nothing was changed. Please try again.';
 beforeEach(() => {
   mode = 'success'; calls = []; providerAborted = false;
   globalThis.fetch = async (url, init) => {
@@ -43,6 +47,8 @@ beforeEach(() => {
     if (path.endsWith('/reserve_nsso_chat_budget')) return Response.json(mode === 'quota'
       ? { allowed: false, code: 'daily_ip_allowance_exhausted' } : { allowed: true });
     if (path.endsWith('/finish_nsso_chat_budget')) return Response.json(null);
+    if (path === '/auth/v1/user') return Response.json({ id: fixtureOwnerId, aud: 'authenticated', role: 'authenticated' });
+    if (path.endsWith('/get_agent_context')) return Response.json({ profile: { full_name: 'Fixture Creator', headline: 'Fixture headline', bio: 'Fixture biography' }, links: [{ id: fixtureLinkId, link_name: 'Fixture link', link_url: 'https://example.test/' }] });
     if (path.endsWith('/intelligent_search')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
     if (path.endsWith(':embedContent')) return Response.json({ embedding: { values: Array(768).fill(0.01) } });
     if (path.endsWith(':countTokens')) return Response.json({ totalTokens: 500 });
@@ -60,9 +66,19 @@ beforeEach(() => {
       if (mode === 'always_busy' || (mode === 'busy_once' && calls.filter(c => c.path.endsWith(':streamGenerateContent')).length === 1)) {
         return Response.json({ error: { code: 503, message: `Busy ${privateText}` } }, { status: 503 });
       }
-      const candidate = { candidates: [{ index: 0, content: { role: 'model', parts: mode === 'empty' ? [] : [{ text: 'NSSO stands for new sovereign self online.' }] }, finishReason: 'STOP' }],
+      const validTool = { functionCall: { name: 'update_link', args: { linkId: fixtureLinkId, name: 'Fixture renamed link' } } };
+      const invalidTool = { functionCall: { name: 'update_link', args: { linkId: privateText, name: privateText } } };
+      const parts = mode === 'empty' ? []
+        : mode === 'tool_with_tip' ? [{ text: "I don't have extra context, but I can prepare that link change." }, validTool]
+        : mode === 'tool_only' ? [validTool]
+        : mode === 'invalid_tool_only' ? [invalidTool]
+        : mode === 'unknown_tool_only' ? [{ functionCall: { name: privateText, args: { value: privateText } } }]
+        : mode === 'mixed_tools' ? [validTool, invalidTool]
+        : mode === 'tool_broken_stream' ? [{ text: 'A partial fixture response.' }, validTool]
+        : [{ text: 'NSSO stands for new sovereign self online.' }];
+      const candidate = { candidates: [{ index: 0, content: { role: 'model', parts }, finishReason: 'STOP' }],
         usageMetadata: { promptTokenCount: 500, candidatesTokenCount: 20, totalTokenCount: 520 } };
-      const wire = `data: ${JSON.stringify(candidate)}\n\n${mode === 'broken_stream' ? 'data: {broken JSON}\n\n' : ''}`;
+      const wire = `data: ${JSON.stringify(candidate)}\n\n${['broken_stream', 'tool_broken_stream'].includes(mode) ? 'data: {broken JSON}\n\n' : ''}`;
       return new Response(wire, { headers: { 'content-type': 'text/event-stream' } });
     }
     throw new Error(`Unexpected test network call: ${path}`);
@@ -72,6 +88,96 @@ after(() => { globalThis.fetch = realFetch; process.env = previousEnv; });
 const request = (patch = {}, signal) => new Request('https://www.nsso.me/api/deity/chat', { method: 'POST',
   headers: { 'content-type': 'application/json', origin: 'https://www.nsso.me', 'x-vercel-forwarded-for': '192.0.2.100' },
   body: JSON.stringify({ message: 'what is nsso?', history: [], ...patch }), signal });
+const ownerRequest = (patch = {}) => {
+  const input = request({ message: 'Rename my fixture AI link.', ...patch });
+  input.headers.set('authorization', 'Bearer fixture-only-token');
+  return input;
+};
+const assertNoMutationOrRetry = () => {
+  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+  assert.equal(calls.filter(call => call.path.endsWith('/reserve_nsso_chat_budget')).length, 2);
+  assert.equal(calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget')).length, 1);
+  const allowedRpcs = ['reserve_nsso_chat_budget', 'finish_nsso_chat_budget', 'get_agent_context', 'intelligent_search'];
+  assert.ok(calls.filter(call => call.path.includes('/rpc/')).every(call => allowedRpcs.some(name => call.path.endsWith('/' + name))), 'A proposed change must never invoke a profile mutation');
+};
+
+test('authenticated native update_link remains terminal JSON after a category tip and final billing', async () => {
+  mode = 'tool_with_tip';
+  const response = await POST(ownerRequest());
+  assert.equal(response.status, 200);
+  const wire = await response.text();
+  const { message, actionsJson } = splitActionPayload(wire);
+  assert.match(message, /Tip: I noticed you were asking about AI Tools/);
+  const actions = parseActionList(JSON.parse(actionsJson));
+  assert.deepEqual(actions, [{ version: 1, label: 'Update link', change: { kind: 'link.patch', id: fixtureLinkId, patch: { link_name: 'Fixture renamed link' } } }]);
+  assert.equal(wire.indexOf('__DEITY_ACTIONS__'), wire.lastIndexOf('__DEITY_ACTIONS__'));
+  assert.equal(calls.find(call => call.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, true);
+  const generation = calls.find(call => call.path.endsWith(':streamGenerateContent')).body;
+  assert.ok(generation.tools[0].functionDeclarations.some(tool => tool.name === 'update_link'));
+  assert.equal(generation.toolConfig, undefined, 'Do not force model tool choice');
+  assertNoMutationOrRetry();
+});
+
+test('an action-only provider completion still emits one valid review proposal', async () => {
+  mode = 'tool_only';
+  const response = await POST(ownerRequest());
+  const { message, actionsJson } = splitActionPayload(await response.text());
+  assert.equal(message.trim(), '');
+  assert.equal(parseActionList(JSON.parse(actionsJson)).length, 1);
+  assertNoMutationOrRetry();
+});
+
+for (const rejected of ['invalid_tool_only', 'unknown_tool_only']) {
+  test(`${rejected} produces explicit no-change feedback and allowlisted diagnostics without leaking arguments`, async t => {
+    mode = rejected;
+    const warnings = [];
+    t.mock.method(console, 'warn', (...args) => warnings.push(args));
+    const response = await POST(ownerRequest());
+    assert.equal(response.status, 200);
+    const wire = await response.text();
+    assert.equal(wire, invalidProposalMessage);
+    assert.doesNotMatch(wire, /__DEITY_ACTIONS__|response was interrupted|Reference:|SHOULD_NEVER_LEAK/);
+    const diagnostic = warnings.find(args => args[0] === 'Deity tool proposal rejected');
+    assert.deepEqual(diagnostic?.[1], { requestId: response.headers.get('x-deity-request-id'), code: 'INVALID_PROFILE_PROPOSAL', toolName: rejected === 'invalid_tool_only' ? 'update_link' : 'unknown' });
+    assert.ok(!JSON.stringify(warnings).includes(privateText));
+    assert.equal(calls.find(call => call.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, true);
+    assertNoMutationOrRetry();
+  });
+}
+
+test('mixed valid and invalid native calls retain the valid proposal without the invalid-only feedback', async () => {
+  mode = 'mixed_tools';
+  const response = await POST(ownerRequest());
+  const wire = await response.text();
+  assert.doesNotMatch(wire, /could not prepare a valid profile change/);
+  const actions = parseActionList(JSON.parse(splitActionPayload(wire).actionsJson));
+  assert.equal(actions.length, 1);
+  assert.equal(actions[0].change.id, fixtureLinkId);
+  assertNoMutationOrRetry();
+});
+
+test('a broken provider stream after a tool chunk never leaks a partial review proposal', async () => {
+  mode = 'tool_broken_stream';
+  const response = await POST(ownerRequest());
+  const wire = await response.text();
+  assert.match(wire, /response was interrupted/);
+  assert.doesNotMatch(wire, /__DEITY_ACTIONS__|SHOULD_NEVER_LEAK/);
+  assert.equal(calls.find(call => call.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, false);
+  assertNoMutationOrRetry();
+});
+
+test('a throwing action-emission logger fails before any action JSON is emitted', async t => {
+  mode = 'tool_only';
+  t.mock.method(console, 'log', (...args) => {
+    if (String(args[0]).includes('Actions via Protocol')) throw new Error(privateText);
+  });
+  const response = await POST(ownerRequest());
+  const wire = await response.text();
+  assert.match(wire, /response was interrupted/);
+  assert.doesNotMatch(wire, /__DEITY_ACTIONS__|SHOULD_NEVER_LEAK/);
+  assert.equal(calls.find(call => call.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, true);
+  assertNoMutationOrRetry();
+});
 
 test('real route answers the reported guest question with the budgeted, supported model and product facts', async () => {
   const response = await POST(request({ history: [{ role: 'model', content: 'Welcome. Let me help with your bio.' }, { role: 'model', content: 'Tip: write your bio.' }] }));

@@ -16,7 +16,7 @@ test.beforeAll(async () => {
                     window.setFixtureIdentity=(user,loading)=>{value={user,loading};listeners.forEach(listener=>listener())};
                     window.setFixtureUser=user=>window.setFixtureIdentity(user,false);
                     export const useUser=()=>useSyncExternalStore(subscribe,()=>value);`
-                : path.endsWith('ProfileProvider') ? `const noop=async()=>false;const value={updateField:noop,addLink:noop,updateLink:noop,removeLink:noop,reorderLinks:noop,addExperience:noop,addProject:noop,addQualification:noop,addProduct:noop,undo:noop,canUndo:false,fastMode:false,setFastMode:noop,revision:0,getRevision:()=>0,refreshProfile:async()=>{},applyOperation:async()=>({status:'rejected',operationId:'fixture',revision:0,changes:[]})};export const useProfile=()=>value;`
+                : path.endsWith('ProfileProvider') ? `window.fixtureApplyCount=0;const noop=async()=>false;const value={updateField:noop,addLink:noop,updateLink:noop,removeLink:noop,reorderLinks:noop,addExperience:noop,addProject:noop,addQualification:noop,addProduct:noop,undo:noop,canUndo:false,fastMode:false,setFastMode:noop,revision:0,getRevision:()=>0,refreshProfile:async()=>{},applyOperation:async()=>{window.fixtureApplyCount++;return{status:'rejected',operationId:'fixture',revision:0,changes:[]}}};export const useProfile=()=>value;`
                 : path.endsWith('Toast') ? `const showToast=()=>{};export const useToast=()=>({showToast});`
                 : `window.fixtureIntroReads=[];
                     const client={auth:{getSession:async()=>({data:{session:null}})},from:()=>{
@@ -61,13 +61,13 @@ test.beforeEach(({ page }) => {
 });
 test.afterEach(({ page }) => { expect(runtimeErrors.get(page)).toEqual([]); });
 
-async function openDelayedIntro(page, { stream = false, failChat = false, requests = [], bootstrap = false, props = {} } = {}) {
+async function openDelayedIntro(page, { stream = false, failChat = false, reply = 'Fixture response.', requests = [], bootstrap = false, props = {} } = {}) {
     await page.route('**/*', async route => {
         const url = new URL(route.request().url());
         if (url.pathname === '/fixture') return route.fulfill({ contentType: 'text/html', body: '<div id="root"></div>' });
         if (url.pathname === '/api/deity/chat') {
             requests.push(route.request().postDataJSON().message);
-            return failChat ? route.abort('failed') : route.fulfill({ contentType: 'text/plain', body: 'Fixture response.' });
+            return failChat ? route.abort('failed') : route.fulfill({ contentType: 'text/plain', body: reply });
         }
         if (/\.(png|jpg)$/.test(url.pathname)) return route.fulfill({ status: 204 });
         throw new Error(`Unexpected network request in isolated chat fixture: ${url.href}`);
@@ -93,6 +93,37 @@ async function resolveIntro(page, indices, fullName = 'Current Creator') {
         indices.forEach(index => window.fixtureIntroReads[index].resolve({ full_name: fullName, bio: 'Fixture bio' }));
     }, { indices, fullName });
 }
+
+test('a terminal native-link proposal after a category tip renders one Review action without auto-saving', async ({ page }) => {
+    const actions = [{ version: 1, label: 'Update link', change: { kind: 'link.patch', id: '22222222-2222-4222-8222-222222222222', patch: { link_name: 'Fixture renamed link' } } }];
+    const prose = "I don't have extra context, but I can prepare that link change.\n\n💡 Tip: I noticed you were asking about AI Tools. Try selecting that category below for better search results!";
+    await openDelayedIntro(page, { reply: prose + '\n__DEITY_ACTIONS__\n' + JSON.stringify(actions) + '\n' });
+    await page.getByRole('textbox', { name: 'Message Deity' }).fill('Rename my fixture AI link.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    const apply = page.getByRole('button', { name: 'Apply suggested profile change', exact: true });
+    await expect(apply).toHaveCount(1);
+    await expect(page.getByRole('article', { name: 'Deity message' })).toContainText('Try selecting that category');
+    await apply.locator('..').getByText('Review proposed values', { exact: true }).click();
+    await expect(apply.locator('..').locator('dt')).toHaveText('link name');
+    await expect(apply.locator('..').locator('dd')).toHaveText('Fixture renamed link');
+    expect(await page.evaluate(() => window.fixtureApplyCount)).toBe(0);
+    await page.getByRole('button', { name: 'Reject suggested profile change', exact: true }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Rejected' })).toHaveCount(1);
+    expect(await page.evaluate(() => window.fixtureApplyCount)).toBe(0);
+});
+
+test('an invalid-tool-only response displays explicit no-change feedback, with no proposal or automatic retry', async ({ page }) => {
+    const requests = [];
+    const feedback = 'Deity could not prepare a valid profile change. Nothing was changed. Please try again.';
+    await openDelayedIntro(page, { reply: feedback, requests });
+    await page.getByRole('textbox', { name: 'Message Deity' }).fill('Rename my fixture link.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect(page.getByRole('article', { name: 'Deity message' })).toHaveText(feedback);
+    await expect(page.getByRole('button', { name: 'Apply suggested profile change', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('status', { name: 'Deity is responding', exact: true })).toHaveCount(0);
+    expect(requests).toEqual(['Rename my fixture link.']);
+    expect(await page.evaluate(() => window.fixtureApplyCount)).toBe(0);
+});
 
 test('identity bootstrap has an accessible non-editable state, then keeps the first account draft', async ({ page }) => {
     await openDelayedIntro(page, { bootstrap: true });

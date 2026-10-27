@@ -16,6 +16,7 @@ import { reportRuntimeSignal } from '@/lib/server/runtime-signals';
 import { calculateProfileCompleteness } from '@/lib/profile-completeness';
 
 export const maxDuration = 90;
+const allowedToolNames = new Set(DEITY_TOOLS.map(tool => tool.name));
 
 // Category configuration with optimized thresholds
 const CATEGORY_CONFIG: Record<string, { files: string[], threshold: number }> = {
@@ -388,6 +389,7 @@ export async function POST(req: Request) {
                 let fullResponse = '';
                 try {
                 const collectedActions: DeityAction[] = [];
+                let rejectedProposalCount = 0;
 
                 // Stream chunks as they arrive
                 for await (const chunk of result.stream) {
@@ -407,16 +409,12 @@ export async function POST(req: Request) {
 
                             const proposal = normalizeToolCall(call.name, call.args);
                             if (proposal && collectedActions.length < 20) collectedActions.push(proposal);
-                            else console.warn('Deity tool proposal rejected', { requestId, code: 'INVALID_PROFILE_PROPOSAL' });
+                            else {
+                                rejectedProposalCount++;
+                                console.warn('Deity tool proposal rejected', { requestId, code: 'INVALID_PROFILE_PROPOSAL', toolName: allowedToolNames.has(call.name) ? call.name : 'unknown' });
+                            }
                         });
                     }
-                }
-
-                // If we collected any actions, append them via the helper protocol
-                if (collectedActions.length > 0) {
-                    const payload = createActionPayload(collectedActions);
-                    controller.enqueue(new TextEncoder().encode(payload));
-                    console.log(`🚀 Emitted ${collectedActions.length} Actions via Protocol`);
                 }
 
                 // After full response, detect if LLM indicated lack of knowledge
@@ -465,7 +463,18 @@ export async function POST(req: Request) {
 
                 const response = await result.response;
                 await activeBudget.finish(response.usageMetadata);
-                if (!fullResponse.trim() && collectedActions.length === 0) throw new Error('Empty provider response');
+                if (rejectedProposalCount > 0 && collectedActions.length === 0) {
+                    controller.enqueue(new TextEncoder().encode(`${fullResponse.trim() ? '\n\n' : ''}Deity could not prepare a valid profile change. Nothing was changed. Please try again.`));
+                } else if (!fullResponse.trim() && collectedActions.length === 0) throw new Error('Empty provider response');
+
+                // The client parses the complete suffix after this delimiter as
+                // JSON. Emit it only after all prose/tips and fallible provider
+                // finalization, with no subsequent text or awaited work.
+                if (collectedActions.length > 0) {
+                    const payload = createActionPayload(collectedActions);
+                    console.log(`🚀 Emitted ${collectedActions.length} Actions via Protocol`);
+                    controller.enqueue(new TextEncoder().encode(payload));
+                }
                 controller.close();
                 } catch (error) {
                     await activeBudget.finish();
