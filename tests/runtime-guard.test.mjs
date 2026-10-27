@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url'
 const source=new URL('../src/',import.meta.url),previous={...process.env}
 const hooks=registerHooks({resolve(specifier,context,next){
  if(specifier==='server-only')return{url:'data:text/javascript,export{}',shortCircuit:true}
- if(specifier==='@/lib/server/permissions')return{url:'data:text/javascript,'+encodeURIComponent(`export function assertSameOrigin(request){if(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)throw {status:403}};export function createPrivilegedClient(){return {rpc:async(name,args)=>{globalThis.__limitCalls.push({name,args});return globalThis.__limitResult}}}`),shortCircuit:true}
+ if(specifier==='@/lib/server/permissions')return{url:'data:text/javascript,'+encodeURIComponent(`export function assertSameOrigin(request){if(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)throw {status:403}};export function createPrivilegedClient(context){return {rpc:async(name,args)=>{globalThis.__limitCalls.push({name,args,context});return globalThis.__limitResult}}}`),shortCircuit:true}
  if(specifier.startsWith('@/'))return next(new URL(specifier.slice(2)+'.ts',source).href,context)
  if(specifier.startsWith('.')&&context.parentURL?.startsWith(source.href)){const url=new URL(specifier+'.ts',context.parentURL);if(existsSync(fileURLToPath(url)))return next(url.href,context)}
  return next(specifier,context)
@@ -37,4 +37,20 @@ test('quota denial and unavailable accounting fail closed with private helpful r
  globalThis.__limitResult={data:{allowed:false},error:null};let response=await guardRuntimeRequest(request());assert.equal(response.status,429);assert.equal(response.headers.get('retry-after'),'60')
  globalThis.__limitResult={data:null,error:{message:'private-fixture-error'}};response=await guardRuntimeRequest(request());assert.equal(response.status,503);assert.equal((await response.text()).includes('private-fixture'),false);assert.equal(response.headers.get('cache-control'),'private, no-store')
  delete process.env.NSSO_CHAT_IP_HASH_SECRET;assert.equal((await guardRuntimeRequest(request())).status,503)
+})
+test('limiter dependency error and malformed result correlate503 diagnostics without leaking details or retrying',async t=>{
+ const logs=[];t.mock.method(console,'warn',(...args)=>logs.push(args))
+ for(const result of [{data:null,error:{message:'PRIVATE_DEPENDENCY_BODY'},status:503},{data:{allowed:'PRIVATE_DEPENDENCY_BODY'},error:null,status:200}]){
+  globalThis.__limitCalls=[];globalThis.__limitResult=result;logs.length=0
+  const response=await guardRuntimeRequest(request('/api/profile/operations','POST'))
+  assert.equal(response.status,503);assert.equal(globalThis.__limitCalls.length,1)
+  const id=response.headers.get('x-request-id')
+  assert.equal(globalThis.__limitCalls[0].context.requestId,id)
+  const details=logs.find(([,item])=>item.code==='privileged_dependency_failed')?.[1]
+  assert.equal(details.requestId,id);assert.equal(details.operation,'runtime_limiter')
+  assert.equal(details.failure,result.error?'rpc_error':'malformed_result')
+  assert.equal(details.upstreamStatus,result.status)
+  assert.equal(JSON.stringify(logs).includes('PRIVATE_DEPENDENCY_BODY'),false)
+  assert.equal((await response.text()).includes('PRIVATE_DEPENDENCY_BODY'),false)
+ }
 })

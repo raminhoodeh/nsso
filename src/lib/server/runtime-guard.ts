@@ -2,6 +2,7 @@ import 'server-only'
 import { randomUUID, createHmac } from 'node:crypto'
 import { clientIpHash } from '@/lib/deity/chat-budget-server'
 import { assertSameOrigin, createPrivilegedClient } from '@/lib/server/permissions'
+import { reportLimiterResultFailure } from '@/lib/server/privileged-fetch'
 
 const mutations = new Set(['POST','PUT','PATCH','DELETE'])
 export function runtimeScope(path: string, method: string): string | null {
@@ -31,8 +32,13 @@ export async function guardRuntimeRequest(request: Request): Promise<Response | 
         const maximum = ['/api/razinflix/update','/api/profile/media'].includes(path) ? 12*1024*1024 : path.startsWith('/api/deity/') ? 65_536 : 262_144
         if (Number(request.headers.get('content-length')) > maximum) return Response.json({error:'This request is too large.',requestId},{status:413,headers})
         const hash = createHmac('sha256', clientIpHash(request)).update(`nsso-runtime/${scope}`).digest('hex')
-        const {data,error} = await createPrivilegedClient().rpc('consume_nsso_request_limit',{p_scope:scope,p_subject_hash:hash})
-        if (error || typeof data?.allowed !== 'boolean') throw new Error('Limiter unavailable')
+        const started = performance.now()
+        const result = await createPrivilegedClient({ requestId }).rpc('consume_nsso_request_limit',{p_scope:scope,p_subject_hash:hash})
+        const { data, error } = result
+        if (error || typeof data?.allowed !== 'boolean') {
+            reportLimiterResultFailure({ requestId }, started, Boolean(error), result.status)
+            throw new Error('Limiter unavailable')
+        }
         if (!data.allowed) {
             safeDiagnostic('rate_denied',requestId,429)
             return Response.json({error:'Please pause briefly and try again. Your work is kept.',requestId},{status:429,headers:{...headers,'Retry-After':'60'}})
@@ -53,8 +59,13 @@ export async function guardActorUpload(actorId: string): Promise<Response | null
         const secret = process.env.NSSO_CHAT_IP_HASH_SECRET
         if (!secret || secret.length < 32 || !/^[0-9a-f-]{36}$/i.test(actorId)) throw new Error('Upload accounting unavailable')
         const subject = createHmac('sha256',secret).update(`nsso-upload-actor/${actorId}`).digest('hex')
-        const {data,error} = await createPrivilegedClient().rpc('consume_nsso_request_limit',{p_scope:'upload_actor',p_subject_hash:subject})
-        if (error || typeof data?.allowed !== 'boolean') throw new Error('Upload accounting unavailable')
+        const started = performance.now()
+        const result = await createPrivilegedClient({ requestId }).rpc('consume_nsso_request_limit',{p_scope:'upload_actor',p_subject_hash:subject})
+        const { data, error } = result
+        if (error || typeof data?.allowed !== 'boolean') {
+            reportLimiterResultFailure({ requestId }, started, Boolean(error), result.status)
+            throw new Error('Upload accounting unavailable')
+        }
         if (!data.allowed) return Response.json({error:'Please pause before uploading more images. Your crop has been kept.',requestId},{status:429,headers:{...headers,'Retry-After':'60'}})
         return null
     } catch {
