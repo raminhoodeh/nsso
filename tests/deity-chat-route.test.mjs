@@ -43,9 +43,10 @@ const invalidProposalMessage = 'Deity could not prepare a valid profile change. 
 beforeEach(() => {
   mode = 'success'; calls = []; providerAborted = false;
   globalThis.fetch = async (url, init) => {
-    const path = new URL(String(url)).pathname;
+    const parsedUrl = new URL(String(url));
+    const path = parsedUrl.pathname;
     const body = init?.body ? JSON.parse(init.body) : undefined;
-    calls.push({ path, body });
+    calls.push({ path, body, query: Object.fromEntries(parsedUrl.searchParams), method: init?.method || 'GET' });
     if (path.endsWith('/reserve_nsso_chat_budget')) return Response.json(mode === 'quota'
       ? { allowed: false, code: 'daily_ip_allowance_exhausted' } : { allowed: true });
     if (path.endsWith('/finish_nsso_chat_budget')) return Response.json(null);
@@ -59,7 +60,34 @@ beforeEach(() => {
       if (mode === 'context_unavailable') return Response.json({ code: 'fixture', message: privateText }, { status: 503 });
       if (mode === 'context_missing') return Response.json(null);
       if (mode === 'context_malformed') return Response.json({ profile: [] });
-      return Response.json({ profile: { full_name: 'Fixture Creator', headline: 'Fixture headline', bio: 'Fixture biography' }, links: [{ id: fixtureLinkId, link_name: 'Fixture link', link_url: 'https://example.test/' }] });
+      // Production's legacy RPC contains names/URLs but NO link IDs.
+      return Response.json({ profile: { full_name: 'Fixture Creator', headline: 'Fixture headline', bio: 'Fixture biography' }, links: [{ link_name: 'Legacy link label', link_url: 'https://legacy.example.test/' }] });
+    }
+    if (path === '/rest/v1/links') {
+      assert.equal(parsedUrl.searchParams.get('select'), 'id,user_id,link_name,link_url');
+      assert.equal(parsedUrl.searchParams.get('user_id'), `eq.${fixtureOwnerId}`);
+      assert.equal(parsedUrl.searchParams.get('limit'), '501');
+      assert.equal(parsedUrl.searchParams.get('order'), 'display_order.asc,id.asc');
+      assert.equal(init?.method || 'GET', 'GET');
+      const row = { id: fixtureLinkId, user_id: fixtureOwnerId, link_name: 'Canonical fixture link', link_url: 'https://example.test/' };
+      if (mode === 'links_unavailable') return Response.json({ code: 'fixture', message: privateText }, { status: 503 });
+      if (mode === 'links_missing') return Response.json(null);
+      if (mode === 'links_malformed') return Response.json(row);
+      if (mode === 'links_empty') return Response.json([]);
+      if (mode === 'links_wrong_owner') return Response.json([{ ...row, user_id: fixtureLinkId }]);
+      if (mode === 'links_missing_owner') return Response.json([{ id: row.id, link_name: row.link_name, link_url: row.link_url }]);
+      if (mode === 'links_missing_id') return Response.json([{ user_id: row.user_id, link_name: row.link_name, link_url: row.link_url }]);
+      if (mode === 'links_invalid_id') return Response.json([{ ...row, id: privateText }]);
+      if (mode === 'links_legacy_url') return Response.json([{ ...row, link_url: 'legacy-invalid-url' }]);
+      if (mode === 'links_nullable_fields') return Response.json([{ ...row, link_name: null, link_url: null }]);
+      if (mode === 'links_blank_fields') return Response.json([{ ...row, link_name: '', link_url: '' }]);
+      if (mode === 'links_invalid_url') return Response.json([{ ...row, link_url: 123 }]);
+      if (mode === 'links_invalid_name') return Response.json([{ ...row, link_name: [] }]);
+      if (mode === 'links_oversized_url') return Response.json([{ ...row, link_url: 'x'.repeat(4097) }]);
+      if (mode === 'links_oversized_name') return Response.json([{ ...row, link_name: 'x'.repeat(301) }]);
+      if (mode === 'links_duplicate_ids') return Response.json([row, row]);
+      if (mode === 'links_too_many') return Response.json(Array.from({ length: 501 }, () => row));
+      return Response.json([row]);
     }
     if (path.endsWith('/intelligent_search')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
     if (path.endsWith(':embedContent')) return Response.json({ embedding: { values: Array(768).fill(0.01) } });
@@ -113,6 +141,62 @@ const assertNoMutationOrRetry = () => {
   assert.ok(calls.filter(call => call.path.includes('/rpc/')).every(call => allowedRpcs.some(name => call.path.endsWith('/' + name))), 'A proposed change must never invoke a profile mutation');
 };
 
+test('legacy RPC links without IDs are replaced by separately verified owner-scoped canonical rows before the model sees context', async () => {
+  mode = 'tool_only';
+  const response = await POST(ownerRequest({ expectedAccountId: fixtureOwnerId }));
+  assert.equal(response.status, 200);
+  const actions = parseActionList(JSON.parse(splitActionPayload(await response.text()).actionsJson));
+  assert.equal(actions[0].change.id, fixtureLinkId);
+  const canonical = calls.filter(call => call.path === '/rest/v1/links');
+  assert.equal(canonical.length, 1);
+  assert.deepEqual(canonical[0].query, { select: 'id,user_id,link_name,link_url', user_id: `eq.${fixtureOwnerId}`, order: 'display_order.asc,id.asc', limit: '501' });
+  for (const suffix of [':countTokens', ':streamGenerateContent']) {
+    const input = JSON.stringify(calls.find(call => call.path.endsWith(suffix)).body);
+    assert.ok(input.includes(`[id: ${fixtureLinkId}] Canonical fixture link: https://example.test/`));
+    assert.doesNotMatch(input, /\[id: undefined\]|Legacy link label|legacy\.example\.test/);
+    assert.ok(!input.includes(fixtureOwnerId), 'Do not serialize row ownership into the model context');
+  }
+  const index = path => calls.findIndex(call => call.path.endsWith(path));
+  assert.ok(index('/auth/v1/user') < index('/get_agent_context'));
+  assert.ok(index('/get_agent_context') < index('/rest/v1/links'));
+  assert.ok(index('/rest/v1/links') < index(':countTokens'));
+  assertNoMutationOrRetry();
+});
+
+for (const state of ['links_unavailable', 'links_missing', 'links_malformed', 'links_wrong_owner', 'links_missing_owner', 'links_missing_id', 'links_invalid_id', 'links_invalid_url', 'links_invalid_name', 'links_oversized_url', 'links_oversized_name', 'links_duplicate_ids', 'links_too_many']) {
+  test(`${state} blocks profile chat before any model call instead of guessing a link ID`, async t => {
+    mode = state;
+    const logs = [];
+    t.mock.method(console, 'error', (...args) => logs.push(args));
+    t.mock.method(console, 'warn', (...args) => logs.push(args));
+    const response = await POST(ownerRequest({ expectedAccountId: fixtureOwnerId }));
+    assert.equal(response.status, 503);
+    const body = await response.json();
+    assert.equal(body.code, 'chat_profile_context_unavailable');
+    assert.match(body.error, /Nothing was changed/);
+    assert.doesNotMatch(JSON.stringify({ body, logs }), /SHOULD_NEVER_LEAK/);
+    assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
+    assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 1);
+    assert.equal(calls.filter(call => call.path === '/rest/v1/links' && call.method !== 'GET').length, 0);
+  });
+}
+
+for (const state of ['links_empty', 'links_legacy_url', 'links_nullable_fields', 'links_blank_fields']) {
+  test(`${state} remains usable read-only context without weakening mutation validation`, async () => {
+    mode = state;
+    const response = await POST(ownerRequest({ expectedAccountId: fixtureOwnerId }));
+    assert.equal(response.status, 200);
+    const wire = await response.text();
+    assert.doesNotMatch(wire, /__DEITY_ACTIONS__/);
+    const generation = JSON.stringify(calls.find(call => call.path.endsWith(':streamGenerateContent')).body.systemInstruction);
+    assert.doesNotMatch(generation, /\[id: undefined\]|Legacy link label|legacy\.example\.test/);
+    if (state === 'links_legacy_url') assert.ok(generation.includes('legacy-invalid-url'));
+    if (state === 'links_empty') assert.ok(!generation.includes(`[id: ${fixtureLinkId}]`));
+    else assert.ok(generation.includes(`[id: ${fixtureLinkId}]`));
+    assertNoMutationOrRetry();
+  });
+}
+
 for (const [state, status, code] of [
   ['auth_unavailable', 503, 'chat_authentication_unavailable'],
   ['auth_transport_failure', 503, 'chat_authentication_unavailable'],
@@ -136,6 +220,7 @@ for (const [state, status, code] of [
     assert.doesNotMatch(JSON.stringify(logs), /SHOULD_NEVER_LEAK/);
     assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
     assert.equal(calls.filter(call => call.path === '/auth/v1/user').length, 1);
+    assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
     assert.ok(calls.filter(call => call.path.includes('/rpc/')).every(call => ['reserve_nsso_chat_budget', 'finish_nsso_chat_budget', 'get_agent_context'].some(name => call.path.endsWith('/' + name))));
   });
 }
@@ -148,6 +233,7 @@ test('the expected owner cannot supply identity or silently omit authentication'
   }
   assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
   assert.equal(calls.filter(call => call.path.endsWith('/get_agent_context')).length, 0);
+  assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
 });
 
 test('a malformed bearer is never treated as a guest', async () => {
@@ -156,6 +242,7 @@ test('a malformed bearer is never treated as a guest', async () => {
   assert.equal(response.status, 401);
   assert.equal((await response.json()).code, 'chat_authentication_required');
   assert.equal(calls.filter(call => call.path.includes('/models/') || call.path === '/auth/v1/user').length, 0);
+  assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
 });
 
 test('native tools prepare review proposals and an explicit no-save request is not tool suppression', async () => {
@@ -190,6 +277,7 @@ test('guest and explicitly read-only responses cannot expose unexpected provider
     const wire = await response.text();
     assert.doesNotMatch(wire, /__DEITY_ACTIONS__/);
     assert.match(wire, /Nothing was changed/);
+    if (!input.headers.has('authorization')) assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
   }
 });
 
@@ -277,6 +365,7 @@ test('real route answers the reported guest question with the budgeted, supporte
   assert.match(await response.text(), /new sovereign self online/);
   assert.match(response.headers.get('x-deity-request-id'), /^[a-f0-9-]{36}$/);
   assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search') || c.path.endsWith(':embedContent')).length, 0);
+  assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
   const generation = calls.find(c => c.path.endsWith(':streamGenerateContent'));
   assert.match(generation.path, /gemini-2\.5-flash:/);
   assert.equal(generation.body.generationConfig.thinkingConfig.thinkingBudget, 0);

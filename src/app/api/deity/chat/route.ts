@@ -17,6 +17,7 @@ import { calculateProfileCompleteness } from '@/lib/profile-completeness';
 import { isTransientAuthError } from '@/lib/auth-errors';
 import { createPrivilegedFetch } from '@/lib/server/privileged-fetch';
 import { withRuntimeGuard } from '@/lib/server/runtime-route';
+import { isUuid } from '@/lib/profile-mutations';
 
 export const maxDuration = 90;
 const allowedToolNames = new Set(DEITY_TOOLS.map(tool => tool.name));
@@ -189,7 +190,25 @@ async function handlePOST(req: Request) {
                         console.error('Deity context unavailable', { code: 'PROFILE_CONTEXT_UNAVAILABLE', requestId });
                         throw new ChatAllowanceError('chat_profile_context_unavailable', 503);
                     } else {
-                        contextData = fetchedContext;
+                        // The legacy context RPC deliberately omits link IDs.
+                        // Read canonical rows only for the freshly verified owner
+                        // so edit proposals never depend on invented/stale IDs.
+                        const { data: ownedLinks, error: linksError } = await supabase.from('links')
+                            .select('id,user_id,link_name,link_url').eq('user_id', userId)
+                            .order('display_order', { ascending: true }).order('id', { ascending: true }).limit(501);
+                        const contextTextValue = (value: unknown, maximum: number) => value === null || typeof value === 'string' && value.length <= maximum;
+                        if (linksError || !Array.isArray(ownedLinks) || ownedLinks.length > 500
+                            || !ownedLinks.every(link => link && typeof link === 'object' && !Array.isArray(link)
+                                && link.user_id === userId && isUuid(link.user_id) && isUuid(link.id)
+                                && contextTextValue(link.link_name, 300) && contextTextValue(link.link_url, 4096))
+                            || new Set(ownedLinks.map(link => link.id)).size !== ownedLinks.length) {
+                            console.error('Deity context unavailable', { code: 'OWNED_LINK_CONTEXT_UNAVAILABLE', requestId });
+                            throw new ChatAllowanceError('chat_profile_context_unavailable', 503);
+                        }
+                        // Read-only representation: incomplete/legacy URLs are
+                        // still useful when the user asks to repair their link.
+                        // Never write these fallbacks or relax mutation rules.
+                        contextData = { ...fetchedContext, links: ownedLinks.map(link => ({ id: link.id, link_name: link.link_name ?? '', link_url: link.link_url ?? '' })) };
 
                         // Calculate profile completeness
                         profileCompleteness = calculateProfileCompleteness(contextData);
