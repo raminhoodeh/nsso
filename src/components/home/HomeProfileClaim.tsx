@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { boundedClientRead } from '@/lib/client-read'
@@ -22,6 +22,20 @@ export default function HomeProfileClaim() {
   const pending = useRef(false)
   const generation = useRef(0)
 
+  useLayoutEffect(() => {
+    // Activity can preserve state while hiding this form. Restoring it must
+    // allow a fresh attempt rather than retain an invalidated loading state.
+    if (pending.current) {
+      pending.current = false
+      setBusy(false)
+      setFeedback('')
+    }
+    const requestEpoch = generation
+    // Invalidate at DOM detachment, before a late session promise can navigate.
+    // Passive cleanup alone leaves a commit-to-effect race in WebKit.
+    return () => { requestEpoch.current++ }
+  }, [])
+
   useEffect(() => {
     // Keep the server-rendered controls disabled until their handlers and the
     // optional saved draft are ready together. An early edit must never be
@@ -29,8 +43,6 @@ export default function HomeProfileClaim() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     try { setName(sessionStorage.getItem(DRAFT_KEY) || '') } catch { /* Private browsing can disable storage. */ }
     setReady(true)
-    const requestEpoch = generation
-    return () => { requestEpoch.current++ }
   }, [])
 
   const updateName = (value: string) => {

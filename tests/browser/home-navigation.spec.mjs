@@ -32,7 +32,7 @@ test.beforeAll(async () => {
     }}],
     stdin:{resolveDir:root,loader:'tsx',contents:`
       import React from 'react';import {createRoot} from 'react-dom/client';
-      import Home from './src/app/page';import Header from './src/components/layout/Header';import Sidebar from './src/components/layout/DashboardSidebar';
+      import Home from './src/app/page';import Header from './src/components/layout/Header';import Sidebar from './src/components/layout/DashboardSidebar';import Claim from './src/components/home/HomeProfileClaim';
       window.fixtureUser=null;window.fixturePath='/preview';window.fixtureToasts=[];window.fixtureDestinations=[];
       window.fixtureRouter={push:path=>window.fixtureDestinations.push(path),replace:path=>window.fixtureDestinations.push(path),prefetch(){}};
       window.fixtureSessionMode='guest';window.fixtureSignOutMode='error';window.fixtureSignOutCalls=0;window.fixtureCopied=[];window.fixtureClipboardMode='pending';
@@ -43,7 +43,17 @@ test.beforeAll(async () => {
       Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText(text){window.fixtureCopied.push(text);if(window.fixtureClipboardMode==='error')return Promise.reject(Error('Denied'));return new Promise(resolve=>window.fixtureResolveCopy=resolve)}}});
       window.IntersectionObserver=class{constructor(callback){window.fixtureIntersection=callback}observe(){}disconnect(){}};
       const root=createRoot(document.getElementById('root'));
-      window.fixtureRender=screen=>root.render(screen==='home'?<Home/>:screen==='sidebar'?<Sidebar/>:<Header/>);
+      function DestinationHeader(){
+        React.useLayoutEffect(()=>{
+          if(!window.fixtureResolveClaimAtCommit)return;
+          window.fixtureResolveClaimAtCommit=false;
+          window.fixtureClaimResolvedAfterDetach=!document.querySelector('#choose-profile-name');
+          window.fixtureResolveSession({data:{session:null},error:null});
+        },[]);
+        return <Header/>;
+      }
+      window.fixtureRender=screen=>root.render(screen==='home'?<Home/>:screen==='sidebar'?<Sidebar/>:<DestinationHeader/>);
+      window.fixtureRetainClaim=mode=>root.render(<React.Activity mode={mode}><Claim/></React.Activity>);
     `}
   })
   bundle=result.outputFiles[0].text
@@ -110,6 +120,53 @@ test('a late claim session cannot override navigation away from home',async({pag
   await page.evaluate(()=>window.fixtureResolveSession({data:{session:null},error:null}))
   await page.waitForTimeout(50)
   expect(await page.evaluate(()=>window.fixtureDestinations)).toEqual([])
+})
+
+test('claim completion at the destination commit cannot navigate after its form is detached',async({page})=>{
+  await fixture(page)
+  await page.getByRole('textbox',{name:'Profile name'}).fill('kept-name')
+  await page.evaluate(()=>window.fixtureSessionMode='pending')
+  await page.getByRole('button',{name:'CLAIM IT',exact:true}).click()
+  await expect(page.getByRole('textbox',{name:'Profile name'})).toBeDisabled()
+  await expect.poll(()=>page.evaluate(()=>typeof window.fixtureResolveSession)).toBe('function')
+  // Resolve from the next screen's layout effect: DOM removal is committed,
+  // but passive cleanup is not guaranteed to have run yet on every engine.
+  await page.evaluate(()=>{window.fixtureResolveClaimAtCommit=true;window.fixtureRender('header')})
+  await expect(page.getByRole('textbox',{name:'Profile name'})).toHaveCount(0)
+  await expect.poll(()=>page.evaluate(()=>window.fixtureClaimResolvedAfterDetach)).toBe(true)
+  await page.waitForTimeout(50)
+  expect(await page.evaluate(()=>window.fixtureDestinations)).toEqual([])
+})
+
+test('a retained claim recovers after Activity hides it and an obsolete session cannot interrupt the next attempt',async({page})=>{
+  await fixture(page)
+  await page.evaluate(()=>window.fixtureRetainClaim('visible'))
+  const input=page.getByRole('textbox',{name:'Profile name'})
+  await expect(input).toBeEnabled()
+  await input.fill('kept-name')
+  await page.evaluate(()=>window.fixtureSessionMode='pending')
+  await page.getByRole('button',{name:'CLAIM IT',exact:true}).click()
+  await expect(input).toBeDisabled()
+  await expect.poll(()=>page.evaluate(()=>typeof window.fixtureResolveSession)).toBe('function')
+  await page.evaluate(()=>{window.fixtureOldClaimSession=window.fixtureResolveSession;window.fixtureRetainClaim('hidden')})
+  await expect(page.locator('#choose-profile-name')).toBeHidden()
+  await expect(page.locator('#choose-profile-name')).toHaveCount(1)
+  await page.evaluate(()=>window.fixtureRetainClaim('visible'))
+  await expect(input).toBeEnabled()
+  await expect(input).toHaveValue('kept-name')
+  await expect(page.getByRole('form',{name:'Choose your profile name'})).toHaveAttribute('aria-busy','false')
+  await input.fill('recovered-name')
+  await page.getByRole('button',{name:'CLAIM IT',exact:true}).click()
+  await expect(input).toBeDisabled()
+  await expect.poll(()=>page.evaluate(()=>window.fixtureResolveSession!==window.fixtureOldClaimSession)).toBe(true)
+  await page.evaluate(()=>window.fixtureOldClaimSession({data:{session:null},error:null}))
+  await page.waitForTimeout(50)
+  expect(await page.evaluate(()=>window.fixtureDestinations)).toEqual([])
+  await expect(input).toBeDisabled()
+  await expect(input).toHaveValue('recovered-name')
+  await expect(page.getByRole('button',{name:'CHECKING…',exact:true})).toBeDisabled()
+  await page.evaluate(()=>window.fixtureResolveSession({data:{session:null},error:null}))
+  await expect.poll(()=>page.evaluate(()=>window.fixtureDestinations)).toEqual(['/sign-up?name=recovered-name'])
 })
 
 for (const screen of ['header','sidebar']) test(screen+' copy waits for the clipboard and reports a denied copy truthfully',async({page})=>{
