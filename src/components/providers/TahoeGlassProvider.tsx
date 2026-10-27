@@ -9,6 +9,7 @@ import {
   calculateTahoeRim,
   createTahoeDisplacementField,
   type TahoeDisplacementField,
+  type TahoeDisplacementProfile,
 } from "@/lib/tahoe-glass/optics";
 import type {
   TahoeGlassBackend,
@@ -33,6 +34,7 @@ interface SurfaceRuntime {
   fieldKey: string;
   continuous: boolean;
   refractive: boolean;
+  displacementProfile: TahoeDisplacementProfile;
   drawn: boolean;
   priority: number | null;
   rect: DOMRectReadOnly | null;
@@ -49,6 +51,7 @@ interface TahoeGlassEngineContextValue {
       continuous?: boolean;
       priority?: number;
       refractive?: boolean;
+      displacementProfile?: TahoeDisplacementProfile;
     },
   ) => void;
   unregisterSurface: (id: string) => void;
@@ -651,6 +654,7 @@ export function TahoeGlassProvider({
         continuous?: boolean;
         priority?: number;
         refractive?: boolean;
+        displacementProfile?: TahoeDisplacementProfile;
       },
     ) => {
       const existing = registryRef.current.get(id);
@@ -661,15 +665,18 @@ export function TahoeGlassProvider({
           ? options.priority
           : null;
       const nextRefractive = options?.refractive ?? true;
+      const nextDisplacementProfile = options?.displacementProfile ?? "convex";
       if (existing?.element === element) {
         if (
           existing.continuous !== nextContinuous ||
           existing.priority !== nextPriority ||
-          existing.refractive !== nextRefractive
+          existing.refractive !== nextRefractive ||
+          existing.displacementProfile !== nextDisplacementProfile
         ) {
           existing.continuous = nextContinuous;
           existing.priority = nextPriority;
           existing.refractive = nextRefractive;
+          existing.displacementProfile = nextDisplacementProfile;
           existing.fieldKey = "";
           existing.drawn = false;
           writeSurfaceDiagnostics(existing, diagnosticsRef.current);
@@ -691,6 +698,7 @@ export function TahoeGlassProvider({
         fieldKey: "",
         continuous: nextContinuous,
         refractive: nextRefractive,
+        displacementProfile: nextDisplacementProfile,
         drawn: false,
         priority: nextPriority,
         rect: null,
@@ -1203,6 +1211,7 @@ export function TahoeGlassProvider({
             runtime.id,
             priority,
             runtime.refractive ? "refractive" : "material-only",
+            runtime.displacementProfile,
             stackingChain.map(({ zIndex }) => zIndex).join("/"),
             runtime.opacity.toFixed(3),
             runtime.clipRect?.left.toFixed(1) ?? "x",
@@ -1276,7 +1285,7 @@ export function TahoeGlassProvider({
               Math.max(1, rect.width * rect.height),
           );
           const fieldDpr = Math.max(0.25, Math.min(dpr, memoryBoundDpr));
-          const fieldKey = `${rect.width.toFixed(2)}:${rect.height.toFixed(2)}:${fieldDpr.toFixed(3)}`;
+          const fieldKey = `${rect.width.toFixed(2)}:${rect.height.toFixed(2)}:${fieldDpr.toFixed(3)}:${runtime.displacementProfile}`;
           if (!runtime.field || runtime.fieldKey !== fieldKey) {
             runtime.drawn = false;
             runtime.field = createTahoeDisplacementField(
@@ -1284,6 +1293,7 @@ export function TahoeGlassProvider({
               rect.height,
               fieldDpr,
               0,
+              runtime.displacementProfile,
             );
             runtime.fieldKey = fieldKey;
           }

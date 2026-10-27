@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
                                 alt="nsso"
                                 width={458}
                                 height={224}
-                                className="h-10 w-auto mx-auto brightness-0 opacity-80"
+                                className="h-10 w-auto mx-auto"
                             />
                         </Link>
                     </div>
@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
                             alt="nsso"
                             width={458}
                             height={224}
-                            className="h-10 w-auto mx-auto brightness-0 opacity-80"
+                            className="h-10 w-auto mx-auto"
                         />
                     </Link>
                 </div>

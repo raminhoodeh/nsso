@@ -35,6 +35,7 @@ test.beforeAll(async () => {
             window.fixtureChangeAccount=owner=>{window.fixtureAccount=account(owner);window.fixtureProfile=profile(owner);window.dispatchEvent(new Event('fixture-account'));window.dispatchEvent(new Event('fixture-profile'));};
             async function call(name,args){
                 window.fixtureCalls.push({name,args});
+                if(name==='ensure_current_account'&&window.fixtureSetupError)return {data:null,error:{message:'Synthetic setup refusal'}};
                 if(window.fixtureMode==='throw')throw Error('PRIVATE_AUTH_DIAGNOSTIC');
                 if(window.fixtureMode==='hold')await new Promise(resolve=>window.fixtureRelease=resolve);
                 if(window.fixtureMode==='error')return {data:{user:null},error:{message:'Check your sign-in details.'}};
@@ -80,6 +81,71 @@ test('password sign-in honors the protected destination and exposes accessible a
     await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('autocomplete', 'current-password')
     await page.getByRole('button', { name: 'Sign In', exact: true }).click()
     await expect.poll(() => page.evaluate(() => window.fixtureNavigation)).toEqual(['/dashboard/security?next=%2Fadmin'])
+})
+
+for (const path of ['/sign-in', '/sign-up']) test(`${path} uses the shared contour-free shell without losing form semantics`, async ({ page }) => {
+    await fixture(page, path)
+    const card = page.locator('section[data-auth-card="true"]')
+    await expect(card).toHaveCount(1)
+    await expect(card).toHaveAttribute('data-tahoe-glass-surface', 'card')
+    await expect(card).toHaveAttribute('data-tahoe-displacement-profile', 'prism-top')
+    await expect(card).toHaveAttribute('data-tahoe-material-lighting', 'uniform')
+    await expect(card.locator('form')).toHaveCount(1)
+    await expect(card.getByRole('link', { name: 'nsso home', exact: true })).toHaveAttribute('href', '/')
+    const logo = card.getByRole('img', { name: 'nsso', exact: true })
+    expect(await logo.evaluate(image => ({ filter: getComputedStyle(image).filter, opacity: getComputedStyle(image).opacity }))).toEqual({ filter: 'none', opacity: '1' })
+    await expect(card.getByLabel('Email address', { exact: true })).toHaveAttribute('autocomplete', 'email')
+    await expect(card.getByLabel('Email address', { exact: true })).toHaveAttribute('required', '')
+    await expect(card.getByLabel('Password', { exact: true })).toHaveAttribute('autocomplete', path === '/sign-in' ? 'current-password' : 'new-password')
+    await expect(card.getByLabel('Password', { exact: true })).toHaveAttribute('required', '')
+    for (const provider of ['Google', 'GitHub']) await expect(card.getByRole('button', { name: `Continue with ${provider}`, exact: true })).toHaveAttribute('type', 'button')
+    await expect(card.getByRole('button', { name: path === '/sign-in' ? 'Sign In' : 'Create Account', exact: true })).toHaveAttribute('type', 'submit')
+    if (path === '/sign-up') {
+        await expect(card.getByLabel('Password', { exact: true })).toHaveAttribute('minlength', '8')
+        await expect(card.getByLabel('Confirm password', { exact: true })).toHaveAttribute('autocomplete', 'new-password')
+        await expect(card.getByLabel('Confirm password', { exact: true })).toHaveAttribute('minlength', '8')
+        await expect(card.getByLabel('Confirm password', { exact: true })).toHaveAttribute('required', '')
+    }
+    expect(await page.evaluate(() => window.fixtureCalls)).toEqual([])
+})
+
+for (const path of ['/sign-in', '/sign-up']) test(`${path} suppresses duplicate submissions while the existing auth action is pending`, async ({ page }) => {
+    await fixture(page, path, 'hold')
+    await credentials(page, path === '/sign-up')
+    await page.locator('form').evaluate(form => { form.requestSubmit(); form.requestSubmit() })
+    const operation = path === '/sign-in' ? 'signInWithPassword' : 'signUp'
+    await expect.poll(() => page.evaluate(() => window.fixtureCalls.map(call => call.name))).toEqual([operation])
+    await expect(page.getByRole('button', { name: path === '/sign-in' ? 'Signing in...' : 'Creating account...', exact: true })).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'Continue with Google', exact: true })).toBeDisabled()
+    await page.evaluate(() => { window.fixtureMode = 'ok'; window.fixtureRelease() })
+    await expect.poll(() => page.evaluate(() => window.fixtureNavigation.length)).toBe(1)
+    expect(await page.evaluate(name => window.fixtureCalls.filter(call => call.name === name).length, operation)).toBe(1)
+})
+
+for (const path of ['/sign-in', '/sign-up']) test(`${path} still refuses navigation if authenticated account preparation fails`, async ({ page }) => {
+    await fixture(page, path)
+    await page.evaluate(() => { window.fixtureSession = true; window.fixtureSetupError = true })
+    await credentials(page, path === '/sign-up')
+    await page.getByRole('button', { name: path === '/sign-in' ? 'Sign In' : 'Create Account', exact: true }).click()
+    await expect(page.getByRole('alert')).toContainText('could not be prepared')
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+    expect(await page.evaluate(() => window.fixtureCalls.map(call => call.name))).toEqual([path === '/sign-in' ? 'signInWithPassword' : 'signUp', 'ensure_current_account'])
+    await expect(page.getByLabel('Email address', { exact: true })).toHaveValue('fixture@example.invalid')
+})
+
+test('signup retains server-boundary-independent password validation after the visual extraction', async ({ page }) => {
+    await fixture(page, '/sign-up')
+    await credentials(page, true)
+    await page.getByLabel('Confirm password', { exact: true }).fill('Different-valid-password1!')
+    await page.getByRole('button', { name: 'Create Account', exact: true }).click()
+    await expect(page.getByRole('alert')).toHaveText('Passwords do not match')
+    expect(await page.evaluate(() => window.fixtureCalls)).toEqual([])
+    await page.getByLabel('Password', { exact: true }).fill('short')
+    await page.getByLabel('Confirm password', { exact: true }).fill('short')
+    // Exercise the application guard as well as native minLength validation.
+    await page.locator('form').evaluate(form => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
+    await expect(page.getByRole('alert')).toHaveText('Password must be at least 8 characters')
+    expect(await page.evaluate(() => window.fixtureCalls)).toEqual([])
 })
 
 test('OAuth and email confirmation preserve the requested free URL without claiming it', async ({ page }) => {
@@ -203,6 +269,9 @@ test('password-link verification outages leave a retry action instead of an endl
 for (const path of ['/set-password', '/dashboard/security']) test(`${path} read stalls end at the UI deadline and offer explicit recovery`, async ({ page }) => {
     await page.clock.install()
     await fixture(page, path, 'hold')
+    // React effects may start after addScriptTag resolves, especially in
+    // WebKit. Advance from the actual held read, not from the render request.
+    await expect.poll(() => page.evaluate(() => window.fixtureCalls.map(call => call.name))).toEqual(path === '/set-password' ? ['getUser'] : ['listFactors', 'getAuthenticatorAssuranceLevel'])
     await page.clock.fastForward(8100)
     if (path === '/set-password') {
         await expect(page.getByRole('alert')).toContainText('secure link could not be checked')

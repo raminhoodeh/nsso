@@ -493,12 +493,27 @@ test("keeps the navbar as a semantic wrapper around the reusable backdrop surfac
   assert.doesNotMatch(source, /nav-owned-scene-visibility-proof-retry/);
 });
 
-test("uses one reusable refractive backdrop for the outer sign-in card", () => {
-  const source = fs.readFileSync("src/app/sign-in/page.tsx", "utf8");
+test("sign-in and sign-up share one contour-free auth card without changing their account logic", () => {
+  const source = fs.readFileSync("src/components/auth/AuthPageShell.tsx", "utf8");
   const surfaceOpenings = source.match(/<TahoeBackdropSurface\b/g) || [];
 
   assert.equal(surfaceOpenings.length, 1);
   assert.match(source, /as="section"/);
   assert.match(source, /variant="card"/);
+  assert.match(source, /radius=\{40\}/);
+  assert.match(source, /data-auth-card="true"/);
+  assert.match(source, /displacementProfile="prism-top"/);
+  assert.match(source, /materialLighting="uniform"/);
+  assert.match(source, /tone="dark"/);
+  assert.doesNotMatch(source, /(?:createClient|signInWithPassword|signUp\(|signInWithOAuth|ensure_current_account|useRouter|useSearchParams)/);
   assert.doesNotMatch(source, /<GlassCard\b/);
+  for (const route of ["sign-in", "sign-up"]) {
+    const page = fs.readFileSync(`src/app/${route}/page.tsx`, "utf8");
+    assert.equal((page.match(/<AuthPageShell\b/g) || []).length, 1, route);
+    assert.doesNotMatch(page, /<(?:GlassCard|TahoeBackdropSurface)\b/, route);
+    assert.match(page, /authDestination\(/, route);
+    assert.match(page, /authCallbackUrl\(/, route);
+    assert.match(page, /pending\.current/, route);
+    assert.match(page, /ensure_current_account/, route);
+  }
 });

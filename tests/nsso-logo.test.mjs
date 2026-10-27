@@ -11,8 +11,7 @@ const logoPath = path.join(root, 'public/assets/nsso-logo.png');
 const logoConsumers = [
     'src/components/layout/Header.tsx',
     'src/components/layout/DashboardSidebar.tsx',
-    'src/app/sign-in/page.tsx',
-    'src/app/sign-up/page.tsx',
+    'src/components/auth/AuthPageShell.tsx',
     'src/app/set-password/page.tsx',
     'src/app/reset-password/page.tsx',
 ];
@@ -26,10 +25,18 @@ test('the shared silver wordmark retains its transparent canvas and intrinsic di
     const corners = [0, info.width - 1, (info.height - 1) * info.width, info.height * info.width - 1];
     for (const pixel of corners) assert.equal(data[pixel * info.channels + 3], 0);
     let transparentPixels = 0;
+    let opaqueWordmarkPixels = 0;
+    let brightSilverPixels = 0;
     for (let offset = 3; offset < data.length; offset += info.channels) {
         if (data[offset] === 0) transparentPixels += 1;
+        if (data[offset] >= 200) {
+            opaqueWordmarkPixels += 1;
+            const luminance = (data[offset - 3] + data[offset - 2] + data[offset - 1]) / 3;
+            if (luminance > 160) brightSilverPixels += 1;
+        }
     }
     assert.ok(transparentPixels > info.width * info.height * 0.3, 'Do not replace the wordmark with the opaque black-background presentation image.');
+    assert.ok(opaqueWordmarkPixels > 0 && brightSilverPixels / opaqueWordmarkPixels > 0.5, 'Retain the supplied bright silver wordmark, not a flat black replacement.');
 });
 
 test('all shared wordmark consumers reserve the correct aspect ratio without stretching', () => {
@@ -50,11 +57,13 @@ test('all shared wordmark consumers reserve the correct aspect ratio without str
                     }
                     assert.match(attributes.get('className')?.text ?? '', /\bw-auto\b/, filename);
                     assert.match(attributes.get('className')?.text ?? '', /\bh-(8|10)\b/, filename);
+                    assert.doesNotMatch(attributes.get('className')?.text ?? '', /\b(?:brightness-0|invert(?:-[\w/]+)?)\b/, `${filename}: Preserve the silver wordmark rather than forcing a flat black logo.`);
+                    if (filename.includes('AuthPageShell')) assert.doesNotMatch(attributes.get('className')?.text ?? '', /\bopacity-/, 'The authentication wordmark must retain its supplied opacity.');
                 }
             }
             ts.forEachChild(node, visit);
         };
         visit(source);
     }
-    assert.equal(count, 7, 'Cover every Header, sidebar, and authentication logo.');
+    assert.equal(count, 6, 'Cover every Header, sidebar, shared auth shell, and password recovery logo.');
 });
