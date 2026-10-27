@@ -86,6 +86,8 @@ test('profile deletion uses a readable browser-native modal and cancellation nev
     const records = await mount(page)
     const dialog = await openConfirmation(page)
     await expect(dialog.getByText(confirmation, { exact: true })).toBeVisible()
+    await expect(dialog.getByText('Your sign-in account will also be permanently removed.', { exact: true })).toBeVisible()
+    await expect(dialog).toHaveAccessibleDescription(`${confirmation} Your sign-in account will also be permanently removed.`)
     expect(await dialog.evaluate(element => element.tagName === 'DIALOG' && element.matches(':modal'))).toBe(true)
     expect(await dialog.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(227, 231, 237)')
     await expect(dialog.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused()

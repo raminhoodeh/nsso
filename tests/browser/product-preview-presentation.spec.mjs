@@ -9,6 +9,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 const productId = '33333333-3333-4333-8333-333333333333'
 let bundle, css
 const needsSoftwareWebGL = process.platform === 'linux'
+const renderingByPage = new WeakMap()
 
 // Match the existing real-Vanta geometry suite: CI has no hardware GPU, so
 // select ANGLE's actual software renderer rather than its platform default.
@@ -28,6 +29,12 @@ test.beforeEach(async ({ browserName }, testInfo) => {
     // emulation, so bound this software-only fixture at 75 seconds, not the suite.
     // Hardware Chrome/WebKit retain their normal 30-second test deadline.
     if (browserName === 'chromium' && needsSoftwareWebGL) testInfo.setTimeout(75_000)
+})
+
+test.afterEach(async ({ page }, testInfo) => {
+    const measurements = renderingByPage.get(page)
+    if (!measurements || testInfo.status === testInfo.expectedStatus) return
+    await testInfo.attach('product-rendering-diagnostics', { body: Buffer.from(JSON.stringify(measurements)), contentType: 'application/json' })
 })
 
 // Real product rendering, real Tahoe provider/surfaces and the pinned Vanta
@@ -55,13 +62,14 @@ test.beforeAll(async () => {
                                     : 'export const createClient=()=>{throw new Error("No authenticated client is allowed in this public fixture")};' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React,{useSyncExternalStore}from'react';import{createRoot}from'react-dom/client';
-            import Product from'./src/app/products/[id]/page';import Environment from'./src/components/providers/NSSOTahoeGlassEnvironment';import{UIProvider}from'./src/components/providers/UIProvider';
+            import Product from'./src/app/products/[id]/page';import Environment from'./src/components/providers/NSSOTahoeGlassEnvironment';import{UIProvider}from'./src/components/providers/UIProvider';import{useTahoeGlassControls}from'./src/components/providers/TahoeGlassProvider';
             window.fixturePath='/preview';window.fixturePreview=false;const listeners=new Set();window.fixtureSubscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn)};
             window.fixtureNavigate=(path,preview=false)=>{window.fixturePath=path;window.fixturePreview=preview;listeners.forEach(fn=>fn())};window.fixtureRouter={push:path=>window.fixtureNavigate(path),back:()=>window.fixtureNavigate('/preview')};
             const product={id:'${productId}',user_id:'11111111-1111-4111-8111-111111111111',name:'Portfolio review',headline:'Your next chapter starts here',tagline:'A thoughtful review of your story',intro_text:'A synthetic offering used to verify product presentation.',price:'GBP 35',description:'A synthetic review',benefits:['Practical feedback on your portfolio'],testimonials:[{name:'Fixture customer',text:'Clear and useful guidance.'}],video_url:'',image_url:'/fixture-product.svg',purchase_link:'https://seller.example.test/pay',purchase_link_active:true,paypal_active:true,sales_page_published:true,value_proposition:'One personal portfolio review, with clear next steps and helpful written feedback.',payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy Now'}};
             const result=data=>({select(){return this},eq(){return this},abortSignal(){return this},single(){return Promise.resolve({data,error:null})},then(resolve,reject){return Promise.resolve({data,error:null}).then(resolve,reject)}});
             window.fixturePublic={rpc(){return{abortSignal:async()=>{await new Promise(resolve=>setTimeout(resolve,100));return{data:product,error:null}}}},from(table){return result(table==='users'?{username:'fixture-seller'}:[])}};
-            function App(){const path=useSyncExternalStore(window.fixtureSubscribe,()=>window.fixturePath);return <UIProvider><Environment>{path.startsWith('/products/')?<Product/>:<main style={{position:'relative',padding:40,color:'white'}}><h1>Fixture profile</h1><button style={{padding:20}} onClick={()=>window.fixtureNavigate('/products/${productId}')}>Open fixture offering</button></main>}</Environment></UIProvider>};
+            function SourceControls(){const controls=useTahoeGlassControls();React.useLayoutEffect(()=>{window.fixtureSourceControls=controls},[controls]);return null}
+            function App(){const path=useSyncExternalStore(window.fixtureSubscribe,()=>window.fixturePath);return <UIProvider><Environment><SourceControls/>{path.startsWith('/products/')?<Product/>:<main style={{position:'relative',padding:40,color:'white'}}><h1>Fixture profile</h1><button style={{padding:20}} onClick={()=>window.fixtureNavigate('/products/${productId}')}>Open fixture offering</button></main>}</Environment></UIProvider>};
             createRoot(document.getElementById('root')).render(<App/>);
         ` } })
     bundle = result.outputFiles[0].text
@@ -69,6 +77,8 @@ test.beforeAll(async () => {
 
 async function mount(page) {
     const errors = [], unexpected = [], requests = [], consoleMessages = []
+    const measurements = { renderer: null, sourceFramesAtStart: 0, checkpoints: [], consoleMessages }
+    renderingByPage.set(page, measurements)
     page.on('pageerror', error => errors.push(error.message))
     page.on('console', message => consoleMessages.push(`${message.type()}: ${message.text()}`))
     await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -95,6 +105,7 @@ async function mount(page) {
         gl.getExtension('WEBGL_lose_context')?.loseContext()
         return result
     })
+    measurements.renderer = renderer
     expect(renderer.available, JSON.stringify({ renderer, errors, consoleMessages })).toBe(true)
     try {
         // Bound initial software shader compilation without retrying a broken
@@ -109,12 +120,20 @@ async function mount(page) {
         throw new Error(`${error.message}\nProduct scene startup: ${JSON.stringify({ renderer, errors, consoleMessages })}`)
     }
     await page.evaluate(() => { window.fixtureCanvas = document.querySelector('#vanta-bg canvas') })
-    return { errors, unexpected, requests }
+    measurements.sourceFramesAtStart = await page.evaluate(() => window.VANTA.current.renderer.info.render.frame)
+    return { errors, unexpected, requests, measurements }
+}
+
+async function sourceFrames(page) { return page.evaluate(() => window.VANTA.current.renderer.info.render.frame) }
+async function expectBlueBackground(page) {
+    const { data } = await sharp(await page.screenshot()).extract({ left: 4, top: 40, width: 1, height: 1 }).raw().toBuffer({ resolveWithObject: true })
+    expect(data[2]).toBeGreaterThan(data[0] + 8)
+    expect(data[1]).toBeGreaterThan(data[0] + 5)
 }
 
 test('profile-to-product transition keeps one live blue scene and readable purchase context', async ({ page, browserName }, testInfo) => {
     const paintDeadline = browserName === 'chromium' && needsSoftwareWebGL ? 15_000 : 5_000
-    const { errors, unexpected, requests } = await mount(page)
+    const { errors, unexpected, requests, measurements } = await mount(page)
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     const support = page.locator('[data-product-purchase-support]:visible')
@@ -130,6 +149,14 @@ test('profile-to-product transition keeps one live blue scene and readable purch
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(page.locator('form:visible')).toHaveCount(1)
     expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
+    const framesAfterNavigation = await sourceFrames(page)
+    measurements.checkpoints.push({ stage: 'first-product', frames: framesAfterNavigation })
+    if (browserName === 'chromium') {
+        // Layout-only SVG work must not replay the expensive cloud shader.
+        // Before the production demand gate this round trip rendered 63 frames.
+        expect(framesAfterNavigation - measurements.sourceFramesAtStart).toBeLessThanOrEqual(8)
+    }
+
     const frames = await page.evaluate(async () => {
         const samples = []
         for (let i = 0; i < 20; i++) {
@@ -141,14 +168,69 @@ test('profile-to-product transition keeps one live blue scene and readable purch
     })
     expect([...new Set(frames)]).toEqual(['rgb(88, 110, 145)'])
     expect(requests.some(path => path.includes('siri-gradient'))).toBe(false)
-    const screenshot = await page.screenshot({ path: testInfo.outputPath('product-blue-background.png') })
-    const { data } = await sharp(screenshot).extract({ left: 4, top: 40, width: 1, height: 1 }).raw().toBuffer({ resolveWithObject: true })
-    expect(data[2]).toBeGreaterThan(data[0] + 8)
-    expect(data[1]).toBeGreaterThan(data[0] + 5)
+    await page.screenshot({ path: testInfo.outputPath('product-blue-background.png') })
+    await expectBlueBackground(page)
+    const framesBeforeReturn = await sourceFrames(page)
     await page.getByRole('button', { name: 'Back to Profile', exact: true }).click()
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
+    if (browserName === 'chromium') expect((await sourceFrames(page)) - framesBeforeReturn).toBeLessThanOrEqual(4)
+    expect(errors).toEqual([])
+    expect(unexpected).toEqual([])
+})
+
+test('source frame demand, native resize and real context recovery preserve the blue scene', async ({ page, browserName }) => {
+    const paintDeadline = browserName === 'chromium' && needsSoftwareWebGL ? 15_000 : 5_000
+    const { errors, unexpected } = await mount(page)
+    const framesBeforeResize = await sourceFrames(page)
+    // A real native viewport resize clears Vanta's buffer. A paused source must
+    // repaint afterwards, even when no WebGL lens currently reads that buffer.
+    const viewport = page.viewportSize()
+    await page.setViewportSize({ width: viewport.width, height: viewport.height - 64 })
+    await expect.poll(() => sourceFrames(page), { timeout: paintDeadline }).toBeGreaterThan(framesBeforeResize)
+    await expectBlueBackground(page)
+
+    if (browserName === 'chromium') {
+        await page.evaluate(() => {
+            window.fixtureOwnedCopies = 0
+            window.stopFixtureOwnedReader = window.fixtureSourceControls.subscribeOwnedSceneAfterRender(() => window.fixtureOwnedCopies++)
+            window.fixtureSourceControls.requestRender('fixture-owned-reader')
+        })
+        await expect.poll(() => page.evaluate(() => window.fixtureOwnedCopies), { timeout: paintDeadline }).toBeGreaterThan(0)
+        await page.evaluate(async () => { window.stopFixtureOwnedReader(); await new Promise(requestAnimationFrame); await new Promise(requestAnimationFrame) })
+        const beforeLayoutOnlyWork = await sourceFrames(page)
+        await page.evaluate(async () => {
+            for (let i = 0; i < 10; i++) window.fixtureSourceControls.requestRender('fixture-layout-only')
+            await new Promise(requestAnimationFrame); await new Promise(requestAnimationFrame)
+        })
+        expect(await sourceFrames(page)).toBe(beforeLayoutOnlyWork)
+
+        // Exercise a real GPU context restoration, not a synthetic DOM event.
+        await page.evaluate(() => {
+            const canvas = window.fixtureCanvas
+            window.fixtureContextRestored = false
+            window.fixtureRestoredDraws = 0
+            const effect = window.VANTA.current, afterRender = effect.afterRender
+            effect.afterRender = (...args) => { afterRender?.(...args); if (window.fixtureContextRestored) window.fixtureRestoredDraws++ }
+            canvas.addEventListener('webglcontextrestored', () => { window.fixtureContextRestored = true }, { once: true })
+            window.fixtureContextExtension = window.VANTA.current.renderer.getContext().getExtension('WEBGL_lose_context')
+            if (!window.fixtureContextExtension) throw new Error('The test renderer must support context-loss recovery')
+            window.fixtureContextExtension.loseContext()
+        })
+        await page.waitForFunction(() => window.VANTA.current.renderer.getContext().isContextLost(), null, { timeout: paintDeadline })
+        await page.evaluate(() => window.fixtureContextExtension.restoreContext())
+        await page.waitForFunction(() => window.fixtureContextRestored && window.fixtureRestoredDraws > 0 && window.VANTA.current.renderer.info.render.calls > 0, null, { timeout: paintDeadline })
+        await expectBlueBackground(page)
+        expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
+        // Switching back to normal motion must restart the real animation,
+        // independently of layout notifications or framebuffer subscribers.
+        await page.emulateMedia({ reducedMotion: 'no-preference' })
+        await page.waitForFunction(() => {
+            const effect = window.VANTA.current
+            return effect?.renderer?.domElement !== window.fixtureCanvas && effect?.renderer?.info.render.frame >= 3
+        }, null, { timeout: paintDeadline })
+    }
     expect(errors).toEqual([])
     expect(unexpected).toEqual([])
 })

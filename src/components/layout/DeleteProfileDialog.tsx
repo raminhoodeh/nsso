@@ -26,6 +26,7 @@ export default function DeleteProfileDialog({ open, onOpenChange }: { open: bool
     const [localSessionIssue, setLocalSessionIssue] = useState(false)
     const titleId = useId()
     const descriptionId = useId()
+    const loginDescriptionId = useId()
     const cancelRequest = useCallback(() => {
         // Once Auth deletion is confirmed, an expected SIGNED_OUT unmount must
         // not cancel the final hard navigation away from private content.
@@ -115,7 +116,7 @@ export default function DeleteProfileDialog({ open, onOpenChange }: { open: bool
     return createPortal(<dialog
         ref={dialog}
         aria-labelledby={titleId}
-        aria-describedby={descriptionId}
+        aria-describedby={`${descriptionId} ${loginDescriptionId}`}
         data-delete-profile-dialog="true"
         className="m-auto max-h-[calc(100dvh_-_32px)] w-[min(440px,calc(100vw_-_32px))] max-w-none overflow-y-auto rounded-[28px] border border-white/80 bg-[#e3e7ed] p-6 text-slate-950 [text-shadow:none] shadow-2xl backdrop:bg-black/70"
         onCancel={event => { event.preventDefault(); if (!pending.current && !localSessionIssue) onOpenChange(false) }}
@@ -123,6 +124,7 @@ export default function DeleteProfileDialog({ open, onOpenChange }: { open: bool
     >
         <h2 id={titleId} className="text-xl font-semibold">Delete my profile?</h2>
         <p id={descriptionId} className="mt-4 text-base leading-relaxed">{DELETE_PROFILE_CONFIRMATION}</p>
+        <p id={loginDescriptionId} className="mt-3 text-sm leading-relaxed">Your sign-in account will also be permanently removed.</p>
         {error && <p role="alert" className="mt-4 text-sm font-medium text-red-800">{error}</p>}
         {verificationRequired && <Link href="/dashboard/security?next=/dashboard" onClick={() => onOpenChange(false)} className="mt-3 inline-flex min-h-11 items-center font-semibold text-slate-950 underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-slate-950">Verify my account</Link>}
         <p role="status" aria-live="polite" className="sr-only">{deleting ? 'Deleting your profile and signing you out…' : ''}</p>
