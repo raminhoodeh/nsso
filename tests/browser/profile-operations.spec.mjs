@@ -15,12 +15,13 @@ test.beforeAll(async()=>{
         import Chat from './src/components/agent/AgentChatInterface';
         import SaveStatus from './src/components/profile/ProfileSaveStatus';
         window.fixtureState={revision:0,profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Original headline',bio:'Original bio',profile_pic_url:null},links:[{id:'${linkA}',user_id:'${actor}',link_name:'First',link_url:'https://first.test',display_order:0},{id:'${linkB}',user_id:'${actor}',link_name:'Second',link_url:'https://second.test',display_order:1}],contacts:[],experiences:[],qualifications:[],projects:[],products:[]};
-        window.fixtureJournal={};window.fixturePosts=[];window.fixtureToasts=[];window.fixtureActions=[];window.fixtureMode='applied';window.fixtureFastMode=false;window.fixtureChatCalls=0;
-        window.fixtureDatabase={auth:{getSession:async()=>({data:{session:null}})},from:()=>({select(){return this},eq(){return this},single:async()=>({data:window.fixtureState.profile})}),rpc:name=>({abortSignal:async()=>({data:name==='get_profile_snapshot'?structuredClone(window.fixtureState):name==='get_current_account'?{deity_fast_mode:window.fixtureFastMode}:{},error:null})})};
+        window.fixtureJournal={};window.fixturePosts=[];window.fixtureToasts=[];window.fixtureActions=[];window.fixtureMode='applied';window.fixtureFastMode=false;window.fixtureChatCalls=0;window.fixtureChatAuthRequests=[];
+        window.fixtureDatabase={auth:{getSession:async()=>({data:{session:{access_token:'fixture-only-profile-token',user:{id:'${actor}'}}},error:null})},from:()=>({select(){return this},eq(){return this},single:async()=>({data:window.fixtureState.profile})}),rpc:name=>({abortSignal:async()=>({data:name==='get_profile_snapshot'?structuredClone(window.fixtureState):name==='get_current_account'?{deity_fast_mode:window.fixtureFastMode}:{},error:null})})};
         const actualFetch=window.fetch.bind(window);
         window.fetch=async(url,init)=>{
             if(url!=='/api/deity/chat')return actualFetch(url,init);
             window.fixtureChatCalls++;
+            const input=JSON.parse(init.body);window.fixtureChatAuthRequests.push({expectedAccountId:input.expectedAccountId,matchingBearer:init.headers.Authorization==='Bearer fixture-only-profile-token',bodySuppliesActor:Object.hasOwn(input,'actorId')||Object.hasOwn(input,'userId')});
             const text='Here is your proposed change.\\n__DEITY_ACTIONS__\\n'+JSON.stringify(window.fixtureActions)+'\\n';
             const marker=text.indexOf('__DEITY_ACTIONS__')+20;
             return new Response(new ReadableStream({start(controller){for(const chunk of [text.slice(0,marker),text.slice(marker,marker+9),text.slice(marker+9)])controller.enqueue(new TextEncoder().encode(chunk));controller.close();}}),{headers:{'content-type':'text/plain'}});
@@ -85,6 +86,8 @@ async function propose(page,changes){
     await page.evaluate(changes=>{window.fixtureActions=changes.map(change=>({version:1,label:'Suggested profile change',change}));},changes);
     await page.getByRole('textbox',{name:'Message Deity'}).fill('Please update my profile.');
     await page.getByRole('button',{name:'Send message',exact:true}).click();
+    await expect.poll(()=>page.evaluate(()=>window.fixtureChatAuthRequests.length)).toBeGreaterThan(0);
+    expect(await page.evaluate(()=>window.fixtureChatAuthRequests.at(-1))).toEqual({expectedAccountId:actor,matchingBearer:true,bodySuppliesActor:false});
 }
 const bio={kind:'profile.patch',patch:{bio:'Committed new bio'}};
 
