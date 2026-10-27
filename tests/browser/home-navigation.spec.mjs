@@ -19,6 +19,7 @@ test.beforeAll(async () => {
           : path === 'next/image' ? "import React from 'react';export default function Image({priority,fill,...props}){return <img {...props}/>};"
           : path === 'next/link' ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>};"
           : path.endsWith('tahoe-glass') ? `import React from 'react';
+              export {TahoeGlassField} from './src/components/ui/tahoe-glass/TahoeGlassField';
               export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,...props}){return <Tag {...props}>{children}</Tag>}
               export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
               export function TahoeBackdropSurface({backdropEnabled,...props}){return <TahoeGlassSurface {...props}/>}

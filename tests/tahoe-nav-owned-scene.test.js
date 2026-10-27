@@ -495,17 +495,21 @@ test("keeps the navbar as a semantic wrapper around the reusable backdrop surfac
 
 test("sign-in and sign-up share one contour-free auth card without changing their account logic", () => {
   const source = fs.readFileSync("src/components/auth/AuthPageShell.tsx", "utf8");
-  const surfaceOpenings = source.match(/<TahoeBackdropSurface\b/g) || [];
+  const panel = fs.readFileSync("src/components/ui/LightGlassPanel.tsx", "utf8");
+  const surfaceOpenings = source.match(/<LightGlassPanel\b/g) || [];
 
   assert.equal(surfaceOpenings.length, 1);
   assert.match(source, /as="section"/);
-  assert.match(source, /variant="card"/);
-  assert.match(source, /radius=\{40\}/);
   assert.match(source, /data-auth-card="true"/);
-  assert.match(source, /displacementProfile="prism-top"/);
-  assert.match(source, /materialLighting="uniform"/);
-  assert.match(source, /tone="dark"/);
+  assert.equal((panel.match(/<TahoeBackdropSurface\b/g) || []).length, 1);
+  assert.match(panel, /variant="card"/);
+  assert.match(panel, /radius=\{40\}/);
+  assert.match(panel, /displacementProfile="prism-top"/);
+  assert.match(panel, /materialLighting="uniform"/);
+  assert.match(panel, /tone="dark"/);
+  assert.match(panel, /data-light-glass-panel="true"/);
   assert.doesNotMatch(source, /(?:createClient|signInWithPassword|signUp\(|signInWithOAuth|ensure_current_account|useRouter|useSearchParams)/);
+  assert.doesNotMatch(panel, /(?:createClient|signInWithPassword|signUp\(|signInWithOAuth|ensure_current_account|useRouter|useSearchParams)/);
   assert.doesNotMatch(source, /<GlassCard\b/);
   for (const route of ["sign-in", "sign-up"]) {
     const page = fs.readFileSync(`src/app/${route}/page.tsx`, "utf8");

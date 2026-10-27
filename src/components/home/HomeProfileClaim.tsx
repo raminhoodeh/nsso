@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { boundedClientRead } from '@/lib/client-read'
 import { validateProfileUsername } from '@/lib/profile-username'
+import Input from '@/components/ui/Input'
+import GlassButton from '@/components/ui/GlassButton'
 
 const DRAFT_KEY = 'nsso-profile-name-draft'
 
@@ -15,7 +17,7 @@ export default function HomeProfileClaim() {
   const [name, setName] = useState('')
   const [ready, setReady] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [feedback, setFeedback] = useState('Choose 3–30 letters, numbers, underscores or hyphens.')
+  const [feedback, setFeedback] = useState('')
   const [invalid, setInvalid] = useState(false)
   const pending = useRef(false)
   const generation = useRef(0)
@@ -34,7 +36,7 @@ export default function HomeProfileClaim() {
   const updateName = (value: string) => {
     setName(value)
     setInvalid(false)
-    setFeedback('Availability is checked before you create an account.')
+    setFeedback('')
     try { sessionStorage.setItem(DRAFT_KEY, value) } catch { /* The React draft remains available. */ }
   }
 
@@ -79,23 +81,29 @@ export default function HomeProfileClaim() {
   }
 
   return (
-    <form id="choose-profile-name" onSubmit={continueToSignup} aria-busy={!ready || busy} className="mx-auto w-full max-w-xl scroll-mt-32 text-left" aria-label="Choose your profile name">
-      <label htmlFor={id} className="mb-2 block text-sm font-semibold text-white">Choose your nsso profile name</label>
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/40 bg-slate-950/55 p-2 shadow-lg backdrop-blur-xl">
-        <div className="flex min-h-11 min-w-0 flex-1 items-center pl-2">
-          <span aria-hidden="true" className="text-lg font-medium text-white/80">nsso.me/</span>
-          <input id={id} aria-label="Profile name" aria-describedby={`${id}-status`} aria-invalid={invalid} autoCapitalize="none" autoCorrect="off" autoComplete="username" spellCheck={false} maxLength={30} value={name} onChange={event => updateName(event.target.value)} disabled={!ready || busy} placeholder="yourname" className="min-h-11 min-w-0 w-full bg-transparent text-lg text-white outline-none placeholder:text-white/60" />
-        </div>
-        <div className="shrink-0 rounded-[12px] p-[0.75px]" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)' }}>
-          <button type="submit" disabled={!ready || busy} aria-busy={!ready || busy} className="relative flex min-h-11 w-[104px] items-center justify-center rounded-[12px] outline-none transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-[400px]:w-[133px]" style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}>
-            <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[12px] bg-[rgba(255,255,255,0.06)] mix-blend-luminosity" />
-            <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[12px] bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge" />
-            <span className="relative z-10 text-[16px] font-semibold tracking-wide text-white/96" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>{!ready ? 'LOADING…' : busy ? 'CHECKING…' : 'CLAIM IT'}</span>
-          </button>
-        </div>
-      </div>
-      <p id={`${id}-status`} role="status" aria-live="polite" className={`mt-2 min-h-10 text-sm leading-5 ${invalid ? 'text-rose-100' : 'text-white/85'}`}>{ready ? feedback : 'Preparing your profile name…'}</p>
-      <p className="text-xs leading-5 text-white/75">Checking a name doesn’t reserve it. You’ll confirm and save it after creating your account.</p>
+    <form id="choose-profile-name" onSubmit={continueToSignup} aria-busy={!ready || busy} className="mx-auto w-full max-w-xl scroll-mt-32 space-y-4 text-left text-slate-950" aria-label="Choose your profile name">
+      <Input
+        id={id}
+        label="Choose your nsso profile name"
+        prefix="nsso.me/"
+        tone="dark"
+        aria-label="Profile name"
+        aria-describedby={`${id}-status`}
+        aria-invalid={invalid}
+        autoCapitalize="none"
+        autoCorrect="off"
+        autoComplete="username"
+        spellCheck={false}
+        maxLength={30}
+        value={name}
+        onChange={event => updateName(event.target.value)}
+        disabled={!ready || busy}
+        placeholder="yourname"
+      />
+      <GlassButton type="submit" variant="shiny" fullWidth tone="dark" disabled={!ready || busy} aria-busy={!ready || busy}>
+        {!ready ? 'LOADING…' : busy ? 'CHECKING…' : 'CLAIM IT'}
+      </GlassButton>
+      <p id={`${id}-status`} role="status" aria-live="polite" className={`text-sm leading-5 empty:hidden ${invalid ? 'font-medium text-rose-950' : 'text-slate-950/80'}`}>{ready ? feedback : 'Preparing your profile name…'}</p>
     </form>
   )
 }

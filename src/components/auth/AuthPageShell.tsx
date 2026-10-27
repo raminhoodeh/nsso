@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass'
+import LightGlassPanel from '@/components/ui/LightGlassPanel'
 
 interface AuthPageShellProps {
     title: string
@@ -13,15 +13,10 @@ interface AuthPageShellProps {
 export default function AuthPageShell({ title, description, children }: AuthPageShellProps) {
     return (
         <main className="min-h-screen flex items-center justify-center px-6 py-12 relative overflow-hidden">
-            <TahoeBackdropSurface
+            <LightGlassPanel
                 as="section"
-                variant="card"
-                radius={40}
-                displacementProfile="prism-top"
-                materialLighting="uniform"
                 className="w-full max-w-[440px] p-8 lg:p-12 relative z-10"
                 contentClassName="h-full w-full"
-                tone="dark"
                 data-auth-card="true"
             >
                 <div className="text-center mb-8">
@@ -42,7 +37,7 @@ export default function AuthPageShell({ title, description, children }: AuthPage
                 </div>
 
                 {children}
-            </TahoeBackdropSurface>
+            </LightGlassPanel>
         </main>
     )
 }
