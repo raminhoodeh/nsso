@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, layoutCss
 test.beforeAll(async () => {
-  const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx']
+  const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx', 'src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx']
   const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
   const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
   layoutCss = compiler.build(candidates)
@@ -26,7 +26,7 @@ test.beforeAll(async () => {
           : path === 'next/link' ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>};"
           : path.endsWith('tahoe-glass') ? `import React from 'react';
               export {TahoeGlassField} from './src/components/ui/tahoe-glass/TahoeGlassField';
-              export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,chromiumAppearance,...props}){return <Tag {...props}>{children}</Tag>}
+              export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,chromiumAppearance,...props}){return <Tag {...props} data-fixture-tone={tone} data-fixture-appearance={chromiumAppearance}><span className={contentClassName}>{children}</span></Tag>}
               export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
               export function TahoeBackdropSurface({backdropEnabled,...props}){return <TahoeGlassSurface {...props}/>}
               export function TahoeBackdropHeader({displacementProfile,materialLighting,...props}){return <TahoeGlassSurface {...props}/>}
@@ -90,6 +90,44 @@ test('sign-in navigation is a single semantic link without a nested button', asy
   expect(await links.count()).toBeGreaterThan(0)
   await expect(links.first()).toHaveAttribute('href','/sign-in')
   await expect(links.first().locator('button')).toHaveCount(0)
+})
+
+test('core top bar keeps its sky coating, geometry and readable controls across routes and scrolling', async ({ page }, testInfo) => {
+  const { errors } = await fixture(page, 'header')
+  await page.addStyleTag({ content: layoutCss })
+  const widths = testInfo.project.name === 'desktop' ? [1440, 1024, 768] : [390, 320]
+  const bar = page.locator('[data-nsso-topbar]')
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const path of ['/', '/ramin', '/dashboard', '/deity']) {
+      await page.evaluate(path => { window.fixturePath = path; window.fixtureRender('header') }, path)
+      await expect(bar).toHaveAttribute('data-fixture-appearance', 'light')
+      await expect(bar).toHaveAttribute('data-fixture-tone', 'dark')
+      const signIn = page.getByRole('link', { name: 'SIGN IN / SIGN UP', exact: true }).filter({ visible: true })
+      await expect(signIn).toHaveAttribute('href', '/sign-in')
+      await expect(signIn).toHaveAttribute('data-fixture-tone', 'dark')
+      const initial = await bar.evaluate(el => {
+        document.body.style.minHeight = '2000px'
+        const s = getComputedStyle(el, '::after')
+        return { top: el.getBoundingClientRect().top, height: el.getBoundingClientRect().height, coating: s.backgroundImage, pointerEvents: s.pointerEvents }
+      })
+      expect(initial.top).toBe(0)
+      expect(initial.height).toBe(88)
+      expect(initial.coating).toContain('linear-gradient')
+      expect(initial.pointerEvents).toBe('none')
+      await page.evaluate(() => window.scrollTo(0, 500))
+      expect(await bar.evaluate(el => el.getBoundingClientRect().top)).toBe(0)
+      expect(await bar.evaluate(el => getComputedStyle(el, '::after').backgroundImage)).toBe(initial.coating)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+      await page.evaluate(() => window.scrollTo(0, 0))
+    }
+  }
+  await page.emulateMedia({ forcedColors: 'active' })
+  expect(await bar.evaluate(el => getComputedStyle(el, '::after').display)).toBe('none')
+  await page.emulateMedia({ forcedColors: 'none' })
+  await bar.evaluate(el => el.setAttribute('data-tahoe-backdrop-backend', 'solid'))
+  expect(await bar.evaluate(el => getComputedStyle(el, '::after').content)).toBe('none')
+  expect(errors).toEqual([])
 })
 
 test('homepage uses desktop columns without carrying that layout onto mobile', async ({ page }, testInfo) => {

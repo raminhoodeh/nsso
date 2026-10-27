@@ -18,6 +18,7 @@ import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeWebUrl } from '@/lib/urls'
 import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import NssoTopBar, { NSSO_TOPBAR_CONTENT_CLASS } from '@/components/layout/NssoTopBar'
 import {
     PROFILE_COLLECTION_GRID_CLASS,
     PROFILE_COLLECTION_SECTION_CLASS,
@@ -68,19 +69,16 @@ export default function PreviewPage() {
     return (
         <main className="min-h-screen">
             {/* Navigation Bar */}
-            <TahoeGlassSurface
-                as="nav"
-                variant="menu"
-                radius="0 0 24px 24px"
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.025}
-                className="fixed top-0 left-0 right-0 z-50 px-6 lg:px-10 md:hidden"
-                contentClassName="mx-auto flex h-[72px] max-w-[1800px] items-center justify-between"
+            <NssoTopBar
+                className="md:hidden"
+                contentClassName="h-full w-full"
             >
+                <nav className={NSSO_TOPBAR_CONTENT_CLASS} aria-label="Profile preview">
                     <GlassButton
                         variant="ghost"
                         size="sm"
+                        tone="dark"
+                        className="min-h-11"
                         onClick={() => router.push('/dashboard')}
                     >
                         ← Edit Profile
@@ -88,14 +86,17 @@ export default function PreviewPage() {
                     <GlassButton
                         variant="ghost"
                         size="sm"
+                        tone="dark"
+                        className="min-h-11"
                         onClick={copyProfileUrl}
                     >
                         Copy page URL
                     </GlassButton>
-            </TahoeGlassSurface>
+                </nav>
+            </NssoTopBar>
 
             {/* Profile Content */}
-            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[120px] pb-40`}>
+            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[calc(120px+env(safe-area-inset-top))] md:pt-[120px] pb-40`}>
                 <ProfileSaveStatus />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 

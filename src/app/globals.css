@@ -29,6 +29,9 @@
   --separator-light: rgba(255, 255, 255, 0.15);
   --separator-dark: #5E5E5E;
 
+  /* Shared cool coating for homepage cards and core navigation. */
+  --nsso-sky-glass-coating: linear-gradient(135deg, rgba(186, 230, 253, 0.32), rgba(125, 211, 252, 0.22));
+
   /* Font families */
   --font-sf-pro: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-sf-pro-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -162,7 +165,17 @@ body {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
-/* A cool coating for homepage cards, beneath their rim and readable content. */
+/* Coatings sit below the glass rim and readable content without intercepting input. */
+.nsso-topbar-glass:not([data-tahoe-backdrop-backend="solid"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--nsso-sky-glass-coating);
+}
+
 @media (min-width: 1024px) {
   .home-sky-glass:not([data-tahoe-backdrop-backend="solid"])::after {
     content: "";
@@ -171,12 +184,13 @@ body {
     z-index: 7;
     border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(135deg, rgba(186, 230, 253, 0.32), rgba(125, 211, 252, 0.22));
+    background: var(--nsso-sky-glass-coating);
   }
 }
 
 @media (forced-colors: active), (prefers-reduced-transparency: reduce) {
-  .home-sky-glass::after {
+  .home-sky-glass::after,
+  .nsso-topbar-glass::after {
     display: none;
   }
 }
