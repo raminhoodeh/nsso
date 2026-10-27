@@ -28,7 +28,15 @@ interface AgentChatInterfaceProps {
     onMinimize?: () => void;
     onClose?: () => void;
     initialMessage?: string;
-    shortcutRequests?: { id: string; message: string }[];
+    shortcutRequests?: { id: string; message: string; ownerId?: string }[];
+}
+
+interface RequestScope {
+    identity: string | null;
+    epoch: number;
+    shortcutEpochs: Map<string, number>;
+    initialMessage?: string;
+    initialEpoch: number | null;
 }
 
 const CATEGORY_QUESTIONS: Record<string, string[]> = {
@@ -80,8 +88,63 @@ import { useUser } from '@/components/providers/UserProvider';
 import { useProfile } from '@/components/providers/ProfileProvider';
 import { useToast } from '@/components/ui/Toast';
 
-export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage, shortcutRequests = [] }: AgentChatInterfaceProps) {
+export default function AgentChatInterface(props: AgentChatInterfaceProps) {
     const { user, loading } = useUser();
+    const ownerId = user?.id ?? 'signed-out';
+    const identity = loading && !user ? null : ownerId;
+    const [scope, setScope] = useState<RequestScope>(() => ({
+        identity, epoch: 0,
+        shortcutEpochs: new Map(identity === null ? [] : (props.shortcutRequests ?? []).map(request => [request.id, 0])),
+        initialMessage: props.initialMessage,
+        initialEpoch: identity === null ? null : 0,
+    }));
+
+    // Track prop events above the keyed conversation. Parents may retain their
+    // entire shortcut history, so resetting only the child's consumed IDs would
+    // replay old prompts under another account or after signing back in.
+    let nextScope = scope;
+    if (identity !== scope.identity) nextScope = { ...nextScope, identity, epoch: scope.epoch + 1 };
+    if (props.initialMessage !== scope.initialMessage) {
+        // Only the first bootstrap may defer an unowned prompt. Once an
+        // account has existed, a new prompt during unresolved auth has no
+        // reliable owner and must not borrow the next account's identity.
+        const initialEpoch = identity === null ? (nextScope.epoch === 0 ? null : -1) : nextScope.epoch;
+        nextScope = { ...nextScope, initialMessage: props.initialMessage, initialEpoch };
+    } else if (identity !== null && props.initialMessage !== undefined && scope.initialEpoch === null) {
+        nextScope = { ...nextScope, initialEpoch: nextScope.epoch };
+    }
+    const newRequests = props.shortcutRequests?.filter(request => !scope.shortcutEpochs.has(request.id) && (identity !== null || (nextScope.epoch > 0 && request.ownerId === undefined))) ?? [];
+    if (newRequests.length) {
+        const shortcutEpochs = new Map(scope.shortcutEpochs);
+        for (const request of newRequests) shortcutEpochs.set(request.id, identity === null ? -1 : nextScope.epoch);
+        nextScope = { ...nextScope, shortcutEpochs };
+    }
+    if (nextScope !== scope) {
+        // React restarts this component before committing children. This avoids
+        // an effect-sized window in which inherited prompts could be submitted.
+        setScope(nextScope);
+        return null;
+    }
+    if (identity === null) return (
+        <section aria-label="Deity assistant" aria-busy="true" data-deity-surface="opaque" className="flex h-full min-h-0 flex-col items-center justify-center gap-4 bg-[#11161d] p-6 text-white">
+            <p role="status" aria-live="polite">Loading Deity account…</p>
+            {props.onClose && <button type="button" onClick={props.onClose} aria-label="Close Deity chat" className="inline-flex min-h-11 items-center rounded-full border border-white/20 bg-[#232b36] px-4">Close</button>}
+        </section>
+    );
+    // A conversation, draft and pending response belong to one identity. Never
+    // carry them into another account (including a sign-out) on the same page.
+    return <AccountChatInterface
+        key={`${identity}:${scope.epoch}`}
+        {...props}
+        initialMessage={scope.initialEpoch === scope.epoch ? props.initialMessage : undefined}
+        shortcutRequests={props.shortcutRequests?.filter(request => scope.shortcutEpochs.get(request.id) === scope.epoch && (request.ownerId === undefined || request.ownerId === ownerId))}
+    />;
+}
+
+function AccountChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage, shortcutRequests = [] }: AgentChatInterfaceProps) {
+    const { user, loading } = useUser();
+    const userId = user?.id;
+    const username = user?.username;
     const { applyOperation, undo, canUndo, fastMode, setFastMode, revision, refreshProfile, getRevision, links } = useProfile();
     const { showToast } = useToast();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -95,6 +158,7 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const [actionPreview, setActionPreview] = useState<{operationId:string;text:string} | null>(null);
     const applying = useRef(new Set<string>());
     const activeRequest = useRef<AbortController | null>(null);
+    const categoryReplyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const consumedShortcuts = useRef(new Set<string>());
     const consumedInitialMessage = useRef<string | undefined>(undefined);
     const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -108,7 +172,14 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const alive = useRef(true);
     const fastModeRef = useRef(fastMode);
     useEffect(() => { fastModeRef.current = fastMode; }, [fastMode]);
-    useEffect(() => { alive.current = true; return () => { alive.current = false; activeRequest.current?.abort(); }; }, []);
+    useEffect(() => {
+        alive.current = true;
+        return () => {
+            alive.current = false;
+            activeRequest.current?.abort();
+            if (categoryReplyTimer.current !== null) clearTimeout(categoryReplyTimer.current);
+        };
+    }, []);
 
     const placeholders = [
         "What is your dream?",
@@ -118,25 +189,26 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     ];
 
     useEffect(() => {
+        let cancelled = false;
         const fetchProfileAndSetIntro = async () => {
             if (loading || hasInitialized) return;
 
             let firstName = 'creator';
             let introText = '';
 
-            if (user) {
+            if (userId) {
                 try {
                     // Fetch profile to get full_name and bio
                     const { data: profile } = await supabase
                         .from('profiles')
                         .select('full_name, bio')
-                        .eq('user_id', user.id)
+                        .eq('user_id', userId)
                         .single();
 
                     if (profile?.full_name) {
                         firstName = profile.full_name.split(' ')[0];
-                    } else if (user.username) {
-                        firstName = user.username;
+                    } else if (username) {
+                        firstName = username;
                     }
 
                     const hasBio = !!profile?.bio;
@@ -166,8 +238,9 @@ Check out some of the areas I can help you with below.`;
                         introText = `Love your profile ${firstName}… now let’s get your name out there! Check out some of the areas I can help you with below.`;
                     }
                 } catch {
+                    if (cancelled) return;
                     console.error('Deity profile intro unavailable', {code:'PROFILE_INTRO_UNAVAILABLE'});
-                    if (user.username) firstName = user.username;
+                    if (username) firstName = username;
                     // Fallback for introText if profile fetch fails
                     if (isFullScreen) {
                         introText = `Love your profile ${firstName || 'there'}… now let’s get your name out there!
@@ -205,12 +278,20 @@ Check out some of the areas I can help you with below.`;
                     timestamp: Date.now() + 1
                 }
             ];
-            setMessages(welcomeMessages);
+            if (cancelled) return;
+            // The composer is deliberately usable while this optional read is
+            // pending. A late welcome must not replace user text, a category
+            // reply, streamed output, or a completed proposal. The functional
+            // update arbitrates against messages queued in the same render.
+            setMessages(previous => previous.length === 0 ? welcomeMessages : previous);
             setHasInitialized(true);
         };
 
-        fetchProfileAndSetIntro();
-    }, [isFullScreen, user, loading, hasInitialized, supabase]);
+        void fetchProfileAndSetIntro();
+        // Each effect instance owns its completion: StrictMode replay,
+        // fullscreen changes and unmount all invalidate the old read.
+        return () => { cancelled = true; };
+    }, [isFullScreen, userId, username, loading, hasInitialized, supabase]);
 
     // Rotate placeholder text every 3 seconds
     useEffect(() => {
@@ -448,11 +529,14 @@ Check out some of the areas I can help you with below.`;
         try {
             const history = boundedChatHistory(messages);
             const {data:{session}} = await supabase.auth.getSession();
+            if (!alive.current || controller.signal.aborted) return;
             const headers: Record<string,string> = {'Content-Type':'application/json'};
             if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
             const response = await fetch('/api/deity/chat',{method:'POST',headers,body:JSON.stringify({message:text,category:activeCategory,history}),signal:controller.signal});
+            if (!alive.current || controller.signal.aborted) return;
             if (!response.ok) {
                 const failure = await response.json().catch(() => ({}));
+                if (!alive.current || controller.signal.aborted) return;
                 setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:failure.error || 'AI chat is temporarily unavailable.',timestamp:Date.now(),responseError:true,allowanceCta:isDailyAllowanceCode(failure.code)}]);
                 return;
             }
@@ -465,6 +549,7 @@ Check out some of the areas I can help you with below.`;
             try {
                 for (;;) {
                     const {done,value} = await reader.read();
+                    if (!alive.current || controller.signal.aborted) return;
                     if (done) break;
                     accumulated += decoder.decode(value,{stream:true});
                     const {message} = splitActionPayload(accumulated);
@@ -472,7 +557,7 @@ Check out some of the areas I can help you with below.`;
                 }
                 accumulated += decoder.decode();
             } finally { reader.releaseLock(); }
-            if (controller.signal.aborted) return;
+            if (!alive.current || controller.signal.aborted) return;
             const {message,actionsJson} = splitActionPayload(accumulated);
             let parsed: DeityAction[] | null = [];
             if (actionsJson) { try { parsed = parseActionList(JSON.parse(actionsJson)); } catch { parsed = null; } }
@@ -485,8 +570,8 @@ Check out some of the areas I can help you with below.`;
             setMessages(previous => previous.map(item => item.id === botMessageId ? {...item,content:message,actions:proposals} : item));
             if (fastModeRef.current && proposals.length) await applyProposals(botMessageId,proposals);
         } catch {
-            if (!controller.signal.aborted) setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:'Deity could not finish that response. Please try again.',timestamp:Date.now(),responseError:true}]);
-        } finally { if (activeRequest.current === controller) setIsLoading(false); }
+            if (alive.current && !controller.signal.aborted) setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:'Deity could not finish that response. Please try again.',timestamp:Date.now(),responseError:true}]);
+        } finally { if (alive.current && activeRequest.current === controller) setIsLoading(false); }
     },[revision,messages,supabase,activeCategory,applyProposals]);
 
     const handleCategoryClick = useCallback((category: string) => {
@@ -508,7 +593,10 @@ Check out some of the areas I can help you with below.`;
         const botContent = "Here are some things you could ask me about " + category + ":\n\n" +
             questions.map(q => "• " + q).join("\n");
 
-        setTimeout(() => {
+        if (categoryReplyTimer.current !== null) clearTimeout(categoryReplyTimer.current);
+        categoryReplyTimer.current = setTimeout(() => {
+            categoryReplyTimer.current = null;
+            if (!alive.current) return;
             const botMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'model',
