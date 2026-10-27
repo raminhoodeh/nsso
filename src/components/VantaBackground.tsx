@@ -210,8 +210,11 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
                             mouseControls: !reducedMotionRef.current,
                             touchControls: !reducedMotionRef.current,
                             gyroControls: false,
-                            minHeight: window.innerHeight * 0.75,
-                            minWidth: window.innerWidth * 0.75,
+                            // Let the responsive host own the scene size. A
+                            // viewport-derived minimum would keep the old,
+                            // larger canvas after the window becomes smaller.
+                            minHeight: 200,
+                            minWidth: 200,
                             backgroundColor: 0x586E91,
                             skyColor: 0x586E91,
                             cloudColor: 0xadcdde,
