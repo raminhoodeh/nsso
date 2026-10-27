@@ -46,3 +46,37 @@ test('the application server factory bounds the complete SDK task and retains SS
         assert.equal(calls, 1); assert.equal(values.get(key), value); assert.deepEqual(writes, [])
     } finally { globalThis.fetch = originalFetch; console.error = originalError; process.env = previousEnv; delete globalThis.__authDeadlineCookies }
 })
+
+test('the pinned SSR client can refresh a deletion identity without writing over a replacement account cookie', async () => {
+    const previousEnv = { ...process.env }, originalFetch = globalThis.fetch
+    const key = 'sb-readonly-fixture-auth-token', now = Math.floor(Date.now() / 1000)
+    const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url')
+    const user = { id: '11111111-1111-4111-8111-111111111111', aud: 'authenticated', app_metadata: {}, user_metadata: {}, created_at: '2026-10-26T00:00:00Z' }
+    const token = exp => encode({ alg: 'HS256', typ: 'JWT' }) + '.' + encode({ sub: user.id, exp, aud: 'authenticated', role: 'authenticated' }) + '.synthetic-signature'
+    const session = { access_token: token(now - 60), refresh_token: 'synthetic-refresh', expires_at: now - 60, expires_in: 3600, token_type: 'bearer', user }
+    const values = new Map([[key, 'base64-' + encode(session)]]), writes = []
+    globalThis.__authDeadlineCookies = { getAll: () => [...values].map(([name, value]) => ({ name, value })), set: (...args) => writes.push(args) }
+    Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: 'https://readonly-fixture.supabase.co', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'synthetic-anonymous-key' })
+    let refreshed = false
+    globalThis.fetch = async input => {
+        const path = new URL(input).pathname
+        if (path === '/auth/v1/token') {
+            refreshed = true
+            // A newer browser sign-in arrives while the identity-bound request
+            // is still authenticating. Its response must not overwrite B.
+            values.set(key, 'replacement-account-cookie')
+            return Response.json({ ...session, access_token: token(now + 3600), expires_at: now + 3600 })
+        }
+        assert.equal(path, '/auth/v1/user')
+        return Response.json(user)
+    }
+    try {
+        const client = await createClient({ readOnlyCookies: true })
+        const result = await client.auth.getUser()
+        assert.equal(result.error, null)
+        assert.equal(result.data.user.id, user.id)
+        assert.equal(refreshed, true)
+        assert.deepEqual(writes, [])
+        assert.equal(values.get(key), 'replacement-account-cookie')
+    } finally { process.env = previousEnv; globalThis.fetch = originalFetch; delete globalThis.__authDeadlineCookies }
+})

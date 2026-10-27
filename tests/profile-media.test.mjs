@@ -26,11 +26,11 @@ hooks.deregister()
 const actorId = '11111111-1111-4111-8111-111111111111', otherId = '22222222-2222-4222-8222-222222222222'
 const png = await sharp({ create: { width: 8, height: 8, channels: 4, background: '#ff000080' } }).png().toBuffer()
 const jpeg = await sharp(png).withMetadata({ exif: { IFD0: { Artist: 'private-synthetic-fixture' } } }).jpeg().toBuffer()
-let actor, calls, uploadError, registrationFailures
+let actor, calls, uploadError, registrationFailures, reservationError, releaseError
 beforeEach(() => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://fixture.supabase.co'
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'synthetic-only-not-a-secret'
-    actor = { id: actorId }; calls = globalThis.__mediaCalls = []; uploadError = null; registrationFailures = 0
+    actor = { id: actorId }; calls = globalThis.__mediaCalls = []; uploadError = null; registrationFailures = 0; reservationError = null; releaseError = false
     globalThis.__mediaQuotaChecks = []; globalThis.__mediaQuotaDenied = false
     globalThis.__mediaSession = { auth: { getUser: async () => ({ data: { user: actor }, error: null }) } }
     globalThis.__mediaService = {
@@ -41,6 +41,8 @@ beforeEach(() => {
         } } },
         async rpc(name, args) {
             calls.push(['rpc', name, args])
+            if (name === 'reserve_profile_media') return { data: reservationError ? null : { accountId: args.p_actor_id, bucket: args.p_bucket_id, objectName: args.p_object_name, leaseId: 'synthetic-lease' }, error: reservationError }
+            if (name === 'finish_profile_media_upload') { if (releaseError) throw new Error('Private lease release diagnostic'); return { data: { finished: true }, error: null } }
             if (registrationFailures-- > 0) throw new Error('private-storage-diagnostic')
             return { data: { assetId: 'fixture', bucket: args.p_bucket_id, objectName: args.p_object_name, contentType: args.p_content_type, bytes: args.p_bytes }, error: null }
         },
@@ -80,7 +82,9 @@ test('valid raster bytes become a metadata-free JPEG under a generated actor-own
     assert.deepEqual(upload[4], { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false })
     const metadata = await sharp(upload[3]).metadata()
     assert.equal(metadata.format, 'jpeg'); assert.equal(metadata.exif, undefined); assert.equal(metadata.xmp, undefined)
-    assert.deepEqual(calls.find(call => call[0] === 'rpc').slice(1), ['register_profile_media', { p_actor_id: actorId, p_bucket_id: 'avatars', p_object_name: body.path, p_content_type: 'image/jpeg', p_bytes: upload[3].length }])
+    assert.deepEqual(calls.find(call => call[1] === 'register_profile_media').slice(1), ['register_profile_media', { p_actor_id: actorId, p_bucket_id: 'avatars', p_object_name: body.path, p_content_type: 'image/jpeg', p_bytes: upload[3].length }])
+    assert.ok(calls.findIndex(call => call[1] === 'reserve_profile_media') < calls.findIndex(call => call[0] === 'upload'))
+    assert.deepEqual(calls.at(-1).slice(1), ['finish_profile_media_upload', { p_actor_id: actorId, p_bucket_id: 'avatars', p_object_name: body.path, p_definite: true }])
 })
 
 test('project and product images preserve their kind with new portfolio paths and no overwrite', async () => {
@@ -115,14 +119,32 @@ test('dropped registration replies reconcile the same object, while unknown outc
     registrationFailures = 1
     let response = await POST(request())
     assert.equal(response.status, 200)
-    let registrations = calls.filter(call => call[0] === 'rpc')
+    let registrations = calls.filter(call => call[1] === 'register_profile_media')
     assert.equal(registrations.length, 2); assert.deepEqual(registrations[0], registrations[1])
     assert.equal(calls.filter(call => call[0] === 'upload').length, 1)
     calls.length = 0; registrationFailures = 2
     response = await POST(request())
     assert.equal(response.status, 503); assert.doesNotMatch(await response.text(), /private-storage-diagnostic/)
     assert.equal(calls.filter(call => call[0] === 'upload').length, 1)
-    registrations = calls.filter(call => call[0] === 'rpc'); assert.equal(registrations.length, 2)
+    registrations = calls.filter(call => call[1] === 'register_profile_media'); assert.equal(registrations.length, 2)
+    assert.equal(calls.some(call => call[1] === 'finish_profile_media_upload'), false)
+})
+
+test('an account deletion fence rejects the reservation before Storage bytes are sent', async () => {
+    reservationError = { code: '42501', message: 'Private deletion fence diagnostic' }
+    const response = await POST(request())
+    assert.equal(response.status, 503)
+    assert.doesNotMatch(await response.text(), /Private deletion fence diagnostic/)
+    assert.equal(calls.filter(call => call[0] === 'upload').length, 0)
+    assert.equal(calls.filter(call => call[1] === 'register_profile_media').length, 0)
+})
+
+test('uncertain uploads retain their lease and release failures never invalidate a confirmed image', async () => {
+    uploadError = { message: 'Private uncertain timeout' }
+    assert.equal((await POST(request())).status, 503)
+    assert.equal(calls.some(call => call[1] === 'finish_profile_media_upload'), false)
+    calls.length = 0; uploadError = null; releaseError = true
+    assert.equal((await POST(request())).status, 200)
 })
 
 

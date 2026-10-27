@@ -13,6 +13,7 @@ import {randomUUID,createHash} from 'node:crypto'
 import {createClient} from '@supabase/supabase-js'
 import sharp from 'sharp'
 import {verifyAuthCascades} from './auth-cascade-proof.mjs'
+import {verifyAccountDeletion} from './account-deletion-proof.mjs'
 
 if(process.env.NSSO_ALLOW_LOCAL_SECURITY_REHEARSAL!=='1')throw Error('Explicit local rehearsal opt-in required')
 const [statusFile,evidenceArg,existing]=process.argv.slice(2)
@@ -159,6 +160,10 @@ try{
  await check('supported Auth deletion cleans journal/media rows and is safe with both concurrent operation schedules',async()=>{
   const checks=await verifyAuthCascades({config,container,sql});assert.equal(checks.length,3)
   writeFileSync(resolve(evidence,'auth-cascade-checks.json'),JSON.stringify({checks},null,2),{mode:0o600})
+ })
+ await check('self-service account deletion fences media, preserves other accounts and shared apps, and retains private technical receipts',async()=>{
+  const checks=await verifyAccountDeletion({config,container,sql});assert.equal(checks.length,4)
+  writeFileSync(resolve(evidence,'account-deletion-checks.json'),JSON.stringify({checks},null,2),{mode:0o600})
  })
  await check('fresh bootstrap refuses existing data instead of resetting it',async()=>{
   const result=spawnSync('docker',['exec','-i',container,'psql','-X','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{input:readFileSync(resolve(repo,'supabase/bootstrap/schema.sql')),encoding:'utf8'});assert.notEqual(result.status,0);assert.match(result.stderr,/requires empty application schemas/)

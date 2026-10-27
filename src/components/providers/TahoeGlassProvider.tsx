@@ -556,7 +556,15 @@ export function TahoeGlassProvider({
 
   const scheduleRender = React.useCallback(() => {
     synchronousSceneFrameRequestedRef.current = true;
-    for (const listener of sceneFrameListenersRef.current) listener();
+    // SVG/live-DOM lenses reuse the composited scene: changing their layout
+    // does not require redrawing a reduced-motion WebGL cloud background.
+    // Wake the source only when a renderer actually copies its framebuffer.
+    if (
+      diagnosticsRef.current.backend === "webgl" ||
+      ownedSceneAfterRenderListenersRef.current.size > 0
+    ) {
+      for (const listener of sceneFrameListenersRef.current) listener();
+    }
     if (frameRef.current !== null || typeof window === "undefined") return;
     frameRef.current = window.requestAnimationFrame(() => {
       frameRef.current = null;

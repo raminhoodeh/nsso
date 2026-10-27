@@ -160,14 +160,45 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
         effect.animationLoop()
     }, [])
 
+    const requestPausedSourceFrame = useCallback(() => {
+        if (!reducedMotionRef.current || !vantaEffect.current) return
+        if (pausedForReducedMotionRef.current) resumeVanta()
+        else resumeAfterCurrentFrameRef.current = true
+    }, [resumeVanta])
+
     useEffect(() => subscribeSceneFrameRequests(() => {
         // A nav-local owned-scene renderer can need a fresh source frame even
         // when the provider itself is currently on SVG or CSS fallback.
-        if (reducedMotionRef.current) {
-            if (pausedForReducedMotionRef.current) resumeVanta()
-            else resumeAfterCurrentFrameRef.current = true
+        requestPausedSourceFrame()
+    }), [requestPausedSourceFrame, subscribeSceneFrameRequests])
+
+    useEffect(() => {
+        let redrawFrame: number | null = null
+        const refreshResizedSource = () => {
+            // Vanta's own resize listener clears its drawing buffer. Run after
+            // all event listeners so a paused source is redrawn, not erased by
+            // a later resize handler. Normal-motion rendering stays untouched.
+            if (redrawFrame !== null) return
+            redrawFrame = window.requestAnimationFrame(() => {
+                redrawFrame = null
+                requestPausedSourceFrame()
+            })
         }
-    }), [resumeVanta, subscribeSceneFrameRequests])
+        const restoreSource = (event: Event) => {
+            const effect = vantaEffect.current
+            const canvas = effect?.getCanvasElement?.() ?? effect?.renderer?.domElement
+            if (event.target === canvas) refreshResizedSource()
+        }
+        window.addEventListener('resize', refreshResizedSource)
+        window.visualViewport?.addEventListener('resize', refreshResizedSource)
+        window.addEventListener('webglcontextrestored', restoreSource, true)
+        return () => {
+            if (redrawFrame !== null) window.cancelAnimationFrame(redrawFrame)
+            window.removeEventListener('resize', refreshResizedSource)
+            window.visualViewport?.removeEventListener('resize', refreshResizedSource)
+            window.removeEventListener('webglcontextrestored', restoreSource, true)
+        }
+    }, [requestPausedSourceFrame])
 
     // Initialize Vanta
     useEffect(() => {
@@ -380,19 +411,20 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
         }
     // Recreate when reduced-motion changes so its RAF lifecycle is restarted
     // from a clean, deterministic frame.
-    }, [reducedMotion])
+    }, [reducedMotion, resumeVanta])
 
     // Handle visibility changes and resize when pathname changes
     useEffect(() => {
         if (vantaEffect.current) {
             // Force resize when becoming visible
-            setTimeout(() => {
+            const timer = window.setTimeout(() => {
                 if (vantaEffect.current?.resize) {
                     vantaEffect.current.resize()
                 }
                 // Trigger window resize event as fallback
                 window.dispatchEvent(new Event('resize'))
             }, 100)
+            return () => window.clearTimeout(timer)
         }
     }, [pathname, useFullAppleMobileSource])
 

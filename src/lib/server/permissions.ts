@@ -3,6 +3,7 @@ import 'server-only'
 import { randomUUID } from 'node:crypto'
 import { reportRuntimeSignal } from '@/lib/server/runtime-signals'
 import { createPrivilegedFetch, type PrivilegedFetchContext } from '@/lib/server/privileged-fetch'
+import { isVerifiedAdminIdentity } from '@/lib/admin-access'
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient as createSessionClient } from '@/lib/supabase/server'
@@ -64,6 +65,7 @@ export async function requirePermission(permission: AppPermission, request?: Req
     catch { throw new PermissionError(503, 'permission_check_unavailable') }
     if (isTransientAuthError(actor.error)) throw new PermissionError(503, 'permission_check_unavailable')
     if (actor.error || !actor.data.user) throw new PermissionError(401, 'authentication_required')
+    if (permission === 'nsso:admin' && !isVerifiedAdminIdentity(actor.data.user)) throw new PermissionError(403, 'permission_denied')
     if (!await hasPermission(actor.data.user.id, permission)) throw new PermissionError(403, 'permission_denied')
     let assurance
     try { assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel() }

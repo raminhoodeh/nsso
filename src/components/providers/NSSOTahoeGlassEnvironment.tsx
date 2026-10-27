@@ -26,7 +26,6 @@ const SIRI_SCENE = (
 function routeUsesSiriScene(pathname: string): boolean {
   return (
     pathname === "/earnings" ||
-    pathname.startsWith("/products/") ||
     (/^\/dashboard\/products\/[^/]+\/creator\/?$/.test(pathname))
   );
 }
@@ -71,6 +70,9 @@ export default function NSSOTahoeGlassEnvironment({
       className="min-h-screen"
       contentClassName="min-h-screen"
       scene={scene}
+      // Keep the same blue base during source startup, WebGL recovery and
+      // profile-to-product navigation; transparent frames must not reveal black.
+      sceneStyle={{ backgroundColor: usesSiriScene ? "#43628c" : "#586E91" }}
       sourceLabel={sourceLabel}
       preferredBackend="auto"
       fallback="webgl"

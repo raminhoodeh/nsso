@@ -111,7 +111,10 @@ test('a minimal committed payment receipt recovers the saved button without reta
 test('preview is inert and semantic URL rendering preserves invalid text without a clickable link', async ({ page }) => {
     await fixture(page);
     await render(page, { config: { version: 1, kind: 'hosted-button', hostedButtonId: 'FIXTUREGBP', currency: 'GBP' }, preview: true });
-    await expect(page.getByRole('button', { name: 'Pay with PayPal' })).toBeDisabled();
+    await expect(page.getByText('Checkout is disabled during profile preview', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Pay with PayPal' }).press('Enter');
+    await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview');
+    await expect(page.getByRole('button', { name: 'Pay with PayPal' })).toHaveAttribute('aria-describedby', await page.getByRole('status').getAttribute('id'));
     await expect(page.locator('form')).toHaveCount(0);
     expect(await page.evaluate(() => window.sdkLoaded || 0)).toBe(0);
     await page.evaluate(() => window.renderLink('javascript:window.fixturePwned=1'));

@@ -2,6 +2,7 @@ import { isTransientAuthError } from '@/lib/auth-errors'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { hasPermission } from '@/lib/server/permissions'
+import { isVerifiedAdminIdentity } from '@/lib/admin-access'
 import { createAuthFetch } from './auth-fetch'
 import { boundedClientRead } from '../client-read'
 
@@ -81,8 +82,9 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
     }
 
     // Admin-only route protection
-    if (request.nextUrl.pathname.startsWith('/admin') && user) {
+    if ((path === '/admin' || path.startsWith('/admin/')) && user) {
         try {
+            if (!isVerifiedAdminIdentity(user)) return redirect('/dashboard')
             if (!await hasPermission(user.id, 'nsso:admin')) return redirect('/dashboard')
         } catch { return redirect('/dashboard') }
     }

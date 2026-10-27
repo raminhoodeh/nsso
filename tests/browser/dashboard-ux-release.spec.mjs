@@ -66,13 +66,14 @@ async function expectReadableOverlay(dialog) {
     await expect(dialog.locator('[data-liquid-glass]')).toHaveCount(0)
 }
 
-test('a standard mobile account can reach security and cannot see the privileged Admin item', async ({ page }) => {
+test('a standard mobile account can delete its profile and cannot see the privileged Admin item', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await mount(page)
     await page.getByRole('button', { name: 'Open account menu' }).click()
     const dialog = page.getByRole('dialog', { name: 'Menu', exact: true })
     await expectReadableOverlay(dialog)
-    await expect(dialog.getByRole('link', { name: 'Account security' })).toHaveAttribute('href', '/dashboard/security')
+    await expect(dialog.getByRole('link', { name: 'Account security' })).toHaveCount(0)
+    await expect(dialog.getByRole('button', { name: 'Delete my profile', exact: true })).toBeVisible()
     await expect(dialog.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0)
     await expect(dialog.getByRole('button', { name: 'Sign Out' })).toBeVisible()
     await page.keyboard.press('Escape')

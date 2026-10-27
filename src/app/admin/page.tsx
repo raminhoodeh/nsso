@@ -6,6 +6,7 @@ import GlassCard from '@/components/ui/GlassCard'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { useToast } from '@/components/ui/Toast'
 import type { User } from '@/lib/types'
+import { isAdminEmailEligible } from '@/lib/admin-access'
 
 interface UserWithProfile extends User {
     profiles: { full_name: string | null } | null
@@ -154,7 +155,8 @@ export default function AdminPage() {
                                             <div className="flex justify-center">
                                                 <TahoeGlassButton
                                                     onClick={() => toggleAdmin(user.id, user.user_type)}
-                                                    disabled={user.id === currentUserId}
+                                                    disabled={user.id === currentUserId || (user.user_type !== 'admin' && !isAdminEmailEligible(user.email))}
+                                                    title={!isAdminEmailEligible(user.email) && user.user_type !== 'admin' ? 'Administrator access is limited to the approved email addresses.' : undefined}
                                                     role="switch"
                                                     aria-checked={user.user_type === 'admin'}
                                                     aria-label={`Administrator access for ${user.email}`}

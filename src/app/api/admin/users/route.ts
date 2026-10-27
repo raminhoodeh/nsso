@@ -1,6 +1,7 @@
 import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { requirePermission, createPrivilegedClient, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
+import { isVerifiedAdminIdentity } from '@/lib/admin-access'
 
 const headers = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -26,7 +27,16 @@ async function handlePOST(request: Request) {
             || !['nsso:admin', 'razinflix:manage'].includes(String(body.permission)) || typeof body.granted !== 'boolean') {
             return Response.json({ error: 'Choose a valid account and permission.' }, { status: 400, headers })
         }
-        const { error } = await createPrivilegedClient().rpc('admin_set_permission', {
+        const privileged = createPrivilegedClient()
+        if (body.permission === 'nsso:admin' && body.granted) {
+            // Targets come from the trusted Auth record, never the supplied email or public account row.
+            const target = await privileged.auth.admin.getUserById(body.userId)
+            if (target.error) return Response.json({ error: 'The account could not be verified. Please retry.' }, { status: 503, headers })
+            if (target.data.user?.id !== body.userId || !isVerifiedAdminIdentity(target.data.user)) {
+                return Response.json({ error: 'Administrator access is limited to the approved verified email addresses.' }, { status: 403, headers })
+            }
+        }
+        const { error } = await privileged.rpc('admin_set_permission', {
             p_actor_id: user.id, p_user_id: body.userId, p_permission: body.permission, p_granted: body.granted,
         })
         if (error) {

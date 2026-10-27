@@ -12,6 +12,7 @@ import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import GlassCard from '@/components/profile/ProfileGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
 import { productCheckoutVisibility } from '@/lib/payments/product-presentation'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeWebUrl } from '@/lib/urls'
@@ -96,7 +97,6 @@ export default function PreviewPage() {
 
             {/* Profile Content */}
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[calc(120px+env(safe-area-inset-top))] md:pt-[120px] pb-40`}>
-                <p role="status" className="mb-4 rounded-xl bg-black/20 p-3 text-sm text-white/80">Profile preview — checkout is disabled. Unsaved changes are not yet public.</p>
                 <ProfileSaveStatus />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
@@ -364,9 +364,9 @@ export default function PreviewPage() {
                                         <div className="space-y-3 mt-auto">
                                             {checkout.purchaseUrl && (
                                                 <div className="w-full flex justify-center">
-                                                    <GlassButton disabled className="w-[11.625rem]">
+                                                    <PreviewCheckoutButton className="w-[11.625rem]">
                                                         Link to Purchase
-                                                    </GlassButton>
+                                                    </PreviewCheckoutButton>
                                                 </div>
                                             )}
                                             {checkout.paypal && product.payment_config && (

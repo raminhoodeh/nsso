@@ -10,13 +10,17 @@ import {
     Newspaper,
     LogOut,
     Eye,
-    Link as LinkIcon
+    Link as LinkIcon,
+    Trash2
 } from 'lucide-react';
 import ComingSoonBadge from '@/components/ui/ComingSoonBadge';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { useUser } from '@/components/providers/UserProvider';
 import { boundedClientRead } from '@/lib/client-read';
+import { canAccessAdmin } from '@/lib/admin-access';
+import { isAccountDeletionAvailable } from '@/lib/delete-profile-client';
+import DeleteProfileDialog from '@/components/layout/DeleteProfileDialog';
 import { TahoeBackdropSurface, TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass';
 import {
     getDashboardDesktopLayoutSnapshot,
@@ -60,8 +64,10 @@ const NAV_ITEMS: NavItem[] = [
 
 function DashboardSidebarContent({
     backdropEnabled,
+    onDeleteProfile,
 }: {
     backdropEnabled: boolean;
+    onDeleteProfile: () => void;
 }) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -69,7 +75,7 @@ function DashboardSidebarContent({
     const { showToast } = useToast();
     const { user } = useUser();
     const [signingOut, setSigningOut] = useState(false);
-    const isAdmin = user?.user_type === 'admin';
+    const isAdmin = canAccessAdmin(user);
 
     const currentView = searchParams.get('view') || 'profile';
     const handleNavClick = (view: string, comingSoon?: boolean) => {
@@ -205,8 +211,6 @@ function DashboardSidebarContent({
                     </TahoeGlassSurface>
                 )}
 
-                <TahoeGlassButton onClick={() => router.push('/dashboard/security')} radius={12} tone="light" className="min-h-11 w-full px-4 py-3 text-left text-white/80">Account security</TahoeGlassButton>
-
                 {/* Preview Profile */}
                 <TahoeGlassButton
                     onClick={() => router.push('/preview')}
@@ -231,6 +235,17 @@ function DashboardSidebarContent({
                     <span className="font-medium text-[14px]">Copy profile link</span>
                 </TahoeGlassButton>
 
+                {isAccountDeletionAvailable() && <TahoeGlassButton
+                    onClick={event => { event.currentTarget.focus(); onDeleteProfile() }}
+                    radius={12}
+                    tone="light"
+                    className="group w-full px-4 py-3 text-left text-red-300 transition-all hover:text-red-200"
+                    contentClassName="w-full justify-start gap-3 text-inherit"
+                >
+                    <Trash2 size={18} />
+                    <span className="font-medium text-[14px]">Delete my profile</span>
+                </TahoeGlassButton>}
+
                 {/* Sign Out */}
                 <TahoeGlassButton
                     onClick={handleSignOut}
@@ -251,6 +266,7 @@ function DashboardSidebarContent({
 }
 
 export default function DashboardSidebar() {
+    const [deleteProfileOpen, setDeleteProfileOpen] = useState(false);
     // Width controls only whether the desktop sidebar exists. Optical
     // capability is independent, so a 1024/1366px iPad can show the sidebar
     // without allocating an Apple-mobile owned-scene WebGL lens.
@@ -265,11 +281,12 @@ export default function DashboardSidebar() {
         getDashboardServerSnapshot,
     );
 
-    if (!isDesktop) return null;
-
     return (
-        <Suspense fallback={null}>
-            <DashboardSidebarContent backdropEnabled={backdropEnabled} />
-        </Suspense>
+        <>
+            {isDesktop && <Suspense fallback={null}>
+                <DashboardSidebarContent backdropEnabled={backdropEnabled} onDeleteProfile={() => setDeleteProfileOpen(true)} />
+            </Suspense>}
+            <DeleteProfileDialog open={deleteProfileOpen} onOpenChange={setDeleteProfileOpen} />
+        </>
     );
 }
