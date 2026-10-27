@@ -11,6 +11,100 @@ let bundle, css
 const needsSoftwareWebGL = process.platform === 'linux'
 const renderingByPage = new WeakMap()
 
+// Software-GPU metrology only: Vanta's volumetric shader can submit frames much
+// faster than pinned SwiftShader completes them. Keep one unchanged full-scene
+// draw in flight, skipping redundant submissions from the still-live vendor RAF
+// until its real GPU fence signals. This measures completed work, not FPS or
+// unchanged submission cadence; it never treats callbacks as GPU completion.
+// This wraps the constructor before Vanta's first draw; vendor bytes, shader,
+// geometry, physical drawing-buffer size and the normal-motion loop are intact.
+const softwareCloudCompletionFence = `
+;(() => {
+    if (!window.fixtureFenceSoftwareCloudFrames) return;
+    const Three = window.THREE, OriginalRenderer = Three.WebGLRenderer;
+    window.fixtureCloudCompletions = new WeakMap();
+    window.fixtureCloudCompletionRecords = [];
+    Three.WebGLRenderer = new Proxy(OriginalRenderer, {
+        construct(Target, args, NewTarget) {
+            const owner = window.VANTA?.current;
+            const renderer = Reflect.construct(Target, args, NewTarget);
+            if (owner?.el !== document.getElementById('vanta-bg')) return renderer;
+            const context = renderer.getContext();
+            if (typeof context.fenceSync !== 'function' || typeof context.getBufferSubData !== 'function') throw new Error('The software completion fixture requires actual WebGL2');
+            const record = { submitted: 0, completed: 0, lost: 0, errors: [], widths: [], heights: [], pixels: [], durations: [], polls: 0, backpressured: 0, maxInFlight: 0, createdSyncs: 0, deletedSyncs: 0, createdBuffers: 0, deletedBuffers: 0, disposed: false };
+            window.fixtureCloudCompletions.set(renderer, record);
+            window.fixtureCloudCompletionRecords.push(record);
+            const originalRender = renderer.render, originalDispose = renderer.dispose, pixel = new Uint8Array(4);
+            let pending = null, pixelBuffer = null;
+            const withPixelBuffer = operation => {
+                const previous = context.getParameter(context.PIXEL_PACK_BUFFER_BINDING);
+                try { context.bindBuffer(context.PIXEL_PACK_BUFFER, pixelBuffer); return operation(); }
+                finally { context.bindBuffer(context.PIXEL_PACK_BUFFER, previous); }
+            };
+            renderer.dispose = function (...disposeArgs) {
+                try {
+                    if (!record.disposed) {
+                        record.disposed = true;
+                        try {
+                            if (pending) { const retiring = pending; pending = null; context.deleteSync(retiring.sync); record.deletedSyncs++; }
+                        } finally {
+                            if (pixelBuffer) { const retiring = pixelBuffer; pixelBuffer = null; context.deleteBuffer(retiring); record.deletedBuffers++; }
+                        }
+                    }
+                } finally {
+                    // The fixture's additional GPU objects must never prevent
+                    // the real production Three renderer cleanup from running.
+                    originalDispose.apply(this, disposeArgs);
+                }
+            };
+            renderer.render = function (...renderArgs) {
+                if (owner.renderer !== renderer) throw new Error('GPU completion fence must belong only to the owned Vanta renderer');
+                if (record.disposed) throw new Error('The owned source rendered after disposal');
+                if (context.isContextLost()) { record.lost++; throw new Error('The owned source context was lost'); }
+                if (pending) {
+                    record.polls++;
+                    const status = context.clientWaitSync(pending.sync, 0, 0);
+                    if (status === context.TIMEOUT_EXPIRED) { record.backpressured++; return; }
+                    if (status !== context.ALREADY_SIGNALED && status !== context.CONDITION_SATISFIED) throw new Error('The owned source GPU fence failed');
+                    withPixelBuffer(() => context.getBufferSubData(context.PIXEL_PACK_BUFFER, 0, pixel));
+                    const error = context.getError();
+                    record.errors.push(error);
+                    if (context.isContextLost() || error !== context.NO_ERROR) throw new Error('The owned source GPU readback did not complete successfully');
+                    record.completed++;
+                    record.widths.push(pending.width);
+                    record.heights.push(pending.height);
+                    record.pixels.push([...pixel]);
+                    record.durations.push(performance.now() - pending.began);
+                    context.deleteSync(pending.sync); record.deletedSyncs++;
+                    pending = null;
+                }
+                const began = performance.now();
+                record.submitted++;
+                const result = originalRender.apply(this, renderArgs);
+                if (!pixelBuffer) {
+                    pixelBuffer = context.createBuffer();
+                    if (!pixelBuffer) throw new Error('The owned source pixel buffer was unavailable');
+                    record.createdBuffers++;
+                    withPixelBuffer(() => context.bufferData(context.PIXEL_PACK_BUFFER, 4, context.STREAM_READ));
+                }
+                // Capture this exact draw before preserveDrawingBuffer=false
+                // presentation can clear its framebuffer. Read into a PBO, not
+                // a JS array, so the browser main thread never waits on shader work.
+                withPixelBuffer(() => context.readPixels(0, 0, 1, 1, context.RGBA, context.UNSIGNED_BYTE, 0));
+                const sync = context.fenceSync(context.SYNC_GPU_COMMANDS_COMPLETE, 0);
+                if (!sync) throw new Error('The owned source GPU fence was unavailable');
+                record.createdSyncs++;
+                pending = { sync, began, width: context.drawingBufferWidth, height: context.drawingBufferHeight };
+                record.maxInFlight = Math.max(record.maxInFlight, record.submitted - record.completed);
+                context.flush();
+                return result;
+            };
+            return renderer;
+        },
+    });
+})();
+`
+
 // Match the existing real-Vanta geometry suite: CI has no hardware GPU, so
 // select ANGLE's actual software renderer rather than its platform default.
 // WebKit retains its own renderer and never receives Chromium-only switches.
@@ -99,7 +193,9 @@ async function mount(page, { initialPath = '/preview', expectVanta = true, reduc
     renderingByPage.set(page, measurements)
     page.on('pageerror', error => errors.push(error.message))
     page.on('console', message => consoleMessages.push(`${message.type()}: ${message.text()}`))
+    const completeSoftwareCloudFrames = needsSoftwareWebGL && page.context().browser()?.browserType().name() === 'chromium' && reducedMotion === 'no-preference' && expectVanta
     await page.emulateMedia({ reducedMotion })
+    await page.addInitScript(enabled => { window.fixtureFenceSoftwareCloudFrames = enabled }, completeSoftwareCloudFrames)
     await page.addInitScript(() => {
         const request = window.requestAnimationFrame.bind(window), cancel = window.cancelAnimationFrame.bind(window)
         const pending = new Map()
@@ -120,7 +216,10 @@ async function mount(page, { initialPath = '/preview', expectVanta = true, reduc
         if (url.origin !== 'https://nsso.test') { unexpected.push(url.href); return route.abort() }
         if (url.pathname === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundle })
         if (url.pathname === '/fixture.css') return route.fulfill({ contentType: 'text/css', body: css })
-        if (url.pathname.startsWith('/vendor/')) return route.fulfill({ contentType: 'application/javascript', body: readFileSync(root + 'public' + url.pathname) })
+        if (url.pathname.startsWith('/vendor/')) {
+            const vendor = readFileSync(root + 'public' + url.pathname, 'utf8')
+            return route.fulfill({ contentType: 'application/javascript', body: vendor + (url.pathname.includes('/three-') ? softwareCloudCompletionFence : '') })
+        }
         if (url.pathname === '/assets/backgrounds/nsso-deck-blue.webp') return route.fulfill({ contentType: 'image/webp', body: readFileSync(root + 'public' + url.pathname) })
         if (url.pathname === '/guaranteed-logo.png') return route.fulfill({ contentType: 'image/png', body: readFileSync(root + 'public/guaranteed-logo.png') })
         if (url.pathname === '/fixture-product.svg') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="#2e596d"/><circle cx="300" cy="250" r="130" fill="#d8b79b"/><text x="300" y="490" text-anchor="middle" fill="white" font-size="42">Portfolio review</text></svg>' })
@@ -135,6 +234,60 @@ async function mount(page, { initialPath = '/preview', expectVanta = true, reduc
             const image = new Image(); image.src = '/assets/backgrounds/nsso-deck-blue.webp'
             return image.complete && image.naturalWidth > 0
         })
+        return { errors, unexpected, requests, measurements }
+    }
+    if (completeSoftwareCloudFrames) {
+        // One startup RPC observes actual completed source work, captures its
+        // resources and records diagnostics. Separate metadata RPCs would let
+        // this intentionally live software loop perform several more costly
+        // full-scene draws before Playwright can deliver the user's click.
+        let readinessDeadline
+        let startup
+        try {
+            startup = await Promise.race([
+                page.evaluate(async () => {
+                    for (;;) {
+                        const effect = window.VANTA?.current
+                        const renderer = effect?.renderer
+                        const canvas = document.querySelector('#vanta-bg canvas')
+                        const record = renderer && window.fixtureCloudCompletions?.get(renderer)
+                        if (canvas?.width > 0 && canvas?.height > 0 && renderer?.domElement === canvas && renderer.info.render.calls > 0 && record?.completed >= 3) {
+                            const context = renderer.getContext()
+                            const debug = context.getExtension('WEBGL_debug_renderer_info')
+                            window.fixtureCanvas = canvas
+                            window.fixtureInitialEffect = effect
+                            window.fixtureInitialRenderer = renderer
+                            window.fixtureInitialContext = context
+                            window.fixtureInitialDisposeCalls = 0
+                            const dispose = renderer.dispose.bind(renderer)
+                            renderer.dispose = () => { window.fixtureInitialDisposeCalls++; return dispose() }
+                            return {
+                                renderer: { available: !context.isContextLost(), version: context.getParameter(context.VERSION), renderer: context.getParameter(debug ? debug.UNMASKED_RENDERER_WEBGL : context.RENDERER) },
+                                canvasCount: document.querySelectorAll('#vanta-bg canvas').length,
+                                completedCloudWork: { ...record, rendererFrames: renderer.info.render.frame,
+                                    drawingBuffer: { width: canvas.width, height: canvas.height },
+                                    host: { width: effect.el.offsetWidth, height: effect.el.offsetHeight },
+                                    devicePixelRatio, shaderScale: effect.scale,
+                                    pendingRAF: window.fixtureFrameMetrics.vantaPending(),
+                                    vantaScheduled: window.fixtureFrameMetrics.vantaScheduled,
+                                    media: matchMedia('(prefers-reduced-motion: reduce)').matches },
+                            }
+                        }
+                        await new Promise(requestAnimationFrame)
+                    }
+                }),
+                new Promise((_, reject) => { readinessDeadline = setTimeout(() => reject(new Error('Software cloud source did not complete three actual frames within the existing 15-second startup deadline')), 15_000) }),
+            ])
+        } finally { clearTimeout(readinessDeadline) }
+        expect(startup.canvasCount).toBe(1)
+        expect(startup.renderer.available, JSON.stringify(startup.renderer)).toBe(true)
+        expect(startup.renderer.version).toBeTruthy()
+        expect(startup.renderer.renderer).toBeTruthy()
+        expect(startup.renderer.version).toContain('WebGL 2')
+        expect(startup.renderer.renderer).toContain('SwiftShader')
+        measurements.renderer = startup.renderer
+        measurements.sourceFramesAtStart = startup.completedCloudWork.rendererFrames
+        measurements.completedSourceWork = startup.completedCloudWork
         return { errors, unexpected, requests, measurements }
     }
     const renderer = await page.evaluate(() => {
@@ -160,7 +313,15 @@ async function mount(page, { initialPath = '/preview', expectVanta = true, reduc
     } catch (error) {
         throw new Error(`${error.message}\nProduct scene startup: ${JSON.stringify({ renderer, errors, consoleMessages })}`)
     }
-    await page.evaluate(() => { window.fixtureCanvas = document.querySelector('#vanta-bg canvas'); window.fixtureInitialEffect = window.VANTA.current; window.fixtureInitialRenderer = window.VANTA.current.renderer })
+    await page.evaluate(() => {
+        window.fixtureCanvas = document.querySelector('#vanta-bg canvas')
+        window.fixtureInitialEffect = window.VANTA.current
+        window.fixtureInitialRenderer = window.VANTA.current.renderer
+        window.fixtureInitialContext = window.fixtureInitialRenderer.getContext()
+        window.fixtureInitialDisposeCalls = 0
+        const dispose = window.fixtureInitialRenderer.dispose.bind(window.fixtureInitialRenderer)
+        window.fixtureInitialRenderer.dispose = () => { window.fixtureInitialDisposeCalls++; return dispose() }
+    })
     measurements.sourceFramesAtStart = await page.evaluate(() => window.VANTA.current.renderer.info.render.frame)
     return { errors, unexpected, requests, measurements }
 }
@@ -242,14 +403,40 @@ test('homepage, authentication and private or public profile routes retain their
 test('profile-to-product transition releases the cloud renderer for deck blue and restores preview safely', async ({ page, browserName }, testInfo) => {
     const paintDeadline = browserName === 'chromium' && needsSoftwareWebGL ? 15_000 : 5_000
     const { errors, unexpected, requests, measurements } = await mount(page, { reducedMotion: 'no-preference' })
-    const normalMotionDraws = await page.evaluate(async () => {
-        const initial = window.VANTA.current.renderer.info.render.frame
-        for (let i = 0; i < 12; i++) await new Promise(requestAnimationFrame)
-        return window.VANTA.current.renderer.info.render.frame - initial
-    })
+    const softwareCompletion = browserName === 'chromium' && needsSoftwareWebGL
+    let normalMotionDraws, completedCloudWork
+    if (softwareCompletion) {
+        // Three completed full-resolution cloud draws are stronger evidence of
+        // real software-rendered motion than twelve arbitrary RAF submissions.
+        // Keep normal motion and the vendor loop running until the actual click.
+        completedCloudWork = measurements.completedSourceWork
+        normalMotionDraws = completedCloudWork.rendererFrames
+        expect(completedCloudWork.completed).toBeGreaterThanOrEqual(3)
+        expect(completedCloudWork.submitted).toBeGreaterThanOrEqual(completedCloudWork.completed)
+        expect(completedCloudWork.submitted).toBeLessThanOrEqual(completedCloudWork.completed + 1)
+        expect(completedCloudWork.maxInFlight).toBe(1)
+        expect(completedCloudWork.lost).toBe(0)
+        expect([...new Set(completedCloudWork.errors)]).toEqual([0])
+        expect(completedCloudWork.media).toBe(false)
+        expect(completedCloudWork.pendingRAF).toBe(1)
+        expect(completedCloudWork.devicePixelRatio).toBe(1)
+        expect(completedCloudWork.shaderScale).toBe(1)
+        expect(completedCloudWork.drawingBuffer).toEqual({ width: Math.max(200, completedCloudWork.host.width), height: Math.max(200, completedCloudWork.host.height) })
+        expect([...new Set(completedCloudWork.widths)]).toEqual([completedCloudWork.drawingBuffer.width])
+        expect([...new Set(completedCloudWork.heights)]).toEqual([completedCloudWork.drawingBuffer.height])
+        expect(completedCloudWork.pixels.every(pixel => pixel[3] === 255)).toBe(true)
+        await testInfo.attach('software-source-completed-work', { body: Buffer.from(JSON.stringify({ renderer: measurements.renderer, ...completedCloudWork })), contentType: 'application/json' })
+    } else {
+        normalMotionDraws = await page.evaluate(async () => {
+            const initial = window.VANTA.current.renderer.info.render.frame
+            for (let i = 0; i < 12; i++) await new Promise(requestAnimationFrame)
+            return window.VANTA.current.renderer.info.render.frame - initial
+        })
+    }
     expect(normalMotionDraws).toBeGreaterThanOrEqual(3)
-    expect(await page.evaluate(() => window.fixtureFrameMetrics.vantaScheduled)).toBeGreaterThanOrEqual(3)
-    measurements.checkpoints.push({ stage: 'excluded-preview-normal-motion', observedAnimationTicks: 12, cloudDraws: normalMotionDraws })
+    expect(softwareCompletion ? completedCloudWork.vantaScheduled : await page.evaluate(() => window.fixtureFrameMetrics.vantaScheduled)).toBeGreaterThanOrEqual(3)
+    measurements.checkpoints.push({ stage: 'excluded-preview-normal-motion', observedAnimationTicks: softwareCompletion ? undefined : 12,
+        cloudDraws: normalMotionDraws, completedCloudWork })
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     const support = page.locator('[data-product-purchase-support]:visible')
@@ -268,6 +455,15 @@ test('profile-to-product transition releases the cloud renderer for deck blue an
     await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
     await expect.poll(() => page.evaluate(() => window.fixtureFrameMetrics.vantaPending())).toBe(0)
     expect(await page.evaluate(() => window.fixtureInitialEffect.renderer === null)).toBe(true)
+    // The test deliberately retains this renderer for inspection, preventing
+    // normal garbage collection. Verify resource disposal, not a synchronous
+    // driver context loss which production navigation must not force.
+    expect(await page.evaluate(() => ({ calls: window.fixtureInitialDisposeCalls, attached: window.fixtureCanvas.isConnected, ...window.fixtureInitialRenderer.info.memory, programs: window.fixtureInitialRenderer.info.programs.length }))).toEqual({ calls: 1, attached: false, geometries: 0, textures: 0, programs: 0 })
+    if (softwareCompletion) {
+        const released = await page.evaluate(() => { const record = window.fixtureCloudCompletions.get(window.fixtureInitialRenderer); return { disposed: record.disposed, createdBuffers: record.createdBuffers, deletedBuffers: record.deletedBuffers, createdSyncs: record.createdSyncs, deletedSyncs: record.deletedSyncs } })
+        expect(released).toMatchObject({ disposed: true, createdBuffers: 1, deletedBuffers: 1 })
+        expect(released.deletedSyncs).toBe(released.createdSyncs)
+    }
     const framesAfterNavigation = await page.evaluate(() => window.fixtureInitialRenderer.info.render.frame)
     measurements.checkpoints.push({ stage: 'first-product-static', frames: framesAfterNavigation })
 
@@ -289,13 +485,27 @@ test('profile-to-product transition releases the cloud renderer for deck blue an
     await page.getByRole('button', { name: 'Back to Profile', exact: true }).click()
     await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(0)
     await expect(page.locator('#vanta-bg canvas')).toHaveCount(1, { timeout: paintDeadline })
-    await page.waitForFunction(() => window.VANTA.current?.renderer?.info.render.calls > 0, null, { timeout: paintDeadline })
+    await page.waitForFunction(() => window.VANTA.current?.renderer?.info.render.calls > 0 && (!window.fixtureFenceSoftwareCloudFrames || window.fixtureCloudCompletions.get(window.VANTA.current.renderer)?.completed >= 1), null, { timeout: paintDeadline })
     expect(await page.evaluate(() => window.fixtureCanvas !== document.querySelector('#vanta-bg canvas'))).toBe(true)
+    await page.evaluate(() => {
+        window.fixtureReturnedRenderer = window.VANTA.current.renderer
+        window.fixtureReturnedContext = window.fixtureReturnedRenderer.getContext()
+        window.fixtureReturnedDisposeCalls = 0
+        const dispose = window.fixtureReturnedRenderer.dispose.bind(window.fixtureReturnedRenderer)
+        window.fixtureReturnedRenderer.dispose = () => { window.fixtureReturnedDisposeCalls++; return dispose() }
+    })
+    expect(await page.evaluate(() => window.fixtureReturnedContext !== window.fixtureInitialContext && !window.fixtureReturnedContext.isContextLost())).toBe(true)
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)
     await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
     await expect.poll(() => page.evaluate(() => window.fixtureFrameMetrics.vantaPending())).toBe(0)
+    expect(await page.evaluate(() => ({ calls: window.fixtureReturnedDisposeCalls, attached: window.fixtureReturnedRenderer.domElement.isConnected, ...window.fixtureReturnedRenderer.info.memory, programs: window.fixtureReturnedRenderer.info.programs.length }))).toEqual({ calls: 1, attached: false, geometries: 0, textures: 0, programs: 0 })
+    if (softwareCompletion) {
+        const released = await page.evaluate(() => { const record = window.fixtureCloudCompletions.get(window.fixtureReturnedRenderer); return { disposed: record.disposed, createdBuffers: record.createdBuffers, deletedBuffers: record.deletedBuffers, createdSyncs: record.createdSyncs, deletedSyncs: record.deletedSyncs } })
+        expect(released).toMatchObject({ disposed: true, createdBuffers: 1, deletedBuffers: 1 })
+        expect(released.deletedSyncs).toBe(released.createdSyncs)
+    }
     expect(errors).toEqual([])
     expect(unexpected).toEqual([])
     await testInfo.attach('cloud-renderer-release-performance', { body: Buffer.from(JSON.stringify(measurements.checkpoints)), contentType: 'application/json' })
