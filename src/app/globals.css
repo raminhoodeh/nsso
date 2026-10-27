@@ -162,6 +162,25 @@ body {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
+/* A cool coating for homepage cards, beneath their rim and readable content. */
+@media (min-width: 1024px) {
+  .home-sky-glass:not([data-tahoe-backdrop-backend="solid"])::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(186, 230, 253, 0.32), rgba(125, 211, 252, 0.22));
+  }
+}
+
+@media (forced-colors: active), (prefers-reduced-transparency: reduce) {
+  .home-sky-glass::after {
+    display: none;
+  }
+}
+
 /* ============================================
    Animation Classes
    ============================================ */
