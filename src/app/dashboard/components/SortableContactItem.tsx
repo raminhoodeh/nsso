@@ -22,6 +22,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
         attributes,
         listeners,
         setNodeRef,
+        setActivatorNodeRef,
         transform,
         transition,
         isDragging
@@ -46,26 +47,31 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
             semanticTintOpacity={0.38}
             tracking={isDragging ? 'continuous' : 'static'}
             className={isDragging ? 'ring-1 ring-white/30 shadow-xl' : ''}
-            contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4 md:flex-row md:items-center"
+            contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4"
         >
-            {/* Drag Handle */}
-            <div
-                {...attributes}
-                {...listeners}
-                className="hidden md:flex items-center justify-center cursor-move text-white/30 hover:text-white/70 transition-colors -ml-2 p-2 touch-none select-none"
-            >
-                <GripVertical size={20} />
+            <div data-sortable-controls="contact" className="-mx-3 -mt-3 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center border-b border-white/10 px-2 py-1 sm:-mx-4 sm:-mt-4">
+                <button
+                    ref={setActivatorNodeRef}
+                    type="button"
+                    {...attributes}
+                    {...listeners}
+                    aria-label={`Drag to reorder ${contact.method} contact method`}
+                    className="col-start-2 flex min-h-11 cursor-grab touch-none select-none items-center justify-center rounded-lg text-white/60 outline-none transition-colors hover:text-white active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-white"
+                >
+                    <GripVertical size={20} aria-hidden="true" />
+                </button>
+                <TahoeGlassButton
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    className="col-start-3 h-11 w-11 shrink-0 p-0"
+                    contentClassName="text-red-200 text-xl"
+                    aria-label={`Remove ${contact.method} contact method`}
+                >
+                    ×
+                </TahoeGlassButton>
             </div>
 
-            {/* Mobile Drag Handle (Top Center) */}
-            <div
-                {...attributes}
-                {...listeners}
-                className="-mx-3 -mt-3 mb-1 flex min-h-11 cursor-move touch-none select-none items-center justify-center border-b border-white/10 py-1 text-white/30 transition-colors hover:text-white/70 sm:-mx-4 sm:-mt-4 md:hidden"
-            >
-                <GripVertical size={16} />
-            </div>
-
+            <div className="flex min-w-0 flex-col gap-3 sm:gap-4 md:flex-row md:flex-wrap md:items-center">
             <div className="w-full md:w-48 shrink-0">
                 <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5">
                     <select
@@ -103,14 +109,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
                 />
             </div>
 
-            <TahoeGlassButton
-                onClick={() => setConfirmDelete(true)}
-                className="h-11 w-11 shrink-0 p-0"
-                contentClassName="text-red-200 text-xl"
-                aria-label={`Remove ${contact.method} contact method`}
-            >
-                ×
-            </TahoeGlassButton>
+            </div>
         </TahoeGlassSurface>
         <ConfirmDeleteDialog open={confirmDelete} name={`${contact.method} contact method`} onClose={() => setConfirmDelete(false)} onConfirm={() => removeContact(contact.id)} />
         </>

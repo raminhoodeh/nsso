@@ -7,6 +7,7 @@ import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus';
 import {
     routeSuppressesAuthenticatedNavigation,
     routeUsesDashboardSidebar,
+    routeUsesMobileProfileMenu,
 } from '@/lib/tahoe-glass/route-boundaries';
 
 export default function AuthenticatedLayoutWrapper({
@@ -20,15 +21,16 @@ export default function AuthenticatedLayoutWrapper({
     const isLoggedIn = !!user;
     const navigationSuppressed = routeSuppressesAuthenticatedNavigation(pathname);
     const usesDashboardSidebar = routeUsesDashboardSidebar(pathname);
+    const usesMobileProfileMenu = routeUsesMobileProfileMenu(pathname);
 
     return (
         <div className={cn(
             "relative w-full transition-all duration-300",
-            isLoggedIn && !navigationSuppressed ? "pb-[calc(var(--mobile-bottom-nav-height)+16px)] lg:pb-0" : "",
+            isLoggedIn && !navigationSuppressed && !usesMobileProfileMenu ? "pb-[calc(var(--mobile-bottom-nav-height)+16px)] lg:pb-0" : "",
             isLoggedIn && usesDashboardSidebar ? "lg:pl-[280px]" : ""
         )}>
             {children}
-            {isLoggedIn && pathname.startsWith('/dashboard') && pathname !== '/dashboard/security' && <ProfileSaveStatus floating />}
+            {isLoggedIn && pathname.startsWith('/dashboard') && pathname !== '/dashboard/security' && <ProfileSaveStatus floating aboveBottomNav={!usesMobileProfileMenu} />}
         </div>
     );
 }

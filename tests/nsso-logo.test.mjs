@@ -65,5 +65,5 @@ test('all shared wordmark consumers reserve the correct aspect ratio without str
         };
         visit(source);
     }
-    assert.equal(count, 6, 'Cover every Header, sidebar, shared auth shell, and password recovery logo.');
+    assert.equal(count, 7, 'Cover the Header and account menu, sidebar, shared auth shell, and password recovery logos.');
 });
