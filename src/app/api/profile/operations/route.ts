@@ -1,10 +1,11 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 import { isProfileOperation, isUuid, normalizeProfileChange } from '@/lib/profile-mutations'
 
 const respond = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
         assertSameOrigin(request)
         const session = await createClient()
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     } catch (error) { return permissionErrorResponse(error) || requestBodyErrorResponse(error) || respond({ code: 'OUTCOME_UNKNOWN' }, 503) }
 }
 
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
     try {
         const session = await createClient()
         const { data: { user }, error } = await session.auth.getUser()
@@ -32,3 +33,6 @@ export async function GET(request: Request) {
         return respond(result.data)
     } catch { return respond({ code: 'OUTCOME_UNKNOWN' }, 503) }
 }
+
+export const POST = withRuntimeGuard(handlePOST)
+export const GET = withRuntimeGuard(handleGET)

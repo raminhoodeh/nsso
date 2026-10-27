@@ -1,11 +1,11 @@
 import { updateSession } from '@/lib/supabase/middleware'
-import { guardRuntimeRequest } from '@/lib/server/runtime-guard'
+import { guardRuntimePreflight } from '@/lib/server/runtime-guard'
 import { prepareSecurityRequest, securityHeaders } from '@/lib/server/security-headers'
 import { type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
     const security = prepareSecurityRequest(request)
-    const denied = await guardRuntimeRequest(request)
+    const denied = guardRuntimePreflight(request)
     if (denied) return securityHeaders(request, denied, security)
     const response = await updateSession(request, security.requestHeaders)
     if (security.nonce) response.headers.set('Cache-Control', 'private, no-store')

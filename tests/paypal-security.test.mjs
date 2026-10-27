@@ -8,6 +8,7 @@ const source = new URL('../src/', import.meta.url);
 const sessionMock = `data:text/javascript,${encodeURIComponent('export const createClient = async () => globalThis.__paymentSession;')}`;
 const serviceMock = `data:text/javascript,${encodeURIComponent('export const createClient = () => {globalThis.__paymentCalls.push(["privileged"]);return globalThis.__paymentService;};')}`;
 const hooks = registerHooks({ resolve(specifier, context, next) {
+    if (specifier === '@/lib/server/runtime-route') return { url: 'data:text/javascript,export const withRuntimeGuard = handler => handler;', shortCircuit: true };
     if (specifier === 'next/server') return next('next/server.js', context);
     if (specifier === 'server-only') return { url: 'data:text/javascript,export {};', shortCircuit: true };
     if (specifier === '@/lib/supabase/server') return { url: sessionMock, shortCircuit: true };

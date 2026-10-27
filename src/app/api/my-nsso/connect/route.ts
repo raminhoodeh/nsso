@@ -1,10 +1,11 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     const headers = { 'Cache-Control': 'private, no-store' }
     try {
         assertSameOrigin(request)
@@ -32,3 +33,5 @@ export async function POST(request: Request) {
             ?? Response.json({ error: 'The connection could not be saved. Please retry.' }, { status: 503, headers })
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)

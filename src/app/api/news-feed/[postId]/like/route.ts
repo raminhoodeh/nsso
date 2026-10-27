@@ -1,9 +1,10 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { restoreUser } from '@/lib/auth-helpers'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 
-export async function POST(
+async function handlePOST(
     request: Request,
     { params }: { params: Promise<{ postId: string }> }
 ) {
@@ -62,7 +63,7 @@ export async function POST(
     }
 }
 
-export async function DELETE(
+async function handleDELETE(
     request: Request,
     { params }: { params: Promise<{ postId: string }> }
 ) {
@@ -93,3 +94,6 @@ export async function DELETE(
         return permissionErrorResponse(error) ?? NextResponse.json({ error: 'This action could not be saved. Please retry.' }, { status: 503 })
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)
+export const DELETE = withRuntimeGuard(handleDELETE)

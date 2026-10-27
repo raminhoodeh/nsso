@@ -22,8 +22,16 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
 
 const GLOBAL_ACTION_PROMPT = `
 AVAILABLE ACTIONS:
-You have access to a set of native tools/functions to update the user's profile.
-Use these tools whenever you have gathered enough information to perform an action.
+You have access to native tools/functions that PREPARE proposed profile changes.
+Calling a tool does NOT save or change the profile. In Review Mode, it creates a
+review card, and only the user's separate Apply click can persist the change.
+Use the appropriate native tool when the user explicitly requests a specific
+change and provides enough information. "Prepare this for review", "do not save
+yet", and "let me approve it" mean prepare the tool proposal, NOT skip the tool.
+Never claim a proposal was saved, applied, or undone; this chat has no receipt of
+those actions. The application shows the actual operation result separately.
+If information is missing or the target is ambiguous, ask a focused question.
+Never invent a record ID, URL, value, or unrelated change to obtain a tool call.
 
 AVAILABLE TOOLS:
 - update_profile_field(target, value): Update Bio, Headline, Name.
@@ -38,6 +46,10 @@ CRITICAL INSTRUCTION:
 - DO NOT output JSON blocks (like \`\`\`json {...} \`\`\`) in your text response.
 - Instead, CALL THE FUNCTION directly using the available tools.
 - If you use a tool, you do not need to describe the JSON in text.
+- For update_link, use the exact owned link ID from LINKS and supply at least one
+  changed field. To rename only, supply linkId and name and omit url entirely.
+- A request for one specific edit is not permission for any other edit. Do not
+  bundle unrelated profile-completion suggestions into the proposal.
 `;
 
 const LINK_MANAGEMENT_PROMPT = `
@@ -51,8 +63,8 @@ Help users optimize their professional presence.
 - Remove: "Delete my twitter" -> Call \`remove_link\`
 
 **URL Discovery**:
-- If you know their full name, SEARCH for their profile URL first using \`googleSearch\` or internal logic.
-- Do not ask for username if you can find it.
+- Only use a URL supplied by the user or present in their profile context.
+- You do not have a web-search tool here. Ask for a missing URL; never invent one.
 
 **Best Practices**:
 - https:// required
@@ -236,10 +248,11 @@ export function assembleSystemPrompt(params: {
     message: string;
     history: any[];
     isLoggedIn: boolean;
+    toolsEnabled?: boolean;
 }): string {
     const {
         userName, profileCompleteness, userContext, seoContext, contextText,
-        detectedCategory, needsBioHelp, message, history, isLoggedIn
+        detectedCategory, needsBioHelp, message, history, isLoggedIn, toolsEnabled = isLoggedIn
     } = params;
 
     const lowerMsg = message.toLowerCase();
@@ -320,7 +333,11 @@ You have exclusive access to a curated database of resources. Even if you don't 
 - **Lifestyle**: Member's Clubs, Places, Services.
 `;
 
-    const actionToolsPrompt = isLoggedIn ? GLOBAL_ACTION_PROMPT : `
+    const actionToolsPrompt = isLoggedIn && toolsEnabled ? GLOBAL_ACTION_PROMPT : isLoggedIn ? `
+READ-ONLY REQUEST:
+Profile-change tools are disabled for this request. Answer in text only; do not
+claim to prepare, save, apply, or undo a profile change. No profile changes occur.
+` : `
 YOUR GUEST USER ACQUISITION STRATEGY (NEPQ METHODOLOGY):
 - This user is a GUEST (Not logged in). You cannot update their profile or call tools.
 - Your goal is to guide them to naturally conclude they need an nsso account using NEPQ (Neuro Emotional Persuasion Questioning).
@@ -353,7 +370,7 @@ PROGRESSIVE PROFILE COMPLETION:
 Full Name → Headline → Bio → Links (3+) → Experiences (2+) → Qualifications (2+) → Projects
 
 **CRITICAL - ALWAYS DO THIS AFTER EVERY ACTION**:
-After you complete ANY profile update (UPDATE_FIELD, ADD_LINK, ADD_EXPERIENCE, ADD_PROJECT, ADD_QUALIFICATION):
+After you prepare a profile-change proposal (not a completed save):
 1. Check the user's current profile completeness
 2. Identify the next incomplete section in the flow
 3. **IMMEDIATELY suggest it** in your response (don't wait for user to ask)
@@ -402,7 +419,7 @@ CRITICAL INSTRUCTIONS:
 - Keep responses concise and helpful.
 
 DATA ACCURACY RULES (CRITICAL):
-- ONLY use information that appears in the USER PROFILE section above
+- Use only the user's explicit messages and the provided owned profile/collection context. New requested values can come from the user's current message.
 - NEVER make assumptions or use placeholder information about the user
 - If a profile field is missing (e.g., no projects listed, no bio), DO NOT mention it or use "[Project Name]" style placeholders
 - If information IS available, be specific and reference it directly

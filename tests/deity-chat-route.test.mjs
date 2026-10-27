@@ -13,6 +13,8 @@ Object.assign(process.env, {
   NSSO_CHAT_IP_HASH_SECRET: 'test-only-hmac-secret-longer-than-32-characters', VERCEL: '1',
 });
 const hooks = registerHooks({ resolve(specifier, context, next) {
+  // Route behavior is isolated here; guarded dispatch and accounting are tested independently.
+  if (specifier === '@/lib/server/runtime-route') return {url:'data:text/javascript,export const withRuntimeGuard = handler => handler;',shortCircuit:true};
   if (specifier === 'server-only') return {url:'data:text/javascript,export {};',shortCircuit:true};
   if (specifier === 'next/server') return next('next/server.js',context);
   if (specifier.startsWith('@/')) return next(new URL(`${specifier.slice(2)}.ts`, source).href, context);
@@ -47,8 +49,18 @@ beforeEach(() => {
     if (path.endsWith('/reserve_nsso_chat_budget')) return Response.json(mode === 'quota'
       ? { allowed: false, code: 'daily_ip_allowance_exhausted' } : { allowed: true });
     if (path.endsWith('/finish_nsso_chat_budget')) return Response.json(null);
-    if (path === '/auth/v1/user') return Response.json({ id: fixtureOwnerId, aud: 'authenticated', role: 'authenticated' });
-    if (path.endsWith('/get_agent_context')) return Response.json({ profile: { full_name: 'Fixture Creator', headline: 'Fixture headline', bio: 'Fixture biography' }, links: [{ id: fixtureLinkId, link_name: 'Fixture link', link_url: 'https://example.test/' }] });
+    if (path === '/auth/v1/user') {
+      if (mode === 'auth_unavailable') return Response.json({ code: 'unexpected_failure', msg: privateText }, { status: 503 });
+      if (mode === 'auth_invalid') return Response.json({ code: 'bad_jwt', msg: privateText }, { status: 401 });
+      if (mode === 'auth_transport_failure') throw new TypeError(privateText);
+      return Response.json({ id: fixtureOwnerId, aud: 'authenticated', role: 'authenticated' });
+    }
+    if (path.endsWith('/get_agent_context')) {
+      if (mode === 'context_unavailable') return Response.json({ code: 'fixture', message: privateText }, { status: 503 });
+      if (mode === 'context_missing') return Response.json(null);
+      if (mode === 'context_malformed') return Response.json({ profile: [] });
+      return Response.json({ profile: { full_name: 'Fixture Creator', headline: 'Fixture headline', bio: 'Fixture biography' }, links: [{ id: fixtureLinkId, link_name: 'Fixture link', link_url: 'https://example.test/' }] });
+    }
     if (path.endsWith('/intelligent_search')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
     if (path.endsWith(':embedContent')) return Response.json({ embedding: { values: Array(768).fill(0.01) } });
     if (path.endsWith(':countTokens')) return Response.json({ totalTokens: 500 });
@@ -100,6 +112,86 @@ const assertNoMutationOrRetry = () => {
   const allowedRpcs = ['reserve_nsso_chat_budget', 'finish_nsso_chat_budget', 'get_agent_context', 'intelligent_search'];
   assert.ok(calls.filter(call => call.path.includes('/rpc/')).every(call => allowedRpcs.some(name => call.path.endsWith('/' + name))), 'A proposed change must never invoke a profile mutation');
 };
+
+for (const [state, status, code] of [
+  ['auth_unavailable', 503, 'chat_authentication_unavailable'],
+  ['auth_transport_failure', 503, 'chat_authentication_unavailable'],
+  ['auth_invalid', 401, 'chat_authentication_required'],
+  ['context_unavailable', 503, 'chat_profile_context_unavailable'],
+  ['context_missing', 503, 'chat_profile_context_unavailable'],
+  ['context_malformed', 503, 'chat_profile_context_unavailable'],
+]) {
+  test(`${state} cannot silently become a guest/no-context model answer`, async t => {
+    mode = state;
+    const logs = [];
+    t.mock.method(console, 'error', (...args) => logs.push(args));
+    t.mock.method(console, 'warn', (...args) => logs.push(args));
+    const response = await POST(ownerRequest({ expectedAccountId: fixtureOwnerId }));
+    assert.equal(response.status, status);
+    const body = await response.json();
+    assert.equal(body.code, code);
+    assert.match(response.headers.get('x-deity-request-id'), /^[a-f0-9-]{36}$/);
+    assert.match(body.error, /Nothing was changed/);
+    assert.doesNotMatch(JSON.stringify(body), /SHOULD_NEVER_LEAK/);
+    assert.doesNotMatch(JSON.stringify(logs), /SHOULD_NEVER_LEAK/);
+    assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
+    assert.equal(calls.filter(call => call.path === '/auth/v1/user').length, 1);
+    assert.ok(calls.filter(call => call.path.includes('/rpc/')).every(call => ['reserve_nsso_chat_budget', 'finish_nsso_chat_budget', 'get_agent_context'].some(name => call.path.endsWith('/' + name))));
+  });
+}
+
+test('the expected owner cannot supply identity or silently omit authentication', async () => {
+  for (const input of [request({ expectedAccountId: fixtureOwnerId }), ownerRequest({ expectedAccountId: fixtureLinkId })]) {
+    const response = await POST(input);
+    assert.equal(response.status, 401);
+    assert.match((await response.json()).error, /Nothing was changed/);
+  }
+  assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
+  assert.equal(calls.filter(call => call.path.endsWith('/get_agent_context')).length, 0);
+});
+
+test('a malformed bearer is never treated as a guest', async () => {
+  const input = ownerRequest(); input.headers.set('authorization', 'Basic fixture');
+  const response = await POST(input);
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).code, 'chat_authentication_required');
+  assert.equal(calls.filter(call => call.path.includes('/models/') || call.path === '/auth/v1/user').length, 0);
+});
+
+test('native tools prepare review proposals and an explicit no-save request is not tool suppression', async () => {
+  mode = 'tool_only';
+  const response = await POST(ownerRequest({ message: 'Rename my fixture link for review, but do not save yet.', expectedAccountId: fixtureOwnerId }));
+  const { actionsJson } = splitActionPayload(await response.text());
+  assert.equal(parseActionList(JSON.parse(actionsJson)).length, 1);
+  const generation = calls.find(call => call.path.endsWith(':streamGenerateContent')).body;
+  const prompt = JSON.stringify(generation.systemInstruction);
+  assert.match(prompt, /Calling a tool does NOT save or change the profile/);
+  assert.match(prompt, /only the user's separate Apply click can persist/);
+  assert.match(prompt, /mean prepare the tool proposal, NOT skip the tool/);
+  assert.match(prompt, /never invent one/);
+  assert.equal(generation.toolConfig, undefined);
+  assert.deepEqual(generation.tools[0].functionDeclarations.find(tool => tool.name === 'update_profile_field').parameters.properties.target.enum, ['bio', 'headline', 'full_name']);
+  assertNoMutationOrRetry();
+});
+
+test('an authenticated read-only request disables native tools without pretending it can save', async () => {
+  const response = await POST(ownerRequest({ disableTools: true, expectedAccountId: fixtureOwnerId }));
+  await response.text();
+  const generation = calls.find(call => call.path.endsWith(':streamGenerateContent')).body;
+  assert.equal(generation.tools, undefined);
+  assert.match(JSON.stringify(generation.systemInstruction), /Profile-change tools are disabled for this request/);
+  assert.doesNotMatch(JSON.stringify(generation.systemInstruction), /AVAILABLE ACTIONS:/);
+});
+
+test('guest and explicitly read-only responses cannot expose unexpected provider tool proposals', async () => {
+  mode = 'tool_only';
+  for (const input of [request(), ownerRequest({ disableTools: true, expectedAccountId: fixtureOwnerId })]) {
+    const response = await POST(input);
+    const wire = await response.text();
+    assert.doesNotMatch(wire, /__DEITY_ACTIONS__/);
+    assert.match(wire, /Nothing was changed/);
+  }
+});
 
 test('authenticated native update_link remains terminal JSON after a category tip and final billing', async () => {
   mode = 'tool_with_tip';

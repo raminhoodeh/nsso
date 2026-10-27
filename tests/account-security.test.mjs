@@ -10,6 +10,8 @@ const emptyModule = `data:text/javascript,${encodeURIComponent('export {};')}`;
 const sessionModule = `data:text/javascript,${encodeURIComponent('export const createClient = async () => globalThis.__accountSession;')}`;
 const serviceModule = `data:text/javascript,${encodeURIComponent('export const createClient = () => globalThis.__accountService;')}`;
 const hooks = registerHooks({ resolve(specifier,context,next) {
+    // Route-specific authorization is isolated here; runtime accounting has its own integration suite.
+    if (specifier === '@/lib/server/runtime-route') return {url:'data:text/javascript,export const withRuntimeGuard = handler => handler;',shortCircuit:true};
     if (specifier === 'next/server') return next('next/server.js',context);
     if (specifier === 'server-only') return {url:emptyModule,shortCircuit:true};
     if (specifier === '@/lib/supabase/server') return {url:sessionModule,shortCircuit:true};

@@ -528,11 +528,18 @@ Check out some of the areas I can help you with below.`;
         setIsLoading(true);
         try {
             const history = boundedChatHistory(messages);
-            const {data:{session}} = await supabase.auth.getSession();
+            const {data:{session}, error: sessionError} = await supabase.auth.getSession();
             if (!alive.current || controller.signal.aborted) return;
+            // The account UI and bearer must describe the same owner. A missing
+            // or stale browser session must never turn a signed-in edit into a
+            // guest answer (or send a different account's private conversation).
+            if (sessionError || (userId ? !session?.access_token || session.user?.id !== userId : !!session?.access_token)) {
+                setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:'Deity could not verify this signed-in account. Nothing was changed. Please sign in again before asking for a profile change.',timestamp:Date.now(),responseError:true}]);
+                return;
+            }
             const headers: Record<string,string> = {'Content-Type':'application/json'};
             if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
-            const response = await fetch('/api/deity/chat',{method:'POST',headers,body:JSON.stringify({message:text,category:activeCategory,history}),signal:controller.signal});
+            const response = await fetch('/api/deity/chat',{method:'POST',headers,body:JSON.stringify({message:text,category:activeCategory,history,...(userId ? {expectedAccountId:userId} : {})}),signal:controller.signal});
             if (!alive.current || controller.signal.aborted) return;
             if (!response.ok) {
                 const failure = await response.json().catch(() => ({}));
@@ -572,7 +579,7 @@ Check out some of the areas I can help you with below.`;
         } catch {
             if (alive.current && !controller.signal.aborted) setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:'Deity could not finish that response. Please try again.',timestamp:Date.now(),responseError:true}]);
         } finally { if (alive.current && activeRequest.current === controller) setIsLoading(false); }
-    },[revision,messages,supabase,activeCategory,applyProposals]);
+    },[revision,messages,supabase,userId,activeCategory,applyProposals]);
 
     const handleCategoryClick = useCallback((category: string) => {
         setActiveCategory(category); // Set context for future messages

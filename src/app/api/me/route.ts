@@ -1,10 +1,11 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { permissionErrorResponse, type AppPermission } from '@/lib/server/permissions'
 
 const privateHeaders = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 
-export async function GET(request?: Request) {
+async function handleGET(request?: Request) {
     try {
         const client = await createClient()
         const { data: { user: actor }, error: authError } = await client.auth.getUser()
@@ -32,3 +33,5 @@ export async function GET(request?: Request) {
         return permissionErrorResponse(error) ?? Response.json({ error: 'Account details are temporarily unavailable.' }, { status: 503, headers: privateHeaders })
     }
 }
+
+export const GET = withRuntimeGuard(handleGET)

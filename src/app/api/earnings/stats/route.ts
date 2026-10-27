@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import type { EarningsStats } from '@/lib/earnings'
 
@@ -8,7 +9,7 @@ interface EarningsStatsRow {
     paypal_me_slug: string | null
 }
 
-export async function GET() {
+async function handleGET() {
     const headers = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
     try {
         const supabase = await createClient()
@@ -56,3 +57,5 @@ export async function GET() {
         )
     }
 }
+
+export const GET = withRuntimeGuard(handleGET)

@@ -14,6 +14,9 @@ import { detectCategory, assembleSystemPrompt, detectSectionIntent, detectKnowle
 import { assessLinkHealth } from '@/lib/deity/linkVerifier';
 import { reportRuntimeSignal } from '@/lib/server/runtime-signals';
 import { calculateProfileCompleteness } from '@/lib/profile-completeness';
+import { isTransientAuthError } from '@/lib/auth-errors';
+import { createPrivilegedFetch } from '@/lib/server/privileged-fetch';
+import { withRuntimeGuard } from '@/lib/server/runtime-route';
 
 export const maxDuration = 90;
 const allowedToolNames = new Set(DEITY_TOOLS.map(tool => tool.name));
@@ -66,7 +69,7 @@ const CATEGORY_CONFIG: Record<string, { files: string[], threshold: number }> = 
 
 // ... (existing imports)
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
     let budget: ChatBudget | undefined;
     let phase: ChatPhase = 'request';
     let requestId = crypto.randomUUID() as string;
@@ -84,7 +87,7 @@ export async function POST(req: Request) {
     const providerSignal = (timeout: number) => AbortSignal.any([upstream.signal, AbortSignal.timeout(timeout)]);
     try {
         upstream.signal.throwIfAborted();
-        const { message, category, history, disableTools } = await readChatRequest(req);
+        const { message, category, history, disableTools, expectedAccountId } = await readChatRequest(req);
         upstream.signal.throwIfAborted();
         phase = 'allowance';
         budget = await openChatBudget(req, 'chat');
@@ -92,7 +95,20 @@ export async function POST(req: Request) {
         phase = 'context';
         // Build/import paths must not instantiate a privileged client or model.
         // The configured allowance gate has already checked the required server settings.
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+        const dependencyFetch = createPrivilegedFetch({ requestId });
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+            global: { fetch: async (input, init) => {
+                try { return await dependencyFetch(input, { ...init,
+                    signal: init?.signal ? AbortSignal.any([upstream.signal, init.signal]) : upstream.signal }); }
+                catch {
+                    // Auth's pinned SDK logs transport exceptions internally.
+                    // The safe dependency diagnostic was already emitted; never
+                    // hand that logger a raw URL, token, or exception message.
+                    throw new TypeError('Deity profile dependency is unavailable');
+                }
+            } },
+        });
         const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
         const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
 
@@ -152,21 +168,27 @@ export async function POST(req: Request) {
         let seoContext = '';
 
         const authHeader = req.headers.get('authorization');
+        if (!authHeader && expectedAccountId) throw new ChatAllowanceError('chat_authentication_required', 401);
         if (authHeader) {
             try {
-                const token = authHeader.replace('Bearer ', '');
+                const token = /^Bearer ([^\s]+)$/i.exec(authHeader)?.[1];
+                if (!token) throw new ChatAllowanceError('chat_authentication_required', 401);
                 const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-                if (user && !authError) {
+                if (isTransientAuthError(authError)) throw new ChatAllowanceError('chat_authentication_unavailable', 503);
+                if (authError || !user) throw new ChatAllowanceError('chat_authentication_required', 401);
+                if (expectedAccountId && user.id !== expectedAccountId) throw new ChatAllowanceError('chat_account_changed', 401);
+                {
                     userId = user.id;
 
                     const { data: fetchedContext, error: contextError } = await supabase.rpc('get_agent_context', {
                         user_uuid: userId
                     });
 
-                    if (contextError) {
+                    if (contextError || !fetchedContext || typeof fetchedContext !== 'object' || Array.isArray(fetchedContext)
+                        || !fetchedContext.profile || typeof fetchedContext.profile !== 'object' || Array.isArray(fetchedContext.profile)) {
                         console.error('Deity context unavailable', { code: 'PROFILE_CONTEXT_UNAVAILABLE', requestId });
-                    } else if (fetchedContext) {
+                        throw new ChatAllowanceError('chat_profile_context_unavailable', 503);
+                    } else {
                         contextData = fetchedContext;
 
                         // Calculate profile completeness
@@ -214,9 +236,17 @@ export async function POST(req: Request) {
                     }
                 }
             } catch (err) {
+                if (err instanceof ChatAllowanceError) throw err;
                 console.error('Deity context unavailable', chatFailureDetails(err, 'context', requestId));
+                throw new ChatAllowanceError(userId ? 'chat_profile_context_unavailable' : 'chat_authentication_unavailable', 503);
             }
         }
+
+        // Fixed booleans only: diagnose missing capabilities without retaining
+        // tokens, owner IDs, profile content, prompts, or provider replies.
+        try { console.info('Deity chat capabilities', { requestId, signedIn: !!userId,
+            profileContextLoaded: !!contextData, toolsEnabled: !!userId && !disableTools,
+            expectedAccountPresent: !!expectedAccountId }); } catch { /* Diagnostics never change the outcome. */ }
 
         // 3. Search for relevant context (Intelligent Retrieval)
         let documents: any[] = [];
@@ -314,7 +344,8 @@ export async function POST(req: Request) {
             needsBioHelp,
             message,
             history,
-            isLoggedIn: !!userId
+            isLoggedIn: !!userId,
+            toolsEnabled: !!userId && !disableTools,
         });
 
         // 4. Initialize Model with System Instruction AND Tools
@@ -407,7 +438,7 @@ export async function POST(req: Request) {
                         calls.forEach(call => {
                             console.log('Deity tool call received', { requestId });
 
-                            const proposal = normalizeToolCall(call.name, call.args);
+                            const proposal = userId && !disableTools ? normalizeToolCall(call.name, call.args) : null;
                             if (proposal && collectedActions.length < 20) collectedActions.push(proposal);
                             else {
                                 rejectedProposalCount++;
@@ -463,6 +494,9 @@ export async function POST(req: Request) {
 
                 const response = await result.response;
                 await activeBudget.finish(response.usageMetadata);
+                try { console.info('Deity chat proposal outcome', { requestId,
+                    acceptedProposalCount: collectedActions.length, rejectedProposalCount,
+                    textPresent: !!fullResponse.trim() }); } catch { /* No raw reply is retained. */ }
                 if (rejectedProposalCount > 0 && collectedActions.length === 0) {
                     controller.enqueue(new TextEncoder().encode(`${fullResponse.trim() ? '\n\n' : ''}Deity could not prepare a valid profile change. Nothing was changed. Please try again.`));
                 } else if (!fullResponse.trim() && collectedActions.length === 0) throw new Error('Empty provider response');
@@ -519,7 +553,12 @@ export async function POST(req: Request) {
         if (req.signal.aborted) return Response.json({ error: 'This chat request was cancelled.', code: 'chat_cancelled' }, {
             status: 499, headers: { 'Cache-Control': 'no-store', 'X-Deity-Request-Id': requestId },
         });
-        if (err instanceof ChatAllowanceError) { if(err.status>=500)reportRuntimeSignal('budget_unavailable'); return allowanceResponse(err); }
+        if (err instanceof ChatAllowanceError) {
+            if (err.status >= 500) reportRuntimeSignal(err.code === 'chat_authentication_unavailable' || err.code === 'chat_profile_context_unavailable' ? 'upstream_failed' : 'budget_unavailable');
+            const response = allowanceResponse(err);
+            response.headers.set('X-Deity-Request-Id', requestId);
+            return response;
+        }
         const failure = chatFailureDetails(err, phase, requestId);
         reportRuntimeSignal(phase==='allowance'?'budget_unavailable':'upstream_failed');
         console.error('Deity chat failure', failure);
@@ -527,3 +566,5 @@ export async function POST(req: Request) {
             headers: { 'Cache-Control': 'no-store', 'X-Deity-Request-Id': requestId } });
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST);

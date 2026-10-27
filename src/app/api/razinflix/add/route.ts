@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
 import { openChatBudget, CHAT_MODEL, type ChatBudget } from '@/lib/deity/chat-budget-server';
@@ -136,7 +137,7 @@ function rowTitleAliases(title: string): Set<string> {
     return aliases;
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
         await requirePermission('razinflix:manage', request);
         let input: FilmLookupInput;
@@ -259,3 +260,5 @@ export async function POST(request: Request) {
         );
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)

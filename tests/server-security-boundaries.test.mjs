@@ -23,6 +23,7 @@ export const verifyPosterUrl = async () => {globalThis.__securityCalls.push(['pr
 export const resolveTrailer = async () => {globalThis.__securityCalls.push(['provider','trailer']);return {trailer:{key:'abcdefghijk',source:'tmdb',title:'Trailer',confidence:'high'},diagnostics:[]};};
 `)}`;
 const hooks = registerHooks({ resolve(specifier, context, next) {
+    if (specifier === '@/lib/server/runtime-route') return { url: 'data:text/javascript,export const withRuntimeGuard = handler => handler;', shortCircuit: true };
     if (specifier === 'server-only') return { url: noop, shortCircuit: true };
     if (specifier === 'next/server') return next('next/server.js', context);
     if (specifier === '@/lib/supabase/server') return { url: sessionMock, shortCircuit: true };

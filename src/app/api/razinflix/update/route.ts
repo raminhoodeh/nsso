@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createPrivilegedClient, permissionErrorResponse, requirePermission } from '@/lib/server/permissions';
@@ -13,7 +14,7 @@ function field(form: FormData, name: string, maximum: number): string | undefine
     return value;
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
         const { user } = await requirePermission('razinflix:manage', request);
         const contentType = request.headers.get('content-type') || '';
@@ -78,3 +79,5 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'The film could not be saved. Please try again.' }, { status: 500, headers: PRIVATE_HEADERS });
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)

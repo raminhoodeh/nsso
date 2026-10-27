@@ -1,7 +1,8 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import { validateProfileUsername } from '@/lib/profile-username'
 
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
     const { searchParams } = new URL(request.url)
     const validated = validateProfileUsername(searchParams.get('username'))
     if ('error' in validated) {
@@ -23,3 +24,5 @@ export async function GET(request: Request) {
         ? { available: false, reason: 'Username is already taken' }
         : { available: true })
 }
+
+export const GET = withRuntimeGuard(handleGET)

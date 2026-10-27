@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const source = new URL('../src/',import.meta.url);
 const hooks = registerHooks({resolve(specifier,context,next){
+    if(specifier==='@/lib/server/runtime-route')return{url:'data:text/javascript,export const withRuntimeGuard = handler => handler;',shortCircuit:true};
     if(specifier==='server-only')return{url:'data:text/javascript,export {};',shortCircuit:true};
     if(specifier==='next/server')return next('next/server.js',context);
     if(specifier==='@/lib/supabase/server')return{url:`data:text/javascript,${encodeURIComponent('export const createClient=async()=>globalThis.__profileSession;')}`,shortCircuit:true};
