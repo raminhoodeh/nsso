@@ -126,7 +126,7 @@ test('reduced motion keeps the decorative video unloaded until explicit play and
 
 test('the inline profile demo keeps its clear label while playback and error feedback remain actionable', async ({ page }) => {
   const { errors } = await fixture(page, 'demo')
-  const label = page.getByText('A demo of a nsso profile', { exact: true })
+  const label = page.getByText('nsso profile demo', { exact: true })
   await expect(label).toBeVisible()
   await expect(page.locator('figure')).toHaveAccessibleName('nsso profile preview')
   await expect(page.locator('video')).not.toHaveAttribute('src')

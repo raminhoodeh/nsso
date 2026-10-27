@@ -137,22 +137,22 @@ export default function HomePage() {
         className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-[clamp(1.5rem,4.5svh,3rem)] px-5 pb-16 pt-[calc(88px+env(safe-area-inset-top)+2rem)] text-center font-bold tracking-tight text-white [text-shadow:0_2px_12px_rgba(15,23,42,0.55)]"
         style={{ fontFamily: 'var(--font-sf-pro-display)' }}
       >
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight">Clarify</p>
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight">Organise</p>
+        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Clarify</p>
+        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Organise</p>
         <h1 className="w-full text-[clamp(2.5rem,12vw,7.5rem)] leading-[1.03] tracking-[-0.04em]">
           <span className="block">Future-Proof</span>{' '}
           <span className="block">Yourself</span>
         </h1>
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight">Present</p>
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight">Discover</p>
+        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Present</p>
+        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Discover</p>
       </section>
 
       <section className="mx-auto max-w-4xl px-5 pb-16 sm:px-8 lg:pb-24" aria-label="Meet nsso">
         <LightGlassPanel data-home-intro="true" className="p-6 sm:p-8 lg:p-12">
           <div className="mx-auto max-w-2xl space-y-8 lg:space-y-10">
             <div className="space-y-5 text-center">
-              <p className="text-base font-medium leading-relaxed text-slate-950/80 sm:text-lg">The most beautiful way to present yourself online</p>
               <h2 className="text-3xl font-bold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">All of you. All in one place.</h2>
+              <p className="text-base font-medium leading-relaxed text-slate-950/80 sm:text-lg">The most beautiful way to present yourself online</p>
             </div>
 
             <HomeProfileDemo />
@@ -185,20 +185,22 @@ export default function HomePage() {
       <section className="mx-auto max-w-4xl px-5 pb-16 sm:px-8" aria-label="Explore nsso">
         <div className="mx-auto mb-12 grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
           <Link href={user ? '/dashboard' : '/sign-up'} className="block">
-            <LightGlassPanel className="h-full cursor-pointer p-6 transition-transform hover:scale-[1.02]">
-              <h3 className="mb-3 text-xl font-bold text-slate-950">Monetise</h3>
-              <div className="mb-4 h-px w-full bg-black/10" />
-              <p className="text-sm leading-relaxed text-slate-950/75">
+            <LightGlassPanel data-home-offer-card="monetise" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
+              <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                <h3 className="text-xl font-bold text-slate-950">Monetise</h3>
+              </div>
+              <p className="p-6 text-sm leading-relaxed text-slate-950/75">
                 Showcase your products and services with purchase links and PayPal buttons.
               </p>
             </LightGlassPanel>
           </Link>
 
           <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
-            <LightGlassPanel className="h-full cursor-pointer p-6 transition-transform hover:scale-[1.02]">
-              <h3 className="mb-3 text-xl font-bold text-slate-950">Example Profile</h3>
-              <div className="mb-4 h-px w-full bg-black/10" />
-              <p className="text-sm leading-relaxed text-slate-950/75">
+            <LightGlassPanel data-home-offer-card="example-profile" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
+              <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                <h3 className="text-xl font-bold text-slate-950">Example Profile</h3>
+              </div>
+              <p className="p-6 text-sm leading-relaxed text-slate-950/75">
                 See how your unified identity could look.
               </p>
             </LightGlassPanel>
@@ -225,18 +227,6 @@ export default function HomePage() {
           >
             WhatsApp
           </a>
-          <p className="mt-2 flex justify-center px-4 not-italic">
-            <a
-              href="https://21st.dev/@jahed/components/apple-tahoe-liquid-glass-button"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center rounded-xl border border-white/40 bg-white/50 px-3 text-xs leading-relaxed text-slate-950 underline decoration-black/30 underline-offset-4 hover:decoration-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950"
-              data-testid="glass-component-credit"
-            >
-              Glass component by Hossain Jahed
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          </p>
         </div>
       </section >
 

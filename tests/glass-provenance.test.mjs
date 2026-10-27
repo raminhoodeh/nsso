@@ -20,14 +20,9 @@ test('glass attribution distinguishes the supplied component from its MIT squirc
   assert.match(notices, /This notice does \*\*not\*\* identify the entire supplied component as MIT-licensed/)
 })
 
-test('homepage includes a visible keyboard-accessible credit to the component author', () => {
-  const credit = homepage.match(/<a\s+href="https:\/\/21st\.dev\/@jahed\/components\/apple-tahoe-liquid-glass-button"[\s\S]*?<\/a>/)?.[0]
-  assert.ok(credit)
-  assert.match(credit, /Glass component by Hossain Jahed/)
-  assert.match(credit, /rel="noopener noreferrer"/)
-  assert.match(credit, /min-h-11/)
-  assert.match(credit, /focus-visible:outline/)
-  assert.match(credit, /opens in a new tab/)
+test('homepage keeps contact links while component provenance remains in the notices', () => {
+  assert.ok(notices.includes(originalComponent))
+  assert.doesNotMatch(homepage, /data-testid="glass-component-credit"/)
   assert.match(homepage, /https:\/\/www\.instagram\.com\/ramin\.nsso/)
   assert.match(homepage, /https:\/\/wa\.link\/gh1dhy/)
 })
