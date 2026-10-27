@@ -172,7 +172,15 @@ for (const fixture of fixtures) {
             assert.equal(geometry.radius, '40px')
             if (snapshots.length) assert.deepEqual(styles, snapshots[0].styles, `${fixture.name}: signup controls must match sign-in`)
             if (route.includes('?name=')) assert(await page.getByText('This name is a draft, not a reservation. Confirm availability and save it in profile setup.').isVisible())
-            await page.screenshot({ path: path.join(output, `${fixture.name}-${route.includes('?') ? 'sign-up-name' : route.slice(1)}.png`), fullPage: true })
+            const capture = `${fixture.name}-${route.includes('?') ? 'sign-up-name' : route.slice(1)}`
+            // A full-page capture stretches a viewport-owned WebGL scene
+            // beyond its real framebuffer. Capture actual scroll viewports.
+            await page.evaluate(() => window.scrollTo(0, 0))
+            await page.waitForTimeout(150)
+            await page.screenshot({ path: path.join(output, `${capture}-top.png`) })
+            await card.locator('form button[type="submit"]').scrollIntoViewIfNeeded()
+            await page.waitForTimeout(150)
+            await page.screenshot({ path: path.join(output, `${capture}-controls.png`) })
             snapshots.push({ route, geometry, styles, map, ownedScene, material, logoStyle })
         }
         assert.deepEqual(mutations, [], 'This visual check must not make account/data mutations')
