@@ -64,7 +64,7 @@ content should be removed to solve a presentation issue.
 - [x] V02 Type checks, lint of changed files and production build pass.
 - [x] V03 Desktop, narrow/mobile and short/landscape browser inspection passes; emulation is labelled accurately.
 - [x] V04 Independent review completed and material findings resolved.
-- [ ] V05 Commit pushed and production deployment ready; live health revision matches intended commit.
+- [x] V05 Commit pushed and production deployment ready; live health revision matches intended commit.
 - [ ] V06 Critical live journeys repeated and remaining limitations disclosed.
 
 ## Evidence and handoff
@@ -102,4 +102,22 @@ content should be removed to solve a presentation issue.
 - Authenticated editing and deletion checks use controlled fixtures of the real components and compiled CSS. No customer account, payments, real deletion, signup email or production AI spend is exercised.
 - The local checkout's privileged credential is not current; local protected API outage paths were tested honestly. Deployment must use configured production credentials and pass live health.
 - American Doctor's configured YouTube clip is private. It is labelled unavailable with a useful fallback, not claimed repaired or silently replaced.
-- Production deployment and live critical journeys remain incomplete until V05–V06 are checked below.
+- The first protected release is deployed and verified at `b4f364a30c890ba010ad4dbadcd675101439dc31`. Final acceptance remains open for two actual-browser findings below; V06 must not be marked complete until their production retest passes.
+
+## First production verification and follow-up findings
+
+- Protected PR #25 merged after both required jobs passed: database authorization/negative-control (2m48s) and full verification (5m42s). `npm audit --audit-level=high` found zero vulnerabilities.
+- Vercel production deployment `dpl_EviTgkVCCz4XNAYBWY7LCdADoc9R` is READY. All five smoke routes return 200 with enforced CSP/nosniff, and health matches exact merge revision `b4f364a30c890ba010ad4dbadcd675101439dc31`.
+- The production-health revision variable was updated and workflow run `40462764140` passed.
+- Live RazinFlix: all six journey groups passed in Chrome desktop, WebKit mobile and Chrome landscape; actual YouTube ready messages and advancing playback verified in all three. Evidence: `private/test-results/ux-film-live-2026-10-27T06-43-04.647Z/report.json`.
+- Live public journeys: 30/31 groups passed; both actual homepage videos decoded and duration/controls synchronized in desktop Chrome and mobile WebKit. Profile expansion, section anchors, touch actions, QR, privacy and initial unloaded media passed. Evidence: `private/test-results/ux-public-live-2026-10-27T06-43-03-497Z/report.json`.
+- P01 follow-up: first-render Chrome can accept input before hydration then clear it during draft restoration. Keep SSR controls disabled until draft restoration and event handlers are ready; add a held-client/hydrateRoot regression and repeat live.
+- A03 follow-up: actual /deity at WebKit 390×400 with four input lines places Send below the viewport (bottom425 versus400). Desktop and 390×844 pass. Compact the short-panel layout and verify using actual compiled CSS, then repeat live without sending AI messages.
+- Live account reads confirm optional anonymous lookup returns 200/null, protected-default lookup retains 401, both private/no-store; malformed/taken names return available:false.
+- Release incident: an initially started deployment completed while being stopped after the protected-branch rejection. Removing it briefly caused domain 404 responses. Both domains were restored to the previously verified baseline and health200 before the protected release was merged/deployed. No customer data was changed. Future deployment attempts must resolve branch protection and required checks before starting promotion.
+
+## Follow-up implementation verification
+
+- P01 fixed: server input/submit remain disabled until hydration restores the optional draft and makes handlers ready. Real renderToString → held-client → hydrateRoot regressions cover retained first edit, restored draft and denied browser storage. Public/hydration checks pass 32/32, with 3/3 dedicated WebKit hydration checks.
+- A03 fixed: actual pane/header/toggle/padding measurements budget the composer and category list; short panes receive compact spacing. ResizeObserver and visualViewport listeners preserve fitting controls and drafts while resizing. Eight compiled-CSS WebKit regressions pass at 390×400, 390×844, 667×375 and resizing 844→400→320→844, including long drafts, category expansion and database dismissal, with zero page errors or observer-loop warnings.
+- Root independently ran 20/20 follow-up browser cases and the production build/CSP checks. Full unit/API suite is rerun for the follow-up; independent source review found no material remaining defect. Final production retest remains pending V06.
