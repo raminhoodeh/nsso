@@ -131,6 +131,81 @@ test('creation cancellation is write-free and a failed named creation retains th
     expect(await page.evaluate(() => window.fixtureSnapshot().products)).toEqual([])
 })
 
+test('a held navigation frame cannot replace a newer focus inside the selected offering', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await mount(page)
+    // Pause browser frames after mounting. A direct native click lets React
+    // mount the requested editor while its heading-focus frame remains queued.
+    await page.clock.install({ time: new Date('2026-10-27T12:00:00Z') })
+    await page.clock.pauseAt(new Date('2026-10-27T12:00:00.100Z'))
+    await choose(page, 2).evaluate(button => button.click())
+    const field = page.getByRole('textbox', { name: 'Product name', exact: true })
+    await expect(field).toHaveValue('Fixture offering 2')
+    await field.evaluate(input => input.focus({ preventScroll: true }))
+    await expect(field).toBeFocused()
+    const before = await page.evaluate(() => scrollY)
+    await page.clock.runFor(64)
+    await expect(field).toBeFocused()
+    expect(await page.evaluate(() => scrollY)).toBe(before)
+    expect(await writes(page)).toEqual([])
+})
+
+test('automatic offering recovery cannot focus or scroll behind an active Deity-style modal', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await mount(page)
+    await choose(page, 1).click()
+    await expect(page.getByRole('heading', { name: 'Fixture offering 1', exact: true })).toBeFocused()
+    await page.clock.install({ time: new Date('2026-10-27T12:00:00Z') })
+    await page.clock.pauseAt(new Date('2026-10-27T12:00:00.100Z'))
+    await page.evaluate(() => window.fixtureUpdate({ products: window.fixtureSnapshot().products.filter(product => product.id !== 'offering-1') }))
+    await expect(choose(page, 1)).toHaveCount(0)
+    await page.evaluate(() => {
+        const modal = document.createElement('section')
+        modal.setAttribute('role', 'dialog')
+        modal.setAttribute('aria-modal', 'true')
+        modal.setAttribute('aria-label', 'Deity fixture')
+        Object.assign(modal.style, { position: 'fixed', inset: '0', zIndex: '10000', background: '#11161d' })
+        const close = document.createElement('button')
+        close.type = 'button'
+        close.textContent = 'Close Deity fixture'
+        modal.append(close)
+        document.body.append(modal)
+        close.focus({ preventScroll: true })
+    })
+    const close = page.getByRole('button', { name: 'Close Deity fixture', exact: true })
+    await expect(close).toBeFocused()
+    const before = await page.evaluate(() => scrollY)
+    await page.clock.runFor(64)
+    await expect(close).toBeFocused()
+    expect(await page.evaluate(() => scrollY)).toBe(before)
+})
+
+test('automatic offering recovery preserves focus in an unrelated profile field', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await mount(page)
+    await choose(page, 1).click()
+    await expect(page.getByRole('heading', { name: 'Fixture offering 1', exact: true })).toBeFocused()
+    await page.clock.install({ time: new Date('2026-10-27T12:00:00Z') })
+    await page.clock.pauseAt(new Date('2026-10-27T12:00:00.100Z'))
+    await page.evaluate(() => {
+        const field = document.createElement('input')
+        field.setAttribute('aria-label', 'Unrelated profile full name')
+        field.value = 'Fixture owner'
+        Object.assign(field.style, { position: 'fixed', top: '0', right: '0', zIndex: '10000' })
+        document.body.append(field)
+        window.fixtureUpdate({ products: window.fixtureSnapshot().products.filter(product => product.id !== 'offering-1') })
+        field.focus({ preventScroll: true })
+    })
+    await expect(choose(page, 1)).toHaveCount(0)
+    const field = page.getByRole('textbox', { name: 'Unrelated profile full name', exact: true })
+    await expect(field).toBeFocused()
+    const before = await page.evaluate(() => scrollY)
+    await page.clock.runFor(64)
+    await expect(field).toBeFocused()
+    await expect(field).toHaveValue('Fixture owner')
+    expect(await page.evaluate(() => scrollY)).toBe(before)
+})
+
 for (const destination of ['another offering', 'collapsed section']) {
     test(`a delayed creation preserves navigation and focus in ${destination}`, async ({ page }) => {
         await page.setViewportSize({ width: 1440, height: 900 })

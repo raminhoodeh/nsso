@@ -76,11 +76,13 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         const request = focusRequest.current
         focusRequest.current = null
         const frame = requestAnimationFrame(() => {
-            if (request.origin !== undefined) {
-                const active = document.activeElement
-                const modal = document.querySelector('dialog:modal') || Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')).some(element => !element.closest('[hidden],[inert],[aria-hidden="true"]') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
-                if (modal || (active !== request.origin && active !== document.body)) return
-            }
+            const active = document.activeElement
+            const modal = document.querySelector('dialog:modal') || Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')).some(element => !element.closest('[hidden],[inert],[aria-hidden="true"]') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+            // Navigation focus is deferred until the editor/list is mounted.
+            // A newer field focus wins over its initiating control. Recovery
+            // without a known origin can focus only when nothing else has it.
+            const movedFocus = request.origin === undefined ? active !== document.body : active !== request.origin && active !== document.body
+            if (modal || movedFocus) return
             if (request.kind === 'list') {
                 if (listRef.current) listRef.current.scrollTop = listPosition.current.scrollTop
                 const target = request.productId ? listButtons.current.get(request.productId) : request.addPosition === 'bottom' ? bottomAddRef.current : addRef.current
@@ -128,14 +130,14 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
 
     function openOffering(productId: string) {
         rememberListPosition()
-        focusRequest.current = { kind: 'editor' }
+        focusRequest.current = { kind: 'editor', origin: document.activeElement }
         setSelectedId(productId)
         setView('editor')
         setShowGuide(false)
     }
 
     function backToOfferings() {
-        focusRequest.current = { kind: 'list', productId: view === 'create' ? null : selectedId, addPosition: creationPosition.current }
+        focusRequest.current = { kind: 'list', productId: view === 'create' ? null : selectedId, addPosition: creationPosition.current, origin: document.activeElement }
         setView('list')
     }
 
@@ -143,7 +145,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         rememberListPosition()
         // An unresolved create keeps its original placement, name and receipt.
         if (!creationLocked) creationPosition.current = position
-        focusRequest.current = { kind: 'create' }
+        focusRequest.current = { kind: 'create', origin: document.activeElement }
         setView('create')
     }
 
