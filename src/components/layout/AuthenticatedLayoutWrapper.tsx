@@ -3,6 +3,7 @@
 import { useUser } from '@/components/providers/UserProvider';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus';
 import {
     routeSuppressesAuthenticatedNavigation,
     routeUsesDashboardSidebar,
@@ -27,6 +28,7 @@ export default function AuthenticatedLayoutWrapper({
             isLoggedIn && usesDashboardSidebar ? "lg:pl-[280px]" : ""
         )}>
             {children}
+            {isLoggedIn && pathname.startsWith('/dashboard') && pathname !== '/dashboard/security' && <ProfileSaveStatus floating />}
         </div>
     );
 }

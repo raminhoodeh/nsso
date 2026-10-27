@@ -982,7 +982,6 @@ export const TahoeBackdropSurface = React.forwardRef<
             >
               <feImage
                 ref={feImageRef}
-                href=""
                 x="0"
                 y="0"
                 width="1"

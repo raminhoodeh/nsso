@@ -23,7 +23,6 @@ import MyNssoTab from '@/app/dashboard/components/MyNssoTab'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { useProfile } from '@/components/providers/ProfileProvider'
-import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import type { ProfilePatch } from '@/lib/profile-mutations'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
@@ -76,6 +75,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
         addContact,
         removeContact,
         reorderContacts,
+        profileCompleteness,
     } = useProfile()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -88,21 +88,6 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
     const [customDomain, setCustomDomain] = useState(() => 'username' in claimIntent ? claimIntent.username : user?.username || '')
     const savedUsername = useRef(user?.username)
 
-
-    // Calculate profile completeness
-    const profileCompleteness = (() => {
-        if (!profile) return 0
-        const fields = [
-            profile.full_name,
-            profile.headline,
-            profile.bio,
-            profile.profile_pic_url,
-            links.length > 0,
-            contacts.length > 0
-        ]
-        const filled = fields.filter(Boolean).length
-        return Math.round((filled / fields.length) * 100)
-    })()
 
     // UI state follows the account-scoped authoritative profile provider.
 
@@ -246,8 +231,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
     const saveProfile = async (patch: ProfilePatch) => {
         setSaving(true)
-        const success = await patchProfile(patch,true)
-        if (!success) showToast('This field was not saved. Your draft has been kept.', 'error')
+        await patchProfile(patch,true)
         setSaving(false)
     }
 
@@ -446,7 +430,6 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                 />
                             )}
 
-                            <ProfileSaveStatus />
                             {/* Profile Fields */}
                             <div className="lg:col-span-2 space-y-4">
 

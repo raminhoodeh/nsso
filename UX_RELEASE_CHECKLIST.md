@@ -1,0 +1,105 @@
+# NSSO UX release — 27 October 2026
+
+Continuous goal: resolve every item from the current UX audit, deploy the release,
+and verify production behaviour. Baseline: `2824b0f` (checkout and live health).
+
+Status: `[ ]` pending, `[~]` implemented awaiting verification, `[x]` verified.
+Every item requires evidence here before completion. No production customer
+content should be removed to solve a presentation issue.
+
+## Public pages
+
+- [x] P01 Claim flow validates syntax and availability before signup; truthful claiming copy and retained draft.
+- [x] P02 Every Create profile action opens account creation and preserves a safe destination.
+- [x] P03 Public experience and qualification cards avoid nested scroll traps on mobile.
+- [x] P04 Bio preview/collapse works for all long profiles; long profiles have useful section navigation.
+- [x] P05 Primary homepage setup action is accessible above the fold and repeated appropriately.
+- [x] P06 Decorative video respects reduced motion, has pause control, poster and loading fallback.
+- [x] P07 Vision player synchronizes duration/progress after hydration and exposes reliable controls.
+- [x] P08 Large videos load on demand; avoid unnecessary initial requests and redundant downloads.
+- [x] P09 Privacy choices do not cover profile content; preserve explicit tracking consent.
+- [x] P10 Public actions/contact links/bio toggle meet mobile touch-target sizing.
+- [x] P11 Purchase links have distinct product-specific accessible names.
+- [x] P12 Photo/QR toggle has an understandable touch affordance.
+- [x] P13 Hero text remains readable against animated light backgrounds.
+
+## Dashboard and account flows
+
+- [x] D01 All signed-in mobile users can open Account security; only the Admin item is privileged.
+- [x] D02 One validated completeness function is shared by dashboard, provider and Deity; score can reach 100.
+- [x] D03 One consistent save/load status region prevents duplicate errors.
+- [x] D04 Substantive deletions consistently offer confirmation or undo.
+- [x] D05 My nsso uses readable mobile cards, explicit accessible sorting and adequately sized notes controls.
+- [x] D06 Notes and product-delete dialogs portal above fixed app navigation.
+- [x] D07 Image cropper fits short/landscape screens and keeps actions accessible.
+- [x] D08 Advanced editor labels/placeholders are readable and explanations work with touch/keyboard.
+- [x] D09 Empty My nsso displays actionable onboarding and QR guidance.
+
+## Deity
+
+- [x] A01 Composer grows across multiple lines while retaining submission and length limits.
+- [x] A02 Repeated Ask Deity shortcut events each enqueue the requested prompt once.
+- [x] A03 Mobile full-screen header respects safe areas and viewport/keyboard changes.
+- [x] A04 Category controls meet touch sizing and expanded lists do not clip.
+- [x] A05 Database image overlay offers a visible dismiss control and accessible modal behaviour.
+
+## RazinFlix
+
+- [x] R01 Unavailable/private trailers have a useful fallback; American Doctor is repaired or honestly marked unavailable.
+- [x] R02 Browser Back closes film details; forward/deep links preserve sensible navigation.
+- [x] R03 Details-only and Play trailer are distinct; browsing details does not autoplay.
+- [x] R04 Catalogue rendering scales on mobile with bounded initial DOM and progressive rows/grid.
+- [x] R05 Add film processing is cancellable, has bounded requests and removes artificial delays.
+- [x] R06 Mobile header avoids a dedicated pause-only row and keeps search usable.
+- [x] R07 Shelf arrows reflect boundaries and do not obscure mobile card interactions.
+- [x] R08 Category chips filter exact membership, independently of free-text search.
+- [x] R09 Recommendations ignore generic collection labels and require meaningful relevance.
+- [x] R10 Visible home/back navigation and page-specific metadata prevent navigation dead ends.
+- [x] R11 Mobile controls meet touch sizes; title casing and rating presentation are consistent.
+- [x] R12 Public requests avoid unnecessary anonymous-auth error noise where safely possible.
+
+## Release acceptance
+
+- [x] V01 Functional regressions cover relevant interactions and failure states; required tests pass.
+- [x] V02 Type checks, lint of changed files and production build pass.
+- [x] V03 Desktop, narrow/mobile and short/landscape browser inspection passes; emulation is labelled accurately.
+- [x] V04 Independent review completed and material findings resolved.
+- [ ] V05 Commit pushed and production deployment ready; live health revision matches intended commit.
+- [ ] V06 Critical live journeys repeated and remaining limitations disclosed.
+
+## Evidence and handoff
+
+- Initial checkout is clean; main and origin/main match live `/api/health` at `2824b0f`.
+- Physical iPhone access has not been established; browser emulation must not be presented as device testing.
+
+## Implementation verification (pre-production)
+
+- Public: 60/60 focused browser cases and 16/16 targeted node checks passed; claim action measured above fold at 390×844, 1440×900 and 667×375; videos initially have no media source; public/preview experience overflow is visible. Poster extracted from the existing demo, and the preferred metallic CTA preserved.
+- Dashboard: 36/36 focused browser checks and 23/23 targeted contracts passed. Tests cover standard-account menu/security, all six delete flows, failure/cancel paths, high modal layers, responsive connection cards, notes and 667×320 cropper controls. Synthetic fixtures use the actual UI and compiled CSS.
+- Root: 26/26 account/Deity browser cases and 32/32 targeted node checks passed. Identical shortcut events enqueue separately without rerender replay; database information has a native dismissible dialog; multiline messages retain line breaks. Local actual Deity inspected at 390×844, 390×400, 667×375 and 1440×900 with no page errors or horizontal overflow; composer/send/close remain visible.
+- RazinFlix: 30/30 focused browser cases, plus six cancellation/stall rechecks passed; initial actual DOM now contains 40 cards. Details do not embed or play video until requested. Private American Doctor clip is handled with an honest unavailable state and an external trailer search instead of a broken panel. Exact category filtering and meaningful recommendation helpers have tests.
+- Final combined suite: 405/405 unit/API tests, 300/300 Chromium browser cases (desktop/mobile), and 22/22 WebKit mobile cases pass. Typecheck, production build, CSP/critical-CSS verification, and secret scan pass. Full lint exits zero with 50 non-blocking warnings.
+- Independent dashboard review confirmed the optional account API preserves private/no-store and default protected 401 responses. It found the default New Product/price 0 completeness edge case; root corrected it and added the exact regression.
+
+## Acceptance evidence by issue
+
+- P01–P02, P05: `public-ux-release` and account-journey browser regressions cover invalid, reserved, taken and unavailable names, retained draft, safe destinations and truthful copy. Actual rendered CTA fits above the fold at 320×568, 390×844, 667×375 and 1440×900.
+- P03–P04, P09–P12: public-profile regressions cover generic bio collapse, semantic sections, visible overflow, distinct purchase labels, 44px actions and photo/QR instructions. Actual /ramin has visible experience overflow, no horizontal overflow or page errors, and document-flow privacy controls.
+- P06–P08, P13: media regressions cover reduced motion, pause persistence, unavailable media/retry, hydration metadata, lazy sources and legible hero surfaces. Both homepage video sources are unset initially in actual Chrome and WebKit rendering.
+- D01, D03–D09: `dashboard-ux-release`, account and network suites cover standard-account menu/security access, one save/load region, all six confirmation flows including failure/cancel, responsive sorted cards, notes layering, onboarding, upload/help accessibility and cropper actions at 667×320.
+- D02: `profile-completeness.test.mjs` verifies a reachable 100, invalid/empty row exclusion, and the default New Product/price-0 regression. Provider, dashboard and Deity import the same function.
+- A01–A05: `deity-initial-message` regressions cover bounded multiline input, event queue order and exactly-once consumption, touch targets and dismissible database modal. Actual rendered Deity was inspected at desktop, mobile, short-keyboard and landscape sizes; send and close remain visible.
+- R01, R03: trailer/browsing tests plus actual YouTube playback confirm details-only creates no iframe and Play starts explicitly. A real available trailer played beyond 19 seconds with onReady/infoDelivery messages and advancing subtitles. American Doctor's private clip produces an honest unavailable message and official trailer-search link.
+- R02, R08: personal-app-quality regressions cover Back/Forward, direct links, category/search/view reload restoration, exact membership, category-from-modal, same-filter closure and search clearing. Actual WebKit Back/Forward and private-trailer fallback also pass.
+- R04, R06–R07, R09–R11: browsing helpers and desktop/mobile regressions cover bounded initial 40-card DOM, progressive rendering, meaningful recommendations, consistent ratings, visible home link and heading-level shelf arrows. Actual 390×844, 844×390 and 1440×900 catalogue views have no horizontal overflow.
+- R05: cancelled-add route tests and browser cancellation/stall cases cover no pre-abort writes, sequential bounded requests and honest saved/failed/unconfirmed counts. No real catalogue writes were made for verification.
+- R12: account-security and optional-account checks retain protected-default 401, private/no-store and backend-failure 503 while allowing explicit optional unauthenticated reads to return a quiet null account.
+- V04: independent reviewers checked root/account/Deity and film browsing/history changes. Two material findings (default product completeness and filter history) were corrected and given regression coverage.
+
+## Verification limitations
+
+- Browser mobile checks use Chromium emulation and desktop WebKit, not a physical iPhone or Android device.
+- Authenticated editing and deletion checks use controlled fixtures of the real components and compiled CSS. No customer account, payments, real deletion, signup email or production AI spend is exercised.
+- The local checkout's privileged credential is not current; local protected API outage paths were tested honestly. Deployment must use configured production credentials and pass live health.
+- American Doctor's configured YouTube clip is private. It is labelled unavailable with a useful fallback, not claimed repaired or silently replaced.
+- Production deployment and live critical journeys remain incomplete until V05–V06 are checked below.

@@ -31,7 +31,7 @@ export default function ExpandableBio({ text, collapsedText, className }: Expand
                         aria-expanded={isExpanded}
                         aria-label={isExpanded ? 'Collapse bio' : 'Show full bio'}
                         onClick={() => setIsExpanded((expanded) => !expanded)}
-                        className="inline font-semibold text-cyan-300 underline decoration-cyan-300/50 underline-offset-4 transition-colors hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                        className="inline-flex min-h-11 items-center px-2 font-semibold text-cyan-300 underline decoration-cyan-300/50 underline-offset-4 transition-colors hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                     >
                         {isExpanded ? 'see less' : 'see more'}
                     </button>

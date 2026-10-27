@@ -204,6 +204,9 @@ export async function POST(request: Request) {
             categories: [editorial.category],
         };
 
+        // A cancelled browser batch must stop before starting another database write.
+        if (request.signal.aborted) return NextResponse.json({ error: 'Film lookup cancelled. Nothing was saved.' }, { status: 499 });
+
         const query = existingFilm
             ? supabase.from('razinflix_films').update(databaseEntry).eq('id', existingFilm.id)
             : supabase.from('razinflix_films').insert(databaseEntry);

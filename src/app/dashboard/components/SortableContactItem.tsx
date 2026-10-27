@@ -7,14 +7,17 @@ import Input from '@/components/ui/Input'
 import { Contact } from '@/lib/types'
 import { CONTACT_METHODS } from '@/lib/contact-methods'
 import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { useState } from 'react'
+import ConfirmDeleteDialog from './ConfirmDeleteDialog'
 
 interface Props {
     contact: Contact
     updateContact: (id: string, field: 'value' | 'method' | 'custom_method_name', value: string) => void
-    removeContact: (id: string) => void
+    removeContact: (id: string) => void | Promise<boolean | void>
 }
 
 export function SortableContactItem({ contact, updateContact, removeContact }: Props) {
+    const [confirmDelete, setConfirmDelete] = useState(false)
     const {
         attributes,
         listeners,
@@ -32,7 +35,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
         position: 'relative' as const,
     }
 
-    return (
+    return (<>
         <TahoeGlassSurface
             ref={setNodeRef}
             style={style}
@@ -83,6 +86,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
             {contact.method === 'Other' && (
                 <div className="w-full md:w-48 shrink-0">
                     <Input
+                        aria-label="Custom contact method name"
                         value={contact.custom_method_name || ''}
                         onChange={(e) => updateContact(contact.id, 'custom_method_name', e.target.value)}
                         placeholder="Label"
@@ -92,6 +96,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
 
             <div className="flex-1 min-w-0">
                 <Input
+                    aria-label={`${contact.method} contact details`}
                     value={contact.value}
                     onChange={(e) => updateContact(contact.id, 'value', e.target.value)}
                     placeholder={contact.method === 'Email' ? 'you@example.com' : 'Contact details'}
@@ -99,7 +104,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
             </div>
 
             <TahoeGlassButton
-                onClick={() => removeContact(contact.id)}
+                onClick={() => setConfirmDelete(true)}
                 className="h-11 w-11 shrink-0 p-0"
                 contentClassName="text-red-200 text-xl"
                 aria-label={`Remove ${contact.method} contact method`}
@@ -107,5 +112,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
                 ×
             </TahoeGlassButton>
         </TahoeGlassSurface>
+        <ConfirmDeleteDialog open={confirmDelete} name={`${contact.method} contact method`} onClose={() => setConfirmDelete(false)} onConfirm={() => removeContact(contact.id)} />
+        </>
     )
 }

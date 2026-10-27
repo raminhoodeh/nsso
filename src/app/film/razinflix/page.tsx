@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import Link from 'next/link';
 import CategoryRow from '@/components/film/CategoryRow';
 import MovieModal from '@/components/film/MovieModal';
 import MovieCard, { type Film } from '@/components/film/MovieCard';
 import AddFilmModal from '@/components/film/AddFilmModal';
-import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X, Pause, Play } from 'lucide-react';
+import { Search, Loader2, ChevronLeft, ChevronRight, Plus, X, Pause, Play, Home } from 'lucide-react';
 import { createPublicReadClient } from '@/lib/supabase/public';
 import {
     TahoeBackdropHeader,
@@ -20,27 +21,17 @@ import { ToastViewport } from '@/components/ui/Toast';
 import modalStyles from '@/components/film/MovieModal.module.css';
 import styles from './razinflix.module.css';
 import { useUser } from '@/components/providers/UserProvider';
-
-type ViewMode = 'category' | 'alpha' | 'date_desc' | 'rating_desc' | 'rating_asc' | 'update_mode';
-
-const PINNED_CATEGORY_ORDER = ['New', 'Recently Added'] as const;
-const PROTECTED_CATEGORIES = new Set<string>(PINNED_CATEGORY_ORDER);
-
-function categoryRank(title: string): number {
-    const rank = PINNED_CATEGORY_ORDER.indexOf(title as typeof PINNED_CATEGORY_ORDER[number]);
-    return rank === -1 ? PINNED_CATEGORY_ORDER.length : rank;
-}
-
-function matchesFilmSearch(film: Film, query: string) {
-    return [film.title, film.director, film.description, ...(film.categories ?? [])]
-        .some(value => value?.toLowerCase().includes(query));
-}
+import { filterFilms, filmBrowseUrl, filmUrl, groupFilms, readFilmBrowseUrl, type FilmBrowseState, type FilmViewMode } from '@/lib/razinflix/browsing';
 
 export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const [browseLimit, setBrowseLimit] = useState(36);
+    const [shelfLimit, setShelfLimit] = useState(4);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [requestedViewMode, setViewMode] = useState<ViewMode>('category');
+    const [requestedViewMode, setViewMode] = useState<FilmViewMode>('category');
     const [selectedFilm, setSelectedFilm] = useState<Film | null>(null);
+    const [startTrailer, setStartTrailer] = useState(false);
     const [featuredFilms, setFeaturedFilms] = useState<Film[]>([]);
     const [featuredIndex, setFeaturedIndex] = useState(0);
     const [rotationPaused, setRotationPaused] = useState(false);
@@ -60,8 +51,34 @@ export default function RazinFlixPage() {
     const heroTouchStart = useRef<{ x: number; y: number } | null>(null);
     const suppressHeroClick = useRef(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const browseHistoryRef = useRef('');
     const searchQuery = searchTerm.trim().toLowerCase();
     const previewsDisabled = Boolean(selectedFilm || (canManage && isAddModalOpen));
+    const isFiltered = Boolean(searchQuery || activeCategory);
+    const filteredFilms = useMemo(() => filterFilms(films, searchQuery, activeCategory), [films, searchQuery, activeCategory]);
+
+    useEffect(() => {
+        const syncFromLocation = () => {
+            const browse = readFilmBrowseUrl(window.location.href);
+            const signature = JSON.stringify(browse);
+            if (browseHistoryRef.current !== signature) {
+                setSearchTerm(browse.searchTerm);
+                setActiveCategory(browse.category);
+                setViewMode(browse.viewMode);
+                setBrowseLimit(36);
+                setShelfLimit(4);
+                browseHistoryRef.current = signature;
+            }
+            const id = Number(new URL(window.location.href).searchParams.get('film'));
+            const film = films.find(item => item.id === id) ?? null;
+            setSelectedFilm(film);
+            setStartTrailer(false);
+            if (film) setModalContext({ list: films, index: films.indexOf(film) });
+        };
+        syncFromLocation();
+        window.addEventListener('popstate', syncFromLocation);
+        return () => window.removeEventListener('popstate', syncFromLocation);
+    }, [films]);
 
     useEffect(() => {
         if (viewMode === 'update_mode' && !isCheckingPosters && films.length > 0) {
@@ -211,10 +228,56 @@ export default function RazinFlixPage() {
 
     const requestAddFilmAccess = () => { if (canManage) setIsAddModalOpen(true); };
 
-    const handleFilmClick = (film: Film, list: Film[]) => {
+    const updateBrowse = (changes: Partial<FilmBrowseState>, history: 'push' | 'replace' | 'typing' = 'push') => {
+        const browse: FilmBrowseState = { searchTerm, category: activeCategory, viewMode: requestedViewMode, ...changes };
+        const current = new URL(window.location.href);
+        const next = filmBrowseUrl(current.href, browse);
+        if (next.href !== current.href) {
+            // First search input opens one history entry; later keystrokes refine it.
+            const replace = history === 'replace' || (history === 'typing' && current.searchParams.has('q'));
+            if (history === 'typing' && !browse.searchTerm.trim() && window.history.state?.nssoRazinflixSearch) {
+                // Returning an in-progress search to its initial state consumes that entry.
+                window.history.back();
+            } else {
+                const isTypingEntry = history === 'typing' && (Boolean(window.history.state?.nssoRazinflixSearch) || !replace);
+                window.history[replace ? 'replaceState' : 'pushState']({ ...window.history.state, nssoRazinflixModal: false, nssoRazinflixSearch: isTypingEntry }, '', next);
+            }
+        }
+        browseHistoryRef.current = JSON.stringify(browse);
+        setSearchTerm(browse.searchTerm);
+        setActiveCategory(browse.category);
+        setViewMode(browse.viewMode);
+        setBrowseLimit(36);
+        setShelfLimit(4);
+    };
+
+    const handleFilmClick = (film: Film, list: Film[], play = false, replace = false) => {
         setSelectedFilm(film);
+        setStartTrailer(play);
         const index = list.findIndex(item => item.id === film.id);
         setModalContext(index >= 0 ? { list, index } : { list: [film], index: 0 });
+        const url = filmUrl(window.location.href, film.id);
+        if (replace || selectedFilm) window.history.replaceState(window.history.state, '', url);
+        else window.history.pushState({ ...window.history.state, nssoRazinflixModal: true }, '', url);
+    };
+
+    const closeFilmDetails = () => {
+        setSelectedFilm(null);
+        setStartTrailer(false);
+        if (window.history.state?.nssoRazinflixModal) window.history.back();
+        else window.history.replaceState(window.history.state, '', filmUrl(window.location.href));
+    };
+
+    const filterFromDetails = (term: string, category = false) => {
+        const nextBrowse: FilmBrowseState = { searchTerm: category ? '' : term, category: category ? term : null, viewMode: 'category' };
+        if (window.history.state?.nssoRazinflixModal && filmBrowseUrl(window.location.href, nextBrowse).href === filmUrl(window.location.href).href) {
+            closeFilmDetails();
+            return;
+        }
+        setSelectedFilm(null);
+        setStartTrailer(false);
+        updateBrowse(nextBrowse, 'replace');
+        window.scrollTo({ top: 0, behavior: 'instant' });
     };
 
     const handleSimilarFilmClick = (film: Film) => {
@@ -225,66 +288,22 @@ export default function RazinFlixPage() {
     const handleNextFilm = () => {
         if (!modalContext.list.length) return;
         const nextIndex = (modalContext.index + 1) % modalContext.list.length;
-        setSelectedFilm(modalContext.list[nextIndex]);
-        setModalContext({ ...modalContext, index: nextIndex });
+        handleFilmClick(modalContext.list[nextIndex], modalContext.list, false, true);
     };
 
     const handlePrevFilm = () => {
         if (!modalContext.list.length) return;
         const prevIndex = (modalContext.index - 1 + modalContext.list.length) % modalContext.list.length;
-        setSelectedFilm(modalContext.list[prevIndex]);
-        setModalContext({ ...modalContext, index: prevIndex });
+        handleFilmClick(modalContext.list[prevIndex], modalContext.list, false, true);
     };
 
-    // Group films by category
-    const categories = useMemo(() => {
-        const cats: Record<string, Film[]> = {};
-        
-        if (!searchQuery) {
-            films.forEach(film => {
-                if (film.categories && film.categories.length > 0) {
-                    // Forcefully prioritize Japanese Anime per UX directive, otherwise strictly assign 1 category
-                    const targetCategory = film.categories.includes('Japanese Anime')
-                                           ? 'Japanese Anime'
-                                           : film.categories[0];
-                    if (!cats[targetCategory]) cats[targetCategory] = [];
-                    cats[targetCategory].push(film);
-                }
-            });
-
-            // Post-process to aggressively consolidate and delete visually thin categories
-            const finalCats: Record<string, Film[]> = {};
-            const leftovers: Film[] = [];
-            
-            Object.keys(cats).forEach(key => {
-                 if (cats[key].length < 5 && !PROTECTED_CATEGORIES.has(key)) {
-                     leftovers.push(...cats[key]);
-                 } else {
-                     finalCats[key] = cats[key];
-                 }
-            });
-
-            if (leftovers.length > 0) {
-                 if (!finalCats["Visually Striking Emotional Dramas"]) finalCats["Visually Striking Emotional Dramas"] = [];
-                 finalCats["Visually Striking Emotional Dramas"].push(...leftovers);
-            }
-            return finalCats;
-        } else {
-            cats['Search Results'] = films.filter(film => matchesFilmSearch(film, searchQuery));
-            return cats;
-        }
-    }, [searchQuery, films]);
+    const categories = useMemo(() => groupFilms(films), [films]);
 
     // Flat sorted array for dynamic views
     const sortedFilms = useMemo(() => {
         if (viewMode === 'category') return [];
 
-        let result = [...films];
-
-        // Apply search filtering first
-        if (searchQuery) {
-             result = result.filter(film => matchesFilmSearch(film, searchQuery));
-        }
+        const result = [...filteredFilms];
 
         const extractRating = (r: string) => {
             if (!r || r === 'N/A' || r.includes('TBD') || r === 'Unknown') return -1;
@@ -338,7 +357,7 @@ export default function RazinFlixPage() {
             });
         }
         return result;
-    }, [films, viewMode, searchQuery, brokenPosters]);
+    }, [filteredFilms, viewMode, brokenPosters]);
 
     // Handle scroll for navbar bg
     useEffect(() => {
@@ -382,10 +401,12 @@ export default function RazinFlixPage() {
             >
                 <nav
                     aria-label="RazinFlix controls"
-                    className="flex min-w-0 flex-col items-center justify-between gap-3 px-4 pb-4 pt-[calc(max(env(safe-area-inset-top),_1rem))] md:flex-row md:px-12"
+                    className="flex min-w-0 flex-wrap items-center justify-between gap-2 px-3 pb-2 pt-[calc(max(env(safe-area-inset-top),_0.5rem))] md:flex-nowrap md:px-12"
                 >
                     {/* Keep desktop controls in normal flow at tablet widths. */}
-                    <div className="hidden shrink-0 items-center gap-2 md:flex">
+                    <div className="flex w-full shrink-0 items-center gap-2 md:w-auto">
+                        <Link href="/" aria-label="Back to nsso home" className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-white"><Home size={20} aria-hidden="true" /><span>RazinFlix</span></Link>
+                        <div className="flex-1 md:hidden" />
                         {canManage && (<TahoeGlassButton
                             onClick={requestAddFilmAccess}
                             tone="light"
@@ -418,14 +439,15 @@ export default function RazinFlixPage() {
                                 aria-label="Search films"
                                 className={`relative min-h-11 w-full min-w-0 bg-transparent py-2 pl-10 text-base text-white outline-none placeholder:text-white/55 [&::-webkit-search-cancel-button]:appearance-none ${searchTerm ? 'pr-12' : 'pr-3'}`}
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(e) => updateBrowse({ searchTerm: e.target.value }, 'typing')}
+                                maxLength={300}
                             />
                             {searchTerm && (
                                 <button
                                     type="button"
                                     aria-label="Clear search"
                                     className="absolute right-0 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl text-white focus-visible:outline-2 focus-visible:outline-white"
-                                    onClick={() => { setSearchTerm(''); searchInputRef.current?.focus(); }}
+                                    onClick={() => { updateBrowse({ searchTerm: '' }); searchInputRef.current?.focus(); }}
                                 >
                                     <X size={18} aria-hidden="true" />
                                 </button>
@@ -443,7 +465,7 @@ export default function RazinFlixPage() {
                         >
                             <select
                                 value={viewMode}
-                                onChange={(e) => setViewMode(e.target.value as ViewMode)}
+                                onChange={(e) => updateBrowse({ viewMode: e.target.value as FilmViewMode })}
                             >
                                 <option value="category">Category View</option>
                                 <option value="alpha">Alphabetical (A-Z)</option>
@@ -455,25 +477,11 @@ export default function RazinFlixPage() {
                         </TahoeGlassField>
                     </div>
 
-                    {/* Mobile Add Button Row (Under Search) */}
-                    <div className="md:hidden w-full flex justify-end gap-2">
-                        {canManage && (<TahoeGlassButton
-                            onClick={requestAddFilmAccess}
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.04}
-                            className="min-h-11 w-full px-4 py-2.5"
-                            contentClassName="flex items-center justify-center gap-1 text-sm font-semibold text-white"
-                        >
-                            <Plus size={16} /> Add Film
-                        </TahoeGlassButton>)}
-                        {rotationControl}
-                    </div>
                 </nav>
             </TahoeBackdropHeader>
 
             {/* Cinematic Hero Billboard (Hidden on search/filter) */}
-            {!searchQuery && viewMode === 'category' && featuredFilms.length > 0 && (
+            {!isFiltered && viewMode === 'category' && featuredFilms.length > 0 && (
                 <div 
                     onFocusCapture={() => setHeroHasFocus(true)}
                     onBlurCapture={(event) => {
@@ -548,7 +556,7 @@ export default function RazinFlixPage() {
 
                         {/* Billboard Content (Typography Slides In) */}
                         <div className="relative z-20 max-w-3xl space-y-4 md:space-y-6" style={{ animation: 'slideInX 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
-                        <h1 className="text-white font-black text-4xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight capitalize">
+                        <h1 className="text-white font-black text-4xl md:text-8xl tracking-tighter drop-shadow-2xl leading-tight">
                             {featuredFilms[featuredIndex].title}
                         </h1>
                         <p className="text-gray-300 text-lg md:text-xl line-clamp-3 font-medium drop-shadow-md">
@@ -557,11 +565,11 @@ export default function RazinFlixPage() {
                         
                         <div className="flex flex-wrap gap-3 pt-6">
                             <TahoeGlassButton
-                                onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films); }}
+                                onClick={(e) => { e.stopPropagation(); handleFilmClick(featuredFilms[featuredIndex], films, true); }}
                                 tone="light"
                                 semanticTint="light"
                                 semanticTintOpacity={0.08}
-                                className="px-5 py-2.5 hover:scale-105 whitespace-nowrap"
+                                className="min-h-11 px-5 py-2.5 hover:scale-105 whitespace-nowrap"
                                 contentClassName="flex items-center gap-2 text-sm md:text-base font-bold text-white"
                             >
                                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -572,7 +580,7 @@ export default function RazinFlixPage() {
                                 tone="light"
                                 semanticTint="dark"
                                 semanticTintOpacity={0.035}
-                                className="px-5 py-2.5 hover:scale-105 whitespace-nowrap"
+                                className="min-h-11 px-5 py-2.5 hover:scale-105 whitespace-nowrap"
                                 contentClassName="flex items-center gap-2 text-sm md:text-base font-medium text-white"
                             >
                                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -603,7 +611,8 @@ export default function RazinFlixPage() {
             )}
 
             {/* Content Feed */}
-            <div className={`relative z-10 space-y-4 ${!searchQuery && viewMode === 'category' ? 'pb-12 pt-8 md:pt-16' : 'pt-44 md:pt-24'}`}>
+            <div className={`relative z-10 space-y-4 ${!isFiltered && viewMode === 'category' && featuredFilms.length ? 'pb-12 pt-8 md:pt-16' : 'pt-[calc(8rem+env(safe-area-inset-top))] md:pt-24'}`}>
+                {activeCategory && <div className="flex flex-wrap items-center gap-3 px-4 md:px-12"><h1 className="text-xl font-semibold">{activeCategory}</h1><button type="button" onClick={() => updateBrowse({ category: null })} className="min-h-11 rounded-full border border-white/30 px-4 text-sm">Clear category filter</button></div>}
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
                         <Loader2 className="animate-spin mb-4" size={48} />
@@ -616,13 +625,9 @@ export default function RazinFlixPage() {
                     </div>
                 ) : films.length === 0 ? (
                     <p role="status" className="mt-32 px-6 text-center text-gray-300">No films are available yet.</p>
-                ) : viewMode === 'category' ? (
+                ) : viewMode === 'category' && !isFiltered ? (
                     <>
-                        {Object.entries(categories)
-                            .filter(([, categoryFilms]) => categoryFilms.length > 0)
-                            .sort(([titleA], [titleB]) => {
-                                return categoryRank(titleA) - categoryRank(titleB);
-                            })
+                        {categories.slice(0, shelfLimit)
                             .map(([title, films]) => (
                             <CategoryRow
                                 key={title}
@@ -632,24 +637,26 @@ export default function RazinFlixPage() {
                                 onFilmClick={(film) => handleFilmClick(film, films)}
                             />
                         ))}
-                        {searchQuery && categories['Search Results'].length === 0 && (
-                            <div className="text-center text-gray-500 mt-20">No matching titles found.</div>
-                        )}
+                        {shelfLimit < categories.length && <div className="px-4 md:px-12"><button type="button" className="min-h-11 rounded-xl border border-white/30 bg-neutral-900 px-6 py-3 font-semibold" onClick={() => setShelfLimit(limit => limit + 4)}>Show more categories ({categories.length - shelfLimit} remaining)</button></div>}
                     </>
                 ) : (
                     <div className="px-4 md:px-12">
-                        {sortedFilms.length > 0 ? (
+                        {(viewMode === 'category' ? filteredFilms : sortedFilms).length > 0 ? (
+                            <>
+                            <p className="mb-4 text-sm text-gray-300" role="status">{(viewMode === 'category' ? filteredFilms : sortedFilms).length} films{searchTerm ? ` matching “${searchTerm}”` : ''}{activeCategory ? ` in ${activeCategory}` : ''}</p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                                {sortedFilms.map((film) => (
+                                {(viewMode === 'category' ? filteredFilms : sortedFilms).slice(0, browseLimit).map((film) => (
                                     <MovieCard
                                         key={film.id}
                                         film={film}
-                                        onClick={(f) => handleFilmClick(f, sortedFilms)}
+                                        onClick={(f) => handleFilmClick(f, viewMode === 'category' ? filteredFilms : sortedFilms)}
                                         isGrid={true}
                                         previewsDisabled={previewsDisabled}
                                     />
                                 ))}
                             </div>
+                            {browseLimit < (viewMode === 'category' ? filteredFilms : sortedFilms).length && <button type="button" className="mt-6 min-h-11 rounded-xl border border-white/30 bg-neutral-900 px-6 py-3 font-semibold" onClick={() => setBrowseLimit(limit => limit + 36)}>Show more films</button>}
+                            </>
                         ) : (
                             <div className="text-center text-gray-500 mt-20">No films found.</div>
                         )}
@@ -668,9 +675,10 @@ export default function RazinFlixPage() {
                 selectedFilm && (
                     <MovieModal
                         film={selectedFilm}
+                        startTrailer={startTrailer}
                         canManage={canManage}
                         filmList={films}
-                        onClose={() => setSelectedFilm(null)}
+                        onClose={closeFilmDetails}
                         onNext={handleNextFilm}
                         onPrev={handlePrevFilm}
                         onSelect={handleSimilarFilmClick}
@@ -687,11 +695,8 @@ export default function RazinFlixPage() {
                             setFeaturedIndex(0);
                             setModalContext(prev => ({ list: prev.list.filter(f => f.id !== id), index: 0 }));
                         }}
-                        onSearch={(term) => {
-                            setSearchTerm(term);
-                            setViewMode('category'); 
-                            setSelectedFilm(null);
-                        }}
+                        onSearch={(term) => filterFromDetails(term)}
+                        onCategory={(category) => filterFromDetails(category, true)}
                     />
                 )
             }

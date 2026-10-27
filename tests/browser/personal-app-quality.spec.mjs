@@ -39,7 +39,7 @@ createRoot(document.getElementById('root')).render(<ToastProvider>{content}</Toa
 }
 test.beforeAll(async () => { bundles = Object.fromEntries(await Promise.all(['film', 'places'].map(async app => [app, await bundle(app)]))) })
 
-async function mount(page, app, { catalog = [film], failedReads = 0, manager = false, storage = 'normal', details = 'normal', updatedFilm = { ...film, title: 'Updated featured film' } } = {}) {
+async function mount(page, app, { catalog = [film], failedReads = 0, manager = false, storage = 'normal', details = 'normal', trailerStatus = 'available', addPending = false, initialFilm = '', updatedFilm = { ...film, title: 'Updated featured film' } } = {}) {
     const errors = [], requests = []
     let reads = 0
     page.on('pageerror', error => errors.push(error.message))
@@ -61,12 +61,17 @@ async function mount(page, app, { catalog = [film], failedReads = 0, manager = f
         }
         if (url.pathname === '/api/razinflix/update') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ film: updatedFilm }) })
         if (url.pathname === '/api/razinflix/delete') return route.fulfill({ contentType: 'application/json', body: '{"success":true}' })
+        if (url.pathname.startsWith('/api/razinflix/trailer/')) return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ status: trailerStatus }) })
+        if (url.pathname === '/api/razinflix/add') {
+            if (addPending === true || (typeof addPending === 'number' && requests.filter(request => request.path === '/api/razinflix/add').length >= addPending)) return
+            return route.fulfill({ contentType: 'application/json', body: JSON.stringify(film) })
+        }
         if (route.request().resourceType() === 'image') return route.fulfill({ contentType: 'image/png', body: pixel })
         if (url.hostname === 'www.youtube.com') return route.fulfill({ contentType: 'text/html', body: '<p>Trailer fixture</p>' })
         if (url.origin !== 'https://nsso.test') throw new Error('Unexpected provider request in personal app fixture')
         return route.fulfill({ contentType: 'text/html', body: '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' })
     })
-    await page.goto('https://nsso.test/' + (app === 'film' ? 'film/razinflix' : 'places/dubai'))
+    await page.goto('https://nsso.test/' + (app === 'film' ? `film/razinflix${initialFilm ? `?film=${initialFilm}` : ''}` : 'places/dubai'))
     return { errors, requests, reads: () => reads }
 }
 
@@ -119,6 +124,220 @@ test('removing a featured trailer keeps the film browsable without requesting a 
     await expect(page.getByRole('button', { name: `Open details for ${film.title}` })).toBeVisible()
     expect(state.requests.some(request => /\/hero\/(null|undefined)$/.test(request.path))).toBe(false)
     expect(state.errors).toEqual([])
+})
+
+test('film details do not load a player; Back closes and Forward restores details without autoplay', async ({ page }) => {
+    const state = await mount(page, 'film')
+    await page.getByRole('button', { name: `Open details for ${film.title}` }).click()
+    await expect(page).toHaveURL(/\?film=1$/)
+    await expect(page.getByRole('dialog', { name: `Film details: ${film.title}` })).toBeVisible()
+    await expect(page.locator('iframe')).toHaveCount(0)
+    expect(state.requests.filter(request => request.path.startsWith('/api/razinflix/trailer/'))).toHaveLength(0)
+    await page.goBack()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix')
+    await page.goForward()
+    await expect(page.getByRole('dialog', { name: `Film details: ${film.title}` })).toBeVisible()
+    await expect(page.locator('iframe')).toHaveCount(0)
+    expect(state.errors).toEqual([])
+})
+
+test('a direct film URL opens details and Close returns to the catalogue on the same route', async ({ page }) => {
+    await mount(page, 'film', { initialFilm: '1' })
+    await expect(page.getByRole('dialog', { name: `Film details: ${film.title}` })).toBeVisible()
+    await page.getByRole('button', { name: 'Close film details' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix')
+})
+
+test('next and previous replace the modal entry so Close returns directly to browsing', async ({ page }) => {
+    const second = { ...film, id: 2, title: 'Second fixture film' }
+    await mount(page, 'film', { catalog: [film, second] })
+    await page.getByRole('button', { name: `Open details for ${film.title}` }).click()
+    const historyLength = await page.evaluate(() => history.length)
+    await page.getByRole('button', { name: 'Next film', exact: true }).click()
+    await expect(page).toHaveURL(/\?film=2$/)
+    await page.getByRole('button', { name: 'Previous film', exact: true }).click()
+    await expect(page).toHaveURL(/\?film=1$/)
+    await page.getByRole('button', { name: 'Next film', exact: true }).click()
+    expect(await page.evaluate(() => history.length)).toBe(historyLength)
+    await page.getByRole('button', { name: 'Close film details' }).click()
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await page.goForward()
+    await expect(page.getByRole('dialog', { name: 'Film details: Second fixture film' })).toBeVisible()
+})
+
+test('Play trailer checks availability and a private clip gets a useful fallback', async ({ page }) => {
+    const state = await mount(page, 'film', { trailerStatus: 'unavailable' })
+    await page.getByRole('button', { name: 'Play Trailer', exact: true }).click()
+    await expect(page.getByText(/This trailer is unavailable/)).toBeVisible()
+    await expect(page.locator('iframe')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Find an official trailer on YouTube' })).toHaveAttribute('href', /results\?search_query=/)
+    expect(state.requests.filter(request => request.path.startsWith('/api/razinflix/trailer/'))).toHaveLength(1)
+    expect(state.errors).toEqual([])
+})
+
+test('a playable trailer loads only after an explicit playback action and player errors recover', async ({ page }) => {
+    await mount(page, 'film')
+    await page.getByRole('button', { name: 'More Info', exact: true }).click()
+    await expect(page.locator('iframe')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Play trailer', exact: true }).click()
+    await expect(page.locator('iframe')).toHaveCount(1)
+    await page.locator('iframe').evaluate(iframe => window.dispatchEvent(new MessageEvent('message', { origin: 'https://www.youtube.com', source: iframe.contentWindow, data: JSON.stringify({ event: 'onError', info: 150 }) })))
+    await expect(page.getByText(/This trailer is unavailable/)).toBeVisible()
+    await expect(page.locator('iframe')).toHaveCount(0)
+})
+
+test('a stalled iframe cannot leave an empty player indefinitely', async ({ page }) => {
+    await page.clock.install()
+    await mount(page, 'film')
+    await page.getByRole('button', { name: 'Play Trailer', exact: true }).click()
+    await expect(page.locator('iframe')).toHaveCount(1)
+    await page.clock.fastForward(15_100)
+    await expect(page.getByText(/This trailer is unavailable/)).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Find an official trailer on YouTube' })).toBeVisible()
+})
+
+test('category chips use exact membership and generic New labels do not fabricate recommendations', async ({ page }) => {
+    const catalog = [film, { ...film, id: 2, title: 'News unrelated', description: 'An unrelated report.', director: 'Different director', categories: ['Drama'] }]
+    await mount(page, 'film', { catalog })
+    await page.getByRole('button', { name: `Open details for ${film.title}` }).click()
+    await expect(page.getByRole('region', { name: 'Similar films' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'New', exact: true }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.getByRole('status')).toContainText('1 films in New')
+    await expect(page.getByRole('button', { name: 'Open details for News unrelated' })).toHaveCount(0)
+    await expect(page.getByRole('searchbox', { name: 'Search films' })).toHaveValue('')
+    await page.getByRole('button', { name: 'Clear category filter' }).click()
+    await expect(page.getByRole('button', { name: 'Open details for News unrelated' })).toBeVisible()
+})
+
+test('category, search and sort URLs restore independently with Back and Forward', async ({ page }) => {
+    const catalog = [film, { ...film, id: 2, title: 'News unrelated', description: 'An unrelated report.', director: 'Different director', categories: ['Drama'] }]
+    await mount(page, 'film', { catalog })
+    await page.getByRole('button', { name: `Open details for ${film.title}` }).click()
+    await page.getByRole('button', { name: 'New', exact: true }).click()
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix?category=New')
+    await expect(page.getByRole('status')).toContainText('1 films in New')
+    await page.goBack()
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix')
+    await expect(page.getByRole('button', { name: 'Clear category filter' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Open details for News unrelated' })).toBeVisible()
+    await page.goForward()
+    await expect(page.getByRole('status')).toContainText('1 films in New')
+    await page.getByRole('searchbox', { name: 'Search films' }).fill('Synthetic')
+    await expect(page).toHaveURL(/category=New&q=Synthetic/)
+    await page.getByLabel('Film view').selectOption('alpha')
+    await expect(page).toHaveURL(/view=alpha/)
+    await page.goBack()
+    await expect(page.getByLabel('Film view')).toHaveValue('category')
+    await expect(page.getByRole('searchbox', { name: 'Search films' })).toHaveValue('Synthetic')
+    await page.goBack()
+    await expect(page.getByRole('searchbox', { name: 'Search films' })).toHaveValue('')
+    await expect(page.getByRole('button', { name: 'Clear category filter' })).toBeVisible()
+    await page.goForward()
+    await expect(page.getByRole('searchbox', { name: 'Search films' })).toHaveValue('Synthetic')
+    await page.goForward()
+    await expect(page.getByLabel('Film view')).toHaveValue('alpha')
+    await page.reload()
+    await expect(page.getByRole('searchbox', { name: 'Search films' })).toHaveValue('Synthetic')
+    await expect(page.getByLabel('Film view')).toHaveValue('alpha')
+    await expect(page.getByRole('status')).toContainText('1 films matching “Synthetic” in New')
+})
+
+test('deleting an in-progress search returns to its original catalogue history entry', async ({ page }) => {
+    await mount(page, 'film')
+    const initialLength = await page.evaluate(() => history.length)
+    await page.getByRole('searchbox', { name: 'Search films' }).fill('Synthetic')
+    await expect(page).toHaveURL(/q=Synthetic/)
+    expect(await page.evaluate(() => history.length)).toBe(initialLength + 1)
+    await page.getByRole('searchbox', { name: 'Search films' }).fill('')
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix')
+    await page.goForward()
+    await expect(page.getByRole('searchbox', { name: 'Search films' })).toHaveValue('Synthetic')
+})
+
+test('choosing an already active category from details consumes the modal instead of duplicating results history', async ({ page }) => {
+    await mount(page, 'film')
+    await page.getByRole('button', { name: `Open details for ${film.title}` }).click()
+    await page.getByRole('button', { name: 'New', exact: true }).click()
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix?category=New')
+    await page.getByRole('button', { name: `Open details for ${film.title}` }).click()
+    await page.getByRole('button', { name: 'New', exact: true }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix?category=New')
+    await page.goBack()
+    await expect(page).toHaveURL('https://nsso.test/film/razinflix')
+    await expect(page.getByRole('button', { name: 'Clear category filter' })).toHaveCount(0)
+})
+
+test('the unavailable trailer fallback keeps all actions inside its media area at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 })
+    await mount(page, 'film', { trailerStatus: 'unavailable' })
+    await page.getByRole('button', { name: 'Play Trailer', exact: true }).click()
+    const fallback = page.locator('[data-film-trailer-state="unavailable"]')
+    await expect(fallback).toBeVisible()
+    const media = await fallback.boundingBox()
+    for (const action of [page.getByRole('link', { name: 'Find an official trailer on YouTube' }), page.getByRole('button', { name: 'Retry trailer' })]) {
+        const box = await action.boundingBox()
+        expect(box.y).toBeGreaterThanOrEqual(media.y)
+        expect(box.y + box.height).toBeLessThanOrEqual(media.y + media.height + 1)
+    }
+})
+
+test('large catalogues progressively render shelves and grid without hiding access to later films', async ({ page }) => {
+    const catalog = Array.from({ length: 120 }, (_, index) => ({ ...film, id: index + 1, title: `Film ${String(index + 1).padStart(3, '0')}`, categories: [`Category ${Math.floor(index / 20) + 1}`] }))
+    await mount(page, 'film', { catalog })
+    await expect(page.locator('[data-film-shelf]')).toHaveCount(4)
+    await expect(page.getByRole('button', { name: /Open details for/ })).toHaveCount(40)
+    const shelf = page.getByRole('region', { name: 'Category 1', exact: true })
+    await expect(shelf.getByRole('button', { name: 'Scroll Category 1 left' })).toBeDisabled()
+    await shelf.getByRole('button', { name: 'Show 10 more films in Category 1' }).click()
+    await expect(shelf.getByRole('button', { name: /Open details for/ })).toHaveCount(20)
+    await page.getByRole('button', { name: /Show more categories/ }).click()
+    await expect(page.locator('[data-film-shelf]')).toHaveCount(6)
+    await page.getByLabel('Film view').selectOption('alpha')
+    await expect(page.getByRole('button', { name: /Open details for/ })).toHaveCount(36)
+    await page.getByRole('button', { name: 'Show more films', exact: true }).click()
+    await expect(page.getByRole('button', { name: /Open details for/ })).toHaveCount(72)
+})
+
+test('add-film stops an in-flight request without starting the next film and keeps saved work explicit', async ({ page }) => {
+    const state = await mount(page, 'film', { manager: true, addPending: true })
+    await page.getByRole('button', { name: 'Add Film', exact: true }).first().click()
+    await page.getByRole('textbox', { name: 'Film Intel Input' }).fill('One\nTwo\nThree')
+    await page.getByRole('dialog').getByRole('button', { name: 'Add Film', exact: true }).click()
+    await expect.poll(() => state.requests.filter(request => request.path === '/api/razinflix/add').length).toBe(1)
+    await page.getByRole('button', { name: 'Stop adding films', exact: true }).last().click()
+    await expect(page.getByText(/Stopped: 0 confirmed saved/)).toBeVisible()
+    await expect(page.getByText(/interrupted film’s save status is unknown/)).toBeVisible()
+    expect(state.requests.filter(request => request.path === '/api/razinflix/add')).toHaveLength(1)
+    await expect(page.getByRole('button', { name: 'Close', exact: true })).toBeVisible()
+    expect(state.errors).toEqual([])
+})
+
+test('add-film caps input batches before sending any writes', async ({ page }) => {
+    const state = await mount(page, 'film', { manager: true })
+    await page.getByRole('button', { name: 'Add Film', exact: true }).first().click()
+    await page.getByRole('textbox', { name: 'Film Intel Input' }).fill(Array.from({ length: 21 }, (_, index) => `Film ${index}`).join('\n'))
+    await expect(page.getByRole('alert')).toContainText('no more than 20 films')
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Add Film', exact: true })).toBeDisabled()
+    expect(state.requests.filter(request => request.path === '/api/razinflix/add')).toHaveLength(0)
+})
+
+test('stopping a partial add batch retains confirmed saves and reports the interrupted result as unknown', async ({ page }) => {
+    const state = await mount(page, 'film', { manager: true, addPending: 2 })
+    await page.getByRole('button', { name: 'Add Film', exact: true }).first().click()
+    await page.getByRole('textbox', { name: 'Film Intel Input' }).fill('One\nTwo\nThree')
+    await page.getByRole('dialog').getByRole('button', { name: 'Add Film', exact: true }).click()
+    await expect.poll(() => state.requests.filter(request => request.path === '/api/razinflix/add').length).toBe(2)
+    await page.getByRole('button', { name: 'Stop adding films', exact: true }).last().click()
+    await expect(page.getByText(/Stopped: 1 confirmed saved/)).toBeVisible()
+    await expect(page.getByText(/interrupted film’s save status is unknown/)).toBeVisible()
+    expect(state.requests.filter(request => request.path === '/api/razinflix/add')).toHaveLength(2)
+    await page.getByRole('button', { name: 'Close add film dialog' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
 async function findCourtyard(page) {

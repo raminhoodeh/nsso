@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast'
 import { useUI } from '@/components/providers/UIProvider'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { boundedClientRead } from '@/lib/client-read'
+import Link from 'next/link'
 
 interface MyNssoTabProps {
     initialData?: {
@@ -23,6 +24,9 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
     const [loading, setLoading] = useState(!initialData)
     const [loadError, setLoadError] = useState('')
     const connectionRead = useRef<AbortController | null>(null)
+    // A late dashboard prefetch must not abort the tab's own in-flight read or
+    // overwrite edits. initialData is a seed for this mounted account only.
+    const hasInitialSeed = useRef(Boolean(initialData))
 
     // Handle background dimming
     useEffect(() => {
@@ -92,9 +96,9 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
     useEffect(() => {
         const controller = new AbortController()
-        if (!initialData) void loadConnections(controller.signal)
+        if (!hasInitialSeed.current) void loadConnections(controller.signal)
         return () => { controller.abort(); connectionRead.current?.abort() }
-    }, [initialData])
+    }, [])
 
     // Update Connection Handler
     const handleUpdateConnection = async (id: string, data: { notes?: string, location?: string }) => {
@@ -133,30 +137,27 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
     return (
         <div className="space-y-6">
             {loadError && <div role="alert" className="rounded-xl border border-white/20 p-4 text-white"><p>{loadError}</p><button type="button" className="mt-3 min-h-11 underline" onClick={() => { void loadConnections() }}>Retry connections</button></div>}
-            <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px]">
+            <GlassCard refractive className="relative p-4 sm:p-6 lg:p-8">
                 {/* Header Section */}
-                <div className="text-left space-y-2 mb-10">
-                    <h2 className="text-3xl font-bold text-white">My nsso Network</h2>
-                    <p className="text-white/60 max-w-lg">
+                <div className="text-left space-y-2 mb-6 md:pr-52">
+                    <h2 className="text-2xl font-bold text-white sm:text-3xl">My nsso Network</h2>
+                    <p className="text-white/80 max-w-lg">
                         Your personal timeline of everyone you&apos;ve met.
                         Scan QR codes to build your journey.
                     </p>
                 </div>
 
-                {/* Coming Soon: Discover nsso users */}
-                <TahoeGlassSurface variant="panel" radius={12} tone="light" className="absolute top-8 right-8 hidden md:block cursor-help opacity-60 hover:opacity-100 transition-opacity group" contentClassName="flex items-center gap-4 px-4 py-2.5">
-                    <span className="text-white/50 text-[15px]">Discover nsso users</span>
-                    <TahoeGlassSurface variant="pill" tone="light" className="px-[10px] py-[3px]" contentClassName="flex items-center justify-center">
-                        <span className="font-medium text-[10px] text-white/96 leading-[14px] whitespace-nowrap" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
-                            Coming soon
-                        </span>
-                    </TahoeGlassSurface>
+                <p className="mb-6 text-sm text-white/70 md:absolute md:right-8 md:top-8 md:mb-0 md:max-w-44">Discover nsso users — coming soon</p>
 
-                    {/* Tooltip */}
-                    <TahoeGlassSurface variant="popover" radius={12} tone="light" className="absolute right-0 top-full mt-2 w-64 p-3 z-[60] invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none shadow-xl" contentClassName="text-white/80 text-xs leading-relaxed text-right">
-                        Find and follow other users to grow your network.
-                    </TahoeGlassSurface>
-                </TahoeGlassSurface>
+                {connections.length === 0 && !loadError && <section aria-labelledby="network-start-title" className="mb-6 rounded-2xl border border-white/20 bg-black/25 p-5 text-white">
+                    <h3 id="network-start-title" className="text-lg font-semibold">Start with someone you know</h3>
+                    <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-white/85">
+                        <li>Open your profile and tap the profile photo to show your QR code.</li>
+                        <li>Ask someone to scan it with their phone camera and open your profile.</li>
+                        <li>They can sign in and choose “Add to My nsso”. You will both see the connection here; notes stay private.</li>
+                    </ol>
+                    <Link href="/preview" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-white/30 bg-white/10 px-4 py-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-white">Open my profile and QR</Link>
+                </section>}
 
                 {/* Top Section: Table View */}
                 <div className="space-y-4 mb-12">
@@ -256,22 +257,24 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
         <TahoeGlassDialog
             open={isOpen}
             onOpenChange={(open) => { if (!open && !busy) onClose() }}
-            portal={false}
             tone="light"
             semanticTint="dark"
             semanticTintOpacity={0.38}
             aria-label={`Notes for ${connection.fullName}`}
+            overlayClassName="z-[10000]"
+            backdropClassName="bg-black/70"
             className="max-w-lg p-6"
+            contentClassName="rounded-2xl bg-[#202126] p-1"
         >
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-white">Notes for {connection.fullName}</h3>
-                <TahoeGlassButton onClick={onClose} disabled={busy} className="h-9 w-9 p-0" contentClassName="text-white/70" aria-label="Close notes dialog">
+                <TahoeGlassButton onClick={onClose} disabled={busy} className="h-11 w-11 shrink-0 p-0" contentClassName="text-white/85" aria-label="Close notes dialog">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                 </TahoeGlassButton>
             </div>
-            <TahoeGlassField label="Connection notes" visuallyHideLabel tone="light" surfaceClassName="p-0 mb-2" controlClassName="p-4 resize-none custom-scrollbar">
+            <TahoeGlassField label="Connection notes" visuallyHideLabel tone="light" surfaceClassName="p-0 mb-2" controlClassName="max-h-[35dvh] min-h-24 p-3 resize-y custom-scrollbar">
                 <textarea
                     aria-label="Connection notes"
                     value={content}
@@ -280,13 +283,13 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
                     maxLength={3333}
                     rows={8}
                     placeholder="Add notes about your meeting, context, or follow-ups..."
-                    className="text-white placeholder:text-white/30"
+                    className="text-base text-white placeholder:text-white/60"
                 />
             </TahoeGlassField>
             {error && <p role="alert" className="mb-3 text-sm text-rose-200">{error}</p>}
-            <div className="flex justify-between items-center text-xs text-white/40 gap-3">
+            <div className="flex flex-wrap justify-between items-center text-xs text-white/70 gap-3">
                 <span>{content.length} / 3333 characters</span>
-                <TahoeGlassButton onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className="px-4 py-2" contentClassName="text-white font-semibold">
+                <TahoeGlassButton onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className="min-h-11 px-4 py-2" contentClassName="text-white font-semibold">
                     {saving ? 'Saving...' : 'Save Notes'}
                 </TahoeGlassButton>
             </div>
@@ -297,14 +300,14 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
                             Remove {connection.fullName} from your My nsso? This removes them from your list and deletes your private notes, including any unsaved notes. Their record of you stays unchanged.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            <TahoeGlassButton onClick={() => { void removeConnection() }} disabled={busy} className="px-4 py-2" contentClassName="text-rose-200">
+                            <TahoeGlassButton onClick={() => { void removeConnection() }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">
                                 {removing ? 'Removing...' : 'Confirm removal'}
                             </TahoeGlassButton>
-                            <TahoeGlassButton onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className="px-4 py-2">Keep connection</TahoeGlassButton>
+                            <TahoeGlassButton onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className="min-h-11 px-4 py-2">Keep connection</TahoeGlassButton>
                         </div>
                     </div>
                 ) : (
-                    <TahoeGlassButton onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className="px-4 py-2" contentClassName="text-rose-200">Remove from My nsso</TahoeGlassButton>
+                    <TahoeGlassButton onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">Remove from My nsso</TahoeGlassButton>
                 )}
             </div>
         </TahoeGlassDialog>

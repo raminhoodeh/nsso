@@ -75,9 +75,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
         const isExternal = !!href?.startsWith('https:')
 
         const content = (
-            <div className="text-white flex items-center justify-center lg:justify-start gap-2">
+            <div className="text-white flex flex-wrap items-center justify-center lg:justify-start gap-2 break-words">
                 <span className="text-white/70">{method}:</span>
-                <span className={href ? "hover:underline hover:text-white transition-colors" : ""}>
+                <span className={`min-w-0 break-all ${href ? 'hover:underline hover:text-white transition-colors' : ''}`}>
                     {contact.value}
                 </span>
                 {isExternal && <ExternalLink size={12} className="opacity-50" />}
@@ -91,7 +91,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     href={href}
                     target={isExternal ? "_blank" : undefined}
                     rel={isExternal ? "noopener noreferrer" : undefined}
-                    className="block hover:opacity-80 transition-opacity"
+                    className="flex min-h-11 items-center justify-center lg:justify-start hover:opacity-80 transition-opacity"
                 >
                     {content}
                 </a>
@@ -103,9 +103,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     return (
         <>
-            {pixelId && (
-                <MetaPixelConsent pixelId={pixelId} initialConsent={initialPixelConsent} />
-            )}
             <main className="min-h-screen pb-40" style={{ paddingTop: '128px' }}>
             {/* Navigation */}
             <div className={viewer ? "md:hidden" : ""}>
@@ -120,9 +117,16 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
             {/* Profile Content */}
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} space-y-12 lg:space-y-20`}>
+                <nav id="profile-sections" aria-label="Profile sections" className="flex scroll-mt-32 flex-wrap justify-center gap-2 lg:justify-start">
+                    <a href="#profile-about" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">About</a>
+                    {experiences.length > 0 && <a href="#profile-experience" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Experience</a>}
+                    {qualifications.length > 0 && <a href="#profile-qualifications" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Qualifications</a>}
+                    {projects.length > 0 && <a href="#profile-projects" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Projects</a>}
+                    {products.length > 0 && <a href="#profile-products" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Products & Services</a>}
+                </nav>
 
                 {/* 1. Identity & Resume Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                <div id="profile-about" className="grid scroll-mt-32 grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
                     {/* Left Column - Primary Identity & Resume */}
                     <div className="space-y-6">
@@ -209,43 +213,45 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 !mt-10">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
-                                <GlassCard className="p-6 h-full max-h-[85vh]">
-                                    <div className="h-full overflow-y-auto custom-scrollbar pr-2">
-                                        <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h3>
+                                <GlassCard className="p-6 h-full">
+                                    <section id="profile-experience" className="scroll-mt-32">
+                                        <h2 className="text-white/70 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h2>
                                         <div className="space-y-6">
                                             {experiences.map(exp => (
                                                 <div key={exp.id} className="relative pl-6 border-l border-white/10">
                                                     <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
                                                     <h4 className="text-white font-semibold text-lg leading-tight mb-1">{exp.job_title}</h4>
                                                     <p className="text-white/70 font-medium mb-1">{exp.company_name}</p>
-                                                    <p className="text-white/40 text-sm">
+                                                    <p className="text-white/65 text-sm">
                                                         {exp.start_year} — {exp.end_year || 'Present'}
                                                     </p>
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
+                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
+                                    </section>
                                 </GlassCard>
                             )}
 
                             {/* Qualifications Section */}
                             {qualifications.length > 0 && (
-                                <GlassCard className="p-6 h-full max-h-[85vh]">
-                                    <div className="h-full overflow-y-auto custom-scrollbar pr-2">
-                                        <h3 className="text-white/50 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h3>
+                                <GlassCard className="p-6 h-full">
+                                    <section id="profile-qualifications" className="scroll-mt-32">
+                                        <h2 className="text-white/70 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h2>
                                         <div className="space-y-6">
                                             {qualifications.map(qual => (
                                                 <div key={qual.id} className="relative pl-6 border-l border-white/10">
                                                     <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
                                                     <h4 className="text-white font-semibold text-lg leading-tight mb-1">{qual.qualification_name}</h4>
                                                     <p className="text-white/70 font-medium mb-1">{qual.institution}</p>
-                                                    <p className="text-white/40 text-sm">
+                                                    <p className="text-white/65 text-sm">
                                                         {qual.start_year} — {qual.end_year}
                                                     </p>
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
+                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
+                                    </section>
                                 </GlassCard>
                             )}
                         </div>
@@ -295,7 +301,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {/* 2. Visual Portfolio (Projects) */}
                 {
                     projects.length > 0 && (
-                        <section className={PROFILE_COLLECTION_SECTION_CLASS}>
+                        <section id="profile-projects" className={`${PROFILE_COLLECTION_SECTION_CLASS} scroll-mt-32`}>
                             <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Projects</h2>
                             <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {projects.map((project) => {
@@ -327,6 +333,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     )
                                 })}
                             </div>
+                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
                         </section>
                     )
                 }
@@ -334,7 +341,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {/* 3. Products & Services */}
                 {
                     products.length > 0 && (
-                        <section className={PROFILE_COLLECTION_SECTION_CLASS}>
+                        <section id="profile-products" className={`${PROFILE_COLLECTION_SECTION_CLASS} scroll-mt-32`}>
                             <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
                             <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {products.map(product => {
@@ -380,6 +387,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="w-[11.625rem]"
+                                                            aria-label={`Purchase ${product.name}`}
                                                         >
                                                             Link to Purchase
                                                         </ShinyLink>
@@ -399,6 +407,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     )
                                 })}
                             </div>
+                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
                         </section>
                     )
                 }
@@ -409,8 +418,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {/* Footer - Only for non-logged-in users */}
                 {/* Footer - Always visible */}
                 <div className="pt-12 flex justify-center pb-1">
-                    <CreateProfileButton />
+                    <CreateProfileButton returnTo={`/${encodeURIComponent(username)}`} />
                 </div>
+                {pixelId && <MetaPixelConsent pixelId={pixelId} initialConsent={initialPixelConsent} />}
             </div >
             </main >
         </>

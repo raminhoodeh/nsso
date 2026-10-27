@@ -8,7 +8,7 @@ export function runtimeScope(path: string, method: string): string | null {
     if (!path.startsWith('/api/')) return null
     if (path === '/api/profile/media' && method === 'POST') return 'upload'
     if (path === '/api/places/photo') return 'photo'
-    if (path.startsWith('/api/razinflix/hero/')) return 'film_media'
+    if (path.startsWith('/api/razinflix/hero/') || path.startsWith('/api/razinflix/trailer/')) return 'film_media'
     if (path.startsWith('/api/razinflix/') && mutations.has(method)) return 'film_write'
     if (['/api/deity/chat','/api/deity/places'].includes(path) && method === 'POST') return 'chat'
     if (path === '/api/health') return 'health'

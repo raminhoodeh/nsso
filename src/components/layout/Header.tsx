@@ -10,7 +10,6 @@ import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { boundedClientRead } from '@/lib/client-read'
 import { useState, useEffect, useCallback } from 'react'
-import { LogOut } from 'lucide-react'
 import {
     TahoeBackdropHeader,
     TahoeGlassButton,
@@ -34,7 +33,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const { showToast } = useToast()
     const [signingOut, setSigningOut] = useState(false)
     const [mobileMenuState, setMobileMenuState] = useState({ open: false, pathname })
-    const mobileMenuOpen = mobileMenuState.open && mobileMenuState.pathname === pathname
+    const mobileMenuOpen = Boolean(user) && mobileMenuState.open && mobileMenuState.pathname === pathname
     const setMobileMenuOpen = useCallback((open: boolean) => {
         setMobileMenuState({ open, pathname })
     }, [pathname])
@@ -200,17 +199,17 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {/* Default Mode: Contextual Button (Preview/Copy) */}
                     {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
 
-                    {/* Hamburger Menu ONLY for Admin */}
-                    {isAdmin && (
+                    {/* Every account needs access to security and session controls. */}
+                    {user && (
                         <TahoeGlassButton
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             radius={8}
                             className="h-11 w-11 p-0 text-white transition-colors"
                             contentClassName="text-white"
                             tone="light"
-                            aria-label="Toggle menu"
+                            aria-label="Open account menu"
                             aria-expanded={mobileMenuOpen}
-                            aria-controls="mobile-admin-menu"
+                            aria-controls="mobile-account-menu"
                         >
                             <svg
                                 className="w-6 h-6"
@@ -230,26 +229,9 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         </TahoeGlassButton>
                     )}
 
-                    {/* Non-Admin Mobile: Sign Out Icon */}
-                    {user && !isAdmin && (
-                        <TahoeGlassButton
-                            onClick={handleSignOut}
-                            disabled={signingOut}
-                            radius={8}
-                            className="h-11 w-11 p-0 text-white/80 transition-colors hover:text-white"
-                            contentClassName="text-inherit"
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.08}
-                            aria-label="Sign Out"
-                        >
-                            <LogOut size={20} />
-                        </TahoeGlassButton>
-                    )}
-
                     {/* Mobile Slide-out Menu */}
                     <TahoeGlassDialog
-                        id="mobile-admin-menu"
+                        id="mobile-account-menu"
                         open={mobileMenuOpen}
                         onOpenChange={setMobileMenuOpen}
                         radius="32px 0 0 32px"

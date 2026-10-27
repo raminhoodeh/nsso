@@ -28,6 +28,7 @@ interface AgentChatInterfaceProps {
     onMinimize?: () => void;
     onClose?: () => void;
     initialMessage?: string;
+    shortcutRequests?: { id: string; message: string }[];
 }
 
 const CATEGORY_QUESTIONS: Record<string, string[]> = {
@@ -79,7 +80,7 @@ import { useUser } from '@/components/providers/UserProvider';
 import { useProfile } from '@/components/providers/ProfileProvider';
 import { useToast } from '@/components/ui/Toast';
 
-export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage }: AgentChatInterfaceProps) {
+export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, initialMessage, shortcutRequests = [] }: AgentChatInterfaceProps) {
     const { user, loading } = useUser();
     const { applyOperation, undo, canUndo, fastMode, setFastMode, revision, refreshProfile, getRevision, links } = useProfile();
     const { showToast } = useToast();
@@ -94,6 +95,12 @@ export default function AgentChatInterface({ isFullScreen, onMaximize, onMinimiz
     const [actionPreview, setActionPreview] = useState<{operationId:string;text:string} | null>(null);
     const applying = useRef(new Set<string>());
     const activeRequest = useRef<AbortController | null>(null);
+    const consumedShortcuts = useRef(new Set<string>());
+    const consumedInitialMessage = useRef<string | undefined>(undefined);
+    const composerRef = useRef<HTMLTextAreaElement>(null);
+    const databaseDialogRef = useRef<HTMLDialogElement>(null);
+    const databaseTriggerRef = useRef<HTMLButtonElement>(null);
+    const shellRef = useRef<HTMLElement>(null);
     const alive = useRef(true);
     const fastModeRef = useRef(fastMode);
     useEffect(() => { fastModeRef.current = fastMode; }, [fastMode]);
@@ -213,8 +220,52 @@ Check out some of the areas I can help you with below.`;
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    useEffect(() => {
+        const composer = composerRef.current;
+        if (!composer) return;
+        composer.style.height = 'auto';
+        composer.style.height = `${Math.min(composer.scrollHeight, 160)}px`;
+    }, [inputValue]);
+
+    // Fit the visible viewport when a phone keyboard opens or browser chrome changes.
+    useEffect(() => {
+        const viewport = window.visualViewport;
+        const fitViewport = () => {
+            const shell = shellRef.current;
+            if (!shell || window.innerWidth >= 768) {
+                shell?.style.removeProperty('max-height');
+                if (shell?.parentElement?.getAttribute('role') === 'dialog') {
+                    shell.parentElement.style.removeProperty('top');
+                    shell.parentElement.style.removeProperty('height');
+                }
+                return;
+            }
+            const top = isFullScreen ? Math.max(0, shell.getBoundingClientRect().top - (viewport?.offsetTop ?? 0)) : 0;
+            shell.style.maxHeight = `${Math.max(140, (viewport?.height ?? window.innerHeight) - top)}px`;
+            if (!isFullScreen && shell.parentElement?.getAttribute('role') === 'dialog') {
+                shell.parentElement.style.top = `${viewport?.offsetTop ?? 0}px`;
+                shell.parentElement.style.height = `${viewport?.height ?? window.innerHeight}px`;
+            }
+        };
+        fitViewport();
+        viewport?.addEventListener('resize', fitViewport);
+        viewport?.addEventListener('scroll', fitViewport);
+        window.addEventListener('resize', fitViewport);
+        return () => {
+            viewport?.removeEventListener('resize', fitViewport);
+            viewport?.removeEventListener('scroll', fitViewport);
+            window.removeEventListener('resize', fitViewport);
+        };
+    }, [isFullScreen]);
+
+    useEffect(() => {
+        const dialog = databaseDialogRef.current;
+        if (showVennDiagram && dialog && !dialog.open) dialog.showModal();
+        return () => { if (dialog?.open) dialog.close(); };
+    }, [showVennDiagram]);
+
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     };
 
     const renderMessage = (content: string, isAssistant: boolean) => {
@@ -438,18 +489,30 @@ Check out some of the areas I can help you with below.`;
     // Handle an initial prompt only when it changes or initialization completes.
     // Declare this after the callbacks so it never reads an uninitialized const.
     useEffect(() => {
-        if (initialMessage && hasInitialized) {
+        if (initialMessage && hasInitialized && !isLoading && initialMessage !== consumedInitialMessage.current) {
+            consumedInitialMessage.current = initialMessage;
             void handleSendMessage(initialMessage);
         }
         // The send callback is intentionally excluded so one initial message
         // cannot be replayed as chat state changes during streaming.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialMessage, hasInitialized]);
+    }, [initialMessage, hasInitialized, isLoading]);
+
+    useEffect(() => {
+        if (!hasInitialized || isLoading || isTyping) return;
+        const next = shortcutRequests.find(request => !consumedShortcuts.current.has(request.id));
+        if (!next) return;
+        consumedShortcuts.current.add(next.id);
+        void handleSendMessage(next.message);
+        // Consume each event id once; streaming rerenders must never replay it.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [shortcutRequests, hasInitialized, isLoading, isTyping]);
 
     const iconButtonClass = 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#232b36] text-white/65 transition-colors hover:bg-[#2b3542] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none';
 
     return (
         <section
+            ref={shellRef}
             aria-label="Deity assistant"
             data-deity-surface="opaque"
             style={{ borderRadius: isFullScreen ? 0 : '32px 0 0 32px' }}
@@ -458,7 +521,7 @@ Check out some of the areas I can help you with below.`;
                 : 'h-dvh w-full border border-white/10'
                 }`}
         >
-            <header className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#171d26] p-4 md:p-6">
+            <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#171d26] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:p-6">
                 <div className="flex items-center gap-3 md:gap-4">
                     <span className="block h-9 w-9 overflow-hidden rounded-full bg-[#232b36] md:h-10 md:w-10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -609,7 +672,7 @@ Check out some of the areas I can help you with below.`;
                             onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
                             aria-expanded={isCategoriesExpanded}
                             aria-controls="deity-category-options"
-                            className="inline-flex items-center gap-2 rounded-full bg-[#222a35] px-4 py-2 text-xs font-medium uppercase tracking-wider text-white/55 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 motion-reduce:transition-none"
+                            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#222a35] px-4 py-2 text-xs font-medium uppercase tracking-wider text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 motion-reduce:transition-none"
                         >
                             What you can ask me about
                             {isCategoriesExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -621,7 +684,7 @@ Check out some of the areas I can help you with below.`;
                     id="deity-category-options"
                     aria-hidden={!isCategoriesExpanded}
                     inert={!isCategoriesExpanded}
-                    className={`overflow-hidden transition-all duration-500 ease-in-out motion-reduce:transition-none ${isCategoriesExpanded ? 'max-h-[120px] opacity-100' : 'max-h-0 opacity-0'}`}
+                    className={`overflow-y-auto overscroll-contain transition-all duration-300 ease-in-out motion-reduce:transition-none ${isCategoriesExpanded ? 'max-h-[min(220px,30dvh)] opacity-100' : 'max-h-0 opacity-0'}`}
                 >
                     <div className="flex flex-wrap justify-center gap-2 overflow-y-auto px-4 pb-2 scrollbar-none">
                         {Object.keys(CATEGORY_QUESTIONS).map(cat => (
@@ -630,7 +693,7 @@ Check out some of the areas I can help you with below.`;
                                 key={cat}
                                 onClick={() => handleCategoryClick(cat)}
                                 aria-pressed={activeCategory === cat}
-                                className={`mb-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 ${activeCategory === cat
+                                className={`mb-1 min-h-11 rounded-full px-3 py-2 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 ${activeCategory === cat
                                     ? 'bg-[#15313a] text-cyan-300'
                                     : 'bg-[#222a35] text-white/70 hover:bg-[#2b3542] hover:text-cyan-300'
                                     }`}
@@ -640,15 +703,12 @@ Check out some of the areas I can help you with below.`;
                         ))}
                         <button
                             type="button"
-                            className="mb-1 rounded-full bg-[#15313a] px-3 py-1.5 text-xs font-bold tracking-wide text-cyan-300 transition-colors hover:bg-[#1b3d47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
-                            onMouseEnter={() => setShowVennDiagram(true)}
-                            onMouseLeave={() => setShowVennDiagram(false)}
-                            onFocus={() => setShowVennDiagram(true)}
-                            onBlur={() => setShowVennDiagram(false)}
+                            ref={databaseTriggerRef}
+                            className="mb-1 min-h-11 rounded-full bg-[#15313a] px-3 py-2 text-xs font-bold tracking-wide text-cyan-300 transition-colors hover:bg-[#1b3d47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
                             onClick={() => setShowVennDiagram(true)}
                             aria-expanded={showVennDiagram}
                             aria-controls="deity-database-tooltip"
-                            aria-describedby={showVennDiagram ? 'deity-database-tooltip' : undefined}
+                            aria-haspopup="dialog"
                         >
                             nsso DATABASE
                         </button>
@@ -657,25 +717,33 @@ Check out some of the areas I can help you with below.`;
 
                 <div className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
                     <form
-                        onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputValue); }}
+                        onSubmit={(e) => { e.preventDefault(); if (!isLoading) void handleSendMessage(inputValue); }}
                         className="group relative"
                     >
                         <label htmlFor="deity-message-input" className="sr-only">Message Deity</label>
-                        <input
+                        <textarea
+                            ref={composerRef}
                             id="deity-message-input"
-                            type="text"
+                            rows={1}
                             value={inputValue}
                             maxLength={4000}
                             onChange={(e) => setInputValue(e.target.value)}
+                            onFocus={() => setIsCategoriesExpanded(false)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && window.matchMedia('(pointer: fine)').matches) {
+                                    event.preventDefault();
+                                    if (!isLoading) void handleSendMessage(inputValue);
+                                }
+                            }}
                             placeholder={placeholders[placeholderIndex]}
                             autoComplete="off"
-                            className="w-full rounded-2xl border border-white/10 bg-[#0c1118] px-5 py-4 pr-16 text-base text-white outline-none placeholder:text-white/50 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/20"
+                            className="block max-h-40 min-h-14 w-full resize-none overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118] px-4 py-3.5 pr-16 text-base leading-6 text-white outline-none placeholder:text-white/60 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/20"
                         />
                         <button
                             type="submit"
                             disabled={!inputValue.trim() || isLoading}
                             aria-label="Send message"
-                            className="absolute right-1.5 top-1/2 z-30 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#15313a] text-cyan-100 transition-colors hover:bg-[#1b3d47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 disabled:pointer-events-none disabled:opacity-30 motion-reduce:transition-none"
+                            className="absolute bottom-1.5 right-1.5 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#15313a] text-cyan-100 transition-colors hover:bg-[#1b3d47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 disabled:pointer-events-none disabled:opacity-30 motion-reduce:transition-none"
                         >
                             <Send size={18} />
                         </button>
@@ -684,18 +752,22 @@ Check out some of the areas I can help you with below.`;
             </footer>
 
             {showVennDiagram && createPortal(
-                <div
+                <dialog
+                    ref={databaseDialogRef}
                     id="deity-database-tooltip"
-                    role="tooltip"
-                    className="pointer-events-none fixed left-1/2 top-1/2 z-[9999] max-h-[90vh] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-cyan-500/50 bg-[#11161d] p-2"
+                    aria-label="About the nsso database"
+                    onCancel={(event) => { event.preventDefault(); setShowVennDiagram(false); }}
+                    onClose={() => { setShowVennDiagram(false); databaseTriggerRef.current?.focus(); }}
+                    className="fixed inset-0 z-[9999] m-auto max-h-[90dvh] w-[min(900px,94vw)] max-w-[94vw] overflow-auto rounded-2xl border border-cyan-500/50 bg-[#11161d] p-3 text-white backdrop:bg-[#080c14]/90"
                 >
+                    <div className="mb-3 flex items-center justify-between gap-4"><h2 className="font-semibold">The nsso database</h2><button type="button" aria-label="Close database information" onClick={() => setShowVennDiagram(false)} className={iconButtonClass}><X size={20}/></button></div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/nsso-venn-diagram.jpg"
                         alt="nsso Agent vs ChatGPT Venn Diagram"
-                        className="block max-h-[calc(90vh-1rem)] max-w-[calc(90vw-1rem)] rounded-xl object-contain"
+                        className="mx-auto block max-h-[calc(90dvh-6rem)] max-w-full rounded-xl object-contain"
                     />
-                </div>,
+                </dialog>,
                 document.body
             )}
         </section>

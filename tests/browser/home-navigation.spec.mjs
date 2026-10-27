@@ -23,7 +23,7 @@ test.beforeAll(async () => {
               export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
               export function TahoeBackdropSurface({backdropEnabled,...props}){return <TahoeGlassSurface {...props}/>}
               export function TahoeBackdropHeader({displacementProfile,materialLighting,...props}){return <TahoeGlassSurface {...props}/>}
-              export function TahoeGlassDialog({open}){return open?<div role="dialog"/>:null}`
+              export function TahoeGlassDialog({open,children}){return open?<div role="dialog">{children}</div>:null}`
           : path.endsWith('HomeVisionPlayer') ? "import React from 'react';export default ()=> <div>Vision player fixture</div>;"
           : "import React from 'react';export default ({children})=><div>{children}</div>;"
         return {contents,loader:'tsx',resolveDir:root}
@@ -56,12 +56,14 @@ async function fixture(page, screen='home', options={}) {
     const path=new URL(route.request().url()).pathname
     if(path==='/')return route.fulfill({contentType:'text/html',body:'<div id="root"></div><script src="/fixture.js"></script>'})
     if(path==='/fixture.js')return route.fulfill({contentType:'application/javascript',body:bundle})
+    if(path==='/api/check-username')return route.fulfill({contentType:'application/json',body:JSON.stringify({available:true})})
     if(path==='/homepage-video.mp4'){videoRequests.push(path);return route.abort()}
     return route.fulfill({status:204,body:''})
   })
   await page.goto('https://nsso.test/')
   await page.evaluate(({screen,options})=>{Object.assign(window,options);window.fixtureRender(screen)},{screen,options})
   await expect(page.getByRole(screen==='sidebar'?'complementary':'navigation')).toBeVisible()
+  if (screen === 'header' && options.fixtureUser) await page.getByRole('button', { name: 'Open account menu' }).click()
   return {errors,videoRequests}
 }
 
@@ -78,7 +80,7 @@ test('claim keeps the requested name and offers retry after an Auth rejection',a
   await page.getByRole('textbox',{name:'Profile name'}).first().fill('my-name')
   await page.evaluate(()=>window.fixtureSessionMode='error')
   await page.getByRole('button',{name:'CLAIM IT',exact:true}).first().click()
-  await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('error')
+  await expect(page.getByRole('status').filter({hasText:'Your name is kept'})).toBeVisible()
   await expect(page.getByRole('textbox',{name:'Profile name'}).first()).toHaveValue('my-name')
   await expect(page.getByRole('button',{name:'CLAIM IT',exact:true}).first()).toBeEnabled()
   await page.evaluate(()=>window.fixtureSessionMode='guest')
@@ -101,6 +103,7 @@ test('a late claim session cannot override navigation away from home',async({pag
   await page.evaluate(()=>window.fixtureSessionMode='pending')
   await page.getByRole('button',{name:'CLAIM IT',exact:true}).first().click()
   await expect(page.getByRole('textbox',{name:'Profile name'}).first()).toBeDisabled()
+  await expect.poll(() => page.evaluate(() => typeof window.fixtureResolveSession)).toBe('function')
   await page.evaluate(()=>window.fixtureRender('header'))
   await expect(page.getByRole('textbox',{name:'Profile name'})).toHaveCount(0)
   await page.evaluate(()=>window.fixtureResolveSession({data:{session:null},error:null}))
@@ -110,13 +113,14 @@ test('a late claim session cannot override navigation away from home',async({pag
 
 for (const screen of ['header','sidebar']) test(screen+' copy waits for the clipboard and reports a denied copy truthfully',async({page})=>{
   await fixture(page,screen,{fixtureUser:{id:'actor-a',username:'actor-a',user_type:'standard'}})
-  const copy = page.getByRole('button',{name:screen==='sidebar'?'Copy profile link':/Copy profile URL/})
+  const copy = page.getByRole('button',{name:screen==='sidebar'?'Copy profile link':'Copy profile URL',exact:true})
   await copy.click()
   expect(await page.evaluate(()=>window.fixtureToasts)).toEqual([])
   await page.evaluate(()=>window.fixtureResolveCopy())
   await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('success')
   expect(await page.evaluate(()=>window.fixtureCopied.at(-1))).toBe('https://nsso.test/actor-a')
   await page.evaluate(()=>window.fixtureClipboardMode='error')
+  if(screen==='header') await page.getByRole('button',{name:'Open account menu'}).click()
   await copy.click()
   await expect.poll(()=>page.evaluate(()=>window.fixtureToasts.at(-1)?.type)).toBe('error')
 })

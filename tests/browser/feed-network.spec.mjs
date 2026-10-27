@@ -30,15 +30,17 @@ test.beforeAll(async () => {
             import CreatePostCard from './src/app/dashboard/components/CreatePostCard';
             import MyNssoTab from './src/app/dashboard/components/MyNssoTab';
             const connections=[{id:'${alice}',connectedUserId:'alice',username:'alice',fullName:'Alice Fixture',headline:null,profilePicUrl:null,dateMet:'2026-10-01',location:window.fixtureExistingLocation || '',notes:'Alice saved notes'},{id:'${blair}',connectedUserId:'blair',username:'blair',fullName:'Blair Fixture',headline:null,profilePicUrl:null,dateMet:'2026-10-02',location:'',notes:'Blair saved notes'}];
+            function NetworkFixture(){const [seed,setSeed]=React.useState(window.fixtureNoNetworkSeed?undefined:{connections});window.fixtureSupplyNetworkSeed=()=>setSeed({connections});return <MyNssoTab initialData={seed}/>;}
             window.fixtureToasts=[];window.fixtureCreated=[];
             const post={id:'${postId}',user_id:'${actor}',type:'manual',content:'Original fixture post',metadata:{},created_at:'2026-10-01T12:00:00Z',user:{username:'fixture',profile:{full_name:'Fixture Creator',profile_pic_url:null}},likes:[],_count:{feed_comments:0}};
-            createRoot(document.getElementById('root')).render(<React.StrictMode><section data-testid="composer"><CreatePostCard onPostCreated={post=>window.fixtureCreated.push(post)}/></section><section data-testid="feed"><FeedItemCard post={post} currentUserId="${actor}"/></section><section data-testid="network"><MyNssoTab initialData={window.fixtureNoNetworkSeed ? undefined : {connections}}/></section></React.StrictMode>);
+            createRoot(document.getElementById('root')).render(<React.StrictMode><section data-testid="composer"><CreatePostCard onPostCreated={post=>window.fixtureCreated.push(post)}/></section><section data-testid="feed"><FeedItemCard post={post} currentUserId="${actor}"/></section><section data-testid="network"><NetworkFixture/></section></React.StrictMode>);
         ` },
     });
     bundle = result.outputFiles[0].text;
 });
-async function fixture(page, { noNetworkSeed = false, existingLocation = '', networkStatus = 200 } = {}) {
+async function fixture(page, { noNetworkSeed = false, existingLocation = '', networkStatus = 200, deferNetwork = false } = {}) {
     const state = { networkStatus, likeStatus: 200, commentStatus: 200, postStatus: 200, deleteStatus: 200, patchStatus: 200, commentsStatus: 200, requests: [], comments: [], memberships: [alice, blair], reciprocalMemberships: ['their-record-of-me'], hold: null };
+    if (deferNetwork) state.releaseNetwork = hold(state, 'network');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.route('**/*', async route => {
         const request = route.request(), url = new URL(request.url()), method = request.method();
@@ -202,7 +204,8 @@ test('network loading failure is visible and retries without inventing an empty 
     state.networkStatus = 200;
     await network.getByRole('button', { name: 'Retry connections', exact: true }).click();
     await expect(network.getByRole('alert')).toHaveCount(0);
-    await expect(network).toContainText('No connections found.');
+    await expect(network).toContainText('Start with someone you know');
+    await expect(network.getByRole('link', { name: 'Open my profile and QR' })).toHaveAttribute('href', '/preview');
 });
 
 test('an existing meeting location is keyboard editable; duplicate Enter/blur cannot double-save', async ({ page }) => {
@@ -221,6 +224,32 @@ test('an existing meeting location is keyboard editable; duplicate Enter/blur ca
     release();
     await expect(network.getByRole('button', { name: 'Edit location for Alice Fixture', exact: true })).toHaveText('Corrected meeting place');
     expect(state.requests.filter(r => r.method === 'PATCH').map(r => JSON.parse(r.body))).toEqual([{ location: 'Corrected meeting place' }]);
+});
+
+test('network sorting is explicit, search is reversible, and cancelling a location does not write', async ({ page }) => {
+    const state = await fixture(page), network = page.getByTestId('network');
+    const names = () => network.getByRole('list', { name: 'Your connections' }).getByRole('link').allTextContents();
+    expect((await names())[0]).toContain('Blair Fixture');
+    await network.getByRole('combobox', { name: 'Sort connections' }).selectOption('name');
+    await network.getByRole('button', { name: 'Sort ascending', exact: true }).click();
+    expect((await names())[0]).toContain('Alice Fixture');
+    await network.getByRole('searchbox', { name: 'Search connections' }).fill('missing person');
+    await expect(network).toContainText('No connections match your search.');
+    await network.getByRole('button', { name: 'Clear search' }).click();
+    await network.getByRole('button', { name: 'Edit location for Alice Fixture' }).click();
+    await network.getByRole('textbox', { name: 'Location for Alice Fixture' }).fill('Unsent draft');
+    await network.getByRole('button', { name: 'Cancel', exact: true }).click();
+    expect(state.requests.filter(request => request.method === 'PATCH')).toHaveLength(0);
+    await expect(network.getByRole('button', { name: 'Edit location for Alice Fixture' })).toContainText('Add meeting location');
+});
+
+test('late dashboard prefetch data cannot leave an already-loading network stuck', async ({ page }) => {
+    const state = await fixture(page, { noNetworkSeed: true, deferNetwork: true });
+    await expect.poll(() => state.requests.filter(request => request.path === '/api/my-nsso/connections').length).toBeGreaterThan(0);
+    await page.evaluate(() => window.fixtureSupplyNetworkSeed());
+    state.releaseNetwork();
+    await expect(page.getByTestId('network')).toContainText('Start with someone you know');
+    await expect(page.getByTestId('network').getByRole('alert')).toHaveCount(0);
 });
 
 

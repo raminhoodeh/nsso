@@ -92,9 +92,10 @@ function ImageCropperContent({
             semanticTintOpacity={0.055}
             overlayClassName="z-[9999] animate-in fade-in duration-200"
             backdropClassName="bg-black/60"
-            className="max-w-xl overflow-hidden border border-white/10 p-0"
+            className="h-[min(680px,calc(100dvh-2rem))] max-w-xl overflow-hidden border border-white/10 p-0"
+            contentClassName="flex h-full min-h-0 flex-col bg-[#202126]"
         >
-            <header className="flex items-center justify-between border-b border-white/10 p-6">
+            <header className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-2 sm:px-6">
                 <h2 id="image-cropper-title" className="text-xl font-bold text-white">Crop Image</h2>
                 <TahoeGlassButton
                     onClick={onClose}
@@ -103,7 +104,7 @@ function ImageCropperContent({
                     tone="light"
                     semanticTint="dark"
                     semanticTintOpacity={0.04}
-                    className="p-2"
+                    className="h-11 w-11 p-0"
                     contentClassName="text-white/60 hover:text-white"
                 >
                     <X size={24} />
@@ -111,7 +112,7 @@ function ImageCropperContent({
             </header>
 
             {/* The crop stage intentionally stays opaque so image bounds are legible. */}
-            <div className="relative h-[400px] w-full overflow-hidden bg-black/50">
+            <div className="relative min-h-[80px] w-full flex-1 overflow-hidden bg-black/50">
                 <Cropper
                     image={imageSrc}
                     crop={crop}
@@ -126,7 +127,7 @@ function ImageCropperContent({
                 />
             </div>
 
-            <div className="space-y-6 p-6">
+            <div className="max-h-[50%] shrink-0 space-y-3 overflow-y-auto p-3 sm:p-4">
                 <div className="flex items-center gap-4">
                     <ZoomIn aria-hidden="true" size={20} className="text-white/50" />
                     <TahoeGlassField
@@ -136,8 +137,8 @@ function ImageCropperContent({
                         semanticTint="dark"
                         semanticTintOpacity={0.04}
                         className="flex-1"
-                        surfaceClassName="px-3 py-3"
-                        controlClassName="h-1 cursor-pointer appearance-none rounded-lg bg-white/20 active:bg-white/40"
+                        surfaceClassName="px-3 py-1"
+                        controlClassName="h-11 cursor-pointer accent-white"
                     >
                         <input
                             type="range"
@@ -160,7 +161,7 @@ function ImageCropperContent({
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.04}
-                        className="flex-1 border border-white/15 px-5 py-3"
+                        className="min-h-11 flex-1 border border-white/15 px-3 py-2"
                         contentClassName="text-white/80"
                     >
                         Cancel
@@ -171,7 +172,7 @@ function ImageCropperContent({
                         tone="light"
                         semanticTint="light"
                         semanticTintOpacity={0.07}
-                        className="flex-1 border border-white/20 px-5 py-3"
+                        className="min-h-11 flex-1 border border-white/20 px-3 py-2"
                         contentClassName="text-white"
                     >
                         {busy ? 'Processing...' : 'Apply Crop'}

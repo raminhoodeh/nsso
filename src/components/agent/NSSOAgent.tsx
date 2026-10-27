@@ -21,16 +21,19 @@ const AgentChatInterface = dynamic(
 export default function NSSOAgent() {
     const [isOpen, setIsOpen] = useState(false);
     const [hasOpened, setHasOpened] = useState(false);
-    const [initialMessage, setInitialMessage] = useState<string | undefined>(undefined);
+    const [shortcutRequests, setShortcutRequests] = useState<{ id: string; message: string }[]>([]);
     const launcherRef = useRef<HTMLButtonElement>(null);
     const chatWindowRef = useRef<HTMLDivElement>(null);
     const restoreLauncherFocusRef = useRef(false);
+    const openerRef = useRef<HTMLElement | null>(null);
 
     // Listen for custom event to open chat
     useEffect(() => {
         const handleOpenChat = (event: CustomEvent) => {
+            openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            restoreLauncherFocusRef.current = true;
             if (event.detail?.initialMessage) {
-                setInitialMessage(event.detail.initialMessage);
+                setShortcutRequests(previous => [...previous, { id: crypto.randomUUID(), message: event.detail.initialMessage }]);
             }
             setIsOpen(true);
             setHasOpened(true);
@@ -43,6 +46,7 @@ export default function NSSOAgent() {
     }, []);
 
     const handleOpen = () => {
+        openerRef.current = launcherRef.current;
         restoreLauncherFocusRef.current = true;
         setIsOpen(true);
         setHasOpened(true);
@@ -55,7 +59,11 @@ export default function NSSOAgent() {
     useEffect(() => {
         if (!isOpen) {
             if (restoreLauncherFocusRef.current) {
-                const frame = window.requestAnimationFrame(() => launcherRef.current?.focus());
+                const frame = window.requestAnimationFrame(() => {
+                    const opener = openerRef.current;
+                    if (opener?.isConnected) opener.focus();
+                    else launcherRef.current?.focus();
+                });
                 restoreLauncherFocusRef.current = false;
                 return () => window.cancelAnimationFrame(frame);
             }
@@ -64,6 +72,7 @@ export default function NSSOAgent() {
 
         const frame = window.requestAnimationFrame(() => chatWindowRef.current?.focus({ preventScroll: true }));
         const handleKeyDown = (event: KeyboardEvent) => {
+            if (document.querySelector('dialog[open]')) return;
             if (event.key === 'Escape') {
                 event.preventDefault();
                 setIsOpen(false);
@@ -205,7 +214,7 @@ export default function NSSOAgent() {
                             isFullScreen={false}
                             onClose={handleClose}
                             onMaximize={undefined} // Disable maximize on desktop as it's already full height
-                            initialMessage={initialMessage}
+                            shortcutRequests={shortcutRequests}
                         />
                     )}
                 </div>

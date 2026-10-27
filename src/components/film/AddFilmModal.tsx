@@ -47,18 +47,21 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
     const dialogRef = useRef<HTMLElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const processingRef = useRef(false);
+    const controllerRef = useRef<AbortController | null>(null);
+    const stopRequestedRef = useRef(false);
+    const mountedRef = useRef(true);
+    const batchSize = inputText.split(/\n+/).filter(title => title.trim()).length;
 
     useEffect(() => {
         if (bottomRef.current) {
-            bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+            bottomRef.current.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
         }
     }, [logs]);
 
     const addLog = (msg: string) => {
-        setLogs(prev => [...prev, `[System] ${msg}`]);
+        if (mountedRef.current) setLogs(prev => [...prev, msg]);
     };
-
-    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
     const parseInput = (text: string) => {
         // Preserve punctuation and numeric words in titles; the server evaluates year hypotheses.
@@ -69,7 +72,9 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
     };
 
     const handleAdd = async () => {
-        if (!inputText.trim()) return;
+        if (!inputText.trim() || processingRef.current || batchSize > 20) return;
+        processingRef.current = true;
+        stopRequestedRef.current = false;
 
         setIsProcessing(true);
         setIsFinished(false);
@@ -79,54 +84,29 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
         const films = parseInput(inputText);
         let addedCount = 0;
         let failedCount = 0;
+        let unknownCount = 0;
 
-        await delay(300);
-        addLog(`▶ SYSTEM: Initializing RazinFlix Intelligence Engine...`);
-        await delay(500);
+        addLog(`Checking ${films.length} film${films.length === 1 ? '' : 's'}, one at a time.`);
 
         for (const film of films) {
-            addLog(`========================================`);
-            addLog(`▶ SYSTEM: Initiating search for "${film.title}" ${film.year ? `(${film.year})` : ''}`);
-            await delay(400);
-
-            addLog(`▶ TMDB: Resolving the canonical film, release year, poster, and credits...`);
+            if (stopRequestedRef.current || !mountedRef.current) break;
+            addLog(`Checking “${film.title}”: title, year, artwork and trailer…`);
+            const controller = new AbortController();
+            controllerRef.current = controller;
+            let timedOut = false;
+            const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 65_000);
 
             try {
-                const apiPromise = fetch('/api/razinflix/add', {
+                const response = await fetch('/api/razinflix/add', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(film)
+                    body: JSON.stringify(film),
+                    signal: controller.signal,
                 });
-
-                await delay(600);
-                addLog(`▶ MATCHING: Comparing alternate titles and rejecting ambiguous releases...`);
-                await delay(700);
-                addLog(`▶ TRAILER: Checking TMDB's linked YouTube trailers first...`);
-                await delay(700);
-                addLog(`▶ FALLBACK: Ranking playable trailer candidates when required...`);
-                await delay(700);
-                addLog(`▶ QUALITY GATE: Requiring both verified artwork and a playable trailer...`);
-
-                const response = await apiPromise;
                 const data = await response.json() as AddFilmApiResponse;
 
                 if (response.ok) {
-                    const match = data._match;
-                    addLog(`▶ MATCH: "${match?.canonicalTitle || data.title}" resolved at ${match?.confidence ?? 'high'}% confidence.`);
-
-                    await delay(200);
-                    addLog(`  ↳ Poster: Verified TMDB artwork selected.`);
-
-                    await delay(300);
-                    addLog(`  ↳ Trailer: "${match?.trailerTitle || 'Verified trailer'}" selected via ${match?.trailerSource || 'TMDB'}.`);
-
-                    await delay(200);
-                    addLog(`  ↳ Metadata: ${data.director || 'Director unavailable'} · ${data.rating || 'Unrated'} · ${data.categories?.[0] || 'Uncategorised'}.`);
-
-                    await delay(400);
-                    addLog(`▶ SUPABASE: ${data._operation === 'updated' ? 'Repairing the existing film record' : 'Saving the canonical film record'}...`);
-                    await delay(300);
-                    addLog(`▶ SUCCESS: "${data.title}" is complete and live on RazinFlix!`);
+                    addLog(`Saved “${data.title}” (${data.year}) — ${data.director || 'Director unavailable'}. ${data._operation === 'updated' ? 'Existing record updated.' : 'Added to the library.'}`);
                     addedCount++;
 
                     const cleanData = { ...data };
@@ -134,10 +114,10 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                     delete cleanData._operation;
                     delete cleanData._match;
 
-                    onFilmAdded(cleanData as Film);
+                    if (mountedRef.current) onFilmAdded(cleanData as Film);
                 } else {
                     failedCount++;
-                    addLog(`▶ ERROR: Could not add film. ${data.error || 'Validation failed.'}`);
+                    addLog(`Could not add “${film.title}”: ${data.error || 'Validation failed.'}`);
                     if (Array.isArray(data.candidates) && data.candidates.length > 0) {
                         const candidateText = data.candidates
                             .slice(0, 3)
@@ -148,32 +128,35 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                     if (data.suggestion) addLog(`  ↳ ${data.suggestion}`);
                 }
             } catch (err: unknown) {
-                failedCount++;
+                unknownCount++;
+                if (stopRequestedRef.current) break;
                 const message = err instanceof Error ? err.message : 'Unexpected request failure.';
-                addLog(`▶ CRITICAL FAILURE: ${message}`);
-            }
-
-            await delay(1200);
+                addLog(timedOut ? `“${film.title}” took too long. Refresh the library before retrying; its save status is unknown.` : `No confirmation for “${film.title}”: ${message} Refresh the library before retrying; its save status is unknown.`);
+            } finally { window.clearTimeout(timeout); controllerRef.current = null; }
         }
 
-        addLog(`========================================`);
-        addLog(`▶ OPERATION COMPLETE: ${addedCount} complete, ${failedCount} rejected.`);
-        setIsFinished(true);
-        if (failedCount === 0) {
-            await delay(1500);
-            onClose();
-        }
+        addLog(`${stopRequestedRef.current ? 'Stopped' : 'Complete'}: ${addedCount} confirmed saved, ${failedCount} unsuccessful, ${unknownCount} unconfirmed.${unknownCount ? ' The interrupted film’s save status is unknown. Any saved films remain in the library; refresh before retrying it.' : ''}`);
+        processingRef.current = false;
+        if (mountedRef.current) setIsFinished(true);
     };
 
+    const stopProcessing = useCallback(() => {
+        stopRequestedRef.current = true;
+        controllerRef.current?.abort();
+    }, []);
+
     const handleCancel = useCallback(() => {
+        if (processingRef.current) { stopProcessing(); return; }
+        if (isFinished) { onClose(); return; }
         if (inputText.trim() && !hasAttemptedCancel) {
             setHasAttemptedCancel(true);
         } else {
             onClose();
         }
-    }, [hasAttemptedCancel, inputText, onClose]);
+    }, [hasAttemptedCancel, inputText, isFinished, onClose, stopProcessing]);
 
     useEffect(() => {
+        mountedRef.current = true;
         const previousOverflow = document.body.style.overflow;
         const previousOverscroll = document.body.style.overscrollBehavior;
         const previouslyFocused = document.activeElement instanceof HTMLElement
@@ -188,6 +171,9 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
         });
 
         return () => {
+            mountedRef.current = false;
+            stopRequestedRef.current = true;
+            controllerRef.current?.abort();
             window.cancelAnimationFrame(focusFrame);
             document.body.style.overflow = previousOverflow;
             document.body.style.overscrollBehavior = previousOverscroll;
@@ -197,7 +183,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
 
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && !isProcessing) {
+            if (event.key === 'Escape') {
                 event.preventDefault();
                 handleCancel();
                 return;
@@ -259,17 +245,15 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                         <Plus aria-hidden="true" />
                         <span>Add Film to Database</span>
                     </h2>
-                    {!isProcessing && (
                         <button
                             ref={closeButtonRef}
                             type="button"
                             onClick={handleCancel}
-                            aria-label="Close add film dialog"
+                            aria-label={isProcessing && !isFinished ? 'Stop adding films' : 'Close add film dialog'}
                             className={styles.iconButton}
                         >
                             <X aria-hidden="true" size={22} />
                         </button>
-                    )}
                 </header>
 
                 <div className={styles.content}>
@@ -289,11 +273,13 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                     }}
                                     placeholder={'e.g. The Matrix (1999)\nAvatar\nInception (2010)'}
                                     className={styles.textarea}
+                                    maxLength={8_000}
                                     aria-describedby="razinflix-film-input-description"
                                 />
                                 <p id="razinflix-film-input-description" className={styles.description}>
-                                    Enter one film per line. Add the release year in parentheses when a title has remakes or multiple versions.
+                                    Enter up to 20 films, one per line. Include the release year for remakes or similar titles.
                                 </p>
+                                {batchSize > 20 && <p role="alert" className={styles.warningPanel}>Add no more than 20 films at a time.</p>}
                             </div>
 
                             {hasAttemptedCancel && (
@@ -306,7 +292,7 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                 <button
                                     type="button"
                                     onClick={handleAdd}
-                                    disabled={!inputText.trim()}
+                                    disabled={!inputText.trim() || batchSize > 20}
                                     className={styles.primaryButton}
                                 >
                                     <Plus aria-hidden="true" size={20} />
@@ -327,9 +313,12 @@ export default function AddFilmModal({ onClose, onFilmAdded }: AddFilmModalProps
                                 <div ref={bottomRef} />
                             </div>
                             {!isFinished ? (
+                                <>
                                 <div className={styles.progressTrack}>
                                     <div className={styles.progressBar} />
                                 </div>
+                                <button type="button" onClick={stopProcessing} className={styles.secondaryButton}>Stop adding films</button>
+                                </>
                             ) : (
                                 <div className={styles.statusActions}>
                                     <button

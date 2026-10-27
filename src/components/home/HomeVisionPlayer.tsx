@@ -40,10 +40,23 @@ export default function HomeVisionPlayer() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [volume, setVolume] = useState(1)
 
   useEffect(() => {
     const video = videoRef.current
+    // Metadata may be ready before hydration attaches React's event handlers.
+    const syncMedia = () => {
+      if (!video) return
+      setDuration(Number.isFinite(video.duration) ? video.duration : 0)
+      setCurrentTime(video.currentTime || 0)
+      setVolume(video.volume)
+      setIsMuted(video.muted)
+      setIsPlaying(!video.paused && !video.ended)
+    }
+    syncMedia()
+    const mediaEvents = ['loadedmetadata', 'durationchange', 'canplay', 'timeupdate', 'volumechange', 'play', 'pause', 'ended']
+    mediaEvents.forEach(event => video?.addEventListener(event, syncMedia))
     const onFullscreenChange = () => {
       setIsFullscreen(document.fullscreenElement === shellRef.current)
     }
@@ -58,6 +71,7 @@ export default function HomeVisionPlayer() {
       document.removeEventListener('fullscreenchange', onFullscreenChange)
       video?.removeEventListener('webkitbeginfullscreen', onWebkitBeginFullscreen)
       video?.removeEventListener('webkitendfullscreen', onWebkitEndFullscreen)
+      mediaEvents.forEach(event => video?.removeEventListener(event, syncMedia))
     }
   }, [])
 
@@ -66,9 +80,14 @@ export default function HomeVisionPlayer() {
     if (!video) return
 
     if (video.paused || video.ended) {
+      // Attaching the URL on user intent avoids downloading a second large film
+      // during an ordinary homepage visit.
+      if (!video.getAttribute('src')) video.src = VIDEO_ASSET_URL
       if (video.ended) video.currentTime = 0
+      setIsLoading(true)
       setPlaybackNotice(null)
       void video.play().catch(() => {
+        setIsLoading(false)
         setPlaybackNotice('Playback could not start. Please try again or watch on YouTube.')
       })
     } else {
@@ -151,9 +170,8 @@ export default function HomeVisionPlayer() {
       <div className="aspect-video w-full bg-black">
         <video
           ref={videoRef}
-          src={VIDEO_ASSET_URL}
           poster={VIDEO_POSTER_URL}
-          preload="metadata"
+          preload="none"
           playsInline
           tabIndex={-1}
           aria-hidden="true"
@@ -169,8 +187,13 @@ export default function HomeVisionPlayer() {
             setError(null)
             setPlaybackNotice(null)
             setIsPlaying(true)
+            setIsLoading(false)
           }}
-          onPause={() => setIsPlaying(false)}
+          onPlaying={() => setIsLoading(false)}
+          onWaiting={() => setIsLoading(true)}
+          onStalled={() => setPlaybackNotice('Video loading has stalled. Try playback again or watch on YouTube.')}
+          onCanPlay={() => setIsLoading(false)}
+          onPause={() => { setIsPlaying(false); setIsLoading(false) }}
           onEnded={() => setIsPlaying(false)}
           onVolumeChange={(event) => {
             setIsMuted(event.currentTarget.muted)
@@ -179,7 +202,7 @@ export default function HomeVisionPlayer() {
               lastNonzeroVolumeRef.current = event.currentTarget.volume
             }
           }}
-          onError={() => setError('This video is temporarily unavailable.')}
+          onError={() => { setIsLoading(false); setError('This video is temporarily unavailable.') }}
         />
       </div>
 
@@ -198,8 +221,8 @@ export default function HomeVisionPlayer() {
           {isPlaying ? <Pause size={19} fill="currentColor" /> : <Play size={19} fill="currentColor" />}
         </button>
 
-        <span className="w-[4.75rem] shrink-0 text-center text-xs tabular-nums text-white/75">
-          {formatTime(currentTime)} / {formatTime(duration)}
+        <span aria-live="off" className="w-[4.75rem] shrink-0 text-center text-xs tabular-nums text-white/75">
+          {formatTime(currentTime)} / {duration > 0 ? formatTime(duration) : '—:—'}
         </span>
 
         <input
@@ -212,7 +235,7 @@ export default function HomeVisionPlayer() {
           disabled={!timelineAvailable}
           aria-label="Video progress"
           aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
-          className="h-1.5 min-w-0 flex-1 cursor-pointer accent-white disabled:cursor-wait"
+          className="h-11 min-w-0 flex-1 cursor-pointer accent-white disabled:cursor-wait"
         />
 
         <button
@@ -235,7 +258,7 @@ export default function HomeVisionPlayer() {
           disabled={!controlsAvailable}
           aria-label="Video volume"
           aria-valuetext={`${Math.round((isMuted ? 0 : volume) * 100)} percent`}
-          className="hidden h-1.5 w-24 cursor-pointer accent-white disabled:cursor-wait md:block"
+          className="hidden h-11 w-24 cursor-pointer accent-white disabled:cursor-wait md:block"
         />
 
         <a
@@ -260,13 +283,16 @@ export default function HomeVisionPlayer() {
         </button>
       </div>
 
+      {isLoading && !error && <p role="status" className="bg-[#080c14] px-4 pb-3 text-sm text-white/80">Loading video…</p>}
+
       {error || playbackNotice ? (
         <div
           role={error ? 'alert' : 'status'}
           className="border-t border-red-300/20 bg-red-950 px-4 py-3 text-sm text-red-100"
         >
           {error ?? playbackNotice}{' '}
-          <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer" className="underline">
+          {error && <button type="button" onClick={() => { const video = videoRef.current; if (!video) return; setError(null); video.removeAttribute('src'); video.load(); togglePlayback() }} className="mr-3 inline-flex min-h-11 items-center underline">Retry video</button>}
+          <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline">
             Watch on YouTube
           </a>
         </div>

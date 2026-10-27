@@ -7,14 +7,17 @@ import Input from '@/components/ui/Input'
 import { Link } from '@/lib/types'
 import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { safeWebUrl } from '@/lib/urls'
+import { useState } from 'react'
+import ConfirmDeleteDialog from './ConfirmDeleteDialog'
 
 interface Props {
     link: Link
     updateLink: (id: string, field: 'link_name' | 'link_url', value: string) => void
-    removeLink: (id: string) => void
+    removeLink: (id: string) => void | Promise<boolean | void>
 }
 
 export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
+    const [confirmDelete, setConfirmDelete] = useState(false)
     const validUrl = Boolean(safeWebUrl(link.link_url))
     const urlStatus = validUrl ? 'Valid URL format; destination not checked' : link.link_url ? 'Invalid URL format' : 'Missing URL'
     const {
@@ -34,7 +37,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
         position: 'relative' as const,
     }
 
-    return (
+    return (<>
         <TahoeGlassSurface
             ref={setNodeRef}
             style={style}
@@ -101,7 +104,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
                     />
                 </div>
                 <TahoeGlassButton
-                    onClick={() => removeLink(link.id)}
+                    onClick={() => setConfirmDelete(true)}
                     className="h-11 w-11 shrink-0 p-0"
                     contentClassName="text-red-200 text-xl"
                     aria-label={`Remove ${link.link_name || 'link'}`}
@@ -110,5 +113,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
                 </TahoeGlassButton>
             </div>
         </TahoeGlassSurface>
+        <ConfirmDeleteDialog open={confirmDelete} name={link.link_name || 'link'} onClose={() => setConfirmDelete(false)} onConfirm={() => removeLink(link.id)} />
+        </>
     )
 }

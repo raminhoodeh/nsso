@@ -13,6 +13,7 @@ import { DEITY_TOOLS } from '@/lib/deity/tools';
 import { detectCategory, assembleSystemPrompt, detectSectionIntent, detectKnowledgeIntent } from '@/lib/deity/contextManager';
 import { assessLinkHealth } from '@/lib/deity/linkVerifier';
 import { reportRuntimeSignal } from '@/lib/server/runtime-signals';
+import { calculateProfileCompleteness } from '@/lib/profile-completeness';
 
 export const maxDuration = 90;
 
@@ -61,33 +62,6 @@ const CATEGORY_CONFIG: Record<string, { files: string[], threshold: number }> = 
         threshold: 0.5 // Higher for precise business matching
     }
 };
-
-// Helper: Calculate profile completeness (0-100)
-function calculateProfileCompleteness(contextData: any): number {
-    if (!contextData) return 0;
-
-    let score = 0;
-
-    // Core Identity (40%)
-    if (contextData.profile?.bio) score += 15;
-    if (contextData.profile?.headline) score += 15;
-    if (contextData.profile?.profile_pic_url) score += 10;
-
-    // Connectivity (20%)
-    if (contextData.links?.length > 0) score += 10;
-    if (contextData.contacts?.length > 0) score += 10;
-
-    // Professional Depth (30%)
-    if (contextData.experiences?.length > 0) score += 10;
-    if (contextData.projects?.length > 0) score += 5;
-    if (contextData.qualifications?.length > 0) score += 5;
-
-    // Storefront (10%)
-    if (contextData.products?.length > 0) score += 10;
-
-    return score;
-}
-
 
 // ... (existing imports)
 
