@@ -152,7 +152,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-4xl px-5 pb-16 sm:px-8 lg:max-w-6xl lg:pb-16" aria-label="Meet nsso">
-        <LightGlassPanel chromiumAppearance="light" data-home-intro="true" className="p-6 sm:p-8 lg:p-12">
+        <LightGlassPanel chromiumAppearance="light" data-home-intro="true" className="home-sky-glass p-6 sm:p-8 lg:p-12">
           <div className="mx-auto flex max-w-2xl flex-col gap-5 lg:max-w-none lg:gap-10">
             <div className="mx-auto max-w-3xl space-y-5 text-center">
               <h2 className="text-3xl font-bold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">All of you. All in one place.</h2>
@@ -183,7 +183,7 @@ export default function HomePage() {
 
       <div data-home-actions-layout="true" className="mx-auto grid max-w-6xl gap-y-16 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-x-10">
         <section className="mx-auto w-full min-w-0 max-w-2xl lg:max-w-none" aria-labelledby="home-claim-title">
-          <LightGlassPanel chromiumAppearance="light" className="p-6 sm:p-8 lg:p-10">
+          <LightGlassPanel chromiumAppearance="light" className="home-sky-glass p-6 sm:p-8 lg:p-10">
             <h2 id="home-claim-title" className="mb-8 text-center text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">Your whole story in one profile</h2>
             <HomeProfileClaim />
           </LightGlassPanel>
@@ -192,7 +192,7 @@ export default function HomePage() {
         <section className="mx-auto w-full min-w-0 max-w-4xl lg:max-w-none" aria-label="Explore nsso">
           <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1">
             <Link href={user ? '/dashboard' : '/sign-up'} className="block">
-              <LightGlassPanel chromiumAppearance="light" data-home-offer-card="monetise" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
+              <LightGlassPanel chromiumAppearance="light" data-home-offer-card="monetise" className="home-sky-glass h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
                 <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <h3 className="text-xl font-bold text-slate-950">Monetise</h3>
                 </div>
@@ -203,7 +203,7 @@ export default function HomePage() {
             </Link>
 
             <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
-              <LightGlassPanel chromiumAppearance="light" data-home-offer-card="example-profile" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
+              <LightGlassPanel chromiumAppearance="light" data-home-offer-card="example-profile" className="home-sky-glass h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
                 <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <h3 className="text-xl font-bold text-slate-950">Example Profile</h3>
                 </div>
@@ -239,7 +239,7 @@ export default function HomePage() {
       </div>
 
       {/* Video Feature Section */}
-      <section data-home-vision="true" className="flex w-full flex-col items-center justify-center gap-12 pb-24">
+      <section data-home-vision="true" className="flex w-full flex-col items-center justify-center gap-12 pb-24 lg:pb-6">
         <div className="h-full w-full max-w-[1470px] lg:max-w-6xl lg:px-8">
           <HomeVisionPlayer />
         </div>

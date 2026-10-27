@@ -9,7 +9,7 @@ let bundle, layoutCss
 test.beforeAll(async () => {
   const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx']
   const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
-  const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
+  const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
   layoutCss = compiler.build(candidates)
   const result = await build({
     absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
@@ -110,6 +110,8 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
         tagline: rect('[data-home-intro] h2 + p'),
         contact: rect('[data-home-contact]'), vision: rect('[data-home-vision]'),
         contactPadding: { top: getComputedStyle(document.querySelector('[data-home-contact]')).paddingTop, bottom: getComputedStyle(document.querySelector('[data-home-contact]')).paddingBottom },
+        bottomPadding: parseFloat(getComputedStyle(document.querySelector('[data-home-vision]')).paddingBottom),
+        cardCoatings: [...document.querySelectorAll('.home-sky-glass')].map(el => { const s = getComputedStyle(el, '::after'); return { content: s.content, background: s.backgroundImage, pointerEvents: s.pointerEvents, zIndex: s.zIndex } }),
         overflow: document.documentElement.scrollWidth > innerWidth,
       }
     })
@@ -119,6 +121,13 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
     expect(Math.abs(layout.contact.top - Math.max(layout.claim.bottom, layout.offers.bottom))).toBeLessThanOrEqual(1)
     expect(Math.abs(layout.contact.bottom - layout.vision.top)).toBeLessThanOrEqual(1)
     if (width >= 1024) {
+      expect(layout.bottomPadding).toBe(24)
+      expect(layout.cardCoatings).toHaveLength(4)
+      for (const coating of layout.cardCoatings) {
+        expect(coating.background).toContain('linear-gradient')
+        expect(coating.pointerEvents).toBe('none')
+        expect(coating.zIndex).toBe('7')
+      }
       expect(Math.abs(layout.headlineParts[0].top - layout.headlineParts[1].top)).toBeLessThanOrEqual(1)
       expect(layout.headlineParts[1].right).toBeLessThanOrEqual(width)
       expect(layout.demo.right).toBeLessThan(layout.story.left)
@@ -126,6 +135,8 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
       expect(layout.claim.right).toBeLessThan(layout.offers.left)
       if (width === 1440) expect(layout.intro.width).toBeGreaterThan(1000)
     } else {
+      expect(layout.bottomPadding).toBe(96)
+      for (const coating of layout.cardCoatings) expect(coating.content).toBe('none')
       expect(layout.headlineParts[0].bottom).toBeLessThanOrEqual(layout.headlineParts[1].top + 2)
       expect(layout.demo.bottom).toBeLessThanOrEqual(layout.story.top)
       expect(layout.claim.bottom).toBeLessThanOrEqual(layout.offers.top)
@@ -133,6 +144,12 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
     }
   }
   await expect(page.locator('[data-home-intro] figure')).toHaveCount(1)
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.emulateMedia({ forcedColors: 'active' })
+  expect(await page.locator('.home-sky-glass').first().evaluate(el => getComputedStyle(el, '::after').display)).toBe('none')
+  await page.emulateMedia({ forcedColors: 'none' })
+  await page.locator('.home-sky-glass').first().evaluate(el => el.setAttribute('data-tahoe-backdrop-backend', 'solid'))
+  expect(await page.locator('.home-sky-glass').first().evaluate(el => getComputedStyle(el, '::after').content)).toBe('none')
   expect(errors).toEqual([])
 })
 
