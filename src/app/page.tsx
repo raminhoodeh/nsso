@@ -134,22 +134,26 @@ export default function HomePage() {
       <section
         data-home-hero="true"
         aria-label="Future-proof your identity"
-        className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-[clamp(1.5rem,4.5svh,3rem)] px-5 pb-16 pt-[calc(88px+env(safe-area-inset-top)+2rem)] text-center font-bold tracking-tight text-white [text-shadow:0_2px_12px_rgba(15,23,42,0.55)]"
+        className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-[clamp(1.5rem,4.5svh,3rem)] px-5 pb-16 pt-[calc(88px+env(safe-area-inset-top)+2rem)] text-center font-bold tracking-tight text-white [text-shadow:0_2px_12px_rgba(15,23,42,0.55)] lg:min-h-[min(760px,100svh)] lg:gap-10 lg:px-8 lg:pb-24 lg:pt-[calc(88px+4rem)]"
         style={{ fontFamily: 'var(--font-sf-pro-display)' }}
       >
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Clarify</p>
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Organise</p>
-        <h1 className="w-full text-[clamp(2.5rem,12vw,7.5rem)] leading-[1.03] tracking-[-0.04em]">
-          <span className="block">Future-Proof</span>{' '}
-          <span className="block">Yourself</span>
+        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:flex-row lg:gap-16">
+          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Clarify</p>
+          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Organise</p>
+        </div>
+        <h1 className="w-full text-[clamp(2.5rem,12vw,7.5rem)] leading-[1.03] tracking-[-0.04em] lg:whitespace-nowrap lg:text-[clamp(3.25rem,7vw,6.25rem)]">
+          <span className="block lg:inline">Future-Proof</span>{' '}
+          <span className="block lg:inline">Yourself</span>
         </h1>
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Present</p>
-        <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75">Discover</p>
+        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:flex-row lg:gap-16">
+          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Present</p>
+          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Discover</p>
+        </div>
       </section>
 
       <section className="mx-auto max-w-4xl px-5 pb-16 sm:px-8 lg:max-w-6xl lg:pb-16" aria-label="Meet nsso">
-        <LightGlassPanel data-home-intro="true" className="p-6 sm:p-8 lg:p-12">
-          <div className="mx-auto max-w-2xl space-y-8 lg:max-w-none lg:space-y-10">
+        <LightGlassPanel chromiumAppearance="light" data-home-intro="true" className="p-6 sm:p-8 lg:p-12">
+          <div className="mx-auto flex max-w-2xl flex-col gap-5 lg:max-w-none lg:gap-10">
             <div className="mx-auto max-w-3xl space-y-5 text-center">
               <h2 className="text-3xl font-bold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">All of you. All in one place.</h2>
               <p className="text-base font-medium leading-relaxed text-slate-950/80 sm:text-lg">The most beautiful way to present yourself online</p>
@@ -177,9 +181,9 @@ export default function HomePage() {
         </LightGlassPanel>
       </section>
 
-      <div data-home-actions-layout="true" className="mx-auto grid max-w-6xl gap-y-16 px-5 pb-16 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-x-10 lg:gap-y-8 lg:pb-20">
+      <div data-home-actions-layout="true" className="mx-auto grid max-w-6xl gap-y-16 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start lg:gap-x-10">
         <section className="mx-auto w-full min-w-0 max-w-2xl lg:max-w-none" aria-labelledby="home-claim-title">
-          <LightGlassPanel className="p-6 sm:p-8 lg:p-10">
+          <LightGlassPanel chromiumAppearance="light" className="p-6 sm:p-8 lg:p-10">
             <h2 id="home-claim-title" className="mb-8 text-center text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">Your whole story in one profile</h2>
             <HomeProfileClaim />
           </LightGlassPanel>
@@ -188,7 +192,7 @@ export default function HomePage() {
         <section className="mx-auto w-full min-w-0 max-w-4xl lg:max-w-none" aria-label="Explore nsso">
           <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-1">
             <Link href={user ? '/dashboard' : '/sign-up'} className="block">
-              <LightGlassPanel data-home-offer-card="monetise" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
+              <LightGlassPanel chromiumAppearance="light" data-home-offer-card="monetise" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
                 <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <h3 className="text-xl font-bold text-slate-950">Monetise</h3>
                 </div>
@@ -199,7 +203,7 @@ export default function HomePage() {
             </Link>
 
             <a href="https://nsso.me/ramin" target="_blank" rel="noopener noreferrer" className="block">
-              <LightGlassPanel data-home-offer-card="example-profile" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
+              <LightGlassPanel chromiumAppearance="light" data-home-offer-card="example-profile" className="h-full cursor-pointer overflow-hidden transition-transform hover:scale-[1.02]">
                 <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <h3 className="text-xl font-bold text-slate-950">Example Profile</h3>
                 </div>
@@ -210,32 +214,32 @@ export default function HomePage() {
             </a>
           </div>
         </section>
+      </div>
 
-        {/* Contact Footer */}
-        <div className="-mt-4 text-center text-sm italic text-slate-950/85 lg:col-span-2 lg:mt-0">
-          Message us on{' '}
-          <a
-            href="https://www.instagram.com/ramin.nsso"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center text-slate-950 underline hover:no-underline"
-          >
-            Instagram
-          </a>
-          {' '}or{' '}
-          <a
-            href="https://wa.link/gh1dhy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center text-slate-950 underline hover:no-underline"
-          >
-            WhatsApp
-          </a>
-        </div>
+      {/* Equal breathing room between the action cards and the film. */}
+      <div data-home-contact="true" className="mx-auto max-w-6xl px-5 py-10 text-center text-sm italic text-slate-950/85 sm:px-8 lg:py-12">
+        Message us on{' '}
+        <a
+          href="https://www.instagram.com/ramin.nsso"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-11 items-center text-slate-950 underline hover:no-underline"
+        >
+          Instagram
+        </a>
+        {' '}or{' '}
+        <a
+          href="https://wa.link/gh1dhy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-11 items-center text-slate-950 underline hover:no-underline"
+        >
+          WhatsApp
+        </a>
       </div>
 
       {/* Video Feature Section */}
-      <section className="flex w-full flex-col items-center justify-center gap-12 pb-24 pt-12 lg:pt-8">
+      <section data-home-vision="true" className="flex w-full flex-col items-center justify-center gap-12 pb-24">
         <div className="h-full w-full max-w-[1470px] lg:max-w-6xl lg:px-8">
           <HomeVisionPlayer />
         </div>

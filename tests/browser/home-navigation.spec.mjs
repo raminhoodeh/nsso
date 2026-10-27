@@ -26,7 +26,7 @@ test.beforeAll(async () => {
           : path === 'next/link' ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>};"
           : path.endsWith('tahoe-glass') ? `import React from 'react';
               export {TahoeGlassField} from './src/components/ui/tahoe-glass/TahoeGlassField';
-              export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,...props}){return <Tag {...props}>{children}</Tag>}
+              export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,chromiumAppearance,...props}){return <Tag {...props}>{children}</Tag>}
               export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
               export function TahoeBackdropSurface({backdropEnabled,...props}){return <TahoeGlassSurface {...props}/>}
               export function TahoeBackdropHeader({displacementProfile,materialLighting,...props}){return <TahoeGlassSurface {...props}/>}
@@ -106,19 +106,30 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
       return {
         intro: rect('[data-home-intro]'), demo: rect('[data-home-intro] figure'), story: rect('[data-home-story]'),
         claim: rect('[data-home-actions-layout] > section[aria-labelledby]'), offers: rect('[data-home-actions-layout] > section[aria-label]'),
+        headlineParts: [...document.querySelectorAll('[data-home-hero] h1 > span')].map(el => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, right: r.right } }),
+        tagline: rect('[data-home-intro] h2 + p'),
+        contact: rect('[data-home-contact]'), vision: rect('[data-home-vision]'),
+        contactPadding: { top: getComputedStyle(document.querySelector('[data-home-contact]')).paddingTop, bottom: getComputedStyle(document.querySelector('[data-home-contact]')).paddingBottom },
         overflow: document.documentElement.scrollWidth > innerWidth,
       }
     })
     expect(layout.overflow, `Overflow at ${width}px`).toBe(false)
     expect(layout.demo.height).toBeGreaterThan(200)
+    expect(layout.contactPadding.top).toBe(layout.contactPadding.bottom)
+    expect(Math.abs(layout.contact.top - Math.max(layout.claim.bottom, layout.offers.bottom))).toBeLessThanOrEqual(1)
+    expect(Math.abs(layout.contact.bottom - layout.vision.top)).toBeLessThanOrEqual(1)
     if (width >= 1024) {
+      expect(Math.abs(layout.headlineParts[0].top - layout.headlineParts[1].top)).toBeLessThanOrEqual(1)
+      expect(layout.headlineParts[1].right).toBeLessThanOrEqual(width)
       expect(layout.demo.right).toBeLessThan(layout.story.left)
       expect(Math.min(layout.demo.bottom, layout.story.bottom)).toBeGreaterThan(Math.max(layout.demo.top, layout.story.top))
       expect(layout.claim.right).toBeLessThan(layout.offers.left)
       if (width === 1440) expect(layout.intro.width).toBeGreaterThan(1000)
     } else {
+      expect(layout.headlineParts[0].bottom).toBeLessThanOrEqual(layout.headlineParts[1].top + 2)
       expect(layout.demo.bottom).toBeLessThanOrEqual(layout.story.top)
       expect(layout.claim.bottom).toBeLessThanOrEqual(layout.offers.top)
+      expect(layout.demo.top - layout.tagline.bottom).toBeLessThanOrEqual(24)
     }
   }
   await expect(page.locator('[data-home-intro] figure')).toHaveCount(1)
