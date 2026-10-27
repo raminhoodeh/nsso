@@ -2,6 +2,7 @@ import { isTransientAuthError } from '@/lib/auth-errors'
 import 'server-only'
 import { randomUUID } from 'node:crypto'
 import { reportRuntimeSignal } from '@/lib/server/runtime-signals'
+import { createPrivilegedFetch, type PrivilegedFetchContext } from '@/lib/server/privileged-fetch'
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createClient as createSessionClient } from '@/lib/supabase/server'
@@ -21,13 +22,13 @@ export class PermissionError extends Error {
 }
 
 /** This client never carries a browser session. Call only after operation-specific authorization. */
-export function createPrivilegedClient() {
+export function createPrivilegedClient(context: PrivilegedFetchContext = {}) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) throw new PermissionError(503, 'permission_check_unavailable')
     return createSupabaseClient(url, key, {
         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-        global: { fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(5_000) }) },
+        global: { fetch: createPrivilegedFetch(context) },
     })
 }
 
