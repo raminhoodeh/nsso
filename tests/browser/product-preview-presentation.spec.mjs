@@ -166,7 +166,7 @@ test.beforeAll(async () => {
         plugins: [{ name: 'product-presentation-fixture', setup(builder) {
             builder.onResolve({ filter: /^(?:next\/(?:navigation|image|link)|@\/lib\/supabase\/(?:client|public)|@\/components\/providers\/UserProvider)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path === 'next/navigation' ? `import{useSyncExternalStore}from'react';export const usePathname=()=>useSyncExternalStore(window.fixtureSubscribe,()=>window.fixturePath),useParams=()=>({id:'${productId}'}),useRouter=()=>window.fixtureRouter,useSearchParams=()=>new URLSearchParams(window.fixturePreview?'preview=true':'');`
+                path === 'next/navigation' ? `import{useSyncExternalStore}from'react';export const usePathname=()=>useSyncExternalStore(window.fixtureSubscribe,()=>new URL(window.fixturePath,'https://nsso.test').pathname),useParams=()=>({id:'${productId}'}),useRouter=()=>window.fixtureRouter,useSearchParams=()=>new URLSearchParams(window.fixturePreview?'preview=true':'');`
                     : path === 'next/image' ? 'export default({fill,priority,...props})=><img {...props} style={fill?{position:"absolute",inset:0,width:"100%",height:"100%"}:undefined}/>;'
                         : path === 'next/link' ? 'export default({children,...props})=><a {...props}>{children}</a>;'
                             : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:null,loading:false,error:null});'
@@ -337,6 +337,7 @@ test('cold tool routes decode the real grain asset without loading clouds or run
     const { errors, unexpected, requests, measurements } = await mount(page, { initialPath: '/earnings', expectVanta: false, reducedMotion: 'no-preference' })
     const staticRoutes = [
         '/earnings', '/deity', '/news/feed', '/admin', '/products/' + productId,
+        '/dashboard', '/dashboard?view=profile', '/dashboard?view=my-nsso', '/dashboard?view=earnings',
         '/dashboard/security', '/dashboard/products/' + productId + '/creator',
         '/reset-password', '/set-password', '/ramin/privacy',
     ]
@@ -386,9 +387,9 @@ test('cold tool routes decode the real grain asset without loading clouds or run
     expect(unexpected).toEqual([])
 })
 
-test('homepage, authentication and private or public profile routes retain their existing cloud source', async ({ page }) => {
+test('homepage, authentication and preview or public profile routes retain their existing cloud source', async ({ page }) => {
     const { errors, unexpected, requests } = await mount(page)
-    for (const path of ['/', '/sign-in', '/sign-up', '/dashboard', '/preview', '/fixture-seller']) {
+    for (const path of ['/', '/sign-in', '/sign-up', '/preview', '/fixture-seller']) {
         await page.evaluate(path => window.fixtureNavigate(path), path)
         await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(0)
         await expect(page.locator('#vanta-bg canvas')).toHaveCount(1)

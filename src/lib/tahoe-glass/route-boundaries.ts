@@ -14,7 +14,6 @@ const ROUTES_KEEPING_PROFILE_SCENE = new Set([
   "/",
   "/sign-in",
   "/sign-up",
-  "/dashboard",
   "/preview",
   "/glass-reference",
   "/glass-candidate",
@@ -33,7 +32,7 @@ function normalizedPathname(pathname: string): string {
   return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
 }
 
-/** Static NSSO tool pages; identity, auth, profiles and demos keep their scene. */
+/** Static tools and profile editor; identity, auth, public/preview profiles keep their scene. */
 export function routeUsesDeckBackground(pathname: string): boolean {
   const normalized = normalizedPathname(pathname);
   if (ROUTES_KEEPING_PROFILE_SCENE.has(normalized)) return false;
