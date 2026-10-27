@@ -28,6 +28,12 @@ export function routeUsesDashboardSidebar(pathname: string): boolean {
   return normalized === "/dashboard" || normalized.startsWith("/dashboard/");
 }
 
+// The profile editor owns a mobile header menu. Its nested tools do not all
+// render that header, so retain their existing bottom navigation for now.
+export function routeUsesMobileProfileMenu(pathname: string): boolean {
+  return normalizedPathname(pathname) === "/dashboard";
+}
+
 export function routeOwnsTahoeScene(pathname: string): boolean {
   const normalized = normalizedPathname(pathname);
   return ROUTE_OWNED_TAHOE_SCENES.some((route) => normalized === route);

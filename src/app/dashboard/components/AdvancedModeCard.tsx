@@ -281,7 +281,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
     const renderPanelToggle = (
         panel: Exclude<ExpandedPanel, null>,
         title: string,
-        description: string,
         controls: string
     ) => {
         const expanded = expandedPanel === panel
@@ -304,7 +303,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             >
                 <span className="min-w-0">
                     <span className="block text-xl sm:text-2xl font-bold text-white">{title}</span>
-                    <span className="block text-sm text-white/60">{description}</span>
                 </span>
                 {expanded ? (
                     <ChevronUp className="shrink-0 text-white/80 transition-colors" />
@@ -847,7 +845,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 {renderPanelToggle(
                     'experience',
                     'Experience & Education',
-                    'Manage job titles, qualifications, and projects',
                     'experience-education-editor'
                 )}
                 <div
@@ -959,7 +956,6 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                 {renderPanelToggle(
                     'products',
                     'Products & Services',
-                    'Manage what you offer without opening your experience editor',
                     'products-services-editor'
                 )}
                 <div

@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import {
     routeSuppressesAuthenticatedNavigation,
     routeUsesDashboardSidebar,
+    routeUsesMobileProfileMenu,
 } from '@/lib/tahoe-glass/route-boundaries';
 
 
@@ -29,7 +30,7 @@ function GlobalNavigationContent() {
     return (
         <>
             {usesDashboardSidebar && <DashboardSidebar />}
-            <DashboardBottomNav />
+            {!routeUsesMobileProfileMenu(pathname) && <DashboardBottomNav />}
         </>
     );
 }
