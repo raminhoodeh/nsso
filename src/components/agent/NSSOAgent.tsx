@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useUser } from '@/components/providers/UserProvider';
 
 // Lazy load the heavy chat interface
 const AgentChatInterface = dynamic(
@@ -19,9 +20,11 @@ const AgentChatInterface = dynamic(
 );
 
 export default function NSSOAgent() {
+    const { user, loading } = useUser();
+    const ownerId = loading && !user ? undefined : user?.id ?? 'signed-out';
     const [isOpen, setIsOpen] = useState(false);
     const [hasOpened, setHasOpened] = useState(false);
-    const [shortcutRequests, setShortcutRequests] = useState<{ id: string; message: string }[]>([]);
+    const [shortcutRequests, setShortcutRequests] = useState<{ id: string; message: string; ownerId?: string }[]>([]);
     const launcherRef = useRef<HTMLButtonElement>(null);
     const chatWindowRef = useRef<HTMLDivElement>(null);
     const restoreLauncherFocusRef = useRef(false);
@@ -33,7 +36,7 @@ export default function NSSOAgent() {
             openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
             restoreLauncherFocusRef.current = true;
             if (event.detail?.initialMessage) {
-                setShortcutRequests(previous => [...previous, { id: crypto.randomUUID(), message: event.detail.initialMessage }]);
+                setShortcutRequests(previous => [...previous, { id: crypto.randomUUID(), message: event.detail.initialMessage, ownerId }]);
             }
             setIsOpen(true);
             setHasOpened(true);
@@ -43,7 +46,7 @@ export default function NSSOAgent() {
         return () => {
             window.removeEventListener('open-deity-chat', handleOpenChat as EventListener);
         };
-    }, []);
+    }, [ownerId]);
 
     const handleOpen = () => {
         openerRef.current = launcherRef.current;
