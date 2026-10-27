@@ -2,7 +2,6 @@
 
 import { Suspense, useRef, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { authCallbackUrl, authDestination, authErrorMessage } from '@/lib/auth-journey'
 import { createClient } from '@/lib/supabase/client'
@@ -10,7 +9,7 @@ import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import WalletLogin from '@/components/auth/WalletLogin'
-import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass'
+import AuthPageShell from '@/components/auth/AuthPageShell'
 
 const providers = [
     { name: 'google', label: 'Google' },
@@ -60,37 +59,7 @@ function SignInForm() {
     }
 
     return (
-        <main className="min-h-screen flex items-center justify-center px-6 py-12 relative overflow-hidden">
-            <TahoeBackdropSurface
-                as="section"
-                variant="card"
-                radius={40}
-                className="w-full max-w-[440px] p-8 lg:p-12 relative z-10"
-                contentClassName="h-full w-full"
-                tone="dark"
-            >
-                {/* Logo */}
-                <div className="text-center mb-8">
-                    <Link href="/" className="inline-block">
-                        <Image
-                            src="/assets/nsso-logo.png"
-                            alt="nsso"
-                            width={458}
-                            height={224}
-                            className="h-10 w-auto mx-auto brightness-0 opacity-80"
-                        />
-                    </Link>
-                </div>
-
-                {/* Title */}
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-slate-950 mb-2">
-                        Welcome back
-                    </h1>
-                    <p className="text-slate-950/80">
-                        Continue your journey of self-discovery.
-                    </p>
-                </div>
+        <AuthPageShell title="Welcome back" description="Continue your journey of self-discovery.">
 
                 {/* SSO Buttons */}
                 <div className="space-y-3 mb-6">
@@ -178,8 +147,7 @@ function SignInForm() {
                         Sign Up
                     </Link>
                 </div>
-            </TahoeBackdropSurface>
-        </main>
+        </AuthPageShell>
     )
 }
 

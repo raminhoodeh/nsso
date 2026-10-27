@@ -2,11 +2,10 @@
 
 import { useRef, useState, Suspense } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { authCallbackUrl, authDestination } from '@/lib/auth-journey'
-import GlassCard from '@/components/ui/GlassCard'
+import AuthPageShell from '@/components/auth/AuthPageShell'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
@@ -82,35 +81,7 @@ function SignUpForm() {
     }
 
     return (
-        <main className="min-h-screen flex items-center justify-center px-6 py-12 relative overflow-hidden">
-            <GlassCard
-                className="w-full max-w-[440px] p-8 lg:p-12 relative z-10"
-                tone="dark"
-                semanticTint="light"
-                semanticTintOpacity={0.07}
-            >
-                {/* Logo */}
-                <div className="text-center mb-8">
-                    <Link href="/" className="inline-block">
-                        <Image
-                            src="/assets/nsso-logo.png"
-                            alt="nsso"
-                            width={458}
-                            height={224}
-                            className="h-10 w-auto mx-auto brightness-0 opacity-80"
-                        />
-                    </Link>
-                </div>
-
-                {/* Title */}
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-slate-950 mb-2">
-                        Create your nsso profile
-                    </h1>
-                    <p className="text-slate-950/80">
-                        Evolve your identity with the world.
-                    </p>
-                </div>
+        <AuthPageShell title="Create your nsso profile" description="Evolve your identity with the world.">
 
                 {/* Reserved name indicator */}
                 {reservedName && (
@@ -216,8 +187,7 @@ function SignUpForm() {
                         Sign In
                     </Link>
                 </div>
-            </GlassCard>
-        </main>
+        </AuthPageShell>
     )
 }
 

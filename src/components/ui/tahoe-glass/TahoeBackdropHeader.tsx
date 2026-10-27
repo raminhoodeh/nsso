@@ -756,11 +756,15 @@ export const TahoeBackdropSurface = React.forwardRef<
     ) {
       return;
     }
-    registerSurface(surfaceId, element);
+    // A local lens can fall back to the provider (for example when its
+    // source-frame proof is unavailable). Keep the chosen geometry rather
+    // than silently reintroducing the provider's default convex contour.
+    registerSurface(surfaceId, element, { displacementProfile });
     return () => unregisterSurface(surfaceId);
   }, [
     chrome.enabled,
     capabilityResolved,
+    displacementProfile,
     mode,
     ownedSceneEligible,
     ownedSceneState,
