@@ -27,7 +27,7 @@ import type {
   TahoeGlassSemanticTint,
   TahoeGlassSurfaceVariant,
 } from "./TahoeGlassSurface";
-import { useChromeGlassOptics } from "./ChromeGlassOptics";
+import { useChromeGlassOptics, type GlassAppearance } from "./ChromeGlassOptics";
 import { supportsChromeGlassGeometry } from "@/lib/tahoe-glass/chrome-policy";
 
 type TahoeBackdropMode = "svg" | "css-blur" | "solid";
@@ -55,6 +55,8 @@ export interface TahoeBackdropSurfaceProps extends Omit<
   tone?: TahoeGlassContentTone;
   semanticTint?: TahoeGlassSemanticTint;
   semanticTintOpacity?: number;
+  /** Desktop Chromium optical calibration only; mobile and accessibility routes stay unchanged. */
+  chromiumAppearance?: GlassAppearance;
   /** Selects a shaped card lens or a contour-free directional nav prism. */
   displacementProfile?: TahoeDisplacementProfile;
   /** Wide chrome should not inherit the fallback material's radial spotlight. */
@@ -138,6 +140,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     tone = "inherit",
     semanticTint = "none",
     semanticTintOpacity = 0.07,
+    chromiumAppearance = "dark",
     displacementProfile = "convex",
     materialLighting = "radial",
     style,
@@ -158,7 +161,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     backdropEnabled && !insideDirectBackdrop && supportsChromeGlassGeometry(undefined, style) && ["card", "panel", "mediaFrame", "menu"].includes(variant) &&
     props["data-tahoe-readable-overlay" as keyof typeof props] !== "true" &&
     !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""),
-    as === "header" || as === "nav");
+    as === "header" || as === "nav", chromiumAppearance);
   const resolvedTint = chrome.enabled && semanticTint === "none" ? (tone === "dark" ? "light" : "dark") : semanticTint;
   const resolvedTintOpacity = chrome.enabled && semanticTint === "none" ? 0.18 : semanticTintOpacity;
   const filterRef = React.useRef<SVGFilterElement | null>(null);
