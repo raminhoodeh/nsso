@@ -1,0 +1,87 @@
+# Vercel CLI does not read .gitignore when collecting deployment source files.
+# Keep every .gitignore protection here as well; tests guard against drift.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+.places-geocode-cache.json
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files: deploy real values through Vercel environment configuration only.
+.env*
+!.env.example
+
+# local/private source data
+/nsso agent context database/
+/private
+/private/
+
+# local diagnostics and generated outputs
+*.log
+/check_*.sql
+/test_*.sql
+/verify_*.sql
+/clear_film_data.sql
+/test_db.js
+/check_models.js
+/update_products_urls.py
+/src/app/dashboard/page.tsx.*
+
+# local experiments and vendor checkouts (not public/vendor build assets)
+/liquid-glass-js-main/
+/liquid-logo-main/
+/src/lib/liquid-glass/
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Local connector configuration
+/.mcp.json
+/supabase/.temp/
+
+# Local-only settings and ephemeral artifacts are not cloud build inputs.
+/.git/
+/.vscode/
+/.idea/
+/.cursor/
+/.claude/
+/.codex/
+/tmp/
+/temp/
+/.tmp/
+/generated/
+*.tmp
+*.bak
+*.swp
+*~
