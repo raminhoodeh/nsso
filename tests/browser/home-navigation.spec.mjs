@@ -1,10 +1,16 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import { compile } from '@tailwindcss/node'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-let bundle
+let bundle, layoutCss
 test.beforeAll(async () => {
+  const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx']
+  const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
+  const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
+  layoutCss = compiler.build(candidates)
   const result = await build({
     absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
     define: { 'process.env.NODE_ENV': '"test"' },
@@ -84,6 +90,39 @@ test('sign-in navigation is a single semantic link without a nested button', asy
   expect(await links.count()).toBeGreaterThan(0)
   await expect(links.first()).toHaveAttribute('href','/sign-in')
   await expect(links.first().locator('button')).toHaveCount(0)
+})
+
+test('homepage uses desktop columns without carrying that layout onto mobile', async ({ page }, testInfo) => {
+  const { errors } = await fixture(page)
+  await page.addStyleTag({ content: layoutCss })
+  const widths = testInfo.project.name === 'desktop' ? [1440, 1024, 768] : [390, 320]
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 1000 })
+    const layout = await page.evaluate(() => {
+      const rect = selector => {
+        const r = document.querySelector(selector).getBoundingClientRect()
+        return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }
+      }
+      return {
+        intro: rect('[data-home-intro]'), demo: rect('[data-home-intro] figure'), story: rect('[data-home-story]'),
+        claim: rect('[data-home-actions-layout] > section[aria-labelledby]'), offers: rect('[data-home-actions-layout] > section[aria-label]'),
+        overflow: document.documentElement.scrollWidth > innerWidth,
+      }
+    })
+    expect(layout.overflow, `Overflow at ${width}px`).toBe(false)
+    expect(layout.demo.height).toBeGreaterThan(200)
+    if (width >= 1024) {
+      expect(layout.demo.right).toBeLessThan(layout.story.left)
+      expect(Math.min(layout.demo.bottom, layout.story.bottom)).toBeGreaterThan(Math.max(layout.demo.top, layout.story.top))
+      expect(layout.claim.right).toBeLessThan(layout.offers.left)
+      if (width === 1440) expect(layout.intro.width).toBeGreaterThan(1000)
+    } else {
+      expect(layout.demo.bottom).toBeLessThanOrEqual(layout.story.top)
+      expect(layout.claim.bottom).toBeLessThanOrEqual(layout.offers.top)
+    }
+  }
+  await expect(page.locator('[data-home-intro] figure')).toHaveCount(1)
+  expect(errors).toEqual([])
 })
 
 test('claim keeps the requested name and offers retry after an Auth rejection',async({page})=>{
