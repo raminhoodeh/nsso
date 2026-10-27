@@ -2,14 +2,16 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import GlassButton from '@/components/ui/GlassButton'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { boundedClientRead } from '@/lib/client-read'
-import { useState, useEffect, useCallback } from 'react'
+import { routeUsesMobileProfileMenu } from '@/lib/tahoe-glass/route-boundaries'
+import { useState, useEffect, useCallback, Suspense, type ReactNode } from 'react'
+import { ChevronRight, Eye, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, ShieldCheck, Sparkles, UserRound, UsersRound, X } from 'lucide-react'
 import {
     TahoeBackdropHeader,
     TahoeGlassButton,
@@ -24,18 +26,97 @@ interface HeaderProps {
     className?: string
 }
 
+const MENU_ROW_CLASS = 'group flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[15px] font-medium text-slate-950 outline-none transition-colors hover:bg-white/65 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950/70'
+
+function MenuRowContent({ icon, children, trailing }: { icon: ReactNode; children: ReactNode; trailing?: ReactNode }) {
+    return <>
+        <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-white/45 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">{icon}</span>
+        <span className="min-w-0 flex-1">{children}</span>
+        {trailing || <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-slate-600" />}
+    </>
+}
+
+function MobileMenuNavigation({ pathname, isAdmin, signingOut, close, copyProfileUrl, handleSignOut, runAfterClose }: {
+    pathname: string
+    isAdmin: boolean
+    signingOut: boolean
+    close: () => void
+    copyProfileUrl: () => Promise<void>
+    handleSignOut: () => Promise<void>
+    runAfterClose: (action: 'deity' | 'news') => void
+}) {
+    const searchParams = useSearchParams()
+    const currentView = searchParams.get('view') || 'profile'
+    const dashboardHref = (view: string) => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('view', view)
+        return `/dashboard?${params.toString()}`
+    }
+    const isDashboardHome = pathname === '/dashboard' || pathname === '/dashboard/'
+    const iconClass = 'h-[19px] w-[19px]'
+    const groupClass = 'rounded-[24px] border border-white/70 bg-white/25 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_5px_18px_rgba(30,41,59,0.05)]'
+
+    return <nav aria-label="Account and profile" className="space-y-6">
+        <section data-mobile-menu-group="profile" aria-labelledby="mobile-menu-profile-heading">
+            <h3 id="mobile-menu-profile-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Your nsso</h3>
+            <div className={groupClass}>
+                <Link href={dashboardHref('profile')} onClick={close} className={cn(MENU_ROW_CLASS, isDashboardHome && currentView === 'profile' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={isDashboardHome && currentView === 'profile' ? 'page' : undefined}>
+                    <MenuRowContent icon={<UserRound className={iconClass} />}>Edit Profile</MenuRowContent>
+                </Link>
+                <Link href={dashboardHref('my-nsso')} onClick={close} className={cn(MENU_ROW_CLASS, isDashboardHome && currentView === 'my-nsso' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={isDashboardHome && currentView === 'my-nsso' ? 'page' : undefined}>
+                    <MenuRowContent icon={<UsersRound className={iconClass} />}>My nsso</MenuRowContent>
+                </Link>
+                <button type="button" onClick={() => runAfterClose('deity')} className={MENU_ROW_CLASS}>
+                    <MenuRowContent icon={<Sparkles className={iconClass} />}>Deity</MenuRowContent>
+                </button>
+                <button type="button" onClick={() => runAfterClose('news')} className={MENU_ROW_CLASS}>
+                    <MenuRowContent icon={<Newspaper className={iconClass} />} trailing={<span className="shrink-0 rounded-full border border-slate-500/20 bg-white/55 px-2 py-1 text-[10px] font-semibold text-slate-700">Coming soon</span>}>News Feed</MenuRowContent>
+                </button>
+            </div>
+        </section>
+        <section data-mobile-menu-group="sharing" aria-labelledby="mobile-menu-sharing-heading">
+            <h3 id="mobile-menu-sharing-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Preview &amp; share</h3>
+            <div className={groupClass}>
+                <Link href="/preview" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/preview' ? 'page' : undefined}>
+                    <MenuRowContent icon={<Eye className={iconClass} />}>Preview Profile</MenuRowContent>
+                </Link>
+                <button type="button" onClick={() => { void copyProfileUrl(); close() }} className={MENU_ROW_CLASS}>
+                    <MenuRowContent icon={<LinkIcon className={iconClass} />}>Copy profile URL</MenuRowContent>
+                </button>
+            </div>
+        </section>
+        <section data-mobile-menu-group="account" aria-labelledby="mobile-menu-account-heading">
+            <h3 id="mobile-menu-account-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Account</h3>
+            <div className={groupClass}>
+                <Link href="/dashboard/security" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/dashboard/security' ? 'page' : undefined}>
+                    <MenuRowContent icon={<ShieldCheck className={iconClass} />}>Account security</MenuRowContent>
+                </Link>
+                {isAdmin && <Link href="/admin" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/admin' ? 'page' : undefined}>
+                    <MenuRowContent icon={<LayoutDashboard className={iconClass} />}>Admin</MenuRowContent>
+                </Link>}
+            </div>
+        </section>
+        <button type="button" onClick={() => { void handleSignOut() }} disabled={signingOut} className={cn(MENU_ROW_CLASS, 'border border-rose-900/10 bg-white/35 text-rose-900 hover:bg-white/65 disabled:cursor-wait disabled:opacity-60')}>
+            <MenuRowContent icon={<LogOut className={iconClass} />} trailing={<span aria-hidden="true" />}>{signingOut ? 'Signing out…' : 'Sign Out'}</MenuRowContent>
+        </button>
+    </nav>
+}
+
 export default function Header({ showAuthButtons = true, variant = 'default', username, className }: HeaderProps) {
     const { user } = useUser()
     const isAdmin = user?.user_type === 'admin'
     const supabase = createClient()
     const pathname = usePathname()
+    const usesProfileEditorMenu = routeUsesMobileProfileMenu(pathname)
     const lightHome = pathname === '/'
     const router = useRouter()
     const { showToast } = useToast()
     const [signingOut, setSigningOut] = useState(false)
+    const [pendingMenuAction, setPendingMenuAction] = useState<{ action: 'deity' | 'news'; pathname: string } | null>(null)
     const [mobileMenuState, setMobileMenuState] = useState({ open: false, pathname })
     const mobileMenuOpen = Boolean(user) && mobileMenuState.open && mobileMenuState.pathname === pathname
     const setMobileMenuOpen = useCallback((open: boolean) => {
+        if (open) setPendingMenuAction(null)
         setMobileMenuState({ open, pathname })
     }, [pathname])
 
@@ -79,6 +160,27 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             window.scrollTo(scrollX, scrollY)
         }
     }, [mobileMenuOpen])
+
+    // Let the drawer release its focus trap, inert background and iOS body lock
+    // before another modal (Deity) opens or a toast is announced.
+    useEffect(() => {
+        if (mobileMenuOpen || !pendingMenuAction) return
+        const frame = window.requestAnimationFrame(() => {
+            setPendingMenuAction(null)
+            if (!user || pendingMenuAction.pathname !== pathname) return
+            if (pendingMenuAction.action === 'deity') {
+                window.dispatchEvent(new CustomEvent('open-deity-chat'))
+            } else {
+                showToast('News Feed coming soon', 'info')
+            }
+        })
+        return () => window.cancelAnimationFrame(frame)
+    }, [mobileMenuOpen, pendingMenuAction, pathname, showToast, user])
+
+    const runAfterMenuClose = (action: 'deity' | 'news') => {
+        setPendingMenuAction({ action, pathname })
+        setMobileMenuOpen(false)
+    }
 
     const handleSignOut = async () => {
         if (signingOut) return
@@ -139,7 +241,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     return (
         <TahoeBackdropHeader
             radius="0 0 24px 24px"
-            className={cn("fixed top-0 left-0 right-0 z-[5000]", user && "md:hidden", className)}
+            className={cn("fixed top-0 left-0 right-0 z-[5000]", user && (usesProfileEditorMenu ? "lg:hidden" : "md:hidden"), className)}
             contentClassName="h-full w-full"
             displacementProfile="prism-top"
             materialLighting="uniform"
@@ -168,7 +270,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     (!user || true) && ( // logic check: we sidebar has logo.
                         <Link
                             href={user ? "/?view=home" : "/"}
-                            className={user ? "flex md:hidden items-center" : "flex items-center"}
+                            className={cn("flex items-center", user && (usesProfileEditorMenu ? "lg:hidden" : "md:hidden"))}
                             onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
                         >
                             <Image
@@ -197,7 +299,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 </div>
 
                 {/* --- MOBILE NAVIGATION (HAMBURGER) --- */}
-                <div className="ml-auto flex items-center gap-2 min-[360px]:gap-3 md:hidden">
+                <div className={cn("ml-auto flex items-center gap-2 min-[360px]:gap-3", user && usesProfileEditorMenu ? "lg:hidden" : "md:hidden")}>
 
                     {/* Default Mode: Contextual Button (Preview/Copy) */}
                     {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
@@ -238,108 +340,31 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         open={mobileMenuOpen}
                         onOpenChange={setMobileMenuOpen}
                         radius="32px 0 0 32px"
-                        tone="light"
+                        tone="dark"
                         aria-label="Menu"
                         preventBodyScroll={false}
                         overlayClassName="z-[5001] items-stretch justify-end p-0"
                         backdropClassName="bg-black/70"
-                        className="h-[100dvh] max-h-[100dvh] w-[min(352px,calc(100vw_-_24px))] max-w-none animate-slide-in-right overflow-hidden p-0"
+                        className="h-[100dvh] max-h-[100dvh] w-[min(368px,calc(100vw_-_16px))] max-w-none animate-slide-in-right overflow-hidden p-0"
                         contentClassName="h-full w-full"
                         tracking="continuous"
                     >
-                                <div className="flex h-full flex-col overflow-hidden rounded-l-[32px] bg-[#11161d] text-white shadow-[-24px_0_64px_rgba(0,0,0,0.42)]">
-                                    {/* Menu Header */}
-                                    <div className="flex items-center justify-between border-b border-white/10 pb-4 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(1.25rem,env(safe-area-inset-top))]">
-                                        <span className="text-lg font-semibold text-white">Menu</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-[#222a35] text-white/80 outline-none transition-colors hover:bg-[#2a3441] hover:text-white focus-visible:ring-2 focus-visible:ring-white/80"
-                                            aria-label="Close menu"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    {/* Menu Items */}
-                                    <div
-                                        className="flex flex-1 flex-col gap-2 overflow-y-auto pb-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-4"
-                                        style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
-                                    >
-
-                                        {/* Button: Copy Page URL (Both Modes) */}
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                copyProfileUrl()
-                                                setMobileMenuOpen(false)
-                                            }}
-                                            className="min-h-12 w-full rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
-                                        >
-                                            Copy profile URL
-                                        </button>
-
-                                        {/* Default Mode: Preview Page Button (if not on preview) */}
-                                        {!isOwnerMode && !isPreviewPage && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    router.push('/preview')
-                                                    setMobileMenuOpen(false)
-                                                }}
-                                                className="min-h-12 w-full rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
-                                            >
-                                                Preview Profile
-                                            </button>
-                                        )}
-
-                                        {/* Owner Mode: Edit Profile */}
-                                        {isOwnerMode && (
-                                            <Link
-                                                href="/dashboard"
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className="flex min-h-12 w-full items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
-                                            >
-                                                Edit Profile
-                                            </Link>
-                                        )}
-
-                                        {/* Regular Mode: Dashboard (if not on dashboard) */}
-                                        {!isOwnerMode && pathname !== '/dashboard' && (
-                                            <Link
-                                                href="/dashboard"
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className="flex min-h-12 w-full items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
-                                            >
-                                                Dashboard
-                                            </Link>
-                                        )}
-
-                                        {isAdmin && (
-                                            <Link
-                                                href="/admin"
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className="flex min-h-12 w-full items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-left font-medium text-white outline-none transition-colors hover:bg-[#222a35] focus-visible:ring-2 focus-visible:ring-white/80"
-                                            >
-                                                Admin
-                                            </Link>
-                                        )}
-
-                                        <Link href="/dashboard/security" onClick={() => setMobileMenuOpen(false)} className="flex min-h-12 items-center rounded-xl border border-white/10 bg-[#1a212b] px-4 py-3 text-white">Account security</Link>
-                                        <div className="border-t border-white/10 my-2" />
-
-                                        <button
-                                            type="button"
-                                            onClick={() => { void handleSignOut() }}
-                                            disabled={signingOut}
-                                            className="min-h-12 w-full rounded-xl border border-red-300/15 bg-[#21191e] px-4 py-3 text-left font-medium text-red-300 outline-none transition-colors hover:bg-[#2b1e24] focus-visible:ring-2 focus-visible:ring-red-200/80"
-                                        >
-                                            {signingOut ? 'Signing out…' : 'Sign Out'}
-                                        </button>
-                                    </div>
+                        <div data-mobile-account-menu="true" className="flex h-full flex-col overflow-hidden rounded-l-[32px] bg-[#e3e7ed] bg-[linear-gradient(155deg,rgba(255,255,255,0.45),rgba(226,226,237,0.65)_48%,rgba(236,224,226,0.85))] text-slate-950 [text-shadow:none] shadow-[-24px_0_64px_rgba(0,0,0,0.28)]">
+                            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-500/15 pb-5 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(1.25rem,env(safe-area-inset-top))]">
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <Image src="/assets/nsso-logo.png" alt="nsso" width={458} height={224} className="h-8 w-auto" />
+                                    <span className="border-l border-slate-500/25 pl-3 text-lg font-semibold tracking-tight">Menu</span>
                                 </div>
+                                <button type="button" onClick={() => setMobileMenuOpen(false)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/45 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_3px_10px_rgba(30,41,59,0.08)] outline-none hover:bg-white/75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950/70" aria-label="Close menu">
+                                    <X aria-hidden="true" className="h-5 w-5" />
+                                </button>
+                            </div>
+                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-5" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+                                <Suspense fallback={<p className="p-3 text-sm text-slate-600">Loading menu…</p>}>
+                                    <MobileMenuNavigation pathname={pathname} isAdmin={isAdmin} signingOut={signingOut} close={() => setMobileMenuOpen(false)} copyProfileUrl={copyProfileUrl} handleSignOut={handleSignOut} runAfterClose={runAfterMenuClose} />
+                                </Suspense>
+                            </div>
+                        </div>
                     </TahoeGlassDialog>
 
 

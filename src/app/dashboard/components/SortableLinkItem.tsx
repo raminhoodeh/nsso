@@ -24,6 +24,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
         attributes,
         listeners,
         setNodeRef,
+        setActivatorNodeRef,
         transform,
         transition,
         isDragging
@@ -48,29 +49,32 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
             semanticTintOpacity={0.38}
             tracking={isDragging ? 'continuous' : 'static'}
             className={isDragging ? 'ring-1 ring-white/30 shadow-xl' : ''}
-            contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4 md:flex-row md:items-center"
+            contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4"
         >
-            {/* Drag Handle */}
-            <div
-                {...attributes}
-                {...listeners}
-                aria-label={`Drag to reorder ${link.link_name || 'link'}`}
-                className="hidden md:flex items-center justify-center cursor-move text-white/30 hover:text-white/70 transition-colors -ml-2 p-2 touch-none select-none"
-            >
-                <GripVertical size={20} />
+            <div data-sortable-controls="link" className="-mx-3 -mt-3 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center border-b border-white/10 px-2 py-1 sm:-mx-4 sm:-mt-4">
+                <button
+                    ref={setActivatorNodeRef}
+                    type="button"
+                    {...attributes}
+                    {...listeners}
+                    aria-label={`Drag to reorder ${link.link_name || 'link'}`}
+                    className="col-start-2 flex min-h-11 cursor-grab touch-none select-none items-center justify-center rounded-lg text-white/60 outline-none transition-colors hover:text-white active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-white"
+                >
+                    <GripVertical size={20} aria-hidden="true" />
+                </button>
+                <TahoeGlassButton
+                    type="button"
+                    onClick={() => setConfirmDelete(true)}
+                    className="col-start-3 h-11 w-11 shrink-0 p-0"
+                    contentClassName="text-red-200 text-xl"
+                    aria-label={`Remove ${link.link_name || 'link'}`}
+                >
+                    ×
+                </TahoeGlassButton>
             </div>
 
-            {/* Mobile Drag Handle (Top Center) */}
-            <div
-                {...attributes}
-                {...listeners}
-                aria-label={`Drag to reorder ${link.link_name || 'link'}`}
-                className="-mx-3 -mt-3 mb-1 flex min-h-11 cursor-move touch-none select-none items-center justify-center border-b border-white/10 py-1 text-white/30 transition-colors hover:text-white/70 sm:-mx-4 sm:-mt-4 md:hidden"
-            >
-                <GripVertical size={16} />
-            </div>
-
-            <div className="w-full md:flex-1">
+            <div className="grid min-w-0 grid-cols-1 items-center gap-3 sm:gap-4 md:grid-cols-2">
+            <div className="min-w-0">
                 <Input
                     aria-label="Link name"
                     value={link.link_name}
@@ -103,14 +107,7 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
                         placeholder="https://..."
                     />
                 </div>
-                <TahoeGlassButton
-                    onClick={() => setConfirmDelete(true)}
-                    className="h-11 w-11 shrink-0 p-0"
-                    contentClassName="text-red-200 text-xl"
-                    aria-label={`Remove ${link.link_name || 'link'}`}
-                >
-                    ×
-                </TahoeGlassButton>
+            </div>
             </div>
         </TahoeGlassSurface>
         <ConfirmDeleteDialog open={confirmDelete} name={link.link_name || 'link'} onClose={() => setConfirmDelete(false)} onConfirm={() => removeLink(link.id)} />

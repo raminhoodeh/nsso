@@ -1,11 +1,11 @@
 'use client'
 import { useProfile } from '@/components/providers/ProfileProvider'
 
-export default function ProfileSaveStatus({ floating = false }: { floating?: boolean }) {
+export default function ProfileSaveStatus({ floating = false, aboveBottomNav = true }: { floating?: boolean; aboveBottomNav?: boolean }) {
     const { mutationState, retryPending, loadError, refreshProfile } = useProfile()
     if (!loadError && mutationState.status === 'saved') return null
     return <div role="status" aria-live="polite" data-profile-save-status
-        className={`${floating ? 'fixed inset-x-3 bottom-[calc(var(--mobile-bottom-nav-height,80px)+12px)] z-[5500] mx-auto max-w-xl md:bottom-4' : 'my-3'} rounded-xl border border-white/20 bg-[#11161d] px-4 py-3 text-sm text-white shadow-lg`}>
+        className={`${floating ? `fixed inset-x-3 z-[5500] mx-auto max-w-xl ${aboveBottomNav ? 'bottom-[calc(var(--mobile-bottom-nav-height,80px)+12px)] md:bottom-4' : 'bottom-[max(1rem,env(safe-area-inset-bottom))]'}` : 'my-3'} rounded-xl border border-white/20 bg-[#11161d] px-4 py-3 text-sm text-white shadow-lg`}>
         {loadError && <p>{loadError}</p>}
         {mutationState.status !== 'saved' && <p>{mutationState.message || 'Saving your changes…'}</p>}
         {loadError

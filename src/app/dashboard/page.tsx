@@ -45,14 +45,16 @@ import {
     verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { SortableLinkItem } from './components/SortableLinkItem'
+import SectionHelp from './components/SectionHelp'
 
 function DashboardContent() {
     const { user, loading, error, refreshUser } = useUser()
     const [claimOwner, setClaimOwner] = useState<string | null>(null)
+    const header = !loading && <div className="lg:hidden"><Header /></div>
     if (user && !claimOwner) setClaimOwner(user.id)
-    if (loading || (user && !claimOwner)) return <main className="min-h-screen flex items-center justify-center text-white"><p role="status">Loading your account…</p></main>
-    if (!user) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><button type="button" onClick={() => { void refreshUser() }}>Retry account</button></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main>
-    return <DashboardForAccount key={user.id} allowClaim={claimOwner === user.id} />
+    if (loading || (user && !claimOwner)) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><p role="status">Loading your account…</p></main></>
+    if (!user) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><button type="button" onClick={() => { void refreshUser() }}>Retry account</button></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main></>
+    return <>{header}<DashboardForAccount key={user.id} allowClaim={claimOwner === user.id} /></>
 }
 
 function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
@@ -321,13 +323,9 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
     return (
         <main className="min-h-screen pb-12">
-            <div className="md:hidden">
-                <Header />
-            </div>
+            <div className="mx-auto max-w-[1470px] space-y-6 pb-0 pl-[max(16px,env(safe-area-inset-left))] pr-[max(16px,env(safe-area-inset-right))] pt-[calc(120px+env(safe-area-inset-top))] sm:pl-[max(24px,env(safe-area-inset-left))] sm:pr-[max(24px,env(safe-area-inset-right))] lg:pt-10 lg:px-8">
 
-            <div className="mx-auto max-w-[1470px] space-y-6 pb-0 pl-[max(16px,env(safe-area-inset-left))] pr-[max(16px,env(safe-area-inset-right))] pt-[calc(120px+env(safe-area-inset-top))] sm:pl-[max(24px,env(safe-area-inset-left))] sm:pr-[max(24px,env(safe-area-inset-right))] md:pt-10 lg:px-8">
-
-                {/* Tab Bar Removed - Replaced by Global Sidebar/BottomNav */}
+                {/* Desktop sidebar and mobile account menu own navigation. */}
 
                 {/* Profile Completeness Banner */}
                 {profileCompleteness < 20 && (
@@ -366,7 +364,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                         {/* Header */}
                         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
                             <h2 className="text-2xl font-bold text-white">
-                                {profilePicUrl ? 'Hey, beautiful' : 'Profile'}
+                                {profilePicUrl ? 'Hey, wonderful' : 'Profile'}
                             </h2>
 
                             {/* Ask Deity Button */}
@@ -572,7 +570,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     ) : null}
                                 </div>
                             )}
-                            <p className="mt-4 text-white/60 text-sm">Premium profile access and your nsso.me URL are currently free.</p>
+                            <p className="mt-4 text-white/60 text-sm">Premium profile access and your nsso.me URL are currently free for the first 1000 users.</p>
                         </div>
                     </GlassCard>
                 )}
@@ -589,11 +587,11 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                     currentView === 'profile' && (
                         <>
                             {/* Card 2: Links Section */}
-                            <GlassCard className="p-4 sm:p-6 lg:p-8">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="pr-8">
+                            <GlassCard className="overflow-visible p-4 sm:p-6 lg:p-8">
+                                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex min-w-0 items-center gap-1">
                                         <h2 className="text-2xl font-bold text-white">Links</h2>
-                                        <p className="text-white/70 text-sm">Where can people find you and your work online?</p>
+                                        <SectionHelp title="Links">Where can people find you or your work online?</SectionHelp>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {/* Ask Deity Button */}
@@ -651,8 +649,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                             <GlassCard className="p-4 sm:p-8">
                                 <div className="flex justify-between items-center mb-6">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-white mb-2">Contact</h2>
-                                        <p className="text-white/50 text-sm">Add your contact methods and social profiles.</p>
+                                        <h2 className="text-2xl font-bold text-white">Contact</h2>
                                     </div>
                                     <TahoeGlassButton
                                         onClick={() => addContact()}

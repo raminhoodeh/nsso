@@ -317,9 +317,10 @@ test('mobile notifications clear the bottom bar and use an opaque readable token
     assert.doesNotMatch(toastSource, /TahoeGlassSurface/)
 })
 
-test('the mobile account drawer is an opaque safe-area sheet with robust scroll locking', () => {
+test('the mobile account drawer is a readable light safe-area sheet with robust scroll locking', () => {
     assert.match(headerSource, /bg-black\/70/)
-    assert.match(headerSource, /bg-\[#11161d\]/)
+    assert.match(headerSource, /data-mobile-account-menu="true"[^\n]*bg-\[#e3e7ed\]/)
+    assert.match(headerSource, /data-mobile-account-menu="true"[^\n]*text-slate-950/)
     assert.match(headerSource, /env\(safe-area-inset-top\)/)
     assert.match(headerSource, /env\(safe-area-inset-bottom\)/)
     assert.match(headerSource, /body\.style\.position = 'fixed'/)
@@ -331,5 +332,6 @@ test('the mobile account drawer is an opaque safe-area sheet with robust scroll 
     const dialogEnd = headerSource.indexOf('{/* Mobile - Not logged in', dialogStart)
     const drawerMarkup = headerSource.slice(dialogStart, dialogEnd)
     assert.doesNotMatch(drawerMarkup, /<TahoeGlassSurface/)
-    assert.match(drawerMarkup, /min-h-12/)
+    assert.match(drawerMarkup, /<MobileMenuNavigation/)
+    assert.match(headerSource, /MENU_ROW_CLASS = '[^'\n]*min-h-12/)
 })
