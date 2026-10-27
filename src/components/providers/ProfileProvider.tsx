@@ -12,7 +12,9 @@ import { calculateProfileCompleteness } from '@/lib/profile-completeness'
 
 interface OwnerSnapshot { revision: number; profile: Profile | null; links: Link[]; contacts: Contact[]; experiences: Experience[]; qualifications: Qualification[]; projects: Project[]; products: Product[] }
 type Draft = { entity: ProfileEntity; id: string; patch: Record<string, unknown>; sequence: number; timer?: ReturnType<typeof setTimeout>; operationId?: string; operationPatch?:Record<string,unknown>; failed?: boolean; failureStatus?: MutationResult['status']; inFlight?: boolean; waiters: ((value: boolean) => void)[] }
-type PendingCreate = { operationId: string; changes: ProfileChange[]; status?: MutationResult['status']; pending?: Promise<MutationResult> }
+type PendingCreate = { operationId: string; originalOperationId?: string; changes: ProfileChange[]; status?: MutationResult['status']; pending?: Promise<MutationResult> }
+type PendingCreateRetry = { originalOperationId: string; changes: ProfileChange[]; result: MutationResult }
+type SaveState = { status: 'saved' | 'saving' | 'failed' | 'conflict' | 'outcomeUnknown'; message: string }
 const emptySnapshot = (): OwnerSnapshot => ({ revision: 0, profile: null, links: [], contacts: [], experiences: [], qualifications: [], projects: [], products: [] })
 interface ProfileContextType extends OwnerSnapshot {
     loading: boolean
@@ -44,10 +46,12 @@ interface ProfileContextType extends OwnerSnapshot {
     fastMode: boolean
     setFastMode: (enabled: boolean) => Promise<boolean>
     profileCompleteness: number
-    refreshProfile: () => Promise<void>
+    refreshProfile: () => Promise<boolean>
     getRevision: () => number
-    mutationState: { status: 'saved' | 'saving' | 'failed' | 'conflict' | 'outcomeUnknown'; message: string }
-    retryPending: () => Promise<void>
+    mutationState: SaveState
+    productMutationState: SaveState
+    productCreationResults: Record<string, MutationResult>
+    retryPending: () => Promise<PendingCreateRetry[]>
 }
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
 
@@ -96,6 +100,8 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
     const [history, setHistory] = useState<string[]>([])
     const undoAttempt = useRef<{ original: string; operationId: string } | null>(null)
     const [mutationState, setMutationState] = useState<ProfileContextType['mutationState']>({ status: 'saved', message: '' })
+    const [productMutationState, setProductMutationState] = useState<SaveState>({ status: 'saved', message: '' })
+    const [productCreationResults, setProductCreationResults] = useState<Record<string, MutationResult>>({})
     const mounted = useRef(true)
     const generation = useRef(0)
     const activeRead = useRef<AbortController | null>(null)
@@ -103,10 +109,21 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
         const overlays: MutationDelta[] = Array.from(drafts.current.values()).map(draft => ({ entity: draft.entity, id: draft.id, row: { id: draft.id, ...draft.patch } }))
         for (const [entity,pending] of pendingOrders.current) pending.order.forEach((id,display_order) => overlays.push({entity,id,row:{id,display_order}}))
         setSnapshot(mergeDeltas(canonical.current, overlays))
+        // Publish aggregate status from the queue event, never by reading mutable
+        // refs during React render. A successful B cannot hide a failed A draft.
+        const productDrafts = Array.from(drafts.current.values()).filter(draft => draft.entity === 'products')
+        const productCreates = Array.from(pendingCreates.current.values()).filter(entry => entry.changes.some(change => change.kind === 'product.add'))
+        const failedStatus = productDrafts.find(draft => draft.failed)?.failureStatus
+            || productCreates.find(entry => entry.status && entry.status !== 'applied')?.status
+        setProductMutationState(failedStatus
+            ? { status: failedStatus === 'conflict' || failedStatus === 'outcomeUnknown' ? failedStatus : 'failed', message: mutationMessage({ status: failedStatus }) }
+            : productDrafts.length || productCreates.length
+                ? { status: 'saving', message: 'Saving offering changes…' }
+                : { status: 'saved', message: '' })
     }, [])
 
     const refreshProfile = useCallback(async () => {
-        if (!user?.id) { setLoading(false); return }
+        if (!user?.id) { setLoading(false); return false }
         const current = ++generation.current
         activeRead.current?.abort()
         const controller = new AbortController()
@@ -117,14 +134,18 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
                 supabase.rpc('get_profile_snapshot').abortSignal(signal),
                 supabase.rpc('get_current_account').abortSignal(signal),
             ]), { signal: controller.signal })
-            if (!mounted.current || current !== generation.current) return
+            if (!mounted.current || current !== generation.current) return false
             if (result.error || !result.data || !Number.isSafeInteger(result.data.revision)) throw new Error('unavailable')
             if (result.data.revision >= canonical.current.revision) canonical.current = result.data as OwnerSnapshot
             client.setRevision(result.data.revision)
             setFastModeState(Boolean(account.data?.deity_fast_mode))
             setLoadError(null)
             publish()
-        } catch { if (mounted.current && current === generation.current) setLoadError('Your profile could not be refreshed. Your draft has been kept.') }
+            return true
+        } catch {
+            if (mounted.current && current === generation.current) setLoadError('Your profile could not be refreshed. Your draft has been kept.')
+            return false
+        }
         finally {
             if (activeRead.current === controller) activeRead.current = null
             if (mounted.current && current === generation.current) setLoading(false)
@@ -207,18 +228,27 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
         return patchProfile({ [field]: value })
     }, [patchProfile])
     const patchEntity = useCallback(<K extends RowKind>(kind: K, id: string, patch: EditableValues[K], immediate = false) => queuePatch(rowCollections[kind], id, patch as Record<string, unknown>, immediate), [queuePatch])
+    const recordProductCreation = useCallback((entry: PendingCreate, result: MutationResult) => {
+        if (mounted.current && entry.changes.some(change => change.kind === 'product.add')) {
+            // Consumers observe the verified receipt even when a different retry
+            // control resolves the intent. Never identify a created row by name.
+            setProductCreationResults(previous => ({ ...previous, [entry.originalOperationId || entry.operationId]: result, [entry.operationId]: result }))
+        }
+    }, [])
     const submitCreate = useCallback((key: string, entry: PendingCreate): Promise<MutationResult> => {
         if (entry.pending) return entry.pending
         const pending = applyOperation(entry.changes, entry.operationId).then(result => {
+            recordProductCreation(entry, result)
             if (pendingCreates.current.get(key) === entry) {
                 if (result.status === 'applied') pendingCreates.current.delete(key)
                 else entry.status = result.status
             }
+            publish()
             return result
         }).finally(() => { entry.pending = undefined })
         entry.pending = pending
         return pending
-    }, [applyOperation])
+    }, [applyOperation, recordProductCreation, publish])
     const createEntity = useCallback(<K extends RowKind>(kind: K, values: EditableValues[K]) => {
         const changes = [{ kind: `${kind}.add`, values } as ProfileChange]
         const key = JSON.stringify(changes)
@@ -244,21 +274,23 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
         publish();return result.status==='applied'
     }, [applyOperation,publish])
     const retryPending = useCallback(async () => {
+        const creationResults: PendingCreateRetry[] = []
         await refreshProfile()
         for (const [key, entry] of pendingCreates.current) {
-            if (entry.pending) { await entry.pending; continue }
+            const collect = (result: MutationResult) => { creationResults.push({ originalOperationId: entry.operationId, changes: entry.changes, result }); return result }
+            if (entry.pending) { collect(await entry.pending); continue }
             const previous = await client.status(entry.operationId)
-            if (previous.status === 'applied') { record(previous); pendingCreates.current.delete(key); continue }
-            if (previous.status === 'outcomeUnknown') { record(previous, false); continue }
+            if (previous.status === 'applied') { collect(previous); recordProductCreation(entry, previous); record(previous); pendingCreates.current.delete(key); continue }
+            if (previous.status === 'outcomeUnknown') { collect(previous); recordProductCreation(entry, previous); record(previous, false); continue }
             if (entry.status === 'outcomeUnknown') {
-                if (previous.status !== 'not_found') { pendingCreates.current.set(key, { ...entry, status: previous.status }); record(previous, false); continue }
-                await submitCreate(key, entry)
+                if (previous.status !== 'not_found') { collect(previous); recordProductCreation(entry, previous); pendingCreates.current.set(key, { ...entry, status: previous.status }); record(previous, false); continue }
+                collect(await submitCreate(key, entry))
             } else {
                 // A known rejection/conflict can be accepted again after this explicit
                 // refresh/retry. Never replace an ID while its outcome is uncertain.
-                const accepted = { changes: entry.changes, operationId: crypto.randomUUID() }
+                const accepted = { changes: entry.changes, operationId: crypto.randomUUID(), originalOperationId: entry.originalOperationId || entry.operationId }
                 pendingCreates.current.set(key, accepted)
-                await submitCreate(key, accepted)
+                collect(await submitCreate(key, accepted))
             }
         }
         for (const [key, draft] of drafts.current) {
@@ -291,7 +323,8 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
             await reorder(collection,pending.order,pending.status==='outcomeUnknown'?pending.operationId:undefined)
         }
         publish()
-    }, [refreshProfile, client, record, flushDraft, publish,reorder,submitCreate])
+        return creationResults
+    }, [refreshProfile, client, record, flushDraft, publish,reorder,submitCreate,recordProductCreation])
     const undo = useCallback(async () => {
         const original = history.at(-1)
         if (!original) return { status: 'rejected', operationId: '', revision: client.revision, changes: [], code: 'NOTHING_TO_UNDO' } as MutationResult
@@ -310,7 +343,7 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
     }, [supabase])
     const profileCompleteness = calculateProfileCompleteness(snapshot)
 
-    return <ProfileContext.Provider value={{ ...snapshot, loading, loadError, mutationState, retryPending, patchProfile, updateField, patchEntity, createEntity, removeEntity, applyOperation, refreshProfile, getRevision: () => client.revision, undo, canUndo: history.length > 0, fastMode, setFastMode, profileCompleteness,
+    return <ProfileContext.Provider value={{ ...snapshot, loading, loadError, mutationState, productMutationState, productCreationResults, retryPending, patchProfile, updateField, patchEntity, createEntity, removeEntity, applyOperation, refreshProfile, getRevision: () => client.revision, undo, canUndo: history.length > 0, fastMode, setFastMode, profileCompleteness,
         addLink: async (link_name, link_url) => (await createEntity('link', { link_name, link_url })).status === 'applied',
         updateLink: (id, field, value) => patchEntity('link', id, { [field]: value }), removeLink: id => removeEntity('link', id), reorderLinks: ids => reorder('links', ids), validateLinks: () => validateLinksUtil(snapshot.links.map(link => ({ id: link.id, url: link.link_url }))),
         addContact: async () => (await createEntity('contact', { method: 'Email', value: '', custom_method_name: null })).status === 'applied', updateContact: (id, field, value) => patchEntity('contact', id, { [field]: value }), removeContact: id => removeEntity('contact', id), reorderContacts: ids => reorder('contacts', ids),

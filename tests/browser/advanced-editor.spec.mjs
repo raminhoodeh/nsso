@@ -7,9 +7,9 @@ let bundle
 test.beforeAll(async () => {
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'advanced-label-fixture', setup(builder) {
-            builder.onResolve({ filter: /^(?:@\/components\/(?:providers\/ProfileProvider|profile\/ProfileSaveStatus|payments\/PayPalCodeEditor|ui\/(?:Toast|ImageCropperModal|tahoe-glass))|@\/app\/dashboard\/components\/DashboardGlassCard)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
+            builder.onResolve({ filter: /^(?:@\/components\/(?:providers\/ProfileProvider|profile\/ProfileSaveStatus|payments\/PayPalCodeEditor|ui\/(?:Toast|ImageCropperModal|tahoe-glass))|@\/app\/dashboard\/components\/DashboardGlassCard|\.\/DashboardGlassCard)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path.endsWith('ProfileProvider') ? 'export const useProfile=()=>window.fixtureProfile;'
+                path.endsWith('ProfileProvider') ? 'export const useProfile=()=>({mutationState:{status:"saved",message:""},retryPending:async()=>{},...window.fixtureProfile});'
                     : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:()=>{}});'
                         : path.endsWith('DashboardGlassCard') ? 'import React from "react";export default ({children})=><div>{children}</div>;'
                             : path.endsWith('tahoe-glass') ? 'import React from "react";const attrs=props=>Object.fromEntries(Object.entries(props).filter(([key])=>key.startsWith("aria-")||["id","role","onClick","onKeyDown","tabIndex","hidden","disabled"].includes(key)));export const TahoeGlassSurface=React.forwardRef(({as:Tag="div",children,...props},ref)=><Tag ref={ref} {...attrs(props)}>{children}</Tag>);export const TahoeGlassButton=React.forwardRef(({children,...props},ref)=><button ref={ref} {...attrs(props)}>{children}</button>);export const TahoeGlassField=({children})=><div>{children}</div>;export const TahoeGlassDialog=()=>null;'
@@ -39,6 +39,6 @@ test('advanced editor fields keep accessible names across section and product se
     await page.getByRole('tab',{name:'Projects',exact:true}).click()
     for (const name of ['Project name','Your contribution','Project URL (optional)','Project description']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
     await page.getByRole('button',{name:/^Products & Services/}).click()
-    await page.getByRole('button',{name:'Fixture offer',exact:true}).click()
+    await page.getByRole('button',{name:'Edit Fixture offer',exact:true}).click()
     for (const name of ['Product name','Price (include the currency)','Product description','Purchase link']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
 })

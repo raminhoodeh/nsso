@@ -18,10 +18,18 @@ test.beforeAll(async () => {
             import {parsePayPalInput} from './src/lib/payments/paypal-config';
             const root=createRoot(document.getElementById('root'));
             window.saved=[];
+            window.busy=[];
             window.parsePayPal=parsePayPalInput;
             window.renderPayPal=props=>root.render(<PayPal {...props}/>);
             window.renderMany=props=>root.render(<>{props.map((p,i)=><PayPal key={i} {...p}/>)}</>);
-            window.renderEditor=(html,id='11111111-1111-4111-8111-111111111111')=>root.render(<Editor accountId="22222222-2222-4222-8222-222222222222" productId={id} initialHtml={html} getRevision={()=>0} refreshRevision={async()=>{}} onSaved={(html,config)=>window.saved.push({html,config})}/>);
+            const editorProps={accountId:'22222222-2222-4222-8222-222222222222',getRevision:()=>0,onSavingChange:saving=>window.busy.push(saving),refreshRevision:async()=>{if(window.fixtureRevisionRefreshFailure)throw new Error('Fixture refresh failed');return !window.fixtureRevisionRefreshFalse},onSaved:async(html,config)=>{window.saved.push({html,config});if(window.fixtureRefreshFailure)throw new Error('Fixture profile refresh failed');return !window.fixtureRefreshFalse}};
+            window.renderEditor=(html,id='11111111-1111-4111-8111-111111111111',options={})=>root.render(<Editor {...editorProps} productId={id} initialHtml={html} {...options}/>);
+            function Sessions({html}){
+                const [selected,select]=React.useState('one');
+                const [expanded,expand]=React.useState(true);
+                return <><button onClick={()=>select('one')}>Fixture offering one</button><button onClick={()=>select('two')}>Fixture offering two</button><button onClick={()=>select(null)}>Fixture back to offerings</button><button onClick={()=>expand(value=>!value)}>Fixture collapse section</button>{['one','two'].map(id=><div key={id} hidden={!expanded||selected!==id}><Editor {...editorProps} productId={id==='one'?'11111111-1111-4111-8111-111111111111':'33333333-3333-4333-8333-333333333333'} initialHtml={html} active={expanded&&selected===id}/></div>)}</>;
+            }
+            window.renderSessions=html=>root.render(<Sessions html={html}/>);
             window.renderLink=href=>root.render(<SafeExternalLink href={href}>Portfolio</SafeExternalLink>);
             window.clear=()=>root.render(null);
         ` },
@@ -91,7 +99,7 @@ test('a minimal committed payment receipt recovers the saved button without reta
     });
     await page.evaluate(html => window.renderEditor(html), ncp);
     const input = page.getByRole('textbox', { name: 'PayPal button code' });
-    await input.fill(ncp2); await input.blur();
+    await input.fill(ncp2); await page.getByRole('button', { name: 'Save payment button' }).click();
     await expect(page.getByRole('button', { name: 'Save payment button' })).toBeDisabled();
     await expect.poll(() => page.evaluate(() => window.saved.length)).toBe(1);
     expect(writes).toBe(1);
@@ -182,7 +190,7 @@ test('invalid editor drafts never persist, failed saves retain draft and last sa
     await expect(input).toHaveAttribute('aria-invalid', 'true');
     expect(requests).toBe(0);
     await input.fill(ncp2);
-    await input.blur();
+    await page.getByRole('button', { name: 'Save payment button' }).click();
     await expect(page.getByRole('button', { name: 'Check status and retry' })).toBeEnabled();
     await expect(input).toHaveValue(ncp2);
     expect(await page.evaluate(() => window.saved)).toEqual([]);
@@ -205,11 +213,168 @@ test('typing while a save is pending preserves newer draft and leaves another sa
     });
     await page.evaluate(html => window.renderEditor(html), ncp);
     const input = page.getByRole('textbox', { name: 'PayPal button code' });
-    await input.fill(ncp2); await input.blur(); await requestedPromise;
+    await input.fill(ncp2); await page.getByRole('button', { name: 'Save payment button' }).click(); await requestedPromise;
     const newer = ncp.replace('AB12CD34EF56G', 'ZZ12CD34EF56G');
     await input.fill(newer); release();
     await expect(page.getByRole('button', { name: 'Save payment button' })).toBeEnabled();
     await expect(input).toHaveValue(newer);
     expect((await page.evaluate(() => window.saved)).map(saved => saved.html)).toEqual([ncp2]);
     await expect(page.getByRole('status')).toContainText('Unsaved changes.');
+});
+
+test('valid payment code is saved explicitly, never by leaving its field or navigating away', async ({ page }) => {
+    let writes = 0;
+    await fixture(page, async route => {
+        if (!route.request().url().includes('/payment')) return false;
+        writes++;
+        const {operationId}=route.request().postDataJSON();
+        await route.fulfill({contentType:'application/json',body:JSON.stringify({status:'applied',operationId,revision:1})});
+        return true;
+    });
+    await page.evaluate(html => window.renderSessions(html), ncp);
+    const input=page.getByRole('textbox',{name:'PayPal button code'});
+    await input.fill(ncp2); await input.blur();
+    await expect(page.getByRole('status')).toContainText('Unsaved changes.');
+    expect(writes).toBe(0);
+    await page.getByRole('button',{name:'Fixture offering two',exact:true}).click();
+    await expect(input).toHaveValue(ncp);
+    await page.getByRole('button',{name:'Fixture offering one',exact:true}).click();
+    await expect(input).toHaveValue(ncp2);
+    await page.getByRole('button',{name:'Fixture back to offerings'}).click();
+    await expect(input).toHaveCount(0);
+    await page.getByRole('button',{name:'Fixture offering one',exact:true}).click();
+    await expect(input).toHaveValue(ncp2);
+    await page.getByRole('button',{name:'Fixture collapse section'}).click();
+    await expect(input).toHaveCount(0);
+    await page.getByRole('button',{name:'Fixture collapse section'}).click();
+    await expect(input).toHaveValue(ncp2);
+    expect(writes).toBe(0);
+    await page.getByRole('button',{name:'Save payment button',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('Payment button saved.');
+    expect(writes).toBe(1);
+});
+
+test('an in-flight save completes while its stable offering editor is hidden', async ({ page }) => {
+    let release, requested, writes=0;
+    const gate=new Promise(resolve=>{release=resolve});
+    const requestSeen=new Promise(resolve=>{requested=resolve});
+    await fixture(page,async route=>{
+        if(!route.request().url().includes('/payment'))return false;
+        writes++; requested(); await gate;
+        const {operationId}=route.request().postDataJSON();
+        await route.fulfill({contentType:'application/json',body:JSON.stringify({status:'applied',operationId,revision:1})});
+        return true;
+    });
+    await page.evaluate(html=>window.renderSessions(html),ncp);
+    await page.getByRole('textbox',{name:'PayPal button code'}).fill(ncp2);
+    await page.getByRole('button',{name:'Save payment button',exact:true}).click();
+    await requestSeen;
+    expect(await page.evaluate(()=>window.busy)).toEqual([true]);
+    await page.getByRole('button',{name:'Fixture back to offerings'}).click();
+    await page.getByRole('button',{name:'Fixture collapse section'}).click();
+    release();
+    await expect.poll(()=>page.evaluate(()=>window.saved.length)).toBe(1);
+    await page.getByRole('button',{name:'Fixture collapse section'}).click();
+    await page.getByRole('button',{name:'Fixture offering one',exact:true}).click();
+    await expect(page.getByRole('textbox',{name:'PayPal button code'})).toHaveValue(ncp2);
+    await expect(page.getByRole('status')).toContainText('Payment button saved.');
+    await expect(page.getByRole('button',{name:'Save payment button',exact:true})).toBeDisabled();
+    expect(writes).toBe(1);
+    expect(await page.evaluate(()=>window.busy)).toEqual([true,false]);
+});
+
+test('confirmed saves remain saved when profile refresh fails, without a duplicate write or stale prop rollback',async({page})=>{
+    let writes=0;
+    await fixture(page,async route=>{
+        if(!route.request().url().includes('/payment'))return false;
+        writes++;
+        const {operationId}=route.request().postDataJSON();
+        await route.fulfill({contentType:'application/json',body:JSON.stringify({status:'applied',operationId,revision:1})});
+        return true;
+    });
+    await page.evaluate(html=>{window.fixtureRefreshFailure=true;window.renderEditor(html)},ncp);
+    const input=page.getByRole('textbox',{name:'PayPal button code'});
+    await input.fill(ncp2);
+    await page.getByRole('button',{name:'Save payment button',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('Payment button saved. The profile could not refresh');
+    await expect(input).toHaveValue(ncp2);
+    await expect(page.getByRole('button',{name:'Save payment button',exact:true})).toBeDisabled();
+    await page.evaluate(html=>window.renderEditor(html),ncp);
+    await expect(input).toHaveValue(ncp2);
+    expect(writes).toBe(1);
+});
+
+test('external prop refresh preserves dirty code and switching account clears the prior account draft',async({page})=>{
+    await fixture(page);
+    await page.evaluate(html=>window.renderEditor(html),ncp);
+    const input=page.getByRole('textbox',{name:'PayPal button code'});
+    await input.fill(ncp2);
+    const remote=ncp.replace('AB12CD34EF56G','ZZ12CD34EF56G');
+    await page.evaluate(html=>window.renderEditor(html),remote);
+    await expect(input).toHaveValue(ncp2);
+    await page.evaluate(html=>window.renderEditor(html,undefined,{accountId:'44444444-4444-4444-8444-444444444444'}),remote);
+    await expect(input).toHaveValue(remote);
+    await expect(page.getByRole('button',{name:'Save payment button',exact:true})).toBeDisabled();
+});
+
+test('conflict refresh failures keep the draft and allow a deliberate review retry',async({page})=>{
+    await fixture(page,async route=>{
+        if(!route.request().url().includes('/payment'))return false;
+        const {operationId}=route.request().postDataJSON();
+        await route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({status:'conflict',operationId,revision:2})});
+        return true;
+    });
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.evaluate(html=>{window.fixtureRevisionRefreshFailure=true;window.renderEditor(html)},ncp);
+    const input=page.getByRole('textbox',{name:'PayPal button code'});
+    await input.fill(ncp2);
+    await page.getByRole('button',{name:'Save payment button',exact:true}).click();
+    await page.getByRole('button',{name:'Refresh for review',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('Could not load the latest settings. Your draft is kept.');
+    await expect(input).toHaveValue(ncp2);
+    await page.evaluate(()=>{window.fixtureRevisionRefreshFailure=false});
+    await page.getByRole('button',{name:'Refresh for review',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('Latest settings loaded. Review your draft');
+    await expect(page.getByRole('button',{name:'Save payment button',exact:true})).toBeEnabled();
+    expect(errors).toEqual([]);
+});
+
+test('an explicitly false provider refresh does not claim conflict settings were loaded',async({page})=>{
+    let writes=0;
+    await fixture(page,async route=>{
+        if(!route.request().url().includes('/payment'))return false;
+        writes++;
+        const {operationId}=route.request().postDataJSON();
+        await route.fulfill({status:409,json:{status:'conflict',operationId,revision:2}});return true;
+    });
+    await page.evaluate(html=>{window.fixtureRevisionRefreshFalse=true;window.renderEditor(html)},ncp);
+    await page.getByRole('textbox',{name:'PayPal button code'}).fill(ncp2);
+    await page.getByRole('button',{name:'Save payment button',exact:true}).click();
+    await page.getByRole('button',{name:'Refresh for review',exact:true}).click();
+    await expect(page.getByRole('status')).toContainText('Could not load the latest settings');
+    await expect(page.getByRole('button',{name:'Refresh for review',exact:true})).toBeEnabled();
+    expect(writes).toBe(1);
+});
+
+test('changing account cancels an older pending save and releases its busy state without applying it locally',async({page})=>{
+    let release, requested;
+    const gate=new Promise(resolve=>{release=resolve});
+    const requestSeen=new Promise(resolve=>{requested=resolve});
+    await fixture(page,async route=>{
+        if(!route.request().url().includes('/payment'))return false;
+        requested(); await gate;
+        const {operationId}=route.request().postDataJSON();
+        await route.fulfill({contentType:'application/json',body:JSON.stringify({status:'applied',operationId,revision:1})}).catch(()=>{});
+        return true;
+    });
+    await page.evaluate(html=>window.renderEditor(html),ncp);
+    await page.getByRole('textbox',{name:'PayPal button code'}).fill(ncp2);
+    await page.getByRole('button',{name:'Save payment button',exact:true}).click();
+    await requestSeen;
+    await page.evaluate(html=>window.renderEditor(html,undefined,{accountId:'44444444-4444-4444-8444-444444444444'}),ncp);
+    release();
+    await expect(page.getByRole('textbox',{name:'PayPal button code'})).toHaveValue(ncp);
+    await expect(page.getByRole('button',{name:'Save payment button',exact:true})).toBeDisabled();
+    expect(await page.evaluate(()=>window.saved)).toEqual([]);
+    expect(await page.evaluate(()=>window.busy)).toEqual([true,false]);
 });
