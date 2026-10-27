@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, "..");
 const bundle = buildSync({
   absWorkingDir: root,
   stdin: {
-    contents: 'export { prefersNewChromeOptics } from "./src/lib/tahoe-glass/chrome-policy"; export { resolveTahoeNavPlatformRoute } from "./src/lib/tahoe-glass/nav-platform";',
+    contents: 'export { prefersNewChromeOptics, supportsChromeGlassGeometry } from "./src/lib/tahoe-glass/chrome-policy"; export { resolveTahoeNavPlatformRoute } from "./src/lib/tahoe-glass/nav-platform";',
     loader: "ts",
     resolveDir: root,
   },
@@ -20,7 +20,7 @@ const bundle = buildSync({
 });
 const compiledModule = { exports: {} };
 new Function("require", "module", "exports", bundle.outputFiles[0].text)(require, compiledModule, compiledModule.exports);
-const { prefersNewChromeOptics, resolveTahoeNavPlatformRoute } = compiledModule.exports;
+const { prefersNewChromeOptics, resolveTahoeNavPlatformRoute, supportsChromeGlassGeometry } = compiledModule.exports;
 
 const desktopChrome = {
   userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/143.0.0.0 Safari/537.36",
@@ -81,4 +81,30 @@ test("reduced-transparency and forced-colors preferences override the desktop ro
   assert.equal(enabled({ reducedTransparency: true }), false);
   assert.equal(enabled({ forcedColors: true }), false);
   assert.equal(enabled({ reducedTransparency: true, forcedColors: true }), false);
+});
+
+test("uniform radii remain eligible for the single-radius Chrome lens", () => {
+  for (const radius of [undefined, 0, 28, 9999, "0", "28px", "50%", " 28px "]) {
+    assert.equal(supportsChromeGlassGeometry(radius), true, `radius ${String(radius)}`);
+    assert.equal(supportsChromeGlassGeometry(undefined, { borderRadius: radius }), true, `style radius ${String(radius)}`);
+  }
+  assert.equal(supportsChromeGlassGeometry(28, { borderRadius: "24px", padding: 12 }), true);
+});
+
+test("speech-bubble corner overrides stay with the original renderer", () => {
+  // FeedItemCard intentionally squares the upper-left corner. Even zero must
+  // count as an override rather than being dropped by a truthiness check.
+  assert.equal(supportsChromeGlassGeometry(28, { borderTopLeftRadius: 0 }), false);
+  for (const corner of ["borderTopLeftRadius", "borderTopRightRadius", "borderBottomLeftRadius", "borderBottomRightRadius"]) {
+    for (const value of [0, 12, "16px"]) {
+      assert.equal(supportsChromeGlassGeometry(28, { [corner]: value }), false, `${corner}: ${value}`);
+    }
+  }
+});
+
+test("multi-corner and elliptical radius strings do not get flattened", () => {
+  for (const radius of ["28px 0 0 28px", "24px 12px", "12px 12px 12px", "20px / 10px", "20px/10px", "28px\t0", "28px\n0"]) {
+    assert.equal(supportsChromeGlassGeometry(radius), false, `radius ${radius}`);
+    assert.equal(supportsChromeGlassGeometry(undefined, { borderRadius: radius }), false, `style radius ${radius}`);
+  }
 });
