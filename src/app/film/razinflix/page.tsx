@@ -14,7 +14,6 @@ import {
     TahoeGlassField,
     TahoeGlassProvider,
     TahoeGlassSurface,
-    type TahoeGlassWebGLSource,
 } from '@/components/ui/tahoe-glass';
 import ConditionalNSSOAgent from '@/components/agent/ConditionalNSSOAgent';
 import { ToastViewport } from '@/components/ui/Toast';
@@ -22,6 +21,7 @@ import modalStyles from '@/components/film/MovieModal.module.css';
 import styles from './razinflix.module.css';
 import { useUser } from '@/components/providers/UserProvider';
 import { filterFilms, filmBrowseUrl, filmUrl, groupFilms, readFilmBrowseUrl, type FilmBrowseState, type FilmViewMode } from '@/lib/razinflix/browsing';
+import { DECK_BACKGROUND_ASSET, DECK_BACKGROUND_COLOR, DECK_BACKGROUND_IMAGE_SOURCE, DECK_BACKGROUND_LABEL } from '@/lib/deck-background';
 
 export default function RazinFlixPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -171,7 +171,7 @@ export default function RazinFlixPage() {
     }, [catalogAttempt]);
 
     useEffect(() => {
-        // Cache the five scene images before they enter the rotation.
+        // Cache only the five featured-film images; the page foundation never rotates.
         const images = featuredFilms.map(film => {
             const image = new window.Image();
             image.src = `/api/razinflix/hero/${encodeURIComponent(film.trailer_key!)}`;
@@ -202,23 +202,13 @@ export default function RazinFlixPage() {
     const featuredFilm = featuredFilms[featuredIndex];
     const heroSceneUrl = featuredFilm?.trailer_key
         ? `/api/razinflix/hero/${encodeURIComponent(featuredFilm.trailer_key)}`
-        : '/siri-gradient.png';
-    const heroWebglSource = useMemo<TahoeGlassWebGLSource>(
-        () => ({
-            kind: 'image',
-            src: heroSceneUrl,
-            fit: 'cover',
-            label: 'razinflix-featured',
-        }),
-        [heroSceneUrl],
-    );
-
+        : DECK_BACKGROUND_ASSET;
     const rotationControl = (
         <button
             type="button"
             className={modalStyles.control}
-            aria-label={rotationPaused ? 'Resume background rotation' : 'Pause background rotation'}
-            title={rotationPaused ? 'Resume background rotation' : 'Pause background rotation'}
+            aria-label={rotationPaused ? 'Resume featured film rotation' : 'Pause featured film rotation'}
+            title={rotationPaused ? 'Resume featured film rotation' : 'Pause featured film rotation'}
             aria-pressed={rotationPaused}
             onClick={() => setRotationPaused(paused => !paused)}
         >
@@ -373,21 +363,19 @@ export default function RazinFlixPage() {
             scene={(
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                    data-razinflix-background={featuredFilm?.id ?? ''}
-                    style={{ backgroundImage: `url(${JSON.stringify(heroSceneUrl)})` }}
+                    data-razinflix-background="deck-blue"
+                    style={{ backgroundColor: DECK_BACKGROUND_COLOR, backgroundImage: `url(${JSON.stringify(DECK_BACKGROUND_ASSET)})` }}
                 />
             )}
-            sourceLabel="razinflix-featured"
-            webglSource={heroWebglSource}
+            sourceLabel={DECK_BACKGROUND_LABEL}
+            webglSource={DECK_BACKGROUND_IMAGE_SOURCE}
             preferredBackend="auto"
             fallback="webgl"
-            className="min-h-screen bg-black text-white font-sans"
+            className="min-h-screen text-white font-sans"
             contentClassName="min-h-screen"
         >
         <div className="min-h-screen text-white pb-[calc(max(env(safe-area-inset-bottom),_5rem))] font-sans relative">
-            <div aria-hidden="true" className={styles.backgroundShade} data-razinflix-background-shade="true">
-                <div key={heroSceneUrl} className={styles.backgroundFade} />
-            </div>
+            <div aria-hidden="true" className={styles.backgroundShade} data-razinflix-background-shade="true" />
             {/* Navbar */}
             <TahoeBackdropHeader
                 radius="0 0 24px 24px"
@@ -532,6 +520,12 @@ export default function RazinFlixPage() {
                         className="w-full h-full absolute inset-0 flex items-end justify-start pb-4 md:pb-24 px-6 md:px-24"
                         style={{ animation: 'nativeFade 0.6s ease-out forwards' }}
                     >
+                        <div
+                            aria-hidden="true"
+                            data-razinflix-featured-art={featuredFilms[featuredIndex].id}
+                            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                            style={{ backgroundImage: `url(${JSON.stringify(heroSceneUrl)})` }}
+                        />
                         {/* Gradient Fade Overlays */}
                         <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-black/90 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
                         <div className="absolute inset-y-0 left-0 w-[80%] md:w-[50%] bg-gradient-to-r from-black/80 md:from-black via-black/40 to-transparent z-10 pointer-events-none"></div>
@@ -614,7 +608,7 @@ export default function RazinFlixPage() {
             <div className={`relative z-10 space-y-4 ${!isFiltered && viewMode === 'category' && featuredFilms.length ? 'pb-12 pt-8 md:pt-16' : 'pt-[calc(8rem+env(safe-area-inset-top))] md:pt-24'}`}>
                 {activeCategory && <div className="flex flex-wrap items-center gap-3 px-4 md:px-12"><h1 className="text-xl font-semibold">{activeCategory}</h1><button type="button" onClick={() => updateBrowse({ category: null })} className="min-h-11 rounded-full border border-white/30 px-4 text-sm">Clear category filter</button></div>}
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center mt-32 text-gray-400">
+                    <div className="flex flex-col items-center justify-center mt-32 text-white/85">
                         <Loader2 className="animate-spin mb-4" size={48} />
                         <p className="font-medium tracking-wide">Loading from Razin database...</p>
                     </div>

@@ -7,35 +7,34 @@ import VantaBackground from "@/components/VantaBackground";
 import { TahoeGlassProvider } from "@/components/providers/TahoeGlassProvider";
 import DimmingOverlay from "@/components/ui/DimmingOverlay";
 import type { TahoeGlassWebGLSource } from "@/lib/tahoe-glass/types";
-import { routeOwnsTahoeScene } from "@/lib/tahoe-glass/route-boundaries";
+import {
+  routeOwnsTahoeScene,
+  routeUsesDeckBackground,
+} from "@/lib/tahoe-glass/route-boundaries";
+import {
+  DECK_BACKGROUND_ASSET,
+  DECK_BACKGROUND_COLOR,
+  DECK_BACKGROUND_IMAGE_SOURCE,
+  DECK_BACKGROUND_LABEL,
+} from "@/lib/deck-background";
 
-const SIRI_IMAGE_SOURCE = {
-  kind: "image",
-  src: "/siri-gradient.png",
-  fit: "cover",
-  label: "siri-gradient",
-} as const satisfies TahoeGlassWebGLSource;
-
-const SIRI_SCENE = (
+const DECK_SCENE = (
   <div
-    className="h-full w-full bg-[#43628c] bg-cover bg-center bg-no-repeat"
-    style={{ backgroundImage: "url('/siri-gradient.png')" }}
+    data-nsso-deck-background="true"
+    className="h-full w-full bg-cover bg-center bg-no-repeat"
+    style={{
+      backgroundColor: DECK_BACKGROUND_COLOR,
+      backgroundImage: `url('${DECK_BACKGROUND_ASSET}')`,
+    }}
   />
 );
-
-function routeUsesSiriScene(pathname: string): boolean {
-  return (
-    pathname === "/earnings" ||
-    (/^\/dashboard\/products\/[^/]+\/creator\/?$/.test(pathname))
-  );
-}
 
 export default function NSSOTahoeGlassEnvironment({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const vantaCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
-  const usesSiriScene = routeUsesSiriScene(pathname);
+  const usesDeckBackground = routeUsesDeckBackground(pathname);
 
   const exposeVantaCanvas = React.useCallback(
     (canvas: HTMLCanvasElement | null) => {
@@ -59,11 +58,15 @@ export default function NSSOTahoeGlassEnvironment({
     return <>{children}</>;
   }
 
-  const scene = usesSiriScene
-    ? SIRI_SCENE
+  const scene = usesDeckBackground
+    ? DECK_SCENE
     : <VantaBackground onCanvasChange={exposeVantaCanvas} />;
-  const webglSource = usesSiriScene ? SIRI_IMAGE_SOURCE : vantaWebglSource;
-  const sourceLabel = usesSiriScene ? "siri-gradient" : "vanta-clouds";
+  const webglSource = usesDeckBackground
+    ? DECK_BACKGROUND_IMAGE_SOURCE
+    : vantaWebglSource;
+  const sourceLabel = usesDeckBackground
+    ? DECK_BACKGROUND_LABEL
+    : "vanta-clouds";
 
   return (
     <TahoeGlassProvider
@@ -72,7 +75,9 @@ export default function NSSOTahoeGlassEnvironment({
       scene={scene}
       // Keep the same blue base during source startup, WebGL recovery and
       // profile-to-product navigation; transparent frames must not reveal black.
-      sceneStyle={{ backgroundColor: usesSiriScene ? "#43628c" : "#586E91" }}
+      sceneStyle={{
+        backgroundColor: usesDeckBackground ? DECK_BACKGROUND_COLOR : "#586E91",
+      }}
       sourceLabel={sourceLabel}
       preferredBackend="auto"
       fallback="webgl"

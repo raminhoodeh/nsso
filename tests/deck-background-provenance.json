@@ -1,0 +1,19 @@
+{
+  "source": "User-supplied NSSO pitch deck, original background drawing operations only",
+  "sourceSha256": "923286069ec57e20c81a670aa9665d2d4ddaa521620cce99658df070cda5949d",
+  "sourcePage": 11,
+  "sourceFormObject": 293,
+  "inclusiveDrawingOperationRange": [0, 28],
+  "maskedGlowObjects": [264, 270, 272],
+  "grainImageObject": 744,
+  "grainBlendMode": "Overlay",
+  "originalBaseColor": "#43628c",
+  "asset": "public/assets/backgrounds/nsso-deck-blue.webp",
+  "width": 1920,
+  "height": 1360,
+  "bytes": 1945376,
+  "sha256": "bb14bb8f062b924d592a7f8e581ab025242cb4e8952b9d7a2f8a93e64a1fe167",
+  "rgbPixelSha256": "c108acbe4dd59532a682c259422635f974a3c5a68389de200172699c89e86187",
+  "encoding": "lossless WebP; decoded pixels identical to the extracted PDF composition",
+  "extractionValidation": "Four disjoint background-only original-page bands compare with zero channel error; no text, logos, mockups or PDF instructions retained"
+}

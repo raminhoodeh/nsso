@@ -401,13 +401,26 @@ export default function VantaBackground({ onCanvasChange }: VantaBackgroundProps
             onCanvasChangeRef.current?.(null)
             pausedForReducedMotionRef.current = false
             resumeAfterCurrentFrameRef.current = false
-            if (vantaEffect.current) {
-                vantaEffect.current.afterRender = undefined
-                vantaEffect.current.destroy()
-                vantaEffect.current = null
+            const effect = vantaEffect.current
+            vantaEffect.current = null
+            if (effect) {
+                // The pinned vendor destroy disposes scene resources but only
+                // nulls renderer. Stop its loop, then dispose the captured owned
+                // renderer too; never dispose a Tahoe consumer's renderer.
+                const renderer = effect.renderer
+                effect.afterRender = undefined
+                if (typeof effect.req === 'number') window.cancelAnimationFrame(effect.req)
+                try {
+                    effect.destroy()
+                } finally {
+                    // Dispose resources without forcing context loss during
+                    // navigation; let the browser retire the detached context.
+                    renderer?.dispose?.()
+                }
             }
             // Cleanup scripts? Usually not necessary or safe as other components might need them, 
-            // but in a SPA we usually leave them. Vanta destroy handles the canvas.
+            // but in a SPA we leave them available for an excluded route's next
+            // initialization. The owned renderer's resources are disposed.
         }
     // Recreate when reduced-motion changes so its RAF lifecycle is restarted
     // from a clean, deterministic frame.

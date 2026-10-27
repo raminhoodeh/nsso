@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6zZkAAAAASUVORK5CYII=', 'base64')
+const deckAssetPath = '/assets/backgrounds/nsso-deck-blue.webp'
+const deckPixels = readFileSync(new URL('../../public/assets/backgrounds/nsso-deck-blue.webp', import.meta.url))
 const film = { id: 1, title: 'Synthetic featured film', year: '2026', rating: '8/10', poster: 'https://images.test/poster.jpg', description: 'A fixture journey.', director: 'Fixture director', categories: ['New'], trailer_key: 'FIXTURE1234' }
 const placeName = 'The Courtyard — Al Quoz'
 let bundles
@@ -54,6 +57,7 @@ async function mount(page, app, { catalog = [film], failedReads = 0, manager = f
         const url = new URL(route.request().url()); requests.push({ path: url.pathname, method: route.request().method() })
         if (url.pathname === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundles[app].js })
         if (url.pathname === '/fixture.css') return route.fulfill({ contentType: 'text/css', body: bundles[app].css + '\n[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}' })
+        if (url.pathname === deckAssetPath) return route.fulfill({ contentType: 'image/webp', body: deckPixels })
         if (url.pathname.startsWith('/rest/v1/')) {
             expect(url.pathname).toBe('/rest/v1/razinflix_films')
             expect(route.request().headers().authorization).toBe('Bearer synthetic-anonymous-key')
@@ -74,6 +78,52 @@ async function mount(page, app, { catalog = [film], failedReads = 0, manager = f
     await page.goto('https://nsso.test/' + (app === 'film' ? `film/razinflix${initialFilm ? `?film=${initialFilm}` : ''}` : 'places/dubai'))
     return { errors, requests, reads: () => reads }
 }
+
+test('the library foundation stays blue grain while featured-film art and controls change only the billboard', async ({ page }) => {
+    const catalog = [film, { ...film, id: 2, title: 'Second synthetic film', trailer_key: 'SECOND12345' }]
+    const state = await mount(page, 'film', { catalog })
+    const scene = page.locator('[data-razinflix-background="deck-blue"]')
+    const art = page.locator('[data-razinflix-featured-art]')
+    await expect(art).toHaveCount(1)
+    await page.getByRole('button', { name: 'Pause featured film rotation', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Resume featured film rotation', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    const initialScene = await scene.evaluate(node => ({ image: getComputedStyle(node).backgroundImage, color: getComputedStyle(node).backgroundColor }))
+    expect(initialScene.image).toContain(deckAssetPath)
+    expect(initialScene.color).toBe('rgb(67, 98, 140)')
+    const firstArt = await art.getAttribute('data-razinflix-featured-art')
+    const firstImage = await art.evaluate(node => getComputedStyle(node).backgroundImage)
+    expect(firstImage).toContain('/api/razinflix/hero/')
+    await page.getByRole('button', { name: 'Next featured film', exact: true }).first().click()
+    await expect(art).not.toHaveAttribute('data-razinflix-featured-art', firstArt)
+    expect(await art.evaluate(node => getComputedStyle(node).backgroundImage)).not.toBe(firstImage)
+    expect(await scene.evaluate(node => ({ image: getComputedStyle(node).backgroundImage, color: getComputedStyle(node).backgroundColor }))).toEqual(initialScene)
+    await page.getByLabel('Film view').selectOption('alpha')
+    await expect(art).toHaveCount(0)
+    expect(await scene.evaluate(node => getComputedStyle(node).backgroundImage)).toBe(initialScene.image)
+    const decoded = await page.evaluate(async asset => {
+        const image = new Image(); image.src = asset; await image.decode()
+        return [image.naturalWidth, image.naturalHeight]
+    }, deckAssetPath)
+    expect(decoded[0]).toBeGreaterThan(1000); expect(decoded[1]).toBeGreaterThan(1000)
+    expect(state.errors).toEqual([])
+})
+
+test('Places retains an interactive map host with real blue grain beneath the unavailable-map state', async ({ page }) => {
+    const state = await mount(page, 'places')
+    await expect(page.getByRole('status')).toContainText('Google Maps could not load. The place list still works.')
+    const shell = page.locator('[data-places-background="deck-blue"]')
+    const map = page.getByLabel('Map of places to go in the UAE', { exact: true })
+    for (const surface of [shell, map]) {
+        const background = await surface.evaluate(node => ({ image: getComputedStyle(node).backgroundImage, color: getComputedStyle(node).backgroundColor }))
+        expect(background.image).toContain(deckAssetPath)
+        expect(background.color).toBe('rgb(67, 98, 140)')
+    }
+    await expect(map).not.toHaveAttribute('inert')
+    await findCourtyard(page)
+    await expect(page.getByRole('button', { name: `Save ${placeName}`, exact: true })).toBeVisible()
+    expect(state.requests.some(request => request.path === deckAssetPath)).toBe(true)
+    expect(state.errors).toEqual([])
+})
 
 test('a failed catalogue read explains the failure and retries while preserving search and view', async ({ page }) => {
     const state = await mount(page, 'film', { failedReads: 1 })
