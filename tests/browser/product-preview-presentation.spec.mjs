@@ -32,9 +32,26 @@ test.beforeEach(async ({ browserName }, testInfo) => {
 })
 
 test.afterEach(async ({ page }, testInfo) => {
+    let cleanup = { complete: true }
+    if (page && !page.isClosed()) {
+        let cleanupDeadline
+        try {
+            cleanup = await Promise.race([
+                page.evaluate(() => {
+                    window.fixtureUnmount?.()
+                    return document.getElementById('root')?.childElementCount === 0 && !document.querySelector('#vanta-bg canvas')
+                }).then(complete => ({ complete }), error => ({ complete: false, reason: error.message })),
+                new Promise(resolve => { cleanupDeadline = setTimeout(() => resolve({ complete: false, reason: 'React scene cleanup exceeded five seconds' }), 5_000) }),
+            ])
+        } finally { clearTimeout(cleanupDeadline) }
+    }
     const measurements = renderingByPage.get(page)
-    if (!measurements || testInfo.status === testInfo.expectedStatus) return
-    await testInfo.attach('product-rendering-diagnostics', { body: Buffer.from(JSON.stringify(measurements)), contentType: 'application/json' })
+    if (measurements && (testInfo.status !== testInfo.expectedStatus || !cleanup.complete)) {
+        await testInfo.attach('product-rendering-diagnostics', { body: Buffer.from(JSON.stringify({ ...measurements, cleanup })), contentType: 'application/json' })
+    }
+    // Preserve the original failure, but never silently pass a successful case
+    // whose graphics scene failed to release before the next context starts.
+    if (testInfo.status === testInfo.expectedStatus) expect(cleanup.complete, JSON.stringify(cleanup)).toBe(true)
 })
 
 // Real product rendering, real Tahoe provider/surfaces and the pinned Vanta
@@ -70,7 +87,7 @@ test.beforeAll(async () => {
             window.fixturePublic={rpc(){return{abortSignal:async()=>{await new Promise(resolve=>setTimeout(resolve,100));return{data:product,error:null}}}},from(table){return result(table==='users'?{username:'fixture-seller'}:[])}};
             function SourceControls(){const controls=useTahoeGlassControls();React.useLayoutEffect(()=>{window.fixtureSourceControls=controls},[controls]);return null}
             function App(){const path=useSyncExternalStore(window.fixtureSubscribe,()=>window.fixturePath);return <UIProvider><Environment><SourceControls/>{path.startsWith('/products/')?<Product/>:<main style={{position:'relative',padding:40,color:'white'}}><h1>Fixture profile</h1><button style={{padding:20}} onClick={()=>window.fixtureNavigate('/products/${productId}')}>Open fixture offering</button></main>}</Environment></UIProvider>};
-            createRoot(document.getElementById('root')).render(<App/>);
+            const fixtureRoot=createRoot(document.getElementById('root'));let mounted=true;window.fixtureUnmount=()=>{if(mounted){mounted=false;fixtureRoot.unmount()}};fixtureRoot.render(<App/>);
         ` } })
     bundle = result.outputFiles[0].text
 })
@@ -225,11 +242,21 @@ test('source frame demand, native resize and real context recovery preserve the 
         expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
         // Switching back to normal motion must restart the real animation,
         // independently of layout notifications or framebuffer subscribers.
+        await page.evaluate(() => {
+            window.fixtureNormalMotionDraws = 0
+            const unsubscribe = window.fixtureSourceControls.subscribeOwnedSceneAfterRender(() => {
+                const renderer = window.VANTA.current?.renderer
+                if (renderer?.domElement === window.fixtureCanvas || !(renderer?.info.render.frame >= 3)) return
+                window.fixtureNormalMotionDraws = renderer.info.render.frame
+                // The vendor schedules its next frame after this callback.
+                // Unmount in a microtask after that stack completes so React's
+                // real effect cleanup can cancel the newly scheduled frame.
+                queueMicrotask(() => { unsubscribe(); window.fixtureUnmount() })
+            })
+        })
         await page.emulateMedia({ reducedMotion: 'no-preference' })
-        await page.waitForFunction(() => {
-            const effect = window.VANTA.current
-            return effect?.renderer?.domElement !== window.fixtureCanvas && effect?.renderer?.info.render.frame >= 3
-        }, null, { timeout: paintDeadline })
+        await page.waitForFunction(() => window.fixtureNormalMotionDraws >= 3 && document.getElementById('root').childElementCount === 0, null, { timeout: paintDeadline })
+        await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)
     }
     expect(errors).toEqual([])
     expect(unexpected).toEqual([])
