@@ -43,8 +43,8 @@ Browser emulation must not be described as physical-device verification.
   and focus restoration remain intact.
 - [ ] Supplied NSSO logo assets render clearly where needed, with correct aspect
   ratio, accessible naming and no missing-image or hydration errors.
-- [ ] The homepage's visible component credit links to the original author page;
-  the Lissé versioned MIT notice is retained and no marketplace demo media ships.
+- [ ] Component provenance and the Lissé versioned MIT notice are retained in
+  `THIRD_PARTY_NOTICES.md`; no marketplace demo media ships.
 
 ## Verification gates
 
