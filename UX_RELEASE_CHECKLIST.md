@@ -65,7 +65,7 @@ content should be removed to solve a presentation issue.
 - [x] V03 Desktop, narrow/mobile and short/landscape browser inspection passes; emulation is labelled accurately.
 - [x] V04 Independent review completed and material findings resolved.
 - [x] V05 Commit pushed and production deployment ready; live health revision matches intended commit.
-- [ ] V06 Critical live journeys repeated and remaining limitations disclosed.
+- [x] V06 Critical live journeys repeated and remaining limitations disclosed.
 
 ## Evidence and handoff
 
@@ -102,7 +102,7 @@ content should be removed to solve a presentation issue.
 - Authenticated editing and deletion checks use controlled fixtures of the real components and compiled CSS. No customer account, payments, real deletion, signup email or production AI spend is exercised.
 - The local checkout's privileged credential is not current; local protected API outage paths were tested honestly. Deployment must use configured production credentials and pass live health.
 - American Doctor's configured YouTube clip is private. It is labelled unavailable with a useful fallback, not claimed repaired or silently replaced.
-- The first protected release is deployed and verified at `b4f364a30c890ba010ad4dbadcd675101439dc31`. Final acceptance remains open for two actual-browser findings below; V06 must not be marked complete until their production retest passes.
+- Final application release `fa3a9d697d9b7df44382d59052a37dd1116627c7` is deployed and verified. Both first-pass live findings described below are fixed and their production retests pass.
 
 ## First production verification and follow-up findings
 
@@ -120,4 +120,18 @@ content should be removed to solve a presentation issue.
 
 - P01 fixed: server input/submit remain disabled until hydration restores the optional draft and makes handlers ready. Real renderToString → held-client → hydrateRoot regressions cover retained first edit, restored draft and denied browser storage. Public/hydration checks pass 32/32, with 3/3 dedicated WebKit hydration checks.
 - A03 fixed: actual pane/header/toggle/padding measurements budget the composer and category list; short panes receive compact spacing. ResizeObserver and visualViewport listeners preserve fitting controls and drafts while resizing. Eight compiled-CSS WebKit regressions pass at 390×400, 390×844, 667×375 and resizing 844→400→320→844, including long drafts, category expansion and database dismissal, with zero page errors or observer-loop warnings.
-- Root independently ran 20/20 follow-up browser cases and the production build/CSP checks. Full unit/API suite is rerun for the follow-up; independent source review found no material remaining defect. Final production retest remains pending V06.
+- Root independently ran 20/20 follow-up browser cases and the production build/CSP checks. All 405 unit/API tests pass again; independent source review found no material remaining defect. Final production retests pass as recorded below.
+
+## Final production acceptance — all 39 UX items verified
+
+- PR #26 merged after both protected jobs passed: 405/405 unit/API tests, 314/314 browser tests, dependency audit (zero vulnerabilities), secret scan, lint, typecheck, production build, CSP/critical-CSS checks, and isolated database authorization/negative-control checks. CI run: `40463689508`.
+- Final application merge revision: `fa3a9d697d9b7df44382d59052a37dd1116627c7`. Vercel deployment `dpl_9uQEMeZB4xFPixaDjZLRuDrzC38J` is READY. All five production smoke routes return200 with enforced security headers; public health reports that exact intended revision. The updated production-health workflow run `40464418689` passed.
+- P01–P13 live retest: 42/42 journey groups passed in desktop Chrome, mobile Chrome emulation, mobile WebKit and short landscape WebKit. The original early-input hydration failure is resolved. Both actual homepage media files decode and playback/duration/controls synchronize in all three full-media browser configurations. No page exceptions or application write attempts.
+  Evidence: `private/test-results/ux-public-live-2026-10-27T06-59-44-790Z/report.json`.
+- A01/A03–A05 live retest: 5/5 actual /deity viewport cases pass (desktop Chrome, mobile Chrome, mobile WebKit, WebKit390×400 keyboard-sized, WebKit667×375 landscape). Four-line and twenty-line drafts retain an on-screen Send control; composer grows from56px to126px, capped111px where the short landscape needs it; categories and database dismissal remain usable. No AI requests, page errors or writes.
+  Evidence: `private/test-results/ux-deity-live-2026-10-27T06-59-47.673Z/report.json`.
+- R01–R04/R06–R11 live retest: all six journey groups pass in Chrome desktop, WebKit mobile and Chrome landscape. Exact New membership, filter/deep-link history, bounded rendering and unavailable-trailer fallback pass. A real available YouTube trailer emits ready messages and advances playback in all three; no external-provider verification limitation occurred. No catalogue writes.
+  Evidence: `private/test-results/ux-film-live-2026-10-27T06-59-47.089Z/report.json`.
+- D01–D09, A02 and R05 retain the passing authenticated fixture, native-HTTP and isolated authorization/transactional evidence described above; real customer account edits, destructive actions, signup emails, payments and production AI spend were deliberately not exercised. Mobile verification is browser emulation, not physical-device certification.
+- American Doctor's configured private YouTube clip remains explicitly unavailable, with working trailer search/retry; no invented metadata or silent catalogue change.
+- All feature and release acceptance boxes are complete. This evidence-only update changes no application, schema, dependencies or customer content. After its protected merge, repeat release-identity/route health and lightweight public/Deity smoke on the promoted documentation revision.
