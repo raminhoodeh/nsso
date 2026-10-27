@@ -62,7 +62,7 @@ test("direct Places popovers opt out while retaining their readable backings", (
 });
 
 test("the PayPal help popup is an opaque grey reading surface", () => {
-  const panels = surfaces("src/app/dashboard/components/AdvancedModeCard.tsx");
+  const panels = surfaces("src/app/dashboard/components/ProductsServicesEditor.tsx");
   assert.equal(panels.length, 1);
   const { node, source, attributes } = panels[0];
   assert.equal(attributes.id, '"paypal-guide"');

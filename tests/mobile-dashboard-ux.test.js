@@ -12,6 +12,10 @@ const paypalEditorSource = fs.readFileSync(
     path.join(process.cwd(), 'src/components/payments/PayPalCodeEditor.tsx'),
     'utf8'
 )
+const productsEditorSource = fs.readFileSync(
+    path.join(process.cwd(), 'src/app/dashboard/components/ProductsServicesEditor.tsx'),
+    'utf8'
+)
 const bottomNavSource = fs.readFileSync(
     path.join(process.cwd(), 'src/components/layout/DashboardBottomNav.tsx'),
     'utf8'
@@ -55,10 +59,11 @@ test('experience and products are exclusive sibling accordions', () => {
     assert.match(advancedModeSource, /data-profile-editor-sections="split"/)
 
     const experienceCard = advancedModeSource.indexOf('data-editor-card="experience"')
-    const productsCard = advancedModeSource.indexOf('data-editor-card="products"')
+    const productsCard = advancedModeSource.indexOf('<ProductsServicesEditor')
 
     assert.ok(experienceCard >= 0, 'experience editor card is present')
-    assert.ok(productsCard > experienceCard, 'products card is a later sibling')
+    assert.ok(productsCard > experienceCard, 'the persistent products editor is a later sibling')
+    assert.match(productsEditorSource, /data-editor-card="products"/)
     assert.match(advancedModeSource, /'Experience & Education'/)
     assert.match(advancedModeSource, /'Products & Services'/)
     assert.match(advancedModeSource, /data-editor-accordion="experience"/)
@@ -83,7 +88,7 @@ test('products no longer participate in experience section navigation', () => {
     assert.doesNotMatch(advancedModeSource, /setActiveSection\('products'\)/)
 
     const experienceCard = advancedModeSource.indexOf('data-editor-card="experience"')
-    const productsPanel = advancedModeSource.indexOf("expandedPanel === 'products'", experienceCard)
+    const productsPanel = advancedModeSource.indexOf('<ProductsServicesEditor', experienceCard)
     const experienceMarkup = advancedModeSource.slice(experienceCard, productsPanel)
 
     assert.doesNotMatch(experienceMarkup, /renderProducts\(\)/)
@@ -92,7 +97,7 @@ test('products no longer participate in experience section navigation', () => {
 
 test('mobile navigation immediately precedes the active experience editor', () => {
     const experienceCard = advancedModeSource.indexOf('data-editor-card="experience"')
-    const productsPanel = advancedModeSource.indexOf("expandedPanel === 'products'", experienceCard)
+    const productsPanel = advancedModeSource.indexOf('<ProductsServicesEditor', experienceCard)
     const experienceMarkup = advancedModeSource.slice(experienceCard, productsPanel)
     const tabList = experienceMarkup.indexOf('role="tablist"')
     const tabPanel = experienceMarkup.indexOf('role="tabpanel"')
@@ -176,30 +181,24 @@ test('mobile advanced editors reserve writing room without changing desktop dens
     assert.match(advancedModeSource, /py-2\.5 md:py-2/)
     assert.match(advancedModeSource, /min-h-\[88px\] resize-none md:min-h-\[60px\]/)
 
-    assert.match(advancedModeSource, /md:absolute md:right-0 md:top-\[27px\][^>]*>[\s\S]*?Product details/)
-    assert.match(advancedModeSource, /min-h-\[144px\] resize-none[^"\n]*md:min-h-\[100px\]/)
+    assert.match(productsEditorSource, /min-h-\[160px\]/)
     assert.match(paypalEditorSource, /min-h-\[112px\] resize-none[^"\n]*md:min-h-\[80px\]/)
-    assert.match(advancedModeSource, /text-base text-white\/70[^"\n]*md:text-sm/)
-    assert.match(advancedModeSource, /text-base text-white\/80 md:text-sm/)
     assert.match(paypalEditorSource, /text-base font-mono[^"\n]*md:text-xs/)
 
-    const mobileSwitchTargets = advancedModeSource.match(
-        /className="h-11 w-14 shrink-0 p-0"/g
-    ) || []
-    assert.equal(mobileSwitchTargets.length, 3, 'all product switches retain 44px mobile targets')
-    assert.match(advancedModeSource, /min-h-11 min-w-0 flex-1 px-3 py-2 md:flex-none md:px-4/)
+    assert.match(productsEditorSource, /className="h-11 w-14 shrink-0 p-0"/)
+    assert.equal((productsEditorSource.match(/<Toggle checked=/g) || []).length, 3, 'all product switches share the 44px mobile target')
+    assert.match(productsEditorSource, /Upload image for/)
 })
 
 test('the split products card retains its existing CRUD and editor paths', () => {
-    for (const handler of [
-        'addProduct',
-        'updateProduct',
-        'confirmDeleteProduct',
-        'executeDelete',
-        'renderProducts()'
-    ]) {
-        assert.ok(advancedModeSource.includes(handler), `${handler} remains wired`)
-    }
+    assert.match(productsEditorSource, /createEntity\('product'/)
+    assert.match(productsEditorSource, /patchEntity\('product'/)
+    assert.match(productsEditorSource, /removeEntity\('product'/)
+    assert.match(productsEditorSource, /<ConfirmDeleteDialog/)
+    assert.match(productsEditorSource, /<ImageCropperModal/)
+    assert.match(productsEditorSource, /<PayPalCodeEditor/)
+    assert.doesNotMatch(productsEditorSource, /name:\s*'New Product'/)
+    assert.match(productsEditorSource, /Add to public profile/)
 })
 
 test('the bottom bar shares the header backdrop engine and owns real safe-area space', () => {
@@ -278,32 +277,32 @@ test('profile Ask Deity controls have clear field spacing and compact chrome', (
 
 test('nested dashboard cards use one concentric radius system', () => {
     assert.equal(
-        (advancedModeSource.match(/radius="var\(--editor-card-radius\)"/g) || []).length,
+        ((advancedModeSource + productsEditorSource).match(/radius="var\(--editor-card-radius\)"/g) || []).length,
         2,
         'both expanded editor shells use the responsive radius token'
     )
     assert.equal(
         (advancedModeSource.match(/radius="var\(--editor-aside-radius\)"/g) || []).length,
-        2,
-        'both flush editor menus use the matching corner-aware token'
+        1,
+        'the unchanged experience menu retains its corner-aware radius'
     )
     assert.equal(
         (advancedModeSource.match(/\[--editor-aside-radius:28px_28px_0px_0px\]/g) || []).length,
-        2
+        1
     )
     assert.equal(
         (advancedModeSource.match(/md:\[--editor-aside-radius:40px_0px_0px_40px\]/g) || []).length,
-        2
+        1
     )
     assert.doesNotMatch(advancedModeSource, /rounded-\[28px\][^"\n]*md:rounded-\[40px\]/)
     assert.match(dashboardPageSource, /radius="var\(--profile-card-radius\)"/)
     assert.match(dashboardPageSource, /\[--profile-card-radius:32px\]/)
     assert.match(dashboardPageSource, /sm:\[--profile-card-radius:40px\]/)
 
-    const productsStart = advancedModeSource.indexOf('data-editor-card="products"')
-    const productsEnd = advancedModeSource.indexOf('</GlassCard>', productsStart)
-    const productsMarkup = advancedModeSource.slice(productsStart, productsEnd)
-    assert.equal((productsMarkup.match(/<PlannedFeature /g) || []).length, 2, 'both future integrations use the shared touch-accessible disclosure')
+    assert.doesNotMatch(productsEditorSource, /<PlannedFeature/)
+    assert.match(productsEditorSource, /aria-controls="offerings-coming-soon"/)
+    assert.match(productsEditorSource, /id="offerings-coming-soon"/)
+    assert.match(productsEditorSource, /Coming soon/)
 })
 
 test('mobile notifications clear the bottom bar and use an opaque readable token', () => {

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/components/layout/Header.tsx', 'src/components/ui/ImageCropperModal.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SortableLinkItem.tsx', 'src/app/dashboard/components/SortableContactItem.tsx', 'src/app/dashboard/components/NetworkTable.tsx', 'src/app/dashboard/components/MyNssoTab.tsx']
+    const files = ['src/components/layout/Header.tsx', 'src/components/ui/ImageCropperModal.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ProductsServicesEditor.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SortableLinkItem.tsx', 'src/app/dashboard/components/SortableContactItem.tsx', 'src/app/dashboard/components/NetworkTable.tsx', 'src/app/dashboard/components/MyNssoTab.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;background:#344956;color:white;font-family:Arial}#root{padding:110px 16px 110px}#fixture-chrome{position:fixed;bottom:0;height:88px;inset-inline:0;z-index:5000;background:#27323d}button,input,textarea,select{font:inherit}'
@@ -21,7 +21,7 @@ test.beforeAll(async () => {
                             : path.endsWith('supabase/client') ? 'export const createClient=()=>({auth:{signOut:async()=>({error:null})}});'
                                 : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:{id:"fixture",username:"fixture",user_type:"standard"}});'
                                     : path.endsWith('UIProvider') ? 'const noop=()=>{};export const useUI=()=>({setBackgroundDimmed:noop});'
-                                        : path.endsWith('ProfileProvider') ? 'export const useProfile=()=>window.fixtureProfile;'
+                                        : path.endsWith('ProfileProvider') ? 'export const useProfile=()=>({mutationState:{status:"saved",message:""},retryPending:async()=>{},...window.fixtureProfile});'
                                             : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:()=>{}});'
                                                 : path.endsWith('DashboardGlassCard') ? 'export default ({children,className})=><div className={className}>{children}</div>;'
                                                     : path.endsWith('PayPalCodeEditor') ? 'export default ()=>null;'
@@ -106,9 +106,11 @@ test('all advanced content deletion paths confirm above fixed navigation', async
         await page.getByRole('dialog', { name: title, exact: true }).getByRole('button', { name: 'Keep item' }).click()
     }
     await page.getByRole('button', { name: /^Products & Services/ }).click()
-    await page.getByRole('button', { name: 'Fixture offer', exact: true }).click()
+    await page.getByRole('button', { name: 'Edit Fixture offer', exact: true }).focus()
+    await page.keyboard.press('Enter')
     await page.screenshot({ path: testInfo.outputPath('product-editor.png'), fullPage: true })
-    await page.getByRole('button', { name: 'Delete product', exact: true }).click()
+    await page.getByRole('button', { name: 'Delete offering', exact: true }).focus()
+    await page.keyboard.press('Enter')
     const dialog = page.getByRole('dialog', { name: 'Delete Fixture offer?', exact: true })
     await expectReadableOverlay(dialog)
     expect(await dialog.evaluate(element => {
@@ -123,13 +125,16 @@ test('all advanced content deletion paths confirm above fixed navigation', async
 test('future integrations and PayPal explanations work with touch or keyboard even before enabling PayPal', async ({ page }) => {
     await mount(page)
     await page.getByRole('button', { name: /^Products & Services/ }).click()
-    const planned = page.getByRole('button', { name: 'Integrate web3 wallet Coming soon', exact: true })
+    const planned = page.getByRole('button', { name: 'Coming soon', exact: true })
+    await expect(planned).toHaveAttribute('aria-expanded', 'false')
     await planned.focus()
     await planned.press('Enter')
+    await page.getByRole('button', { name: 'About Web3 wallet', exact: true }).click()
     await expect(page.getByText('Wallet sign-in and crypto payments are planned for a future release.')).toBeVisible()
-    await page.getByRole('button', { name: 'Fixture offer', exact: true }).click()
-    await page.getByRole('button', { name: 'Where is this?', exact: true }).filter({ visible: true }).click()
-    await expect(page.getByText('PayPal Dashboard > Copy Code')).toBeVisible()
+    await page.getByRole('button', { name: 'Edit Fixture offer', exact: true }).focus()
+    await page.keyboard.press('Enter')
+    await page.getByRole('button', { name: 'About PayPal checkout', exact: true }).click()
+    await expect(page.getByRole('tooltip')).toContainText('PayPal controls the recipient, price and checkout')
     await expect(page.getByRole('switch', { name: 'Enable PayPal button code' })).toHaveAttribute('aria-checked', 'false')
 })
 
