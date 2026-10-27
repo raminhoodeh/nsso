@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
+import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
 import { productCheckoutVisibility, productPageIsPublic } from '@/lib/payments/product-presentation'
 import { safeWebUrl } from '@/lib/urls'
 import {
@@ -236,7 +237,6 @@ function ProductSalesContent({ productId }: { productId: string }) {
     return (
         <ProductRouteContent>
         <main className="relative z-[1] min-h-screen p-4 md:p-8">
-            {preview && <p role="status" className="mb-4 rounded-xl bg-black/20 p-3 text-center text-sm text-white">Draft preview — checkout is disabled.</p>}
             <div className="max-w-[1400px] mx-auto">
                 {/* Golden Ratio Grid: 1.618fr 1fr */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
@@ -288,9 +288,9 @@ function ProductSalesContent({ productId }: { productId: string }) {
                         <TahoeGlassSurface
                             variant="panel"
                             radius={20}
-                            tone="dark"
-                            semanticTint="light"
-                            semanticTintOpacity={0.16}
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.38}
                             className="w-full lg:hidden"
                             contentClassName="flex w-full flex-col items-center p-6"
                         >
@@ -307,19 +307,19 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             )}
 
                             {/* Product Name */}
-                            <h3 className="text-[17px] font-bold text-slate-900 mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.name}
                             </h3>
 
                             {/* Price */}
-                            <p className="text-[29px] font-bold text-slate-800 mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <p className="text-[29px] font-bold text-white mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.price}
                             </p>
 
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    {preview ? <button type="button" disabled className="min-h-11 w-full rounded-xl bg-white/10 px-4">Preview only</button> : <PurchaseLink href={checkout.purchaseUrl} />}
+                                    {preview ? <PreviewCheckoutButton className="w-full">Link to Purchase</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
@@ -333,6 +333,11 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                         productName={product.name}
                                     />
                                 </div>
+                            )}
+                            {product.value_proposition && (
+                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-white/90">
+                                    {product.value_proposition}
+                                </p>
                             )}
                         </TahoeGlassSurface>
 
@@ -428,10 +433,10 @@ function ProductSalesContent({ productId }: { productId: string }) {
                         <TahoeGlassSurface
                             variant="panel"
                             radius={20}
-                            tone="dark"
-                            semanticTint="light"
-                            semanticTintOpacity={0.16}
-                            className="w-full"
+                            tone="light"
+                            semanticTint="dark"
+                            semanticTintOpacity={0.38}
+                            className="hidden w-full lg:block"
                             contentClassName="flex w-full flex-col items-center p-6"
                         >
                             {/* Product Image */}
@@ -447,19 +452,19 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             )}
 
                             {/* Product Name */}
-                            <h3 className="text-[17px] font-bold text-slate-900 mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.name}
                             </h3>
 
                             {/* Price */}
-                            <p className="text-[29px] font-bold text-slate-800 mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <p className="text-[29px] font-bold text-white mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.price}
                             </p>
 
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    {preview ? <button type="button" disabled className="min-h-11 w-full rounded-xl bg-white/10 px-4">Preview only</button> : <PurchaseLink href={checkout.purchaseUrl} />}
+                                    {preview ? <PreviewCheckoutButton className="w-full">Link to Purchase</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
@@ -477,7 +482,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                             {/* Value Proposition */}
                             {product.value_proposition && (
-                                <p className="text-[15px] md:text-[13px] text-slate-500 leading-[20px] md:leading-[18px] mt-4 text-center font-medium">
+                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-white/90">
                                     {product.value_proposition}
                                 </p>
                             )}

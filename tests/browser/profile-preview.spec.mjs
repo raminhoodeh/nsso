@@ -44,12 +44,16 @@ async function fixture(page) {
     return { errors, unexpected }
 }
 
-test('profile preview uses the current draft and keeps both checkout paths inert', async ({ page }) => {
+test('profile preview uses autosaved content, shows no banner, and explains checkout only on an attempt', async ({ page }) => {
     const { errors, unexpected } = await fixture(page)
     await expect(page.getByRole('heading', { name: "I'm Fixture creator" })).toBeVisible()
     await expect(page.getByText('Current local bio')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Link to Purchase', exact: true })).toBeDisabled()
-    await expect(page.getByRole('button', { name: 'Buy fixture offer', exact: true })).toBeDisabled()
+    await expect(page.getByText('Profile preview — checkout is disabled. Unsaved changes are not yet public.', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('Checkout is disabled during profile preview', { exact: true })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Link to Purchase', exact: true }).press('Enter')
+    await expect(page.getByRole('status').filter({ hasText: 'Checkout is disabled during profile preview' })).toHaveCount(1)
+    await page.getByRole('button', { name: 'Buy fixture offer', exact: true }).press('Space')
+    await expect(page.getByRole('status').filter({ hasText: 'Checkout is disabled during profile preview' })).toHaveCount(2)
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.locator('a[href="https://seller.example.test/pay"]')).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'Fixture offer' })).toHaveAttribute('href', '/products/product-fixture?preview=true')

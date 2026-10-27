@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { createAuthFetch } from './auth-fetch'
 import { boundedClientRead } from '../client-read'
 
-export async function createClient({ timeoutMs = 5_000, signal }: { timeoutMs?: number; signal?: AbortSignal } = {}) {
+export async function createClient({ timeoutMs = 5_000, signal, readOnlyCookies = false }: { timeoutMs?: number; signal?: AbortSignal; readOnlyCookies?: boolean } = {}) {
     const cookieStore = await cookies()
 
     const client = createServerClient(
@@ -20,6 +20,9 @@ export async function createClient({ timeoutMs = 5_000, signal }: { timeoutMs?: 
                     return cookieStore.getAll()
                 },
                 setAll(cookiesToSet) {
+                    // A long-running, identity-bound mutation must never deliver
+                    // refreshed credentials over a newer browser sign-in.
+                    if (readOnlyCookies) return
                     try {
                         cookiesToSet.forEach(({ name, value, options }) =>
                             cookieStore.set(name, value, options)

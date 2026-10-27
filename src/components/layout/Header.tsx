@@ -9,9 +9,12 @@ import GlassButton from '@/components/ui/GlassButton'
 import { useToast } from '@/components/ui/Toast'
 import { useUser } from '@/components/providers/UserProvider'
 import { boundedClientRead } from '@/lib/client-read'
+import { canAccessAdmin } from '@/lib/admin-access'
+import { isAccountDeletionAvailable } from '@/lib/delete-profile-client'
+import DeleteProfileDialog from '@/components/layout/DeleteProfileDialog'
 import { routeUsesMobileProfileMenu } from '@/lib/tahoe-glass/route-boundaries'
 import { useState, useEffect, useCallback, Suspense, type ReactNode } from 'react'
-import { ChevronRight, Eye, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, ShieldCheck, Sparkles, UserRound, UsersRound, X } from 'lucide-react'
+import { ChevronRight, Eye, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, Sparkles, Trash2, UserRound, UsersRound, X } from 'lucide-react'
 import {
     TahoeBackdropHeader,
     TahoeGlassButton,
@@ -43,7 +46,7 @@ function MobileMenuNavigation({ pathname, isAdmin, signingOut, close, copyProfil
     close: () => void
     copyProfileUrl: () => Promise<void>
     handleSignOut: () => Promise<void>
-    runAfterClose: (action: 'deity' | 'news') => void
+    runAfterClose: (action: 'deity' | 'news' | 'delete-profile') => void
 }) {
     const searchParams = useSearchParams()
     const currentView = searchParams.get('view') || 'profile'
@@ -88,12 +91,12 @@ function MobileMenuNavigation({ pathname, isAdmin, signingOut, close, copyProfil
         <section data-mobile-menu-group="account" aria-labelledby="mobile-menu-account-heading">
             <h3 id="mobile-menu-account-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Account</h3>
             <div className={groupClass}>
-                <Link href="/dashboard/security" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/dashboard/security' ? 'page' : undefined}>
-                    <MenuRowContent icon={<ShieldCheck className={iconClass} />}>Account security</MenuRowContent>
-                </Link>
                 {isAdmin && <Link href="/admin" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/admin' ? 'page' : undefined}>
                     <MenuRowContent icon={<LayoutDashboard className={iconClass} />}>Admin</MenuRowContent>
                 </Link>}
+                {isAccountDeletionAvailable() && <button type="button" onClick={() => runAfterClose('delete-profile')} className={cn(MENU_ROW_CLASS, 'text-rose-900')}>
+                    <MenuRowContent icon={<Trash2 className={iconClass} />}>Delete my profile</MenuRowContent>
+                </button>}
             </div>
         </section>
         <button type="button" onClick={() => { void handleSignOut() }} disabled={signingOut} className={cn(MENU_ROW_CLASS, 'border border-rose-900/10 bg-white/35 text-rose-900 hover:bg-white/65 disabled:cursor-wait disabled:opacity-60')}>
@@ -104,7 +107,7 @@ function MobileMenuNavigation({ pathname, isAdmin, signingOut, close, copyProfil
 
 export default function Header({ showAuthButtons = true, variant = 'default', username, className }: HeaderProps) {
     const { user } = useUser()
-    const isAdmin = user?.user_type === 'admin'
+    const isAdmin = canAccessAdmin(user)
     const supabase = createClient()
     const pathname = usePathname()
     const usesProfileEditorMenu = routeUsesMobileProfileMenu(pathname)
@@ -112,7 +115,8 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const router = useRouter()
     const { showToast } = useToast()
     const [signingOut, setSigningOut] = useState(false)
-    const [pendingMenuAction, setPendingMenuAction] = useState<{ action: 'deity' | 'news'; pathname: string } | null>(null)
+    const [pendingMenuAction, setPendingMenuAction] = useState<{ action: 'deity' | 'news' | 'delete-profile'; pathname: string } | null>(null)
+    const [deleteProfileOpen, setDeleteProfileOpen] = useState(false)
     const [mobileMenuState, setMobileMenuState] = useState({ open: false, pathname })
     const mobileMenuOpen = Boolean(user) && mobileMenuState.open && mobileMenuState.pathname === pathname
     const setMobileMenuOpen = useCallback((open: boolean) => {
@@ -170,6 +174,8 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             if (!user || pendingMenuAction.pathname !== pathname) return
             if (pendingMenuAction.action === 'deity') {
                 window.dispatchEvent(new CustomEvent('open-deity-chat'))
+            } else if (pendingMenuAction.action === 'delete-profile') {
+                setDeleteProfileOpen(true)
             } else {
                 showToast('News Feed coming soon', 'info')
             }
@@ -177,7 +183,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
         return () => window.cancelAnimationFrame(frame)
     }, [mobileMenuOpen, pendingMenuAction, pathname, showToast, user])
 
-    const runAfterMenuClose = (action: 'deity' | 'news') => {
+    const runAfterMenuClose = (action: 'deity' | 'news' | 'delete-profile') => {
         setPendingMenuAction({ action, pathname })
         setMobileMenuOpen(false)
     }
@@ -304,10 +310,10 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {/* Default Mode: Contextual Button (Preview/Copy) */}
                     {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
 
-                    {/* Every account needs access to security and session controls. */}
+                    {/* Every account keeps access to profile and session controls. */}
                     {user && (
                         <TahoeGlassButton
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            onClick={event => { event.currentTarget.focus(); setMobileMenuOpen(!mobileMenuOpen) }}
                             radius={8}
                             className="h-11 w-11 p-0 text-white transition-colors"
                             contentClassName="text-white"
@@ -366,6 +372,8 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                             </div>
                         </div>
                     </TahoeGlassDialog>
+
+                    <DeleteProfileDialog open={deleteProfileOpen} onOpenChange={setDeleteProfileOpen} />
 
 
                     {/* Mobile - Not logged in (Default Mode Only) */}

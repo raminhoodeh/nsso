@@ -35,13 +35,15 @@ hooks.deregister();
 const actorId = '11111111-1111-4111-8111-111111111111';
 const targetId = '22222222-2222-4222-8222-222222222222';
 const secretFixture = 'private-diagnostic-fixture-never-echo';
-let actor, authError, account, bootstrap, accountError, rpcError, permitted, permissionError, adminRows, calls, connected;
+let actor, authError, account, bootstrap, accountError, rpcError, permitted, permissionError, adminRows, calls, connected, permissionTarget, targetError;
 beforeEach(() => {
     Object.assign(process.env,{NEXT_PUBLIC_SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'fixture-only-not-a-secret'});
-    actor = {id:actorId,email:'verified-fixture@example.test',user_metadata:{user_type:'admin'},factors:[{id:'fixture-factor',status:'verified'}]};
+    actor = {id:actorId,email:'raminhoodeh@gmail.com',email_confirmed_at:'2026-01-01T00:00:00Z',user_metadata:{user_type:'admin'},factors:[{id:'fixture-factor',status:'verified'}]};
     authError = null; permitted = true; permissionError = null; accountError = null; rpcError = null; adminRows = []; calls = []; connected = new Set();
     account = {id:actorId,email:'untrusted-copy@example.test',username:'fixture',is_premium:false,user_type:'admin',permissions:[]};
     bootstrap = {...account};
+    permissionTarget = {id:targetId,email:'troy@nsso.me',email_confirmed_at:'2026-01-01T00:00:00Z'};
+    targetError = null;
     globalThis.__accountSession = {
         auth:{getUser:async () => ({data:{user:actor},error:authError}),mfa:{getAuthenticatorAssuranceLevel:async () => ({data:{currentLevel:'aal2'},error:null})}},
         from:() => assert.fail('Account endpoints must use bounded RPC contracts, never direct account or reciprocal row writes'),
@@ -60,6 +62,7 @@ beforeEach(() => {
         },
     };
     globalThis.__accountService = {
+        auth:{admin:{getUserById:async id => { calls.push(['auth-admin','getUserById',id]); return {data:{user:permissionTarget},error:targetError}; }}},
         from:() => assert.fail('Admin endpoints must not expose unrestricted table queries'),
         rpc(name,args) {
             calls.push(['service-rpc',name,args]);
@@ -106,6 +109,28 @@ test('current account uses only the verified subject and vetted capability list,
     response = await me(); body = await response.json();
     assert.equal(body.user.user_type,'admin');
     assert.deepEqual(body.permissions,['nsso:admin','razinflix:manage']);
+    assert.deepEqual(body.user.permissions,body.permissions);
+});
+
+test('current account strips administrator capability from both response copies unless the verified Auth email is eligible',async () => {
+    account.permissions = ['nsso:admin','razinflix:manage'];
+    for (const identity of [
+        {email:'outside@example.test',email_confirmed_at:'2026-01-01T00:00:00Z'},
+        {email:'troy@nsso.me',email_confirmed_at:undefined},
+        {email:'troy@nsso.me',email_confirmed_at:'',confirmed_at:'2026-01-01T00:00:00Z',phone_confirmed_at:'2026-01-01T00:00:00Z'},
+    ]) {
+        actor = {...actor,...identity,user_metadata:{email:'raminhoodeh@gmail.com',email_confirmed_at:'2026-01-01T00:00:00Z',user_type:'admin'}};
+        const response = await me();
+        assert.equal(response.status,200);
+        const body = await response.json();
+        assert.equal(body.user.user_type,'standard');
+        assert.deepEqual(body.permissions,['razinflix:manage']);
+        assert.deepEqual(body.user.permissions,['razinflix:manage']);
+    }
+    actor.email = ' TROY@NSSO.ME '; actor.email_confirmed_at = '2026-01-01T00:00:00Z';
+    const body = await (await me()).json();
+    assert.equal(body.user.user_type,'admin');
+    assert.deepEqual(body.user.permissions,['nsso:admin','razinflix:manage']);
 });
 
 test('current-account authentication and mismatched subjects fail without exposing another account',async () => {
@@ -175,6 +200,29 @@ test('admin listing requires protected membership even when editable user metada
     assert.deepEqual(rpcCalls('has_app_permission')[0][2],{p_user_id:actorId,p_permission:'nsso:admin'});
 });
 
+test('admin APIs reject wrong or unverified emails even with a protected grant, aal2 and metadata spoofing',async () => {
+    for (const identity of [
+        {email:'other@example.test',email_confirmed_at:'2026-01-01T00:00:00Z'},
+        {email:'raminhoodeh@gmail.com',email_confirmed_at:undefined},
+    ]) {
+        calls.length = 0;
+        actor = {...actor,...identity,user_metadata:{email:'troy@nsso.me',user_type:'admin',email_confirmed_at:'2026-01-01T00:00:00Z'}};
+        assert.equal((await listAccounts(new Request('https://nsso.test/api/admin/users'))).status,403);
+        assert.equal((await changePermission(neverRead('/api/admin/users'))).status,403);
+        assert.deepEqual(calls,[],'Reject ineligible identity before permission lookup, request body or admin data');
+    }
+});
+
+test('both approved verified emails still require their separately protected administrator membership',async () => {
+    for (const email of ['raminhoodeh@gmail.com','TROY@NSSO.ME']) {
+        actor.email = email;
+        permitted = false;
+        assert.equal((await listAccounts(new Request('https://nsso.test/api/admin/users'))).status,403);
+        permitted = true;
+        assert.equal((await listAccounts(new Request('https://nsso.test/api/admin/users'))).status,200);
+    }
+});
+
 test('admin listing validates pagination and forwards the verified actor with a fixed page bound',async () => {
     for (const offset of ['-1','0.5','Infinity','100001']) assert.equal((await listAccounts(new Request(`https://nsso.test/api/admin/users?offset=${offset}`))).status,400);
     assert.equal(rpcCalls('admin_list_accounts').length,0);
@@ -194,6 +242,39 @@ test('admin permission mutation cannot select its actor or write arbitrary colum
         assert.equal((await changePermission(request(body,'/api/admin/users'))).status,400);
         assert.equal(rpcCalls('admin_set_permission').length,0);
     }
+});
+
+test('administrator grants verify the target Auth email while RazinFlix grants retain their independent scope',async () => {
+    const body = {userId:targetId,permission:'nsso:admin',granted:true,email:'raminhoodeh@gmail.com'};
+    permissionTarget.email = 'outside@example.test';
+    let response = await changePermission(request(body,'/api/admin/users'));
+    assert.equal(response.status,403);
+    assert.equal(rpcCalls('admin_set_permission').length,0);
+    permissionTarget.email = 'troy@nsso.me'; permissionTarget.email_confirmed_at = undefined;
+    response = await changePermission(request(body,'/api/admin/users'));
+    assert.equal(response.status,403);
+    assert.equal(rpcCalls('admin_set_permission').length,0);
+    permissionTarget.email_confirmed_at = '2026-01-01T00:00:00Z';
+    response = await changePermission(request(body,'/api/admin/users'));
+    assert.equal(response.status,200);
+    assert.equal(rpcCalls('admin_set_permission').length,1);
+    calls.length = 0; permissionTarget.email = 'outside@example.test';
+    response = await changePermission(request({...body,permission:'razinflix:manage'},'/api/admin/users'));
+    assert.equal(response.status,200);
+    assert.equal(calls.some(call => call[0] === 'auth-admin'),false);
+    assert.equal(rpcCalls('admin_set_permission').length,1);
+});
+
+test('target verification failures and mismatched Auth subjects never grant administrator capability',async () => {
+    const body = {userId:targetId,permission:'nsso:admin',granted:true};
+    targetError = {message:secretFixture};
+    let response = await changePermission(request(body,'/api/admin/users'));
+    assert.equal(response.status,503); assert.doesNotMatch(await response.text(),new RegExp(secretFixture));
+    assert.equal(rpcCalls('admin_set_permission').length,0);
+    targetError = null; permissionTarget.id = actorId;
+    response = await changePermission(request(body,'/api/admin/users'));
+    assert.equal(response.status,403);
+    assert.equal(rpcCalls('admin_set_permission').length,0);
 });
 
 test('membership and last-admin failures remain fail-closed with safe errors',async () => {

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { resolvePayPalConfig } from '@/lib/payments/paypal-config'
 import { loadPayPalHostedSdk } from '@/lib/payments/paypal-sdk'
+import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
 
 interface PayPalSmartButtonProps {
     html?: string | null
@@ -48,7 +49,7 @@ export default function PayPalSmartButton({ html, config, preview = false }: Pay
 
     if (!payment) return html || config ? <p className="py-2 text-center text-xs text-white/70">Payment button unavailable. Please contact the seller.</p> : null
     const buttonClass = 'min-h-11 w-full rounded-md border border-amber-400/50 bg-[#ffc439] px-5 py-3 text-center font-semibold text-black disabled:cursor-default disabled:opacity-75'
-    if (preview) return <div className="w-full max-w-[320px]"><button type="button" disabled className={buttonClass}>{payment.kind === 'payment-form' ? payment.label : 'Pay with PayPal'}</button><p className="mt-2 text-xs text-white/60">Preview only — no payment is started.</p></div>
+    if (preview) return <PreviewCheckoutButton className="w-full max-w-[320px]" buttonClassName={buttonClass}>{payment.kind === 'payment-form' ? payment.label : 'Pay with PayPal'}</PreviewCheckoutButton>
     if (payment.kind === 'payment-form') {
         return (
             <form action={payment.action} method="post" target="_top" className="w-full max-w-[320px]" data-paypal-kind="payment-form">

@@ -2,6 +2,7 @@ import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { permissionErrorResponse, type AppPermission } from '@/lib/server/permissions'
+import { isVerifiedAdminIdentity } from '@/lib/admin-access'
 
 const privateHeaders = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 
@@ -27,8 +28,9 @@ async function handleGET(request?: Request) {
         // account reads need no service key; privileged mutations check membership again.
         const candidates: AppPermission[] = ['nsso:admin', 'razinflix:manage']
         const permissions = Array.isArray(account.permissions)
-            ? candidates.filter(permission => account.permissions.includes(permission)) : []
-        return Response.json({ user: { ...account, email: actor.email ?? '', user_type: permissions.includes('nsso:admin') ? 'admin' : 'standard', is_premium: true }, permissions }, { headers: privateHeaders })
+            ? candidates.filter(permission => account.permissions.includes(permission)
+                && (permission !== 'nsso:admin' || isVerifiedAdminIdentity(actor))) : []
+        return Response.json({ user: { ...account, email: actor.email ?? '', permissions, user_type: permissions.includes('nsso:admin') ? 'admin' : 'standard', is_premium: true }, permissions }, { headers: privateHeaders })
     } catch (error) {
         return permissionErrorResponse(error) ?? Response.json({ error: 'Account details are temporarily unavailable.' }, { status: 503, headers: privateHeaders })
     }

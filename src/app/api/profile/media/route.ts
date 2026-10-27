@@ -39,6 +39,14 @@ async function handlePOST(request: Request) {
         const bucket = kind === 'avatar' ? 'avatars' : 'portfolio-assets'
         const path = `${user.id}/${kind}/${randomUUID()}.jpg`
         const trusted = createPrivilegedClient()
+        // Reserve the exact server-generated path before contacting Storage.
+        // Deletion fences new reservations and waits for current upload leases.
+        // A dropped upload/registration response keeps its 120-second safety
+        // window, rather than pretending that no bytes could have been written.
+        const reservation = await trusted.rpc('reserve_profile_media', { p_actor_id: user.id, p_bucket_id: bucket, p_object_name: path })
+        if (reservation.error || reservation.data?.accountId !== user.id || reservation.data?.bucket !== bucket || reservation.data?.objectName !== path || typeof reservation.data?.leaseId !== 'string') {
+            return respond({ error: 'The image was not uploaded. Your crop has been kept. Account deletion may be in progress.' }, 503)
+        }
         const { error: uploadError } = await trusted.storage.from(bucket).upload(path, output, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false })
         if (uploadError) return respond({ error: 'The image was not uploaded. Your crop has been kept so you can retry.' }, 503)
         let registered = false
@@ -54,6 +62,9 @@ async function handlePOST(request: Request) {
             const requestId = reportRuntimeSignal('upstream_failed')
             return respond({ error: 'The image could not be confirmed. Your crop has been kept so you can retry.', requestId }, 503)
         }
+        // Only a confirmed registration releases the lease early. If this reply
+        // is unavailable, expiry is conservative and the saved image remains valid.
+        try { await trusted.rpc('finish_profile_media_upload', { p_actor_id: user.id, p_bucket_id: bucket, p_object_name: path, p_definite: true }) } catch { /* Retain the safety window after an uncertain lease-release response. */ }
         const { data } = trusted.storage.from(bucket).getPublicUrl(path)
         return respond({ url: data.publicUrl, path, accountId: user.id })
     } catch (error) {

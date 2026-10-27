@@ -42,7 +42,7 @@ test.beforeAll(async () => {
             import Dashboard from './src/app/dashboard/page';import Header from './src/components/layout/Header';
             import GlobalNavigation from './src/components/layout/GlobalNavigation';import AuthenticatedLayout from './src/components/layout/AuthenticatedLayoutWrapper';
             window.routeSubscribers=new Set();window.destinations=[];window.toasts=[];window.deleted=[];window.reordered=[];window.deityEvents=[];window.signOuts=0;
-            window.fixtureUser={id:'qa',username:'fixture',user_type:window.fixtureOptions.admin?'admin':'standard'};
+            window.fixtureUser={id:'qa',username:'fixture',email:window.fixtureOptions.admin?'raminhoodeh@gmail.com':'fixture@example.invalid',permissions:window.fixtureOptions.admin?['nsso:admin']:[],user_type:window.fixtureOptions.admin?'admin':'standard'};
             window.fixtureNavigate=target=>{window.destinations.push(target);history.pushState({},'',target);window.routeSubscribers.forEach(fn=>fn())};
             window.addEventListener('open-deity-chat',()=>window.deityEvents.push({menuPresent:!!document.querySelector('[role=dialog]'),bodyPosition:document.body.style.position,inert:document.getElementById('root').inert}));
             function App(){const [,update]=useState(0);const refresh=()=>update(value=>value+1);const profile=window.fixtureProfile||={
@@ -101,7 +101,7 @@ test('mobile profile navigation is grouped in useful order, preserves query stat
     expect(destination.pathname).toBe('/dashboard')
     expect(Object.fromEntries(destination.searchParams)).toEqual({ claim: 'keep-name', source: 'qa', view: 'my-nsso' })
     const items = await dialog.getByRole('navigation', { name: 'Account and profile' }).locator('a,button').allTextContents()
-    expect(items.map(text => text.trim().replace(/\s+/g, ' '))).toEqual(['Edit Profile', 'My nsso', 'Deity', 'News FeedComing soon', 'Preview Profile', 'Copy profile URL', 'Account security', 'Sign Out'])
+    expect(items.map(text => text.trim().replace(/\s+/g, ' '))).toEqual(['Edit Profile', 'My nsso', 'Deity', 'News FeedComing soon', 'Preview Profile', 'Copy profile URL', 'Delete my profile', 'Sign Out'])
     await page.screenshot({ path: testInfo.outputPath('mobile-profile-menu.png') })
     await myNsso.click()
     await expect(dialog).toHaveCount(0)
@@ -291,7 +291,7 @@ test('profile copy is concise and Links help is accessible on demand by keyboard
     await expect(tooltip).toHaveCount(0)
 })
 
-test('administrative navigation remains role-gated and follows account security', async ({ page }) => {
+test('administrative navigation remains capability-and-email gated with profile deletion secondary', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await mount(page)
     await expect((await openMenu(page)).getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0)
@@ -299,9 +299,9 @@ test('administrative navigation remains role-gated and follows account security'
     await mount(page, { admin: true, path: '/dashboard/security', content: 'navigation' })
     const dialog = await openMenu(page)
     const account = dialog.locator('[data-mobile-menu-group="account"]')
-    expect(await account.locator('a,button').allTextContents()).toEqual(['Account security', 'Admin'])
+    expect(await account.locator('a,button').allTextContents()).toEqual(['Admin', 'Delete my profile'])
     expect((await dialog.getByRole('navigation', { name: 'Account and profile' }).locator('a,button').allTextContents()).at(-1)).toBe('Sign Out')
-    await expect(account.getByRole('link', { name: 'Account security', exact: true })).toHaveAttribute('aria-current', 'page')
+    await expect(account.getByRole('link', { name: 'Account security', exact: true })).toHaveCount(0)
     await expect(account.getByRole('link', { name: 'Admin', exact: true })).toHaveAttribute('href', '/admin')
 })
 
@@ -314,7 +314,7 @@ test('signed-in profile loading and failures keep mobile navigation available wi
         else await expect(page.getByText('All of you...', { exact: false })).toBeVisible()
         const dialog = await openMenu(page)
         await expect(dialog.getByRole('link', { name: 'Edit Profile', exact: true })).toBeVisible()
-        await expect(dialog.getByRole('link', { name: 'Account security', exact: true })).toBeVisible()
+        await expect(dialog.getByRole('button', { name: 'Delete my profile', exact: true })).toBeVisible()
         await dialog.getByRole('link', { name: 'My nsso', exact: true }).click()
         await expect(dialog).toHaveCount(0)
         await expect(page).toHaveURL('https://nsso.test/dashboard?view=my-nsso')

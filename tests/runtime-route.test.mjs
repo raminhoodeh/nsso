@@ -121,7 +121,7 @@ const scopeInventory = [
     ['POST', '/api/news-feed/[postId]/comments', 'mutation'], ['POST', '/api/news-feed/[postId]/like', 'mutation'],
     ['DELETE', '/api/news-feed/[postId]/like', 'mutation'], ['GET', '/api/news-feed', null], ['POST', '/api/news-feed', 'mutation'],
     ['GET', '/api/places/photo', 'photo'], ['POST', '/api/polar-checkout', null], ['POST', '/api/products/[id]/payment', 'mutation'],
-    ['POST', '/api/profile/media', 'upload'], ['POST', '/api/profile/operations', 'mutation'], ['GET', '/api/profile/operations', null],
+    ['DELETE', '/api/profile', 'mutation'], ['POST', '/api/profile/media', 'upload'], ['POST', '/api/profile/operations', 'mutation'], ['GET', '/api/profile/operations', null],
     ['POST', '/api/profile/operations/undo', 'mutation'], ['POST', '/api/razinflix/add', 'film_write'], ['POST', '/api/razinflix/delete', 'film_write'],
     ['GET', '/api/razinflix/hero/[videoId]', 'film_media'], ['GET', '/api/razinflix/trailer/[videoId]', 'film_media'],
     ['POST', '/api/razinflix/update', 'film_write'], ['POST', '/api/update-username', 'mutation'], ['POST', '/api/webhooks/polar', null],
@@ -137,7 +137,7 @@ test('every existing API method preserves its former scope and four retired POST
         assert.equal(globalThis.__runtimeRouteCalls.length, expected ? 1 : 0, `${method} ${path}`)
         if (expected) { scoped++; assert.equal(globalThis.__runtimeRouteCalls[0].args.p_scope, expected) }
     }
-    assert.equal(scoped, 27); assert.equal(scopeInventory.length, 38)
+    assert.equal(scoped, 28); assert.equal(scopeInventory.length, 39)
     assert.deepEqual(scopeInventory.filter(([method, , scope]) => method === 'POST' && !scope).map(([, path]) => path).sort(), [
         '/api/cancel-subscription', '/api/deity/validate-link', '/api/polar-checkout', '/api/webhooks/polar',
     ])

@@ -179,11 +179,32 @@ test('middleware preserves refreshed cookies on sign-in and denied-admin redirec
     let response = await updateSession(new NextRequest('https://nsso.test/dashboard?tab=profile'));
     assert.equal(response.cookies.get('refreshed-session').value,'test-only-cookie');
     assert.equal(new URL(response.headers.get('location')).searchParams.get('next'),'/dashboard?tab=profile');
-    user = {id:'ordinary-user'}; allowed = false;
+    user = {id:'ordinary-user',email:'raminhoodeh@gmail.com',email_confirmed_at:'2026-01-01T00:00:00Z'}; allowed = false;
     response = await updateSession(new NextRequest('https://nsso.test/admin'));
     assert.equal(new URL(response.headers.get('location')).pathname,'/dashboard');
     assert.equal(response.cookies.get('refreshed-session').value,'test-only-cookie');
     assert.deepEqual(calls.find(call => call[0] === 'permission')[2],{p_user_id:'ordinary-user',p_permission:'nsso:admin'});
+});
+
+test('admin page routes require an approved verified Auth email as well as protected membership', async () => {
+    for (const identity of [
+        {email:'outside@example.test',email_confirmed_at:'2026-01-01T00:00:00Z'},
+        {email:'raminhoodeh@gmail.com'},
+        {email:'troy@nsso.me',phone_confirmed_at:'2026-01-01T00:00:00Z',confirmed_at:'2026-01-01T00:00:00Z'},
+    ]) {
+        calls.length = 0; allowed = true;
+        user = {id:'fixture-admin',...identity,user_metadata:{email:'raminhoodeh@gmail.com',email_confirmed_at:'2026-01-01T00:00:00Z',user_type:'admin'}};
+        const response = await updateSession(new NextRequest('https://nsso.test/admin'));
+        assert.equal(new URL(response.headers.get('location')).pathname,'/dashboard');
+        assert.equal(response.cookies.get('refreshed-session').value,'test-only-cookie');
+        assert.equal(calls.some(call => call[0] === 'permission'),false);
+    }
+    for (const email of ['raminhoodeh@gmail.com','TROY@NSSO.ME']) {
+        calls.length = 0; user = {id:'fixture-admin',email,email_confirmed_at:'2026-01-01T00:00:00Z'};
+        const response = await updateSession(new NextRequest('https://nsso.test/admin/users'));
+        assert.equal(response.headers.get('location'),null);
+        assert.equal(calls.find(call => call[0] === 'permission')[2].p_permission,'nsso:admin');
+    }
 });
 
 test('retired link endpoint and format assessment perform no network requests and make no health claims', async () => {
