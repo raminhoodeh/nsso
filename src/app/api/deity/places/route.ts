@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { dubaiPlaces } from "@/data/places-dubai";
 import { datePlans, placeVisitGuides } from "@/lib/places-editorial";
 import { createPlacesChatHandler } from "@/lib/deity/places-service";
@@ -16,4 +17,6 @@ const handler = createPlacesChatHandler({
   return geminiPlacesProvider(input, budget);
 });
 
-export async function POST(request: Request) { return handler(request); }
+async function handlePOST(request: Request) { return handler(request); }
+
+export const POST = withRuntimeGuard(handlePOST)

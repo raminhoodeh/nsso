@@ -21,16 +21,32 @@ export function safeDiagnostic(code: string, requestId: string, status: number) 
     // Codes are supplied by application code only. Never accept a raw error/payload here.
     console.warn('nsso request signal', { code, requestId, status })
 }
-export async function guardRuntimeRequest(request: Request): Promise<Response | null> {
+/** Cheap checks may run in the global proxy; they never contact a dependency. */
+export function guardRuntimePreflight(request: Request): Response | null {
     const path = new URL(request.url).pathname
-    const scope = runtimeScope(path, request.method)
-    if (!scope) return null
+    if (!runtimeScope(path, request.method)) return null
     const requestId = randomUUID()
     const headers = { 'Cache-Control':'private, no-store','X-Request-ID':requestId }
     try {
         if (mutations.has(request.method)) assertSameOrigin(request)
         const maximum = ['/api/razinflix/update','/api/profile/media'].includes(path) ? 12*1024*1024 : path.startsWith('/api/deity/') ? 65_536 : 262_144
         if (Number(request.headers.get('content-length')) > maximum) return Response.json({error:'This request is too large.',requestId},{status:413,headers})
+        return null
+    } catch (error) {
+        const status = error && typeof error === 'object' && 'status' in error && error.status === 403 ? 403 : 503
+        safeDiagnostic(status===403?'request_rejected':'rate_unavailable',requestId,status)
+        return Response.json({error:status===403?'Use this action from nsso.':'This action is temporarily unavailable. Please retry shortly.',requestId},{status,headers})
+    }
+}
+export async function guardRuntimeRequest(request: Request): Promise<Response | null> {
+    const path = new URL(request.url).pathname
+    const scope = runtimeScope(path, request.method)
+    if (!scope) return null
+    const denied = guardRuntimePreflight(request)
+    if (denied) return denied
+    const requestId = randomUUID()
+    const headers = { 'Cache-Control':'private, no-store','X-Request-ID':requestId }
+    try {
         const hash = createHmac('sha256', clientIpHash(request)).update(`nsso-runtime/${scope}`).digest('hex')
         const started = performance.now()
         const result = await createPrivilegedClient({ requestId }).rpc('consume_nsso_request_limit',{p_scope:scope,p_subject_hash:hash})

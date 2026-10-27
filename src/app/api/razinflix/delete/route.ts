@@ -1,8 +1,9 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { NextResponse } from 'next/server';
 import { createPrivilegedClient, permissionErrorResponse, requirePermission } from '@/lib/server/permissions';
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request';
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
         await requirePermission('razinflix:manage', request);
         const body = await readBoundedJson(request);
@@ -38,3 +39,5 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'The film could not be deleted. Please try again.' }, { status: 500 });
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)

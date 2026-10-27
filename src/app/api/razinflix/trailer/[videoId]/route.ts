@@ -1,7 +1,8 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { NextResponse } from 'next/server';
 
 /** Public, bounded availability probe. Private/deleted clips must not become a blank player. */
-export async function GET(_request: Request, context: { params: Promise<{ videoId: string }> }) {
+async function handleGET(_request: Request, context: { params: Promise<{ videoId: string }> }) {
     const { videoId } = await context.params;
     if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return NextResponse.json({ status: 'unavailable' }, { status: 400 });
     try {
@@ -17,3 +18,5 @@ export async function GET(_request: Request, context: { params: Promise<{ videoI
         return NextResponse.json({ status: 'unknown' }, { headers: { 'Cache-Control': 'no-store' } });
     }
 }
+
+export const GET = withRuntimeGuard(handleGET)

@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
@@ -5,7 +6,7 @@ import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-
 
 const headers = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handlePATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         assertSameOrigin(request)
         const { id } = await params
@@ -27,7 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         return permissionErrorResponse(error) ?? requestBodyErrorResponse(error) ?? Response.json({ error: 'Your changes could not be saved. Please retry.' }, { status: 503, headers })
     }
 }
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handleDELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         assertSameOrigin(request)
         const { id } = await params
@@ -43,3 +44,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
         return permissionErrorResponse(error) ?? Response.json({ error: 'This connection could not be removed. Please retry.' }, { status: 503, headers })
     }
 }
+
+export const PATCH = withRuntimeGuard(handlePATCH)
+export const DELETE = withRuntimeGuard(handleDELETE)

@@ -5,6 +5,7 @@ import test from 'node:test';
 const moduleUrl = source => `data:text/javascript,${encodeURIComponent(source)}`;
 const hooks = registerHooks({ resolve(specifier, context, next) {
     const mocks = {
+        '@/lib/server/runtime-route': 'export const withRuntimeGuard = handler => handler;',
         'next/server': 'export const NextResponse={json:(...args)=>Response.json(...args)};',
         '@google/generative-ai': 'export class GoogleGenerativeAI {}',
         '@/lib/deity/chat-budget-server': 'export const CHAT_MODEL="fixture"; export const openChatBudget=()=>{throw Error("Unexpected editorial call")};',

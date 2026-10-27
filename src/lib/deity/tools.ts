@@ -4,12 +4,14 @@ import { type FunctionDeclaration, SchemaType } from "@google/generative-ai";
 export const DEITY_TOOLS: FunctionDeclaration[] = [
     {
         name: "update_profile_field",
-        description: "Update a simple text field on the user's profile (bio, headline, full_name).",
+        description: "Prepare a proposed change to bio, headline, or full_name for the user to review. This tool does not persist the change.",
         parameters: {
             type: SchemaType.OBJECT,
             properties: {
                 target: {
                     type: SchemaType.STRING,
+                    format: 'enum',
+                    enum: ['bio', 'headline', 'full_name'],
                     description: "The field to update. Allowed values: 'bio', 'headline', 'full_name'"
                 },
                 value: {
@@ -93,7 +95,7 @@ export const DEITY_TOOLS: FunctionDeclaration[] = [
     },
     {
         name: "update_link",
-        description: "Update an existing link's name or URL.",
+        description: "Prepare an owned link's name and/or URL change for review, without saving it. Use the exact ID from LINKS. Supply at least one changed field; omit url for a name-only edit.",
         parameters: {
             type: SchemaType.OBJECT,
             properties: {
@@ -136,7 +138,7 @@ export const DEITY_TOOLS: FunctionDeclaration[] = [
         parameters: {
             type: SchemaType.OBJECT,
             properties: {
-                target: { type: SchemaType.STRING, description: "Field being improved (e.g. headline)" },
+                target: { type: SchemaType.STRING, format: 'enum', enum: ['bio', 'headline', 'full_name'], description: "Field being improved" },
                 original: { type: SchemaType.STRING, description: "The original text" },
                 improved: { type: SchemaType.STRING, description: "The suggested new text" },
                 reasoning: { type: SchemaType.STRING, description: "Why this is better" }

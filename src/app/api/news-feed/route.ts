@@ -1,9 +1,10 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
     const supabase = await createClient()
 
     try {
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     const supabase = await createClient()
 
     try {
@@ -84,3 +85,6 @@ export async function POST(request: Request) {
         return permissionErrorResponse(error) ?? requestBodyErrorResponse(error) ?? NextResponse.json({ error: 'Your post could not be saved. Please retry.' }, { status: 503 })
     }
 }
+
+export const GET = withRuntimeGuard(handleGET)
+export const POST = withRuntimeGuard(handlePOST)

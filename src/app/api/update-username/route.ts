@@ -1,5 +1,8 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { updateFreeProfileUsername } from '@/lib/free-profile-username'
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     return updateFreeProfileUsername(request, 'username')
 }
+
+export const POST = withRuntimeGuard(handlePOST)

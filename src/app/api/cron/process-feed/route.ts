@@ -1,7 +1,8 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, createPrivilegedClient, permissionErrorResponse } from '@/lib/server/permissions'
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
     const headers = { 'Cache-Control': 'private, no-store' }
     try {
         assertSameOrigin(req)
@@ -17,3 +18,5 @@ export async function POST(req: Request) {
         return permissionErrorResponse(error) ?? Response.json({ error: 'Feed updates could not be prepared. Please retry.' }, { status: 503, headers })
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)

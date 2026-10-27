@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { isTransientAuthError } from '@/lib/auth-errors'
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
@@ -11,7 +12,7 @@ export const runtime = 'nodejs'
 export const maxDuration = 30
 const respond = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
         assertSameOrigin(request)
         const session = await createClient()
@@ -61,3 +62,5 @@ export async function POST(request: Request) {
         return permissionErrorResponse(error) || requestBodyErrorResponse(error) || respond({ error: 'The image was not uploaded. Your crop has been kept so you can retry.' }, 503)
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)

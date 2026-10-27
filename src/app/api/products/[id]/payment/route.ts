@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, createPrivilegedClient, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
@@ -7,7 +8,7 @@ import { reportRuntimeSignal } from '@/lib/server/runtime-signals'
 
 const respond = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } })
 
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+async function handlePOST(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
         assertSameOrigin(request)
         const session = await createClient()
@@ -32,3 +33,5 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         return permissionErrorResponse(error) || requestBodyErrorResponse(error) || respond({ error: 'Payment settings are temporarily unavailable.' }, 503)
     }
 }
+
+export const POST = withRuntimeGuard(handlePOST)

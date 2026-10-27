@@ -8,6 +8,7 @@ import sharp from 'sharp'
 const source = new URL('../src/', import.meta.url)
 const moduleUrl = text => `data:text/javascript,${encodeURIComponent(text)}`
 const hooks = registerHooks({ resolve(specifier, context, next) {
+    if (specifier === '@/lib/server/runtime-route') return { url: moduleUrl('export const withRuntimeGuard = handler => handler;'), shortCircuit: true }
     if (specifier === 'server-only') return { url: moduleUrl('export {};'), shortCircuit: true }
     if (specifier === '@/lib/supabase/server') return { url: moduleUrl('export const createClient = async()=>globalThis.__mediaSession;'), shortCircuit: true }
     if (specifier === '@/lib/server/runtime-signals') return { url: moduleUrl('export const reportRuntimeSignal = ()=>"synthetic-request";'), shortCircuit: true }

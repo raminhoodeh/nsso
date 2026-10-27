@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { assertSameOrigin } from "@/lib/server/permissions";
 
 const MAX_URL_LENGTH = 8_192;
@@ -202,7 +203,7 @@ async function readBodyWithLimit(response: Response) {
  * sample the exact pixels shown in the detail and lightbox scenes. The proxy
  * is deliberately restricted to Google's photo delivery hosts.
  */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   try { assertSameOrigin(request); }
   catch { return photoError("Photo requests must come from this site", 403); }
 
@@ -249,3 +250,5 @@ export async function GET(request: Request) {
     return photoError("Google Places photo unavailable", 502);
   }
 }
+
+export const GET = withRuntimeGuard(handleGET)

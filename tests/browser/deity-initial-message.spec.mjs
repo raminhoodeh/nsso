@@ -11,15 +11,15 @@ test.beforeAll(async () => {
             build.onResolve({ filter: /^@\/(?:components\/providers\/(?:UserProvider|ProfileProvider)|components\/ui\/Toast|lib\/supabase\/client)$/ }, args => ({ path: args.path, namespace: 'chat-fixture' }));
             build.onLoad({ filter: /.*/, namespace: 'chat-fixture' }, ({ path }) => ({ contents:
                 path.endsWith('UserProvider') ? `import {useSyncExternalStore} from 'react';
-                    let value=window.fixtureBootstrapPending?{user:null,loading:true}:{user:{id:'fixture-account',username:'fixture'},loading:false};const listeners=new Set();
+                    let value=window.fixtureBootstrapPending?{user:null,loading:true}:{user:{id:'fixture-account',username:'fixture'},loading:false};window.fixtureSessionOwner=value.user?.id;const listeners=new Set();
                     const subscribe=listener=>{listeners.add(listener);return()=>listeners.delete(listener)};
-                    window.setFixtureIdentity=(user,loading)=>{value={user,loading};listeners.forEach(listener=>listener())};
+                    window.setFixtureIdentity=(user,loading)=>{value={user,loading};window.fixtureSessionOwner=user?.id;listeners.forEach(listener=>listener())};
                     window.setFixtureUser=user=>window.setFixtureIdentity(user,false);
                     export const useUser=()=>useSyncExternalStore(subscribe,()=>value);`
                 : path.endsWith('ProfileProvider') ? `window.fixtureApplyCount=0;const noop=async()=>false;const value={updateField:noop,addLink:noop,updateLink:noop,removeLink:noop,reorderLinks:noop,addExperience:noop,addProject:noop,addQualification:noop,addProduct:noop,undo:noop,canUndo:false,fastMode:false,setFastMode:noop,revision:0,getRevision:()=>0,refreshProfile:async()=>{},applyOperation:async()=>{window.fixtureApplyCount++;return{status:'rejected',operationId:'fixture',revision:0,changes:[]}}};export const useProfile=()=>value;`
                 : path.endsWith('Toast') ? `const showToast=()=>{};export const useToast=()=>({showToast});`
                 : `window.fixtureIntroReads=[];
-                    const client={auth:{getSession:async()=>({data:{session:null}})},from:()=>{
+                    const client={auth:{getSession:async()=>({data:{session:Object.hasOwn(window,'fixtureSession')?window.fixtureSession:window.fixtureSessionOwner?{access_token:'fixture-only-token',user:{id:window.fixtureSessionOwner}}:null},error:window.fixtureSessionError??null})},from:()=>{
                         let owner;return{select(){return this},eq(_field,id){owner=id;return this},single:()=>window.fixtureDelayIntro
                             ? new Promise((resolve,reject)=>window.fixtureIntroReads.push({owner,resolve:profile=>resolve({data:profile}),reject}))
                             : Promise.resolve({data:{full_name:'Fixture Creator',bio:'Fixture bio'}})}
@@ -123,6 +123,36 @@ test('an invalid-tool-only response displays explicit no-change feedback, with n
     await expect(page.getByRole('status', { name: 'Deity is responding', exact: true })).toHaveCount(0);
     expect(requests).toEqual(['Rename my fixture link.']);
     expect(await page.evaluate(() => window.fixtureApplyCount)).toBe(0);
+});
+
+for (const sessionState of ['missing', 'other-owner', 'auth-error']) {
+    test(`a signed-in chat with ${sessionState} session fails closed before sending private history`, async ({ page }) => {
+        const requests = [];
+        await openDelayedIntro(page, { requests });
+        await page.evaluate(state => {
+            if (state === 'missing') window.fixtureSession = null;
+            if (state === 'other-owner') window.fixtureSession = { access_token: 'fixture-only-other-token', user: { id: 'other-account' } };
+            if (state === 'auth-error') window.fixtureSessionError = { status: 503 };
+        }, sessionState);
+        await page.getByRole('textbox', { name: 'Message Deity' }).fill('Prepare my profile change for review.');
+        await page.getByRole('button', { name: 'Send message', exact: true }).click();
+        await expect(page.getByRole('article', { name: 'Deity message' })).toContainText('Nothing was changed. Please sign in again');
+        await expect(page.getByRole('button', { name: 'Apply suggested profile change', exact: true })).toHaveCount(0);
+        await expect(page.getByRole('status', { name: 'Deity is responding', exact: true })).toHaveCount(0);
+        expect(requests).toEqual([]);
+        expect(await page.evaluate(() => window.fixtureApplyCount)).toBe(0);
+    });
+}
+
+test('a verified browser session carries an owner consistency assertion, never an actor for persistence', async ({ page }) => {
+    const requests = [];
+    await openDelayedIntro(page, { stream: true, requests });
+    await page.getByRole('textbox', { name: 'Message Deity' }).fill('Prepare my link change for review.');
+    await page.getByRole('button', { name: 'Send message', exact: true }).click();
+    await expect.poll(() => page.evaluate(() => window.fixtureChatRequests.length)).toBe(1);
+    expect(await page.evaluate(() => window.fixtureChatRequests[0].expectedAccountId)).toBe('fixture-account');
+    expect(await page.evaluate(() => window.fixtureApplyCount)).toBe(0);
+    await page.evaluate(() => { window.fixtureChunk('No change requested by this fixture.'); window.fixtureFinish(); });
 });
 
 test('identity bootstrap has an accessible non-editable state, then keeps the first account draft', async ({ page }) => {

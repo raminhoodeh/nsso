@@ -1,10 +1,11 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { isTransientAuthError } from '@/lib/auth-errors'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 const privateHeaders = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
     try {
         const { searchParams } = new URL(request.url)
         const sort = searchParams.get('sort') || 'date'
@@ -120,3 +121,5 @@ export async function GET(request: Request) {
         )
     }
 }
+
+export const GET = withRuntimeGuard(handleGET)

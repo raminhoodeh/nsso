@@ -3,6 +3,7 @@ import { registerHooks } from 'node:module';
 import test from 'node:test';
 
 const hooks = registerHooks({ resolve(specifier, context, next) {
+    if (specifier === '@/lib/server/runtime-route') return { url: 'data:text/javascript,export const withRuntimeGuard = handler => handler;', shortCircuit: true };
     if (specifier === 'next/server') return { url: `data:text/javascript,${encodeURIComponent('export const NextResponse={json:(...args)=>Response.json(...args)}')}`, shortCircuit: true };
     return next(specifier, context);
 } });

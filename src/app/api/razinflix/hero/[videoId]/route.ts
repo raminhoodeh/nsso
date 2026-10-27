@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { NextResponse } from 'next/server'
 
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/
@@ -111,7 +112,7 @@ function heroError(message: string, status: number) {
  * The cross-origin YouTube player remains available in the film modal, but a
  * framebuffer cannot honestly sample it for the page-wide Tahoe material.
  */
-export async function GET(
+async function handleGET(
     _request: Request,
     context: { params: Promise<{ videoId: string }> }
 ) {
@@ -157,3 +158,5 @@ export async function GET(
 
     return heroError('Hero image unavailable', 404)
 }
+
+export const GET = withRuntimeGuard(handleGET)

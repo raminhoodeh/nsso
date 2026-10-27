@@ -1,3 +1,4 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { createClient } from '@/lib/supabase/server'
 import { assertSameOrigin, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
@@ -12,7 +13,7 @@ function present<T extends Comment>(comment: T) {
     const profile = Array.isArray(user?.profile) ? user.profile[0] : user?.profile
     return { ...comment, user: { username: user?.username ?? '', full_name: profile?.full_name || user?.username || 'nsso user', avatar_url: profile?.profile_pic_url ?? null } }
 }
-export async function GET(_request: Request, { params }: { params: Promise<{ postId: string }> }) {
+async function handleGET(_request: Request, { params }: { params: Promise<{ postId: string }> }) {
     try {
         const { postId } = await params
         if (!uuid.test(postId)) return Response.json({ error: 'Invalid post.' }, { status: 400, headers })
@@ -26,7 +27,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pos
         return Response.json({ error: 'Comments could not be loaded. Please retry.' }, { status: 503, headers })
     }
 }
-export async function POST(request: Request, { params }: { params: Promise<{ postId: string }> }) {
+async function handlePOST(request: Request, { params }: { params: Promise<{ postId: string }> }) {
     try {
         assertSameOrigin(request)
         const { postId } = await params
@@ -43,3 +44,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ pos
         return permissionErrorResponse(error) ?? requestBodyErrorResponse(error) ?? Response.json({ error: 'Your comment could not be saved. Please retry.' }, { status: 503, headers })
     }
 }
+
+export const GET = withRuntimeGuard(handleGET)
+export const POST = withRuntimeGuard(handlePOST)

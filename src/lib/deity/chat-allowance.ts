@@ -14,6 +14,12 @@ export class ChatAllowanceError extends Error {
           ? "That message or conversation is too long or could not be read. Please start a shorter chat."
         : code === "chat_origin_denied"
           ? "Please open AI chat from nsso."
+        : code === "chat_authentication_required" || code === "chat_account_changed"
+          ? "Deity could not verify this signed-in account. Nothing was changed. Please sign in again before asking for a profile change."
+        : code === "chat_authentication_unavailable"
+          ? "Deity could not verify your account just now. Nothing was changed. Please try again shortly."
+        : code === "chat_profile_context_unavailable"
+          ? "Deity could not load your profile just now. Nothing was changed. Please try again shortly."
         : code === "chat_busy"
           ? "Please wait a minute before sending another message."
           : "Paid AI chat is temporarily unavailable. Please try again later.");

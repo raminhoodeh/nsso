@@ -1,10 +1,11 @@
+import { withRuntimeGuard } from '@/lib/server/runtime-route'
 import { requirePermission, createPrivilegedClient, permissionErrorResponse } from '@/lib/server/permissions'
 import { readBoundedJson, requestBodyErrorResponse } from '@/lib/server/bounded-request'
 
 const headers = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
     try {
         const { user } = await requirePermission('nsso:admin')
         const offset = Number(new URL(request.url).searchParams.get('offset') ?? 0)
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
     }
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
     try {
         const { user } = await requirePermission('nsso:admin', request)
         const body = await readBoundedJson(request, 2048)
@@ -39,3 +40,6 @@ export async function POST(request: Request) {
             ?? Response.json({ error: 'The permission could not be saved. Please retry.' }, { status: 503, headers })
     }
 }
+
+export const GET = withRuntimeGuard(handleGET)
+export const POST = withRuntimeGuard(handlePOST)

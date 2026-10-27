@@ -5,6 +5,7 @@ import { registerHooks } from 'node:module';
 const serverMock = `data:text/javascript,${encodeURIComponent('export const createClient = async () => globalThis.__freeProfileSupabase;')}`;
 const hooks = registerHooks({
   resolve(specifier, context, nextResolve) {
+    if (specifier === '@/lib/server/runtime-route') return { url: 'data:text/javascript,export const withRuntimeGuard = handler => handler;', shortCircuit: true };
     if (specifier === 'server-only') return { url: 'data:text/javascript,export {}', shortCircuit: true };
     if (specifier === '@/lib/supabase/server') return { url: serverMock, shortCircuit: true };
     if (specifier.startsWith('@/lib/')) {
