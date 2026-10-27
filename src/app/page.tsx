@@ -287,6 +287,18 @@ export default function HomePage() {
           >
             WhatsApp
           </a>
+          <p className="mt-2 flex justify-center px-4 not-italic">
+            <a
+              href="https://21st.dev/@jahed/components/apple-tahoe-liquid-glass-button"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center rounded-xl border border-white/15 bg-slate-950/80 px-3 text-xs leading-relaxed text-white/90 underline decoration-white/40 underline-offset-4 hover:text-white hover:decoration-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              data-testid="glass-component-credit"
+            >
+              Glass component by Hossain Jahed
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+          </p>
         </div>
       </section >
 

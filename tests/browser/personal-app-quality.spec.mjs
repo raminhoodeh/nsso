@@ -279,6 +279,7 @@ test('the unavailable trailer fallback keeps all actions inside its media area a
     const fallback = page.locator('[data-film-trailer-state="unavailable"]')
     await expect(fallback).toBeVisible()
     const media = await fallback.boundingBox()
+    expect(media.height).toBeGreaterThanOrEqual(240)
     for (const action of [page.getByRole('link', { name: 'Find an official trailer on YouTube' }), page.getByRole('button', { name: 'Retry trailer' })]) {
         const box = await action.boundingBox()
         expect(box.y).toBeGreaterThanOrEqual(media.y)
@@ -342,8 +343,15 @@ test('stopping a partial add batch retains confirmed saves and reports the inter
 
 async function findCourtyard(page) {
     const browse = page.getByRole('button', { name: 'Explore', exact: true })
-    if (await browse.isVisible()) await browse.click()
-    await page.getByRole('searchbox', { name: 'Search places' }).fill('Courtyard')
+    const search = page.getByRole('searchbox', { name: 'Search places' })
+    // The compact layout is selected in a mount effect. A one-shot visibility
+    // check can run before Explore appears, especially in WebKit after reload.
+    if (await page.evaluate(() => window.matchMedia('(max-width: 900px)').matches)) {
+        await expect(browse).toBeVisible()
+        await browse.click()
+    }
+    await expect(search).toBeVisible()
+    await search.fill('Courtyard')
 }
 
 test('unavailable browser storage does not crash Places and saved places still work for the visit', async ({ page }) => {
@@ -375,7 +383,7 @@ test('hung place details stop loading and a late response cannot replace the sta
     await findCourtyard(page)
     await page.getByRole('button', { name: /Arts & culture.*The Courtyard/ }).click()
     await expect.poll(() => page.evaluate(() => window.__placeRequests || 0)).toBe(1)
-    if (testInfo.project.name === 'mobile') await page.getByRole('button', { name: `Expand Details for ${placeName} sheet` }).click()
+    if (testInfo.project.use.isMobile) await page.getByRole('button', { name: `Expand Details for ${placeName} sheet` }).click()
     await page.clock.fastForward(8_100)
     await expect(page.getByText(/Photos are loading|Finding photos/)).toHaveCount(0)
     const directions = page.getByRole('link', { name: /^(Get directions|Directions)$/i })

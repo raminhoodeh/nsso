@@ -298,8 +298,9 @@ test("direct backdrop surfaces make nested glass material-only without a second 
   assert.match(genericSurface, /refractive: !insideDirectBackdrop/);
   assert.match(
     genericSurface,
-    /const activeOptics =\s*!insideDirectBackdrop &&/,
+    /const activeOptics =\s*!chrome\.enabled && !insideDirectBackdrop &&/,
   );
+  assert.match(genericSurface, /if \(chrome\.enabled \|\| !registerSurface/);
   assert.match(provider, /refractive: boolean/);
   assert.match(
     provider,

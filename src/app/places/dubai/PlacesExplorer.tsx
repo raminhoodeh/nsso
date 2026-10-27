@@ -1029,6 +1029,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
         {mapError && (
           <TahoeGlassSurface
             variant="popover"
+            data-tahoe-readable-overlay="true"
             radius={14}
             tone="dark"
             semanticTint="light"
@@ -1373,6 +1374,7 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
             {activePhoto && !activePhotoUnavailable ? (
               <TahoeGlassSurface
                 variant="popover"
+                data-tahoe-readable-overlay="true"
                 radius={10}
                 tone="light"
                 semanticTint="dark"

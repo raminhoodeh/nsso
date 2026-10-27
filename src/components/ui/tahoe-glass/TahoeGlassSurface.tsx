@@ -8,6 +8,8 @@ import {
 import { TahoeGlassDirectBackdropBoundaryContext } from "@/components/ui/tahoe-glass/TahoeGlassBoundaryContext";
 import { cn } from "@/lib/utils";
 import { TAHOE_SPECULAR_SHADOW } from "@/lib/tahoe-glass/constants";
+import { useChromeGlassOptics } from "./ChromeGlassOptics";
+import { supportsChromeGlassGeometry } from "@/lib/tahoe-glass/chrome-policy";
 
 export type TahoeGlassSurfaceElement =
   | "div"
@@ -125,6 +127,12 @@ export const TahoeGlassSurface = React.forwardRef<
   const diagnostics = useTahoeGlassDiagnostics();
   const internalRef = React.useRef<HTMLElement | null>(null);
   const id = React.useId();
+  const chrome = useChromeGlassOptics(internalRef,
+    !insideDirectBackdrop && supportsChromeGlassGeometry(radius, style) && ["card", "panel", "mediaFrame"].includes(variant) &&
+    props["data-tahoe-readable-overlay" as keyof typeof props] !== "true" &&
+    !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""));
+  const resolvedTint = chrome.enabled && semanticTint === "none" ? (tone === "dark" ? "light" : "dark") : semanticTint;
+  const resolvedTintOpacity = chrome.enabled && semanticTint === "none" ? 0.18 : semanticTintOpacity;
 
   const setRef = React.useCallback(
     (element: HTMLElement | null) => {
@@ -137,7 +145,7 @@ export const TahoeGlassSurface = React.forwardRef<
 
   React.useLayoutEffect(() => {
     const element = internalRef.current;
-    if (!registerSurface || !unregisterSurface || !element) return;
+    if (chrome.enabled || !registerSurface || !unregisterSurface || !element) return;
     registerSurface(id, element, {
       continuous: tracking === "continuous",
       priority: opticalPriority,
@@ -146,6 +154,7 @@ export const TahoeGlassSurface = React.forwardRef<
     return () => unregisterSurface(id);
   }, [
     id,
+    chrome.enabled,
     insideDirectBackdrop,
     opticalPriority,
     registerSurface,
@@ -160,7 +169,7 @@ export const TahoeGlassSurface = React.forwardRef<
   }, [className, requestRender, style]);
 
   const activeOptics =
-    !insideDirectBackdrop &&
+    !chrome.enabled && !insideDirectBackdrop &&
     diagnostics.status === "active" &&
     (diagnostics.backend === "svg" || diagnostics.backend === "webgl");
   const solidMaterial = diagnostics.backend === "solid";
@@ -215,18 +224,21 @@ export const TahoeGlassSurface = React.forwardRef<
       {...props}
       data-tahoe-glass-surface={variant}
       data-tahoe-glass-tone={tone}
-      data-tahoe-glass-tint={semanticTint}
-      data-tahoe-glass-state={context ? undefined : diagnostics.status}
-      data-tahoe-glass-backend={context ? undefined : diagnostics.backend}
-      data-tahoe-glass-source={context ? undefined : diagnostics.source}
+      data-tahoe-glass-tint={resolvedTint}
+      data-tahoe-chromium-optics={chrome.enabled ? (chrome.ready ? "refract" : "initializing") : undefined}
+      data-tahoe-glass-state={chrome.enabled ? (chrome.ready ? "active" : "initializing") : context ? undefined : diagnostics.status}
+      data-tahoe-glass-backend={chrome.enabled ? (chrome.ready ? "svg" : "css-blur") : context ? undefined : diagnostics.backend}
+      data-tahoe-glass-source={chrome.enabled ? "live-dom" : context ? undefined : diagnostics.source}
       data-tahoe-glass-fallback-reason={
         context ? undefined : diagnostics.reason || undefined
       }
     >
+      {chrome.layers}
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 rounded-[inherit]"
         style={{
+          display: chrome.enabled ? "none" : undefined,
           background: activeOptics
             ? "transparent"
             : solidMaterial
@@ -245,14 +257,14 @@ export const TahoeGlassSurface = React.forwardRef<
         }}
       />
 
-      {semanticTint !== "none" && (
+      {resolvedTint !== "none" && (
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-[1] rounded-[inherit]"
           style={{
             backgroundColor:
-              semanticTint === "light" ? "white" : "rgb(8, 12, 20)",
-            opacity: Math.max(0, Math.min(0.42, semanticTintOpacity)),
+              resolvedTint === "light" ? "white" : "rgb(8, 12, 20)",
+            opacity: Math.max(0, Math.min(0.42, resolvedTintOpacity)),
           }}
         />
       )}
@@ -262,6 +274,7 @@ export const TahoeGlassSurface = React.forwardRef<
         className="pointer-events-none absolute inset-0 z-10 rounded-[inherit] p-px"
         style={{
           background: "var(--rim-gradient)",
+          display: chrome.enabled ? "none" : undefined,
           WebkitMask:
             "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
           WebkitMaskComposite: "xor",
