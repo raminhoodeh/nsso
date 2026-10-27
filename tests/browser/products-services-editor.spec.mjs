@@ -267,21 +267,54 @@ test('selected-offering deletion requires confirmation and retains the item when
     expect((await page.evaluate(() => window.fixtureSnapshot().products)).map(item => item.id)).toEqual(['offering-2'])
 })
 
-test('the actual cropper supports product image selection and preserves crop on upload failure', async ({ page }) => {
-    await mount(page, { count: 1 })
-    await choose(page, 1).click()
-    const image = await page.evaluate(() => { const canvas = document.createElement('canvas'); canvas.width=300; canvas.height=300; const context=canvas.getContext('2d'); context.fillStyle='#e19a72'; context.fillRect(0,0,300,300); return canvas.toDataURL('image/png').split(',')[1] })
-    await page.getByLabel('Upload image for Fixture offering 1', { exact: true }).setInputFiles({ name: 'fixture.png', mimeType: 'image/png', buffer: Buffer.from(image, 'base64') })
+test('the actual cropper supports product image selection and preserves crop on upload failure', async ({ page }, testInfo) => {
+    let stage = 'open image cropper'
+    const mediaResponses = [], pageErrors = []
+    const isMediaResponse = response => {
+        const url = new URL(response.url())
+        return response.request().method() === 'POST' && url.origin === 'https://nsso.test' && url.pathname === '/api/profile/media'
+    }
+    page.on('response', response => { if (isMediaResponse(response)) mediaResponses.push(response.status()) })
+    page.on('pageerror', error => pageErrors.push(error.message))
     const cropper = page.getByRole('dialog', { name: 'Crop Image', exact: true })
-    await expect(cropper).toHaveAttribute('data-tahoe-readable-overlay', 'true')
-    await expect(cropper.getByRole('slider', { name: 'Zoom', exact: true })).toBeVisible()
-    await page.route('**/api/profile/media', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Synthetic upload unavailable' }) }))
-    await cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click()
-    await expect(cropper.getByRole('alert')).toContainText('crop is still here')
-    await page.unroute('**/api/profile/media')
-    await cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click()
-    await expect(cropper).toHaveCount(0)
-    expect(await writes(page)).toContainEqual(expect.objectContaining({ kind: 'patch', id: 'offering-1', patch: expect.objectContaining({ image_url: 'https://nsso.test/fixture-thumb.svg?cropped' }) }))
+    try {
+        await mount(page, { count: 1 })
+        await choose(page, 1).click()
+        const image = await page.evaluate(() => { const canvas = document.createElement('canvas'); canvas.width=300; canvas.height=300; const context=canvas.getContext('2d'); context.fillStyle='#e19a72'; context.fillRect(0,0,300,300); return canvas.toDataURL('image/png').split(',')[1] })
+        await page.getByLabel('Upload image for Fixture offering 1', { exact: true }).setInputFiles({ name: 'fixture.png', mimeType: 'image/png', buffer: Buffer.from(image, 'base64') })
+        await expect(cropper).toHaveAttribute('data-tahoe-readable-overlay', 'true')
+        await expect(cropper.getByRole('slider', { name: 'Zoom', exact: true })).toBeVisible()
+        await page.route('**/api/profile/media', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Synthetic upload unavailable' }) }))
+        stage = 'receive rejected upload'
+        const [rejectedUpload] = await Promise.all([
+            page.waitForResponse(isMediaResponse, { timeout: 5000 }),
+            cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click(),
+        ])
+        expect(rejectedUpload.status()).toBe(503)
+        stage = 'retain crop after rejected upload'
+        await expect(cropper.getByRole('alert')).toContainText('crop is still here')
+        await page.unroute('**/api/profile/media')
+        stage = 'receive successful retry upload'
+        const [retryUpload] = await Promise.all([
+            page.waitForResponse(isMediaResponse, { timeout: 5000 }),
+            cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click(),
+        ])
+        expect(retryUpload.status()).toBe(200)
+        stage = 'submit retried image patch'
+        await expect.poll(() => writes(page)).toContainEqual(expect.objectContaining({ kind: 'patch', id: 'offering-1', patch: expect.objectContaining({ image_url: 'https://nsso.test/fixture-thumb.svg?cropped' }) }))
+        stage = 'close cropper after saved image'
+        await expect(cropper).toHaveCount(0)
+    } catch (error) {
+        const diagnostics = {
+            stage, mediaResponses, pageErrors,
+            fixture: await page.evaluate(() => ({ toasts: window.fixtureToasts, writes: window.fixtureWrites, mutation: window.fixtureSnapshot?.().mutationState })).catch(error => ({ captureError: error.message })),
+            dialogCount: await cropper.count().catch(() => null),
+            dialogAlerts: await cropper.getByRole('alert').allTextContents().catch(() => []),
+        }
+        console.error('Crop retry diagnostics:', JSON.stringify(diagnostics))
+        await testInfo.attach('crop-retry-diagnostics', { body: JSON.stringify(diagnostics, null, 2), contentType: 'application/json' })
+        throw error
+    }
 })
 
 test('unsaved PayPal code belongs to each offering through switching, returning and collapsing', async ({ page }) => {
