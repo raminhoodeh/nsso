@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 
+// The CI image has no physical GPU. Select the same real software WebGL
+// backend explicitly rather than relying on platform-dependent ANGLE defaults.
+test.use({ launchOptions: { args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } })
+
 test.beforeAll(async () => {
   const source = readFileSync(root + 'src/components/VantaBackground.tsx', 'utf8')
   const candidates = [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)]
@@ -51,14 +55,44 @@ test.beforeAll(async () => {
 })
 
 async function mountBackground(page) {
+  const diagnostics = { console: [], errors: [], webgl: null }
+  page.on('console', message => diagnostics.console.push(`${message.type()}: ${message.text()}`))
+  page.on('pageerror', error => diagnostics.errors.push(error.message))
   await page.setContent('<meta name="viewport" content="width=device-width, initial-scale=1"><div id="root"></div>')
   await page.addStyleTag({ content: css })
+  diagnostics.webgl = await page.evaluate(() => {
+    const canvas = document.createElement('canvas')
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
+    if (!gl) return { available: false, userAgent: navigator.userAgent }
+    const debug = gl.getExtension('WEBGL_debug_renderer_info')
+    const result = {
+      available: true,
+      renderer: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+      version: gl.getParameter(gl.VERSION),
+    }
+    gl.getExtension('WEBGL_lose_context')?.loseContext()
+    return result
+  })
+  expect(diagnostics.webgl.available, JSON.stringify(diagnostics)).toBe(true)
   // Use the real pinned renderer and cloud shader. The geometry assertion then
   // covers both the CSS host and Vanta's canvas, including its resize lifecycle.
   await page.addScriptTag({ path: root + 'public/vendor/three-r134/three.min.js' })
   await page.addScriptTag({ path: root + 'public/vendor/vanta-0.5.24/vanta.clouds.min.js' })
   await page.addScriptTag({ content: bundle })
-  await expect(page.locator('#vanta-bg canvas')).toHaveCount(1)
+  try {
+    // Software shader compilation can block the first rendered frame. The
+    // capability probe above is mandatory; a missing renderer still fails.
+    await expect(page.locator('#vanta-bg canvas')).toHaveCount(1, { timeout: 15_000 })
+  } catch (error) {
+    const scene = await page.evaluate(() => ({
+      host: document.querySelector('#vanta-bg')?.outerHTML,
+      canvasCount: document.querySelectorAll('canvas').length,
+      renderer: Boolean(window.VANTA?.current?.renderer),
+      rendererCanvasConnected: window.VANTA?.current?.renderer?.domElement?.isConnected,
+      rendererCanvasParent: window.VANTA?.current?.renderer?.domElement?.parentElement?.id,
+    }))
+    throw new Error(`${error.message}\nVanta startup diagnostics: ${JSON.stringify({ ...diagnostics, scene })}`)
+  }
 }
 
 async function backgroundGeometry(page) {
@@ -92,9 +126,9 @@ function expectViewportCoverage(geometry) {
   expect(Math.abs(geometry.bufferHeight - geometry.renderHeight)).toBeLessThan(2)
 }
 
-test('clouds cover the desktop viewport without magnification at either display density', async ({ browser }, testInfo) => {
-  test.skip(testInfo.project.name !== 'desktop', 'Desktop geometry is independent of the mobile project.')
-  for (const deviceScaleFactor of [1, 2]) {
+for (const deviceScaleFactor of [1, 2]) {
+  test(`clouds cover the desktop viewport without magnification at DPR ${deviceScaleFactor}`, async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'Desktop geometry is independent of the mobile project.')
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor })
     try {
       const page = await context.newPage()
@@ -113,8 +147,8 @@ test('clouds cover the desktop viewport without magnification at either display 
     } finally {
       await context.close()
     }
-  }
-})
+  })
+}
 
 test('Apple mobile keeps a full-resolution viewport source across height changes', async ({ browser }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile', 'Apple mobile source policy is covered in the mobile project.')
