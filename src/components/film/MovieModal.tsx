@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Edit2, Save, Upload, Loader2, Check, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { TahoeGlassDirectBackdropBoundaryContext } from '@/components/ui/tahoe-glass/TahoeGlassBoundaryContext';
 import styles from './MovieModal.module.css';
+import FilmTrailer from './FilmTrailer';
+import { formatFilmRating, recommendFilms } from '@/lib/razinflix/browsing';
 import {
     TahoeGlassButton,
     TahoeGlassDialog,
@@ -51,6 +53,7 @@ interface Film {
 interface MovieModalProps {
     film: Film;
     canManage?: boolean;
+    startTrailer?: boolean;
     filmList: Film[];
     onClose: () => void;
     onNext: () => void;
@@ -59,15 +62,17 @@ interface MovieModalProps {
     onUpdate?: (film: Film) => void;
     onDelete?: (id: number) => void;
     onSearch?: (term: string) => void;
+    onCategory?: (category: string) => void;
 }
 
-const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onDelete, onSearch }: MovieModalProps) => {
+const MovieModal = ({ film, canManage = false, startTrailer = false, filmList = [], onClose, onNext, onPrev, onSelect, onUpdate, onDelete, onSearch, onCategory }: MovieModalProps) => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const closeRef = useRef<HTMLButtonElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLElement | null>(null);
     const dialogTitleId = React.useId();
+    const [recommendationBounds, setRecommendationBounds] = useState({ left: false, right: false });
 
     useEffect(() => {
         const dialog = dialogRef.current;
@@ -226,38 +231,18 @@ const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, o
         }
     };
 
-    // Advanced "Similar Films" Similarity Matrix (Client-Side Jaccard Indexing)
-    const [similarFilms, setSimilarFilms] = useState<Film[]>([]);
+    const similarFilms = useMemo(() => recommendFilms(film, filmList), [film, filmList]);
 
     useEffect(() => {
-        if (!film || !filmList.length) return;
-
-        // Naive tokenizer stripping stop-words visually
-        const getTokens = (str: string) => str.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(w => w.length > 3);
-        const targetTokens = new Set(getTokens(film.description));
-
-        const scored = filmList.filter(f => f.id !== film.id).map(f => {
-            let score = 0;
-            // High weight: Director match
-            if (f.director && film.director && f.director === film.director) score += 50;
-            
-            // Medium weight: Categorical intersection
-            if (f.categories && film.categories) {
-                const catOverlap = f.categories.filter(c => film.categories.includes(c)).length;
-                score += (catOverlap * 10);
-            }
-            
-            // Algorithmic weight: Description keyword Jaccard overlap
-            const fTokens = getTokens(f.description || '');
-            const overlap = fTokens.filter(t => targetTokens.has(t)).length;
-            score += (overlap * 2); 
-            
-            return { film: f, score };
-        });
-
-        const recommendations = scored.sort((a, b) => b.score - a.score).slice(0, 15).map(s => s.film);
-        setSimilarFilms(recommendations);
-    }, [film, filmList]);
+        const row = carouselRef.current;
+        if (!row) return;
+        const update = () => setRecommendationBounds({ left: row.scrollLeft > 2, right: row.scrollLeft + row.clientWidth < row.scrollWidth - 2 });
+        update();
+        row.addEventListener('scroll', update, { passive: true });
+        const resize = new ResizeObserver(update);
+        resize.observe(row);
+        return () => { row.removeEventListener('scroll', update); resize.disconnect(); };
+    }, [similarFilms]);
 
     const nestedDialogOpen = isDeleteConfirmOpen || Boolean(operationError);
 
@@ -417,20 +402,8 @@ const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, o
                             </TahoeGlassSurface>
                         ) : null}
 
-                        {film.trailer_key && !isEditing ? (
-                            <div className="w-full h-full">
-                                <iframe
-                                    key={film.id}
-                                    title={film.title + " Trailer"}
-                                    width="100%"
-                                    height="100%"
-                                    src={`https://www.youtube.com/embed/${film.trailer_key}?autoplay=1&controls=1&modestbranding=1&rel=0&iv_load_policy=3`}
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                    className="w-full h-full object-cover"
-                                ></iframe>
-                            </div>
+                        {!isEditing ? (
+                            <FilmTrailer key={`${film.id}-${film.trailer_key}`} film={film} autoPlay={startTrailer} />
                         ) : (
                             <>
                                 <div className="relative w-full h-full">
@@ -505,7 +478,7 @@ const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, o
                                     />
                                 </TahoeGlassField>
                             ) : (
-                                <h2 className="text-2xl font-bold text-white mb-1 leading-tight capitalize">{film.title}</h2>
+                                <h2 className="text-2xl font-bold text-white mb-1 leading-tight">{film.title}</h2>
                             )}
                             
                             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mb-4 font-medium">
@@ -544,7 +517,7 @@ const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, o
                                     </>
                                 ) : (
                                     <>
-                                        <span className="text-green-400">{typeof film.rating === 'string' && film.rating.includes('/') ? film.rating.split('/')[0] : film.rating} Rating</span>
+                                        <span className="text-green-400">Rating: {formatFilmRating(film.rating)}</span>
                                         <span>{film.year}</span>
                                     </>
                                 )}
@@ -653,8 +626,8 @@ const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, o
                                                     radius={999}
                                                     tone="light"
                                                     key={cat} 
-                                                    onClick={() => onSearch && onSearch(cat)}
-                                                    className="px-2 py-0.5 text-[10px] text-gray-200 hover:text-white"
+                                                    onClick={() => onCategory?.(cat)}
+                                                    className="min-h-11 px-3 py-2 text-sm text-gray-200 hover:text-white"
                                                 >
                                                     {cat}
                                                 </TahoeGlassSurface>
@@ -671,12 +644,12 @@ const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, o
                 </section>
 
                 {/* Bottom Carousel: Recommended Films (Intelligent Overlap Algorithm) */}
-                <section className={styles.recommendations} data-film-recommendations="true" aria-label="Similar films">
+                {similarFilms.length > 0 && <section className={styles.recommendations} data-film-recommendations="true" aria-label="Similar films">
                     <div className={styles.recommendationsHeader}>
                         <h3>More like this</h3>
                         <div className={styles.navigation}>
-                            <button type="button" className={styles.control} onClick={() => carouselRef.current?.scrollBy({ left: -carouselRef.current.clientWidth * 0.8, behavior: 'smooth' })} aria-label="Scroll similar films left"><ChevronLeft size={20} /></button>
-                            <button type="button" className={styles.control} onClick={() => carouselRef.current?.scrollBy({ left: carouselRef.current.clientWidth * 0.8, behavior: 'smooth' })} aria-label="Scroll similar films right"><ChevronRight size={20} /></button>
+                            <button type="button" disabled={!recommendationBounds.left} className={styles.control} onClick={() => carouselRef.current?.scrollBy({ left: -carouselRef.current.clientWidth * 0.8, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })} aria-label="Scroll similar films left"><ChevronLeft size={20} /></button>
+                            <button type="button" disabled={!recommendationBounds.right} className={styles.control} onClick={() => carouselRef.current?.scrollBy({ left: carouselRef.current.clientWidth * 0.8, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })} aria-label="Scroll similar films right"><ChevronRight size={20} /></button>
                         </div>
                     </div>
                     <div className={styles.recommendationsRow} ref={carouselRef}>
@@ -701,7 +674,7 @@ const MovieModal = ({ film, canManage = false, filmList = [], onClose, onNext, o
                             </TahoeGlassSurface>
                         ))}
                     </div>
-                </section>
+                </section>}
                 </div>
             </div>
 

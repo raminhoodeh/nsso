@@ -8,6 +8,7 @@ import { ProfileMutationClient } from '@/lib/profile-mutation-client'
 import { boundedClientRead } from '@/lib/client-read'
 import { mutationMessage, rowCollections, type EditableValues, type MutationDelta, type MutationResult, type ProfileChange, type ProfileEntity, type ProfilePatch, type RowKind } from '@/lib/profile-mutations'
 import { validateLinks as validateLinksUtil, type LinkValidation } from '@/lib/deity/linkValidator'
+import { calculateProfileCompleteness } from '@/lib/profile-completeness'
 
 interface OwnerSnapshot { revision: number; profile: Profile | null; links: Link[]; contacts: Contact[]; experiences: Experience[]; qualifications: Qualification[]; projects: Project[]; products: Product[] }
 type Draft = { entity: ProfileEntity; id: string; patch: Record<string, unknown>; sequence: number; timer?: ReturnType<typeof setTimeout>; operationId?: string; operationPatch?:Record<string,unknown>; failed?: boolean; failureStatus?: MutationResult['status']; inFlight?: boolean; waiters: ((value: boolean) => void)[] }
@@ -307,9 +308,7 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
         if (error) return false
         setFastModeState(enabled); return true
     }, [supabase])
-    const has = (value: unknown) => !!(typeof value === 'string' ? value.trim() : value)
-    const completenessFields=[has(snapshot.profile?.full_name),has(snapshot.profile?.headline),has(snapshot.profile?.bio),has(snapshot.profile?.profile_pic_url),snapshot.links.length>0,snapshot.contacts.length>0,snapshot.experiences.length>0,snapshot.qualifications.length>0,snapshot.projects.length>0,snapshot.products.length>0]
-    const profileCompleteness=completenessFields.reduce((score,filled,index)=>score+(filled?[10,10,20,10,10,10,10,5,5,10][index]:0),0)
+    const profileCompleteness = calculateProfileCompleteness(snapshot)
 
     return <ProfileContext.Provider value={{ ...snapshot, loading, loadError, mutationState, retryPending, patchProfile, updateField, patchEntity, createEntity, removeEntity, applyOperation, refreshProfile, getRevision: () => client.revision, undo, canUndo: history.length > 0, fastMode, setFastMode, profileCompleteness,
         addLink: async (link_name, link_url) => (await createEntity('link', { link_name, link_url })).status === 'applied',

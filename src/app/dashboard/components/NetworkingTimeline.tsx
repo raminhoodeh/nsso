@@ -88,7 +88,7 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                             <GlassCard className="p-5 relative overflow-hidden group/card">
 
                                                 {/* Header: Contextual Stamp */}
-                                                <div className="flex items-center gap-2 text-[11px] font-bold text-white/40 uppercase tracking-wider mb-3">
+                                                <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-white/70">
                                                     <div className="flex items-center gap-1">
                                                         <Calendar size={10} />
                                                         {new Date(conn.dateMet).getDate()} {month.split(' ')[0]}
@@ -134,12 +134,12 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                                             {/* Add Note Mini Button */}
                                                             <TahoeGlassButton
                                                                 onClick={() => onOpenNotes(conn)}
-                                                                className="p-1.5"
+                                                                className="h-11 w-11 shrink-0 p-0"
                                                                 contentClassName={conn.notes ? 'text-white' : 'text-white/45'}
                                                                 title="Notes"
                                                                 aria-label={`Edit notes for ${conn.fullName}`}
                                                             >
-                                                                <NotebookPen size={14} />
+                                                                <NotebookPen size={18} />
                                                             </TahoeGlassButton>
                                                         </div>
 

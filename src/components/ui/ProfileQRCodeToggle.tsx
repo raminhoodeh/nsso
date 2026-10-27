@@ -66,7 +66,7 @@ export default function ProfileQRCodeToggle({
                     />
 
                     {/* Hover Hint */}
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-black/80 to-transparent px-3 pb-3 pt-7">
                         <TahoeGlassSurface
                             variant="pill"
                             tone="light"
@@ -74,7 +74,7 @@ export default function ProfileQRCodeToggle({
                             semanticTintOpacity={0.06}
                             className="border border-white/20 px-3 py-1 text-sm font-medium text-white"
                         >
-                            Show QR
+                            Tap to show QR
                         </TahoeGlassSurface>
                     </div>
                 </div>
@@ -88,6 +88,7 @@ export default function ProfileQRCodeToggle({
                         transform: 'rotateY(180deg)',
                     }}
                 >
+                    <span className="sr-only">Tap again to return to the profile photo.</span>
                     {/* The white QR plate stays opaque for scanner contrast. */}
                     <div className="bg-white p-2 rounded-xl shadow-inner relative z-10">
                         <QRCodeSVG
@@ -99,6 +100,7 @@ export default function ProfileQRCodeToggle({
                             includeMargin={false}
                         />
                     </div>
+                    <span className="mt-2 text-xs font-medium text-white">Tap for photo</span>
                 </div>
             </div>
 

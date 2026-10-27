@@ -12,7 +12,6 @@ import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-
 import { boundedClientRead } from '@/lib/client-read'
 import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
 import { useProfile } from '@/components/providers/ProfileProvider'
-import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import {
     TahoeGlassButton,
     TahoeGlassField,
@@ -273,7 +272,6 @@ export default function SalesPageCreator() {
             <div className="pt-[120px] md:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto">
 
                 <GlassCard refractive className="p-8 lg:p-12">
-                    <ProfileSaveStatus />
                 {/* Header */}
                     <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">

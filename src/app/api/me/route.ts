@@ -4,12 +4,19 @@ import { permissionErrorResponse, type AppPermission } from '@/lib/server/permis
 
 const privateHeaders = { 'Cache-Control': 'private, no-store', Vary: 'Cookie' }
 
-export async function GET() {
+export async function GET(request?: Request) {
     try {
         const client = await createClient()
         const { data: { user: actor }, error: authError } = await client.auth.getUser()
         if (isTransientAuthError(authError)) return Response.json({ error: 'Account verification is temporarily unavailable.' }, { status: 503, headers: privateHeaders })
-        if (authError || !actor) return Response.json({ error: 'Please sign in.' }, { status: 401, headers: privateHeaders })
+        if (authError || !actor) {
+            // Public navigation asks whether a session exists. An anonymous visit
+            // is a valid answer; protected account reads retain their 401 contract.
+            if (!actor && request?.headers.get('X-NSSO-Optional-Account') === '1') {
+                return Response.json({ user: null, permissions: [] }, { headers: privateHeaders })
+            }
+            return Response.json({ error: 'Please sign in.' }, { status: 401, headers: privateHeaders })
+        }
         let { data: account, error } = await client.rpc('get_current_account')
         if (!error && !account) ({ data: account, error } = await client.rpc('ensure_current_account'))
         if (error || !account || account.id !== actor.id) {

@@ -12,6 +12,7 @@ import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import WalletLogin from '@/components/auth/WalletLogin'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { validateProfileUsername } from '@/lib/profile-username'
 
 const providers = [
     { name: 'google', label: 'Google' },
@@ -24,7 +25,8 @@ function SignUpForm() {
     const router = useRouter()
     const pending = useRef(false)
     const searchParams = useSearchParams()
-    const reservedName = searchParams.get('name') || ''
+    const requestedName = validateProfileUsername(searchParams.get('name'))
+    const reservedName = 'username' in requestedName ? requestedName.username : ''
     const supabase = createClient()
     const { showToast } = useToast()
 
@@ -120,7 +122,8 @@ function SignUpForm() {
                     >
                         <p className="text-slate-950/80 text-sm">Requested profile URL:</p>
                         <p className="text-slate-950 font-semibold">nsso.me/{reservedName}</p>
-                        <p className="text-sm text-slate-950/70">Check availability and save it after signing in.</p>
+                        <p className="text-sm text-slate-950/70">This name is a draft, not a reservation. Confirm availability and save it in profile setup.</p>
+                        <Link href="/#choose-profile-name" className="inline-flex min-h-11 items-center text-sm font-semibold text-slate-950 underline">Choose a different name</Link>
                     </TahoeGlassSurface>
                 )}
 

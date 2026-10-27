@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useId } from 'react'
+import { useEffect, useMemo, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/layout/Header'
 import ProfileGlassCard from '@/components/profile/ProfileGlassCard'
 import HomeVisionPlayer from '@/components/home/HomeVisionPlayer'
+import HomeProfileClaim from '@/components/home/HomeProfileClaim'
+import HomeProfileDemo from '@/components/home/HomeProfileDemo'
 import Link from 'next/link'
 import { useUser } from '@/components/providers/UserProvider'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
-import { useToast } from '@/components/ui/Toast'
 import { boundedClientRead } from '@/lib/client-read'
 
 
@@ -80,46 +81,10 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
   )
 }
 
-function ClaimItButton({ onClick, className, disabled = false }: { onClick: () => void; className?: string; disabled?: boolean }) {
-  return (
-    <div
-      className={cn('rounded-[12px] p-[0.75px]', className)}
-      style={{
-        background: 'linear-gradient(to bottom, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.01) 40%, rgba(255,255,255,0.01) 57%, rgba(255,255,255,0.15) 100%)'
-      }}
-    >
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={disabled}
-        className="relative flex min-h-11 w-[133px] items-center justify-center rounded-[12px] outline-none transition-all hover:scale-[1.02] active:scale-[0.98] disabled:cursor-wait disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        style={{ boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.13)' }}
-      >
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[12px] bg-[rgba(255,255,255,0.06)] mix-blend-luminosity" />
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[12px] bg-[rgba(128,128,128,0.3)] mix-blend-color-dodge" />
-        <span
-          className="relative z-10 text-[16px] font-semibold tracking-wide text-white/96"
-          style={{
-            fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-            fontWeight: 590
-          }}
-        >
-          {disabled ? 'OPENING…' : 'CLAIM IT'}
-        </span>
-      </button>
-    </div>
-  )
-}
-
 export default function HomePage() {
   const router = useRouter()
   const { user } = useUser()
-  const [reservedName, setReservedName] = useState('')
-  const [claiming, setClaiming] = useState(false)
-  const claimRequest = useRef(0)
-  const { showToast } = useToast()
   const supabase = useMemo(() => createClient(), [])
-  const videoRef = useRef<HTMLVideoElement>(null)
 
   // Redirect authenticated users to dashboard (unless they clicked the logo)
   useEffect(() => {
@@ -167,51 +132,8 @@ export default function HomePage() {
       }
     }
     void checkAuthAndRedirect()
-    return () => { cancelled = true; claimRequest.current++ }
+    return () => { cancelled = true }
   }, [router, supabase])
-
-  // Lazy load video when it enters viewport
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            void video.play().catch(() => { /* A blocked decorative autoplay is harmless. */ })
-          } else {
-            video.pause()
-          }
-        })
-      },
-      { threshold: 0.5 } // Play when 50% visible
-    )
-
-    observer.observe(video)
-    return () => observer.disconnect()
-  }, [])
-
-  const handleClaimIt = async () => {
-    if (claiming) return
-    const request = ++claimRequest.current
-    setClaiming(true)
-    try {
-      const { data: { session }, error } = await boundedClientRead(() => supabase.auth.getSession())
-      if (request !== claimRequest.current) return
-      if (error) throw error
-      const name = reservedName.trim()
-      if (session) {
-        router.push(name ? `/dashboard?claim=${encodeURIComponent(name)}` : '/dashboard')
-      } else {
-        router.push(name ? `/sign-up?name=${encodeURIComponent(name)}` : '/sign-up')
-      }
-    } catch {
-      if (request === claimRequest.current) showToast('Could not open profile setup. Your chosen name is kept. Please try again.', 'error')
-    } finally {
-      if (request === claimRequest.current) setClaiming(false)
-    }
-  }
 
   return (
     <main className="min-h-screen">
@@ -220,31 +142,35 @@ export default function HomePage() {
       {/* Hero Section */}
       {/* Hero Section */}
       <section className={cn(
-        "pt-[calc(140px+5vh)] lg:pt-[140px] pb-16 px-6 max-w-[1470px] mx-auto",
+        "pt-[128px] lg:pt-[140px] pb-16 px-5 max-w-[1470px] mx-auto",
         user ? "lg:px-8" : "lg:px-[165px]"
       )}>
 
         {/* Typographic Hero Animation/Layout - Centered Vertical Stack */}
-        <div className="relative mb-48 flex flex-col items-center font-bold tracking-tight select-none z-0">
+        <div className="relative mb-12 flex flex-col items-center rounded-[32px] border border-white/15 bg-slate-950/45 px-4 py-6 font-bold tracking-tight z-0 shadow-xl backdrop-blur-lg [text-shadow:0_2px_5px_rgba(0,0,0,0.8)] lg:mb-24 lg:px-8 lg:py-10 [@media(max-height:500px)]:py-3">
           {/* Top words */}
-          <div className="text-4xl lg:text-7xl text-white/40 mb-2" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
+          <div className="text-lg lg:text-4xl text-white/75 mb-1 [@media(max-height:500px)]:hidden" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
             Clarify
           </div>
-          <div className="text-4xl lg:text-7xl text-white/60 mb-2" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
+          <div className="text-lg lg:text-4xl text-white/85 mb-1 [@media(max-height:500px)]:hidden" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
             Organise
           </div>
 
           {/* Main Title Line - Full Width Centered */}
-          <h1 className="text-5xl lg:text-8xl text-white mb-2 w-full text-center" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
+          <h1 className="text-4xl lg:text-7xl text-white mb-2 w-full text-center [@media(max-height:500px)]:text-3xl" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
             Future-Proof Yourself
           </h1>
 
           {/* Bottom words */}
-          <div className="text-4xl lg:text-7xl text-white/60 mb-2" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
+          <div className="text-lg lg:text-4xl text-white/85 mb-1 [@media(max-height:500px)]:hidden" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
             Present
           </div>
-          <div className="text-4xl lg:text-7xl text-white/40" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
+          <div className="text-lg lg:text-4xl text-white/75 [@media(max-height:500px)]:hidden" style={{ fontFamily: 'var(--font-sf-pro-display)' }}>
             Discover
+          </div>
+          <div className="mt-5 w-full font-normal tracking-normal [text-shadow:none]">
+            <HomeProfileClaim />
+            <Link href={user ? '/dashboard' : '/sign-up'} className="mt-3 flex min-h-11 items-center justify-center text-sm font-semibold text-white underline underline-offset-4">Create a profile and choose a name later →</Link>
           </div>
         </div>
 
@@ -262,9 +188,9 @@ export default function HomePage() {
                 </p>
 
                 {/* Middle Row: Title Text */}
-                <h3 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
+                <h2 className="text-3xl lg:text-5xl font-bold text-white leading-tight text-center lg:text-left">
                   All of you. All in one place.
-                </h3>
+                </h2>
 
                 {/* Bottom Row: Subtitle Text */}
                 <div className="space-y-4 text-lg leading-relaxed text-white/90 text-center lg:text-left">
@@ -302,18 +228,7 @@ export default function HomePage() {
           </div>
 
           {/* Right Half - Fullscreen Vertical Video */}
-          <div className="w-full lg:w-1/2 relative">
-            <video
-              ref={videoRef}
-              src="/homepage-video.mp4"
-              preload="none"
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover rounded-[40px]"
-              style={{ minHeight: '80vh' }}
-            />
-          </div>
+          <div className="w-full lg:w-1/2 relative"><HomeProfileDemo /></div>
         </div>
       </section >
 
@@ -324,93 +239,11 @@ export default function HomePage() {
       )}>
         <div className="text-center mb-8">
           <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-            Reserve your nsso profile name
+            Your whole story starts with one profile
           </h2>
         </div>
 
-        {/* Reservation Input */}
-        {/* Reservation Input - Figma Exact Design */}
-        <div className="relative w-full max-w-[522px] mx-auto mb-12">
-          {/* Horizontal layout for larger screens (> 400px) */}
-          <div className="hidden min-[400px]:block">
-            <TahoeGlassSurface
-              variant="recessed"
-              radius={12}
-              tone="light"
-              className="h-[54px] w-full"
-              contentClassName="flex h-full w-full items-center"
-            >
-              <span
-                className="shrink-0 pl-4 text-[22px] font-medium text-white/96"
-                style={{
-                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 510
-                }}
-              >
-                nsso.me/
-              </span>
-              <input
-                aria-label="Profile name"
-                type="text"
-                value={reservedName}
-                disabled={claiming}
-                onChange={(e) => setReservedName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
-                placeholder="yourname"
-                className="min-w-0 flex-1 border-none bg-transparent text-[22px] font-medium text-white outline-none placeholder:text-white placeholder:opacity-100"
-                style={{
-                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 510
-                }}
-              />
-              <ClaimItButton
-                onClick={handleClaimIt}
-                disabled={claiming}
-                className="relative z-10 mr-1.5 shrink-0"
-              />
-            </TahoeGlassSurface>
-          </div>
-
-          {/* Stacked layout for small screens (≤ 400px) */}
-          <div className="min-[400px]:hidden flex flex-col gap-3">
-            <TahoeGlassSurface
-              variant="recessed"
-              radius={12}
-              tone="light"
-              className="h-[54px] w-full"
-              contentClassName="flex h-full w-full items-center"
-            >
-              <span
-                className="shrink-0 pl-3 text-[20px] font-medium text-white/96"
-                style={{
-                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 510
-                }}
-              >
-                nsso.me/
-              </span>
-              <input
-                aria-label="Profile name"
-                type="text"
-                value={reservedName}
-                disabled={claiming}
-                onChange={(e) => setReservedName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleClaimIt()}
-                placeholder="yourname"
-                className="min-w-0 flex-1 border-none bg-transparent pr-3 text-[20px] font-medium text-white outline-none placeholder:text-white placeholder:opacity-100"
-                style={{
-                  fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif",
-                  fontWeight: 510
-                }}
-              />
-            </TahoeGlassSurface>
-
-            {/* Button - centered below */}
-            <div className="flex justify-center">
-              <ClaimItButton onClick={handleClaimIt} disabled={claiming} />
-            </div>
-          </div>
-        </div>
+        <div className="mb-12 text-center"><a href="#choose-profile-name" className="inline-flex min-h-11 items-center rounded-full border border-white/40 bg-slate-950/50 px-6 py-3 font-semibold text-white backdrop-blur-xl">Choose your profile name ↑</a></div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
           <Link href={user ? '/dashboard' : '/sign-up'} className="block">
@@ -441,7 +274,7 @@ export default function HomePage() {
             href="https://www.instagram.com/ramin.nsso"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white underline hover:no-underline"
+            className="inline-flex min-h-11 items-center text-white underline hover:no-underline"
           >
             Instagram
           </a>
@@ -450,7 +283,7 @@ export default function HomePage() {
             href="https://wa.link/gh1dhy"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white underline hover:no-underline"
+            className="inline-flex min-h-11 items-center text-white underline hover:no-underline"
           >
             WhatsApp
           </a>
@@ -468,9 +301,9 @@ export default function HomePage() {
           <TahoeGlassSurface
             as="a"
             variant="button"
-            href="/sign-in"
+            href={user ? '/dashboard' : '/sign-up'}
             tone="light"
-            className="group flex items-center justify-center overflow-hidden px-6 py-2 transition-all duration-300 hover:scale-105 active:scale-95"
+            className="group flex min-h-11 items-center justify-center overflow-hidden px-6 py-2 transition-all duration-300 hover:scale-105 active:scale-95"
             contentClassName="flex flex-col items-center justify-center"
           >
             <span className="whitespace-nowrap text-center text-[14px] font-semibold leading-normal tracking-wide text-[#5ac8f5] drop-shadow-sm">

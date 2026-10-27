@@ -23,7 +23,7 @@ export default function AgentPage() {
         <main className="relative flex h-dvh w-full flex-col items-center justify-center overflow-hidden">
             <Header />
 
-            <div className="relative z-10 h-full w-full px-3 pb-3 pt-[100px]">
+            <div className="relative z-10 h-full w-full px-3 pb-3 pt-[calc(100px+env(safe-area-inset-top))]">
                 <section
                     aria-label="Deity chat"
                     className="h-full w-full overflow-hidden rounded-[28px] border border-white/10 bg-[#11161d]"

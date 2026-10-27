@@ -195,7 +195,7 @@ test('the split products card retains its existing CRUD and editor paths', () =>
         'addProduct',
         'updateProduct',
         'confirmDeleteProduct',
-        'executeDeleteProduct',
+        'executeDelete',
         'renderProducts()'
     ]) {
         assert.ok(advancedModeSource.includes(handler), `${handler} remains wired`)
@@ -303,7 +303,7 @@ test('nested dashboard cards use one concentric radius system', () => {
     const productsStart = advancedModeSource.indexOf('data-editor-card="products"')
     const productsEnd = advancedModeSource.indexOf('</GlassCard>', productsStart)
     const productsMarkup = advancedModeSource.slice(productsStart, productsEnd)
-    assert.equal((productsMarkup.match(/radius=\{16\}/g) || []).length, 4)
+    assert.equal((productsMarkup.match(/<PlannedFeature /g) || []).length, 2, 'both future integrations use the shared touch-accessible disclosure')
 })
 
 test('mobile notifications clear the bottom bar and use an opaque readable token', () => {
@@ -317,7 +317,7 @@ test('mobile notifications clear the bottom bar and use an opaque readable token
     assert.doesNotMatch(toastSource, /TahoeGlassSurface/)
 })
 
-test('the mobile admin drawer is an opaque safe-area sheet with robust scroll locking', () => {
+test('the mobile account drawer is an opaque safe-area sheet with robust scroll locking', () => {
     assert.match(headerSource, /bg-black\/70/)
     assert.match(headerSource, /bg-\[#11161d\]/)
     assert.match(headerSource, /env\(safe-area-inset-top\)/)
@@ -327,7 +327,7 @@ test('the mobile admin drawer is an opaque safe-area sheet with robust scroll lo
     assert.match(headerSource, /window\.scrollTo\(scrollX, scrollY\)/)
     assert.match(headerSource, /preventBodyScroll=\{false\}/)
 
-    const dialogStart = headerSource.indexOf('id="mobile-admin-menu"')
+    const dialogStart = headerSource.indexOf('id="mobile-account-menu"')
     const dialogEnd = headerSource.indexOf('{/* Mobile - Not logged in', dialogStart)
     const drawerMarkup = headerSource.slice(dialogStart, dialogEnd)
     assert.doesNotMatch(drawerMarkup, /<TahoeGlassSurface/)

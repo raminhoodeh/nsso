@@ -67,7 +67,7 @@ export default function AddToMyNssoButton({
             disabled={isConnected || loading}
             aria-busy={loading}
             className={`
-                relative group flex items-center justify-center px-6 py-2 rounded-full overflow-hidden transition-all duration-300
+                relative group flex min-h-11 items-center justify-center px-6 py-2 rounded-full overflow-hidden transition-all duration-300
                 backdrop-blur-xl bg-black/60 hover:bg-black/70
                 border border-white/10 hover:border-white/20
                 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95

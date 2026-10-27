@@ -117,6 +117,16 @@ test('current-account authentication and mismatched subjects fail without exposi
     assert.doesNotMatch(await response.text(),new RegExp(secretFixture));
 });
 
+test('optional public account discovery returns an empty success without querying private data', async () => {
+    actor = null;
+    const response = await me(new Request('https://nsso.test/api/me', { headers: { 'X-NSSO-Optional-Account': '1' } }));
+    assert.equal(response.status, 200); privateResponse(response);
+    assert.deepEqual(await response.json(), { user: null, permissions: [] });
+    assert.deepEqual(calls, []);
+    authError = { status: 503, message: 'Synthetic auth outage' };
+    assert.equal((await me(new Request('https://nsso.test/api/me', { headers: { 'X-NSSO-Optional-Account': '1' } }))).status, 503);
+});
+
 test('missing current accounts use the idempotent bootstrap contract and failures never look signed in',async () => {
     account = null;
     let response = await me();

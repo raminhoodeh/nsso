@@ -1655,7 +1655,6 @@ export function TahoeGlassProvider({
             >
               <feImage
                 ref={feImage0Ref}
-                href=""
                 x="0"
                 y="0"
                 width="100%"
@@ -1685,7 +1684,6 @@ export function TahoeGlassProvider({
             >
               <feImage
                 ref={feImage1Ref}
-                href=""
                 x="0"
                 y="0"
                 width="100%"

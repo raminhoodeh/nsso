@@ -26,6 +26,13 @@ test('cross-origin and oversized requests are refused before quota or provider w
  assert.equal((await guardRuntimeRequest(request('/api/profile/operations','POST',{'content-length':'9999999'}))).status,413)
  assert.equal(globalThis.__limitCalls.length,0)
 })
+test('public trailer probes share the bounded film-media quota before contacting YouTube', async () => {
+ assert.equal(runtimeScope('/api/razinflix/trailer/Be7_u8jzHzU','GET'),'film_media')
+ assert.equal(await guardRuntimeRequest(request('/api/razinflix/trailer/Be7_u8jzHzU')),null)
+ assert.equal(globalThis.__limitCalls[0].args.p_scope,'film_media')
+ globalThis.__limitResult={data:{allowed:false},error:null}
+ assert.equal((await guardRuntimeRequest(request('/api/razinflix/trailer/Be7_u8jzHzU'))).status,429)
+})
 test('quota denial and unavailable accounting fail closed with private helpful responses',async()=>{
  globalThis.__limitResult={data:{allowed:false},error:null};let response=await guardRuntimeRequest(request());assert.equal(response.status,429);assert.equal(response.headers.get('retry-after'),'60')
  globalThis.__limitResult={data:null,error:{message:'private-fixture-error'}};response=await guardRuntimeRequest(request());assert.equal(response.status,503);assert.equal((await response.text()).includes('private-fixture'),false);assert.equal(response.headers.get('cache-control'),'private, no-store')

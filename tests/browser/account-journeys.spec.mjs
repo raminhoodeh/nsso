@@ -84,7 +84,7 @@ test('password sign-in honors the protected destination and exposes accessible a
 
 test('OAuth and email confirmation preserve the requested free URL without claiming it', async ({ page }) => {
     await fixture(page, '/sign-up?name=My_Profile')
-    await expect(page.getByText('Check availability and save it after signing in.')).toBeVisible()
+    await expect(page.getByText('This name is a draft, not a reservation. Confirm availability and save it in profile setup.')).toBeVisible()
     await page.getByRole('button', { name: 'Continue with Google', exact: true }).click()
     let args = await page.evaluate(() => window.fixtureCalls.find(call => call.name === 'signInWithOAuth').args)
     expect(new URL(args.options.redirectTo).searchParams.get('next')).toBe('/dashboard?claim=my_profile')

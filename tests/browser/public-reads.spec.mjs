@@ -8,10 +8,11 @@ test.beforeAll(async () => {
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
         define: { 'process.env.NODE_ENV': '"test"', 'process.env.NEXT_PUBLIC_SUPABASE_URL': '"https://public-fixture.supabase.co"', 'process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': '"synthetic-anonymous-key"' },
         plugins: [{ name: 'public-catalog-presentation', setup(builder) {
+            builder.onResolve({ filter: /^next\/link$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onResolve({ filter: /\.module\.css$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onResolve({ filter: /^@\/components\/(?:film\/|ui\/tahoe-glass$|ui\/Toast$|agent\/ConditionalNSSOAgent$|providers\/UserProvider$)/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path.endsWith('.css') ? 'export default {};' : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:null,loading:false,error:"Synthetic Auth outage"});'
+                path === 'next/link' ? 'import React from "react";export default function Link(props){return <a {...props}/>;}' : path.endsWith('.css') ? 'export default {};' : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:null,loading:false,error:"Synthetic Auth outage"});'
                     : path.endsWith('CategoryRow') ? 'import React from "react";export default function Row({title,films}){return <section><h2>{title}</h2>{films.map(film=><p key={film.id}>{film.title}</p>)}</section>}'
                         : path.endsWith('tahoe-glass') ? 'import React from "react";const Surface=({children})=><div>{children}</div>;export const TahoeGlassProvider=Surface,TahoeBackdropHeader=Surface,TahoeGlassSurface=Surface,TahoeGlassField=Surface;export const TahoeGlassButton=({children,onClick})=><button onClick={onClick}>{children}</button>;'
                             : path.endsWith('Toast') ? 'export const ToastViewport=()=>null;' : 'export default ()=>null;' }))

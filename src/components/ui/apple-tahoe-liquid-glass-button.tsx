@@ -428,13 +428,13 @@ export const LiquidGlassViewport = React.forwardRef<HTMLDivElement, LiquidGlassV
           <svg className="absolute w-0 h-0 overflow-hidden pointer-events-none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <filter id={filterId0} x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                <feImage ref={feImage0Ref} href="" x="0" y="0" width="200" height="80" result="lens" preserveAspectRatio="none" />
+                <feImage ref={feImage0Ref} x="0" y="0" width="200" height="80" result="lens" preserveAspectRatio="none" />
                 <feFlood floodColor="rgb(128,128,128)" result="neutral" />
                 <feComposite in="lens" in2="neutral" operator="over" result="dispMap" />
                 <feDisplacementMap in="SourceGraphic" in2="dispMap" scale={DISP_SCALE.toString()} xChannelSelector="R" yChannelSelector="G" />
               </filter>
               <filter id={filterId1} x="0" y="0" width="100%" height="100%" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-                <feImage ref={feImage1Ref} href="" x="0" y="0" width="200" height="80" result="lens" preserveAspectRatio="none" />
+                <feImage ref={feImage1Ref} x="0" y="0" width="200" height="80" result="lens" preserveAspectRatio="none" />
                 <feFlood floodColor="rgb(128,128,128)" result="neutral" />
                 <feComposite in="lens" in2="neutral" operator="over" result="dispMap" />
                 <feDisplacementMap in="SourceGraphic" in2="dispMap" scale={DISP_SCALE.toString()} xChannelSelector="R" yChannelSelector="G" />
