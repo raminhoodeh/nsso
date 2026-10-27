@@ -29,6 +29,7 @@ import { placeClosureNotice, surpriseCandidates } from "@/lib/places-business-st
 import { clusterPlaces } from "@/lib/places-clusters";
 import { EXPERIENCES, matchesExperience, type ExperienceId } from "@/lib/places-experiences";
 import { searchPlaces } from "@/lib/places-search";
+import { DECK_BACKGROUND_ASSET, DECK_BACKGROUND_COLOR } from "@/lib/deck-background";
 import {
   TahoeGlassButton,
   TahoeGlassProvider,
@@ -1006,7 +1007,16 @@ export default function PlacesExplorer({ payload }: { payload: PlacesPayload }) 
   const mobileFilterLabel = searchActive ? `Search: ${searchQuery.trim()}` : selectedDatePlan?.title || (favouritesOnly ? "Saved places" : EXPERIENCES.find(item => item.id === experienceId)?.subcategories.find(item => item.id === subcategoryId)?.label || EXPERIENCES.find(item => item.id === experienceId)?.label);
 
   return (
-    <main className={styles.shell} style={{ "--navigation-width": navigationMinimized && !isCompact ? "72px" : "460px", "--mobile-bottom-offset": "calc(94px + env(safe-area-inset-bottom))" } as React.CSSProperties}>
+    <main
+      className={styles.shell}
+      data-places-background="deck-blue"
+      style={{
+        "--navigation-width": navigationMinimized && !isCompact ? "72px" : "460px",
+        "--mobile-bottom-offset": "calc(94px + env(safe-area-inset-bottom))",
+        "--deck-background-image": `url(${JSON.stringify(DECK_BACKGROUND_ASSET)})`,
+        "--deck-background-color": DECK_BACKGROUND_COLOR,
+      } as React.CSSProperties}
+    >
       <TahoeGlassProvider
         scene={(
           <div

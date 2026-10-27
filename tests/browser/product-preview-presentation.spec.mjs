@@ -24,7 +24,8 @@ const test = base.extend({
 
 test.beforeEach(async ({ browserName }, testInfo) => {
     // The integrated fixture compiles Vanta's initial cloud shader, then real
-    // product Tahoe programs across two route cycles while keeping that canvas.
+    // product Tahoe programs across route cycles, releasing the cloud canvas
+    // on product pages and restoring it only for the excluded profile preview.
     // The pinned amd64 image completed those assertions in 64 seconds under CPU
     // emulation, so bound this software-only fixture at 75 seconds, not the suite.
     // Hardware Chrome/WebKit retain their normal 30-second test deadline.
@@ -79,26 +80,40 @@ test.beforeAll(async () => {
                                     : 'export const createClient=()=>{throw new Error("No authenticated client is allowed in this public fixture")};' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React,{useSyncExternalStore}from'react';import{createRoot}from'react-dom/client';
-            import Product from'./src/app/products/[id]/page';import Environment from'./src/components/providers/NSSOTahoeGlassEnvironment';import{UIProvider}from'./src/components/providers/UIProvider';import{useTahoeGlassControls}from'./src/components/providers/TahoeGlassProvider';
-            window.fixturePath='/preview';window.fixturePreview=false;const listeners=new Set();window.fixtureSubscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn)};
+            import Product from'./src/app/products/[id]/page';import Environment from'./src/components/providers/NSSOTahoeGlassEnvironment';import{UIProvider}from'./src/components/providers/UIProvider';import{useTahoeGlassControls}from'./src/components/providers/TahoeGlassProvider';import{TahoeGlassSurface}from'./src/components/ui/tahoe-glass/TahoeGlassSurface';
+            window.fixturePath=window.fixtureInitialPath||'/preview';window.fixturePreview=false;const listeners=new Set();window.fixtureSubscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn)};
             window.fixtureNavigate=(path,preview=false)=>{window.fixturePath=path;window.fixturePreview=preview;listeners.forEach(fn=>fn())};window.fixtureRouter={push:path=>window.fixtureNavigate(path),back:()=>window.fixtureNavigate('/preview')};
             const product={id:'${productId}',user_id:'11111111-1111-4111-8111-111111111111',name:'Portfolio review',headline:'Your next chapter starts here',tagline:'A thoughtful review of your story',intro_text:'A synthetic offering used to verify product presentation.',price:'GBP 35',description:'A synthetic review',benefits:['Practical feedback on your portfolio'],testimonials:[{name:'Fixture customer',text:'Clear and useful guidance.'}],video_url:'',image_url:'/fixture-product.svg',purchase_link:'https://seller.example.test/pay',purchase_link_active:true,paypal_active:true,sales_page_published:true,value_proposition:'One personal portfolio review, with clear next steps and helpful written feedback.',payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy Now'}};
             const result=data=>({select(){return this},eq(){return this},abortSignal(){return this},single(){return Promise.resolve({data,error:null})},then(resolve,reject){return Promise.resolve({data,error:null}).then(resolve,reject)}});
             window.fixturePublic={rpc(){return{abortSignal:async()=>{await new Promise(resolve=>setTimeout(resolve,100));return{data:product,error:null}}}},from(table){return result(table==='users'?{username:'fixture-seller'}:[])}};
             function SourceControls(){const controls=useTahoeGlassControls();React.useLayoutEffect(()=>{window.fixtureSourceControls=controls},[controls]);return null}
-            function App(){const path=useSyncExternalStore(window.fixtureSubscribe,()=>window.fixturePath);return <UIProvider><Environment><SourceControls/>{path.startsWith('/products/')?<Product/>:<main style={{position:'relative',padding:40,color:'white'}}><h1>Fixture profile</h1><button style={{padding:20}} onClick={()=>window.fixtureNavigate('/products/${productId}')}>Open fixture offering</button></main>}</Environment></UIProvider>};
+            function App(){const path=useSyncExternalStore(window.fixtureSubscribe,()=>window.fixturePath);return <UIProvider><Environment><SourceControls/>{path.startsWith('/products/')?<Product/>:<main style={{position:'relative',padding:40,color:'white',minHeight:2400}}><h1>Fixture profile</h1><button style={{padding:20}} onClick={()=>window.fixtureNavigate('/products/${productId}')}>Open fixture offering</button>{path!=='/preview'&&<TahoeGlassSurface data-testid="fixture-static-glass" variant="card" tone="light" semanticTint="dark" semanticTintOpacity={.38} style={{marginTop:100,padding:24,maxWidth:500}}>Readable static-background glass</TahoeGlassSurface>}</main>}</Environment></UIProvider>};
             const fixtureRoot=createRoot(document.getElementById('root'));let mounted=true;window.fixtureUnmount=()=>{if(mounted){mounted=false;fixtureRoot.unmount()}};fixtureRoot.render(<App/>);
         ` } })
     bundle = result.outputFiles[0].text
 })
 
-async function mount(page) {
+async function mount(page, { initialPath = '/preview', expectVanta = true, reducedMotion = 'reduce' } = {}) {
     const errors = [], unexpected = [], requests = [], consoleMessages = []
     const measurements = { renderer: null, sourceFramesAtStart: 0, checkpoints: [], consoleMessages }
     renderingByPage.set(page, measurements)
     page.on('pageerror', error => errors.push(error.message))
     page.on('console', message => consoleMessages.push(`${message.type()}: ${message.text()}`))
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.emulateMedia({ reducedMotion })
+    await page.addInitScript(() => {
+        const request = window.requestAnimationFrame.bind(window), cancel = window.cancelAnimationFrame.bind(window)
+        const pending = new Map()
+        window.fixtureFrameMetrics = { scheduled: 0, vantaScheduled: 0, vantaPending: () => [...pending.values()].filter(Boolean).length }
+        window.requestAnimationFrame = callback => {
+            const vanta = new Error().stack?.includes('/vendor/vanta-') ?? false
+            window.fixtureFrameMetrics.scheduled++
+            if (vanta) window.fixtureFrameMetrics.vantaScheduled++
+            const id = request(timestamp => { pending.delete(id); callback(timestamp) })
+            pending.set(id, vanta)
+            return id
+        }
+        window.cancelAnimationFrame = id => { pending.delete(id); cancel(id) }
+    })
     await page.route('**/*', async route => {
         const url = new URL(route.request().url())
         requests.push(url.pathname)
@@ -106,13 +121,22 @@ async function mount(page) {
         if (url.pathname === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundle })
         if (url.pathname === '/fixture.css') return route.fulfill({ contentType: 'text/css', body: css })
         if (url.pathname.startsWith('/vendor/')) return route.fulfill({ contentType: 'application/javascript', body: readFileSync(root + 'public' + url.pathname) })
+        if (url.pathname === '/assets/backgrounds/nsso-deck-blue.webp') return route.fulfill({ contentType: 'image/webp', body: readFileSync(root + 'public' + url.pathname) })
         if (url.pathname === '/guaranteed-logo.png') return route.fulfill({ contentType: 'image/png', body: readFileSync(root + 'public/guaranteed-logo.png') })
         if (url.pathname === '/fixture-product.svg') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="#2e596d"/><circle cx="300" cy="250" r="130" fill="#d8b79b"/><text x="300" y="490" text-anchor="middle" fill="white" font-size="42">Portfolio review</text></svg>' })
-        if (url.pathname === '/presentation-fixture') return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' })
+        if (url.pathname === '/presentation-fixture') return route.fulfill({ contentType: 'text/html', body: `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script>window.fixtureInitialPath=${JSON.stringify(initialPath)}</script><script src="/fixture.js"></script>` })
         unexpected.push(url.href)
         return route.abort()
     })
     await page.goto('https://nsso.test/presentation-fixture')
+    if (!expectVanta) {
+        await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
+        await page.waitForFunction(() => {
+            const image = new Image(); image.src = '/assets/backgrounds/nsso-deck-blue.webp'
+            return image.complete && image.naturalWidth > 0
+        })
+        return { errors, unexpected, requests, measurements }
+    }
     const renderer = await page.evaluate(() => {
         const canvas = document.createElement('canvas')
         const gl = canvas.getContext('webgl2') || canvas.getContext('webgl')
@@ -136,7 +160,7 @@ async function mount(page) {
     } catch (error) {
         throw new Error(`${error.message}\nProduct scene startup: ${JSON.stringify({ renderer, errors, consoleMessages })}`)
     }
-    await page.evaluate(() => { window.fixtureCanvas = document.querySelector('#vanta-bg canvas') })
+    await page.evaluate(() => { window.fixtureCanvas = document.querySelector('#vanta-bg canvas'); window.fixtureInitialEffect = window.VANTA.current; window.fixtureInitialRenderer = window.VANTA.current.renderer })
     measurements.sourceFramesAtStart = await page.evaluate(() => window.VANTA.current.renderer.info.render.frame)
     return { errors, unexpected, requests, measurements }
 }
@@ -148,9 +172,84 @@ async function expectBlueBackground(page) {
     expect(data[1]).toBeGreaterThan(data[0] + 5)
 }
 
-test('profile-to-product transition keeps one live blue scene and readable purchase context', async ({ page, browserName }, testInfo) => {
+test('cold tool routes decode the real grain asset without loading clouds or running a cloud frame loop', async ({ page }, testInfo) => {
+    const { errors, unexpected, requests, measurements } = await mount(page, { initialPath: '/earnings', expectVanta: false, reducedMotion: 'no-preference' })
+    const staticRoutes = [
+        '/earnings', '/deity', '/news/feed', '/admin', '/products/' + productId,
+        '/dashboard/security', '/dashboard/products/' + productId + '/creator',
+        '/reset-password', '/set-password', '/ramin/privacy',
+    ]
+    for (const path of staticRoutes) {
+        await page.evaluate(path => window.fixtureNavigate(path), path)
+        await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
+        await expect(page.locator('#vanta-bg')).toHaveCount(0)
+        await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-source', /nsso-deck-blue/)
+    }
+    const decoded = await page.evaluate(async () => {
+        const image = new Image(); image.src = '/assets/backgrounds/nsso-deck-blue.webp'; await image.decode()
+        return { width: image.naturalWidth, height: image.naturalHeight }
+    })
+    expect(decoded).toEqual({ width: 1920, height: 1360 })
+    const glass = page.getByTestId('fixture-static-glass')
+    await expect(glass).toBeVisible()
+    const glassIsReady = () => glass.evaluate(element => element.hasAttribute('data-tahoe-chromium-optics') ? element.dataset.tahoeChromiumOptics === 'refract' : element.dataset.tahoeGlassMeasured === 'true')
+    await expect.poll(glassIsReady).toBe(true)
+    await glass.scrollIntoViewIfNeeded()
+    await page.setViewportSize({ width: page.viewportSize().width, height: page.viewportSize().height - 72 })
+    await expect(glass).toBeVisible()
+    await expect.poll(glassIsReady).toBe(true)
+    await page.evaluate(() => scrollTo(0, 0))
+    await expectBlueBackground(page)
+    // Grain must survive the actual CSS cover scaling, not merely appear in a
+    // source-file assertion or be replaced by an equivalent flat blue swatch.
+    const patch = await sharp(await page.screenshot()).extract({ left: 4, top: 40, width: 32, height: 32 }).raw().toBuffer({ resolveWithObject: true })
+    const blue = Array.from({ length: 32 * 32 }, (_, index) => patch.data[index * patch.info.channels + 2])
+    const mean = blue.reduce((sum, value) => sum + value, 0) / blue.length
+    const deviation = Math.sqrt(blue.reduce((sum, value) => sum + (value - mean) ** 2, 0) / blue.length)
+    expect(deviation).toBeGreaterThan(0.2)
+    const frames = await page.evaluate(async () => {
+        const samples = []
+        for (let i = 0; i < 30; i++) {
+            await new Promise(requestAnimationFrame)
+            samples.push(getComputedStyle(document.querySelector('[data-tahoe-glass-viewport] > div')).backgroundColor)
+        }
+        return { backgrounds: [...new Set(samples)], vantaSchedules: window.fixtureFrameMetrics.vantaScheduled, vantaPending: window.fixtureFrameMetrics.vantaPending() }
+    })
+    expect(frames).toEqual({ backgrounds: ['rgb(67, 98, 140)'], vantaSchedules: 0, vantaPending: 0 })
+    expect(requests.filter(path => /\/vendor\/(?:three|vanta)/.test(path))).toEqual([])
+    expect(requests.some(path => path.includes('siri-gradient'))).toBe(false)
+    measurements.checkpoints.push({ stage: 'cold-static-normal-motion', ...decoded, renderedBlueGrainDeviation: deviation, ...frames })
+    await testInfo.attach('static-background-performance', { body: Buffer.from(JSON.stringify(measurements.checkpoints)), contentType: 'application/json' })
+    await page.screenshot({ path: testInfo.outputPath('deck-blue-static-glass.png') })
+    expect(errors).toEqual([])
+    expect(unexpected).toEqual([])
+})
+
+test('homepage, authentication and private or public profile routes retain their existing cloud source', async ({ page }) => {
+    const { errors, unexpected, requests } = await mount(page)
+    for (const path of ['/', '/sign-in', '/sign-up', '/dashboard', '/preview', '/fixture-seller']) {
+        await page.evaluate(path => window.fixtureNavigate(path), path)
+        await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(0)
+        await expect(page.locator('#vanta-bg canvas')).toHaveCount(1)
+        await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-source', /vanta-clouds/)
+        expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
+    }
+    expect(requests.filter(path => path === '/assets/backgrounds/nsso-deck-blue.webp')).toEqual([])
+    expect(errors).toEqual([])
+    expect(unexpected).toEqual([])
+})
+
+test('profile-to-product transition releases the cloud renderer for deck blue and restores preview safely', async ({ page, browserName }, testInfo) => {
     const paintDeadline = browserName === 'chromium' && needsSoftwareWebGL ? 15_000 : 5_000
-    const { errors, unexpected, requests, measurements } = await mount(page)
+    const { errors, unexpected, requests, measurements } = await mount(page, { reducedMotion: 'no-preference' })
+    const normalMotionDraws = await page.evaluate(async () => {
+        const initial = window.VANTA.current.renderer.info.render.frame
+        for (let i = 0; i < 12; i++) await new Promise(requestAnimationFrame)
+        return window.VANTA.current.renderer.info.render.frame - initial
+    })
+    expect(normalMotionDraws).toBeGreaterThanOrEqual(3)
+    expect(await page.evaluate(() => window.fixtureFrameMetrics.vantaScheduled)).toBeGreaterThanOrEqual(3)
+    measurements.checkpoints.push({ stage: 'excluded-preview-normal-motion', observedAnimationTicks: 12, cloudDraws: normalMotionDraws })
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     const support = page.locator('[data-product-purchase-support]:visible')
@@ -165,14 +264,12 @@ test('profile-to-product transition keeps one live blue scene and readable purch
     expect(textColor[3]).toBeGreaterThanOrEqual(225)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(page.locator('form:visible')).toHaveCount(1)
-    expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
-    const framesAfterNavigation = await sourceFrames(page)
-    measurements.checkpoints.push({ stage: 'first-product', frames: framesAfterNavigation })
-    if (browserName === 'chromium') {
-        // Layout-only SVG work must not replay the expensive cloud shader.
-        // Before the production demand gate this round trip rendered 63 frames.
-        expect(framesAfterNavigation - measurements.sourceFramesAtStart).toBeLessThanOrEqual(8)
-    }
+    await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)
+    await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
+    await expect.poll(() => page.evaluate(() => window.fixtureFrameMetrics.vantaPending())).toBe(0)
+    expect(await page.evaluate(() => window.fixtureInitialEffect.renderer === null)).toBe(true)
+    const framesAfterNavigation = await page.evaluate(() => window.fixtureInitialRenderer.info.render.frame)
+    measurements.checkpoints.push({ stage: 'first-product-static', frames: framesAfterNavigation })
 
     const frames = await page.evaluate(async () => {
         const samples = []
@@ -183,18 +280,25 @@ test('profile-to-product transition keeps one live blue scene and readable purch
         }
         return samples
     })
-    expect([...new Set(frames)]).toEqual(['rgb(88, 110, 145)'])
+    expect([...new Set(frames)]).toEqual(['rgb(67, 98, 140)'])
+    // Sampling real animation ticks must not advance the released cloud scene.
+    expect(await page.evaluate(() => window.fixtureInitialRenderer.info.render.frame)).toBe(framesAfterNavigation)
     expect(requests.some(path => path.includes('siri-gradient'))).toBe(false)
     await page.screenshot({ path: testInfo.outputPath('product-blue-background.png') })
     await expectBlueBackground(page)
-    const framesBeforeReturn = await sourceFrames(page)
     await page.getByRole('button', { name: 'Back to Profile', exact: true }).click()
+    await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(0)
+    await expect(page.locator('#vanta-bg canvas')).toHaveCount(1, { timeout: paintDeadline })
+    await page.waitForFunction(() => window.VANTA.current?.renderer?.info.render.calls > 0, null, { timeout: paintDeadline })
+    expect(await page.evaluate(() => window.fixtureCanvas !== document.querySelector('#vanta-bg canvas'))).toBe(true)
     await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
-    expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
-    if (browserName === 'chromium') expect((await sourceFrames(page)) - framesBeforeReturn).toBeLessThanOrEqual(4)
+    await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)
+    await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
+    await expect.poll(() => page.evaluate(() => window.fixtureFrameMetrics.vantaPending())).toBe(0)
     expect(errors).toEqual([])
     expect(unexpected).toEqual([])
+    await testInfo.attach('cloud-renderer-release-performance', { body: Buffer.from(JSON.stringify(measurements.checkpoints)), contentType: 'application/json' })
 })
 
 test('source frame demand, native resize and real context recovery preserve the blue scene', async ({ page, browserName }) => {
