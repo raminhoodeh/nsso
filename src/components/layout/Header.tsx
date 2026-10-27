@@ -218,19 +218,24 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
     // Determine content based on variant
     const isOwnerMode = variant === 'owner'
+    const isPreviewRoute = pathname === '/preview' || pathname === '/preview/'
+    // Preview has no desktop sidebar, so its account menu remains available at
+    // every width. The editor's shared sidebar replaces it on desktop.
+    const authenticatedVisibilityClass = isPreviewRoute ? undefined : usesProfileEditorMenu ? 'lg:hidden' : 'md:hidden'
 
     // Determine which primary button to show on mobile (Default Mode)
-    const isPreviewPage = pathname === '/preview' || (user?.username && pathname?.startsWith(`/${user.username}`))
+    const isPreviewPage = isOwnerMode || isPreviewRoute || (user?.username && pathname?.replace(/\/+$/, '') === `/${user.username}`)
     const primaryMobileButton = isPreviewPage ? (
         <GlassButton
             variant="ghost"
             size="sm"
             tone="dark"
             onClick={copyProfileUrl}
+            aria-label="Copy page URL"
             className="min-h-11 px-3 min-[360px]:px-4"
         >
             <span className="min-[360px]:hidden">Copy URL</span>
-            <span className="hidden min-[360px]:inline">Copy profile URL</span>
+            <span className="hidden min-[360px]:inline">Copy page URL</span>
         </GlassButton>
     ) : (
         <TahoeGlassButton
@@ -248,46 +253,26 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
 
     return (
         <NssoTopBar
-            className={cn(user && (usesProfileEditorMenu ? "lg:hidden" : "md:hidden"), className)}
+            className={cn(user && authenticatedVisibilityClass, className)}
             contentClassName="h-full w-full"
         >
-            <nav className={NSSO_TOPBAR_CONTENT_CLASS}>
+            <nav className={NSSO_TOPBAR_CONTENT_CLASS} aria-label={isPreviewRoute ? 'Profile preview' : 'Main navigation'}>
 
-                {/* --- LEFT SIDE (Except for Owner Mobile) --- */}
-                {isOwnerMode ? (
-                    // OWNER MODE: Edit Profile button REMOVED as per Phase 7 requirements
-                    // Also hidden on desktop if user is logged in (handled by parent logic or CSS)
-                    /* --- DESKTOP HIDING LOGIC --- */
-                    /* We want to hide the ENTIRE nav content on desktop if user is logged in,
-                       BUT we might still want the Logo to be visible?
-                       User said: "there is no more need for a nav bar on desktop once the user has logged in."
-                       So we should invalid render or return null for desktop if user is logged in?
-                       Actually, let's wrap the desktop specific parts.
-                     */
-                    <div className="hidden md:flex">
-                        {/* Space reserved if needed later */}
-                    </div>
-                ) : (
-                    // DEFAULT MODE: Logo
-                    // Show logo ONLY if NOT logged in OR on Mobile
-                    // If logged in on desktop -> Sidebar has logo.
-                    (!user || true) && ( // logic check: we sidebar has logo.
-                        <Link
-                            href={user ? "/?view=home" : "/"}
-                            className={cn("flex items-center", user && (usesProfileEditorMenu ? "lg:hidden" : "md:hidden"))}
-                            onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
-                        >
-                            <Image
-                                src="/assets/nsso-logo.png"
-                                alt="nsso"
-                                width={458}
-                                height={224}
-                                className="h-8 w-auto"
-                                priority
-                            />
-                        </Link>
-                    )
-                )}
+                {/* Shared logo and material on editor, profile and preview. */}
+                <Link
+                    href={user ? "/?view=home" : "/"}
+                    className={cn("flex items-center", user && authenticatedVisibilityClass)}
+                    onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
+                >
+                    <Image
+                        src="/assets/nsso-logo.png"
+                        alt="nsso"
+                        width={458}
+                        height={224}
+                        className="h-8 w-auto"
+                        priority
+                    />
+                </Link>
 
                 {/* --- RIGHT SIDE / DESKTOP NAV --- */}
                 {/* COMPLETELY HIDDEN ON DESKTOP IF LOGGED IN */}
@@ -303,10 +288,10 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 </div>
 
                 {/* --- MOBILE NAVIGATION (HAMBURGER) --- */}
-                <div className={cn("ml-auto flex items-center gap-2 min-[360px]:gap-3", user && usesProfileEditorMenu ? "lg:hidden" : "md:hidden")}>
+                <div className={cn("ml-auto flex items-center gap-2 min-[360px]:gap-3", user ? authenticatedVisibilityClass : 'md:hidden')}>
 
                     {/* Default Mode: Contextual Button (Preview/Copy) */}
-                    {!isOwnerMode && showAuthButtons && user && primaryMobileButton}
+                    {showAuthButtons && user && primaryMobileButton}
 
                     {/* Every account keeps access to profile and session controls. */}
                     {user && (

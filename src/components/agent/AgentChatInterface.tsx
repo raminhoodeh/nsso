@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw, Zap } from 'lucide-react';
+import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw } from 'lucide-react';
 import { splitActionPayload, parseActionList, type DeityAction } from '@/lib/deity/actionParser';
 import { mutationMessage, type MutationResult } from '@/lib/profile-mutations';
 import { safeWebUrl } from '@/lib/urls';
@@ -145,13 +145,12 @@ function AccountChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, i
     const { user, loading } = useUser();
     const userId = user?.id;
     const username = user?.username;
-    const { applyOperation, undo, canUndo, fastMode, setFastMode, revision, refreshProfile, getRevision, links } = useProfile();
+    const { applyOperation, undo, canUndo, revision, refreshProfile, getRevision, links } = useProfile();
     const { showToast } = useToast();
     const [messages, setMessages] = useState<Message[]>([]);
     const supabase = useMemo(() => createClient(), []);
 
     const [hasInitialized, setHasInitialized] = useState(false);
-    const [placeholderIndex, setPlaceholderIndex] = useState(0);
     const [showVennDiagram, setShowVennDiagram] = useState(false);
     const [isCategoriesExpanded, setIsCategoriesExpanded] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
@@ -170,8 +169,6 @@ function AccountChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, i
     const categoryOptionsRef = useRef<HTMLDivElement>(null);
     const composerAreaRef = useRef<HTMLDivElement>(null);
     const alive = useRef(true);
-    const fastModeRef = useRef(fastMode);
-    useEffect(() => { fastModeRef.current = fastMode; }, [fastMode]);
     useEffect(() => {
         alive.current = true;
         return () => {
@@ -180,13 +177,6 @@ function AccountChatInterface({ isFullScreen, onMaximize, onMinimize, onClose, i
             if (categoryReplyTimer.current !== null) clearTimeout(categoryReplyTimer.current);
         };
     }, []);
-
-    const placeholders = [
-        "What is your dream?",
-        "Ask about films, courses, or career advice...",
-        "Try: 'Recommend inspiring films'",
-        "Select a category above for best results!"
-    ];
 
     useEffect(() => {
         let cancelled = false;
@@ -293,14 +283,6 @@ Check out some of the areas I can help you with below.`;
         return () => { cancelled = true; };
     }, [isFullScreen, userId, username, loading, hasInitialized, supabase]);
 
-    // Rotate placeholder text every 3 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
-        }, 3000);
-        return () => clearInterval(interval);
-    }, [placeholders.length]);
-
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -323,7 +305,7 @@ Check out some of the areas I can help you with below.`;
         shell.dataset.minimal = String(minimal);
         const areaStyle = getComputedStyle(area);
         const composerPadding = parseFloat(areaStyle.paddingTop) + parseFloat(areaStyle.paddingBottom);
-        const messagePadding = minimal ? 0 : compact ? 24 : 48;
+        const messagePadding = minimal ? 0 : compact ? 16 : 24;
         const available = Math.max(56, shellHeight - header.offsetHeight - toggle.offsetHeight - composerPadding - messagePadding - 1);
         const expanded = !minimal && options.getAttribute('aria-hidden') === 'false';
         const categoryHeight = expanded ? Math.min(220, Math.max(0, available - 56)) : 0;
@@ -464,7 +446,7 @@ Check out some of the areas I can help you with below.`;
         } : message));
         setStatus('applying');
         try {
-            if (!fastModeRef.current && proposals.length === 1 && first.change.kind === 'profile.patch' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            if (proposals.length === 1 && first.change.kind === 'profile.patch' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                 const value = Object.values(first.change.patch).find(value => typeof value === 'string');
                 if (typeof value === 'string') {
                     setIsTyping(true);
@@ -511,11 +493,6 @@ Check out some of the areas I can help you with below.`;
             showToast('Change undone and saved', 'success');
         } else showToast(mutationMessage(result),'error');
     };
-    const toggleFastMode = async () => {
-        const success = await setFastMode(!fastMode);
-        showToast(success ? `Fast mode ${!fastMode ? 'enabled' : 'disabled'}` : 'Fast mode setting was not saved', success ? 'success' : 'error');
-    };
-
     const handleSendMessage = useCallback(async (text: string) => {
         if (!text.trim()) return;
         activeRequest.current?.abort();
@@ -572,14 +549,14 @@ Check out some of the areas I can help you with below.`;
                 setMessages(previous => previous.map(item => item.id === botMessageId ? {...item,content:message + '\n\nThat proposed change could not be read. Please ask me to try again.',responseError:true} : item));
                 return;
             }
-            const batchId = crypto.randomUUID();
-            const proposals: Proposal[] = parsed.map(action => ({...action,operationId:fastModeRef.current ? batchId : crypto.randomUUID(),expectedRevision:requestRevision,status:'proposed'}));
+            // Every model change requires explicit review, including accounts
+            // with a legacy fast-mode preference saved before its removal.
+            const proposals: Proposal[] = parsed.map(action => ({...action,operationId:crypto.randomUUID(),expectedRevision:requestRevision,status:'proposed'}));
             setMessages(previous => previous.map(item => item.id === botMessageId ? {...item,content:message,actions:proposals} : item));
-            if (fastModeRef.current && proposals.length) await applyProposals(botMessageId,proposals);
         } catch {
             if (alive.current && !controller.signal.aborted) setMessages(previous => [...previous,{id:crypto.randomUUID(),role:'model',content:'Deity could not finish that response. Please try again.',timestamp:Date.now(),responseError:true}]);
         } finally { if (alive.current && activeRequest.current === controller) setIsLoading(false); }
-    },[revision,messages,supabase,userId,activeCategory,applyProposals]);
+    },[revision,messages,supabase,userId,activeCategory]);
 
     const handleCategoryClick = useCallback((category: string) => {
         setActiveCategory(category); // Set context for future messages
@@ -649,8 +626,8 @@ Check out some of the areas I can help you with below.`;
                 : 'h-dvh w-full border border-white/10'
                 }`}
         >
-            <header ref={headerRef} className={`flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#171d26] px-4 pb-3 group-data-[compact=true]/deity:pb-2 ${isFullScreen ? 'pt-3 group-data-[compact=true]/deity:pt-2' : 'pt-[max(0.75rem,env(safe-area-inset-top))] group-data-[compact=true]/deity:pt-[max(0.5rem,env(safe-area-inset-top))]'} md:p-6`}>
-                <div className="flex items-center gap-3 md:gap-4">
+            <header ref={headerRef} className={`flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#171d26] px-3 pb-2 ${isFullScreen ? 'pt-2' : 'pt-[max(0.5rem,env(safe-area-inset-top))]'}`}>
+                <div className="flex items-center gap-2">
                     <span className="block h-9 w-9 overflow-hidden rounded-full bg-[#232b36] md:h-10 md:w-10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -709,17 +686,6 @@ Check out some of the areas I can help you with below.`;
                         </button>
                     )}
 
-                    <button
-                        type="button"
-                        onClick={toggleFastMode}
-                        aria-label={`Fast mode ${fastMode ? 'on' : 'off'}`}
-                        aria-pressed={fastMode}
-                        title={`Fast Mode: ${fastMode ? 'ON' : 'OFF'}`}
-                        className={`${iconButtonClass} ${fastMode ? 'bg-[#12313a] text-cyan-300' : ''}`}
-                    >
-                        <Zap size={18} className={fastMode ? 'fill-cyan-400' : ''} />
-                    </button>
-
                     {onClose && (
                         <button
                             type="button"
@@ -738,7 +704,7 @@ Check out some of the areas I can help you with below.`;
                 role="log"
                 aria-live="polite"
                 aria-relevant="additions text"
-                className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 group-data-[compact=true]/deity:p-3 group-data-[minimal=true]/deity:py-0"
+                className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 group-data-[compact=true]/deity:p-2 group-data-[minimal=true]/deity:py-0"
             >
                 {messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col gap-2">
@@ -747,7 +713,7 @@ Check out some of the areas I can help you with below.`;
                                 <article
                                     aria-label={`${msg.role === 'user' ? 'Your' : 'Deity'} message`}
                                     style={{ borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px' }}
-                                    className={`max-w-[85%] p-4 text-[15px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user'
+                                    className={`max-w-[95%] px-3 py-2 text-[15px] leading-6 whitespace-pre-wrap md:max-w-[90%] ${msg.role === 'user'
                                         ? 'bg-[#15313a] text-white'
                                         : 'bg-[#222a35] text-white/90'
                                         }`}
@@ -760,7 +726,7 @@ Check out some of the areas I can help you with below.`;
                         </div>
 
                         {msg.role === 'model' && msg.actions && msg.actions.length > 0 && (
-                            <div className="flex justify-start"><div className="flex max-w-[85%] flex-wrap gap-2">
+                            <div className="flex justify-start"><div className="flex max-w-[95%] flex-wrap gap-2 md:max-w-[90%]">
                                 {msg.actions.map((action,idx) => <div key={`${action.operationId}-${idx}`} className="space-y-2 rounded-xl border border-white/10 bg-[#1b222c] px-3 py-2 text-sm">
                                     <p className="text-xs text-white/70">{action.label}</p>
                                     <details className="text-xs text-white/60"><summary>Review proposed values</summary><dl className="max-h-48 max-w-full overflow-auto whitespace-pre-wrap">{'patch' in action.change || 'values' in action.change ? Object.entries('patch' in action.change ? action.change.patch : action.change.values).map(([field,value])=><div key={field} className="mt-2"><dt className="capitalize text-white/80">{field.replaceAll('_',' ')}</dt><dd>{value===null || value==='' ? '(clear this value)' : String(value)}</dd></div>) : action.change.kind==='collection.reorder' ? <div><dt>New order</dt><dd>{action.change.order.map(id=>links?.find(link=>link.id===id)?.link_name || 'Saved link').join(' → ')}</dd></div> : action.change.kind==='link.remove' ? <div><dt>Remove link</dt><dd>{links?.find(link=>'id' in action.change && link.id===action.change.id)?.link_name || 'Selected link'}</dd></div> : null}</dl></details>
@@ -781,7 +747,7 @@ Check out some of the areas I can help you with below.`;
                         <div
                             role="status"
                             aria-label="Deity is responding"
-                            className="flex gap-1.5 rounded-[16px_16px_16px_4px] bg-[#222a35] p-4"
+                            className="flex gap-1.5 rounded-[16px_16px_16px_4px] bg-[#222a35] px-3 py-2"
                         >
                             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 motion-reduce:animate-none" style={{ animationDelay: '0ms' }} />
                             <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 motion-reduce:animate-none" style={{ animationDelay: '150ms' }} />
@@ -793,8 +759,8 @@ Check out some of the areas I can help you with below.`;
             </div>
 
             <footer className="w-full shrink-0 border-t border-white/10 bg-[#171d26]">
-                <div ref={categoryToggleRef} className="px-6 pb-2 pt-4 group-data-[compact=true]/deity:px-4 group-data-[compact=true]/deity:py-1 group-data-[minimal=true]/deity:hidden">
-                    <div className="mb-3 flex flex-col items-center gap-2 group-data-[compact=true]/deity:mb-0">
+                <div ref={categoryToggleRef} className="px-3 pt-1 group-data-[minimal=true]/deity:hidden">
+                    <div className="flex flex-col items-center">
                         <button
                             type="button"
                             onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
@@ -815,7 +781,7 @@ Check out some of the areas I can help you with below.`;
                     inert={!isCategoriesExpanded}
                     className={`overflow-y-auto overscroll-contain transition-opacity duration-150 motion-reduce:transition-none group-data-[minimal=true]/deity:hidden ${isCategoriesExpanded ? 'max-h-[min(220px,30dvh)] opacity-100' : 'max-h-0 opacity-0'}`}
                 >
-                    <div className="flex flex-wrap justify-center gap-2 overflow-y-auto px-4 pb-2 scrollbar-none">
+                    <div className="flex flex-wrap justify-center gap-1.5 overflow-y-auto px-3 pb-1 scrollbar-none">
                         {Object.keys(CATEGORY_QUESTIONS).map(cat => (
                             <button
                                 type="button"
@@ -844,7 +810,7 @@ Check out some of the areas I can help you with below.`;
                     </div>
                 </div>
 
-                <div ref={composerAreaRef} className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2 group-data-[compact=true]/deity:px-4 group-data-[compact=true]/deity:pb-[max(0.5rem,env(safe-area-inset-bottom))] group-data-[compact=true]/deity:pt-1">
+                <div ref={composerAreaRef} className="px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
                     <form
                         onSubmit={(e) => { e.preventDefault(); if (!isLoading) void handleSendMessage(inputValue); }}
                         className="group relative"
@@ -864,9 +830,9 @@ Check out some of the areas I can help you with below.`;
                                     if (!isLoading) void handleSendMessage(inputValue);
                                 }
                             }}
-                            placeholder={placeholders[placeholderIndex]}
+                            placeholder="Message Deity…"
                             autoComplete="off"
-                            className="block max-h-40 min-h-14 w-full resize-none overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118] px-4 py-3.5 pr-16 text-base leading-6 text-white outline-none placeholder:text-white/60 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/20"
+                            className="block max-h-40 min-h-14 w-full resize-none overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118] px-3 py-3 pr-14 text-base leading-6 text-white outline-none placeholder:text-white/60 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/20"
                         />
                         <button
                             type="submit"

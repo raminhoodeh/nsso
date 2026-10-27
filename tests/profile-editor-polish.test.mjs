@@ -88,17 +88,40 @@ for (const [kind, filename] of [['link', 'SortableLinkItem.tsx'], ['contact', 'S
     })
 }
 
-test('only the header-owning mobile profile editor replaces bottom navigation', async () => {
+test('profile editing and preview share account menus and no route reintroduces bottom navigation', async () => {
     const transformed = transformSync(read('src/lib/tahoe-glass/route-boundaries.ts'), { loader: 'ts', format: 'esm' })
     const routes = await import('data:text/javascript;base64,' + Buffer.from(transformed.code).toString('base64'))
-    for (const pathname of ['/dashboard', '/dashboard/']) assert.equal(routes.routeUsesMobileProfileMenu(pathname), true, pathname)
-    for (const pathname of ['/dashboard/security', '/dashboard/products/item/sales-page', '/preview', '/film/razinflix', '/dashboard-other', '/']) {
+    for (const pathname of ['/dashboard', '/dashboard/', '/dashboard/security', '/dashboard/products/item/sales-page', '/preview', '/preview/']) assert.equal(routes.routeUsesMobileProfileMenu(pathname), true, pathname)
+    for (const pathname of ['/film/razinflix', '/dashboard-other', '/']) {
         assert.equal(routes.routeUsesMobileProfileMenu(pathname), false, pathname)
     }
+    for (const pathname of ['/', '/admin', '/dashboard/security', '/dashboard/products/item/creator']) assert.equal(routes.routeNeedsGlobalAccountHeader(pathname), true, pathname)
+    for (const pathname of ['/preview', '/dashboard', '/deity', '/film/razinflix', '/creator']) assert.equal(routes.routeNeedsGlobalAccountHeader(pathname), false, pathname)
     const navigation = read('src/components/layout/GlobalNavigation.tsx')
-    assert.match(navigation, /!routeUsesMobileProfileMenu\(pathname\) && <DashboardBottomNav \/>/)
+    assert.doesNotMatch(navigation, /DashboardBottomNav/)
+    assert.match(navigation, /routeNeedsGlobalAccountHeader\(pathname\) && <Header \/>/)
     assert.match(navigation, /usesDashboardSidebar && <DashboardSidebar \/>/)
     const layout = read('src/components/layout/AuthenticatedLayoutWrapper.tsx')
-    assert.match(layout, /routeUsesMobileProfileMenu\(pathname\)/)
-    assert.match(layout, /aboveBottomNav=/)
+    assert.doesNotMatch(layout, /mobile-bottom-nav-height/)
+    assert.match(layout, /aboveBottomNav=\{false\}/)
+    const preview = read('src/app/preview/page.tsx')
+    assert.match(preview, /<Header username=/)
+    assert.doesNotMatch(preview, /NssoTopBar/)
+})
+
+test('the profile QR face has a definite Safari-safe square and no visible text chip', () => {
+    const qr = source('src/components/ui/ProfileQRCodeToggle.tsx')
+    const all = elements(qr)
+    const surface = all.find(node => tag(node) === 'TahoeGlassSurface')
+    assert.match(attribute(surface, 'contentClassName'), /absolute inset-0/)
+    assert.match(attribute(surface, 'aria-label'), /profile photo/)
+    assert.ok(attribute(surface, 'onKeyDown'))
+    assert.match(qr.text, /!isFlipped && <div/, 'Unmount the photo hint so WebKit cannot composite its glass through the back face.')
+    const plate = all.find(node => attribute(node, 'data-profile-qr-plate') === 'true')
+    assert.match(attribute(plate, 'className'), /bg-white p-5/)
+    assert.equal(attribute(plate, 'aria-hidden'), '{!isFlipped}')
+    assert.equal(elements(plate).filter(node => tag(node) === 'QRCodeSVG').length, 1)
+    const spans = elements(plate).filter(node => tag(node) === 'span')
+    assert.ok(spans.every(node => attribute(node, 'className') === 'sr-only'))
+    assert.doesNotMatch(plate.getText(), /Tap for photo/)
 })

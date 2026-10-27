@@ -116,12 +116,22 @@ test('double Apply and a dropped committed response recover one operation; Undo 
     expect(await page.evaluate(()=>window.fixtureState.profile.bio)).toBe('Original bio');
     expect(await page.evaluate(()=>window.fixtureChatCalls)).toBe(1);
 });
-test('Fast Mode commits one validated batch without marking cards applied before the authoritative response',async({page})=>{
+test('a legacy Fast Mode preference never auto-applies proposals; each explicit review uses its own validated operation',async({page})=>{
     await fixture(page,{fastMode:true});
     await propose(page,[{kind:'link.patch',id:linkA,patch:{link_name:'Renamed',link_url:'https://renamed.test'}},{kind:'collection.reorder',collection:'links',order:[linkB,linkA]}]);
+    const apply=page.getByRole('button',{name:'Apply suggested profile change'});
+    await expect(apply).toHaveCount(2);
+    await expect(page.getByRole('button',{name:/Fast mode/i})).toHaveCount(0);
+    expect(await page.evaluate(()=>window.fixturePosts)).toEqual([]);
+    await expect(page.getByTestId('links')).toHaveText('First https://first.test|Second https://second.test');
+    await apply.first().click();
+    await expect(page.getByText('Done, profile updated!',{exact:true})).toHaveCount(1);
+    await expect(page.getByTestId('links')).toHaveText('Renamed https://renamed.test|Second https://second.test');
+    await apply.click();
     await expect(page.getByText('Done, profile updated!',{exact:true})).toHaveCount(2);
     await expect(page.getByTestId('links')).toHaveText('Second https://second.test|Renamed https://renamed.test');
-    const posts=await page.evaluate(()=>window.fixturePosts);expect(posts).toHaveLength(1);expect(posts[0].changes).toHaveLength(2);
+    const posts=await page.evaluate(()=>window.fixturePosts);expect(posts).toHaveLength(2);expect(posts[0].changes).toHaveLength(1);expect(posts[1].changes).toHaveLength(1);
+    expect(posts[1].operationId).not.toBe(posts[0].operationId);expect(posts[1].expectedRevision).toBe(posts[0].expectedRevision+1);
     await page.getByRole('button',{name:'Reload saved profile'}).click();
     await expect(page.getByTestId('links')).toHaveText('Second https://second.test|Renamed https://renamed.test');
 });

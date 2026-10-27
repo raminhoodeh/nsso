@@ -88,7 +88,7 @@ function ToastContainer({
     if (toasts.length === 0) return null
 
     return (
-        <div className="fixed bottom-[calc(var(--mobile-bottom-nav-height)+12px)] left-1/2 z-[9999] flex w-[calc(100%_-_2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 md:bottom-6 md:w-auto">
+        <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[9999] flex w-[calc(100%_-_2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 md:bottom-6 md:w-auto">
             {toasts.map(toast => (
                 <div key={toast.id} className="w-full">
                     <span className="sr-only" role={toast.type === 'error' ? 'alert' : 'status'}>

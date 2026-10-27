@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, ChevronDown, ImagePlus, Layout, Loader2, Plus, Sparkles, Trash2, Upload, X } from 'lucide-react'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
@@ -15,7 +15,8 @@ import ConfirmDeleteDialog from './ConfirmDeleteDialog'
 import SectionHelp from './SectionHelp'
 
 type View = 'list' | 'editor' | 'create'
-type FocusRequest = { kind: 'editor' | 'create' } | { kind: 'list'; productId: string | null }
+type InsertionPosition = 'top' | 'bottom'
+type FocusRequest = ({ kind: 'editor' | 'create' } | { kind: 'list'; productId: string | null; addPosition?: InsertionPosition }) & { origin?: Element | null }
 
 function Toggle({ checked, label, onClick }: { checked: boolean; label: string; onClick: () => void }) {
     return <TahoeGlassButton type="button" onClick={onClick} role="switch" aria-checked={checked} aria-label={label} semanticTint={checked ? 'light' : 'dark'} className="h-11 w-14 shrink-0 p-0" contentClassName="relative block h-6 w-11">
@@ -37,7 +38,8 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
     const creatingRef = useRef(false)
     const [creationError, setCreationError] = useState('')
     const [creationLocked, setCreationLocked] = useState(false)
-    const creationIntent = useRef<{ operationId: string | null } | null>(null)
+    const creationIntent = useRef<{ operationId: string | null; origin: Element | null } | null>(null)
+    const creationPosition = useRef<InsertionPosition>('top')
     const [retrying, setRetrying] = useState(false)
     const retryingRef = useRef(false)
     const [futureOpen, setFutureOpen] = useState(false)
@@ -50,6 +52,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
     const listRef = useRef<HTMLDivElement>(null)
     const listButtons = useRef(new Map<string, HTMLButtonElement>())
     const addRef = useRef<HTMLButtonElement>(null)
+    const bottomAddRef = useRef<HTMLButtonElement>(null)
     const headingRef = useRef<HTMLHeadingElement>(null)
     const creationHeadingRef = useRef<HTMLHeadingElement>(null)
     const nameRef = useRef<HTMLInputElement>(null)
@@ -57,6 +60,11 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
     const listPosition = useRef({ windowY: 0, scrollTop: 0 })
     const imageSelection = useRef(0)
     const mounted = useRef(true)
+    const navigation = useRef({ expanded, view, selectedId, generation: 0 })
+    useLayoutEffect(() => {
+        const previous = navigation.current
+        navigation.current = { expanded, view, selectedId, generation: previous.generation + Number(previous.expanded !== expanded || previous.view !== view || previous.selectedId !== selectedId) }
+    }, [expanded, view, selectedId])
 
     useEffect(() => {
         mounted.current = true
@@ -68,13 +76,20 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         const request = focusRequest.current
         focusRequest.current = null
         const frame = requestAnimationFrame(() => {
+            const active = document.activeElement
+            const modal = document.querySelector('dialog:modal') || Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')).some(element => !element.closest('[hidden],[inert],[aria-hidden="true"]') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+            // Navigation focus is deferred until the editor/list is mounted.
+            // A newer field focus wins over its initiating control. Recovery
+            // without a known origin can focus only when nothing else has it.
+            const movedFocus = request.origin === undefined ? active !== document.body : active !== request.origin && active !== document.body
+            if (modal || movedFocus) return
             if (request.kind === 'list') {
                 if (listRef.current) listRef.current.scrollTop = listPosition.current.scrollTop
-                const target = request.productId ? listButtons.current.get(request.productId) : addRef.current
+                const target = request.productId ? listButtons.current.get(request.productId) : request.addPosition === 'bottom' ? bottomAddRef.current : addRef.current
                 ;(target || addRef.current)?.focus({ preventScroll: true })
                 if (window.matchMedia('(max-width: 767px)').matches) window.scrollTo({ top: listPosition.current.windowY, behavior: 'instant' })
             } else {
-                const target = request.kind === 'create' ? nameRef.current : headingRef.current
+                const target = request.kind === 'create' ? nameRef.current?.disabled ? creationHeadingRef.current : nameRef.current : headingRef.current
                 target?.focus({ preventScroll: true })
                 const scrollTarget = request.kind === 'create' ? creationHeadingRef.current : target
                 if (window.matchMedia('(max-width: 767px)').matches) scrollTarget?.scrollIntoView({ block: 'start', behavior: 'instant' })
@@ -92,7 +107,8 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
 
     // The mutation provider reports verified receipts even when retry was triggered elsewhere.
     useEffect(() => {
-        const operationId = creationIntent.current?.operationId
+        const intent = creationIntent.current
+        const operationId = intent?.operationId
         const result = operationId ? productCreationResults?.[operationId] : null
         if (!creationLocked || result?.status !== 'applied') return
         const row = result.changes.find(change => change.entity === 'products' && change.row)?.row
@@ -101,9 +117,11 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         setCreationLocked(false)
         setCreationName('')
         setCreationError('')
-        focusRequest.current = { kind: 'editor' }
-        setSelectedId(row.id)
-        setView('editor')
+        if (navigation.current.view === 'create' && navigation.current.expanded) {
+            focusRequest.current = { kind: 'editor', origin: intent?.origin }
+            setSelectedId(row.id)
+            setView('editor')
+        } else if (navigation.current.view === 'create') setView('list')
     }, [creationLocked, productCreationResults])
 
     function rememberListPosition() {
@@ -112,20 +130,22 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
 
     function openOffering(productId: string) {
         rememberListPosition()
-        focusRequest.current = { kind: 'editor' }
+        focusRequest.current = { kind: 'editor', origin: document.activeElement }
         setSelectedId(productId)
         setView('editor')
         setShowGuide(false)
     }
 
     function backToOfferings() {
-        focusRequest.current = { kind: 'list', productId: selectedId }
+        focusRequest.current = { kind: 'list', productId: view === 'create' ? null : selectedId, addPosition: creationPosition.current, origin: document.activeElement }
         setView('list')
     }
 
-    function startCreation() {
+    function startCreation(position: InsertionPosition) {
         rememberListPosition()
-        focusRequest.current = { kind: 'create' }
+        // An unresolved create keeps its original placement, name and receipt.
+        if (!creationLocked) creationPosition.current = position
+        focusRequest.current = { kind: 'create', origin: document.activeElement }
         setView('create')
     }
 
@@ -139,21 +159,29 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
             return
         }
         creatingRef.current = true
+        const generation = navigation.current.generation
+        const origin = document.activeElement
         setCreating(true)
         setCreationError('')
-        creationIntent.current = { operationId: null }
+        creationIntent.current = { operationId: null, origin }
         try {
-            const result = await createEntity('product', { name, price: null })
+            const result = await createEntity('product', { name, price: null }, creationPosition.current)
             if (!mounted.current) return
             const row = result.changes.find(change => change.entity === 'products' && change.row)?.row
             if (result.status === 'applied' && row && typeof row.id === 'string') {
                 creationIntent.current = null
                 setCreationName('')
-                focusRequest.current = { kind: 'editor' }
-                setSelectedId(row.id)
-                setView('editor')
+                if (navigation.current.generation === generation && navigation.current.view === 'create') {
+                    focusRequest.current = { kind: 'editor', origin }
+                    setSelectedId(row.id)
+                    setView('editor')
+                } else if (navigation.current.view === 'create' && !navigation.current.expanded) {
+                    // A completed creation must not reopen or scroll a section
+                    // the user collapsed, or replace another offering's editor.
+                    setView('list')
+                }
             } else {
-                creationIntent.current = { operationId: result.operationId }
+                creationIntent.current = { operationId: result.operationId, origin }
                 setCreationLocked(true)
                 setCreationError('Adding this offering was not confirmed. Your name has been kept. Check the save status before trying again.')
             }
@@ -170,6 +198,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
 
     async function retrySaves() {
         if (retryingRef.current) return
+        if (creationIntent.current && navigation.current.view === 'create') creationIntent.current.origin = document.activeElement
         retryingRef.current = true
         setRetrying(true)
         try {
@@ -235,7 +264,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         <GlassCard radius="var(--editor-card-radius)" className="w-full [--editor-card-radius:28px] md:[--editor-card-radius:40px]">
             <div className="grid min-w-0 md:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]" data-editor-card="products" data-offerings-view={view}>
                 <aside className={`${view === 'list' ? 'block' : 'hidden'} min-w-0 border-white/15 p-4 md:block md:border-r md:p-6`} aria-label="Your offerings">
-                    <TahoeGlassButton ref={addRef} type="button" onClick={startCreation} disabled={creating} semanticTint="light" className="min-h-11 w-full px-4 py-3" contentClassName="gap-2 text-left font-semibold text-white">
+                    <TahoeGlassButton ref={addRef} type="button" onClick={() => startCreation('top')} disabled={creating} semanticTint="light" className="min-h-11 w-full px-4 py-3" contentClassName="gap-2 text-left font-semibold text-white">
                         <Plus size={18} aria-hidden="true" /> Add product or service
                     </TahoeGlassButton>
                     <div className="mb-3 mt-5 flex items-center justify-between gap-2">
@@ -250,6 +279,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
                         </TahoeGlassButton>)}
                         {!products.length && <div className="rounded-2xl border border-dashed border-white/25 px-4 py-7 text-center"><ImagePlus className="mx-auto mb-3 text-white/60" size={27} aria-hidden="true" /><p className="font-semibold text-white">Share what you offer</p><p className="mt-2 text-sm leading-relaxed text-white/80">Add your first product or service to your profile.</p></div>}
                     </div>
+                    {products.length > 0 && <TahoeGlassButton ref={bottomAddRef} type="button" onClick={() => startCreation('bottom')} disabled={creating} aria-label="Add product or service at bottom" className="mt-4 min-h-11 w-full px-4 py-3" contentClassName="gap-2 text-left font-semibold text-white"><Plus size={18} aria-hidden="true" />Add product or service</TahoeGlassButton>}
                     <div className="mt-5 border-t border-white/15 pt-3">
                         <button type="button" aria-expanded={futureOpen} aria-controls="offerings-coming-soon" onClick={() => setFutureOpen(value => !value)} className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm text-white/70 underline decoration-white/35 underline-offset-4 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white">Coming soon <ChevronDown size={14} aria-hidden="true" className={futureOpen ? 'rotate-180' : ''} /></button>
                         <div id="offerings-coming-soon" hidden={!futureOpen} className="space-y-2 pt-2 text-sm text-white/80"><div className="flex items-center justify-between gap-2"><span>Web3 wallet</span><SectionHelp title="Web3 wallet">Wallet sign-in and crypto payments are planned for a future release. This integration is not active.</SectionHelp></div><div className="flex items-center justify-between gap-2"><span>Facebook Pixel</span><SectionHelp title="Facebook Pixel">Conversion tracking is planned for a future release. This integration is not active.</SectionHelp></div></div>
@@ -259,7 +289,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
                 <div className={`${view === 'list' ? 'hidden' : 'block'} min-w-0 p-4 md:block md:p-7 lg:p-9`}>
                     <div hidden={view !== 'create'}>
                         <TahoeGlassButton type="button" onClick={backToOfferings} disabled={creating} className="mb-5 min-h-11 px-3 py-2" contentClassName="gap-2 text-sm text-white"><ArrowLeft size={17} aria-hidden="true" />Back to your offerings</TahoeGlassButton>
-                        <h3 ref={creationHeadingRef} className="mb-5 scroll-mt-40 text-xl font-bold text-white">Add product or service</h3>
+                        <h3 ref={creationHeadingRef} tabIndex={-1} className="mb-5 scroll-mt-40 text-xl font-bold text-white outline-none">Add product or service</h3>
                         <form onSubmit={event => { void createOffering(event) }} className="space-y-5">
                             <div><label htmlFor="new-offering-name" className="mb-2 block text-sm font-medium text-white">Offering name</label><TahoeGlassField tone="light" surfaceClassName="px-3 py-3"><input ref={nameRef} id="new-offering-name" type="text" value={creationName} onChange={event => setCreationName(event.target.value)} maxLength={300} required minLength={2} disabled={creating || creationLocked} aria-invalid={Boolean(creationError)} aria-describedby={creationError ? 'offering-create-error' : undefined} placeholder="e.g. Career coaching session" className="scroll-mt-40 text-base text-white" /></TahoeGlassField></div>
                             <div className="flex items-center gap-1"><span className="text-sm font-medium text-white/85">Added to your public profile</span><SectionHelp title="Adding an offering">Choose a meaningful name before adding an offering. Its product card becomes public when creation is confirmed; ordinary fields then save automatically.</SectionHelp></div>
@@ -301,7 +331,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
                             <div className="mt-8 border-t border-white/15 pt-5"><TahoeGlassButton type="button" disabled={selectedBusy} onClick={() => setDeleteId(selected.id)} className="min-h-11 px-3 py-2" contentClassName="gap-2 text-sm text-rose-200"><Trash2 size={16} aria-hidden="true" />Delete offering</TahoeGlassButton>{selectedBusy && <span className="ml-3 text-xs text-white/70">Wait for saving to finish.</span>}</div>
                         </>}
                     </div>
-                    {!selected && view !== 'create' && <div className="hidden min-h-[240px] items-center justify-center md:flex"><p className="text-center text-sm text-white/80">{products.length ? 'Choose an offering to start editing.' : 'Add an offering to get started.'}</p></div>}
+                    {!selected && view !== 'create' && <div className="hidden min-h-[240px] items-center justify-center md:flex"><p className="text-center text-sm text-white/80">{products.length ? 'Choose an offering to edit, or select “Add product or service”.' : 'Select “Add product or service” to get started.'}</p></div>}
                 </div>
             </div>
             {view !== 'editor' && saveStatus}

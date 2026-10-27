@@ -3,6 +3,7 @@ import { CONTACT_METHODS } from './contact-methods'
 
 export const PROFILE_OPERATION_VERSION = 1 as const
 export type RowKind = 'link' | 'contact' | 'experience' | 'qualification' | 'project' | 'product'
+export type InsertionPosition = 'top' | 'bottom'
 export type ProfileEntity = 'profile' | 'links' | 'contacts' | 'experiences' | 'qualifications' | 'projects' | 'products'
 export type OrderCollection = Exclude<ProfileEntity, 'profile' | 'products'>
 export type ProfilePatch = { full_name?: string | null; headline?: string | null; bio?: string | null; profile_pic_url?: string | null }
@@ -14,7 +15,7 @@ export interface EditableValues {
     project: { project_name?: string; contribution?: string; description?: string | null; project_photo_url?: string | null; project_url?: string | null }
     product: { name?: string; price?: string | null; image_url?: string | null; description?: string | null; purchase_link?: string | null; purchase_link_active?: boolean; paypal_active?: boolean; sales_page_active?: boolean; sales_page_published?: boolean; headline?: string | null; tagline?: string | null; intro_text?: string | null; value_proposition?: string | null; video_url?: string | null; benefits?: string[]; testimonials?: { name: string; text: string }[] }
 }
-type RowChange = { [K in RowKind]: { kind: `${K}.add`; values: EditableValues[K] } | { kind: `${K}.patch`; id: string; patch: EditableValues[K] } | { kind: `${K}.remove`; id: string } }[RowKind]
+type RowChange = { [K in RowKind]: { kind: `${K}.add`; values: EditableValues[K]; position?: InsertionPosition } | { kind: `${K}.patch`; id: string; patch: EditableValues[K] } | { kind: `${K}.remove`; id: string } }[RowKind]
 export type ProfileChange = { kind: 'profile.patch'; patch: ProfilePatch } | RowChange | { kind: 'collection.reorder'; collection: OrderCollection; order: string[] }
 export interface ProfileOperation { version: 1; operationId: string; expectedRevision: number; changes: ProfileChange[] }
 export interface MutationDelta { entity: ProfileEntity; id: string; row: Record<string, unknown> | null }
@@ -47,7 +48,8 @@ export function isProfileChange(value: unknown): value is ProfileChange {
     if (extra || !Object.hasOwn(rules, entity) || !['add', 'patch', 'remove'].includes(operation) || (entity === 'profile' && operation !== 'patch')) return false
     if (operation === 'remove') return Object.keys(value).length === 2 && keys(value, ['kind', 'id']) && isUuid(value.id)
     const field = operation === 'add' ? 'values' : 'patch'
-    if (!keys(value, entity === 'profile' || operation === 'add' ? ['kind', field] : ['kind', 'id', field]) || (entity !== 'profile' && operation === 'patch' && !isUuid(value.id))) return false
+    if (!keys(value, operation === 'add' ? ['kind', field, 'position'] : entity === 'profile' ? ['kind', field] : ['kind', 'id', field]) || (entity !== 'profile' && operation === 'patch' && !isUuid(value.id))) return false
+    if (operation === 'add' && Object.hasOwn(value, 'position') && value.position !== 'top' && value.position !== 'bottom') return false
     const values = value[field]
     if (!object(values) || !Object.keys(values).length || !keys(values, Object.keys(rules[entity])) || !Object.entries(values).every(([key, content]) => rules[entity][key](content))) return false
     if (operation === 'add' && !required[entity as RowKind].every(key => Object.hasOwn(values, key))) return false

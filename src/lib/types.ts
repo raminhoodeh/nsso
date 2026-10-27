@@ -99,6 +99,7 @@ export interface Product {
     paypal_active: boolean
     payment_config?: PayPalConfig | null
     created_at: string
+    display_order?: number
     // Sales Page Fields
     sales_page_active: boolean
     sales_page_published?: boolean | null

@@ -31,8 +31,10 @@ test.beforeAll(async () => {
     bundle = result.outputFiles[0].text
 })
 
-async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, search = '' } = {}) {
+async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '' } = {}) {
     const requests = [], errors = []
+    const pendingPublic = []
+    let publicReleased = false
     let failures = failPublicOnce ? 1 : 0
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', async route => {
@@ -44,6 +46,7 @@ async function fixture(page, { published = true, account = { user: null, loading
         expect(route.request().headers().authorization).toBe('Bearer synthetic-anonymous-key')
         let data
         if (url.pathname === '/rest/v1/rpc/get_product_details') {
+            if (deferPublic && !publicReleased) await new Promise(resolve => pendingPublic.push(resolve))
             if (failures-- > 0) return route.abort('failed')
             data = published ? { ...product, ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
         } else if (url.pathname === '/rest/v1/contacts') data = [{ method: 'Email', value: 'public-fixture@example.test' }]
@@ -57,8 +60,33 @@ async function fixture(page, { published = true, account = { user: null, loading
         localStorage.setItem('sb-product-fixture-auth-token', JSON.stringify({ access_token: 'expired-synthetic-token', refresh_token: 'synthetic-refresh-token', expires_at: 1, user: { id: 'previous-private-account' } }))
     }, { account, privateMode, draft: { ...product, sales_page_published: false, headline: 'PRIVATE owner draft', intro_text: 'PRIVATE unsaved sales copy' } })
     await page.addScriptTag({ content: bundle })
-    return { requests, errors }
+    return { requests, errors, releasePublic: () => { publicReleased = true; pendingPublic.splice(0).forEach(resolve => resolve()) } }
 }
+
+test('narrow product loading, error and not-found states retain a keyboard-accessible safe exit without a bottom bar', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    for (const [state, options] of [
+        ['loading', { deferPublic: true }], ['error', { failPublicOnce: true }], ['not-found', { published: false }],
+    ]) {
+        for (const verified of [false, true]) {
+            const { releasePublic } = await fixture(page, { ...options, account: { user: verified ? { id: otherId } : null, loading: false, error: null }, search: '?preview=true&source=creator&next=https%3A%2F%2Funtrusted.example' })
+            if (state === 'loading') await expect(page.getByText('Loading...', { exact: true })).toBeVisible()
+            else if (state === 'error') await expect(page.getByRole('button', { name: 'Retry product', exact: true })).toBeVisible()
+            else await expect(page.getByText('Product not found', { exact: true })).toBeVisible()
+            const back = page.getByRole('button', { name: verified ? 'Back to profile editor' : 'Back to nsso', exact: true })
+            await expect(back).toBeVisible()
+            await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
+            await expect(page.getByRole('button', { name: 'Back to Sales Page Creator', exact: true })).toHaveCount(0)
+            await back.press('Enter')
+            expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([verified ? '/dashboard' : '/'])
+            releasePublic()
+        }
+    }
+    const { releasePublic } = await fixture(page, { deferPublic: true, account: { user: { id: ownerId }, loading: false, error: 'Synthetic unverified identity' } })
+    await expect(page.getByRole('button', { name: 'Back to nsso', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Back to profile editor', exact: true })).toHaveCount(0)
+    releasePublic()
+})
 
 test('published checkout and public creator details load with expired persisted Auth and no session dependency', async ({ page }) => {
     const { requests, errors } = await fixture(page)

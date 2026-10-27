@@ -40,7 +40,7 @@ export default function ProfileQRCodeToggle({
             aria-label={isFlipped ? `Show ${fullName}'s profile photo` : `Show ${fullName}'s QR code`}
             aria-pressed={isFlipped}
             className={`relative w-full max-w-[200px] aspect-square mx-auto lg:mx-0 cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 ${className}`}
-            contentClassName="h-full w-full [perspective:1000px]"
+            contentClassName="absolute inset-0 [perspective:1000px]"
             onClick={toggleFlipped}
             onKeyDown={(event) => {
                 if (event.key !== 'Enter' && event.key !== ' ') return
@@ -54,7 +54,8 @@ export default function ProfileQRCodeToggle({
                 style={{ transformStyle: 'preserve-3d' }}
             >
                 {/* Front: Profile Picture */}
-                <div
+                {!isFlipped && <div
+                    aria-hidden={isFlipped}
                     className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-xl"
                     style={{ backfaceVisibility: 'hidden' }}
                 >
@@ -77,30 +78,32 @@ export default function ProfileQRCodeToggle({
                             Tap to show QR
                         </TahoeGlassSurface>
                     </div>
-                </div>
+                </div>}
 
 
                 {/* Back: QR Code */}
                 <div
-                    className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.3)] rotate-y-180 flex flex-col items-center justify-center p-4 border border-white/50"
+                    data-profile-qr-plate="true"
+                    aria-hidden={!isFlipped}
+                    className="absolute inset-0 flex h-full w-full items-center justify-center overflow-hidden rounded-3xl bg-white p-5 backface-hidden rotate-y-180"
                     style={{
                         backfaceVisibility: 'hidden',
                         transform: 'rotateY(180deg)',
                     }}
                 >
                     <span className="sr-only">Tap again to return to the profile photo.</span>
-                    {/* The white QR plate stays opaque for scanner contrast. */}
-                    <div className="bg-white p-2 rounded-xl shadow-inner relative z-10">
-                        <QRCodeSVG
-                            value={profileUrl}
-                            size={120}
-                            bgColor={"#ffffff"}
-                            fgColor={"#5a769d"} // nsso-bg-primary
-                            level={"M"}
-                            includeMargin={false}
-                        />
-                    </div>
-                    <span className="mt-2 text-xs font-medium text-white">Tap for photo</span>
+                    {/* An opaque square with an equal quiet zone on every side. */}
+                    <QRCodeSVG
+                        value={profileUrl}
+                        size={160}
+                        className="relative z-10 block h-full w-full"
+                        bgColor="#ffffff"
+                        fgColor="#5a769d"
+                        level="M"
+                        marginSize={0}
+                        role="img"
+                        aria-label={`${fullName}'s profile QR code`}
+                    />
                 </div>
             </div>
 

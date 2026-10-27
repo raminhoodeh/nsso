@@ -45,7 +45,9 @@ test.beforeAll(async () => {
                 for(const change of body.changes){
                     if(change.kind==='product.add'){
                         const row={id:crypto.randomUUID(),user_id:'${actor}',created_at:new Date().toISOString(),name:'',price:null,description:null,image_url:null,purchase_link:null,purchase_link_active:false,paypal_html:null,paypal_active:false,sales_page_active:false,sales_page_published:false,...change.values};
-                        state.products.unshift(row);changes.push({entity:'products',id:row.id,row});
+                        const ranks=state.products.map(row=>row.display_order??0);
+                        row.display_order=change.position==='top'?Math.min(1,...ranks)-1:Math.max(-1,...ranks)+1;
+                        state.products.push(row);state.products.sort((a,b)=>(a.display_order??0)-(b.display_order??0)||b.created_at.localeCompare(a.created_at)||a.id.localeCompare(b.id));changes.push({entity:'products',id:row.id,row});
                     }else if(change.kind==='product.patch'){
                         const row=state.products.find(row=>row.id===change.id);if(!row)throw new Error('Fixture target missing');Object.assign(row,change.patch);changes.push({entity:'products',id:row.id,row:change.patch});
                     }else if(change.kind==='product.remove'){
@@ -54,7 +56,7 @@ test.beforeAll(async () => {
                 }
                 return window.fixtureJournal[body.operationId]={status:'applied',operationId:body.operationId,revision:++state.revision,changes};
             };
-            function App(){const p=useProfile();return <><button onClick={()=>void p.refreshProfile()}>Refresh fixture snapshot</button><output data-testid="provider-products">{JSON.stringify(p.products)}</output><div data-testid="global-save-status"><SaveStatus/></div><Advanced userId="${actor}"/></>};
+            function App(){const p=useProfile();return <><button onClick={()=>void p.refreshProfile()}>Refresh fixture snapshot</button><button onClick={()=>void p.createEntity('product',{name:'QA unresolved'},'top')}>Probe top add</button><button onClick={()=>void p.createEntity('product',{name:'QA unresolved'},'bottom')}>Probe bottom add</button><output data-testid="provider-products">{JSON.stringify(p.products)}</output><div data-testid="global-save-status"><SaveStatus/></div><Advanced userId="${actor}"/></>};
             const fallback={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'provider-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
             createRoot(document.getElementById('root')).render(<React.StrictMode><TahoeGlassEngineContext.Provider value={fallback}><ProfileProvider><App/></ProfileProvider></TahoeGlassEngineContext.Provider></React.StrictMode>);
         ` } })
@@ -75,6 +77,10 @@ async function mount(page, products = [product(first, 'QA consultation'), produc
                 const operationId = url.searchParams.get('operationId')
                 const receipt = await page.evaluate(operationId => window.fixtureJournal[operationId] || { status: 'not_found', operationId, revision: window.fixtureState.revision, changes: [] }, operationId)
                 return route.fulfill({ json: receipt })
+            }
+            if (await page.evaluate(() => window.fixtureMode === 'unknown')) {
+                await page.evaluate(body => window.fixturePosts.push(body), request.postDataJSON())
+                return route.abort('failed')
             }
             const result = await page.evaluate(body => window.fixtureApply(body), request.postDataJSON())
             return route.fulfill({ status: result.status === 'rejected' ? 422 : result.status === 'conflict' ? 409 : 200, json: result })
@@ -135,6 +141,41 @@ test('real provider creates only a deliberately named public offering and retain
     expect(JSON.stringify(posts)).not.toContain('New Product')
     await page.getByRole('button', { name: 'Refresh fixture snapshot' }).click()
     await expect(page.getByTestId('provider-products')).toContainText('QA named workshop')
+})
+
+test('real provider preserves explicit top and bottom placement after snapshot refresh', async ({ page }) => {
+    await mount(page)
+    for (const [position, name] of [['top', 'QA first offering'], ['bottom', 'QA last offering']]) {
+        await page.getByRole('button', { name: position === 'top' ? 'Add product or service' : 'Add product or service at bottom', exact: true }).click()
+        await page.getByRole('textbox', { name: 'Offering name', exact: true }).fill(name)
+        await page.getByRole('button', { name: 'Add to public profile', exact: true }).click()
+        await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue(name)
+        const back=page.getByRole('button', {name:'Back to your offerings',exact:true})
+        if(await back.isVisible())await back.click()
+    }
+    const names=()=>page.evaluate(()=>window.fixtureState.products.map(row=>row.name))
+    expect(await names()).toEqual(['QA first offering','QA consultation','QA guide','QA last offering'])
+    await page.getByRole('button',{name:'Refresh fixture snapshot'}).click()
+    const visible=page.locator('button[aria-label^="Edit QA "]')
+    expect((await visible.allTextContents()).map(text=>text.trim())).toEqual(['QA first offeringEdit','QA consultationEdit','QA guideEdit','QA last offeringEdit'])
+    const posts=await page.evaluate(()=>window.fixturePosts)
+    expect(posts.map(body=>body.changes[0].position)).toEqual(['top','bottom'])
+})
+
+test('opposite-end clicks cannot duplicate an uncertain add or change its original placement', async ({ page }) => {
+    await mount(page)
+    await page.evaluate(()=>{window.fixtureMode='unknown'})
+    await page.getByRole('button',{name:'Probe top add',exact:true}).click()
+    await expect(page.getByTestId('global-save-status')).toContainText('not confirmed')
+    await page.getByRole('button',{name:'Probe bottom add',exact:true}).click()
+    await expect.poll(()=>page.evaluate(()=>window.fixturePosts.length)).toBe(2)
+    await page.evaluate(()=>{window.fixtureMode='applied'})
+    await page.getByTestId('global-save-status').getByRole('button',{name:'Check status and retry my draft',exact:true}).click()
+    await expect.poll(()=>page.evaluate(()=>window.fixtureState.products.filter(row=>row.name==='QA unresolved').length)).toBe(1)
+    const posts=await page.evaluate(()=>window.fixturePosts)
+    expect(new Set(posts.map(body=>body.operationId)).size).toBe(1)
+    expect(posts.every(body=>body.changes[0].position==='top')).toBe(true)
+    expect(await page.evaluate(()=>window.fixtureState.products[0].name)).toBe('QA unresolved')
 })
 
 test('real provider sends no delete on cancellation, retains failed deletion, then confirms removal after refresh', async ({ page }) => {

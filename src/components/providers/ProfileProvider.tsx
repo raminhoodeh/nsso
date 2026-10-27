@@ -21,19 +21,19 @@ interface ProfileContextType extends OwnerSnapshot {
     loadError: string | null
     updateField: (field: keyof Profile, value: string, persist?: boolean) => Promise<boolean>
     patchProfile: (patch: ProfilePatch, immediate?: boolean) => Promise<boolean>
-    addLink: (name: string, url: string) => Promise<boolean>
+    addLink: (name: string, url: string, position?: 'top' | 'bottom') => Promise<boolean>
     updateLink: (id: string, field: 'link_name' | 'link_url', value: string) => Promise<boolean>
     removeLink: (id: string) => Promise<boolean>
     reorderLinks: (ids: string[]) => Promise<boolean>
     validateLinks: () => Promise<LinkValidation[]>
-    addContact: () => Promise<boolean>
+    addContact: (position?: 'top' | 'bottom') => Promise<boolean>
     updateContact: (id: string, field: 'method' | 'value' | 'custom_method_name', value: string) => Promise<boolean>
     removeContact: (id: string) => Promise<boolean>
     addExperience: (company: string, title: string, startYear: number | null, endYear: number | null, description?: string) => Promise<boolean>
     addProject: (name: string, description?: string, url?: string) => Promise<boolean>
     addQualification: (institution: string, degree: string, year: number | null) => Promise<boolean>
     addProduct: (name: string, description?: string, price?: string, url?: string) => Promise<boolean>
-    createEntity: <K extends RowKind>(kind: K, values: EditableValues[K]) => Promise<MutationResult>
+    createEntity: <K extends RowKind>(kind: K, values: EditableValues[K], position?: 'top' | 'bottom') => Promise<MutationResult>
     patchEntity: <K extends RowKind>(kind: K, id: string, patch: EditableValues[K], immediate?: boolean) => Promise<boolean>
     removeEntity: (kind: RowKind, id: string) => Promise<boolean>
     reorderExperiences: (ids: string[]) => Promise<boolean>
@@ -64,7 +64,7 @@ function mergeDeltas(snapshot: OwnerSnapshot, deltas: MutationDelta[]): OwnerSna
         const found = rows.find(row => row.id === delta.id)
         const updated = delta.row === null ? rows.filter(row => row.id !== delta.id) : found ? rows.map(row => row.id === delta.id ? { ...row, ...delta.row } : row) : [...rows, delta.row]
         updated.sort((a,b)=>{
-            const order=delta.entity==='products'?0:Number(a.display_order??0)-Number(b.display_order??0)
+            const order=Number(a.display_order??Number.MAX_SAFE_INTEGER)-Number(b.display_order??Number.MAX_SAFE_INTEGER)
             if(order)return order
             if(delta.entity==='experiences'||delta.entity==='qualifications'){
                 const field=delta.entity==='experiences'?'start_year':'end_year'
@@ -249,9 +249,11 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
         entry.pending = pending
         return pending
     }, [applyOperation, recordProductCreation, publish])
-    const createEntity = useCallback(<K extends RowKind>(kind: K, values: EditableValues[K]) => {
-        const changes = [{ kind: `${kind}.add`, values } as ProfileChange]
-        const key = JSON.stringify(changes)
+    const createEntity = useCallback(<K extends RowKind>(kind: K, values: EditableValues[K], position: 'top' | 'bottom' = 'bottom') => {
+        const changes = [{ kind: `${kind}.add`, values, position } as ProfileChange]
+        // A placement click is not a new intent while the same add is unresolved.
+        // Keep the first intent's position and ID even if the opposite button is tapped.
+        const key = JSON.stringify({ kind, values })
         // Repeated clicks share one intent until the server acknowledges its result.
         // An uncertain add keeps its original ID even if a later snapshot advances.
         const entry = pendingCreates.current.get(key) || { changes, operationId: crypto.randomUUID() }
@@ -344,9 +346,9 @@ function AccountProfileProvider({ children }: { children: ReactNode }) {
     const profileCompleteness = calculateProfileCompleteness(snapshot)
 
     return <ProfileContext.Provider value={{ ...snapshot, loading, loadError, mutationState, productMutationState, productCreationResults, retryPending, patchProfile, updateField, patchEntity, createEntity, removeEntity, applyOperation, refreshProfile, getRevision: () => client.revision, undo, canUndo: history.length > 0, fastMode, setFastMode, profileCompleteness,
-        addLink: async (link_name, link_url) => (await createEntity('link', { link_name, link_url })).status === 'applied',
+        addLink: async (link_name, link_url, position = 'top') => (await createEntity('link', { link_name, link_url }, position)).status === 'applied',
         updateLink: (id, field, value) => patchEntity('link', id, { [field]: value }), removeLink: id => removeEntity('link', id), reorderLinks: ids => reorder('links', ids), validateLinks: () => validateLinksUtil(snapshot.links.map(link => ({ id: link.id, url: link.link_url }))),
-        addContact: async () => (await createEntity('contact', { method: 'Email', value: '', custom_method_name: null })).status === 'applied', updateContact: (id, field, value) => patchEntity('contact', id, { [field]: value }), removeContact: id => removeEntity('contact', id), reorderContacts: ids => reorder('contacts', ids),
+        addContact: async (position = 'top') => (await createEntity('contact', { method: 'Email', value: '', custom_method_name: null }, position)).status === 'applied', updateContact: (id, field, value) => patchEntity('contact', id, { [field]: value }), removeContact: id => removeEntity('contact', id), reorderContacts: ids => reorder('contacts', ids),
         addExperience: async (company_name, job_title, start_year, end_year, description) => (await createEntity('experience', { company_name, job_title, start_year, end_year, description: description || '' })).status === 'applied',
         addProject: async (project_name, description, project_url) => (await createEntity('project', { project_name, contribution: 'Creator', description: description || '', project_url: project_url || null })).status === 'applied',
         addQualification: async (institution, qualification_name, year) => (await createEntity('qualification', { institution, qualification_name, start_year: year, end_year: year })).status === 'applied',
