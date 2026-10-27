@@ -33,9 +33,9 @@ function loadTypeScript(filename, dependencies = {}) {
 const routes = loadTypeScript('src/lib/tahoe-glass/route-boundaries.ts')
 const deck = loadTypeScript('src/lib/deck-background.ts')
 
-test('only the requested NSSO identity and profile routes retain the animated source', () => {
+test('identity, public profiles and profile preview retain the animated source', () => {
     for (const pathname of [
-        '/', '/sign-in', '/sign-up', '/dashboard', '/preview',
+        '/', '/sign-in', '/sign-up', '/preview',
         '/ramin', '/john', '/fixture-profile', '/fixture_with_underscores',
     ]) {
         assert.equal(routes.routeUsesDeckBackground(pathname), false, pathname)
@@ -46,7 +46,7 @@ test('only the requested NSSO identity and profile routes retain the animated so
 test('application pages never masquerade as public profiles and nested tools use the deck', () => {
     for (const pathname of [
         '/admin', '/deity', '/earnings', '/news/feed', '/reset-password', '/set-password',
-        '/products/fixture-offering', '/dashboard/security',
+        '/products/fixture-offering', '/dashboard', '/dashboard/security',
         '/dashboard/products/fixture-offering/creator', '/ramin/privacy',
         '/film/razinflix', '/places/dubai',
     ]) {
@@ -89,7 +89,7 @@ function renderEnvironment(pathname) {
 }
 
 test('cold static routes do not mount Vanta and feed identical original pixels to the glass renderer', () => {
-    for (const pathname of ['/admin', '/deity', '/earnings', '/products/fixture-offering', '/dashboard/security', '/dashboard/products/fixture-offering/creator']) {
+    for (const pathname of ['/admin', '/deity', '/earnings', '/products/fixture-offering', '/dashboard', '/dashboard/security', '/dashboard/products/fixture-offering/creator']) {
         const { html, providerProps, vantaRenders } = renderEnvironment(pathname)
         assert.equal(vantaRenders, 0, pathname)
         assert.match(html, /data-nsso-deck-background="true"/)
@@ -106,7 +106,7 @@ test('cold static routes do not mount Vanta and feed identical original pixels t
 })
 
 test('excluded profile routes still mount their source and route-owned tools are not wrapped twice', () => {
-    for (const pathname of ['/', '/sign-in', '/sign-up', '/dashboard', '/preview', '/fixture-profile', '/glass-candidate', '/dreamsea/prompts']) {
+    for (const pathname of ['/', '/sign-in', '/sign-up', '/preview', '/fixture-profile', '/glass-candidate', '/dreamsea/prompts']) {
         const { html, providerProps, vantaRenders } = renderEnvironment(pathname)
         assert.equal(vantaRenders, 1, pathname)
         assert.equal(providerProps.sourceLabel, 'vanta-clouds')
@@ -119,6 +119,22 @@ test('excluded profile routes still mount their source and route-owned tools are
         assert.equal(providerProps, undefined)
         assert.equal(html, '<main>Preserved page content</main>')
     }
+})
+
+test('profile editor keeps the static deck across its query views without changing profile preview', () => {
+    // usePathname excludes query strings, so changing dashboard views must not
+    // reintroduce the cloud source or change the shared provider identity.
+    for (const url of ['/dashboard', '/dashboard/', '/dashboard?view=profile', '/dashboard?view=my-nsso', '/dashboard?view=earnings', '/dashboard?claim=fixture-profile']) {
+        const pathname = new URL(url, 'https://nsso.test').pathname
+        assert.equal(routes.routeUsesDeckBackground(pathname), true, url)
+        const { html, providerProps, vantaRenders } = renderEnvironment(pathname)
+        assert.equal(vantaRenders, 0, url)
+        assert.match(html, /data-nsso-deck-background="true"/)
+        assert.equal(providerProps.webglSource, deck.DECK_BACKGROUND_IMAGE_SOURCE)
+        assert.equal(providerProps.sourceLabel, 'nsso-deck-blue')
+    }
+    assert.equal(routes.routeUsesDeckBackground('/preview'), false)
+    assert.equal(routes.routeUsesDeckBackground('/fixture-profile'), false)
 })
 
 test('route changes do not key and remount the shared provider or page content', () => {

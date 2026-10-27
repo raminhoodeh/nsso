@@ -3,9 +3,10 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-let bundle, css
+let bundle, realSceneBundle, css
 
 function sourceFiles(directory) {
     return readdirSync(root + directory, { withFileTypes: true }).flatMap(entry => entry.isDirectory()
@@ -14,19 +15,20 @@ function sourceFiles(directory) {
 }
 
 test.beforeAll(async () => {
-    const candidates = ['src/app/dashboard/page.tsx', 'src/app/preview/page.tsx', ...sourceFiles('src/app/dashboard/components'), ...sourceFiles('src/components/ui'), ...sourceFiles('src/components/layout')]
+    const candidates = ['src/app/dashboard/page.tsx', 'src/app/preview/page.tsx', 'src/components/agent/AgentChatInterface.tsx', 'src/components/providers/NSSOTahoeGlassEnvironment.tsx', 'src/components/providers/TahoeGlassProvider.tsx', ...sourceFiles('src/app/dashboard/components'), ...sourceFiles('src/components/ui'), ...sourceFiles('src/components/layout')]
         .flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\n:root{--mobile-bottom-safe-space:8px;--mobile-bottom-nav-height:80px}body{margin:0;background:linear-gradient(130deg,#385a6b,#b9abbb);color:white;font-family:Arial}button,input,textarea,select{font:inherit}#fixture-outside{height:100px}#fixture-outside button{min-height:44px}'
+    for (const realScene of [false, true]) {
     const result = await build({
         absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'profile-editor-polish-fixture', setup(builder) {
-            builder.onResolve({ filter: /^(?:next\/(?:navigation|image|link)|@\/lib\/supabase\/client|@\/components\/providers\/(?:ProfileProvider|UserProvider|UIProvider)|@\/components\/ui\/(?:Toast|tahoe-glass)|@\/components\/layout\/DashboardSidebar|@\/components\/profile\/ProfileSaveStatus|@\/components\/ui\/ImageCropperModal|@\/app\/dashboard\/components\/(?:EarningsTab|MyNssoTab|AdvancedModeCard))$/ }, args => ({ path: args.path, namespace: 'fixture' }))
+            builder.onResolve({ filter: /^(?:next\/(?:navigation|image|link)|@\/lib\/supabase\/client|@\/components\/providers\/(?:ProfileProvider|UserProvider|UIProvider)|@\/components\/ui\/(?:Toast|tahoe-glass)|@\/components\/layout\/DashboardSidebar|@\/components\/profile\/ProfileSaveStatus|@\/components\/ui\/ImageCropperModal|@\/app\/dashboard\/components\/(?:EarningsTab|MyNssoTab|AdvancedModeCard))$/ }, args => realScene && /(?:providers\/UIProvider|ui\/tahoe-glass)$/.test(args.path) ? null : ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
                 path === 'next/navigation' ? `import {useSyncExternalStore} from 'react';const subscribe=fn=>{window.routeSubscribers.add(fn);return()=>window.routeSubscribers.delete(fn)};export const usePathname=()=>useSyncExternalStore(subscribe,()=>location.pathname);export const useSearchParams=()=>new URLSearchParams(useSyncExternalStore(subscribe,()=>location.search));export const useRouter=()=>({push:window.fixtureNavigate,prefetch(){}});`
                     : path === 'next/link' ? `export default function Link({href,onClick,children,...props}){return <a {...props} href={href} onClick={event=>{onClick?.(event);if(!event.defaultPrevented){event.preventDefault();window.fixtureNavigate(href)}}}>{children}</a>}`
                         : path === 'next/image' ? 'export default ({priority,fill,...props})=><img {...props}/>;'
-                            : path.endsWith('supabase/client') ? 'export const createClient=()=>({auth:{signOut:async()=>{window.signOuts++;return{error:null}}}});'
+                            : path.endsWith('supabase/client') ? 'export const createClient=()=>({auth:{signOut:async()=>{window.signOuts++;return{error:null}}},from:()=>({select(){return this},eq(){return this},single:async()=>({data:window.fixtureProfile?.profile??null,error:null})})});'
                                 : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:window.fixtureUser,loading:false,refreshUser:async()=>{}});'
                                     : path.endsWith('UIProvider') ? 'export const useUI=()=>({setBackgroundDimmed:()=>{}});'
                                         : path.endsWith('ProfileProvider') ? 'export const useProfile=()=>window.fixtureProfile;'
@@ -39,6 +41,7 @@ test.beforeAll(async () => {
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React,{useState} from 'react';import{createRoot}from'react-dom/client';
             import{TahoeGlassEngineContext}from'./src/components/providers/TahoeGlassProvider';
+            ${realScene ? `import Environment from'./src/components/providers/NSSOTahoeGlassEnvironment';import{UIProvider}from'./src/components/providers/UIProvider';import Chat from'./src/components/agent/AgentChatInterface';` : ''}
             import Dashboard from './src/app/dashboard/page';import Header from './src/components/layout/Header';
             import Preview from './src/app/preview/page';import {routeNeedsGlobalAccountHeader} from './src/lib/tahoe-glass/route-boundaries';
             import GlobalNavigation from './src/components/layout/GlobalNavigation';import AuthenticatedLayout from './src/components/layout/AuthenticatedLayoutWrapper';
@@ -47,7 +50,7 @@ test.beforeAll(async () => {
             window.fixtureUser={id:'qa',username:'fixture',email:window.fixtureOptions.admin?'raminhoodeh@gmail.com':'fixture@example.invalid',permissions:window.fixtureOptions.admin?['nsso:admin']:[],user_type:window.fixtureOptions.admin?'admin':'standard'};
             window.fixtureNavigate=target=>{window.destinations.push(target);history.pushState({},'',target);window.routeSubscribers.forEach(fn=>fn())};
             window.addEventListener('open-deity-chat',()=>window.deityEvents.push({menuPresent:!!document.querySelector('[data-mobile-account-menu]'),bodyPosition:document.body.style.position,inert:document.getElementById('root').inert}));
-            function App(){const [,update]=useState(0);const refresh=()=>update(value=>value+1);const profile=window.fixtureProfile||={
+            function App(){const [,update]=useState(0);const refresh=()=>update(value=>value+1);${realScene ? `const[chatOpen,setChatOpen]=useState(false);React.useEffect(()=>{const open=()=>setChatOpen(true);window.addEventListener('open-deity-chat',open);return()=>window.removeEventListener('open-deity-chat',open)},[]);` : ''}const profile=window.fixtureProfile||={
                 profile:window.fixtureOptions.profileState==='error'?null:{user_id:'qa',full_name:'Fixture Name',headline:'Builder',bio:'A fixture biography.',profile_pic_url:'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 384 384"><rect width="384" height="384" fill="#9abfd1"/><circle cx="192" cy="142" r="66" fill="#e2b8a1"/><path d="M60 384v-32a132 132 0 0 1 264 0v32" fill="#334e68"/></svg>')},loading:window.fixtureOptions.profileState==='loading',profileCompleteness:100,
                 experiences:[],qualifications:[],projects:[],products:[],
                 links:[{id:'link-1',link_name:'Portfolio',link_url:'https://example.test/portfolio'},{id:'link-2',link_name:'Writing',link_url:'https://example.test/writing'}],
@@ -65,12 +68,14 @@ test.beforeAll(async () => {
                 removeContact:async id=>{window.deleted.push({type:'contact',id});profile.contacts=profile.contacts.filter(row=>row.id!==id);refresh();return true},
                 reorderLinks:ids=>{window.reordered.push({type:'link',ids});profile.links=ids.map(id=>profile.links.find(row=>row.id===id));refresh()},
                 reorderContacts:ids=>{window.reordered.push({type:'contact',ids});profile.contacts=ids.map(id=>profile.contacts.find(row=>row.id===id));refresh()}
-            };return <><AuthenticatedLayout>{window.fixtureOptions.content==='dashboard'?<Dashboard/>:window.fixtureOptions.content==='preview'?<Preview/>:<>{!routeNeedsGlobalAccountHeader(location.pathname)&&<Header variant={window.fixtureOptions.content==='owner'?'owner':'default'} username="fixture"/>}<main style={{paddingTop:120,minHeight:1600}}>Other route content</main></>}</AuthenticatedLayout><GlobalNavigation/><div data-fixture-closed-deity role="dialog" aria-label="Synthetic Deity" aria-modal="true" aria-hidden="true" inert={true} style={{position:'fixed',inset:0,opacity:0,pointerEvents:'none'}}><textarea aria-label="Synthetic Deity message"/></div><div id="fixture-outside"><button>Outside focus target</button></div></>};
+            };${realScene ? `if(!profile.fixtureFieldsBound){profile.fixtureFieldsBound=true;window.fixtureFieldWrites=[];profile.updateField=async(field,value)=>{profile.profile={...profile.profile,[field]:value};window.fixtureFieldWrites.push({kind:'field',field,value});refresh();return true};profile.patchProfile=async patch=>{profile.profile={...profile.profile,...patch};window.fixtureFieldWrites.push({kind:'patch',patch});refresh();return true};}` : ''}return <><AuthenticatedLayout>{window.fixtureOptions.content==='dashboard'?<Dashboard/>:window.fixtureOptions.content==='preview'?<Preview/>:<>{!routeNeedsGlobalAccountHeader(location.pathname)&&<Header variant={window.fixtureOptions.content==='owner'?'owner':'default'} username="fixture"/>}<main style={{paddingTop:120,minHeight:1600}}>Other route content</main></>}</AuthenticatedLayout><GlobalNavigation/><div data-fixture-closed-deity role="dialog" aria-label="Synthetic Deity" aria-modal="true" aria-hidden="true" inert={true} style={{position:'fixed',inset:0,opacity:0,pointerEvents:'none'}}><textarea aria-label="Synthetic Deity message"/></div>${realScene ? `{chatOpen&&<div role="dialog" aria-label="Rendered Deity fixture" aria-modal="true" style={{position:'fixed',inset:0,zIndex:300,padding:12,background:'rgba(0,0,0,.5)'}}><Chat isFullScreen onClose={()=>setChatOpen(false)}/></div>}` : ''}<div id="fixture-outside"><button>Outside focus target</button></div></>};
             const fallback={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'layout-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
-            createRoot(document.getElementById('root')).render(<TahoeGlassEngineContext.Provider value={fallback}><App/></TahoeGlassEngineContext.Provider>);
+            const fixtureRoot=createRoot(document.getElementById('root'));window.fixtureUnmount=()=>fixtureRoot.unmount();fixtureRoot.render(${realScene ? '<UIProvider><Environment><App/></Environment></UIProvider>' : '<TahoeGlassEngineContext.Provider value={fallback}><App/></TahoeGlassEngineContext.Provider>'});
         ` },
     })
-    bundle = result.outputFiles[0].text
+    if (realScene) realSceneBundle = result.outputFiles[0].text
+    else bundle = result.outputFiles[0].text
+    }
 })
 
 test('top and bottom Add controls insert Links and Contact at the chosen edge and immediately focus the new field', async ({ page }) => {
@@ -208,19 +213,139 @@ test('subtitle-free mobile section titles are vertically centred beside their ad
     }
 })
 
-async function mount(page, { path = '/dashboard', admin = false, content = 'dashboard', profileState = 'ready' } = {}) {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.route('https://nsso.test/**', route => {
-        const url = new URL(route.request().url())
-        if (url.pathname === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundle })
+async function mount(page, { path = '/dashboard', admin = false, content = 'dashboard', profileState = 'ready', realScene = false } = {}) {
+    const errors = [], unexpected = [], requests = []
+    if (realScene) {
+        page.on('pageerror', error => errors.push(error.message))
+        await page.addInitScript(() => {
+            const request = requestAnimationFrame.bind(window), cancel = cancelAnimationFrame.bind(window), pending = new Map()
+            window.fixtureCloudFrames = { scheduled: 0, pending: () => [...pending.values()].filter(Boolean).length }
+            window.requestAnimationFrame = callback => {
+                const cloud = new Error().stack?.includes('/vendor/vanta-') ?? false
+                if (cloud) window.fixtureCloudFrames.scheduled++
+                const id = request(timestamp => { pending.delete(id); callback(timestamp) }); pending.set(id, cloud); return id
+            }
+            window.cancelAnimationFrame = id => { pending.delete(id); cancel(id) }
+        })
+    }
+    await page.emulateMedia({ reducedMotion: realScene ? 'no-preference' : 'reduce' })
+    await page.route('**/*', route => {
+        const url = new URL(route.request().url()); requests.push({ path: url.pathname, method: route.request().method() })
+        if (url.origin !== 'https://nsso.test') { unexpected.push(url.origin + url.pathname); return route.abort() }
+        if (url.pathname === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: realScene ? realSceneBundle : bundle })
         if (url.pathname === '/fixture.css') return route.fulfill({ contentType: 'text/css', body: css })
+        if (realScene && url.pathname.startsWith('/vendor/')) return route.fulfill({ contentType: 'application/javascript', body: readFileSync(root + 'public' + url.pathname) })
+        if (realScene && url.pathname === '/assets/backgrounds/nsso-deck-blue.webp') return route.fulfill({ contentType: 'image/webp', body: readFileSync(root + 'public' + url.pathname) })
+        if (realScene && ['/assets/nsso-logo.png', '/nsso-agent-avatar.png', '/deity logo white.png'].includes(decodeURIComponent(url.pathname))) return route.fulfill({ contentType: 'image/png', body: readFileSync(root + 'public' + decodeURIComponent(url.pathname)) })
         if (url.pathname.startsWith('/api/')) return route.fulfill({ contentType: 'application/json', body: '{}' })
         if (/\.(?:png|svg)$/.test(url.pathname)) return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="458" height="224"><rect width="458" height="224" fill="silver"/></svg>' })
         return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script>window.fixtureOptions=' + JSON.stringify({ admin, content, profileState }) + '</script><script src="/fixture.js"></script>' })
     })
     await page.goto('https://nsso.test' + path)
     await expect(page.locator('button[aria-label="Open account menu"]')).toBeAttached()
+    return { errors, unexpected, requests }
 }
+
+async function expectRealDashboardDeck(page, state) {
+    await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
+    await expect(page.locator('#vanta-bg')).toHaveCount(0)
+    await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-source', /nsso-deck-blue/)
+    const decoded = await page.evaluate(async () => {
+        const image = new Image(); image.src = '/assets/backgrounds/nsso-deck-blue.webp'; await image.decode()
+        const source = document.querySelector('[data-nsso-deck-background="true"]')
+        return { width: image.naturalWidth, height: image.naturalHeight, image: getComputedStyle(source).backgroundImage, color: getComputedStyle(source).backgroundColor }
+    })
+    expect(decoded).toMatchObject({ width: 1920, height: 1360, color: 'rgb(67, 98, 140)' })
+    expect(decoded.image).toContain('/assets/backgrounds/nsso-deck-blue.webp')
+    const animation = await page.evaluate(async () => {
+        for (let tick = 0; tick < 30; tick++) await new Promise(requestAnimationFrame)
+        return { cloudSchedules: window.fixtureCloudFrames.scheduled, pendingCloudFrames: window.fixtureCloudFrames.pending(), three: typeof window.THREE, vanta: typeof window.VANTA, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches }
+    })
+    expect(animation).toEqual({ cloudSchedules: 0, pendingCloudFrames: 0, three: 'undefined', vanta: 'undefined', reducedMotion: false })
+    expect(state.requests.filter(request => /\/vendor\/(?:three|vanta)/.test(request.path))).toEqual([])
+    expect(state.unexpected).toEqual([])
+    return { decoded, animation }
+}
+
+test('real dashboard deck scene survives query views, scrolling and resizing without cloud initialization', async ({ page }, testInfo) => {
+    const state = await mount(page, { path: '/dashboard?view=profile&source=deck-fixture', realScene: true })
+    try {
+        await expect(page.getByRole('heading', { name: 'Hey, wonderful', exact: true })).toBeVisible()
+        const checks = [await expectRealDashboardDeck(page, state)]
+        for (const query of ['', '?view=my-nsso', '?view=earnings', '?view=profile&source=deck-fixture']) {
+            await page.evaluate(query => window.fixtureNavigate('/dashboard' + query), query)
+            await expect(page).toHaveURL('https://nsso.test/dashboard' + query)
+            await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
+            await expect(page.locator('#vanta-bg')).toHaveCount(0)
+        }
+        await expect(page.getByRole('textbox', { name: 'BIO', exact: true })).toHaveValue('A fixture biography.')
+        await page.getByRole('textbox', { name: 'BIO', exact: true }).scrollIntoViewIfNeeded()
+        const viewport = page.viewportSize()
+        await page.setViewportSize({ width: viewport.width, height: viewport.height - 80 })
+        await page.evaluate(() => scrollTo(0, 0))
+        checks.push(await expectRealDashboardDeck(page, state))
+        // Sample the real rendered outer gutter, not a detached canvas or a
+        // data-attribute-only claim that could pass with a flat blue fallback.
+        const { data, info } = await sharp(await page.screenshot()).extract({ left: 2, top: 104, width: 12, height: 32 }).raw().toBuffer({ resolveWithObject: true })
+        const samples = Array.from({ length: 12 * 32 }, (_, index) => data[index * info.channels + 2])
+        const mean = samples.reduce((sum, value) => sum + value, 0) / samples.length
+        const grainDeviation = Math.sqrt(samples.reduce((sum, value) => sum + (value - mean) ** 2, 0) / samples.length)
+        expect(grainDeviation).toBeGreaterThan(.2)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        expect(state.errors).toEqual([])
+        await testInfo.attach('real-dashboard-static-performance', { body: Buffer.from(JSON.stringify({ checks, grainDeviation, requests: state.requests })), contentType: 'application/json' })
+        await page.screenshot({ path: testInfo.outputPath('real-dashboard-deck-profile.png') })
+    } finally { await page.evaluate(() => window.fixtureUnmount()) }
+})
+
+test('real dashboard fields stay usable over deck grain and the actual Deity chat stays opaque', async ({ page }, testInfo) => {
+    const state = await mount(page, { realScene: true })
+    try {
+        const name = page.getByRole('textbox', { name: 'FULL NAME', exact: true })
+        await expect(name).toHaveValue('Fixture Name')
+        await name.fill('Fixture Deck Person')
+        await name.press('Tab')
+        await expect.poll(() => page.evaluate(() => window.fixtureProfile.profile.full_name)).toBe('Fixture Deck Person')
+        expect(await name.evaluate(element => ({ color: getComputedStyle(element).color, font: parseFloat(getComputedStyle(element).fontSize), width: element.getBoundingClientRect().width }))).toMatchObject({ color: 'rgb(255, 255, 255)' })
+        expect(await name.evaluate(element => element.getBoundingClientRect().width)).toBeGreaterThan(200)
+        expect(await page.locator('[data-profile-identity-header]').evaluate(element => element.closest('[data-tahoe-glass-tint]')?.getAttribute('data-tahoe-glass-tint'))).toBe('dark')
+        const bio = page.getByRole('textbox', { name: 'BIO', exact: true })
+        await bio.fill('A clearly readable, synthetic biography over the exact deck background.')
+        await bio.press('Tab')
+        await expect.poll(() => page.evaluate(() => window.fixtureProfile.profile.bio)).toBe('A clearly readable, synthetic biography over the exact deck background.')
+        await page.getByRole('button', { name: 'Add link', exact: true }).press('Enter')
+        const created = await page.evaluate(() => window.created.at(-1))
+        expect(created).toMatchObject({ kind: 'link', position: 'top' })
+        const link = page.locator(`[data-profile-item-id="${created.id}"]`).getByRole('textbox', { name: 'Link name', exact: true })
+        await expect(link).toBeFocused()
+        await link.fill('Synthetic deck link')
+        await expect(link).toHaveValue('Synthetic deck link')
+        await page.evaluate(() => window.fixtureNavigate('/dashboard?view=my-nsso'))
+        await page.evaluate(() => window.fixtureNavigate('/dashboard?view=profile'))
+        await expect(name).toHaveValue('Fixture Deck Person')
+        await expect(bio).toHaveValue('A clearly readable, synthetic biography over the exact deck background.')
+        if (page.viewportSize().width < 1024) {
+            const header = page.locator('[data-nsso-topbar]').filter({ visible: true })
+            await expect(header).toHaveCount(1)
+            await expect(header.getByRole('button', { name: 'Preview Profile', exact: true })).toBeVisible()
+            await expect(header.getByRole('button', { name: 'Open account menu', exact: true })).toBeVisible()
+        }
+        await page.locator('[data-profile-identity-header]').getByRole('button', { name: 'Ask Deity', exact: true }).press('Enter')
+        const chat = page.locator('[data-deity-surface="opaque"]')
+        await expect(chat).toBeVisible()
+        expect(await chat.evaluate(element => ({ color: getComputedStyle(element).color, background: getComputedStyle(element).backgroundColor, opacity: getComputedStyle(element).opacity }))).toEqual({ color: 'rgb(255, 255, 255)', background: 'rgb(17, 22, 29)', opacity: '1' })
+        const composer = page.getByRole('textbox', { name: 'Message Deity', exact: true })
+        await composer.fill('A synthetic unsent message only.')
+        await expect(composer).toHaveValue('A synthetic unsent message only.')
+        await expect(page.getByRole('button', { name: /Fast mode/i })).toHaveCount(0)
+        await expectRealDashboardDeck(page, state)
+        expect(state.requests.filter(request => request.path.startsWith('/api/deity/'))).toEqual([])
+        expect(state.requests.filter(request => !['GET', 'HEAD', 'OPTIONS'].includes(request.method))).toEqual([])
+        expect(state.errors).toEqual([])
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        await page.screenshot({ path: testInfo.outputPath('real-dashboard-opaque-deity.png') })
+    } finally { await page.evaluate(() => window.fixtureUnmount()) }
+})
 
 async function openMenu(page, keyboard = false) {
     const trigger = page.getByRole('button', { name: 'Open account menu' })
