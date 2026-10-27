@@ -27,6 +27,8 @@ import type {
   TahoeGlassSemanticTint,
   TahoeGlassSurfaceVariant,
 } from "./TahoeGlassSurface";
+import { useChromeGlassOptics } from "./ChromeGlassOptics";
+import { supportsChromeGlassGeometry } from "@/lib/tahoe-glass/chrome-policy";
 
 type TahoeBackdropMode = "svg" | "css-blur" | "solid";
 type TahoeOwnedSceneState = "idle" | "initializing" | "active" | "failed";
@@ -151,6 +153,14 @@ export const TahoeBackdropSurface = React.forwardRef<
   const subscribeOwnedSceneAfterRender =
     context?.subscribeOwnedSceneAfterRender;
   const internalRef = React.useRef<HTMLElement | null>(null);
+  const insideDirectBackdrop = React.useContext(TahoeGlassDirectBackdropBoundaryContext);
+  const chrome = useChromeGlassOptics(internalRef,
+    backdropEnabled && !insideDirectBackdrop && supportsChromeGlassGeometry(undefined, style) && ["card", "panel", "mediaFrame", "menu"].includes(variant) &&
+    props["data-tahoe-readable-overlay" as keyof typeof props] !== "true" &&
+    !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""),
+    as === "header" || as === "nav");
+  const resolvedTint = chrome.enabled && semanticTint === "none" ? (tone === "dark" ? "light" : "dark") : semanticTint;
+  const resolvedTintOpacity = chrome.enabled && semanticTint === "none" ? 0.18 : semanticTintOpacity;
   const filterRef = React.useRef<SVGFilterElement | null>(null);
   const feImageRef = React.useRef<SVGFEImageElement | null>(null);
   const ownedSceneCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
@@ -248,6 +258,13 @@ export const TahoeBackdropSurface = React.forwardRef<
   const updateOptics = React.useCallback(() => {
     const element = internalRef.current;
     if (!element) return;
+    if (chrome.enabled) {
+      // Only one lens owns this surface. The legacy mobile field/render path
+      // stays intact and is resumed when desktop eligibility changes.
+      setMapReady(false);
+      lastSizeKeyRef.current = "";
+      return;
+    }
 
     const rect = element.getBoundingClientRect();
     const width = Math.max(1, Math.round(rect.width));
@@ -337,6 +354,7 @@ export const TahoeBackdropSurface = React.forwardRef<
       requestRender?.("nav-owned-scene-optics-update");
     }
   }, [
+    chrome.enabled,
     backdropEnabled,
     commitOwnedSceneState,
     displacementProfile,
@@ -729,6 +747,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     const element = internalRef.current;
     if (
       mode !== "css-blur" ||
+      chrome.enabled ||
       (ownedSceneEligible && ownedSceneState === "active") ||
       !capabilityResolved ||
       !element ||
@@ -740,6 +759,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     registerSurface(surfaceId, element);
     return () => unregisterSurface(surfaceId);
   }, [
+    chrome.enabled,
     capabilityResolved,
     mode,
     ownedSceneEligible,
@@ -752,9 +772,11 @@ export const TahoeBackdropSurface = React.forwardRef<
   const resolvedRadius =
     typeof radius === "number"
       ? `${radius}px`
-      : radius || VARIANT_RADIUS[variant];
+      : chrome.enabled && radius && radius.trim().split(/\s+/).length > 1
+        ? "24px"
+        : radius || VARIANT_RADIUS[variant];
   const Component = as as React.ElementType;
-  const liveBackdropSelected = mode === "svg" && mapReady;
+  const liveBackdropSelected = chrome.ready || (mode === "svg" && mapReady);
   const localOwnedSceneActive =
     ownedSceneEligible && ownedSceneState === "active";
   const localOwnedSceneInitializing =
@@ -776,7 +798,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     mode !== "solid" && !liveBackdropSelected && !webglMaterialActive;
   const activeWebglMaterial = "blur(0.75px) saturate(160%) brightness(1.03)";
   const backdropFilter =
-    mode === "solid"
+    chrome.enabled || mode === "solid"
       ? "none"
       : liveBackdropSelected
         ? `url(#${filterId}) blur(2px) saturate(180%) brightness(1.05)`
@@ -786,7 +808,7 @@ export const TahoeBackdropSurface = React.forwardRef<
             ? "blur(2px) saturate(180%) brightness(1.05)"
             : "none";
   const webkitBackdropFilter =
-    mode === "solid"
+    chrome.enabled || mode === "solid"
       ? "none"
       : liveBackdropSelected
         ? `url(#${filterId}) blur(1px) saturate(180%) brightness(1.05)`
@@ -802,6 +824,7 @@ export const TahoeBackdropSurface = React.forwardRef<
         ref={setRef}
         className={cn(
           "pointer-events-auto relative z-[1] border-0 bg-transparent",
+          chrome.enabled && "isolate",
           className,
         )}
         style={
@@ -824,7 +847,8 @@ export const TahoeBackdropSurface = React.forwardRef<
         {...props}
         data-tahoe-glass-surface={variant}
         data-tahoe-glass-tone={tone}
-        data-tahoe-glass-tint={semanticTint}
+        data-tahoe-glass-tint={resolvedTint}
+        data-tahoe-chromium-optics={chrome.enabled ? (chrome.ready ? "refract" : "initializing") : undefined}
         data-tahoe-direct-backdrop-enabled={String(backdropEnabled)}
         data-tahoe-backdrop-backend={
           liveBackdropSelected
@@ -889,6 +913,7 @@ export const TahoeBackdropSurface = React.forwardRef<
         data-tahoe-displacement-profile={displacementProfile}
         data-tahoe-material-lighting={materialLighting}
       >
+        {chrome.layers}
         {ownedSceneEligible ? (
           <canvas
             ref={ownedSceneCanvasRef}
@@ -906,6 +931,7 @@ export const TahoeBackdropSurface = React.forwardRef<
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-[5] rounded-[inherit]"
           style={{
+            display: chrome.enabled ? "none" : undefined,
             background: webglMaterialActive
               ? "rgba(255,255,255,0.10)"
               : mode === "solid"
@@ -921,14 +947,14 @@ export const TahoeBackdropSurface = React.forwardRef<
           }}
         />
 
-        {semanticTint !== "none" && (
+        {resolvedTint !== "none" && (
           <span
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 z-[6] rounded-[inherit]"
             style={{
               backgroundColor:
-                semanticTint === "light" ? "white" : "rgb(8, 12, 20)",
-              opacity: Math.max(0, Math.min(0.42, semanticTintOpacity)),
+                resolvedTint === "light" ? "white" : "rgb(8, 12, 20)",
+              opacity: Math.max(0, Math.min(0.42, resolvedTintOpacity)),
             }}
           />
         )}
@@ -937,6 +963,7 @@ export const TahoeBackdropSurface = React.forwardRef<
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-10 rounded-[inherit] p-px"
           style={{
+            display: chrome.enabled ? "none" : undefined,
             background: "var(--rim-gradient)",
             WebkitMask:
               "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
@@ -962,7 +989,7 @@ export const TahoeBackdropSurface = React.forwardRef<
         </TahoeGlassDirectBackdropBoundaryContext.Provider>
       </Component>
 
-      {backdropEnabled ? (
+      {backdropEnabled && !chrome.enabled ? (
         <svg
           aria-hidden="true"
           className="pointer-events-none absolute h-0 w-0 overflow-hidden"

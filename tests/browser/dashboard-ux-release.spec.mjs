@@ -54,11 +54,24 @@ async function mount(page, query = '') {
     await page.goto('https://nsso.test/fixture' + query)
 }
 
+async function expectReadableOverlay(dialog) {
+    await expect(dialog).toHaveAttribute('data-tahoe-readable-overlay', 'true')
+    const backing = await dialog.evaluate(element => {
+        const style = getComputedStyle(element, '::before')
+        return { color: style.backgroundColor, zIndex: style.zIndex, content: style.content }
+    })
+    expect(backing.color).toBe('rgb(32, 33, 38)')
+    expect(backing.content).not.toBe('none')
+    expect(Number(backing.zIndex)).toBeGreaterThan(10)
+    await expect(dialog.locator('[data-liquid-glass]')).toHaveCount(0)
+}
+
 test('a standard mobile account can reach security and cannot see the privileged Admin item', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await mount(page)
     await page.getByRole('button', { name: 'Open account menu' }).click()
     const dialog = page.getByRole('dialog', { name: 'Menu', exact: true })
+    await expectReadableOverlay(dialog)
     await expect(dialog.getByRole('link', { name: 'Account security' })).toHaveAttribute('href', '/dashboard/security')
     await expect(dialog.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0)
     await expect(dialog.getByRole('button', { name: 'Sign Out' })).toBeVisible()
@@ -71,6 +84,7 @@ test('links and contacts require confirmation and cancelled deletion never write
     for (const [trigger, title] of [['Remove Portfolio', 'Delete Portfolio?'], ['Remove Email contact method', 'Delete Email contact method?']]) {
         await page.getByRole('button', { name: trigger, exact: true }).click()
         const dialog = page.getByRole('dialog', { name: title, exact: true })
+        await expectReadableOverlay(dialog)
         await expect(dialog.getByRole('button', { name: 'Keep item' })).toBeFocused()
         await dialog.getByRole('button', { name: 'Keep item' }).click()
     }
@@ -96,6 +110,7 @@ test('all advanced content deletion paths confirm above fixed navigation', async
     await page.screenshot({ path: testInfo.outputPath('product-editor.png'), fullPage: true })
     await page.getByRole('button', { name: 'Delete product', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Delete Fixture offer?', exact: true })
+    await expectReadableOverlay(dialog)
     expect(await dialog.evaluate(element => {
         const overlay = element.closest('[data-tahoe-glass-dialog-overlay]')
         return overlay.parentElement === document.body && Number(getComputedStyle(overlay).zIndex) > Number(getComputedStyle(document.getElementById('fixture-chrome')).zIndex)
@@ -123,6 +138,7 @@ test('notes dialog portals above navigation and keeps its mobile close target us
     await page.screenshot({ path: testInfo.outputPath('network-cards.png'), fullPage: true })
     await page.getByRole('list', { name: 'Your connections' }).getByRole('button', { name: 'Edit notes for Fixture Friend', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Notes for Fixture Friend' })
+    await expectReadableOverlay(dialog)
     expect(await dialog.evaluate(element => element.closest('[data-tahoe-glass-dialog-overlay]').parentElement === document.body)).toBe(true)
     const close = await dialog.getByRole('button', { name: 'Close notes dialog' }).boundingBox()
     expect(close.width).toBeGreaterThanOrEqual(44)
@@ -137,6 +153,7 @@ test('image cropping keeps zoom and Apply accessible on short landscape phones',
     await mount(page)
     await page.getByRole('button', { name: 'Edit photo fixture' }).click()
     const dialog = page.getByRole('dialog', { name: 'Crop Image' })
+    await expectReadableOverlay(dialog)
     await expect(dialog.getByRole('slider', { name: 'Zoom' })).toBeVisible()
     const apply = dialog.getByRole('button', { name: 'Apply Crop', exact: true })
     await expect(apply).toBeEnabled()

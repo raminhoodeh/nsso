@@ -127,8 +127,8 @@ function DashboardSidebarContent({
                     <Image
                         src="/assets/nsso-logo.png"
                         alt="nsso"
-                        width={80}
-                        height={32}
+                        width={458}
+                        height={224}
                         className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
                         priority
                     />

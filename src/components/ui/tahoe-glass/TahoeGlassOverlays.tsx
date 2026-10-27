@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { TahoeGlassDirectBackdropBoundaryContext } from "./TahoeGlassBoundaryContext";
 import {
   TahoeGlassSurface,
   type TahoeGlassSurfaceProps,
@@ -22,6 +23,12 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
   "video[controls]",
 ].join(",");
+
+// Task-oriented overlays are reading surfaces, not lenses over the page.
+// The shell renderer intentionally clears its own fill, so place the opaque
+// backing above its optical layers (z0–10), beneath its content (z20).
+const READABLE_OVERLAY_BACKING =
+  "before:pointer-events-none before:absolute before:inset-0 before:z-[19] before:rounded-[inherit] before:bg-[#202126] before:content-[''] forced-colors:before:bg-[Canvas]";
 
 interface ModalLayer {
   order: number;
@@ -514,11 +521,14 @@ export const TahoeGlassDialog = React.forwardRef<
           }
         }}
       />
+      <TahoeGlassDirectBackdropBoundaryContext.Provider value={true}>
       <TahoeGlassSurface
         {...surfaceProps}
         ref={setPanelRef}
         as="div"
         variant="dialog"
+        tone={surfaceProps.tone ?? "light"}
+        data-tahoe-readable-overlay="true"
         role="dialog"
         aria-modal={modal || undefined}
         aria-label={resolvedAriaLabel}
@@ -527,6 +537,7 @@ export const TahoeGlassDialog = React.forwardRef<
         tabIndex={surfaceProps.tabIndex ?? -1}
         className={cn(
           "pointer-events-auto relative z-[1] max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-auto p-6",
+          READABLE_OVERLAY_BACKING,
           className,
         )}
       >
@@ -545,6 +556,7 @@ export const TahoeGlassDialog = React.forwardRef<
         )}
         {children}
       </TahoeGlassSurface>
+      </TahoeGlassDirectBackdropBoundaryContext.Provider>
     </div>
   );
 
@@ -657,11 +669,14 @@ export const TahoeGlassPopover = React.forwardRef<
           }}
         />
       )}
+      <TahoeGlassDirectBackdropBoundaryContext.Provider value={true}>
       <TahoeGlassSurface
         {...surfaceProps}
         ref={setPanelRef}
         as="div"
         variant="popover"
+        tone={surfaceProps.tone ?? "light"}
+        data-tahoe-readable-overlay="true"
         role={role}
         aria-label={
           surfaceProps["aria-label"] ||
@@ -672,11 +687,13 @@ export const TahoeGlassPopover = React.forwardRef<
         tabIndex={surfaceProps.tabIndex ?? -1}
         className={cn(
           "pointer-events-auto absolute max-h-[calc(100dvh-1rem)] overflow-auto p-3",
+          READABLE_OVERLAY_BACKING,
           className,
         )}
       >
         {children}
       </TahoeGlassSurface>
+      </TahoeGlassDirectBackdropBoundaryContext.Provider>
     </div>
   );
 

@@ -15,6 +15,7 @@ import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
 import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassDirectBackdropBoundaryContext } from '@/components/ui/tahoe-glass/TahoeGlassBoundaryContext'
 
 interface AdvancedModeCardProps {
     userId: string
@@ -783,7 +784,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <div className="relative space-y-3">
                                 {/* Guide Image Accordion */}
                                 {showGuide && (
-                                    <TahoeGlassSurface id="paypal-guide" variant="popover" radius={12} tone="light" className="overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                                    <TahoeGlassDirectBackdropBoundaryContext.Provider value={true}>
+                                    <TahoeGlassSurface id="paypal-guide" variant="popover" radius={12} tone="light" data-tahoe-readable-overlay="true" className="overflow-hidden animate-in slide-in-from-top-2 duration-200" contentClassName="rounded-[inherit] bg-[#202126]">
                                         <div className="p-3 border-b border-white/10 flex justify-between items-center">
                                             <span className="text-xs font-medium text-white/80">PayPal Dashboard &gt; Copy Code</span>
                                             <TahoeGlassButton onClick={() => setShowGuide(false)} className="h-11 w-11 p-0" contentClassName="text-white/85" aria-label="Close PayPal guide">
@@ -810,6 +812,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             </a>
                                         </div>
                                     </TahoeGlassSurface>
+                                    </TahoeGlassDirectBackdropBoundaryContext.Provider>
                                 )}
 
                                 {selectedProduct.paypal_active && <PayPalCodeEditor

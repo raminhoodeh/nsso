@@ -46,8 +46,8 @@ export default function ResetPasswordPage() {
                             <Image
                                 src="/assets/nsso-logo.png"
                                 alt="nsso"
-                                width={100}
-                                height={40}
+                                width={458}
+                                height={224}
                                 className="h-10 w-auto mx-auto brightness-0 opacity-80"
                             />
                         </Link>
@@ -87,8 +87,8 @@ export default function ResetPasswordPage() {
                         <Image
                             src="/assets/nsso-logo.png"
                             alt="nsso"
-                            width={100}
-                            height={40}
+                            width={458}
+                            height={224}
                             className="h-10 w-auto mx-auto brightness-0 opacity-80"
                         />
                     </Link>

@@ -172,8 +172,8 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                             <Image
                                 src="/assets/nsso-logo.png"
                                 alt="nsso"
-                                width={80}
-                                height={32}
+                                width={458}
+                                height={224}
                                 className="h-8 w-auto"
                                 priority
                             />
