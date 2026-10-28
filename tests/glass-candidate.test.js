@@ -20,7 +20,7 @@ function loadCandidate() {
   const result = buildSync({
     absWorkingDir: root,
     stdin: {
-      contents: `${candidateSource}\nexport const __candidateTest = { mapSize, pixelScale, capsuleBake, detectMode, rimAtlasSampling, rimSourcePosition, rimRowBounds, outlineField, renderRimAtlas, fieldURL, overlayURL, overlayCache };`,
+      contents: `${candidateSource}\nexport const __candidateTest = { mapSize, pixelScale, capsuleBake, detectMode, rimAtlasSampling, rimSourcePosition, rimRowBounds, outlineField, renderField, renderRimAtlas, fieldURL, overlayURL, overlayCache };`,
       loader: "tsx",
       resolveDir: path.dirname(candidatePath),
       sourcefile: candidatePath,
@@ -227,6 +227,99 @@ test("rim row bounds never discard near-outline pixels and exclude the deep inte
   }
 });
 
+test("square-top outlines fill upper corners and retain the original lower geometry", () => {
+  const candidate = loadCandidate();
+  const { outlineField, rimRowBounds } = candidate.__candidateTest;
+  for (const [w, h, radius] of [[1470, 88, 24], [390, 76, 24], [160, 64, 32], [56, 40, 18], [2, 2, 1], [200, 50, 0]]) {
+    const rounded = candidate.squircleOutline(w, h, radius);
+    const squareTop = candidate.squircleOutline(w, h, radius, true);
+    assert.equal(candidate.squircleOutline(w, h, radius, false), rounded, 'Omitted and disabled options use the existing outline');
+    assert.notEqual(squareTop, rounded, 'The outline cache must distinguish edge-attached geometry');
+    assert.equal(squareTop.squareTop, true);
+    assert.equal(squareTop.corners[0].length, 0);
+    assert.equal(squareTop.corners[3].length, 0);
+    assert.deepEqual(squareTop.corners[1], rounded.corners[1]);
+    assert.deepEqual(squareTop.corners[2], rounded.corners[2]);
+    assert.ok(squareTop.polygon.startsWith(radius >= 0.5 ? `polygon(0.00px 0.00px, ${w.toFixed(2)}px 0.00px` : `polygon(0px 0px, ${w}px 0px`));
+    const hw = w / 2, hh = h / 2;
+    const inset = Math.min(1, w / 4, h / 4);
+    assert.equal(outlineField(-hw + inset, -hh + inset, squareTop).d, -inset, 'The upper corner transmits the underlying page');
+    assert.equal(outlineField(hw - inset, -hh + inset, squareTop).d, -inset);
+    // Distance, normal, and conservative rim support must keep both lower
+    // corners and their adjoining straight runs intact.
+    for (let py = 0; py <= hh + 3; py += 0.5) {
+      for (let px = hw - squareTop.extent - 7; px <= hw + 3; px += 0.5) {
+        for (const x of [px, -px]) {
+          assert.deepEqual(outlineField(x, py, squareTop), outlineField(x, py, rounded));
+        }
+      }
+    }
+    // Include both square upper corners and curved lower corners; no pixel
+    // in the lighting kernel may be dropped by the row optimization.
+    for (let py = -hh - 3; py <= hh + 3; py += 0.5) {
+      for (let px = hw - squareTop.extent - 7; px <= hw + 3; px += 0.5) {
+        for (const x of [px, -px]) {
+          if (Math.abs(outlineField(x, py, squareTop).d) > 6) continue;
+          const bounds = rimRowBounds(py, squareTop);
+          assert.ok(bounds && Math.abs(x) >= bounds[0] && Math.abs(x) <= bounds[1], `Excluded square-top rim at ${w}x${h}r${radius} ${x},${py}`);
+        }
+      }
+    }
+  }
+});
+
+test("square-top displacement and dense rims preserve lower pixels and cache separately", () => {
+  const canvases = [];
+  const document = {
+    createElement(tag) {
+      assert.equal(tag, 'canvas');
+      const canvas = {
+        width: 0, height: 0, pixels: null,
+        getContext() {
+          return {
+            createImageData(width, height) { return { data: new Uint8ClampedArray(width * height * 4) }; },
+            putImageData(image) { canvas.pixels = image.data; },
+            drawImage() {},
+          };
+        },
+        toDataURL() { return `data:image/png;base64,canvas-${canvases.indexOf(canvas)}`; },
+      };
+      canvases.push(canvas);
+      return canvas;
+    },
+  };
+  for (const dpr of [1, 2, 4]) withGlobals({ window: { devicePixelRatio: dpr }, document }, () => {
+    const { fieldURL, overlayURL, renderField, renderRimAtlas } = loadCandidate().__candidateTest;
+    for (const [w, h, radius] of [[1470, 88, 24], [300, 88, 44]]) {
+      const rounded = renderField(w, h, radius, 32);
+      const squareTop = renderField(w, h, radius, 32, true);
+      assert.equal(rounded.width, squareTop.width);
+      assert.equal(rounded.height, squareTop.height);
+      assert.ok(squareTop.width * squareTop.height <= 262_144);
+      const start = Math.ceil(squareTop.height / 2) * squareTop.width * 4;
+      assert.deepEqual(squareTop.pixels.subarray(start), rounded.pixels.subarray(start), 'All lower displacement pixels retain their original bytes');
+      assert.ok(squareTop.pixels[3] > rounded.pixels[3], 'The upper left pixel is no longer clipped to a rounded corner');
+      const roundedRim = renderRimAtlas(w, h, radius, false);
+      const roundedPixels = canvases.at(-1).pixels;
+      const squareRim = renderRimAtlas(w, h, radius, false, undefined, true);
+      const squarePixels = canvases.at(-1).pixels;
+      assert.deepEqual({ w: squareRim.pixelWidth, h: squareRim.pixelHeight, scale: squareRim.scale }, { w: roundedRim.pixelWidth, h: roundedRim.pixelHeight, scale: roundedRim.scale });
+      assert.ok(squareRim.pixelWidth * squareRim.pixelHeight <= 1_048_576);
+      const lowerRim = Math.ceil(squareRim.pixelHeight / 2) * squareRim.pixelWidth * 4;
+      assert.deepEqual(squarePixels.subarray(lowerRim), roundedPixels.subarray(lowerRim), 'Lower rim highlights retain their original dense pixels');
+      const options = { bezel: 32, dark: false };
+      const field = fieldURL(w, h, radius, options);
+      const squareField = fieldURL(w, h, radius, { ...options, squareTop: true });
+      assert.notEqual(field, squareField);
+      assert.equal(fieldURL(w, h, radius, { ...options, squareTop: true }), squareField);
+      const rim = overlayURL(w, h, radius, options);
+      const square = overlayURL(w, h, radius, { ...options, squareTop: true });
+      assert.notEqual(square, rim);
+      assert.equal(overlayURL(w, h, radius, { ...options, squareTop: true }), square);
+    }
+  });
+});
+
 test("capsule cache does not reuse a different bezel or pixel density", () => {
   const window = { devicePixelRatio: 1 };
   const document = {
@@ -319,7 +412,7 @@ test("repeated identical measurements acquire a filter only once", () => {
   let fieldAvailable = true;
   const dependencies = {
     window: { devicePixelRatio: 1 },
-    bezel: 28, dark: true, tintRGB: undefined, mode: "refract", appearance: "dark", material: "clear", tint: undefined, amount: 32, dispersion: 0, nested: false,
+    bezel: 28, dark: true, tintRGB: undefined, mode: "refract", appearance: "dark", material: "clear", tint: undefined, squareTop: false, amount: 32, dispersion: 0, nested: false,
     squircleOutline: () => ({ polygon: "polygon(0 0, 100% 0, 100% 100%)" }),
     overlayURL: () => "overlay",
     fieldURL: () => fieldAvailable ? "field" : "",
@@ -350,4 +443,19 @@ test("repeated identical measurements acquire a filter only once", () => {
   fixture.build(320, 88, 28);
   assert.deepEqual(released, acquired);
   assert.equal(fixture.held(), null);
+
+  fieldAvailable = true;
+  const squareDependencies = { ...dependencies, squareTop: true };
+  const squareFixture = compiledModule.exports(...Object.values(squareDependencies));
+  squareFixture.build(320, 88, 28);
+  assert.notEqual(acquired.at(-1), acquired[2], 'A square-top surface must not share the rounded surface filter');
+  squareFixture.build(320, 88, 28);
+  assert.equal(acquired.length, 4, 'An unchanged square-top surface acquires once too');
+
+  const roundedFrost = compiledModule.exports(...Object.values({ ...dependencies, mode: 'frost' }));
+  roundedFrost.build(320, 88, 28);
+  const roundedFrostId = currentMap.filterId;
+  const squareFrost = compiledModule.exports(...Object.values({ ...dependencies, mode: 'frost', squareTop: true }));
+  squareFrost.build(320, 88, 28);
+  assert.notEqual(currentMap.filterId, roundedFrostId, 'Frost map identity must refresh the clip when only shape changes');
 });

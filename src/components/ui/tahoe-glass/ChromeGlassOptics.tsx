@@ -13,13 +13,14 @@ export function useChromeGlassOptics(
   eligible: boolean,
   navigation = false,
   appearance: GlassAppearance = "dark",
+  squareTop = false,
 ) {
   const desktopChrome = useDesktopChromeGlassPolicy(resolveTahoeNavPlatformRoute, eligible);
   const enabled = eligible && desktopChrome;
   const glass = useLiquidGlass({
     material: "clear", appearance, refraction: 32,
     bezel: navigation ? 28 : 32, blur: 1, mode: "auto",
-    interactive: false, motion: "none", fluid: false,
+    interactive: false, motion: "none", fluid: false, squareTop,
   }, rootRef, enabled);
   return { enabled, ready: enabled && glass.mode === "refract", layers: enabled ? glass.layers : null };
 }
