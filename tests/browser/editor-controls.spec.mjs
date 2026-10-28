@@ -8,7 +8,7 @@ import sharp from 'sharp'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx']
+    const files = ['src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates)
@@ -66,19 +66,23 @@ async function dispose(page, errors) {
     expect(errors).toEqual([])
 }
 
-const paintedColour = locator => locator.evaluate(element => {
+const paintedColour = (locator, token) => locator.evaluate((element, variable) => {
     // Current Tailwind tokens are OKLCH; inspect their painted sRGB value
     // instead of depending on one browser's computed-colour serialization.
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1
     const context = canvas.getContext('2d')
-    context.fillStyle = getComputedStyle(element).color
+    const style = getComputedStyle(element)
+    const colour = variable ? style.getPropertyValue(variable) : style.color
+    if (!colour) throw new Error('Missing rendered theme token: ' + variable)
+    context.fillStyle = colour
     context.fillRect(0, 0, 1, 1)
     return Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3)
-})
+}, token)
 
-async function labelContrast(button, selector = '[data-tahoe-button-content]') {
-    const luminance = rgb => rgb.map(value => value / 255).map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+const luminance = rgb => rgb.map(value => value / 255).map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+
+async function labelContrast(button, selector = '[data-light-button-content]') {
     const target = await button.elementHandle()
     const label = await button.locator(selector).elementHandle()
     const paint = await label.evaluate(element => {
@@ -88,7 +92,7 @@ async function labelContrast(button, selector = '[data-tahoe-button-content]') {
         return { text: [...context.getImageData(0, 0, 1, 1).data], x: bounds.left - parent.left, y: bounds.top - parent.top, width: bounds.width, height: bounds.height }
     })
     // Synthetic fixture only: hide glyphs without moving their box to sample
-    // the real satin and brightest reflection underneath the entire label.
+    // the actual painted material underneath the entire label.
     await label.evaluate(element => { element.style.visibility = 'hidden' })
     const { data, info } = await sharp(await target.screenshot({ scale: 'css' })).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
     await label.evaluate(element => { element.style.visibility = '' })
@@ -169,22 +173,33 @@ test('Ask Deity normal and hover labels retain small-text contrast on real share
 
 test.describe('desktop sidebar affordances', () => {
     test.use({ viewport: { width: 1280, height: 900 }, isMobile: false, hasTouch: false })
-    test('Sign Out retains readable contrast on the actual satin material including the reflection peak', async ({ page }, testInfo) => {
+    test('Sign Out retains readable dark-red contrast on opaque white material and a darker hover', async ({ page }, testInfo) => {
         const errors = await mount(page)
         const signout = page.getByRole('complementary').getByRole('button', { name: 'Sign Out', exact: true })
         const samples = []
-        await page.addStyleTag({ content: '[data-tahoe-glass-tone="light"] > [data-tahoe-button-reflection]::before{opacity:1!important;transition:none!important;transform:translateX(183.33333%) skewX(-18deg)!important}' })
+        await expect(signout).toHaveAttribute('data-nsso-control', 'white')
+        await expect(signout.locator('[data-tahoe-button-coat], [data-tahoe-button-reflection]')).toHaveCount(0)
+        const idleExpected = await paintedColour(signout, '--color-rose-800')
+        const hoverExpected = await paintedColour(signout, '--color-rose-950')
+        const box = await signout.boundingBox()
+        expect(box.width).toBeGreaterThanOrEqual(44)
+        expect(box.height).toBeGreaterThanOrEqual(44)
         for (const backing of ['#fff', '#000']) {
             await page.evaluate(colour => { document.body.style.background = colour }, backing)
-            await signout.hover()
-            await expect.poll(async () => (await paintedColour(signout))[1]).toBeLessThan(120)
-            const hover = await labelContrast(signout)
-            expect(hover, `Sign Out hover contrast at peak on ${backing}`).toBeGreaterThanOrEqual(4.5)
             await page.mouse.move(800, 400)
-            await expect.poll(async () => (await paintedColour(signout))[1]).toBeGreaterThan(210)
+            await expect(signout).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+            await expect.poll(() => paintedColour(signout)).toEqual(idleExpected)
+            const idleColour = await paintedColour(signout)
             const idle = await labelContrast(signout)
-            expect(idle, `Sign Out idle contrast at peak on ${backing}`).toBeGreaterThanOrEqual(4.5)
-            samples.push({ backing, hover, idle })
+            expect(idle, `Sign Out idle contrast on ${backing}`).toBeGreaterThanOrEqual(4.5)
+            await signout.hover()
+            await expect(signout).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+            await expect.poll(() => paintedColour(signout)).toEqual(hoverExpected)
+            const hoverColour = await paintedColour(signout)
+            expect(luminance(hoverColour)).toBeLessThan(luminance(idleColour))
+            const hover = await labelContrast(signout)
+            expect(hover, `Sign Out hover contrast on ${backing}`).toBeGreaterThanOrEqual(4.5)
+            samples.push({ backing, hover, idle, idleColour, hoverColour })
         }
         await testInfo.attach('sign-out-rendered-contrast', { body: JSON.stringify(samples, null, 2), contentType: 'application/json' })
         await dispose(page, errors)
@@ -195,29 +210,50 @@ test.describe('desktop sidebar affordances', () => {
         const sidebar = page.getByRole('complementary')
         const active = sidebar.getByRole('button', { name: 'Edit Profile', exact: true })
         await expect(active).toHaveAttribute('aria-current', 'page')
-        expect(await active.evaluate(element => getComputedStyle(element).boxShadow)).toContain('1px')
+        await expect(active).toHaveAttribute('data-nsso-control', 'white')
+        await expect(active).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+        const activeMaterial = await active.evaluate(element => {
+            const style = getComputedStyle(element)
+            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
+            const context = canvas.getContext('2d'); context.fillStyle = style.borderTopColor; context.fillRect(0, 0, 1, 1)
+            return { sides: ['Top', 'Right', 'Bottom', 'Left'].map(side => ({ width: style[`border${side}Width`], style: style[`border${side}Style`], colour: style[`border${side}Color`] })), borderPaint: [...context.getImageData(0, 0, 1, 1).data], radius: style.borderRadius, shadow: style.boxShadow }
+        })
+        expect(activeMaterial.sides.every(side => side.width === '1px' && side.style === 'solid')).toBe(true)
+        expect(new Set(activeMaterial.sides.map(side => side.colour)).size).toBe(1)
+        expect(activeMaterial.borderPaint).toEqual([...(await paintedColour(active, '--color-slate-500')), 255])
+        expect(activeMaterial.radius).toBe('12px')
+        expect(activeMaterial.shadow).toMatch(/0px 0px 0px 2px/)
+        const activeBox = await active.boundingBox()
+        expect(activeBox.width).toBeGreaterThanOrEqual(44)
+        expect(activeBox.height).toBeGreaterThanOrEqual(44)
         await expect(active.locator('.blur-\\[2px\\]')).toHaveCount(0)
+        await page.keyboard.press('Tab')
+        await active.focus()
+        await expect(active).toHaveCSS('outline-style', 'solid')
+        await expect(active).toHaveCSS('outline-width', '2px')
+        await expect.poll(() => active.evaluate(element => getComputedStyle(element).boxShadow)).toContain('6px')
+        await active.evaluate(element => element.blur())
+        const order = (await sidebar.locator('button').allTextContents()).map(text => text.trim())
+        expect(order.slice(0, 2)).toEqual(['Edit Profile', 'My nsso'])
+        expect(order.slice(-4)).toEqual(['Preview Profile', 'Copy profile link', 'Delete my profile', 'Sign Out'])
         await sidebar.getByRole('button', { name: 'My nsso', exact: true }).click()
         expect(await page.evaluate(() => window.fixtureNavigation)).toEqual(['/dashboard?view=my-nsso'])
         const remove = sidebar.getByRole('button', { name: 'Delete my profile', exact: true })
-        const removeColour = await paintedColour(remove)
-        expect(Math.max(...removeColour) - Math.min(...removeColour)).toBeLessThan(30)
-        expect(removeColour[0]).toBeLessThan(230)
+        await page.mouse.move(800, 400)
+        await expect.poll(() => paintedColour(remove)).toEqual(await paintedColour(remove, '--color-slate-600'))
+        expect(await labelContrast(remove)).toBeGreaterThanOrEqual(4.5)
         await remove.click()
         const dialog = page.getByRole('dialog', { name: 'Delete my profile?', exact: true })
         await expect(dialog).toBeVisible()
         await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
         await expect(dialog).toHaveCount(0)
         const signout = sidebar.getByRole('button', { name: 'Sign Out', exact: true })
+        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-rose-800'))
         const idleColour = await paintedColour(signout)
-        expect(idleColour[0]).toBeGreaterThan(245)
-        expect(idleColour[1]).toBeGreaterThan(210)
-        expect(idleColour[2]).toBeGreaterThan(210)
         await signout.hover()
-        await expect.poll(async () => (await paintedColour(signout))[1]).toBeLessThan(120)
+        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-rose-950'))
         const hoverColour = await paintedColour(signout)
-        expect(hoverColour[0]).toBeGreaterThan(200)
-        expect(hoverColour[2]).toBeLessThan(130)
+        expect(luminance(hoverColour)).toBeLessThan(luminance(idleColour))
         await signout.click()
         expect(await page.evaluate(() => window.fixtureSignouts)).toBe(1)
         await expect(signout).toBeEnabled()
