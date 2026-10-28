@@ -293,14 +293,15 @@ test('mobile notifications respect the safe area and use an opaque readable toke
     )
     assert.match(toastSource, /w-\[calc\(100%_-_2rem\)\]/)
     assert.match(toastSource, /z-\[9999\]/)
-    assert.match(toastSource, /bg-\[#11161d\]/)
+    assert.match(toastSource, /LIGHT_PANEL\.surface/)
+    assert.match(fs.readFileSync(path.join(process.cwd(), "src/components/ui/light-panel.ts"), "utf8"), /bg-\[#e3e7ed\]/)
     assert.doesNotMatch(toastSource, /TahoeGlassSurface/)
 })
 
 test('the mobile account drawer is a readable light safe-area sheet with robust scroll locking', () => {
     assert.match(headerSource, /bg-black\/70/)
-    assert.match(headerSource, /data-mobile-account-menu="true"[^\n]*bg-\[#e3e7ed\]/)
-    assert.match(headerSource, /data-mobile-account-menu="true"[^\n]*text-slate-950/)
+    assert.match(headerSource, /data-mobile-account-menu="true"[^\n]*LIGHT_PANEL\.surface/)
+    assert.match(fs.readFileSync(path.join(process.cwd(), "src/components/ui/light-panel.ts"), "utf8"), /text-slate-950/)
     assert.match(headerSource, /env\(safe-area-inset-top\)/)
     assert.match(headerSource, /env\(safe-area-inset-bottom\)/)
     assert.match(headerSource, /body\.style\.position = 'fixed'/)

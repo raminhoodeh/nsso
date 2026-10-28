@@ -1,5 +1,6 @@
-
 "use client";
+
+import { LIGHT_PANEL } from '@/components/ui/light-panel';
 
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
@@ -26,7 +27,7 @@ export default function AgentPage() {
             <div className="relative z-10 h-full w-full px-3 pb-3 pt-[calc(100px+env(safe-area-inset-top))]">
                 <section
                     aria-label="Deity chat"
-                    className="h-full w-full overflow-hidden rounded-[28px] border border-white/10 bg-[#11161d]"
+                    className={`${LIGHT_PANEL.surface} h-full w-full overflow-hidden rounded-[28px] border border-white/80`}
                 >
                     <AgentChatInterface isFullScreen={true} onClose={handleClose} />
                 </section>

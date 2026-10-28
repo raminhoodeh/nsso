@@ -60,7 +60,9 @@ test('Links help is a native, named, keyboard-and-touch disclosure over an opaqu
     assert.match(attribute(tooltips[0].parent, 'className'), /pt-2/)
     assert.match(help.text, /addEventListener\('keydown', dismissWithEscape\)/)
     assert.match(help.text, /removeEventListener\('keydown', dismissWithEscape\)/)
-    assert.match(attribute(tooltips[0], 'className'), /bg-\[#202126\]/)
+    assert.match(attribute(tooltips[0], 'className'), /LIGHT_PANEL\.surface/)
+    assert.match(read('src/components/ui/light-panel.ts'), /surface:\s*'[^']*\bbg-\[#[a-f\d]{6}\]/i, 'The shared reading material must retain an opaque RGB base under its gradient.')
+    assert.doesNotMatch(attribute(tooltips[0], 'className'), /\bopacity-/)
 })
 
 for (const [kind, filename] of [['link', 'SortableLinkItem.tsx'], ['contact', 'SortableContactItem.tsx']]) {

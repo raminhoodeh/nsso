@@ -8,6 +8,7 @@ import { mutationMessage, type MutationResult } from '@/lib/profile-mutations';
 import { safeWebUrl } from '@/lib/urls';
 import { ALLOWANCE_CTA_URL, ALLOWANCE_CTA_LABEL, isDailyAllowanceCode, boundedChatHistory } from '@/lib/deity/chat-allowance';
 import { normalizeNssoBrand } from '@/lib/deity/brand';
+import { LIGHT_PANEL } from '@/components/ui/light-panel';
 
 interface Message {
     id: string;
@@ -126,13 +127,9 @@ export default function AgentChatInterface(props: AgentChatInterfaceProps) {
         return null;
     }
     if (identity === null) return (
-        <section aria-label="Deity assistant" aria-busy="true" data-deity-surface="opaque" className="flex h-full min-h-0 flex-col items-center justify-center gap-4 bg-[#11161d] p-6 text-white">
+        <section aria-label="Deity assistant" aria-busy="true" data-deity-surface="opaque" className={`${LIGHT_PANEL.surface} flex h-full min-h-0 flex-col items-center justify-center gap-4 p-6`}>
             <p role="status" aria-live="polite">Loading Deity account…</p>
-            {props.onClose && <button type="button" onClick={props.onClose} aria-label="Close Deity chat" data-tahoe-glass-button="satin" data-tahoe-glass-tone="light" className="relative isolate inline-flex min-h-11 items-center overflow-hidden rounded-full bg-[#232b36] px-4 py-2">
-                <span aria-hidden="true" data-tahoe-button-coat="true" className="pointer-events-none absolute inset-0 z-[2] rounded-[inherit]" />
-                <span aria-hidden="true" data-tahoe-button-reflection="true" />
-                <span data-tahoe-button-content="true" className="relative z-20 text-sm text-white">Close</span>
-            </button>}
+            {props.onClose && <button type="button" onClick={props.onClose} aria-label="Close Deity chat" className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm`}>Close</button>}
         </section>
     );
     // A conversation, draft and pending response belong to one identity. Never
@@ -364,6 +361,14 @@ Check out some of the areas I can help you with below.`;
         return () => { if (dialog?.open) dialog.close(); };
     }, [showVennDiagram]);
 
+    const closeDatabase = () => {
+        // Close the native modal before its portal unmounts, so returning
+        // keyboard focus does not wait for a detached dialog's close event.
+        databaseDialogRef.current?.close();
+        setShowVennDiagram(false);
+        databaseTriggerRef.current?.focus({ preventScroll: true });
+    };
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest' });
     };
@@ -389,7 +394,7 @@ Check out some of the areas I can help you with below.`;
                         href={safeWebUrl(mdMatch[2]) || undefined}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200 transition-colors"
+                        className="text-blue-800 underline underline-offset-2 hover:text-blue-950 transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950/70"
                     >
                         {displayText(mdMatch[1])}
                     </a>
@@ -405,7 +410,7 @@ Check out some of the areas I can help you with below.`;
                                 href={safeWebUrl(subPart) || undefined}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-cyan-300 underline underline-offset-2 hover:text-cyan-200 transition-colors break-all"
+                                className="text-blue-800 underline underline-offset-2 hover:text-blue-950 transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950/70 break-all"
                             >
                                 {subPart}
                             </a>
@@ -417,7 +422,7 @@ Check out some of the areas I can help you with below.`;
                             const boldMatch = boldPart.match(/^\*\*([^*]+)\*\*$/);
                             if (boldMatch) {
                                 elements.push(
-                                    <strong key={`bold-${i}-${j}-${k}`} className="font-bold text-white">
+                                    <strong key={`bold-${i}-${j}-${k}`} className="font-bold text-slate-950">
                                         {displayText(boldMatch[1])}
                                     </strong>
                                 );
@@ -617,7 +622,7 @@ Check out some of the areas I can help you with below.`;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shortcutRequests, hasInitialized, isLoading, isTyping]);
 
-    const iconButtonClass = 'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#232b36] text-white/65 transition-colors hover:bg-[#2b3542] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none';
+    const iconButtonClass = `${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full`;
 
     return (
         <section
@@ -625,14 +630,14 @@ Check out some of the areas I can help you with below.`;
             aria-label="Deity assistant"
             data-deity-surface="opaque"
             style={{ borderRadius: isFullScreen ? 0 : '32px 0 0 32px' }}
-            className={`group/deity relative isolate flex min-h-0 flex-col overflow-hidden bg-[#11161d] text-white max-md:!rounded-none ${isFullScreen
+            className={`${LIGHT_PANEL.surface} group/deity relative isolate flex min-h-0 flex-col overflow-hidden max-md:!rounded-none ${isFullScreen
                 ? 'h-full w-full border-none'
-                : 'h-dvh w-full border border-white/10'
+                : 'h-dvh w-full border border-white/80'
                 }`}
         >
-            <header ref={headerRef} className={`flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#171d26] px-3 pb-2 ${isFullScreen ? 'pt-2' : 'pt-[max(0.5rem,env(safe-area-inset-top))]'}`}>
+            <header ref={headerRef} className={`flex shrink-0 items-center justify-between gap-2 border-b border-slate-500/15 bg-[#eef0f4] px-3 pb-2 ${isFullScreen ? 'pt-2' : 'pt-[max(0.5rem,env(safe-area-inset-top))]'}`}>
                 <div className="flex items-center gap-2">
-                    <span className="block h-9 w-9 overflow-hidden rounded-full bg-[#232b36] md:h-10 md:w-10">
+                    <span className="block h-9 w-9 overflow-hidden rounded-full bg-[#e0e5ed] md:h-10 md:w-10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/nsso-agent-avatar.png"
@@ -644,13 +649,13 @@ Check out some of the areas I can help you with below.`;
                         href="https://drive.google.com/file/d/1fRA7_xIrCw0XtOORljA3crcdSOCdFx3M/view?usp=sharing"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-sm transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+                        className={`${LIGHT_PANEL.focus} rounded-sm transition-opacity hover:opacity-80`}
                     >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/deity logo white.png"
                             alt="Deity"
-                            className="h-7 w-auto translate-y-1 object-contain md:h-8"
+                            className="h-7 w-auto translate-y-1 object-contain brightness-0 md:h-8"
                         />
                     </a>
                 </div>
@@ -708,7 +713,7 @@ Check out some of the areas I can help you with below.`;
                 role="log"
                 aria-live="polite"
                 aria-relevant="additions text"
-                className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 group-data-[compact=true]/deity:p-2 group-data-[minimal=true]/deity:py-0"
+                className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-400/50 group-data-[compact=true]/deity:p-2 group-data-[minimal=true]/deity:py-0"
             >
                 {messages.map((msg) => (
                     <div key={msg.id} className="flex flex-col gap-2">
@@ -718,29 +723,29 @@ Check out some of the areas I can help you with below.`;
                                     aria-label={`${msg.role === 'user' ? 'Your' : 'Deity'} message`}
                                     style={{ borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px' }}
                                     className={`max-w-[95%] px-3 py-2 text-[15px] leading-6 whitespace-pre-wrap md:max-w-[90%] ${msg.role === 'user'
-                                        ? 'bg-[#15313a] text-white'
-                                        : 'bg-[#222a35] text-white/90'
+                                        ? 'border border-white/80 bg-[#dfe8f2] text-slate-950'
+                                        : 'border border-white/80 bg-[#f8f9fb] text-slate-800'
                                         }`}
                                 >
                                     {renderMessage(msg.content, msg.role === 'model')}
                                     {msg.allowanceCta && <a href={ALLOWANCE_CTA_URL} target="_blank" rel="noopener noreferrer"
-                                        className="mt-3 block font-semibold text-cyan-300 underline underline-offset-4">{ALLOWANCE_CTA_LABEL}</a>}
+                                        className={`${LIGHT_PANEL.focus} mt-3 block rounded-sm font-semibold text-blue-800 underline underline-offset-4 hover:text-blue-950`}>{ALLOWANCE_CTA_LABEL}</a>}
                                 </article>
                             )}
                         </div>
 
                         {msg.role === 'model' && msg.actions && msg.actions.length > 0 && (
                             <div className="flex justify-start"><div className="flex max-w-[95%] flex-wrap gap-2 md:max-w-[90%]">
-                                {msg.actions.map((action,idx) => <div key={`${action.operationId}-${idx}`} className="space-y-2 rounded-xl border border-white/10 bg-[#1b222c] px-3 py-2 text-sm">
-                                    <p className="text-xs text-white/70">{action.label}</p>
-                                    <details className="text-xs text-white/60"><summary>Review proposed values</summary><dl className="max-h-48 max-w-full overflow-auto whitespace-pre-wrap">{'patch' in action.change || 'values' in action.change ? Object.entries('patch' in action.change ? action.change.patch : action.change.values).map(([field,value])=><div key={field} className="mt-2"><dt className="capitalize text-white/80">{field.replaceAll('_',' ')}</dt><dd>{value===null || value==='' ? '(clear this value)' : String(value)}</dd></div>) : action.change.kind==='collection.reorder' ? <div><dt>New order</dt><dd>{action.change.order.map(id=>links?.find(link=>link.id===id)?.link_name || 'Saved link').join(' → ')}</dd></div> : action.change.kind==='link.remove' ? <div><dt>Remove link</dt><dd>{links?.find(link=>'id' in action.change && link.id===action.change.id)?.link_name || 'Selected link'}</dd></div> : null}</dl></details>
-                                    {actionPreview?.operationId === action.operationId && <p className="max-h-36 overflow-auto whitespace-pre-wrap text-xs text-white/75">{actionPreview.text}</p>}
-                                    {action.status === 'applied' ? <div role="status" className="flex items-center gap-1 text-xs text-green-300"><Check size={14}/>Done, profile updated!</div>
-                                    : action.status === 'undone' ? <p role="status" className="text-xs text-white/60">Undone and saved.</p>
-                                    : action.status === 'rejected' ? <p role="status" className="text-xs text-white/60">Rejected</p>
-                                    : action.status === 'applying' ? <p role="status" className="text-xs text-cyan-200">Saving change...</p>
-                                    : <><button type="button" disabled={isTyping} aria-label="Apply suggested profile change" onClick={() => {void handleApplyAction(msg.id,action)}} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-[#12313a] px-3 text-xs font-medium text-cyan-300 disabled:opacity-40"><Check size={14}/>{action.status === 'conflict' ? 'Refresh for review' : action.status === 'outcomeUnknown' ? 'Check save status' : action.status === 'failed' ? 'Retry' : 'Apply'}</button>{action.status!=='outcomeUnknown' && <button type="button" aria-label="Reject suggested profile change" onClick={() => handleRejectAction(msg.id,action.operationId)} className="ml-2 inline-flex min-h-11 items-center gap-1 rounded-full bg-[#321d25] px-3 text-xs text-red-300"><XCircle size={14}/>Reject</button>}</>}
-                                    {action.error && <p role="status" className="max-w-md text-xs text-amber-200">{action.error}</p>}
+                                {msg.actions.map((action,idx) => <div key={`${action.operationId}-${idx}`} className={`${LIGHT_PANEL.group} space-y-2 rounded-xl px-3 py-2 text-sm`}>
+                                    <p className="text-xs text-slate-700">{action.label}</p>
+                                    <details className="text-xs text-slate-600"><summary>Review proposed values</summary><dl className="max-h-48 max-w-full overflow-auto whitespace-pre-wrap">{'patch' in action.change || 'values' in action.change ? Object.entries('patch' in action.change ? action.change.patch : action.change.values).map(([field,value])=><div key={field} className="mt-2"><dt className="capitalize text-slate-800">{field.replaceAll('_',' ')}</dt><dd>{value===null || value==='' ? '(clear this value)' : String(value)}</dd></div>) : action.change.kind==='collection.reorder' ? <div><dt>New order</dt><dd>{action.change.order.map(id=>links?.find(link=>link.id===id)?.link_name || 'Saved link').join(' → ')}</dd></div> : action.change.kind==='link.remove' ? <div><dt>Remove link</dt><dd>{links?.find(link=>'id' in action.change && link.id===action.change.id)?.link_name || 'Selected link'}</dd></div> : null}</dl></details>
+                                    {actionPreview?.operationId === action.operationId && <p className="max-h-36 overflow-auto whitespace-pre-wrap text-xs text-slate-700">{actionPreview.text}</p>}
+                                    {action.status === 'applied' ? <div role="status" className="flex items-center gap-1 text-xs text-emerald-800"><Check size={14}/>Done, profile updated!</div>
+                                    : action.status === 'undone' ? <p role="status" className="text-xs text-slate-600">Undone and saved.</p>
+                                    : action.status === 'rejected' ? <p role="status" className="text-xs text-slate-600">Rejected</p>
+                                    : action.status === 'applying' ? <p role="status" className="text-xs text-sky-900">Saving change...</p>
+                                    : <><button type="button" disabled={isTyping} aria-label="Apply suggested profile change" onClick={() => {void handleApplyAction(msg.id,action)}} className={`${LIGHT_PANEL.focus} inline-flex min-h-11 items-center gap-1 rounded-full border border-sky-200 bg-[#dceaf5] px-3 text-xs font-medium text-sky-950 transition-colors hover:bg-[#c9e0f2] disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none`}><Check size={14}/>{action.status === 'conflict' ? 'Refresh for review' : action.status === 'outcomeUnknown' ? 'Check save status' : action.status === 'failed' ? 'Retry' : 'Apply'}</button>{action.status!=='outcomeUnknown' && <button type="button" aria-label="Reject suggested profile change" onClick={() => handleRejectAction(msg.id,action.operationId)} className={`${LIGHT_PANEL.focus} ml-2 inline-flex min-h-11 items-center gap-1 rounded-full border border-rose-200 bg-[#f9e5e9] px-3 text-xs text-rose-900 transition-colors hover:bg-[#f5d6df] motion-reduce:transition-none`}><XCircle size={14}/>Reject</button>}</>}
+                                    {action.error && <p role="status" className="max-w-md text-xs text-amber-900">{action.error}</p>}
                                 </div>)}
                             </div></div>
                         )}
@@ -751,18 +756,18 @@ Check out some of the areas I can help you with below.`;
                         <div
                             role="status"
                             aria-label="Deity is responding"
-                            className="flex gap-1.5 rounded-[16px_16px_16px_4px] bg-[#222a35] px-3 py-2"
+                            className="flex gap-1.5 rounded-[16px_16px_16px_4px] border border-white/80 bg-[#f8f9fb] px-3 py-2"
                         >
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 motion-reduce:animate-none" style={{ animationDelay: '0ms' }} />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 motion-reduce:animate-none" style={{ animationDelay: '150ms' }} />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 motion-reduce:animate-none" style={{ animationDelay: '300ms' }} />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-600 motion-reduce:animate-none" style={{ animationDelay: '0ms' }} />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-600 motion-reduce:animate-none" style={{ animationDelay: '150ms' }} />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-600 motion-reduce:animate-none" style={{ animationDelay: '300ms' }} />
                         </div>
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
-            <footer className="w-full shrink-0 border-t border-white/10 bg-[#171d26]">
+            <footer className="w-full shrink-0 border-t border-slate-500/15 bg-[#eef0f4]">
                 <div ref={categoryToggleRef} className="px-3 pt-1 group-data-[minimal=true]/deity:hidden">
                     <div className="flex flex-col items-center">
                         <button
@@ -770,7 +775,7 @@ Check out some of the areas I can help you with below.`;
                             onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
                             aria-expanded={isCategoriesExpanded}
                             aria-controls="deity-category-options"
-                            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#222a35] px-4 py-2 text-xs font-medium uppercase tracking-wider text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 motion-reduce:transition-none"
+                            className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-wider`}
                         >
                             What you can ask me about
                             {isCategoriesExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -792,9 +797,9 @@ Check out some of the areas I can help you with below.`;
                                 key={cat}
                                 onClick={() => handleCategoryClick(cat)}
                                 aria-pressed={activeCategory === cat}
-                                className={`mb-1 min-h-11 rounded-full px-3 py-2 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 ${activeCategory === cat
-                                    ? 'bg-[#15313a] text-cyan-300'
-                                    : 'bg-[#222a35] text-white/70 hover:bg-[#2b3542] hover:text-cyan-300'
+                                className={`${LIGHT_PANEL.focus} mb-1 min-h-11 rounded-full border px-3 py-2 text-xs font-medium transition-colors motion-reduce:transition-none ${activeCategory === cat
+                                    ? 'border-slate-400 bg-[#dce4ef] text-slate-950'
+                                    : 'border-white/80 bg-[#f4f5f8] text-slate-700 hover:bg-white hover:text-slate-950'
                                     }`}
                             >
                                 {cat}
@@ -803,7 +808,7 @@ Check out some of the areas I can help you with below.`;
                         <button
                             type="button"
                             ref={databaseTriggerRef}
-                            className="mb-1 min-h-11 rounded-full bg-[#15313a] px-3 py-2 text-xs font-bold tracking-wide text-cyan-300 transition-colors hover:bg-[#1b3d47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"
+                            className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} mb-1 min-h-11 rounded-full px-3 py-2 text-xs font-bold tracking-wide`}
                             onClick={() => setShowVennDiagram(true)}
                             aria-expanded={showVennDiagram}
                             aria-controls="deity-database-tooltip"
@@ -836,13 +841,13 @@ Check out some of the areas I can help you with below.`;
                             }}
                             placeholder="Message Deity…"
                             autoComplete="off"
-                            className="block max-h-40 min-h-14 w-full resize-none overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118] px-3 py-3 pr-14 text-base leading-6 text-white outline-none placeholder:text-white/60 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/20"
+                            className="block max-h-40 min-h-14 w-full resize-none overflow-y-auto rounded-2xl border border-slate-400/70 bg-[#fbfcfe] px-3 py-3 pr-14 text-base leading-6 text-slate-950 outline-none placeholder:text-slate-600 focus:border-slate-700 focus:ring-2 focus:ring-slate-700/25"
                         />
                         <button
                             type="submit"
                             disabled={!inputValue.trim() || isLoading}
                             aria-label="Send message"
-                            className="absolute bottom-1.5 right-1.5 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#15313a] text-cyan-100 transition-colors hover:bg-[#1b3d47] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 disabled:pointer-events-none disabled:opacity-30 motion-reduce:transition-none"
+                            className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} absolute bottom-1.5 right-1.5 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full`}
                         >
                             <Send size={18} />
                         </button>
@@ -855,11 +860,11 @@ Check out some of the areas I can help you with below.`;
                     ref={databaseDialogRef}
                     id="deity-database-tooltip"
                     aria-label="About the nsso database"
-                    onCancel={(event) => { event.preventDefault(); setShowVennDiagram(false); }}
-                    onClose={() => { setShowVennDiagram(false); databaseTriggerRef.current?.focus(); }}
-                    className="fixed inset-0 z-[9999] m-auto max-h-[90dvh] w-[min(900px,94vw)] max-w-[94vw] overflow-auto rounded-2xl border border-cyan-500/50 bg-[#11161d] p-3 text-white backdrop:bg-[#080c14]/90"
+                    onCancel={(event) => { event.preventDefault(); closeDatabase(); }}
+                    onClose={closeDatabase}
+                    className={`${LIGHT_PANEL.surface} fixed inset-0 z-[9999] m-auto max-h-[90dvh] w-[min(900px,94vw)] max-w-[94vw] overflow-auto rounded-2xl border border-white/80 p-3 shadow-2xl backdrop:bg-slate-950/60`}
                 >
-                    <div className="mb-3 flex items-center justify-between gap-4"><h2 className="font-semibold">The nsso database</h2><button type="button" aria-label="Close database information" onClick={() => setShowVennDiagram(false)} className={iconButtonClass}><X size={20}/></button></div>
+                    <div className="mb-3 flex items-center justify-between gap-4"><h2 className="font-semibold">The nsso database</h2><button type="button" aria-label="Close database information" onClick={closeDatabase} className={iconButtonClass}><X size={20}/></button></div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/nsso-venn-diagram.jpg"

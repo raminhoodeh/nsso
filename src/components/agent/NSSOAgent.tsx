@@ -1,5 +1,6 @@
-
 "use client";
+
+import { LIGHT_PANEL } from '@/components/ui/light-panel';
 
 import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -12,7 +13,7 @@ const AgentChatInterface = dynamic(
     {
         loading: () => (
             <div className="h-full w-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-white/40 animate-spin" />
+                <Loader2 className="w-8 h-8 text-slate-600 animate-spin motion-reduce:animate-none" />
             </div>
         ),
         ssr: false
@@ -158,9 +159,9 @@ export default function NSSOAgent() {
                     onClick={handleOpen}
                     aria-label="Open Deity assistant"
                     aria-haspopup="dialog"
-                    className="group fixed bottom-6 right-6 z-[6000] hidden h-[56px] items-center rounded-full border border-white/10 bg-[#171d26] pl-2 pr-6 shadow-xl shadow-black/30 transition-transform duration-300 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 motion-reduce:transform-none motion-reduce:transition-none md:inline-flex"
+                    className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} group fixed bottom-6 right-6 z-[6000] hidden h-[56px] items-center rounded-full pl-2 pr-6 shadow-xl shadow-slate-950/15 transition-transform duration-300 hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none md:inline-flex`}
                 >
-                    <span className="mr-3 flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full bg-[#232b36]">
+                    <span className="mr-3 flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full bg-[#e0e5ed]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src="/nsso-agent-avatar.png"
@@ -172,7 +173,7 @@ export default function NSSOAgent() {
                     <img
                         src="/deity logo white.png"
                         alt="Deity"
-                        className="h-7 w-auto translate-y-[2px] object-contain"
+                        className="h-7 w-auto translate-y-[2px] object-contain brightness-0"
                     />
                 </button>
             )}
@@ -196,7 +197,7 @@ export default function NSSOAgent() {
                     aria-hidden={!isOpen}
                     inert={!isOpen}
                     tabIndex={-1}
-                    className={`fixed z-[6000] w-full h-full bg-[#11161d] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transform-none motion-reduce:transition-none
+                    className={`${LIGHT_PANEL.surface} fixed z-[6000] w-full h-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transform-none motion-reduce:transition-none
                         /* Mobile Styles (Default) */
                         inset-0 
                         ${isOpen

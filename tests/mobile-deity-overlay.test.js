@@ -22,7 +22,7 @@ test("the open Deity dialog always isolates itself from dashboard dimming state"
   assert.doesNotMatch(agentSource, /isBackgroundDimmed/);
   assert.match(agentSource, /z-\[5990\] bg-black\/60/);
   assert.doesNotMatch(agentSource, /bg-black\/0/);
-  assert.match(agentSource, /z-\[6000\][^\n]*bg-\[#11161d\]/);
+  assert.match(agentSource, /LIGHT_PANEL\.surface[^\n]*z-\[6000\]/);
   assert.match(
     agentSource,
     /opacity-100 translate-y-0 scale-100 pointer-events-auto/,
@@ -38,11 +38,12 @@ test("the Deity interface is a calm opaque surface rather than nested glass", ()
   assert.doesNotMatch(interfaceSource, /bg-transparent|bg-(?:black|white)\/\d+/);
   assert.doesNotMatch(interfaceSource, /semanticTint/);
   assert.match(interfaceSource, /data-deity-surface="opaque"/);
-  assert.match(interfaceSource, /bg-\[#11161d\]/);
-  assert.match(interfaceSource, /bg-\[#171d26\]/);
-  assert.match(interfaceSource, /bg-\[#222a35\]/);
-  assert.match(interfaceSource, /bg-\[#15313a\]/);
-  assert.match(interfaceSource, /bg-\[#0c1118\]/);
+  assert.match(interfaceSource, /LIGHT_PANEL\.surface/);
+  assert.match(interfaceSource, /bg-\[#eef0f4\]/);
+  assert.match(interfaceSource, /bg-\[#f8f9fb\]/);
+  assert.match(interfaceSource, /bg-\[#dfe8f2\]/);
+  assert.match(interfaceSource, /bg-\[#fbfcfe\]/);
+  assert.doesNotMatch(interfaceSource, /#11161d|#171d26|#222a35|text-white/);
   assert.match(interfaceSource, /max-md:!rounded-none/);
   assert.match(
     interfaceSource,

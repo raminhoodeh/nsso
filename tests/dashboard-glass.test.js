@@ -79,7 +79,7 @@ test("dashboard cards use one readable dark material policy", () => {
   }
 });
 
-test("every direct dashboard card and dialog carries the dark transmission layer", () => {
+test("dashboard cards carry dark transmission and white dialogs explicitly opt into opaque reading material", () => {
   const missing = [];
 
   for (const file of dashboardFiles()) {
@@ -99,6 +99,10 @@ test("every direct dashboard card and dialog carries the dark transmission layer
         const directCard =
           tag === "TahoeGlassSurface" && attributes.variant === '"card"';
         const dialog = tag === "TahoeGlassDialog";
+        if (dialog && attributes.readingMaterial === '"white"') {
+          assert.ok(["ConfirmDeleteDialog.tsx", "MyNssoTab.tsx"].some(name => file.endsWith(name)), "new white reading panels need rendered coverage");
+          return;
+        }
 
         if (
           (directCard || dialog) &&

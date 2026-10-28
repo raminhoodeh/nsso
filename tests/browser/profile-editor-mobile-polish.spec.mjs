@@ -336,7 +336,7 @@ test('real dashboard fields stay usable over deck grain and the actual Deity cha
         await page.locator('[data-profile-identity-header]').getByRole('button', { name: 'Ask Deity about my profile', exact: true }).press('Enter')
         const chat = page.locator('[data-deity-surface="opaque"]')
         await expect(chat).toBeVisible()
-        expect(await chat.evaluate(element => ({ color: getComputedStyle(element).color, background: getComputedStyle(element).backgroundColor, opacity: getComputedStyle(element).opacity }))).toEqual({ color: 'rgb(255, 255, 255)', background: 'rgb(17, 22, 29)', opacity: '1' })
+        expect(await chat.evaluate(element => ({ color: getComputedStyle(element).color, background: getComputedStyle(element).backgroundColor, opacity: getComputedStyle(element).opacity }))).toEqual({ color: 'oklch(0.129 0.042 264.695)', background: 'rgb(227, 231, 237)', opacity: '1' })
         const composer = page.getByRole('textbox', { name: 'Message Deity', exact: true })
         await composer.fill('A synthetic unsent message only.')
         await expect(composer).toHaveValue('A synthetic unsent message only.')

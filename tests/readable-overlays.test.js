@@ -41,7 +41,8 @@ test("shared dialogs and popovers have opaque backing and explicit optics opt-ou
     assert.equal(attributes["data-tahoe-readable-overlay"], '"true"');
     assert.ok(hasBackdropBoundary(node, source), "all panel controls inherit the no-new-refraction boundary");
     assert.match(attributes.className, /READABLE_OVERLAY_BACKING/);
-    assert.equal(attributes.tone, '{surfaceProps.tone ?? "light"}');
+    assert.equal(attributes.tone, '{readingMaterial === "white" ? "inherit" : surfaceProps.tone ?? "light"}');
+    assert.match(attributes.contentClassName, /readingMaterial === "white".*LIGHT_PANEL.content/);
   }
   assert.match(overlays, /before:bg-\[#202126\]/);
   assert.match(overlays, /before:inset-0/);
@@ -61,13 +62,15 @@ test("direct Places popovers opt out while retaining their readable backings", (
   assert.match(placesStyles, /\.photoCredit::before,[\s\S]*?background:\s*var\(--control-fill, rgba\(24, 31, 26, 0\.74\)\)/);
 });
 
-test("the PayPal help popup is an opaque grey reading surface", () => {
+test("the PayPal help popup uses the shared opaque white reading surface", () => {
   const panels = surfaces("src/app/dashboard/components/ProductsServicesEditor.tsx");
   assert.equal(panels.length, 1);
   const { node, source, attributes } = panels[0];
   assert.equal(attributes.id, '"paypal-guide"');
   assert.equal(attributes["data-tahoe-readable-overlay"], '"true"');
-  assert.match(attributes.contentClassName, /bg-\[#202126\]/);
+  assert.match(attributes.contentClassName, /LIGHT_PANEL\.surface/);
+  assert.match(read("src/components/ui/light-panel.ts"), /surface:\s*'[^']*\bbg-\[#[a-f\d]{6}\]/i, "The shared reading material must keep an opaque RGB base beneath its gradient.");
+  assert.doesNotMatch(attributes.contentClassName, /\bopacity-/);
   assert.ok(hasBackdropBoundary(node, source));
 });
 
@@ -83,7 +86,7 @@ test("Deity and native film overlays never import the new clear-glass renderer",
     assert.doesNotMatch(source, /liquid-glass-candidate|TahoeGlass(?:Surface|Dialog|Popover)/, filename);
   }
   assert.match(read("src/components/agent/AgentChatInterface.tsx"), /data-deity-surface="opaque"/);
-  assert.match(read("src/components/agent/AgentChatInterface.tsx"), /bg-\[#11161d\]/);
+  assert.match(read("src/components/agent/AgentChatInterface.tsx"), /LIGHT_PANEL\.surface/);
   assert.match(read("src/components/film/AddFilmModal.module.css"), /\.dialog\s*\{[^}]*background:\s*#202126/);
   assert.match(read("src/components/film/AddFilmModal.module.css"), /\.textarea\s*\{[^}]*background:\s*#2b2d33/);
   assert.match(read("src/components/film/MovieModal.module.css"), /\.window\s*\{[^}]*background:\s*#151619/);

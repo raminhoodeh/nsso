@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 import GlassButton from '@/components/ui/GlassButton'
 import NssoTopBar, { NSSO_TOPBAR_CONTENT_CLASS } from '@/components/layout/NssoTopBar'
 import { useToast } from '@/components/ui/Toast'
@@ -57,7 +58,7 @@ function MobileMenuNavigation({ pathname, isAdmin, signingOut, close, copyProfil
     }
     const isDashboardHome = pathname === '/dashboard' || pathname === '/dashboard/'
     const iconClass = 'h-[19px] w-[19px]'
-    const groupClass = 'rounded-[24px] border border-white/70 bg-white/25 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_5px_18px_rgba(30,41,59,0.05)]'
+    const groupClass = cn(LIGHT_PANEL.group, 'rounded-[24px] p-1.5')
 
     return <nav aria-label="Account and profile" className="space-y-6">
         <section data-mobile-menu-group="profile" aria-labelledby="mobile-menu-profile-heading">
@@ -336,13 +337,13 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         contentClassName="h-full w-full"
                         tracking="continuous"
                     >
-                        <div data-mobile-account-menu="true" className="flex h-full flex-col overflow-hidden rounded-l-[32px] bg-[#e3e7ed] bg-[linear-gradient(155deg,rgba(255,255,255,0.45),rgba(226,226,237,0.65)_48%,rgba(236,224,226,0.85))] text-slate-950 [text-shadow:none] shadow-[-24px_0_64px_rgba(0,0,0,0.28)]">
+                        <div data-mobile-account-menu="true" className={cn(LIGHT_PANEL.surface, "flex h-full flex-col overflow-hidden rounded-l-[32px] shadow-[-24px_0_64px_rgba(0,0,0,0.28)]")}>
                             <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-500/15 pb-5 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(1.25rem,env(safe-area-inset-top))]">
                                 <div className="flex min-w-0 items-center gap-3">
                                     <Image src="/assets/nsso-logo.png" alt="nsso" width={458} height={224} className="h-8 w-auto" />
                                     <span className="border-l border-slate-500/25 pl-3 text-lg font-semibold tracking-tight">Menu</span>
                                 </div>
-                                <button type="button" onClick={() => setMobileMenuOpen(false)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/45 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_3px_10px_rgba(30,41,59,0.08)] outline-none hover:bg-white/75 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950/70" aria-label="Close menu">
+                                <button type="button" onClick={() => setMobileMenuOpen(false)} className={cn(LIGHT_PANEL.control, LIGHT_PANEL.focus, "flex h-11 w-11 shrink-0 items-center justify-center rounded-full")} aria-label="Close menu">
                                     <X aria-hidden="true" className="h-5 w-5" />
                                 </button>
                             </div>

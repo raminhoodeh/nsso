@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Cookie } from 'lucide-react'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TahoeGlassButton, TahoeGlassDialog } from '@/components/ui/tahoe-glass'
 
@@ -136,6 +137,7 @@ export default function MetaPixelConsent({
             {preferencesOpen ? (
                 <TahoeGlassDialog
                     open={preferencesOpen}
+                    readingMaterial="white"
                     onOpenChange={setPreferencesOpen}
                     aria-labelledby="meta-privacy-title"
                     closeOnEscape={false}
@@ -146,22 +148,22 @@ export default function MetaPixelConsent({
                     semanticTintOpacity={0.42}
                     overlayClassName="z-[6000] items-end justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
                     backdropClassName="bg-black/60"
-                    className="max-w-2xl p-px text-white"
+                    className="max-w-2xl p-px text-slate-950"
                 >
-                    {/* The shared glass tint is capped at 42%; privacy copy needs a solid reading surface. */}
-                    <div data-marketing-privacy-backing className="rounded-[23px] p-5 sm:p-6" style={{ backgroundColor: 'rgb(8, 12, 20)' }}>
+                    {/* Opaque reading material keeps consent copy legible over any profile. */}
+                    <div data-marketing-privacy-backing className={`${LIGHT_PANEL.surface} rounded-[23px] p-5 sm:p-6`}>
                         <div className="flex items-start gap-4">
-                            <Cookie aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-white/70" />
+                            <Cookie aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-slate-600" />
                             <div className="min-w-0 flex-1">
                                 <h2 id="meta-privacy-title" className="text-base font-semibold">
                                     Marketing privacy
                                 </h2>
-                                <p className="mt-2 text-sm leading-6 text-white/90">
+                                <p className="mt-2 text-sm leading-6 text-slate-700">
                                     Ramin&apos;s profile can use Meta Pixel to measure advertising performance. It stays off unless you allow marketing tracking.
                                 </p>
                                 <Link
                                     href="/ramin/privacy"
-                                    className="mt-2 inline-flex min-h-11 items-center text-sm text-white underline decoration-white/40 underline-offset-4 hover:decoration-white"
+                                    className="mt-2 inline-flex min-h-11 items-center text-sm text-slate-950 underline decoration-slate-600/40 underline-offset-4 hover:decoration-slate-950 focus-visible:outline-2 focus-visible:outline-slate-950"
                                 >
                                     Read the tracking notice
                                 </Link>
@@ -172,10 +174,10 @@ export default function MetaPixelConsent({
                                 type="button"
                                 onClick={() => chooseConsent('denied')}
                                 radius={12}
-                                tone="light"
+                                tone="dark"
                                 semanticTint="dark"
                                 semanticTintOpacity={0.08}
-                                className="min-h-11 px-5 py-2.5 text-sm font-medium text-white transition-colors"
+                                className="min-h-11 px-5 py-2.5 text-sm font-medium text-slate-950 transition-colors"
                                 contentClassName="text-inherit"
                             >
                                 Decline
@@ -184,10 +186,10 @@ export default function MetaPixelConsent({
                                 type="button"
                                 onClick={() => chooseConsent('granted')}
                                 radius={12}
-                                tone="light"
+                                tone="dark"
                                 semanticTint="light"
                                 semanticTintOpacity={0.12}
-                                className="min-h-11 px-5 py-2.5 text-sm font-semibold text-white transition-colors"
+                                className="min-h-11 px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors"
                                 contentClassName="text-inherit"
                             >
                                 Allow
