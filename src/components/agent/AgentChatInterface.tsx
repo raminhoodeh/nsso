@@ -128,7 +128,11 @@ export default function AgentChatInterface(props: AgentChatInterfaceProps) {
     if (identity === null) return (
         <section aria-label="Deity assistant" aria-busy="true" data-deity-surface="opaque" className="flex h-full min-h-0 flex-col items-center justify-center gap-4 bg-[#11161d] p-6 text-white">
             <p role="status" aria-live="polite">Loading Deity account…</p>
-            {props.onClose && <button type="button" onClick={props.onClose} aria-label="Close Deity chat" className="inline-flex min-h-11 items-center rounded-full border border-white/20 bg-[#232b36] px-4">Close</button>}
+            {props.onClose && <button type="button" onClick={props.onClose} aria-label="Close Deity chat" data-tahoe-glass-button="satin" data-tahoe-glass-tone="light" className="relative isolate inline-flex min-h-11 items-center overflow-hidden rounded-full bg-[#232b36] px-4 py-2">
+                <span aria-hidden="true" data-tahoe-button-coat="true" className="pointer-events-none absolute inset-0 z-[2] rounded-[inherit]" />
+                <span aria-hidden="true" data-tahoe-button-reflection="true" />
+                <span data-tahoe-button-content="true" className="relative z-20 text-sm text-white">Close</span>
+            </button>}
         </section>
     );
     // A conversation, draft and pending response belong to one identity. Never

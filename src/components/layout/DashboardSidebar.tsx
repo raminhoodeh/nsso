@@ -159,7 +159,7 @@ function DashboardSidebarContent({
                                 "group relative w-full px-4 py-3 transition-all duration-200",
                                 isActive
                                     ? "text-white"
-                                    : "text-white/60 hover:text-white",
+                                    : "text-white/80 hover:text-white",
                                 item.comingSoon && "cursor-pointer"
                             )}
                             contentClassName="w-full justify-start gap-3 text-inherit"
@@ -254,10 +254,10 @@ function DashboardSidebarContent({
                     tone="light"
                     semanticTint="dark"
                     semanticTintOpacity={0.1}
-                    className="group w-full px-4 py-3 text-left text-red-400/90 transition-all hover:text-red-300"
+                    className="group w-full px-4 py-3 text-left text-red-200 transition-all hover:text-red-100"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
-                    <LogOut size={18} className="group-hover:text-red-300 transition-colors" />
+                    <LogOut size={18} className="group-hover:text-red-100 transition-colors" />
                     <span className="font-medium text-[14px]">{signingOut ? 'Signing out…' : 'Sign Out'}</span>
                 </TahoeGlassButton>
             </div>

@@ -61,7 +61,7 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
                 >
                     <GripVertical size={20} aria-hidden="true" />
                 </button>
-                <TahoeGlassButton
+                <TahoeGlassButton tone="light"
                     type="button"
                     onClick={() => setConfirmDelete(true)}
                     className="col-start-3 h-11 w-11 shrink-0 p-0"

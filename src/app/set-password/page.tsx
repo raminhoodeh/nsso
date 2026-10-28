@@ -12,6 +12,7 @@ import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import Input from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
 
 export default function SetPasswordPage() {
     const router = useRouter()
@@ -117,7 +118,7 @@ export default function SetPasswordPage() {
                 {checkingSession ? (
                     <p className="text-slate-950/80 text-center">Checking your secure link...</p>
                 ) : sessionError ? (
-                    <div className="space-y-4 text-center"><p role="alert">{sessionError}</p>{sessionRetryable && <button type="button" className="underline min-h-11" onClick={() => setSessionAttempt(value => value + 1)}>Retry secure link</button>}<p><Link href="/reset-password" className="underline">Request a new password reset link</Link></p></div>
+                    <div className="space-y-4 text-center"><p role="alert">{sessionError}</p>{sessionRetryable && <TahoeGlassButton type="button" tone="dark" className="min-h-11 px-4 py-2" contentClassName="text-sm text-slate-950" onClick={() => setSessionAttempt(value => value + 1)}>Retry secure link</TahoeGlassButton>}<p><Link href="/reset-password" className="underline">Request a new password reset link</Link></p></div>
                 ) : (
                     <form onSubmit={handleSetPassword} className="space-y-4">
                         <Input

@@ -1,5 +1,6 @@
 'use client'
 import { useProfile } from '@/components/providers/ProfileProvider'
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
 
 export default function ProfileSaveStatus({ floating = false, aboveBottomNav = true }: { floating?: boolean; aboveBottomNav?: boolean }) {
     const { mutationState, retryPending, loadError, refreshProfile } = useProfile()
@@ -9,7 +10,7 @@ export default function ProfileSaveStatus({ floating = false, aboveBottomNav = t
         {loadError && <p>{loadError}</p>}
         {mutationState.status !== 'saved' && <p>{mutationState.message || 'Saving your changes…'}</p>}
         {loadError
-            ? <button type="button" className="mt-2 min-h-11 rounded-lg border border-white/30 px-3" onClick={() => { void refreshProfile() }}>Refresh profile</button>
-            : mutationState.status !== 'saving' && <button type="button" className="mt-2 min-h-11 rounded-lg border border-white/30 px-3" onClick={() => { void retryPending() }}>Check status and retry my draft</button>}
+            ? <TahoeGlassButton type="button" tone="light" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-white" onClick={() => { void refreshProfile() }}>Refresh profile</TahoeGlassButton>
+            : mutationState.status !== 'saving' && <TahoeGlassButton type="button" tone="light" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-white" onClick={() => { void retryPending() }}>Check status and retry my draft</TahoeGlassButton>}
     </div>
 }

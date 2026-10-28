@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
 export default function QRScanHandler({ scannedUserId, currentUser }: { scannedUserId: string; currentUser: { id: string } | null }) {
     const searchParams = useSearchParams()
     const { showToast } = useToast()
@@ -29,7 +30,7 @@ export default function QRScanHandler({ scannedUserId, currentUser }: { scannedU
         <form onSubmit={connect} className="space-y-3">
             <p>Add this person to My nsso? You will both see the connection; your notes stay private.</p>
             <label className="block text-sm">Where did you meet? (optional)<input maxLength={300} value={location} onChange={event => setLocation(event.target.value)} placeholder="For example, Dubai conference" className="mt-2 w-full rounded-lg bg-slate-800 p-3 text-base" /></label>
-            <div className="flex gap-3"><button disabled={busy} className="min-h-11 rounded-lg border border-white/30 px-4">{busy ? 'Adding…' : 'Add to My nsso'}</button><button type="button" onClick={() => setDismissed(true)} className="min-h-11 px-4">Not now</button></div>
+            <div className="flex gap-3"><TahoeGlassButton type="submit" disabled={busy} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">{busy ? 'Adding…' : 'Add to My nsso'}</TahoeGlassButton><TahoeGlassButton type="button" onClick={() => setDismissed(true)} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Not now</TahoeGlassButton></div>
         </form>
     </aside>
 }

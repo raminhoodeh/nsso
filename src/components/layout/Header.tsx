@@ -243,8 +243,6 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             className="min-h-11 px-3 py-2 text-sm font-medium transition-all min-[360px]:px-4 hover:scale-[1.02] active:scale-[0.98]"
             contentClassName="text-slate-950"
             tone="dark"
-            semanticTint="light"
-            semanticTintOpacity={0.2}
         >
             <span className="min-[360px]:hidden">Preview</span>
             <span className="hidden min-[360px]:inline">Preview Profile</span>
@@ -279,7 +277,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 <div className="hidden md:flex items-center gap-4">
                     {!user && (
                         <TahoeGlassSurface as="a" variant="button" href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}
-                            tone="dark" semanticTint="light" semanticTintOpacity={0.2}
+                            tone="dark"
                             className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
                             contentClassName="text-center text-slate-950">
                             SIGN IN / SIGN UP
@@ -301,8 +299,6 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                             className="h-11 w-11 p-0 text-slate-950 transition-colors"
                             contentClassName="text-slate-950"
                             tone="dark"
-                            semanticTint="light"
-                            semanticTintOpacity={0.2}
                             aria-label="Open account menu"
                             aria-expanded={mobileMenuOpen}
                             aria-controls="mobile-account-menu"
@@ -364,7 +360,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                     {/* Mobile - Not logged in (Default Mode Only) */}
                     {!isOwnerMode && showAuthButtons && !user && (
                         <TahoeGlassSurface as="a" variant="button" href="/sign-in"
-                            tone="dark" semanticTint="light" semanticTintOpacity={0.2}
+                            tone="dark"
                             className="flex min-h-11 items-center px-4 py-2 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
                             contentClassName="text-center text-slate-950">
                             SIGN IN / SIGN UP

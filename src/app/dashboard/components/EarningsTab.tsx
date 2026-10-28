@@ -136,7 +136,7 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
 
                                     {/* Copy Button - Desktop Only */}
                                     <div className="mr-1.5 hidden md:block">
-                                            <TahoeGlassButton
+                                            <TahoeGlassButton tone="light"
                                                 onClick={copyReferralCode}
                                                 className="h-[42px] w-[100px] p-0"
                                                 contentClassName="text-white/95"
@@ -150,7 +150,7 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
 
                             {/* Mobile Copy Button */}
                             <div className="md:hidden w-full max-w-md">
-                                    <TahoeGlassButton
+                                    <TahoeGlassButton tone="light"
                                         onClick={copyReferralCode}
                                         className="h-[42px] w-full p-0"
                                         contentClassName="text-white/95"
@@ -221,7 +221,7 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                                 </TahoeGlassSurface>
 
                                 {/* UPDATE Button */}
-                                    <TahoeGlassButton
+                                    <TahoeGlassButton tone="light"
                                         onClick={updatePayPal}
                                         disabled={updating}
                                         className="h-[54px] w-full px-5 md:w-[120px]"

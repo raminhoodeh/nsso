@@ -27,7 +27,7 @@ test.beforeAll(async () => {
     'src/components/ui/experimental/liquid-glass-candidate.tsx',
   ].map(file => readFileSync(root + file, 'utf8')).join('\n') + fixture
   const candidates = [...sources.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/))
-  const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
+  const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
   css = compiler.build(candidates) + `
     body{margin:0;min-height:2400px;background:#04102a;font-family:Arial}
     #backing{position:absolute;inset:0;min-height:2400px;pointer-events:none;background:#04102a}

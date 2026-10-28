@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/components/providers/UserProvider'
 import { safeInternalPath } from '@/lib/server/auth-redirect'
 import { boundedClientRead } from '@/lib/client-read'
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
 
 function AccountSecurityForm({ userId, refreshUser }: { userId: string; refreshUser: () => Promise<void> }) {
     const supabase = useMemo(() => createClient(), [])
@@ -78,17 +79,17 @@ function AccountSecurityForm({ userId, refreshUser }: { userId: string; refreshU
         <p>Administrator access and RazinFlix editing require an authenticator code. Ordinary profile editing stays available after your normal sign-in.</p>
         {verified ? <p role="status">Your current session has passed two-step verification.</p> : <>
             {factorsLoading && <p role="status">Loading your authenticators…</p>}
-            {!factorsLoading && !factorsReady && <button type="button" onClick={() => { setFactorsLoading(true); setMessage(''); setLoadAttempt(value => value + 1) }} className="min-h-11 underline">Retry security settings</button>}
-            {!factorId && <button disabled={busy || factorsLoading || !factorsReady} onClick={enroll} className="min-h-12 rounded-xl border border-white/30 px-4">Set up authenticator</button>}
+            {!factorsLoading && !factorsReady && <TahoeGlassButton type="button" onClick={() => { setFactorsLoading(true); setMessage(''); setLoadAttempt(value => value + 1) }} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry security settings</TahoeGlassButton>}
+            {!factorId && <TahoeGlassButton type="button" disabled={busy || factorsLoading || !factorsReady} onClick={enroll} tone="light" className="min-h-12 px-4 py-2" contentClassName="text-sm text-white">Set up authenticator</TahoeGlassButton>}
             {qr && <div className="space-y-3 rounded-2xl bg-white p-5 text-black"><p>Scan this code privately with your authenticator app. Keep access to your sign-in email and authenticator for recovery.</p>{/* Auth-generated QR is an image, never mounted as HTML. */}
-                <img src={qr} alt="Authenticator setup QR code" className="mx-auto h-56 w-56" /><p>On this phone, enter the setup key in your authenticator instead of scanning.</p><label className="block">Authenticator setup key<input readOnly value={setupKey} autoComplete="off" className="mt-2 w-full rounded border border-black/30 p-2 font-mono text-sm" onFocus={event => event.target.select()} /></label><button type="button" disabled={busy} onClick={() => { void cancelEnrollment() }} className="min-h-11 underline">Cancel this setup</button></div>}
+                <img src={qr} alt="Authenticator setup QR code" className="mx-auto h-56 w-56" /><p>On this phone, enter the setup key in your authenticator instead of scanning.</p><label className="block">Authenticator setup key<input readOnly value={setupKey} autoComplete="off" className="mt-2 w-full rounded border border-black/30 p-2 font-mono text-sm" onFocus={event => event.target.select()} /></label><TahoeGlassButton type="button" disabled={busy} onClick={() => { void cancelEnrollment() }} tone="dark" className="min-h-11 px-4 py-2" contentClassName="text-sm text-slate-950">Cancel this setup</TahoeGlassButton></div>}
             {factorId && <form onSubmit={verify} className="space-y-4">
                 {factors.length > 1 && <label className="block">Authenticator<select value={factorId} onChange={event => setFactorId(event.target.value)} className="block w-full rounded-xl bg-slate-900 p-3">{factors.map((factor, index) => <option key={factor.id} value={factor.id}>{factor.friendly_name || `Authenticator ${index + 1}`}</option>)}</select></label>}
                 <label className="block">Six-digit authenticator code<input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" required className="mt-2 block w-full rounded-xl bg-slate-900 p-3 text-base" /></label>
-                <button disabled={busy || code.length !== 6} className="min-h-12 rounded-xl border border-white/30 px-4 disabled:opacity-50">{busy ? 'Checking…' : 'Verify and continue'}</button>
+                <TahoeGlassButton type="submit" disabled={busy || code.length !== 6} tone="light" className="min-h-12 px-4 py-2 disabled:opacity-50" contentClassName="text-sm text-white">{busy ? 'Checking…' : 'Verify and continue'}</TahoeGlassButton>
             </form>}
         </>}
-        <button type="button" disabled={busy} onClick={signOutOtherSessions} className="min-h-12 rounded-xl border border-white/30 px-4">Sign out other sessions</button>
+        <TahoeGlassButton type="button" disabled={busy} onClick={signOutOtherSessions} tone="light" className="min-h-12 px-4 py-2" contentClassName="text-sm text-white">Sign out other sessions</TahoeGlassButton>
         {message && <p role="status">{message}</p>}
         <p><Link href="/dashboard" className="underline">Back to your profile editor</Link></p>
     </main>

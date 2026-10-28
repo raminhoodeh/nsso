@@ -10,6 +10,7 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
 
 const VIDEO_URL = 'https://www.youtube.com/watch?v=ukYfrg0ZNbA'
 const VIDEO_ASSET_URL = '/nsso-vision-ukYfrg0ZNbA.mp4'
@@ -291,7 +292,7 @@ export default function HomeVisionPlayer() {
           className="border-t border-red-300/20 bg-red-950 px-4 py-3 text-sm text-red-100"
         >
           {error ?? playbackNotice}{' '}
-          {error && <button type="button" onClick={() => { const video = videoRef.current; if (!video) return; setError(null); video.removeAttribute('src'); video.load(); togglePlayback() }} className="mr-3 inline-flex min-h-11 items-center underline">Retry video</button>}
+          {error && <TahoeGlassButton type="button" onClick={() => { const video = videoRef.current; if (!video) return; setError(null); video.removeAttribute('src'); video.load(); togglePlayback() }} tone="light" className="mr-3 min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry video</TahoeGlassButton>}
           <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline">
             Watch on YouTube
           </a>

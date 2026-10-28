@@ -45,7 +45,7 @@ export default function GlassButton({
     return (
         <TahoeGlassButton
             className={`
-                overflow-hidden text-center transition-all duration-200 ease-out
+                overflow-hidden text-center
                 disabled:!pointer-events-auto disabled:cursor-not-allowed disabled:opacity-50
                 ${sizeStyles[size]}
                 ${variantStyles[variant]}

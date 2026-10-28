@@ -17,7 +17,7 @@ function sourceFiles(directory) {
 test.beforeAll(async () => {
     const candidates = ['src/app/dashboard/page.tsx', 'src/app/preview/page.tsx', 'src/components/agent/AgentChatInterface.tsx', 'src/components/providers/NSSOTahoeGlassEnvironment.tsx', 'src/components/providers/TahoeGlassProvider.tsx', ...sourceFiles('src/app/dashboard/components'), ...sourceFiles('src/components/ui'), ...sourceFiles('src/components/layout')]
         .flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
-    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
+    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\n:root{--mobile-bottom-safe-space:8px;--mobile-bottom-nav-height:80px}body{margin:0;background:linear-gradient(130deg,#385a6b,#b9abbb);color:white;font-family:Arial}button,input,textarea,select{font:inherit}#fixture-outside{height:100px}#fixture-outside button{min-height:44px}'
     for (const realScene of [false, true]) {
     const result = await build({

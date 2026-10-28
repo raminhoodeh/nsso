@@ -336,12 +336,12 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
 
             {/* Actions */}
             <div className="flex items-center gap-6 pt-3 border-t border-white/10">
-                <TahoeGlassButton
+                <TahoeGlassButton tone="light"
                     onClick={handleLike}
                     disabled={liking}
                     aria-busy={liking}
                     className="px-3 py-2"
-                    contentClassName={`text-sm ${liked ? 'text-pink-400' : 'text-white/55'}`}
+                    contentClassName={`text-sm ${liked ? 'text-pink-200' : 'text-white/80'}`}
                     aria-pressed={liked}
                     aria-label={liked ? 'Unlike post' : 'Like post'}
                 >
@@ -357,10 +357,10 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                     <span>{likeCount > 0 ? likeCount : 'Love'}</span>
                 </TahoeGlassButton>
 
-                <TahoeGlassButton
+                <TahoeGlassButton tone="light"
                     onClick={toggleComments}
                     className="px-3 py-2"
-                    contentClassName={`text-sm ${showComments ? 'text-white' : 'text-white/55'}`}
+                    contentClassName={`text-sm ${showComments ? 'text-white' : 'text-white/80'}`}
                     aria-expanded={showComments}
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -433,7 +433,7 @@ export default function FeedItemCard({ post, currentUserId }: FeedItemCardProps)
                                         className="text-sm text-white placeholder:text-white/30"
                                     />
                                 </TahoeGlassField>
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     type="submit"
                                     disabled={!newComment.trim() || submittingComment}
                                     className="px-4 py-2"

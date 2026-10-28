@@ -53,7 +53,7 @@ function DashboardContent() {
     const header = !loading && <div className="lg:hidden"><Header /></div>
     if (user && !claimOwner) setClaimOwner(user.id)
     if (loading || (user && !claimOwner)) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><p role="status">Loading your account…</p></main></>
-    if (!user) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><button type="button" onClick={() => { void refreshUser() }}>Retry account</button></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main></>
+    if (!user) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><TahoeGlassButton type="button" onClick={() => { void refreshUser() }} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry account</TahoeGlassButton></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main></>
     return <>{header}<DashboardForAccount key={user.id} allowClaim={claimOwner === user.id} /></>
 }
 
@@ -355,7 +355,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
         )
     }
 
-    if (!profile) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center"><p role="alert">Your profile could not be loaded. Please retry before editing.</p><button type="button" onClick={() => { void refreshProfile() }}>Retry profile</button></div></main>
+    if (!profile) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center"><p role="alert">Your profile could not be loaded. Please retry before editing.</p><TahoeGlassButton type="button" onClick={() => { void refreshProfile() }} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry profile</TahoeGlassButton></div></main>
 
     return (
         <main className="min-h-screen pb-12">
@@ -404,7 +404,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                             </h2>
 
                             {/* Ask Deity Button */}
-                            <TahoeGlassButton
+                            <TahoeGlassButton tone="light"
                                 onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                     detail: { initialMessage: "How can you help me improve my profile?" }
                                 }))}
@@ -554,7 +554,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                         autoCorrect="off"
                                         className="min-w-0 flex-1 border-none bg-transparent text-[18px] font-medium text-white outline-none placeholder:text-white/50 sm:text-[22px]"
                                     />
-                                    <TahoeGlassButton
+                                    <TahoeGlassButton tone="light"
                                         onClick={handleCopyUrl}
                                         disabled={!user?.username}
                                         className="mr-1 h-11 w-11 p-0"
@@ -565,7 +565,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                         {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
                                     </TahoeGlassButton>
                                 </TahoeGlassSurface>
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     onClick={handleUpdateUsername}
                                     disabled={updatingUsername || !usernameAvailable || !customDomain || customDomain === user?.username}
                                     className="h-11 shrink-0 px-6"
@@ -611,7 +611,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     </div>
                                     <div className="flex items-center gap-1 sm:gap-2">
                                         {/* Ask Deity Button */}
-                                        <TahoeGlassButton
+                                        <TahoeGlassButton tone="light"
                                             onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me find links to add to my profile..." }
                                             }))}
@@ -622,7 +622,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                             <Sparkles className="w-4 h-4" />
                                             <span className="text-xs font-medium hidden sm:inline">Ask Deity</span>
                                         </TahoeGlassButton>
-                                        <TahoeGlassButton
+                                        <TahoeGlassButton tone="light"
                                             onClick={() => { void addProfileItem('link', 'top') }}
                                             aria-disabled={addingCollection !== null}
                                             aria-busy={addingCollection === 'link'}
@@ -671,7 +671,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     <div>
                                         <h2 className="text-2xl font-bold text-white">Contact</h2>
                                     </div>
-                                    <TahoeGlassButton
+                                    <TahoeGlassButton tone="light"
                                         onClick={() => { void addProfileItem('contact', 'top') }}
                                         aria-disabled={addingCollection !== null}
                                         aria-busy={addingCollection === 'contact'}

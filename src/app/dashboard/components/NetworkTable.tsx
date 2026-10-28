@@ -73,7 +73,7 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
                         <option value="location" className="bg-neutral-900">Location</option>
                     </select>
                 </TahoeGlassField>
-                <TahoeGlassButton className="min-h-11 self-end px-3 py-2" onClick={() => setSortOrder(current => current === 'asc' ? 'desc' : 'asc')} aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`} contentClassName="text-sm text-white">
+                <TahoeGlassButton tone="light" className="min-h-11 self-end px-3 py-2" onClick={() => setSortOrder(current => current === 'asc' ? 'desc' : 'asc')} aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`} contentClassName="text-sm text-white">
                     {sortField === 'date' ? (sortOrder === 'desc' ? 'Newest first ↓' : 'Oldest first ↑') : (sortOrder === 'asc' ? 'A–Z ↑' : 'Z–A ↓')}
                 </TahoeGlassButton>
             </div>
@@ -81,7 +81,7 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
         <p role="status" className="text-sm text-white/70">{filteredConnections.length} {filteredConnections.length === 1 ? 'connection' : 'connections'}{searchQuery.trim() ? ' found' : ''}</p>
         {filteredConnections.length === 0 ? <div className="rounded-2xl border border-white/15 bg-black/20 p-5 text-white/80">
             <p>{connections.length ? 'No connections match your search.' : 'No connections yet.'}</p>
-            {searchQuery && <button type="button" className="mt-2 min-h-11 rounded-lg px-2 text-white underline" onClick={() => setSearchQuery('')}>Clear search</button>}
+            {searchQuery && <TahoeGlassButton type="button" tone="light" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-white" onClick={() => setSearchQuery('')}>Clear search</TahoeGlassButton>}
         </div> : <>
             <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_110px] gap-4 px-4 text-xs font-semibold uppercase tracking-wider text-white/70 md:grid"><span>Person</span><span>Meeting location</span><span>Date met</span><span>Notes</span></div>
             <ul className="space-y-3" aria-label="Your connections">
@@ -104,7 +104,7 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
                             </form> : <button type="button" disabled={savingLocation} aria-label={`Edit location for ${conn.fullName}`} className="flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm text-white/85 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white" onClick={() => { setEditingLocationId(conn.id); setLocationValue(conn.location || ''); setLocationError('') }}><MapPin aria-hidden="true" size={16} className="shrink-0" /><span className="break-words">{conn.location || 'Add meeting location'}</span></button>}
                         </div>
                         <div><p className="text-xs font-semibold text-white/70 md:sr-only">Date met</p><time dateTime={conn.dateMet} className="text-sm text-white/85">{formatDate(conn.dateMet)}</time></div>
-                        <TahoeGlassButton onClick={() => onOpenNotes(conn)} className="min-h-11 justify-self-start px-3 py-2" contentClassName="gap-2 text-sm text-white" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} />{conn.notes ? 'Edit notes' : 'Add notes'}</TahoeGlassButton>
+                        <TahoeGlassButton tone="light" onClick={() => onOpenNotes(conn)} className="min-h-11 justify-self-start px-3 py-2" contentClassName="gap-2 text-sm text-white" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} />{conn.notes ? 'Edit notes' : 'Add notes'}</TahoeGlassButton>
                     </TahoeGlassSurface>
                 </li>)}
             </ul>

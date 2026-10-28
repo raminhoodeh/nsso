@@ -9,7 +9,7 @@ let bundle, layoutCss
 test.beforeAll(async () => {
   const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx', 'src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx']
   const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
-  const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
+  const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
   layoutCss = compiler.build(candidates)
   const result = await build({
     absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
@@ -28,7 +28,7 @@ test.beforeAll(async () => {
               export {TahoeGlassField} from './src/components/ui/tahoe-glass/TahoeGlassField';
               export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,chromiumAppearance,...props}){return <Tag {...props} data-fixture-tone={tone} data-fixture-appearance={chromiumAppearance}><span className={contentClassName}>{children}</span></Tag>}
               export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
-              export function TahoeBackdropSurface({backdropEnabled,...props}){return <TahoeGlassSurface {...props}/>}
+              export function TahoeBackdropSurface({backdropEnabled,materialFinish,...props}){return <TahoeGlassSurface {...props}/>}
               export function TahoeBackdropHeader({displacementProfile,materialLighting,...props}){return <TahoeGlassSurface {...props}/>}
               export function TahoeGlassDialog({open,children}){return open?<div role="dialog">{children}</div>:null}`
           : path.endsWith('HomeVisionPlayer') ? "import React from 'react';export default ()=> <div>Vision player fixture</div>;"
@@ -133,7 +133,7 @@ test('core top bar keeps its sky coating, geometry and readable controls across 
 test('homepage uses desktop columns without carrying that layout onto mobile', async ({ page }, testInfo) => {
   const { errors } = await fixture(page)
   await page.addStyleTag({ content: layoutCss })
-  const widths = testInfo.project.name === 'desktop' ? [1440, 1024, 768] : [390, 320]
+  const widths = testInfo.project.name === 'desktop' ? [1920, 1440, 1280, 1024, 768] : [390, 320]
   for (const width of widths) {
     await page.setViewportSize({ width, height: 1000 })
     const layout = await page.evaluate(() => {
@@ -142,6 +142,9 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
         return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }
       }
       return {
+        heroHeadline: rect('[data-home-hero] h1'),
+        heroWords: [...document.querySelectorAll('[data-home-hero-word]')].map(el => { const r = el.getBoundingClientRect(); return { word: el.dataset.homeHeroWord, left: r.left, right: r.right, top: r.top, bottom: r.bottom } }),
+        supportingFontSizes: [...document.querySelectorAll('[data-home-offer-card] p, [data-home-contact]')].map(el => parseFloat(getComputedStyle(el).fontSize)),
         intro: rect('[data-home-intro]'), demo: rect('[data-home-intro] figure'), story: rect('[data-home-story]'),
         claim: rect('[data-home-actions-layout] > section[aria-labelledby]'), offers: rect('[data-home-actions-layout] > section[aria-label]'),
         claimCard: rect('[data-home-claim-card]'), monetiseCard: rect('[data-home-offer-card="monetise"]'), exampleCard: rect('[data-home-offer-card="example-profile"]'),
@@ -161,7 +164,7 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
     expect(Math.abs(layout.contact.bottom - layout.vision.top)).toBeLessThanOrEqual(1)
     if (width >= 1024) {
       expect(layout.bottomPadding).toBe(24)
-      expect(layout.cardCoatings).toHaveLength(4)
+      expect(layout.cardCoatings).toHaveLength(3)
       for (const coating of layout.cardCoatings) {
         expect(coating.background).toContain('linear-gradient')
         expect(coating.pointerEvents).toBe('none')
@@ -169,6 +172,18 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
       }
       expect(Math.abs(layout.headlineParts[0].top - layout.headlineParts[1].top)).toBeLessThanOrEqual(1)
       expect(layout.headlineParts[1].right).toBeLessThanOrEqual(width)
+      const words = [...layout.heroWords].sort((a, b) => a.top - b.top)
+      expect(words.map(item => item.word)).toEqual(['clarify', 'organise', 'discover', 'present'])
+      for (const word of words) expect(Math.abs((word.left + word.right) / 2 - width / 2)).toBeLessThanOrEqual(1)
+      expect(words[0].bottom).toBeLessThan(words[1].top)
+      expect(words[1].bottom).toBeLessThan(layout.heroHeadline.top)
+      expect(layout.heroHeadline.bottom).toBeLessThan(words[2].top)
+      expect(words[2].bottom).toBeLessThan(words[3].top)
+      const center = (layout.heroHeadline.top + layout.heroHeadline.bottom) / 2
+      const above = center - (words[0].top + words[1].bottom) / 2
+      const below = (words[2].top + words[3].bottom) / 2 - center
+      expect(Math.abs(above - below)).toBeLessThanOrEqual(1)
+      expect(layout.supportingFontSizes).toEqual([18, 18, 18])
       expect(layout.demo.right).toBeLessThan(layout.story.left)
       expect(Math.min(layout.demo.bottom, layout.story.bottom)).toBeGreaterThan(Math.max(layout.demo.top, layout.story.top))
       expect(layout.offers.right).toBeLessThan(layout.claim.left)
@@ -176,9 +191,15 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
       expect(Math.abs(layout.exampleCard.bottom - layout.claimCard.bottom)).toBeLessThanOrEqual(1)
       expect(layout.monetiseCard.bottom).toBeLessThan(layout.exampleCard.top)
       expect(Math.abs(layout.monetiseCard.height - layout.exampleCard.height)).toBeLessThanOrEqual(1)
-      if (width === 1440) expect(layout.intro.width).toBeGreaterThan(1000)
+      if (width >= 1440) {
+        expect(layout.intro.width).toBeGreaterThan(1280)
+        expect(layout.demo.width).toBeGreaterThanOrEqual(500)
+        expect(layout.demo.width).toBeLessThanOrEqual(520)
+      }
     } else {
       expect(layout.bottomPadding).toBe(96)
+      expect(layout.supportingFontSizes).toEqual([16, 16, 16])
+      expect([...layout.heroWords].sort((a, b) => a.top - b.top).map(item => item.word)).toEqual(['clarify', 'organise', 'present', 'discover'])
       for (const coating of layout.cardCoatings) expect(coating.content).toBe('none')
       expect(layout.headlineParts[0].bottom).toBeLessThanOrEqual(layout.headlineParts[1].top + 2)
       expect(layout.demo.bottom).toBeLessThanOrEqual(layout.story.top)
@@ -193,6 +214,8 @@ test('homepage uses desktop columns without carrying that layout onto mobile', a
     }
   }
   await expect(page.locator('[data-home-intro] figure')).toHaveCount(1)
+  await expect(page.locator('[data-home-intro]')).toHaveClass(/home-crystal-glass/)
+  await expect(page.locator('[data-home-intro]')).not.toHaveClass(/home-sky-glass/)
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.emulateMedia({ forcedColors: 'active' })
   expect(await page.locator('.home-sky-glass').first().evaluate(el => getComputedStyle(el, '::after').display)).toBe('none')

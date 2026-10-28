@@ -38,7 +38,7 @@ export default function HomeProfileDemo() {
   }
 
   return (
-    <figure className="relative mx-auto w-full max-w-[440px]" aria-label="nsso profile preview">
+    <figure className="relative mx-auto w-full max-w-[440px] lg:max-w-[520px]" aria-label="nsso profile preview">
       <div className="relative aspect-[10/13] overflow-hidden rounded-[24px] bg-slate-950 shadow-lg">
         <video ref={videoRef} poster="/homepage-profile-demo-poster.jpg" preload="none" loop muted playsInline aria-hidden="true" className="absolute inset-0 h-full w-full origin-center scale-[1.18] object-cover" onPlay={() => { setPlaying(true); setNotice('') }} onPause={() => setPlaying(false)} onError={() => { setPlaying(false); setNotice('Preview unavailable. Explore the example profile below.') }} />
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/75 to-transparent p-4 pt-12">

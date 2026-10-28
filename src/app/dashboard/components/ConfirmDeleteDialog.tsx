@@ -50,8 +50,8 @@ export default function ConfirmDeleteDialog({ open, name, onClose, onConfirm }: 
     >
         {error && <p role="alert" className="mt-3 text-sm text-rose-200">{error}</p>}
         <div className="mt-5 flex gap-3">
-            <TahoeGlassButton ref={cancelRef} disabled={busy} onClick={() => { setError(''); onClose() }} className="min-h-11 flex-1 px-3 py-2" contentClassName="text-white">{error ? 'Close' : 'Keep item'}</TahoeGlassButton>
-            <TahoeGlassButton disabled={busy} onClick={() => { void confirm() }} className="min-h-11 flex-1 px-3 py-2" contentClassName="text-red-200">{busy ? 'Deleting…' : 'Delete'}</TahoeGlassButton>
+            <TahoeGlassButton tone="light" ref={cancelRef} disabled={busy} onClick={() => { setError(''); onClose() }} className="min-h-11 flex-1 px-3 py-2" contentClassName="text-white">{error ? 'Close' : 'Keep item'}</TahoeGlassButton>
+            <TahoeGlassButton tone="light" disabled={busy} onClick={() => { void confirm() }} className="min-h-11 flex-1 px-3 py-2" contentClassName="text-red-200">{busy ? 'Deleting…' : 'Delete'}</TahoeGlassButton>
         </div>
     </TahoeGlassDialog>
 }

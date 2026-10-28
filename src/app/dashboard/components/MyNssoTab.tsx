@@ -136,7 +136,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
     return (
         <div className="space-y-6">
-            {loadError && <div role="alert" className="rounded-xl border border-white/20 p-4 text-white"><p>{loadError}</p><button type="button" className="mt-3 min-h-11 underline" onClick={() => { void loadConnections() }}>Retry connections</button></div>}
+            {loadError && <div role="alert" className="rounded-xl border border-white/20 p-4 text-white"><p>{loadError}</p><TahoeGlassButton type="button" tone="light" className="mt-3 min-h-11 px-4 py-2" contentClassName="text-sm text-white" onClick={() => { void loadConnections() }}>Retry connections</TahoeGlassButton></div>}
             <GlassCard refractive className="relative p-4 sm:p-6 lg:p-8">
                 {/* Header Section */}
                 <div className="text-left space-y-2 mb-6 md:pr-52">
@@ -268,7 +268,7 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
         >
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-white">Notes for {connection.fullName}</h3>
-                <TahoeGlassButton onClick={onClose} disabled={busy} className="h-11 w-11 shrink-0 p-0" contentClassName="text-white/85" aria-label="Close notes dialog">
+                <TahoeGlassButton tone="light" onClick={onClose} disabled={busy} className="h-11 w-11 shrink-0 p-0" contentClassName="text-white/85" aria-label="Close notes dialog">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
@@ -289,7 +289,7 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
             {error && <p role="alert" className="mb-3 text-sm text-rose-200">{error}</p>}
             <div className="flex flex-wrap justify-between items-center text-xs text-white/70 gap-3">
                 <span>{content.length} / 3333 characters</span>
-                <TahoeGlassButton onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className="min-h-11 px-4 py-2" contentClassName="text-white font-semibold">
+                <TahoeGlassButton tone="light" onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className="min-h-11 px-4 py-2" contentClassName="text-white font-semibold">
                     {saving ? 'Saving...' : 'Save Notes'}
                 </TahoeGlassButton>
             </div>
@@ -300,14 +300,14 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
                             Remove {connection.fullName} from your My nsso? This removes them from your list and deletes your private notes, including any unsaved notes. Their record of you stays unchanged.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            <TahoeGlassButton onClick={() => { void removeConnection() }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">
+                            <TahoeGlassButton tone="light" onClick={() => { void removeConnection() }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">
                                 {removing ? 'Removing...' : 'Confirm removal'}
                             </TahoeGlassButton>
                             <TahoeGlassButton onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className="min-h-11 px-4 py-2">Keep connection</TahoeGlassButton>
                         </div>
                     </div>
                 ) : (
-                    <TahoeGlassButton onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">Remove from My nsso</TahoeGlassButton>
+                    <TahoeGlassButton tone="light" onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">Remove from My nsso</TahoeGlassButton>
                 )}
             </div>
         </TahoeGlassDialog>
