@@ -137,32 +137,32 @@ export default function HomePage() {
         className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-[clamp(1.5rem,4.5svh,3rem)] px-5 pb-16 pt-[calc(88px+env(safe-area-inset-top)+2rem)] text-center font-bold tracking-tight text-white [text-shadow:0_2px_12px_rgba(15,23,42,0.55)] lg:min-h-[min(760px,100svh)] lg:gap-10 lg:px-8 lg:pb-24 lg:pt-[calc(88px+4rem)]"
         style={{ fontFamily: 'var(--font-sf-pro-display)' }}
       >
-        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:flex-row lg:gap-16">
-          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Clarify</p>
-          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Organise</p>
+        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:gap-4">
+          <p data-home-hero-word="clarify" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Clarify</p>
+          <p data-home-hero-word="organise" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Organise</p>
         </div>
         <h1 className="w-full text-[clamp(2.5rem,12vw,7.5rem)] leading-[1.03] tracking-[-0.04em] lg:whitespace-nowrap lg:text-[clamp(3.25rem,7vw,6.25rem)]">
           <span className="block lg:inline">Future-Proof</span>{' '}
           <span className="block lg:inline">Yourself</span>
         </h1>
-        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:flex-row lg:gap-16">
-          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Present</p>
-          <p className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Discover</p>
+        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:gap-4">
+          <p data-home-hero-word="present" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:order-2 lg:text-3xl">Present</p>
+          <p data-home-hero-word="discover" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:order-1 lg:text-3xl">Discover</p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-5 pb-16 sm:px-8 lg:max-w-6xl lg:pb-16" aria-label="Meet nsso">
-        <LightGlassPanel chromiumAppearance="light" data-home-intro="true" className="home-sky-glass p-6 sm:p-8 lg:p-12">
+      <section className="mx-auto max-w-4xl px-5 pb-16 sm:px-8 lg:max-w-[1600px] lg:pb-16" aria-label="Meet nsso">
+        <LightGlassPanel chromiumAppearance="light" materialFinish="satin" data-home-intro="true" className="home-crystal-glass p-6 sm:p-8 lg:p-10 xl:p-12">
           <div className="mx-auto flex max-w-2xl flex-col gap-5 lg:max-w-none lg:gap-10">
             <div className="mx-auto max-w-3xl space-y-5 text-center">
               <h2 className="text-3xl font-bold leading-tight text-slate-950 sm:text-4xl lg:text-5xl">All of you. All in one place.</h2>
               <p className="text-base font-medium leading-relaxed text-slate-950/80 sm:text-lg">The most beautiful way to present yourself online</p>
             </div>
 
-            <div data-home-intro-layout="true" className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-center lg:gap-12 xl:gap-16">
+            <div data-home-intro-layout="true" className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-10 xl:grid-cols-[minmax(0,520px)_minmax(0,1fr)] xl:gap-16">
               <HomeProfileDemo />
 
-              <div data-home-story="true" className="min-w-0 space-y-6 text-base leading-[1.75] text-slate-950/85 sm:text-lg">
+              <div data-home-story="true" className="min-w-0 space-y-6 text-base leading-[1.75] text-slate-950/85 sm:text-lg xl:max-w-[68ch]">
                 <p>
                   nsso stands for "new sovereign self online". Your nsso profile acts as a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
                 </p>
@@ -196,7 +196,7 @@ export default function HomePage() {
                 <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <h3 className="text-xl font-bold text-slate-950">Monetise</h3>
                 </div>
-                <p className="p-6 text-sm leading-relaxed text-slate-950/75">
+                <p className="p-6 text-base leading-relaxed text-slate-950/80 lg:text-lg">
                   Showcase your products and services with purchase links and PayPal buttons.
                 </p>
               </LightGlassPanel>
@@ -207,7 +207,7 @@ export default function HomePage() {
                 <div data-home-offer-header="true" className="border-b border-white/60 bg-white/40 px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <h3 className="text-xl font-bold text-slate-950">Example Profile</h3>
                 </div>
-                <p className="p-6 text-sm leading-relaxed text-slate-950/75">
+                <p className="p-6 text-base leading-relaxed text-slate-950/80 lg:text-lg">
                   See how your unified identity could look.
                 </p>
               </LightGlassPanel>
@@ -217,7 +217,7 @@ export default function HomePage() {
       </div>
 
       {/* Equal breathing room between the action cards and the film. */}
-      <div data-home-contact="true" className="mx-auto max-w-6xl px-5 py-10 text-center text-sm italic text-slate-950/85 sm:px-8 lg:py-12">
+      <div data-home-contact="true" className="mx-auto max-w-6xl px-5 py-10 text-center text-base italic text-slate-950/85 sm:px-8 lg:py-12 lg:text-lg">
         Message us on{' '}
         <a
           href="https://www.instagram.com/ramin.nsso"

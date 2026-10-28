@@ -28,7 +28,7 @@ test.beforeAll(async () => {
         'src/components/ui/tahoe-glass/TahoeGlassField.tsx',
     ]
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
-    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root, onDependency() {} })
+    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\nhtml{background:#4d6b7b}body{background:linear-gradient(150deg,#51788f,#535c74 60%,#97858a);background-attachment:fixed}#root{max-width:1100px;margin:auto;padding:120px 16px 80px}#fixture-header{position:fixed;inset:0 0 auto;height:88px;z-index:200;background:rgba(58,79,95,.96);color:white;padding:24px;font-weight:700;border-bottom:1px solid #ffffff55}button,input,textarea,select{font:inherit}'
     const result = await build({
         absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },

@@ -178,6 +178,11 @@ export const TahoeGlassSurface = React.forwardRef<
     typeof radius === "number"
       ? `${radius}px`
       : radius || VARIANT_RADIUS[variant];
+  // Decorative pills (badges and statuses) share geometry, not the action
+  // affordance. Keep the satin action coat on actual interactive surfaces.
+  const isGlassButton =
+    (variant === "button" || variant === "pill") &&
+    (as === "button" || (as === "a" && Boolean(href)) || props.role === "button");
   const Component = as as React.ElementType;
   const Content = as === "button" || as === "a" ? "span" : "div";
   const nativeProps: Record<string, unknown> = {};
@@ -223,6 +228,9 @@ export const TahoeGlassSurface = React.forwardRef<
       {...nativeProps}
       {...props}
       data-tahoe-glass-surface={variant}
+      data-tahoe-glass-button={isGlassButton ? "satin" : undefined}
+      data-tahoe-button-material={isGlassButton && solidMaterial ? "solid" : undefined}
+      data-tahoe-button-reduced-motion={isGlassButton && diagnostics.reducedMotion ? "true" : undefined}
       data-tahoe-glass-tone={tone}
       data-tahoe-glass-tint={resolvedTint}
       data-tahoe-chromium-optics={chrome.enabled ? (chrome.ready ? "refract" : "initializing") : undefined}
@@ -236,6 +244,7 @@ export const TahoeGlassSurface = React.forwardRef<
       {chrome.layers}
       <span
         aria-hidden="true"
+        data-tahoe-button-coat={isGlassButton ? "true" : undefined}
         className="pointer-events-none absolute inset-0 z-0 rounded-[inherit]"
         style={{
           display: chrome.enabled ? "none" : undefined,
@@ -257,9 +266,12 @@ export const TahoeGlassSurface = React.forwardRef<
         }}
       />
 
+      {isGlassButton && <span aria-hidden="true" data-tahoe-button-reflection="true" />}
+
       {resolvedTint !== "none" && (
         <span
           aria-hidden="true"
+          data-tahoe-button-tint={isGlassButton ? "true" : undefined}
           className="pointer-events-none absolute inset-0 z-[1] rounded-[inherit]"
           style={{
             backgroundColor:
@@ -285,6 +297,7 @@ export const TahoeGlassSurface = React.forwardRef<
       />
 
       <Content
+        data-tahoe-button-content={isGlassButton ? "true" : undefined}
         className={cn("relative z-20", TONE_CLASS[tone], contentClassName)}
       >
         {children}

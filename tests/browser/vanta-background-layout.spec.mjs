@@ -18,7 +18,7 @@ test.beforeAll(async () => {
   // Include the actual global cascade: compiling utilities alone would miss an
   // unlayered ID rule overriding the component's render-resolution dimensions.
   const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), {
-    base: root,
+      base: root + 'src/app',
     onDependency() {},
   })
   css = compiler.build(candidates)

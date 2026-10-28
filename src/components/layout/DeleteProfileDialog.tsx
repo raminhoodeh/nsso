@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useUser } from '@/components/providers/UserProvider'
 import { clearDeletedAccountSession } from '@/lib/supabase/deleted-account-session'
 import { deleteOwnProfile, getProfileDeleteIntent, ProfileDeleteError } from '@/lib/delete-profile-client'
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
 
 export const DELETE_PROFILE_CONFIRMATION = 'Are you sure? All your profile data will be deleted from our database and will be lost forever'
 
@@ -129,8 +130,8 @@ export default function DeleteProfileDialog({ open, onOpenChange }: { open: bool
         {verificationRequired && <Link href="/dashboard/security?next=/dashboard" onClick={() => onOpenChange(false)} className="mt-3 inline-flex min-h-11 items-center font-semibold text-slate-950 underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-slate-950">Verify my account</Link>}
         <p role="status" aria-live="polite" className="sr-only">{deleting ? 'Deleting your profile and signing you out…' : ''}</p>
         <div className="mt-6 flex justify-end gap-3">
-            {!localSessionIssue && <button ref={cancel} type="button" disabled={deleting} onClick={() => onOpenChange(false)} className="min-h-11 rounded-full border border-slate-500/30 bg-white/70 px-5 py-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:opacity-60">{error ? 'Close' : 'Cancel'}</button>}
-            {localSessionIssue ? <button type="button" onClick={() => window.location.replace('/')} className="inline-flex min-h-11 items-center rounded-full bg-slate-900 px-5 py-2 font-semibold text-white">Return to homepage</button> : <button type="button" disabled={deleting} onClick={() => { void remove() }} className="min-h-11 rounded-full bg-red-800 px-5 py-2 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-red-900 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60">{deleting ? 'Deleting…' : 'Yes'}</button>}
+            {!localSessionIssue && <TahoeGlassButton ref={cancel} type="button" disabled={deleting} onClick={() => onOpenChange(false)} tone="dark" className="min-h-11 px-5 py-2 font-medium focus-visible:ring-2 focus-visible:ring-slate-950 disabled:opacity-60" contentClassName="text-sm text-slate-950">{error ? 'Close' : 'Cancel'}</TahoeGlassButton>}
+            {localSessionIssue ? <TahoeGlassButton type="button" onClick={() => window.location.replace('/')} tone="dark" className="min-h-11 px-5 py-2" contentClassName="text-sm text-slate-950">Return to homepage</TahoeGlassButton> : <button type="button" disabled={deleting} onClick={() => { void remove() }} className="min-h-11 rounded-full bg-red-800 px-5 py-2 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-red-900 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60">{deleting ? 'Deleting…' : 'Yes'}</button>}
         </div>
     </dialog>, document.body)
 }

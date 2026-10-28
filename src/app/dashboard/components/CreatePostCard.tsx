@@ -89,10 +89,10 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
 
                 <div className="flex-1">
                     {!isExpanded ? (
-                        <TahoeGlassButton
+                        <TahoeGlassButton tone="light"
                             onClick={() => setIsExpanded(true)}
                             className="w-full px-4 py-2.5"
-                            contentClassName="w-full justify-start text-left text-white/55 text-sm font-normal"
+                            contentClassName="w-full justify-start text-left text-white/80 text-sm font-normal"
                         >
                             Share a project idea or update...
                         </TahoeGlassButton>
@@ -111,15 +111,15 @@ export default function CreatePostCard({ onPostCreated }: CreatePostCardProps) {
                             </TahoeGlassField>
                             {error && <p role="alert" className="text-sm text-rose-200">{error}</p>}
                             <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     onClick={() => setIsExpanded(false)}
                                     disabled={loading}
                                     className="px-4 py-1.5"
-                                    contentClassName="text-white/70"
+                                    contentClassName="text-white/80"
                                 >
                                     Cancel
                                 </TahoeGlassButton>
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     onClick={handleSubmit}
                                     disabled={!content.trim() || loading}
                                     className="px-6 py-1.5"

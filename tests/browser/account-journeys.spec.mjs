@@ -256,6 +256,18 @@ test('same-phone MFA enrollment exposes a private manual setup key and can cance
     expect(await page.evaluate(() => window.fixtureCalls.filter(call => call.name === 'unenroll').map(call => call.args))).toEqual([{ factorId: 'unverified-fixture-factor' }])
 })
 
+test('MFA glass verification keeps native keyboard submit and disables duplicate pending attempts', async ({ page }) => {
+    await fixture(page, '/dashboard/security')
+    await page.getByRole('button', { name: 'Set up authenticator', exact: true }).click()
+    const code = page.getByLabel('Six-digit authenticator code', { exact: true })
+    await code.fill('123456')
+    await page.evaluate(() => { window.fixtureMode = 'hold' })
+    await code.press('Enter')
+    await expect(page.getByRole('button', { name: 'Checking…', exact: true })).toBeDisabled()
+    expect(await page.evaluate(() => window.fixtureCalls.filter(call => call.name === 'challengeAndVerify').map(call => call.args))).toEqual([{ factorId: 'unverified-fixture-factor', code: '123456' }])
+    await expect(page.getByRole('button', { name: 'Sign out other sessions', exact: true })).toBeDisabled()
+})
+
 
 test('password-link verification outages leave a retry action instead of an endless spinner', async ({ page }) => {
     await fixture(page, '/set-password', 'throw')

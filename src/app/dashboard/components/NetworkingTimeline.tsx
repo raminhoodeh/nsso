@@ -132,10 +132,10 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                                             </Link>
 
                                                             {/* Add Note Mini Button */}
-                                                            <TahoeGlassButton
+                                                            <TahoeGlassButton tone="light"
                                                                 onClick={() => onOpenNotes(conn)}
                                                                 className="h-11 w-11 shrink-0 p-0"
-                                                                contentClassName={conn.notes ? 'text-white' : 'text-white/45'}
+                                                                contentClassName={conn.notes ? 'text-white' : 'text-white/60'}
                                                                 title="Notes"
                                                                 aria-label={`Edit notes for ${conn.fullName}`}
                                                             >

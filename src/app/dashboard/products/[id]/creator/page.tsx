@@ -275,7 +275,7 @@ export default function SalesPageCreator() {
                 {/* Header */}
                     <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">
-                            <TahoeGlassButton
+                            <TahoeGlassButton tone="light"
                                 onClick={() => router.push('/dashboard')}
                                 aria-label="Back to dashboard"
                                 className="-ml-2 h-10 w-10 px-0 py-0"
@@ -305,7 +305,7 @@ export default function SalesPageCreator() {
                                     </>
                                 )}
                             </TahoeGlassSurface>
-                            <TahoeGlassButton
+                            <TahoeGlassButton tone="light"
                                 onClick={() => router.push(`/products/${productId}?source=creator&preview=true`)}
                                 disabled={!saved || isUploading}
                                 className="h-[48px] w-full px-4 py-0 md:h-[32px] md:w-auto"
@@ -480,7 +480,7 @@ export default function SalesPageCreator() {
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Headline Hook
                                         </label>
-                                        <TahoeGlassButton
+                                        <TahoeGlassButton tone="light"
                                             onClick={() => copyPrompt('headline')}
                                             className="px-3 py-1.5"
                                             contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
@@ -511,7 +511,7 @@ export default function SalesPageCreator() {
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Tagline
                                         </label>
-                                        <TahoeGlassButton
+                                        <TahoeGlassButton tone="light"
                                             onClick={() => copyPrompt('tagline')}
                                             className="px-3 py-1.5"
                                             contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
@@ -551,7 +551,7 @@ export default function SalesPageCreator() {
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Introduction / Problem
                                         </label>
-                                        <TahoeGlassButton
+                                        <TahoeGlassButton tone="light"
                                             onClick={() => copyPrompt('intro')}
                                             className="px-3 py-1.5"
                                             contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
@@ -584,7 +584,7 @@ export default function SalesPageCreator() {
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     03 — Benefits
                                 </h3>
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     onClick={() => copyPrompt('benefits')}
                                     className="px-3 py-1.5"
                                     contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
@@ -617,7 +617,7 @@ export default function SalesPageCreator() {
                                                 aria-label={`Benefit ${index + 1}`}
                                             />
                                         </TahoeGlassField>
-                                        <TahoeGlassButton
+                                        <TahoeGlassButton tone="light"
                                             onClick={() => {
                                                 const newBenefits = (product.benefits || []).filter((_, i) => i !== index)
                                                 updateProduct({ benefits: newBenefits })
@@ -633,7 +633,7 @@ export default function SalesPageCreator() {
                                 ))}
 
                                 {(!product.benefits || product.benefits.length < 9) && (
-                                    <TahoeGlassButton
+                                    <TahoeGlassButton tone="light"
                                         onClick={() => updateProduct({ benefits: [...(product.benefits || []), ''] })}
                                         aria-label="Add benefit"
                                         className="h-8 w-8 px-0 py-0"
@@ -651,7 +651,7 @@ export default function SalesPageCreator() {
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     04 — Core Value Proposition
                                 </h3>
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     onClick={() => copyPrompt('value_proposition')}
                                     className="px-3 py-1.5"
                                     contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
@@ -714,7 +714,7 @@ export default function SalesPageCreator() {
                             <div className="space-y-4">
                                 {(product.testimonials || []).map((t, index) => (
                                     <TahoeGlassSurface key={index} variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={14} tone="light" className="group" contentClassName="relative p-4">
-                                        <TahoeGlassButton
+                                        <TahoeGlassButton tone="light"
                                             onClick={() => {
                                                 const newTestimonials = (product.testimonials || []).filter((_, i) => i !== index)
                                                 updateProduct({ testimonials: newTestimonials })
@@ -771,7 +771,7 @@ export default function SalesPageCreator() {
                                 ))}
 
                                 {(!product.testimonials || product.testimonials.length < 5) && (
-                                    <TahoeGlassButton
+                                    <TahoeGlassButton tone="light"
                                         onClick={() => updateProduct({ testimonials: [...(product.testimonials || []), { name: '', text: '' }] })}
                                         aria-label="Add testimonial"
                                         className="h-8 w-8 px-0 py-0"
@@ -785,14 +785,14 @@ export default function SalesPageCreator() {
 
                         {/* Bottom Actions */}
                         <div className="flex flex-col md:flex-row gap-4 pt-8 border-t border-white/10">
-                            <TahoeGlassButton
+                            <TahoeGlassButton tone="light"
                                 onClick={() => router.push('/dashboard')}
                                 className="min-h-[54px] flex-1 px-6 py-0 md:h-[44px] md:min-h-0"
                                 contentClassName="font-semibold !text-white"
                             >
                                 Edit Profile
                             </TahoeGlassButton>
-                            <TahoeGlassButton
+                            <TahoeGlassButton tone="light"
                                 onClick={() => router.push(`/products/${productId}?source=creator&preview=true`)}
                                 disabled={!saved || isUploading}
                                 className="min-h-[54px] flex-1 px-6 py-0 md:h-[44px] md:min-h-0"

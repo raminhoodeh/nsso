@@ -123,10 +123,10 @@ export default function FeedTab({ initialData }: FeedTabProps) {
                 {/* Load More */}
                 {cursor && (
                     <div className="flex justify-center pt-8">
-                        <TahoeGlassButton
+                        <TahoeGlassButton tone="light"
                             onClick={() => fetchFeed(cursor)}
                             className="px-6 py-2"
-                            contentClassName="text-white/75"
+                            contentClassName="text-white/80"
                         >
                             Load more activity
                         </TahoeGlassButton>

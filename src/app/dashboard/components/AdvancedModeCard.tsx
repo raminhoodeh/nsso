@@ -335,7 +335,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Job titles</h4>
-                    <TahoeGlassButton
+                    <TahoeGlassButton tone="light"
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my work experience..." }
                         }))}
@@ -346,7 +346,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton type="button" onClick={() => { void addExperience('top') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add experience">
+                <TahoeGlassButton tone="light" type="button" onClick={() => { void addExperience('top') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add experience">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
@@ -370,7 +370,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             >
                                                 <GripVertical size={16} />
                                             </button>
-                                            <TahoeGlassButton
+                                            <TahoeGlassButton tone="light"
                                                 onClick={() => deleteExperience(exp.id)}
                                                 className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
                                                 contentClassName="text-red-200"
@@ -416,7 +416,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </div>
                 </SortableContext>
             </DndContext>
-            {experiences.length > 0 && <TahoeGlassButton type="button" onClick={() => { void addExperience('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} aria-label="Add experience at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add experience</TahoeGlassButton>}
+            {experiences.length > 0 && <TahoeGlassButton tone="light" type="button" onClick={() => { void addExperience('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} aria-label="Add experience at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add experience</TahoeGlassButton>}
         </div>
     )
 
@@ -426,7 +426,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Qualifications</h4>
-                    <TahoeGlassButton
+                    <TahoeGlassButton tone="light"
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my qualifications..." }
                         }))}
@@ -437,7 +437,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton type="button" onClick={() => { void addQualification('top') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add qualification">
+                <TahoeGlassButton tone="light" type="button" onClick={() => { void addQualification('top') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add qualification">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
@@ -460,7 +460,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             >
                                                 <GripVertical size={16} />
                                             </button>
-                                            <TahoeGlassButton
+                                            <TahoeGlassButton tone="light"
                                                 onClick={() => deleteQualification(qual.id)}
                                                 className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
                                                 contentClassName="text-red-200"
@@ -506,7 +506,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </div>
                 </SortableContext>
             </DndContext>
-            {qualifications.length > 0 && <TahoeGlassButton type="button" onClick={() => { void addQualification('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} aria-label="Add qualification at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add qualification</TahoeGlassButton>}
+            {qualifications.length > 0 && <TahoeGlassButton tone="light" type="button" onClick={() => { void addQualification('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} aria-label="Add qualification at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add qualification</TahoeGlassButton>}
         </div>
     )
 
@@ -516,7 +516,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Projects</h4>
-                    <TahoeGlassButton
+                    <TahoeGlassButton tone="light"
                         onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add a project..." }
                         }))}
@@ -527,7 +527,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
                     </TahoeGlassButton>
                 </div>
-                <TahoeGlassButton type="button" onClick={() => { void addProject('top') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add project">
+                <TahoeGlassButton tone="light" type="button" onClick={() => { void addProject('top') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add project">
                     <Plus size={16} />
                 </TahoeGlassButton>
             </div>
@@ -550,7 +550,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                             >
                                                 <GripVertical size={16} />
                                             </button>
-                                            <TahoeGlassButton
+                                            <TahoeGlassButton tone="light"
                                                 onClick={() => deleteProject(proj.id)}
                                                 className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
                                                 contentClassName="text-red-200"
@@ -615,7 +615,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     </div>
                 </SortableContext>
             </DndContext>
-            {projects.length > 0 && <TahoeGlassButton type="button" onClick={() => { void addProject('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} aria-label="Add project at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add project</TahoeGlassButton>}
+            {projects.length > 0 && <TahoeGlassButton tone="light" type="button" onClick={() => { void addProject('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} aria-label="Add project at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add project</TahoeGlassButton>}
         </div>
     )
 
@@ -649,7 +649,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                         >
                             <h3 className="sr-only md:not-sr-only md:mb-4 md:block md:text-xs md:font-bold md:uppercase md:tracking-widest md:text-white/70">Experience & Education</h3>
                             <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0" role="tablist" aria-label="Experience and education sections">
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     ref={(node) => { sectionTabRefs.current.experiences = node }}
                                     type="button"
                                     id="experience-tab-experiences"
@@ -665,7 +665,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 >
                                     Job Titles
                                 </TahoeGlassButton>
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     ref={(node) => { sectionTabRefs.current.qualifications = node }}
                                     type="button"
                                     id="experience-tab-qualifications"
@@ -681,7 +681,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                                 >
                                     Qualifications
                                 </TahoeGlassButton>
-                                <TahoeGlassButton
+                                <TahoeGlassButton tone="light"
                                     ref={(node) => { sectionTabRefs.current.projects = node }}
                                     type="button"
                                     id="experience-tab-projects"

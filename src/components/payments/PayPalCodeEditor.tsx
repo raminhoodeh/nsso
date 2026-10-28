@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { parsePayPalInput, type PayPalConfig } from '@/lib/payments/paypal-config'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import SectionHelp from '@/app/dashboard/components/SectionHelp'
+import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
 
 interface Props {
     productId: string
@@ -176,9 +177,9 @@ export default function PayPalCodeEditor({ productId, accountId, initialHtml, on
                 {statusMessage}{unsaved && state !== 'saving' && state !== 'refreshing' ? ' Unsaved changes.' : ''}
             </p>
             <div className="flex flex-wrap items-center gap-2">
-                <button type="button" disabled={!parsed.ok || state === 'saving' || state === 'refreshing' || !unsaved} onClick={() => { if (state === 'conflict') void refreshForReview(); else void save() }} className="min-h-11 rounded-xl border border-white/20 bg-white/10 px-4 text-sm text-white disabled:opacity-40">
+                <TahoeGlassButton type="button" disabled={!parsed.ok || state === 'saving' || state === 'refreshing' || !unsaved} onClick={() => { if (state === 'conflict') void refreshForReview(); else void save() }} tone="light" className="min-h-11 px-4 py-2 disabled:opacity-40" contentClassName="text-sm text-white">
                     {state === 'saving' ? 'Saving...' : state === 'refreshing' ? 'Refreshing...' : state === 'conflict' ? 'Refresh for review' : state === 'error' ? 'Check status and retry' : 'Save payment button'}
-                </button>
+                </TahoeGlassButton>
                 <SectionHelp title="PayPal checkout">PayPal sets the price, recipient, checkout and delivery in your PayPal account. Save publishes this button. The preview does not start or verify a payment or merchant identity.</SectionHelp>
             </div>
             {active && parsed.ok && parsed.config && <PayPalSmartButton config={parsed.config} preview />}

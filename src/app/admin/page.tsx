@@ -153,7 +153,7 @@ export default function AdminPage() {
                                         </td>
                                         <td className="py-4 px-4">
                                             <div className="flex justify-center">
-                                                <TahoeGlassButton
+                                                <TahoeGlassButton tone="light"
                                                     onClick={() => toggleAdmin(user.id, user.user_type)}
                                                     disabled={user.id === currentUserId || (user.user_type !== 'admin' && !isAdminEmailEligible(user.email))}
                                                     title={!isAdminEmailEligible(user.email) && user.user_type !== 'admin' ? 'Administrator access is limited to the approved email addresses.' : undefined}
@@ -176,7 +176,7 @@ export default function AdminPage() {
                                         </td>
                                         <td className="py-4 px-4">
                                             <div className="flex justify-center">
-                                                <TahoeGlassButton
+                                                <TahoeGlassButton tone="light"
                                                     onClick={() => toggleFilmEditor(user.id, user.permissions?.includes('razinflix:manage') || false)}
                                                     role="switch"
                                                     aria-checked={user.permissions?.includes('razinflix:manage') || false}

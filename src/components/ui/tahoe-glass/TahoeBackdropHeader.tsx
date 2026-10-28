@@ -61,6 +61,8 @@ export interface TahoeBackdropSurfaceProps extends Omit<
   displacementProfile?: TahoeDisplacementProfile;
   /** Wide chrome should not inherit the fallback material's radial spotlight. */
   materialLighting?: "radial" | "uniform";
+  /** Neutral frosting softens the transmitted scene behind long-form content. */
+  materialFinish?: "clear" | "satin";
 }
 
 export type TahoeBackdropHeaderProps = Omit<
@@ -143,6 +145,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     chromiumAppearance = "dark",
     displacementProfile = "convex",
     materialLighting = "radial",
+    materialFinish = "clear",
     style,
     ...props
   },
@@ -164,7 +167,7 @@ export const TahoeBackdropSurface = React.forwardRef<
     backdropEnabled && !insideDirectBackdrop && supportsChromeGlassGeometry(undefined, style) && ["card", "panel", "mediaFrame", "menu"].includes(variant) &&
     props["data-tahoe-readable-overlay" as keyof typeof props] !== "true" &&
     !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""),
-    as === "header" || as === "nav", chromiumAppearance, squareTop);
+    as === "header" || as === "nav", chromiumAppearance, squareTop, materialFinish === "satin");
   const resolvedTint = chrome.enabled && semanticTint === "none" ? (tone === "dark" ? "light" : "dark") : semanticTint;
   const resolvedTintOpacity = chrome.enabled && semanticTint === "none" ? 0.18 : semanticTintOpacity;
   const filterRef = React.useRef<SVGFilterElement | null>(null);
@@ -807,25 +810,26 @@ export const TahoeBackdropSurface = React.forwardRef<
   const fallbackFrost =
     mode !== "solid" && !liveBackdropSelected && !webglMaterialActive;
   const activeWebglMaterial = "blur(0.75px) saturate(160%) brightness(1.03)";
+  const satinBlur = materialFinish === "satin" ? "5px" : null;
   const backdropFilter =
     chrome.enabled || mode === "solid"
       ? "none"
       : liveBackdropSelected
-        ? `url(#${filterId}) blur(2px) saturate(180%) brightness(1.05)`
+        ? `url(#${filterId}) blur(${satinBlur ?? "2px"}) saturate(180%) brightness(1.05)`
         : webglMaterialActive
-          ? activeWebglMaterial
+          ? satinBlur ? `blur(${satinBlur}) saturate(160%) brightness(1.03)` : activeWebglMaterial
           : fallbackFrost
-            ? "blur(2px) saturate(180%) brightness(1.05)"
+            ? `blur(${satinBlur ?? "2px"}) saturate(180%) brightness(1.05)`
             : "none";
   const webkitBackdropFilter =
     chrome.enabled || mode === "solid"
       ? "none"
       : liveBackdropSelected
-        ? `url(#${filterId}) blur(1px) saturate(180%) brightness(1.05)`
+        ? `url(#${filterId}) blur(${satinBlur ?? "1px"}) saturate(180%) brightness(1.05)`
         : webglMaterialActive
-          ? activeWebglMaterial
+          ? satinBlur ? `blur(${satinBlur}) saturate(160%) brightness(1.03)` : activeWebglMaterial
           : fallbackFrost
-            ? "blur(1px) saturate(180%) brightness(1.05)"
+            ? `blur(${satinBlur ?? "1px"}) saturate(180%) brightness(1.05)`
             : "none";
 
   return (
@@ -922,6 +926,7 @@ export const TahoeBackdropSurface = React.forwardRef<
         data-tahoe-glass-displacement={TAHOE_DISPLACEMENT_SCALE}
         data-tahoe-displacement-profile={displacementProfile}
         data-tahoe-material-lighting={materialLighting}
+        data-tahoe-material-finish={materialFinish}
       >
         {chrome.layers}
         {ownedSceneEligible ? (

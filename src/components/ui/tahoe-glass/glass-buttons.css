@@ -1,0 +1,159 @@
+/* Shared action material: a neutral satin lens, with no fixed blue pigment.
+   Optical roots remain clear; coatings never intercept native input. */
+[data-tahoe-glass-button="satin"] {
+  /* One press transform for links and native buttons; Tailwind's independent
+     scale utilities must not compound the shared material interaction. */
+  scale: none;
+  transition: transform 180ms ease-out, box-shadow 220ms ease-out;
+}
+
+[data-tahoe-glass-button="satin"] > [data-tahoe-button-coat] {
+  z-index: 2;
+  background: linear-gradient(135deg, rgb(255 255 255 / 62%), rgb(255 255 255 / 55%) 50%, rgb(255 255 255 / 60%)) !important;
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 94%), inset 0 0 0 1px rgb(255 255 255 / 58%), inset 0 -2px 4px rgb(255 255 255 / 42%), inset 0 3px 5px rgb(31 41 55 / 15%), 0 3px 8px rgb(15 23 42 / 8%) !important;
+}
+
+/* A white label needs a dark transmission floor on arbitrary creator imagery.
+   The neutral rim and interaction stay the same as the pale sign-in lens. */
+[data-tahoe-glass-button="satin"][data-tahoe-glass-tone="light"] > [data-tahoe-button-coat] {
+  background: linear-gradient(135deg, rgb(8 12 20 / 86%), rgb(8 12 20 / 80%) 50%, rgb(8 12 20 / 84%)) !important;
+}
+
+[data-tahoe-button-reflection] {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0%);
+  transition: box-shadow 220ms ease-out;
+}
+
+[data-tahoe-button-reflection]::before {
+  content: "";
+  position: absolute;
+  inset: -30% auto -30% -55%;
+  width: 45%;
+  opacity: 0;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 12%) 20%, rgb(255 255 255 / 72%) 50%, rgb(255 255 255 / 12%) 80%, transparent);
+  transform: translateX(0) skewX(-18deg);
+  transition: transform 650ms cubic-bezier(0.2, 0.65, 0.3, 1), opacity 180ms ease-out;
+}
+
+[data-tahoe-glass-button="satin"][data-tahoe-glass-tone="light"] > [data-tahoe-button-reflection]::before {
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 4%) 20%, rgb(255 255 255 / 12%) 50%, rgb(255 255 255 / 4%) 80%, transparent);
+}
+
+@media (hover: hover) {
+  [data-tahoe-glass-button="satin"]:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):hover {
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 42%), 0 4px 16px rgb(255 255 255 / 28%), 0 3px 10px rgb(15 23 42 / 10%);
+  }
+
+  [data-tahoe-glass-button="satin"]:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):hover > [data-tahoe-button-reflection]::before {
+    opacity: 1;
+    transform: translateX(375%) skewX(-18deg);
+  }
+}
+
+[data-tahoe-glass-button="satin"]:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):active {
+  transform: scale(0.98);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 65%), 0 0 20px rgb(255 255 255 / 42%);
+}
+
+[data-tahoe-glass-button="satin"]:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):active > [data-tahoe-button-reflection] {
+  box-shadow: inset 0 0 15px rgb(255 255 255 / 52%), inset 0 0 0 1px rgb(255 255 255 / 80%);
+}
+
+[data-tahoe-glass-button="satin"][data-tahoe-glass-tone="light"]:not(:disabled):not([aria-disabled="true"]):not([aria-busy="true"]):active > [data-tahoe-button-reflection] {
+  box-shadow: inset 0 0 15px rgb(255 255 255 / 18%), inset 0 0 0 1px rgb(255 255 255 / 80%);
+}
+
+[data-tahoe-glass-button="satin"]:focus-visible {
+  outline: 2px solid #0f172a;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgb(255 255 255 / 82%), 0 0 18px rgb(255 255 255 / 35%);
+}
+
+[data-tahoe-glass-button="satin"]:is(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+  transform: none;
+  box-shadow: none;
+}
+
+[data-tahoe-glass-button="satin"][data-tahoe-button-material="solid"] > [data-tahoe-button-coat] {
+  background: Canvas !important;
+  box-shadow: inset 0 0 0 1px CanvasText !important;
+}
+
+[data-tahoe-glass-button="satin"][data-tahoe-button-material="solid"] > [data-tahoe-button-reflection],
+[data-tahoe-glass-button="satin"][data-tahoe-button-material="solid"] > [data-tahoe-button-tint] {
+  display: none;
+}
+
+[data-tahoe-button-reduced-motion="true"],
+[data-tahoe-button-reduced-motion="true"] > [data-tahoe-button-reflection],
+[data-tahoe-button-reduced-motion="true"] > [data-tahoe-button-reflection]::before {
+  transition: none;
+  transform: none !important;
+  scale: none !important;
+}
+
+[data-tahoe-button-reduced-motion="true"] > [data-tahoe-button-reflection]::before {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahoe-glass-button="satin"],
+  [data-tahoe-button-reflection],
+  [data-tahoe-button-reflection]::before {
+    transition: none;
+    transform: none !important;
+    scale: none !important;
+  }
+
+  [data-tahoe-button-reflection]::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  [data-tahoe-glass-button="satin"] {
+    color: CanvasText;
+    box-shadow: none !important;
+  }
+
+  [data-tahoe-glass-button="satin"][data-tahoe-glass-tone] > [data-tahoe-button-coat] {
+    background: Canvas !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: inset 0 0 0 1px CanvasText !important;
+  }
+
+  [data-tahoe-glass-button="satin"] > [data-tahoe-button-reflection],
+  [data-tahoe-glass-button="satin"] > [data-tahoe-button-tint] {
+    display: none;
+  }
+
+  [data-tahoe-glass-button="satin"]:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* Important utilities such as creator !text-white sit inside Tailwind's
+   utilities layer. Important base declarations win that layer ordering, so
+   solid accessibility materials cannot retain a white-on-white label. */
+@layer base {
+  [data-tahoe-glass-button="satin"][data-tahoe-button-material="solid"] > [data-tahoe-button-content],
+  [data-tahoe-glass-button="satin"][data-tahoe-button-material="solid"] > [data-tahoe-button-content] * {
+    color: CanvasText !important;
+    text-shadow: none !important;
+  }
+
+  @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+    [data-tahoe-glass-button="satin"] > [data-tahoe-button-content],
+    [data-tahoe-glass-button="satin"] > [data-tahoe-button-content] * {
+      color: CanvasText !important;
+      text-shadow: none !important;
+    }
+  }
+}

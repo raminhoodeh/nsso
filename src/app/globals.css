@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../components/ui/tahoe-glass/glass-buttons.css";
 
 /* ============================================
    NSSO Design System - Global Styles
@@ -176,6 +177,17 @@ body {
   background: var(--nsso-sky-glass-coating);
 }
 
+/* Neutral crystal transmits the scene's colour; its satin finish softens detail. */
+.home-crystal-glass:not([data-tahoe-backdrop-backend="solid"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035));
+}
+
 @media (min-width: 1024px) {
   .home-sky-glass:not([data-tahoe-backdrop-backend="solid"])::after {
     content: "";
@@ -190,6 +202,7 @@ body {
 
 @media (forced-colors: active), (prefers-reduced-transparency: reduce) {
   .home-sky-glass::after,
+  .home-crystal-glass::after,
   .nsso-topbar-glass::after {
     display: none;
   }
