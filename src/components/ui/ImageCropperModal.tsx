@@ -2,12 +2,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Cropper from 'react-easy-crop'
-import { X, ZoomIn } from 'lucide-react'
+import { ZoomIn } from 'lucide-react'
 import {
-    TahoeGlassButton,
     TahoeGlassDialog,
     TahoeGlassField,
 } from '@/components/ui/tahoe-glass'
+import { LightButton, LightCloseButton } from '@/components/ui/LightButton';
 import getCroppedImg from '@/lib/canvasUtils'
 import { runProfileMediaAttempt } from '@/lib/profile-media-client'
 
@@ -98,18 +98,7 @@ function ImageCropperContent({
         >
             <header className="flex shrink-0 items-center justify-between border-b border-slate-500/15 px-4 py-2 sm:px-6">
                 <h2 id="image-cropper-title" className="text-xl font-bold text-slate-950">Crop Image</h2>
-                <TahoeGlassButton
-                    onClick={onClose}
-                    disabled={busy}
-                    aria-label="Close image cropper"
-                    tone="dark"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.04}
-                    className="h-11 w-11 p-0"
-                    contentClassName="text-slate-700 hover:text-slate-950"
-                >
-                    <X size={24} />
-                </TahoeGlassButton>
+                <LightCloseButton onClick={onClose} disabled={busy} aria-label="Close image cropper" />
             </header>
 
             {/* The crop stage intentionally stays opaque so image bounds are legible. */}
@@ -156,28 +145,22 @@ function ImageCropperContent({
                 {error && <p role="alert" className="text-sm text-rose-800">{error}</p>}
 
                 <div className="flex gap-4">
-                    <TahoeGlassButton
+                    <LightButton
                         onClick={onClose}
                         disabled={busy}
-                        tone="dark"
-                        semanticTint="dark"
-                        semanticTintOpacity={0.04}
                         className="min-h-11 flex-1 border border-white/15 px-3 py-2"
                         contentClassName="text-slate-950"
                     >
                         Cancel
-                    </TahoeGlassButton>
-                    <TahoeGlassButton
+                    </LightButton>
+                    <LightButton
                         onClick={handleSave}
                         disabled={busy || !croppedAreaPixels}
-                        tone="dark"
-                        semanticTint="light"
-                        semanticTintOpacity={0.07}
                         className="min-h-11 flex-1 border border-white/20 px-3 py-2"
                         contentClassName="text-slate-950"
                     >
                         {busy ? 'Processing...' : 'Apply Crop'}
-                    </TahoeGlassButton>
+                    </LightButton>
                 </div>
             </div>
         </TahoeGlassDialog>

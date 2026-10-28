@@ -1,10 +1,17 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import { compile } from '@tailwindcss/node'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { controlMaterial, expectWhiteEditorControls } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-let bundle
+let bundle, playerCss
 test.beforeAll(async () => {
+  const files = ['src/components/home/HomeVisionPlayer.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts']
+  const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
+  const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
+  playerCss = compiler.build(candidates)
   const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
     plugins: [{ name: 'public-fixtures', setup(builder) {
       builder.onResolve({ filter: /^(?:next\/(?:navigation|link)|@\/lib\/supabase\/client|@\/components\/ui\/tahoe-glass)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
@@ -36,9 +43,10 @@ async function fixture(page, screen, options = {}) {
       requests.push(url.searchParams.get('username'))
       return route.fulfill({ status: options.availabilityError ? 503 : 200, contentType: 'application/json', body: JSON.stringify({ available: options.available !== false, reason: 'Username is already taken' }) })
     }
-    return route.fulfill({ contentType: 'text/html', body: '<div id="root"></div>' })
+    return route.fulfill({ contentType: 'text/html', body: (screen === 'player' ? '<meta name="viewport" content="width=device-width,initial-scale=1">' : '') + '<div id="root"></div>' })
   })
   await page.goto('https://nsso.test/')
+  if (screen === 'player') await page.addStyleTag({ content: playerCss })
   await page.addScriptTag({ content: bundle })
   await page.evaluate(({ screen, options }) => { window.fixtureDuration = options.duration; window.fixtureReturnTo = options.returnTo; window.renderPublicFixture(screen) }, { screen, options })
   return { requests, errors }
@@ -98,6 +106,18 @@ test('vision player reads metadata present at mount and attaches media only on p
   await fixture(page, 'player', { duration: 100 })
   await expect(page.locator('video')).not.toHaveAttribute('src')
   await expect(page.getByText('0:00 / 1:40', { exact: true })).toBeVisible()
+  const controls = page.getByRole('group', { name: 'Playback controls', exact: true })
+  await expectWhiteEditorControls(controls)
+  await expect(controls).toHaveCSS('background-color', 'rgb(8, 12, 20)')
+  for (const action of ['Play video', 'Mute video', 'Enter fullscreen']) {
+    const box = await controls.getByRole('button', { name: action, exact: true }).boundingBox()
+    expect(box.width).toBe(44); expect(box.height).toBe(44)
+  }
+  const youtube = controls.getByRole('link', { name: 'Watch this video on YouTube', exact: true })
+  if (page.viewportSize().width >= 640) {
+    await expect(youtube).toBeVisible()
+    expect(await controlMaterial(youtube)).toMatchObject({ width: 44, height: 44, background: 'rgb(244, 245, 248)', textShadow: 'none' })
+  } else await expect(youtube).toBeHidden()
   await page.getByRole('button', { name: 'Play video', exact: true }).click()
   await expect(page.locator('video')).toHaveAttribute('src', '/nsso-vision-ukYfrg0ZNbA.mp4')
   await expect(page.getByRole('button', { name: 'Pause video', exact: true })).toBeVisible()
@@ -147,6 +167,7 @@ test('video failures expose an actionable retry and an independent YouTube fallb
   await page.locator('video').evaluate(element => element.dispatchEvent(new Event('error')))
   await expect(page.getByRole('alert')).toContainText('temporarily unavailable')
   await expect(page.getByRole('button', { name: 'Play video', exact: true })).toBeDisabled()
+  await expectWhiteEditorControls(page.getByRole('group', { name: 'The nsso vision video player', exact: true }))
   await expect(page.getByRole('alert').getByRole('link', { name: 'Watch on YouTube', exact: true })).toHaveAttribute('href', 'https://www.youtube.com/watch?v=ukYfrg0ZNbA')
   await page.getByRole('button', { name: 'Retry video', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Pause video', exact: true })).toBeEnabled()

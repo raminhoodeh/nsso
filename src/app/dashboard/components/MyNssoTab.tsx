@@ -7,7 +7,8 @@ import NetworkingTimeline from './NetworkingTimeline'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import { useUI } from '@/components/providers/UIProvider'
-import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { LightButton, LightCloseButton } from '@/components/ui/LightButton';
 import { boundedClientRead } from '@/lib/client-read'
 import Link from 'next/link'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
@@ -139,7 +140,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
     return (
         <div className="space-y-6">
-            {loadError && <div role="alert" className="rounded-xl border border-white/20 p-4 text-white"><p>{loadError}</p><TahoeGlassButton type="button" tone="light" className="mt-3 min-h-11 px-4 py-2" contentClassName="text-sm text-white" onClick={() => { void loadConnections() }}>Retry connections</TahoeGlassButton></div>}
+            {loadError && <div role="alert" className="rounded-xl border border-white/20 p-4 text-white"><p>{loadError}</p><LightButton type="button" className="mt-3 min-h-11 px-4 py-2" contentClassName="text-sm text-slate-800" onClick={() => { void loadConnections() }}>Retry connections</LightButton></div>}
             <GlassCard refractive className="relative p-4 sm:p-6 lg:p-8">
                 {/* Header Section */}
                 <div className="text-left space-y-2 mb-6 md:pr-52">
@@ -274,11 +275,7 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
         >
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold">Notes for {connection.fullName}</h3>
-                <button type="button" onClick={onClose} disabled={busy} className={cn(LIGHT_PANEL.control, LIGHT_PANEL.focus, 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full')} aria-label="Close notes dialog">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                </button>
+                <LightCloseButton onClick={onClose} disabled={busy} aria-label="Close notes dialog" />
             </div>
             <TahoeGlassField label="Connection notes" visuallyHideLabel tone="dark" className={cn(LIGHT_PANEL.group, 'mb-2 overflow-hidden rounded-2xl')} surfaceClassName="p-0" controlClassName={cn(LIGHT_PANEL.focus, 'max-h-[35dvh] min-h-24 resize-y p-3')}>
                 <textarea
@@ -295,9 +292,9 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
             {error && <p role="alert" className="mb-3 text-sm text-rose-800">{error}</p>}
             <div className="flex flex-wrap justify-between items-center text-xs text-slate-700 gap-3">
                 <span>{content.length} / 3333 characters</span>
-                <button type="button" onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className={cn(buttonClass, 'font-semibold')}>
+                <LightButton onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className={cn(buttonClass, 'font-semibold')}>
                     {saving ? 'Saving...' : 'Save Notes'}
-                </button>
+                </LightButton>
             </div>
             <div className="mt-5 pt-4 border-t border-slate-500/20">
                 {confirmRemoval ? (
@@ -306,14 +303,14 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
                             Remove {connection.fullName} from your My nsso? This removes them from your list and deletes your private notes, including any unsaved notes. Their record of you stays unchanged.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            <button type="button" onClick={() => { void removeConnection() }} disabled={busy} className={cn(buttonClass, 'text-rose-800 hover:text-rose-900')}>
+                            <LightButton onClick={() => { void removeConnection() }} disabled={busy} className={cn(buttonClass, 'text-rose-800 hover:text-rose-900')}>
                                 {removing ? 'Removing...' : 'Confirm removal'}
-                            </button>
-                            <button type="button" onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className={buttonClass}>Keep connection</button>
+                            </LightButton>
+                            <LightButton onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className={buttonClass}>Keep connection</LightButton>
                         </div>
                     </div>
                 ) : (
-                    <button type="button" onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className={cn(buttonClass, 'text-rose-800 hover:text-rose-900')}>Remove from My nsso</button>
+                    <LightButton onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className={cn(buttonClass, 'text-rose-800 hover:text-rose-900')}>Remove from My nsso</LightButton>
                 )}
             </div>
         </TahoeGlassDialog>

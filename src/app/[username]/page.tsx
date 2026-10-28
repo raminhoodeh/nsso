@@ -5,6 +5,7 @@ import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeContactUrl, safeWebUrl } from '@/lib/urls'
 import ShinyLink from '@/components/ui/ShinyLink'
+import { lightButtonClass } from '@/components/ui/light-button-styles'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
@@ -118,11 +119,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
             {/* Profile Content */}
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} space-y-12 lg:space-y-20`}>
                 <nav id="profile-sections" aria-label="Profile sections" className="flex scroll-mt-32 flex-wrap justify-center gap-2 lg:justify-start">
-                    <a href="#profile-about" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">About</a>
-                    {experiences.length > 0 && <a href="#profile-experience" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Experience</a>}
-                    {qualifications.length > 0 && <a href="#profile-qualifications" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Qualifications</a>}
-                    {projects.length > 0 && <a href="#profile-projects" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Projects</a>}
-                    {products.length > 0 && <a href="#profile-products" className="inline-flex min-h-11 items-center rounded-full border border-white/25 bg-slate-950/45 px-4 text-sm text-white">Products & Services</a>}
+                    <a href="#profile-about" className={lightButtonClass}>About</a>
+                    {experiences.length > 0 && <a href="#profile-experience" className={lightButtonClass}>Experience</a>}
+                    {qualifications.length > 0 && <a href="#profile-qualifications" className={lightButtonClass}>Qualifications</a>}
+                    {projects.length > 0 && <a href="#profile-projects" className={lightButtonClass}>Projects</a>}
+                    {products.length > 0 && <a href="#profile-products" className={lightButtonClass}>Products & Services</a>}
                 </nav>
 
                 {/* 1. Identity & Resume Section */}

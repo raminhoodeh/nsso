@@ -1,13 +1,31 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import { compile } from '@tailwindcss/node'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import ts from 'typescript'
+import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const ownerId = '11111111-1111-4111-8111-111111111111', otherId = '22222222-2222-4222-8222-222222222222', productId = '33333333-3333-4333-8333-333333333333'
 const action = 'https://www.paypal.com/ncp/payment/AB12CD34EF56G'
 const product = { id: productId, user_id: ownerId, name: 'Fixture product', headline: 'Published fixture sales page', tagline: 'Fixture tagline', intro_text: 'Published fixture content', price: 'GBP 12', description: '', benefits: ['One benefit'], testimonials: [], video_url: '', image_url: '', purchase_link: 'https://seller.example.test/purchase', purchase_link_active: true, paypal_active: true, sales_page_published: true, payment_config: { version: 1, kind: 'payment-form', action, fields: [], label: 'Buy fixture product' } }
-let bundle
+let bundle, css
 test.beforeAll(async () => {
+    const files = ['src/app/products/[id]/page.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/PreviewCheckoutButton.tsx', 'src/components/ui/PayPalSmartButton.tsx']
+    const candidates = files.flatMap(file => {
+        const source = ts.createSourceFile(file, readFileSync(root + file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+        const literals = []
+        const visit = node => {
+            if (ts.isStringLiteralLike(node)) literals.push(node.text)
+            if (ts.isTemplateExpression(node)) literals.push(node.head.text, ...node.templateSpans.map(span => span.literal.text))
+            ts.forEachChild(node, visit)
+        }
+        visit(source)
+        return literals.flatMap(value => value.split(/\s+/))
+    })
+    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
+    css = compiler.build(candidates)
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
         define: { 'process.env.NODE_ENV': '"test"', 'process.env.NEXT_PUBLIC_SUPABASE_URL': '"https://product-fixture.supabase.co"', 'process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': '"synthetic-anonymous-key"' },
         plugins: [{ name: 'product-page-fixture', setup(builder) {
@@ -17,7 +35,7 @@ test.beforeAll(async () => {
                     : path === 'next/image' ? 'import React from "react";export default ({src,alt})=><img src={src} alt={alt}/>;'
                         : path === 'next/link' ? 'import React from "react";export default ({href,children})=><a href={href}>{children}</a>;'
                             : path.endsWith('UserProvider') ? 'import {useSyncExternalStore} from "react";export const useUser=()=>useSyncExternalStore(fn=>{window.fixtureListeners.add(fn);return()=>window.fixtureListeners.delete(fn)},()=>window.fixtureAccount);'
-                                : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,target,rel})=><Tag href={href} target={target} rel={rel}>{children}</Tag>;export const TahoeGlassButton=({children,onClick,...props})=><button onClick={onClick}>{children}</button>;'
+                                : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,target,rel,className,contentClassName,style})=><Tag href={href} target={target} rel={rel} className={className} style={style}><div className={contentClassName}>{children}</div></Tag>;export const TahoeGlassButton=({children,onClick,...props})=><button onClick={onClick}>{children}</button>;'
                                     : 'export const createClient=()=>{window.fixtureSessionClients++;return window.fixtureSession};' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';import {createRoot} from 'react-dom/client';import Page from './src/app/products/[id]/page';
@@ -31,7 +49,7 @@ test.beforeAll(async () => {
     bundle = result.outputFiles[0].text
 })
 
-async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '' } = {}) {
+async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '', styled = false, withTestimonials = false } = {}) {
     const requests = [], errors = []
     const pendingPublic = []
     let publicReleased = false
@@ -39,7 +57,7 @@ async function fixture(page, { published = true, account = { user: null, loading
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', async route => {
         const url = new URL(route.request().url())
-        if (url.origin === 'https://nsso.test') return route.fulfill({ contentType: url.pathname.endsWith('.png') ? 'image/png' : 'text/html', body: url.pathname.endsWith('.png') ? '' : '<div id="root"></div>' })
+        if (url.origin === 'https://nsso.test') return route.fulfill({ contentType: url.pathname.endsWith('.png') ? 'image/png' : 'text/html', body: url.pathname.endsWith('.png') ? '' : (styled ? '<meta name="viewport" content="width=device-width, initial-scale=1"><div id="root"></div>' : '<div id="root"></div>') })
         if (url.origin !== 'https://product-fixture.supabase.co') throw new Error('Unexpected product fixture destination')
         requests.push({ path: url.pathname, authorization: route.request().headers().authorization })
         if (url.pathname.startsWith('/auth/')) return route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"Synthetic Auth outage"}' })
@@ -48,13 +66,14 @@ async function fixture(page, { published = true, account = { user: null, loading
         if (url.pathname === '/rest/v1/rpc/get_product_details') {
             if (deferPublic && !publicReleased) await new Promise(resolve => pendingPublic.push(resolve))
             if (failures-- > 0) return route.abort('failed')
-            data = published ? { ...product, ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
+            data = published ? { ...product, ...(withTestimonials ? { testimonials: [{ name: 'First customer', text: 'First synthetic quote' }, { name: 'Second customer', text: 'Second synthetic quote' }] } : {}), ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
         } else if (url.pathname === '/rest/v1/contacts') data = [{ method: 'Email', value: 'public-fixture@example.test' }]
         else if (url.pathname === '/rest/v1/users') data = { username: 'fixture-seller' }
         else throw new Error('Unexpected public product query')
         return route.fulfill({ contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(data) })
     })
     await page.goto('https://nsso.test/products/' + productId + search)
+    if (styled) await page.addStyleTag({ content: css + '\nbody{margin:0;background:#43628c;color:white;font-family:Arial}button{font:inherit}' })
     await page.evaluate(({ account, privateMode, draft }) => {
         window.fixtureAccount = account; window.fixturePrivateMode = privateMode; window.fixtureDraft = draft
         localStorage.setItem('sb-product-fixture-auth-token', JSON.stringify({ access_token: 'expired-synthetic-token', refresh_token: 'synthetic-refresh-token', expires_at: 1, user: { id: 'previous-private-account' } }))
@@ -62,6 +81,59 @@ async function fixture(page, { published = true, account = { user: null, loading
     await page.addScriptTag({ content: bundle })
     return { requests, errors, releasePublic: () => { publicReleased = true; pendingPublic.splice(0).forEach(resolve => resolve()) } }
 }
+
+test('public product actions share white controls while merchant checkout and guarded destinations remain intact', async ({ page }, testInfo) => {
+    const checkMaterial = async action => {
+        await action.scrollIntoViewIfNeeded()
+        await expect(action).toHaveAttribute('data-nsso-control', 'white')
+        const backdrop = await page.evaluate(() => document.body.style.background)
+        await expectOpaqueLightPanel(page, action)
+        await page.evaluate(value => { document.body.style.background = value }, backdrop)
+        const content = action.locator('[data-light-button-content]')
+        const ink = (await content.textContent()).trim() ? content : action.locator('svg')
+        expect(await minimumTextContrast(ink)).toBeGreaterThanOrEqual(4.5)
+        const bounds = await action.boundingBox()
+        // Mobile compositing may report 43.999992 for an exact 44 CSS px edge.
+        expect(Number(bounds.height.toFixed(3))).toBeGreaterThanOrEqual(44)
+        expect(Number(bounds.width.toFixed(3))).toBeGreaterThanOrEqual(44)
+    }
+    const { errors, requests } = await fixture(page, { styled: true, withTestimonials: true })
+    expect(await page.evaluate(() => window.innerWidth)).toBe(page.viewportSize().width)
+    await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+    const purchase = page.getByRole('link', { name: 'Link to Purchase', exact: true }).filter({ visible: true })
+    await checkMaterial(purchase)
+    await expect(purchase).toHaveAttribute('href', product.purchase_link)
+    await expect(purchase).toHaveAttribute('target', '_blank')
+    await expect(purchase).toHaveAttribute('rel', 'noopener noreferrer')
+    const merchant = page.locator('form button').filter({ visible: true })
+    await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
+    await expect(merchant).not.toHaveAttribute('data-nsso-control')
+    await expect(merchant.locator('..')).toHaveAttribute('action', action)
+    const next = page.getByRole('button', { name: 'Next testimonial', exact: true })
+    const previous = page.getByRole('button', { name: 'Previous testimonial', exact: true })
+    await checkMaterial(next)
+    await checkMaterial(previous)
+    await next.press('Enter')
+    await expect(page.getByText('"Second synthetic quote"', { exact: true })).toBeVisible()
+    await previous.press('Space')
+    await expect(page.getByText('"First synthetic quote"', { exact: true })).toBeVisible()
+    const back = page.getByRole('button', { name: 'Back to Profile', exact: true })
+    await checkMaterial(back)
+    await expect(page.getByRole('link', { name: 'nsso.me/fixture-seller', exact: true })).toBeVisible()
+    await back.press('Enter')
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual(['/fixture-seller'])
+    expect(requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
+    expect(errors).toEqual([])
+    await page.screenshot({ path: testInfo.outputPath('white-public-product-actions.png'), fullPage: true })
+    await fixture(page, { styled: true, failPublicOnce: true })
+    const retry = page.getByRole('button', { name: 'Retry product', exact: true })
+    await checkMaterial(retry)
+    const recovery = page.getByRole('button', { name: 'Back to nsso', exact: true })
+    await checkMaterial(recovery)
+    await retry.press('Enter')
+    await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+})
 
 test('narrow product loading, error and not-found states retain a keyboard-accessible safe exit without a bottom bar', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })

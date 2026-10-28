@@ -21,7 +21,7 @@ const test = base.extend({
 })
 
 test.beforeAll(async () => {
-    const source = ['src/components/agent/AgentChatInterface.tsx', 'src/components/ui/light-panel.ts'].map(file => readFileSync(root + file, 'utf8')).join('\n')
+    const source = ['src/components/agent/AgentChatInterface.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts'].map(file => readFileSync(root + file, 'utf8')).join('\n')
     const candidates = [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + 'body{margin:0;font-family:Arial}#root{height:100dvh}'

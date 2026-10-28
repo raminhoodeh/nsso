@@ -3,12 +3,13 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { controlMaterial, expectWhiteEditorControls, keyboardFocus } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 
 test.beforeAll(async () => {
-    const files = ['src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const files = ['src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;background:linear-gradient(140deg,#34536c,#456f8f);color:white;font-family:Arial}button,input,textarea{font:inherit}#root{max-width:1120px;margin:auto;padding:24px 16px 120px}'
@@ -60,7 +61,7 @@ for (const [kind, tab, primary, detail, collection] of [
     ['qualification', 'Qualifications', 'Institution', 'Qualification', 'qualifications'],
     ['project', 'Projects', 'Project name', 'Your contribution', 'projects'],
 ]) {
-    test(`${kind} controls have separate aligned rows and preserve keyboard reordering`, async ({ page }) => {
+    test(`${kind} controls have separate aligned rows and preserve keyboard reordering`, async ({ page, browserName }) => {
         await mount(page)
         await page.getByRole('tab', { name: tab, exact: true }).click()
         const main = page.getByRole('textbox', { name: primary, exact: true }).first()
@@ -78,6 +79,19 @@ for (const [kind, tab, primary, detail, collection] of [
         expect(Math.abs((detailBox.y + detailBox.height / 2) - (grip.y + grip.height / 2))).toBeLessThan(3)
         expect(grip.width).toBeGreaterThanOrEqual(44)
         expect(x.width).toBeGreaterThanOrEqual(44)
+        expect(x.width).toBe(44)
+        expect(x.height).toBe(44)
+        await page.mouse.move(0, 0)
+        await expectWhiteEditorControls(page.locator('#root'))
+        const material = await controlMaterial(remove)
+        expect(material.icon).toMatchObject({ width: '18', height: '18' })
+        expect(material.background).toBe('rgb(244, 245, 248)')
+        await remove.hover()
+        const hoverCapable = await page.evaluate(() => matchMedia('(hover: hover)').matches)
+        await expect(remove).toHaveCSS('background-color', hoverCapable ? 'rgb(255, 255, 255)' : 'rgb(244, 245, 248)')
+        await page.mouse.move(0, 0)
+        await keyboardFocus(remove, page, browserName)
+        expect((await controlMaterial(remove)).outline).toMatchObject({ width: '2px', style: 'solid' })
         await expect(page.locator('html')).toHaveJSProperty('scrollWidth', page.viewportSize().width)
         await secondary.fill('A revised synthetic detail')
         await expect(secondary).toHaveValue('A revised synthetic detail')

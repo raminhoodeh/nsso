@@ -2,7 +2,7 @@
 
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState, useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react'
-import { Plus, X, ChevronDown, ChevronUp, Upload, Loader2, GripVertical } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Upload, Loader2, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DraggableAttributes, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -13,7 +13,8 @@ import { useProfile } from '@/components/providers/ProfileProvider'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
 import { useToast } from '@/components/ui/Toast'
-import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { LightButton, LightIconButton, LightCloseButton, lightButtonClass } from '@/components/ui/LightButton'
 import ProductsServicesEditor from './ProductsServicesEditor'
 import AskDeityButton from '@/components/ui/AskDeityButton'
 
@@ -308,30 +309,25 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
         const expanded = expandedPanel === panel
 
         return (
-            <TahoeGlassSurface
-                as="button"
+            <LightButton
                 type="button"
                 id={`${controls}-toggle`}
-                variant="card"
                 radius={24}
-                tone="light"
-                semanticTint="dark"
-                semanticTintOpacity={0.38}
                 onClick={() => setExpandedPanel(current => current === panel ? null : panel)}
-                className="w-full overflow-hidden text-left group"
+                className="group w-full overflow-hidden p-0 text-left"
                 contentClassName="p-4 sm:p-6 flex items-center justify-between gap-4 w-full h-full"
                 aria-expanded={expanded}
                 aria-controls={controls}
             >
                 <span className="min-w-0">
-                    <span className="block text-xl sm:text-2xl font-bold text-white">{title}</span>
+                    <span className="block text-xl font-bold sm:text-2xl">{title}</span>
                 </span>
                 {expanded ? (
-                    <ChevronUp className="shrink-0 text-white/80 transition-colors" />
+                    <ChevronUp className="shrink-0" />
                 ) : (
-                    <ChevronDown className="shrink-0 text-white/50 transition-colors group-hover:text-white" />
+                    <ChevronDown className="shrink-0" />
                 )}
-            </TahoeGlassSurface>
+            </LightButton>
         )
     }
 
@@ -346,9 +342,9 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                             detail: { initialMessage: "I want to add my work experience..." }
                         }))} aria-label="Ask Deity about job titles" />
                 </div>
-                <TahoeGlassButton tone="light" type="button" onClick={() => { void addExperience('top') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add experience">
-                    <Plus size={16} />
-                </TahoeGlassButton>
+                <LightIconButton type="button" onClick={() => { void addExperience('top') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} aria-label="Add experience">
+                    <Plus size={18} aria-hidden="true" />
+                </LightIconButton>
             </div>
 
             {/* List */}
@@ -369,14 +365,12 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                                         </TahoeGlassField>
                                                     </div>
                                                 </div>
-                                                <TahoeGlassButton tone="light" type="button" onClick={() => deleteExperience(exp.id)} className="h-11 w-11 justify-self-end p-0" contentClassName="text-red-200" aria-label="Delete experience">
-                                                    <X size={18} aria-hidden="true" />
-                                                </TahoeGlassButton>
+                                                <LightCloseButton type="button" onClick={() => deleteExperience(exp.id)} className="justify-self-end" aria-label="Delete experience" />
                                             </div>
                                             <div data-editor-detail-row className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-end gap-2">
-                                                <button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing" aria-label="Drag to reorder experience">
+                                                <LightIconButton ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing" aria-label="Drag to reorder experience">
                                                     <GripVertical size={18} aria-hidden="true" />
-                                                </button>
+                                                </LightIconButton>
                                                 <div className="min-w-0">
                                                     <div>
                                                         <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
@@ -409,7 +403,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                     </div>
                 </SortableContext>
             </DndContext>
-            {experiences.length > 0 && <TahoeGlassButton tone="light" type="button" onClick={() => { void addExperience('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} aria-label="Add experience at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add experience</TahoeGlassButton>}
+            {experiences.length > 0 && <LightButton type="button" onClick={() => { void addExperience('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} aria-label="Add experience at bottom" className="w-full px-4 py-3"><Plus size={18} aria-hidden="true" />Add experience</LightButton>}
         </div>
     )
 
@@ -423,9 +417,9 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                             detail: { initialMessage: "I want to add my qualifications..." }
                         }))} aria-label="Ask Deity about qualifications" />
                 </div>
-                <TahoeGlassButton tone="light" type="button" onClick={() => { void addQualification('top') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add qualification">
-                    <Plus size={16} />
-                </TahoeGlassButton>
+                <LightIconButton type="button" onClick={() => { void addQualification('top') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} aria-label="Add qualification">
+                    <Plus size={18} aria-hidden="true" />
+                </LightIconButton>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'qualifications')}>
@@ -445,14 +439,12 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                                         </TahoeGlassField>
                                                     </div>
                                                 </div>
-                                                <TahoeGlassButton tone="light" type="button" onClick={() => deleteQualification(qual.id)} className="h-11 w-11 justify-self-end p-0" contentClassName="text-red-200" aria-label="Delete qualification">
-                                                    <X size={18} aria-hidden="true" />
-                                                </TahoeGlassButton>
+                                                <LightCloseButton type="button" onClick={() => deleteQualification(qual.id)} className="justify-self-end" aria-label="Delete qualification" />
                                             </div>
                                             <div data-editor-detail-row className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-end gap-2">
-                                                <button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing" aria-label="Drag to reorder qualification">
+                                                <LightIconButton ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing" aria-label="Drag to reorder qualification">
                                                     <GripVertical size={18} aria-hidden="true" />
-                                                </button>
+                                                </LightIconButton>
                                                 <div className="min-w-0">
                                                     <div>
                                                         <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
@@ -485,7 +477,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                     </div>
                 </SortableContext>
             </DndContext>
-            {qualifications.length > 0 && <TahoeGlassButton tone="light" type="button" onClick={() => { void addQualification('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} aria-label="Add qualification at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add qualification</TahoeGlassButton>}
+            {qualifications.length > 0 && <LightButton type="button" onClick={() => { void addQualification('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} aria-label="Add qualification at bottom" className="w-full px-4 py-3"><Plus size={18} aria-hidden="true" />Add qualification</LightButton>}
         </div>
     )
 
@@ -499,9 +491,9 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                             detail: { initialMessage: "I want to add a project..." }
                         }))} aria-label="Ask Deity about projects" />
                 </div>
-                <TahoeGlassButton tone="light" type="button" onClick={() => { void addProject('top') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add project">
-                    <Plus size={16} />
-                </TahoeGlassButton>
+                <LightIconButton type="button" onClick={() => { void addProject('top') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} aria-label="Add project">
+                    <Plus size={18} aria-hidden="true" />
+                </LightIconButton>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'projects')}>
@@ -521,14 +513,12 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                                         </TahoeGlassField>
                                                     </div>
                                                 </div>
-                                                <TahoeGlassButton tone="light" type="button" onClick={() => deleteProject(proj.id)} className="h-11 w-11 justify-self-end p-0" contentClassName="text-red-200" aria-label="Delete project">
-                                                    <X size={18} aria-hidden="true" />
-                                                </TahoeGlassButton>
+                                                <LightCloseButton type="button" onClick={() => deleteProject(proj.id)} className="justify-self-end" aria-label="Delete project" />
                                             </div>
                                             <div data-editor-detail-row className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-end gap-2">
-                                                <button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing" aria-label="Drag to reorder project">
+                                                <LightIconButton ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing" aria-label="Drag to reorder project">
                                                     <GripVertical size={18} aria-hidden="true" />
-                                                </button>
+                                                </LightIconButton>
                                                 <div className="min-w-0">
                                                     <div>
                                                         <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
@@ -558,17 +548,15 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                                             <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${proj.project_photo_url})` }} />
                                                         </TahoeGlassSurface>
                                                     )}
-                                                    <TahoeGlassSurface variant="button" radius={12} tone="light" className="min-h-11 focus-within:outline-2 focus-within:outline-white" contentClassName="flex items-center gap-2">
-                                                        <label className="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2">
-                                                            {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
-                                                            <span className="text-sm text-white/70">{proj.project_photo_url ? 'Change Photo' : 'Upload Photo'}</span>
-                                                            <input type="file" aria-label={`Upload photo for ${proj.project_name || 'project'}`} accept="image/*" className="sr-only" onChange={(e) => {
-                                                                const file = e.target.files?.[0]
-                                                                if (file) handleImageSelect(file, 'project', proj.id)
-                                                                e.target.value = ''
-                                                            }} />
-                                                        </label>
-                                                    </TahoeGlassSurface>
+                                                    <label className={`${lightButtonClass} cursor-pointer has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-slate-950`}>
+                                                        {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} aria-hidden="true" />}
+                                                        <span>{proj.project_photo_url ? 'Change Photo' : 'Upload Photo'}</span>
+                                                        <input type="file" aria-label={`Upload photo for ${proj.project_name || 'project'}`} accept="image/*" className="sr-only" onChange={(e) => {
+                                                            const file = e.target.files?.[0]
+                                                            if (file) handleImageSelect(file, 'project', proj.id)
+                                                            e.target.value = ''
+                                                        }} />
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
@@ -580,7 +568,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                     </div>
                 </SortableContext>
             </DndContext>
-            {projects.length > 0 && <TahoeGlassButton tone="light" type="button" onClick={() => { void addProject('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} aria-label="Add project at bottom" className="min-h-11 w-full px-4 py-3 aria-disabled:cursor-wait aria-disabled:opacity-50" contentClassName="gap-2 text-white"><Plus size={17} aria-hidden="true" />Add project</TahoeGlassButton>}
+            {projects.length > 0 && <LightButton type="button" onClick={() => { void addProject('bottom') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} aria-label="Add project at bottom" className="w-full px-4 py-3"><Plus size={18} aria-hidden="true" />Add project</LightButton>}
         </div>
     )
 
@@ -614,54 +602,51 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                         >
                             <h3 className="sr-only md:not-sr-only md:mb-4 md:block md:text-xs md:font-bold md:uppercase md:tracking-widest md:text-white/70">Experience & Education</h3>
                             <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0" role="tablist" aria-label="Experience and education sections">
-                                <TahoeGlassButton tone="light"
+                                <LightButton
                                     ref={(node) => { sectionTabRefs.current.experiences = node }}
                                     type="button"
                                     id="experience-tab-experiences"
                                     onClick={() => setActiveSection('experiences')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'experiences')}
-                                    semanticTint={activeSection === 'experiences' ? 'light' : 'dark'}
-                                    className="min-h-11 shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3"
-                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] text-white/90 md:justify-start md:text-left md:text-base"
+                                    className="shrink-0 px-5 py-2.5 aria-selected:ring-2 aria-selected:ring-slate-600/50 md:w-full md:px-4 md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'experiences'}
                                     aria-controls="experience-experiences-panel"
                                     tabIndex={activeSection === 'experiences' ? 0 : -1}
                                 >
                                     Job Titles
-                                </TahoeGlassButton>
-                                <TahoeGlassButton tone="light"
+                                </LightButton>
+                                <LightButton
                                     ref={(node) => { sectionTabRefs.current.qualifications = node }}
                                     type="button"
                                     id="experience-tab-qualifications"
                                     onClick={() => setActiveSection('qualifications')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'qualifications')}
-                                    semanticTint={activeSection === 'qualifications' ? 'light' : 'dark'}
-                                    className="min-h-11 shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3"
-                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] text-white/90 md:justify-start md:text-left md:text-base"
+                                    className="shrink-0 px-5 py-2.5 aria-selected:ring-2 aria-selected:ring-slate-600/50 md:w-full md:px-4 md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'qualifications'}
                                     aria-controls="experience-qualifications-panel"
                                     tabIndex={activeSection === 'qualifications' ? 0 : -1}
                                 >
                                     Qualifications
-                                </TahoeGlassButton>
-                                <TahoeGlassButton tone="light"
+                                </LightButton>
+                                <LightButton
                                     ref={(node) => { sectionTabRefs.current.projects = node }}
                                     type="button"
                                     id="experience-tab-projects"
                                     onClick={() => setActiveSection('projects')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'projects')}
-                                    semanticTint={activeSection === 'projects' ? 'light' : 'dark'}
-                                    className="min-h-11 shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3"
-                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] text-white/90 md:justify-start md:text-left md:text-base"
+                                    className="shrink-0 px-5 py-2.5 aria-selected:ring-2 aria-selected:ring-slate-600/50 md:w-full md:px-4 md:py-3"
+                                    contentClassName="w-full justify-center whitespace-nowrap text-[15px] md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'projects'}
                                     aria-controls="experience-projects-panel"
                                     tabIndex={activeSection === 'projects' ? 0 : -1}
                                 >
                                     Projects
-                                </TahoeGlassButton>
+                                </LightButton>
                             </div>
                         </TahoeGlassSurface>
 

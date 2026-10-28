@@ -156,7 +156,7 @@ test.beforeAll(async () => {
     const files = [
         'src/app/products/[id]/page.tsx', 'src/components/VantaBackground.tsx',
         'src/components/providers/NSSOTahoeGlassEnvironment.tsx', 'src/components/providers/TahoeGlassProvider.tsx',
-        'src/components/ui/PreviewCheckoutButton.tsx', 'src/components/ui/PayPalSmartButton.tsx', 'src/components/ui/light-panel.ts',
+        'src/components/ui/PreviewCheckoutButton.tsx', 'src/components/ui/PayPalSmartButton.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts',
         'src/components/ui/GlassButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx',
         'src/components/ui/experimental/liquid-glass-candidate.tsx',
     ]

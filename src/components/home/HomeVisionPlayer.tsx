@@ -10,7 +10,9 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
+import { LightButton, LightIconButton } from '@/components/ui/LightButton'
+import { lightButtonClass } from '@/components/ui/light-button-styles'
+import { cn } from '@/lib/utils'
 
 const VIDEO_URL = 'https://www.youtube.com/watch?v=ukYfrg0ZNbA'
 const VIDEO_ASSET_URL = '/nsso-vision-ukYfrg0ZNbA.mp4'
@@ -212,15 +214,15 @@ export default function HomeVisionPlayer() {
         aria-label="Playback controls"
         className="flex min-h-16 w-full items-center gap-3 border-t border-white/10 bg-[#080c14] px-3 py-3 sm:px-5"
       >
-        <button
+        <LightIconButton
           type="button"
           onClick={togglePlayback}
           disabled={!controlsAvailable}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait disabled:opacity-45"
+          className="disabled:cursor-wait disabled:opacity-45"
           aria-label={isPlaying ? 'Pause video' : 'Play video'}
         >
           {isPlaying ? <Pause size={19} fill="currentColor" /> : <Play size={19} fill="currentColor" />}
-        </button>
+        </LightIconButton>
 
         <span aria-live="off" className="w-[4.75rem] shrink-0 text-center text-xs tabular-nums text-white/75">
           {formatTime(currentTime)} / {duration > 0 ? formatTime(duration) : '--:--'}
@@ -239,15 +241,15 @@ export default function HomeVisionPlayer() {
           className="h-11 min-w-0 flex-1 cursor-pointer accent-white disabled:cursor-wait"
         />
 
-        <button
+        <LightIconButton
           type="button"
           onClick={toggleMute}
           disabled={!controlsAvailable}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait disabled:opacity-45"
+          className="disabled:cursor-wait disabled:opacity-45"
           aria-label={isMuted ? 'Unmute video' : 'Mute video'}
         >
           {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        </button>
+        </LightIconButton>
 
         <input
           type="range"
@@ -266,22 +268,22 @@ export default function HomeVisionPlayer() {
           href={VIDEO_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden size-11 shrink-0 items-center justify-center rounded-full text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:flex"
+          className={cn(lightButtonClass, 'hidden h-11 w-11 shrink-0 p-0 sm:inline-flex')}
           aria-label="Watch this video on YouTube"
           title="Watch on YouTube"
         >
           <ExternalLink size={19} />
         </a>
 
-        <button
+        <LightIconButton
           type="button"
           onClick={toggleFullscreen}
           disabled={!controlsAvailable}
-          className="flex size-11 shrink-0 items-center justify-center rounded-full text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-wait disabled:opacity-45"
+          className="disabled:cursor-wait disabled:opacity-45"
           aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
         >
           {isFullscreen ? <Minimize2 size={19} /> : <Maximize2 size={19} />}
-        </button>
+        </LightIconButton>
       </div>
 
       {isLoading && !error && <p role="status" className="bg-[#080c14] px-4 pb-3 text-sm text-white/80">Loading video…</p>}
@@ -292,7 +294,7 @@ export default function HomeVisionPlayer() {
           className="border-t border-red-300/20 bg-red-950 px-4 py-3 text-sm text-red-100"
         >
           {error ?? playbackNotice}{' '}
-          {error && <TahoeGlassButton type="button" onClick={() => { const video = videoRef.current; if (!video) return; setError(null); video.removeAttribute('src'); video.load(); togglePlayback() }} tone="light" className="mr-3 min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry video</TahoeGlassButton>}
+          {error && <LightButton type="button" onClick={() => { const video = videoRef.current; if (!video) return; setError(null); video.removeAttribute('src'); video.load(); togglePlayback() }} className="mr-3 min-h-11 px-4 py-2" contentClassName="text-sm">Retry video</LightButton>}
           <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline">
             Watch on YouTube
           </a>

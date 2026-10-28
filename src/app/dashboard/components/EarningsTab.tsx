@@ -7,7 +7,8 @@ import type { EarningsStats } from '@/lib/earnings'
 import { useUI } from '@/components/providers/UIProvider'
 import ReferralsTable from './ReferralsTable'
 import Skeleton from '@/components/ui/Skeleton'
-import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { LightButton } from '@/components/ui/LightButton'
 
 interface EarningsTabProps {
     initialData?: EarningsStats
@@ -136,29 +137,27 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
 
                                     {/* Copy Button - Desktop Only */}
                                     <div className="mr-1.5 hidden md:block">
-                                            <TahoeGlassButton tone="light"
+                                            <LightButton
                                                 onClick={copyReferralCode}
-                                                className="h-[42px] w-[100px] p-0"
-                                                contentClassName="text-white/95"
+                                                className="h-11 w-[100px] p-0"
                                             >
                                                 <span className="text-[16px] font-semibold tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>
                                                     Copy
                                                 </span>
-                                            </TahoeGlassButton>
+                                            </LightButton>
                                     </div>
                             </TahoeGlassSurface>
 
                             {/* Mobile Copy Button */}
                             <div className="md:hidden w-full max-w-md">
-                                    <TahoeGlassButton tone="light"
+                                    <LightButton
                                         onClick={copyReferralCode}
-                                        className="h-[42px] w-full p-0"
-                                        contentClassName="text-white/95"
+                                        className="h-11 w-full p-0"
                                     >
                                         <span className="text-[16px] font-semibold tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>
                                             Copy
                                         </span>
-                                    </TahoeGlassButton>
+                                    </LightButton>
                             </div>
 
                             {/* Earnings Page Link */}
@@ -221,16 +220,15 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                                 </TahoeGlassSurface>
 
                                 {/* UPDATE Button */}
-                                    <TahoeGlassButton tone="light"
+                                    <LightButton
                                         onClick={updatePayPal}
                                         disabled={updating}
                                         className="h-[54px] w-full px-5 md:w-[120px]"
-                                        contentClassName="text-white/95"
                                     >
                                         <span className="text-[16px] font-semibold tracking-wide" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 590 }}>
                                             {updating ? 'Updating...' : 'UPDATE'}
                                         </span>
-                                    </TahoeGlassButton>
+                                    </LightButton>
                             </div>
                         </div>
 

@@ -1,10 +1,17 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import { compile } from '@tailwindcss/node'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { expectWhiteEditorControls } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
-let bundle
+let bundle, securityCss
 test.beforeAll(async () => {
+    const securityFiles = ['src/app/dashboard/security/page.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts']
+    const candidates = securityFiles.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
+    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
+    securityCss = compiler.build(candidates)
     const result = await build({
         absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
         define: { 'process.env.NODE_ENV': '"test"' },
@@ -54,9 +61,10 @@ test.beforeAll(async () => {
 
 async function fixture(page, path, initialMode = 'ok') {
     const requests = []
+    const isSecurity = new URL(path, 'https://nsso.test').pathname === '/dashboard/security'
     await page.route('**/*', route => {
         const url = new URL(route.request().url())
-        if (url.hostname === 'nsso.test' && !url.pathname.startsWith('/api/')) return route.fulfill({ contentType: 'text/html', body: '<div id="root"></div>' })
+        if (url.hostname === 'nsso.test' && !url.pathname.startsWith('/api/')) return route.fulfill({ contentType: 'text/html', body: (isSecurity ? '<meta name="viewport" content="width=device-width,initial-scale=1">' : '') + '<div id="root"></div>' })
         if (url.pathname.startsWith('/api/')) {
             requests.push({ path: url.pathname, method: route.request().method(), body: route.request().postData() })
             if (url.pathname === '/api/check-username') return route.fulfill({ json: { available: true } })
@@ -65,6 +73,7 @@ async function fixture(page, path, initialMode = 'ok') {
         throw new Error('Unexpected nonlocal request in isolated account fixture: ' + url.origin)
     })
     await page.goto('https://nsso.test' + path)
+    if (isSecurity) await page.addStyleTag({ content: securityCss })
     await page.evaluate(mode => { window.fixtureInitialMode = mode }, initialMode)
     await page.addScriptTag({ content: bundle })
     return requests
@@ -249,10 +258,14 @@ test('link fields and drag controls are named, and URL status reports syntax wit
 
 test('same-phone MFA enrollment exposes a private manual setup key and can cancel only its unfinished factor', async ({ page }) => {
     await fixture(page, '/dashboard/security')
+    await expect(page.getByRole('button', { name: 'Set up authenticator', exact: true })).toBeVisible()
+    await expectWhiteEditorControls(page.locator('main'))
     await page.getByRole('button', { name: 'Set up authenticator', exact: true }).click()
     await expect(page.getByLabel('Authenticator setup key')).toHaveValue('SYNTHETIC_SETUP_KEY')
+    await expectWhiteEditorControls(page.locator('main'))
     await page.getByRole('button', { name: 'Cancel this setup', exact: true }).click()
     await expect(page.getByLabel('Authenticator setup key')).toHaveCount(0)
+    await expectWhiteEditorControls(page.locator('main'))
     expect(await page.evaluate(() => window.fixtureCalls.filter(call => call.name === 'unenroll').map(call => call.args))).toEqual([{ factorId: 'unverified-fixture-factor' }])
 })
 
@@ -261,6 +274,8 @@ test('MFA glass verification keeps native keyboard submit and disables duplicate
     await page.getByRole('button', { name: 'Set up authenticator', exact: true }).click()
     const code = page.getByLabel('Six-digit authenticator code', { exact: true })
     await code.fill('123456')
+    await expect(page.getByRole('button', { name: 'Verify and continue', exact: true })).toHaveAttribute('type', 'submit')
+    await expectWhiteEditorControls(page.locator('main'))
     await page.evaluate(() => { window.fixtureMode = 'hold' })
     await code.press('Enter')
     await expect(page.getByRole('button', { name: 'Checking…', exact: true })).toBeDisabled()

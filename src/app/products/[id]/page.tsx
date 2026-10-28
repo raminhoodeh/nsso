@@ -14,9 +14,10 @@ import { productCheckoutVisibility, productPageIsPublic } from '@/lib/payments/p
 import { safeWebUrl } from '@/lib/urls'
 import { offeringEditorHref } from '@/lib/offering-navigation'
 import {
-    TahoeGlassButton,
     TahoeGlassSurface,
 } from '@/components/ui/tahoe-glass'
+import { LightButton, LightIconButton, lightButtonClass } from '@/components/ui/LightButton'
+import { cn } from '@/lib/utils'
 
 function ProductRouteContent({ children }: { children: ReactNode }) {
     return <>{children}</>
@@ -26,19 +27,15 @@ function PurchaseLink({ href }: { href: string }) {
     const destination = safeWebUrl(href)
     if (!destination) return <p className="text-xs text-white/70">Purchase link unavailable. Please contact the seller.</p>
     return (
-        <TahoeGlassSurface
-            as="a"
-            variant="button"
-            radius={12}
+        <a
             href={destination}
             target="_blank"
             rel="noopener noreferrer"
-            tone="light"
-            className="h-[44px] w-full transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            contentClassName="flex h-full w-full items-center justify-center px-4 text-[16px] font-semibold tracking-wide"
+            data-nsso-control="white"
+            className={cn(lightButtonClass, 'h-11 w-full rounded-xl px-4 text-base font-semibold tracking-wide')}
         >
-            Link to Purchase
-        </TahoeGlassSurface>
+            <span data-light-button-content="true">Link to Purchase</span>
+        </a>
     )
 }
 
@@ -208,14 +205,14 @@ function ProductSalesContent({ productId }: { productId: string }) {
     // The standalone product route has no account bottom bar. A failed or
     // pending product read must still leave an explicit, safe way out without
     // trusting a creator id, return URL, or unverified session from the query.
-    const recoveryNavigation = <TahoeGlassButton tone="light"
+    const recoveryNavigation = <LightButton
         onClick={() => router.push(verifiedAccountId ? '/dashboard' : '/')}
         className="min-h-11 px-4 py-2"
-        contentClassName="gap-2 text-[15px] font-semibold !text-white"
+        contentClassName="gap-2 text-[15px] font-semibold"
     >
         <ChevronLeft size={16} />
         {verifiedAccountId ? 'Back to profile editor' : 'Back to nsso'}
-    </TahoeGlassButton>
+    </LightButton>
 
     if (loading) {
         return (
@@ -236,7 +233,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                 <div className="relative z-[1] flex min-h-screen flex-col items-center justify-center gap-5 p-5">
                     {recoveryNavigation}
                     <TahoeGlassSurface variant="card" tone="light" contentClassName="px-8 py-6 text-white/80">
-                        {loadError ? <div role="status" className="space-y-3 text-center"><p>This product could not be loaded. Please retry.</p><TahoeGlassButton type="button" onClick={() => setRetry(value => value + 1)} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry product</TahoeGlassButton></div> : 'Product not found'}
+                        {loadError ? <div role="status" className="space-y-3 text-center"><p>This product could not be loaded. Please retry.</p><LightButton type="button" onClick={() => setRetry(value => value + 1)} className="min-h-11 px-4 py-2" contentClassName="text-sm">Retry product</LightButton></div> : 'Product not found'}
                     </TahoeGlassSurface>
                 </div>
             </ProductRouteContent>
@@ -260,7 +257,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                     <div className="space-y-8 px-3 md:px-16">
                         {/* Back Button */}
                         <div className="mb-8">
-                            <TahoeGlassButton tone="light"
+                            <LightButton
                                 onClick={() => {
                                     if (isOwner) {
                                         if (searchParams.get('source') === 'creator') {
@@ -275,13 +272,13 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                     }
                                 }}
                                 className="px-4 py-2"
-                                contentClassName="gap-2 text-[15px] font-semibold !text-white"
+                                contentClassName="gap-2 text-[15px] font-semibold"
                             >
                                 <ChevronLeft size={16} />
                                 {isOwner && searchParams.get('source') === 'creator'
                                     ? 'Back to Sales Page Creator'
                                     : 'Back to Profile'}
-                            </TahoeGlassButton>
+                            </LightButton>
                         </div>
 
                         {/* Headline Hook */}
@@ -398,14 +395,12 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-3 md:p-8">
                                 <div className="flex items-center gap-2 md:gap-4">
                                     {product.testimonials.length > 1 && (
-                                        <TahoeGlassButton tone="light"
+                                        <LightIconButton
                                             onClick={prevTestimonial}
                                             aria-label="Previous testimonial"
-                                            className="h-8 w-8 shrink-0 px-0 py-0 md:h-10 md:w-10"
-                                            contentClassName="!text-white"
                                         >
                                             <ChevronLeft size={18} />
-                                        </TahoeGlassButton>
+                                        </LightIconButton>
                                     )}
 
                                     <div className="flex-1 space-y-4">
@@ -418,14 +413,12 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                     </div>
 
                                     {product.testimonials.length > 1 && (
-                                        <TahoeGlassButton tone="light"
+                                        <LightIconButton
                                             onClick={nextTestimonial}
                                             aria-label="Next testimonial"
-                                            className="h-8 w-8 shrink-0 px-0 py-0 md:h-10 md:w-10"
-                                            contentClassName="!text-white"
                                         >
                                             <ChevronRight size={18} />
-                                        </TahoeGlassButton>
+                                        </LightIconButton>
                                     )}
                                 </div>
                             </TahoeGlassSurface>

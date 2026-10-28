@@ -11,6 +11,7 @@ import { useProfile } from '@/components/providers/ProfileProvider'
 import ProfileSaveStatus from '@/components/profile/ProfileSaveStatus'
 import GlassCard from '@/components/profile/ProfileGlassCard'
 import GlassButton from '@/components/ui/GlassButton'
+import { LightButton } from '@/components/ui/LightButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
 import { productCheckoutVisibility } from '@/lib/payments/product-presentation'
@@ -233,14 +234,12 @@ export default function PreviewPage() {
                                 <p className="text-white/50">
                                     No links or contact methods added yet.
                                 </p>
-                                <GlassButton
-                                    variant="secondary"
-                                    size="sm"
-                                    className="mt-4"
+                                <LightButton
+                                    className="mt-4 px-4 py-2 text-[15px]"
                                     onClick={() => router.push('/dashboard')}
                                 >
                                     Add content
-                                </GlassButton>
+                                </LightButton>
                             </GlassCard>
                         )}
                     </div>

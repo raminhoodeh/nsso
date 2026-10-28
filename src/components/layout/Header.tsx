@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
+import { LightCloseButton } from '@/components/ui/LightButton'
 import GlassButton from '@/components/ui/GlassButton'
 import NssoTopBar, { NSSO_TOPBAR_CONTENT_CLASS } from '@/components/layout/NssoTopBar'
 import { useToast } from '@/components/ui/Toast'
@@ -16,7 +17,7 @@ import { isAccountDeletionAvailable } from '@/lib/delete-profile-client'
 import DeleteProfileDialog from '@/components/layout/DeleteProfileDialog'
 import { routeUsesMobileProfileMenu } from '@/lib/tahoe-glass/route-boundaries'
 import { useState, useEffect, useCallback, Suspense, type ReactNode } from 'react'
-import { ArrowLeft, ChevronRight, Eye, Home, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, Sparkles, Trash2, UserRound, UsersRound, X } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Eye, Home, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, Sparkles, Trash2, UserRound, UsersRound } from 'lucide-react'
 import {
     TahoeGlassButton,
     TahoeGlassDialog,
@@ -361,9 +362,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                                     </span>
                                     <span className="border-l border-slate-500/25 pl-3 text-lg font-semibold tracking-tight">Menu</span>
                                 </div>
-                                <button type="button" onClick={() => setMobileMenuOpen(false)} className={cn(LIGHT_PANEL.control, LIGHT_PANEL.focus, "flex h-11 w-11 shrink-0 items-center justify-center rounded-full")} aria-label="Close menu">
-                                    <X aria-hidden="true" className="h-5 w-5" />
-                                </button>
+                                <LightCloseButton onClick={() => setMobileMenuOpen(false)} aria-label="Close menu" />
                             </div>
                             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-5" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
                                 <Suspense fallback={<p className="p-3 text-sm text-slate-600">Loading menu…</p>}>

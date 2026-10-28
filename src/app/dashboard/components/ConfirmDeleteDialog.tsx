@@ -1,7 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { TahoeGlassButton, TahoeGlassDialog } from '@/components/ui/tahoe-glass'
+import { TahoeGlassDialog } from '@/components/ui/tahoe-glass'
+import { LightButton } from '@/components/ui/LightButton';
 
 interface ConfirmDeleteDialogProps {
     open: boolean
@@ -51,8 +52,8 @@ export default function ConfirmDeleteDialog({ open, name, onClose, onConfirm }: 
     >
         {error && <p role="alert" className="mt-3 text-sm text-rose-800">{error}</p>}
         <div className="mt-5 flex gap-3">
-            <TahoeGlassButton tone="dark" ref={cancelRef} disabled={busy} onClick={() => { setError(''); onClose() }} className="min-h-11 flex-1 px-3 py-2" contentClassName="text-slate-950">{error ? 'Close' : 'Keep item'}</TahoeGlassButton>
-            <TahoeGlassButton tone="dark" disabled={busy} onClick={() => { void confirm() }} className="min-h-11 flex-1 px-3 py-2" contentClassName="text-red-800">{busy ? 'Deleting…' : 'Delete'}</TahoeGlassButton>
+            <LightButton ref={cancelRef} disabled={busy} onClick={() => { setError(''); onClose() }} className="min-h-11 flex-1 px-3 py-2" contentClassName="text-slate-950">{error ? 'Close' : 'Keep item'}</LightButton>
+            <LightButton intent="danger" disabled={busy} onClick={() => { void confirm() }} className="min-h-11 flex-1 px-3 py-2" >{busy ? 'Deleting…' : 'Delete'}</LightButton>
         </div>
     </TahoeGlassDialog>
 }

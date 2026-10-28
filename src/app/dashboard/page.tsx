@@ -9,10 +9,10 @@ import { validateProfileUsername } from '@/lib/profile-username'
 import Header from '@/components/layout/Header'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import {
-    TahoeGlassButton,
     TahoeGlassField,
     TahoeGlassSurface
 } from '@/components/ui/tahoe-glass'
+import { LightButton, LightIconButton } from '@/components/ui/LightButton'
 import { SortableContactItem } from './components/SortableContactItem'
 import Input from '@/components/ui/Input'
 import { Loader2, Copy, Check } from 'lucide-react'
@@ -53,7 +53,7 @@ function DashboardContent() {
     const header = !loading && <div className="lg:hidden"><Header /></div>
     if (user && !claimOwner) setClaimOwner(user.id)
     if (loading || (user && !claimOwner)) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><p role="status">Loading your account…</p></main></>
-    if (!user) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><TahoeGlassButton type="button" onClick={() => { void refreshUser() }} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry account</TahoeGlassButton></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main></>
+    if (!user) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><LightButton type="button" onClick={() => { void refreshUser() }}>Retry account</LightButton></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main></>
     return <>{header}<DashboardForAccount key={user.id} allowClaim={claimOwner === user.id} /></>
 }
 
@@ -355,7 +355,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
         )
     }
 
-    if (!profile) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center"><p role="alert">Your profile could not be loaded. Please retry before editing.</p><TahoeGlassButton type="button" onClick={() => { void refreshProfile() }} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Retry profile</TahoeGlassButton></div></main>
+    if (!profile) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center"><p role="alert">Your profile could not be loaded. Please retry before editing.</p><LightButton type="button" onClick={() => { void refreshProfile() }}>Retry profile</LightButton></div></main>
 
     return (
         <main className="min-h-screen pb-12">
@@ -544,26 +544,24 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                         autoCorrect="off"
                                         className="min-w-0 flex-1 border-none bg-transparent text-[18px] font-medium text-white outline-none placeholder:text-white/50 sm:text-[22px]"
                                     />
-                                    <TahoeGlassButton tone="light"
+                                    <LightIconButton
                                         onClick={handleCopyUrl}
                                         disabled={!user?.username}
-                                        className="mr-1 h-11 w-11 p-0"
-                                        contentClassName="text-white/70"
+                                        className="mr-1"
                                         title="Copy saved profile URL"
                                         aria-label="Copy saved profile URL"
                                     >
-                                        {urlCopied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
-                                    </TahoeGlassButton>
+                                        {urlCopied ? <Check size={18} className="text-emerald-800" /> : <Copy size={18} />}
+                                    </LightIconButton>
                                 </TahoeGlassSurface>
-                                <TahoeGlassButton tone="light"
+                                <LightButton
                                     onClick={handleUpdateUsername}
                                     disabled={updatingUsername || !usernameAvailable || !customDomain || customDomain === user?.username}
                                     className="h-11 shrink-0 px-6"
-                                    contentClassName="text-white/95"
                                 >
                                     {updatingUsername && <Loader2 className="h-4 w-4 animate-spin" />}
                                     {updatingUsername ? 'Updating...' : 'Update URL'}
-                                </TahoeGlassButton>
+                                </LightButton>
                             </div>
                             {customDomain && customDomain !== user?.username && (
                                 <div className="mt-2" aria-live="polite">
@@ -604,16 +602,16 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                         <AskDeityButton onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me find links to add to my profile..." }
                                             }))} aria-label="Ask Deity about links" />
-                                        <TahoeGlassButton tone="light"
+                                        <LightButton
                                             onClick={() => { void addProfileItem('link', 'top') }}
                                             aria-disabled={addingCollection !== null}
                                             aria-busy={addingCollection === 'link'}
                                             className="min-h-11 shrink-0 px-2 py-1 sm:px-3"
-                                            contentClassName="text-white text-xs sm:text-sm"
+                                            contentClassName="text-xs sm:text-sm"
                                             aria-label="Add link"
                                         >
                                             + Add Link
-                                        </TahoeGlassButton>
+                                        </LightButton>
                                     </div>
                                 </div>
 
@@ -643,7 +641,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                             No links yet. Choose Add Link to add your first link.
                                         </p>
                                     )}
-                                    {links.length > 0 && <TahoeGlassButton tone="light" contentClassName="gap-2 text-white font-medium" type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'link'} onClick={() => { void addProfileItem('link', 'bottom') }} className="min-h-11 w-full px-3 py-2" aria-label="Add link at bottom">+ Add Link</TahoeGlassButton>}
+                                    {links.length > 0 && <LightButton type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'link'} onClick={() => { void addProfileItem('link', 'bottom') }} className="w-full px-3 py-2" aria-label="Add link at bottom">+ Add Link</LightButton>}
                                 </div>
                             </GlassCard>
 
@@ -653,16 +651,15 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     <div>
                                         <h2 className="text-2xl font-bold text-white">Contact</h2>
                                     </div>
-                                    <TahoeGlassButton tone="light"
+                                    <LightButton
                                         onClick={() => { void addProfileItem('contact', 'top') }}
                                         aria-disabled={addingCollection !== null}
                                         aria-busy={addingCollection === 'contact'}
                                         className="min-h-11 shrink-0 px-3 py-1"
-                                        contentClassName="text-white text-sm"
                                         aria-label="Add contact method"
                                     >
                                         + Add Contact
-                                    </TahoeGlassButton>
+                                    </LightButton>
                                 </div>
                                 <div className="space-y-4">
                                     <DndContext
@@ -690,7 +687,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                             No contact methods yet. Choose Add Contact to add one.
                                         </p>
                                     )}
-                                    {contacts.length > 0 && <TahoeGlassButton tone="light" contentClassName="gap-2 text-white font-medium" type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'contact'} onClick={() => { void addProfileItem('contact', 'bottom') }} className="min-h-11 w-full px-3 py-2" aria-label="Add contact method at bottom">+ Add Contact</TahoeGlassButton>}
+                                    {contacts.length > 0 && <LightButton type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'contact'} onClick={() => { void addProfileItem('contact', 'bottom') }} className="w-full px-3 py-2" aria-label="Add contact method at bottom">+ Add Contact</LightButton>}
                                 </div>
                             </GlassCard>
 

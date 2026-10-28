@@ -5,7 +5,8 @@ import { MyNssoConnection } from '@/lib/types'
 import { Search, MapPin, NotebookPen } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
 import Link from 'next/link'
-import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { LightButton } from '@/components/ui/LightButton';
 
 interface NetworkTableProps {
     connections: MyNssoConnection[]
@@ -73,15 +74,15 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
                         <option value="location" className="bg-neutral-900">Location</option>
                     </select>
                 </TahoeGlassField>
-                <TahoeGlassButton tone="light" className="min-h-11 self-end px-3 py-2" onClick={() => setSortOrder(current => current === 'asc' ? 'desc' : 'asc')} aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`} contentClassName="text-sm text-white">
+                <LightButton className="min-h-11 self-end px-3 py-2" onClick={() => setSortOrder(current => current === 'asc' ? 'desc' : 'asc')} aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`} contentClassName="text-sm text-slate-800">
                     {sortField === 'date' ? (sortOrder === 'desc' ? 'Newest first ↓' : 'Oldest first ↑') : (sortOrder === 'asc' ? 'A–Z ↑' : 'Z–A ↓')}
-                </TahoeGlassButton>
+                </LightButton>
             </div>
         </div>
         <p role="status" className="text-sm text-white/70">{filteredConnections.length} {filteredConnections.length === 1 ? 'connection' : 'connections'}{searchQuery.trim() ? ' found' : ''}</p>
         {filteredConnections.length === 0 ? <div className="rounded-2xl border border-white/15 bg-black/20 p-5 text-white/80">
             <p>{connections.length ? 'No connections match your search.' : 'No connections yet.'}</p>
-            {searchQuery && <TahoeGlassButton type="button" tone="light" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-white" onClick={() => setSearchQuery('')}>Clear search</TahoeGlassButton>}
+            {searchQuery && <LightButton type="button" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-slate-800" onClick={() => setSearchQuery('')}>Clear search</LightButton>}
         </div> : <>
             <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_144px] gap-4 px-4 text-xs font-semibold uppercase tracking-wider text-white/70 md:grid"><span>Person</span><span>Meeting location</span><span>Date met</span><span>Notes</span></div>
             <ul className="space-y-3" aria-label="Your connections">
@@ -100,11 +101,11 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
                                     <input autoFocus type="text" maxLength={300} disabled={savingLocation} value={locationValue} onChange={event => setLocationValue(event.target.value)} onKeyDown={event => { if (event.key === 'Escape' && !locationPending.current) setEditingLocationId(null) }} placeholder="Where did you meet?" className="text-base text-white placeholder:text-white/60" />
                                 </TahoeGlassField>
                                 {locationError && <p role="alert" className="text-sm text-rose-200">{locationError}</p>}
-                                <div className="flex flex-wrap gap-2"><TahoeGlassButton type="submit" disabled={savingLocation} className="min-h-11 px-3 py-2">{savingLocation ? 'Saving…' : 'Save location'}</TahoeGlassButton><TahoeGlassButton disabled={savingLocation} className="min-h-11 px-3 py-2" onClick={() => setEditingLocationId(null)}>Cancel</TahoeGlassButton></div>
-                            </form> : <button type="button" disabled={savingLocation} aria-label={`Edit location for ${conn.fullName}`} className="flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm text-white/85 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white" onClick={() => { setEditingLocationId(conn.id); setLocationValue(conn.location || ''); setLocationError('') }}><MapPin aria-hidden="true" size={16} className="shrink-0" /><span className="break-words">{conn.location || 'Add meeting location'}</span></button>}
+                                <div className="flex flex-wrap gap-2"><LightButton type="submit" disabled={savingLocation} className="min-h-11 px-3 py-2">{savingLocation ? 'Saving…' : 'Save location'}</LightButton><LightButton disabled={savingLocation} className="min-h-11 px-3 py-2" onClick={() => setEditingLocationId(null)}>Cancel</LightButton></div>
+                            </form> : <LightButton disabled={savingLocation} aria-label={`Edit location for ${conn.fullName}`} className="min-h-11 w-full justify-start rounded-lg text-left text-sm" contentClassName="w-full justify-start" onClick={() => { setEditingLocationId(conn.id); setLocationValue(conn.location || ''); setLocationError('') }}><MapPin aria-hidden="true" size={16} className="shrink-0" /><span className="break-words">{conn.location || 'Add meeting location'}</span></LightButton>}
                         </div>
                         <div><p className="text-xs font-semibold text-white/70 md:sr-only">Date met</p><time dateTime={conn.dateMet} className="text-sm text-white/85">{formatDate(conn.dateMet)}</time></div>
-                        <TahoeGlassButton type="button" tone="light" onClick={() => onOpenNotes(conn)} className="h-11 min-h-11 w-36 max-w-full shrink-0 justify-self-start px-4 py-0" contentClassName="gap-2 whitespace-nowrap text-sm leading-5 text-white" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} className="shrink-0" /><span className="whitespace-nowrap">{conn.notes ? 'Edit notes' : 'Add notes'}</span></TahoeGlassButton>
+                        <LightButton type="button" onClick={() => onOpenNotes(conn)} className="h-11 min-h-11 w-36 max-w-full shrink-0 justify-self-start px-4 py-0" contentClassName="gap-2 whitespace-nowrap text-sm leading-5 text-slate-800" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} className="shrink-0" /><span className="whitespace-nowrap">{conn.notes ? 'Edit notes' : 'Add notes'}</span></LightButton>
                     </TahoeGlassSurface>
                 </li>)}
             </ul>

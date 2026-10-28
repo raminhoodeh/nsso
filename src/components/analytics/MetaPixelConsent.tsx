@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { Cookie } from 'lucide-react'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TahoeGlassButton, TahoeGlassDialog } from '@/components/ui/tahoe-glass'
+import { TahoeGlassDialog } from '@/components/ui/tahoe-glass'
+import { LightButton } from '@/components/ui/LightButton'
 
 import {
     META_PIXEL_CONSENT_COOKIE,
@@ -143,7 +144,6 @@ export default function MetaPixelConsent({
                     closeOnEscape={false}
                     closeOnPointerDownOutside={false}
                     radius={24}
-                    tone="light"
                     semanticTint="dark"
                     semanticTintOpacity={0.42}
                     overlayClassName="z-[6000] items-end justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
@@ -170,45 +170,38 @@ export default function MetaPixelConsent({
                             </div>
                         </div>
                         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                            <TahoeGlassButton
+                            <LightButton
                                 type="button"
                                 onClick={() => chooseConsent('denied')}
                                 radius={12}
-                                tone="dark"
-                                semanticTint="dark"
-                                semanticTintOpacity={0.08}
                                 className="min-h-11 px-5 py-2.5 text-sm font-medium text-slate-950 transition-colors"
                                 contentClassName="text-inherit"
                             >
                                 Decline
-                            </TahoeGlassButton>
-                            <TahoeGlassButton
+                            </LightButton>
+                            <LightButton
                                 type="button"
                                 onClick={() => chooseConsent('granted')}
                                 radius={12}
-                                tone="dark"
-                                semanticTint="light"
-                                semanticTintOpacity={0.12}
                                 className="min-h-11 px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors"
                                 contentClassName="text-inherit"
                             >
                                 Allow
-                            </TahoeGlassButton>
+                            </LightButton>
                         </div>
                     </div>
                 </TahoeGlassDialog>
             ) : (
-                <TahoeGlassButton
+                <LightButton
                     type="button"
                     onClick={() => setPreferencesOpen(true)}
                     radius={12}
-                    tone="light"
-                    className="mx-auto flex min-h-11 px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:text-white"
+                    className="mx-auto flex min-h-11 px-4 py-2 text-sm font-medium transition-colors"
                     contentClassName="flex items-center gap-2 text-inherit"
                 >
                     <Cookie aria-hidden="true" className="h-4 w-4" />
                     Privacy choices
-                </TahoeGlassButton>
+                </LightButton>
             )}
         </>
     )

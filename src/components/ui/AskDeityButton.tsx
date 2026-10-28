@@ -3,6 +3,7 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import { Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LIGHT_PANEL } from './light-panel'
 
 type AskDeityButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'>
 
@@ -17,12 +18,12 @@ const AskDeityButton = forwardRef<HTMLButtonElement, AskDeityButtonProps>(functi
         type={type}
         aria-label={label}
         data-ask-deity-control="true"
-        className={cn('group inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white/80 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45', className)}
+        className={cn('group inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-slate-950 focus-visible:shadow-[0_0_0_6px_rgba(255,255,255,0.9)] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45', className)}
         style={{ ...style, minHeight: 44, minWidth: 44, padding: '0 2px', border: 0, background: 'transparent' }}
     >
         <span
             data-ask-deity-lens="true"
-            className="pointer-events-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-white/20 bg-black/[0.58] px-2.5 font-medium text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-[background-color,border-color,color,box-shadow] duration-150 group-hover:border-white/35 group-hover:bg-black/[0.62] group-hover:text-white group-hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_0_8px_rgba(255,255,255,0.08)] group-focus-visible:border-white/50 group-focus-visible:text-white group-active:bg-black/[0.66] motion-reduce:transition-none forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]"
+            className={cn(LIGHT_PANEL.control, 'pointer-events-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 font-medium [text-shadow:none] group-hover:bg-white group-hover:text-slate-950 group-focus-visible:outline-solid group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-slate-950 group-active:bg-slate-200 forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]')}
             style={{ height: 28, fontSize: 12, lineHeight: '16px' }}
         >
             <Sparkles size={12} aria-hidden="true" />

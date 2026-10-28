@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { EditableValues } from '@/lib/profile-mutations'
-import { ChevronLeft, Check, Plus, X, Video, List, Copy, Upload, Loader2 } from 'lucide-react'
+import { ChevronLeft, Check, Plus, Video, List, Copy, Upload, Loader2 } from 'lucide-react'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useToast } from '@/components/ui/Toast'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
@@ -15,10 +15,11 @@ import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import { offeringEditorHref } from '@/lib/offering-navigation'
 import {
-    TahoeGlassButton,
     TahoeGlassField,
     TahoeGlassSurface,
 } from '@/components/ui/tahoe-glass'
+import { LightButton, LightIconButton, LightCloseButton, lightButtonClass } from '@/components/ui/LightButton'
+import { cn } from '@/lib/utils'
 
 function CreatorRouteContent({ children }: { children: ReactNode }) {
     return <>{children}</>
@@ -203,7 +204,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
     const backHref = offeringEditorHref(productId)
     const previewDisabled = !saved || isUploading || paymentBusy || paymentDirty || externalPaymentDraft
     const previewClassName = 'min-h-11 px-5 py-2.5'
-    const previewContentClassName = 'text-sm font-semibold text-white'
+    const previewContentClassName = 'text-sm font-semibold'
     const PageRegion = embedded ? 'section' : 'main'
     const PageCard = embedded ? 'div' : GlassCard
     const leavingBusy = isUploading || (!embedded && paymentBusy)
@@ -312,15 +313,14 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                 {/* Header */}
                     <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">
-                            <TahoeGlassButton tone="light"
+                            <LightIconButton
                                 onClick={() => navigateBack()}
                                 aria-label="Back to offering"
                                 disabled={leavingBusy}
-                                className="-ml-2 h-10 w-10 px-0 py-0"
-                                contentClassName="!text-white"
+                                className="-ml-2"
                             >
                                 <ChevronLeft size={24} />
-                            </TahoeGlassButton>
+                            </LightIconButton>
                             <div>
                                 <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     Sales Page Creator
@@ -343,17 +343,17 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                     </>
                                 )}
                             </TahoeGlassSurface>
-                            <TahoeGlassButton tone="light"
+                            <LightButton
                                 onClick={() => router.push(`/products/${productId}?source=creator&preview=true`)}
                                 disabled={previewDisabled}
                                 className={previewClassName}
                                 contentClassName={previewContentClassName}
                             >
                                 Preview page
-                            </TahoeGlassButton>
+                            </LightButton>
                         </div>
                     </TahoeGlassSurface>
-                    {leaveMessage && <div className="mb-5 space-y-3"><p role="alert" className="text-sm text-amber-200">{leaveMessage}</p>{!embedded && paymentDirty && <TahoeGlassButton tone="light" type="button" onClick={discardLocalPaymentDraft} disabled={leavingBusy} className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">Discard local payment draft and go back</TahoeGlassButton>}</div>}
+                    {leaveMessage && <div className="mb-5 space-y-3"><p role="alert" className="text-sm text-amber-200">{leaveMessage}</p>{!embedded && paymentDirty && <LightButton intent="danger" type="button" onClick={discardLocalPaymentDraft} disabled={leavingBusy} className="min-h-11 px-4 py-2" contentClassName="text-sm">Discard local payment draft and go back</LightButton>}</div>}
                     {(paymentDirty || externalPaymentDraft) && <p role="status" className="mb-5 text-sm text-white/85">Save your PayPal button changes before opening a preview.{embedded && ' Back keeps your draft in the offering editor.'}</p>}
 
                     {/* Standard Product Fields */}
@@ -430,22 +430,22 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                                 <div className="h-full w-full rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${product.image_url})` }} />
                                             </TahoeGlassSurface>
                                         )}
-                                        <TahoeGlassSurface variant="button" radius={12} tone="light">
-                                            <label className="flex cursor-pointer items-center gap-2 px-4 py-2">
-                                                {isUploading ? <Loader2 size={16} className="animate-spin text-white/70" /> : <Upload size={16} className="text-white/70" />}
-                                                <span className="text-sm text-white/70">{product.image_url ? 'Change Image' : 'Upload Image'}</span>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="hidden"
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0]
-                                                        if (file) handleImageSelect(file)
-                                                        e.target.value = ''
-                                                    }}
-                                                />
-                                            </label>
-                                        </TahoeGlassSurface>
+                                        <label className={cn(lightButtonClass, 'cursor-pointer has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40')}>
+                                            {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                            <span className="text-sm">{product.image_url ? 'Change Image' : 'Upload Image'}</span>
+                                            <input
+                                                type="file"
+                                                aria-label={`Upload image for ${product.name || 'product'}`}
+                                                accept="image/*"
+                                                className="sr-only"
+                                                disabled={isUploading}
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0]
+                                                    if (file) handleImageSelect(file)
+                                                    e.target.value = ''
+                                                }}
+                                            />
+                                        </label>
                                     </div>
                                 </div>
                                 {/* Cropper Modal */}
@@ -522,13 +522,13 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Headline Hook
                                         </label>
-                                        <TahoeGlassButton tone="light"
+                                        <LightButton
                                             onClick={() => copyPrompt('headline')}
                                             className="px-3 py-1.5"
-                                            contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
+                                            contentClassName="gap-1 text-[13px] font-medium"
                                         >
                                             {copiedField === 'headline' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                        </TahoeGlassButton>
+                                        </LightButton>
                                     </div>
                                     <TahoeGlassField
                                         tone="dark"
@@ -553,13 +553,13 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Tagline
                                         </label>
-                                        <TahoeGlassButton tone="light"
+                                        <LightButton
                                             onClick={() => copyPrompt('tagline')}
                                             className="px-3 py-1.5"
-                                            contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
+                                            contentClassName="gap-1 text-[13px] font-medium"
                                         >
                                             {copiedField === 'tagline' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                        </TahoeGlassButton>
+                                        </LightButton>
                                     </div>
                                     <TahoeGlassField
                                         tone="dark"
@@ -593,13 +593,13 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
                                             Introduction / Problem
                                         </label>
-                                        <TahoeGlassButton tone="light"
+                                        <LightButton
                                             onClick={() => copyPrompt('intro')}
                                             className="px-3 py-1.5"
-                                            contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
+                                            contentClassName="gap-1 text-[13px] font-medium"
                                         >
                                             {copiedField === 'intro' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                        </TahoeGlassButton>
+                                        </LightButton>
                                     </div>
                                     <TahoeGlassField
                                         tone="dark"
@@ -626,13 +626,13 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     03. Benefits
                                 </h3>
-                                <TahoeGlassButton tone="light"
+                                <LightButton
                                     onClick={() => copyPrompt('benefits')}
                                     className="px-3 py-1.5"
-                                    contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
+                                    contentClassName="gap-1 text-[13px] font-medium"
                                 >
                                     {copiedField === 'benefits' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                </TahoeGlassButton>
+                                </LightButton>
                             </div>
 
                             <div className="space-y-3">
@@ -659,30 +659,25 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                                 aria-label={`Benefit ${index + 1}`}
                                             />
                                         </TahoeGlassField>
-                                        <TahoeGlassButton tone="light"
+                                        <LightCloseButton
                                             onClick={() => {
                                                 const newBenefits = (product.benefits || []).filter((_, i) => i !== index)
                                                 updateProduct({ benefits: newBenefits })
                                             }}
                                             aria-label={`Remove benefit ${index + 1}`}
-                                            semanticTint="dark"
-                                            className="absolute right-3 top-1/2 z-20 h-8 w-8 -translate-y-1/2 px-0 py-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
-                                            contentClassName="!text-red-200"
-                                        >
-                                            <X size={16} />
-                                        </TahoeGlassButton>
+                                            intent="danger"
+                                            className="absolute right-1 top-1/2 z-20 -translate-y-1/2"
+                                        />
                                     </div>
                                 ))}
 
                                 {(!product.benefits || product.benefits.length < 9) && (
-                                    <TahoeGlassButton tone="light"
+                                    <LightIconButton
                                         onClick={() => updateProduct({ benefits: [...(product.benefits || []), ''] })}
                                         aria-label="Add benefit"
-                                        className="h-8 w-8 px-0 py-0"
-                                        contentClassName="!text-white"
                                     >
                                         <Plus size={16} />
-                                    </TahoeGlassButton>
+                                    </LightIconButton>
                                 )}
                             </div>
                         </section>
@@ -693,13 +688,13 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     04. Core Value Proposition
                                 </h3>
-                                <TahoeGlassButton tone="light"
+                                <LightButton
                                     onClick={() => copyPrompt('value_proposition')}
                                     className="px-3 py-1.5"
-                                    contentClassName="gap-1 text-[13px] font-medium !text-blue-200"
+                                    contentClassName="gap-1 text-[13px] font-medium"
                                 >
                                     {copiedField === 'value_proposition' ? <Check size={12} /> : <Copy size={12} />} Copy AI Prompt
-                                </TahoeGlassButton>
+                                </LightButton>
                             </div>
 
                             <div>
@@ -756,17 +751,15 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                             <div className="space-y-4">
                                 {(product.testimonials || []).map((t, index) => (
                                     <TahoeGlassSurface key={index} variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={14} tone="light" className="group" contentClassName="relative p-4">
-                                        <TahoeGlassButton tone="light"
+                                        <LightCloseButton
                                             onClick={() => {
                                                 const newTestimonials = (product.testimonials || []).filter((_, i) => i !== index)
                                                 updateProduct({ testimonials: newTestimonials })
                                             }}
                                             aria-label={`Remove testimonial ${index + 1}`}
-                                            className="absolute -right-2 -top-2 h-6 w-6 px-0 py-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
-                                            contentClassName="!text-white"
-                                        >
-                                            <X size={14} strokeWidth={3} />
-                                        </TahoeGlassButton>
+                                            intent="danger"
+                                            className="mb-3 ml-auto flex"
+                                        />
 
                                         <div className="space-y-4">
                                             <TahoeGlassField
@@ -813,14 +806,12 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 ))}
 
                                 {(!product.testimonials || product.testimonials.length < 5) && (
-                                    <TahoeGlassButton tone="light"
+                                    <LightIconButton
                                         onClick={() => updateProduct({ testimonials: [...(product.testimonials || []), { name: '', text: '' }] })}
                                         aria-label="Add testimonial"
-                                        className="h-8 w-8 px-0 py-0"
-                                        contentClassName="!text-white"
                                     >
                                         <Plus size={16} />
-                                    </TahoeGlassButton>
+                                    </LightIconButton>
                                 )}
                             </div>
                         </section >
@@ -828,14 +819,14 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         {/* Bottom Actions */}
                         <div className="flex flex-col md:flex-row gap-4 pt-8 border-t border-white/10">
                             <Link href={backHref} onClick={event => { event.preventDefault(); navigateBack() }} aria-disabled={leavingBusy || undefined} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-lg px-1 py-2 text-sm font-medium text-white/90 underline underline-offset-4 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white aria-disabled:cursor-wait aria-disabled:opacity-50"><ChevronLeft size={16} aria-hidden="true" />Back</Link>
-                            <TahoeGlassButton tone="light"
+                            <LightButton
                                 onClick={() => router.push(`/products/${productId}?source=creator&preview=true`)}
                                 disabled={previewDisabled}
                                 className={previewClassName}
                                 contentClassName={previewContentClassName}
                             >
                                 Preview page
-                            </TahoeGlassButton>
+                            </LightButton>
                         </div >
 
                     </div >
