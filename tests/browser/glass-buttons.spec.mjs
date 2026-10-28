@@ -57,7 +57,7 @@ const fixture = `
 `
 
 test.beforeAll(async () => {
-    const files = ['src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/GlassButton.tsx', 'src/components/ui/CreateProfileButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/page.tsx', 'src/components/products/SalesPageCreator.tsx']
+    const files = ['src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/GlassButton.tsx', 'src/components/ui/CreateProfileButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/page.tsx', 'src/components/products/SalesPageCreator.tsx']
     const candidates = [...files.map(file => readFileSync(root + file, 'utf8')), fixture].flatMap(source => [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates)
@@ -238,9 +238,12 @@ test('normalized white and danger callers stay legible at the real sheen peak an
     await page.evaluate(() => window.showConfirmFixture(true))
     const dialog = page.getByRole('dialog', { name: 'Delete fixture item?' })
     await expect(dialog).toBeVisible()
+    await expect(dialog).toHaveAttribute('data-reading-material', 'white')
+    expect(await dialog.evaluate(element => getComputedStyle(element, '::before').backgroundColor)).toBe('rgb(227, 231, 237)')
     for (const name of ['Keep item', 'Delete']) {
         const action = dialog.getByRole('button', { name, exact: true })
-        await expect(action).toHaveAttribute('data-tahoe-glass-tone', 'light')
+        await expect(action).toHaveAttribute('data-tahoe-glass-tone', 'dark')
+        await expect(action.locator('[data-tahoe-button-content]')).toHaveCSS('text-shadow', 'none')
         expect(await labelContrast(action), `Actual confirmation ${name} contrast`).toBeGreaterThanOrEqual(4.5)
     }
     await dialog.getByRole('button', { name: 'Keep item' }).click()

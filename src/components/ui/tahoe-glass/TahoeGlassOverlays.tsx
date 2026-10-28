@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { LIGHT_PANEL } from "@/components/ui/light-panel";
 import { TahoeGlassDirectBackdropBoundaryContext } from "./TahoeGlassBoundaryContext";
 import {
   TahoeGlassSurface,
@@ -29,6 +30,10 @@ const FOCUSABLE_SELECTOR = [
 // backing above its optical layers (z0–10), beneath its content (z20).
 const READABLE_OVERLAY_BACKING =
   "before:pointer-events-none before:absolute before:inset-0 before:z-[19] before:rounded-[inherit] before:bg-[#202126] before:content-[''] forced-colors:before:bg-[Canvas]";
+
+// Explicit opt-in: core nsso reading panels share the menu material, while
+// existing personal-app dialogs retain their current default appearance.
+const WHITE_OVERLAY_BACKING = LIGHT_PANEL.overlayBacking;
 
 interface ModalLayer {
   order: number;
@@ -415,6 +420,8 @@ export interface TahoeGlassDialogProps
     "as" | "variant" | "role" | "title"
   > {
   open: boolean;
+  /** Opaque reading material; never enables backdrop optics. */
+  readingMaterial?: "dark" | "white";
   onOpenChange?: (open: boolean) => void;
   title?: React.ReactNode;
   description?: React.ReactNode;
@@ -441,6 +448,7 @@ export const TahoeGlassDialog = React.forwardRef<
 >(function TahoeGlassDialog(
   {
     open,
+    readingMaterial = "dark",
     onOpenChange,
     title,
     description,
@@ -527,8 +535,10 @@ export const TahoeGlassDialog = React.forwardRef<
         ref={setPanelRef}
         as="div"
         variant="dialog"
-        tone={surfaceProps.tone ?? "light"}
+        tone={readingMaterial === "white" ? "inherit" : surfaceProps.tone ?? "light"}
+        contentClassName={cn(surfaceProps.contentClassName, readingMaterial === "white" && [LIGHT_PANEL.focusWithin, LIGHT_PANEL.content])}
         data-tahoe-readable-overlay="true"
+        data-reading-material={readingMaterial}
         role="dialog"
         aria-modal={modal || undefined}
         aria-label={resolvedAriaLabel}
@@ -538,6 +548,7 @@ export const TahoeGlassDialog = React.forwardRef<
         className={cn(
           "pointer-events-auto relative z-[1] max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-auto p-6",
           READABLE_OVERLAY_BACKING,
+          readingMaterial === "white" && [LIGHT_PANEL.surface, WHITE_OVERLAY_BACKING],
           className,
         )}
       >
@@ -572,6 +583,8 @@ TahoeGlassDialog.displayName = "TahoeGlassDialog";
 export interface TahoeGlassPopoverProps
   extends Omit<TahoeGlassSurfaceProps, "as" | "variant"> {
   open: boolean;
+  /** Opaque reading material; never enables backdrop optics. */
+  readingMaterial?: "dark" | "white";
   onOpenChange?: (open: boolean) => void;
   portal?: boolean;
   portalContainer?: Element | DocumentFragment | null;
@@ -592,6 +605,7 @@ export const TahoeGlassPopover = React.forwardRef<
 >(function TahoeGlassPopover(
   {
     open,
+    readingMaterial = "dark",
     onOpenChange,
     portal = true,
     portalContainer,
@@ -675,8 +689,10 @@ export const TahoeGlassPopover = React.forwardRef<
         ref={setPanelRef}
         as="div"
         variant="popover"
-        tone={surfaceProps.tone ?? "light"}
+        tone={readingMaterial === "white" ? "inherit" : surfaceProps.tone ?? "light"}
+        contentClassName={cn(surfaceProps.contentClassName, readingMaterial === "white" && [LIGHT_PANEL.focusWithin, LIGHT_PANEL.content])}
         data-tahoe-readable-overlay="true"
+        data-reading-material={readingMaterial}
         role={role}
         aria-label={
           surfaceProps["aria-label"] ||
@@ -688,6 +704,7 @@ export const TahoeGlassPopover = React.forwardRef<
         className={cn(
           "pointer-events-auto absolute max-h-[calc(100dvh-1rem)] overflow-auto p-3",
           READABLE_OVERLAY_BACKING,
+          readingMaterial === "white" && [LIGHT_PANEL.surface, WHITE_OVERLAY_BACKING],
           className,
         )}
       >

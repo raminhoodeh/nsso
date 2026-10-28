@@ -10,6 +10,9 @@ import { useUI } from '@/components/providers/UIProvider'
 import { TahoeGlassButton, TahoeGlassDialog, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { boundedClientRead } from '@/lib/client-read'
 import Link from 'next/link'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
+import { cn } from '@/lib/utils'
+import ComingSoonBadge from '@/components/ui/ComingSoonBadge'
 
 interface MyNssoTabProps {
     initialData?: {
@@ -147,7 +150,10 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
                     </p>
                 </div>
 
-                <p className="mb-6 text-sm text-white/70 md:absolute md:right-8 md:top-8 md:mb-0 md:max-w-44">Discover nsso users — coming soon</p>
+                <div className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-2 md:absolute md:right-8 md:top-8 md:mb-0 md:max-w-44">
+                    <span className="whitespace-nowrap text-sm text-white/70">Discover nsso users</span>
+                    <ComingSoonBadge />
+                </div>
 
                 {connections.length === 0 && !loadError && <section aria-labelledby="network-start-title" className="mb-6 rounded-2xl border border-white/20 bg-black/25 p-5 text-white">
                     <h3 id="network-start-title" className="text-lg font-semibold">Start with someone you know</h3>
@@ -224,6 +230,7 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
     const [error, setError] = useState('')
     const pending = useRef(false)
     const busy = saving || removing
+    const buttonClass = cn(LIGHT_PANEL.control, LIGHT_PANEL.focus, 'min-h-11 rounded-full px-4 py-2')
 
     async function saveNotes() {
         if (pending.current) return
@@ -257,24 +264,23 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
         <TahoeGlassDialog
             open={isOpen}
             onOpenChange={(open) => { if (!open && !busy) onClose() }}
-            tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.38}
+            readingMaterial="white"
+            tone="dark"
             aria-label={`Notes for ${connection.fullName}`}
             overlayClassName="z-[10000]"
             backdropClassName="bg-black/70"
             className="max-w-lg p-6"
-            contentClassName="rounded-2xl bg-[#202126] p-1"
+            contentClassName="rounded-2xl p-1 text-slate-950 [text-shadow:none]"
         >
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-white">Notes for {connection.fullName}</h3>
-                <TahoeGlassButton tone="light" onClick={onClose} disabled={busy} className="h-11 w-11 shrink-0 p-0" contentClassName="text-white/85" aria-label="Close notes dialog">
+                <h3 className="text-xl font-bold">Notes for {connection.fullName}</h3>
+                <button type="button" onClick={onClose} disabled={busy} className={cn(LIGHT_PANEL.control, LIGHT_PANEL.focus, 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full')} aria-label="Close notes dialog">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
-                </TahoeGlassButton>
+                </button>
             </div>
-            <TahoeGlassField label="Connection notes" visuallyHideLabel tone="light" surfaceClassName="p-0 mb-2" controlClassName="max-h-[35dvh] min-h-24 p-3 resize-y custom-scrollbar">
+            <TahoeGlassField label="Connection notes" visuallyHideLabel tone="dark" className={cn(LIGHT_PANEL.group, 'mb-2 overflow-hidden rounded-2xl')} surfaceClassName="p-0" controlClassName={cn(LIGHT_PANEL.focus, 'max-h-[35dvh] min-h-24 resize-y p-3')}>
                 <textarea
                     aria-label="Connection notes"
                     value={content}
@@ -283,31 +289,31 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
                     maxLength={3333}
                     rows={8}
                     placeholder="Add notes about your meeting, context, or follow-ups..."
-                    className="text-base text-white placeholder:text-white/60"
+                    className="text-base text-slate-950 placeholder:text-slate-600"
                 />
             </TahoeGlassField>
-            {error && <p role="alert" className="mb-3 text-sm text-rose-200">{error}</p>}
-            <div className="flex flex-wrap justify-between items-center text-xs text-white/70 gap-3">
+            {error && <p role="alert" className="mb-3 text-sm text-rose-800">{error}</p>}
+            <div className="flex flex-wrap justify-between items-center text-xs text-slate-700 gap-3">
                 <span>{content.length} / 3333 characters</span>
-                <TahoeGlassButton tone="light" onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className="min-h-11 px-4 py-2" contentClassName="text-white font-semibold">
+                <button type="button" onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className={cn(buttonClass, 'font-semibold')}>
                     {saving ? 'Saving...' : 'Save Notes'}
-                </TahoeGlassButton>
+                </button>
             </div>
-            <div className="mt-5 pt-4 border-t border-white/10">
+            <div className="mt-5 pt-4 border-t border-slate-500/20">
                 {confirmRemoval ? (
                     <div className="space-y-3">
-                        <p className="text-sm text-white/80">
+                        <p className="text-sm text-slate-700">
                             Remove {connection.fullName} from your My nsso? This removes them from your list and deletes your private notes, including any unsaved notes. Their record of you stays unchanged.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            <TahoeGlassButton tone="light" onClick={() => { void removeConnection() }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">
+                            <button type="button" onClick={() => { void removeConnection() }} disabled={busy} className={cn(buttonClass, 'text-rose-800 hover:text-rose-900')}>
                                 {removing ? 'Removing...' : 'Confirm removal'}
-                            </TahoeGlassButton>
-                            <TahoeGlassButton onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className="min-h-11 px-4 py-2">Keep connection</TahoeGlassButton>
+                            </button>
+                            <button type="button" onClick={() => { setConfirmRemoval(false); setError('') }} disabled={busy} className={buttonClass}>Keep connection</button>
                         </div>
                     </div>
                 ) : (
-                    <TahoeGlassButton tone="light" onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className="min-h-11 px-4 py-2" contentClassName="text-rose-200">Remove from My nsso</TahoeGlassButton>
+                    <button type="button" onClick={() => { setConfirmRemoval(true); setError('') }} disabled={busy} className={cn(buttonClass, 'text-rose-800 hover:text-rose-900')}>Remove from My nsso</button>
                 )}
             </div>
         </TahoeGlassDialog>

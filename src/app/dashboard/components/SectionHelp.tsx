@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Info } from 'lucide-react'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
+import { cn } from '@/lib/utils'
 
 /** Compact help for section titles, readable without hover on touch screens. */
 export default function SectionHelp({ title, children }: { title: string; children: string }) {
@@ -74,7 +76,7 @@ export default function SectionHelp({ title, children }: { title: string; childr
                 <Info size={18} aria-hidden="true" />
             </button>
             <span ref={tooltip} hidden={!open} style={{ left: offset }} className="absolute top-full z-50 w-[min(248px,calc(100vw_-_96px))] pt-2">
-                <span id={id} role="tooltip" className="block rounded-2xl border border-white/20 bg-[#202126] px-4 py-3 text-sm font-normal leading-relaxed text-white shadow-xl">
+                <span id={id} role="tooltip" className={cn(LIGHT_PANEL.surface, 'block rounded-2xl border border-white/80 px-4 py-3 text-sm font-normal leading-relaxed shadow-xl')}>
                     {children}
                 </span>
             </span>

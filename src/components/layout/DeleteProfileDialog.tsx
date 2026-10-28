@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 import { useUser } from '@/components/providers/UserProvider'
 import { clearDeletedAccountSession } from '@/lib/supabase/deleted-account-session'
 import { deleteOwnProfile, getProfileDeleteIntent, ProfileDeleteError } from '@/lib/delete-profile-client'
@@ -119,7 +120,7 @@ export default function DeleteProfileDialog({ open, onOpenChange }: { open: bool
         aria-labelledby={titleId}
         aria-describedby={`${descriptionId} ${loginDescriptionId}`}
         data-delete-profile-dialog="true"
-        className="m-auto max-h-[calc(100dvh_-_32px)] w-[min(440px,calc(100vw_-_32px))] max-w-none overflow-y-auto rounded-[28px] border border-white/80 bg-[#e3e7ed] p-6 text-slate-950 [text-shadow:none] shadow-2xl backdrop:bg-black/70"
+        className={`${LIGHT_PANEL.surface} m-auto max-h-[calc(100dvh_-_32px)] w-[min(440px,calc(100vw_-_32px))] max-w-none overflow-y-auto rounded-[28px] border border-white/80 p-6 shadow-2xl backdrop:bg-black/70`}
         onCancel={event => { event.preventDefault(); if (!pending.current && !localSessionIssue) onOpenChange(false) }}
         onClose={() => { if (!pending.current) onOpenChange(false) }}
     >

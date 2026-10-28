@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, layoutCss
 test.beforeAll(async () => {
-  const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx', 'src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx']
+  const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx', 'src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx']
   const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
   const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
   layoutCss = compiler.build(candidates)
@@ -30,7 +30,7 @@ test.beforeAll(async () => {
               export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
               export function TahoeBackdropSurface({backdropEnabled,materialFinish,...props}){return <TahoeGlassSurface {...props}/>}
               export function TahoeBackdropHeader({displacementProfile,materialLighting,...props}){return <TahoeGlassSurface {...props}/>}
-              export function TahoeGlassDialog({open,children}){return open?<div role="dialog">{children}</div>:null}`
+              export {TahoeGlassDialog} from './src/components/ui/tahoe-glass/TahoeGlassOverlays'`
           : path.endsWith('HomeVisionPlayer') ? "import React from 'react';export default ()=> <div>Vision player fixture</div>;"
           : "import React from 'react';export default ({children})=><div>{children}</div>;"
         return {contents,loader:'tsx',resolveDir:root}
@@ -78,9 +78,24 @@ async function fixture(page, screen='home', options={}) {
     return route.fulfill({status:204,body:''})
   })
   await page.goto('https://nsso.test/')
+  // Header actions live inside a viewport-sized, scrollable drawer. Mount its
+  // real CSS before rendering; an unstyled inline dialog expands the supplied
+  // high-resolution mark to its intrinsic canvas and moves actions offscreen.
+  // Sidebar behavior probes remain independent of its desktop-only CSS layout.
+  if (screen === 'header') await page.addStyleTag({ content: layoutCss })
   await page.evaluate(({screen,options})=>{Object.assign(window,options);window.fixtureRender(screen)},{screen,options})
   await expect(page.getByRole(screen==='sidebar'?'complementary':'navigation')).toBeVisible()
-  if (screen === 'header' && options.fixtureUser) await page.getByRole('button', { name: 'Open account menu' }).click()
+  if (screen === 'header' && options.fixtureUser) {
+    await page.getByRole('button', { name: 'Open account menu' }).click()
+    const menu = page.getByRole('dialog', { name: 'Menu', exact: true })
+    await expect(menu).toHaveAttribute('aria-modal', 'true')
+    await expect(menu.locator('[data-mobile-menu-logo]')).toHaveCSS('width', '69px')
+    await expect(menu.locator('[data-mobile-menu-logo]')).toHaveCSS('height', '32px')
+    await expect.poll(() => menu.evaluate(element => {
+      const bounds = element.getBoundingClientRect()
+      return bounds.left >= 0 && bounds.top >= 0 && bounds.right <= innerWidth + 1 && bounds.bottom <= innerHeight + 1
+    })).toBe(true)
+  }
   return {errors,videoRequests}
 }
 

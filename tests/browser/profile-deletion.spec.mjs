@@ -9,7 +9,7 @@ const confirmation = 'Are you sure? All your profile data will be deleted from o
 let bundle, css
 
 test.beforeAll(async () => {
-    const candidates = ['src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx', 'src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx']
+    const candidates = ['src/components/ui/light-panel.ts', 'src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx', 'src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx']
         .flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;background:#344956;color:white;font-family:Arial}main{padding:120px 24px}button{font:inherit}'

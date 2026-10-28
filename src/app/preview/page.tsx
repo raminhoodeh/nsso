@@ -152,7 +152,7 @@ export default function PreviewPage() {
                                                     <h4 className="text-white font-semibold text-lg leading-tight mb-1">{exp.job_title}</h4>
                                                     <p className="text-white/70 font-medium mb-1">{exp.company_name}</p>
                                                     <p className="text-white/40 text-sm">
-                                                        {exp.start_year} — {exp.end_year || 'Present'}
+                                                        {exp.start_year} to {exp.end_year || 'Present'}
                                                     </p>
                                                 </div>
                                             ))}
@@ -173,7 +173,7 @@ export default function PreviewPage() {
                                                     <h4 className="text-white font-semibold text-lg leading-tight mb-1">{qual.qualification_name}</h4>
                                                     <p className="text-white/70 font-medium mb-1">{qual.institution}</p>
                                                     <p className="text-white/40 text-sm">
-                                                        {qual.start_year} — {qual.end_year}
+                                                        {qual.start_year} to {qual.end_year}
                                                     </p>
                                                 </div>
                                             ))}

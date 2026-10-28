@@ -11,7 +11,7 @@ test.use({ browserName: 'webkit', channel: '' })
 test.beforeAll(async () => {
     // Compile the actual route/component utility classes, including their flex,
     // padding and overflow rules. Unstyled semantic fixtures miss this failure.
-    const files = ['src/app/deity/page.tsx', 'src/components/agent/AgentChatInterface.tsx']
+    const files = ['src/app/deity/page.tsx', 'src/components/agent/AgentChatInterface.tsx', 'src/components/ui/light-panel.ts']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;font-family:Arial;background:#344956}#fixture-header{position:fixed;inset:0 0 auto;height:88px;z-index:5000;background:#546a7c}'

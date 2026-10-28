@@ -21,7 +21,7 @@ const test = base.extend({
 })
 
 test.beforeAll(async () => {
-    const source = readFileSync(root + 'src/components/agent/AgentChatInterface.tsx', 'utf8')
+    const source = ['src/components/agent/AgentChatInterface.tsx', 'src/components/ui/light-panel.ts'].map(file => readFileSync(root + file, 'utf8')).join('\n')
     const candidates = [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + 'body{margin:0;font-family:Arial}#root{height:100dvh}'
@@ -30,7 +30,7 @@ test.beforeAll(async () => {
         plugins: [{ name: 'compact-deity-fixture', setup(builder) {
             builder.onResolve({ filter: /^@\/(?:components\/providers\/(?:UserProvider|ProfileProvider)|components\/ui\/Toast|lib\/supabase\/client)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'js', resolveDir: root, contents:
-                path.endsWith('UserProvider') ? `const user={id:'compact-fixture',username:'fixture'};export const useUser=()=>({user,loading:false});`
+                path.endsWith('UserProvider') ? `import{useSyncExternalStore}from'react';const user={id:'compact-fixture',username:'fixture'};let value=window.fixtureBootstrapPending?{user:null,loading:true}:{user,loading:false};const listeners=new Set();const subscribe=fn=>{listeners.add(fn);return()=>listeners.delete(fn)};window.fixtureResolveAccount=()=>{value={user,loading:false};listeners.forEach(fn=>fn())};export const useUser=()=>useSyncExternalStore(subscribe,()=>value);`
                 : path.endsWith('ProfileProvider') ? `window.fixtureApplied=[];const value={fastMode:true,setFastMode:()=>{throw Error('Legacy preference must remain untouched')},undo:async()=>({status:'applied'}),canUndo:true,revision:0,getRevision:()=>0,refreshProfile:async()=>{},links:[],applyOperation:async(changes,operationId,expectedRevision)=>{window.fixtureApplied.push({changes,operationId,expectedRevision});return{status:'applied',operationId,revision:window.fixtureApplied.length,changes:[]}}};export const useProfile=()=>value;`
                 : path.endsWith('/Toast') ? `const showToast=()=>{};export const useToast=()=>({showToast});`
                 : `const client={auth:{getSession:async()=>({data:{session:{access_token:'synthetic-fixture-only',user:{id:'compact-fixture'}}}})},from:()=>({select(){return this},eq(){return this},single:async()=>({data:{full_name:'Fixture Person',bio:'Synthetic fixture biography'}})})};export const createClient=()=>client;`
@@ -41,12 +41,13 @@ test.beforeAll(async () => {
     bundle = result.outputFiles[0].text
 })
 
-async function mount(page, viewport) {
+async function mount(page, viewport, { bootstrap = false } = {}) {
     const errors = [], requests = []
     page.on('pageerror', error => errors.push(error.message))
     page.on('console', message => { if (/ResizeObserver.*(?:loop|undelivered)/i.test(message.text())) errors.push(message.text()) })
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.setViewportSize(viewport)
+    await page.addInitScript(value => { window.fixtureBootstrapPending = value }, bootstrap)
     await page.route('https://nsso.test/**', route => {
         const pathname = new URL(route.request().url()).pathname
         if (pathname === '/fixture.css') return route.fulfill({ contentType: 'text/css', body: css })
@@ -65,14 +66,104 @@ async function mount(page, viewport) {
         return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' })
     })
     await page.goto('https://nsso.test/fixture')
+    if (bootstrap) {
+        await expect(page.getByRole('status')).toHaveText('Loading Deity account…')
+        return { errors, requests }
+    }
     await expect(page.getByRole('textbox', { name: 'Message Deity' })).toBeEditable()
     await expect.poll(() => page.locator('header img').evaluateAll(images => images.length === 2 && images.every(image => image.complete && image.naturalWidth > 0))).toBe(true)
     return { errors, requests }
 }
 
+async function textContrast(locator, pseudo = null) {
+    return locator.evaluate((element, pseudo) => {
+        const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
+        const context = canvas.getContext('2d')
+        const paint = colour => { context.clearRect(0, 0, 1, 1); context.fillStyle = colour; context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data] }
+        const foreground = paint(getComputedStyle(element, pseudo).color)
+        let background = [255, 255, 255, 255]
+        for (let node = element; node; node = node.parentElement) {
+            const colour = paint(getComputedStyle(node).backgroundColor)
+            if (colour[3] === 255) { background = colour; break }
+        }
+        const luminance = rgb => rgb.slice(0, 3).map(value => value / 255).map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+        const values = [luminance(foreground), luminance(background)].sort((a, b) => a - b)
+        return (values[1] + 0.05) / (values[0] + 0.05)
+    }, pseudo)
+}
+
 for (const browserName of ['chromium', 'webkit']) {
     test.describe(`${browserName} compact Deity`, () => {
         test.use({ compactBrowserName: browserName })
+        test('loading and loaded Deity share an opaque pastel white panel', async ({ page }, testInfo) => {
+            const { errors, requests } = await mount(page, { width: 390, height: 844 }, { bootstrap: true })
+            const shell = page.locator('[data-deity-surface="opaque"]')
+            const inspectSurface = () => shell.evaluate(element => {
+                const style = getComputedStyle(element)
+                return { background: style.backgroundColor, image: style.backgroundImage, opacity: style.opacity, backdrop: style.backdropFilter }
+            })
+            const loading = await inspectSurface()
+            expect(loading.background).toBe('rgb(227, 231, 237)')
+            expect(loading.opacity).toBe('1')
+            expect(loading.image).toContain('linear-gradient')
+            expect(loading.backdrop).toBe('none')
+            const close = page.getByRole('button', { name: 'Close Deity chat', exact: true })
+            expect(await textContrast(close)).toBeGreaterThanOrEqual(4.5)
+            await close.focus(); await page.keyboard.press('Enter')
+            expect(await page.evaluate(() => window.fixtureClosed)).toBe(1)
+            await page.evaluate(() => window.fixtureResolveAccount())
+            await expect(page.getByRole('textbox', { name: 'Message Deity' })).toBeEditable()
+            expect(await inspectSurface()).toEqual(loading)
+            await expect(shell.locator('[data-tahoe-glass-button],[data-tahoe-surface],[data-tahoe-chromium-optics]')).toHaveCount(0)
+            await expect(page.locator('header img[alt="Deity"]')).toHaveCSS('filter', 'brightness(0)')
+            await page.screenshot({ path: testInfo.outputPath('white-deity-panel.png') })
+            expect(requests).toEqual([])
+            expect(errors).toEqual([])
+        })
+
+        test('white conversation controls, proposals and database dialog retain contrast and keyboard focus', async ({ page }, testInfo) => {
+            const { errors, requests } = await mount(page, { width: 390, height: 844 })
+            const composer = page.getByRole('textbox', { name: 'Message Deity' })
+            expect(await textContrast(composer)).toBeGreaterThanOrEqual(4.5)
+            expect(await textContrast(composer, '::placeholder')).toBeGreaterThanOrEqual(4.5)
+            await composer.fill('Suggest a readable headline.')
+            await page.getByRole('button', { name: 'Send message', exact: true }).click()
+            const apply = page.getByRole('button', { name: 'Apply suggested profile change', exact: true }).first()
+            const reject = page.getByRole('button', { name: 'Reject suggested profile change', exact: true }).first()
+            await expect(apply).toBeVisible()
+            for (const item of [page.getByRole('article', { name: 'Your message' }), page.getByRole('article', { name: 'Deity message' }).last(), apply, reject]) {
+                expect(await textContrast(item)).toBeGreaterThanOrEqual(4.5)
+            }
+            await page.keyboard.press('Tab')
+            await apply.focus()
+            expect(await apply.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none')
+            await page.keyboard.press('Enter')
+            const saved = page.getByRole('status').filter({ hasText: 'Done, profile updated!' })
+            await expect(saved).toBeVisible()
+            expect(await textContrast(saved)).toBeGreaterThanOrEqual(4.5)
+            const categories = page.getByRole('button', { name: 'What you can ask me about', exact: true })
+            await categories.click()
+            const database = page.getByRole('button', { name: 'nsso DATABASE', exact: true })
+            expect(await textContrast(database)).toBeGreaterThanOrEqual(4.5)
+            await database.focus(); await page.keyboard.press('Enter')
+            const dialog = page.getByRole('dialog', { name: 'About the nsso database' })
+            await expect(dialog).toBeVisible()
+            await expect(dialog).toHaveCSS('background-color', 'rgb(227, 231, 237)')
+            await expect(dialog).toHaveCSS('backdrop-filter', 'none')
+            const close = dialog.getByRole('button', { name: 'Close database information' })
+            await expect(close).toBeFocused()
+            await page.screenshot({ path: testInfo.outputPath('white-database-dialog.png') })
+            await page.keyboard.press('Escape')
+            await expect(dialog).toHaveCount(0)
+            await expect(database).toBeFocused()
+            await page.emulateMedia({ forcedColors: 'active' })
+            const forced = await database.evaluate(element => { const style = getComputedStyle(element); return { background: style.backgroundColor, color: style.color, outline: style.outlineStyle } })
+            expect(forced.background).not.toBe(forced.color)
+            expect(forced.outline).not.toBe('none')
+            expect(requests).toHaveLength(1)
+            expect(errors).toEqual([])
+        })
+
         for (const viewport of [{ width: 320, height: 640 }, { width: 390, height: 360 }, { width: 1440, height: 900 }]) {
             test(`stable guidance and compact opaque controls fit ${viewport.width}×${viewport.height}`, async ({ page }, testInfo) => {
                 const { errors, requests } = await mount(page, viewport)
@@ -95,7 +186,7 @@ for (const browserName of ['chromium', 'webkit']) {
                 expect(metrics.composerBottom).toBeLessThanOrEqual(metrics.shellBottom)
                 expect(metrics.logHeight).toBeGreaterThan(metrics.shellHeight * 0.45)
                 expect(metrics.sendHeight).toBeGreaterThanOrEqual(44)
-                expect(metrics.background).toBe('rgb(17, 22, 29)')
+                expect(metrics.background).toBe('rgb(227, 231, 237)')
                 expect(parseFloat(metrics.headerPadding)).toBeLessThanOrEqual(8)
                 expect(metrics.brandRight).toBeLessThanOrEqual(metrics.controlsLeft)
                 expect(metrics.overflow).toBe(false)

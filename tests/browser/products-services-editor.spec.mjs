@@ -3,6 +3,7 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const account = '22222222-2222-4222-8222-222222222222'
@@ -20,6 +21,7 @@ test.beforeAll(async () => {
         'src/app/dashboard/components/ConfirmDeleteDialog.tsx',
         'src/app/dashboard/components/SectionHelp.tsx',
         'src/components/ui/AskDeityButton.tsx',
+        'src/components/ui/light-panel.ts',
         'src/components/products/SalesPageCreator.tsx',
         'src/components/payments/PayPalCodeEditor.tsx',
         'src/components/ui/GlassCard.tsx',
@@ -86,6 +88,7 @@ async function mount(page, { count = 2, payment, offering, creator = false } = {
         if (url.pathname === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundle })
         if (url.pathname === '/fixture.css') return route.fulfill({ contentType: 'text/css', body: css })
         if (url.pathname === '/fixture-thumb.svg') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="300" height="300" fill="#5798ad"/><circle cx="150" cy="150" r="80" fill="#edd7b6"/></svg>' })
+        if (url.pathname === '/guide-paypal.png') return route.fulfill({ contentType: 'image/png', body: readFileSync(root + 'public/guide-paypal.png') })
         if (url.pathname.startsWith('/api/products/') && url.pathname.endsWith('/payment')) {
             if (payment) return payment(route)
             throw new Error('A payment save was not expected in this fixture.')
@@ -111,6 +114,35 @@ async function expectTooltipFits(page) {
     expect(bounds.x).toBeGreaterThanOrEqual(15)
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width - 15)
 }
+
+test('the PayPal guide uses the opaque white help family without changing links or payment drafts', async ({ page }) => {
+    await mount(page, { count: 1 })
+    await choose(page, 1).click()
+    const code = page.getByRole('textbox', { name: 'PayPal button code', exact: true })
+    await code.fill('<kept local synthetic payment draft>')
+    const trigger = page.getByRole('button', { name: 'Where do I find the code?', exact: true })
+    await trigger.press('Enter')
+    const guide = page.locator('#paypal-guide')
+    await expect(guide).toBeVisible()
+    await expect(guide).toHaveAttribute('data-tahoe-readable-overlay', 'true')
+    await expect(guide.locator('[data-tahoe-chromium-optics]')).toHaveCount(0)
+    const content = guide.locator(':scope > div').last()
+    await content.evaluate(element => element.scrollIntoView({ block: 'center' }))
+    await expectOpaqueLightPanel(page, content)
+    expect(await minimumTextContrast(guide.getByText('PayPal Dashboard > Copy Code', { exact: true }))).toBeGreaterThanOrEqual(4.5)
+    const close = guide.getByRole('button', { name: 'Close PayPal guide', exact: true })
+    await close.focus()
+    await page.keyboard.press('Tab')
+    const tutorial = guide.getByRole('link')
+    await expect(tutorial).toBeFocused()
+    expect(await tutorial.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none')
+    await expect(tutorial).toHaveAttribute('href', 'https://youtu.be/9KihkWujsaI?si=hwAHbrQDLvOog6U8&t=28')
+    await expect(tutorial).toHaveAttribute('rel', 'noopener noreferrer')
+    await close.click()
+    await expect(guide).toHaveCount(0)
+    await expect(code).toHaveValue('<kept local synthetic payment draft>')
+    expect(await writes(page)).toEqual([])
+})
 
 test('empty overview and named creation do not publish placeholders', async ({ page }, testInfo) => {
     await mount(page, { count: 0 })

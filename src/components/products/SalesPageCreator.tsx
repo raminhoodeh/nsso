@@ -512,7 +512,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         {/* 1. Header Section */}
                         <section className="space-y-6">
                             <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                01 — The Hook
+                                01. The Hook
                             </h3>
 
                             <div className="space-y-6">
@@ -583,7 +583,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         {/* 2. The Pitch */}
                         <section className="space-y-6">
                             <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                02 — The Pitch
+                                02. The Pitch
                             </h3>
 
                             <div className="space-y-6">
@@ -624,7 +624,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         < section className="space-y-6" >
                             <div className="flex items-center justify-between">
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                    03 — Benefits
+                                    03. Benefits
                                 </h3>
                                 <TahoeGlassButton tone="light"
                                     onClick={() => copyPrompt('benefits')}
@@ -691,7 +691,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         <section className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                    04 — Core Value Proposition
+                                    04. Core Value Proposition
                                 </h3>
                                 <TahoeGlassButton tone="light"
                                     onClick={() => copyPrompt('value_proposition')}
@@ -724,7 +724,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         {/* 5. Video */}
                         <section className="space-y-6">
                             <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                05 — Video Embed
+                                05. Video Embed
                             </h3>
 
                             <div>
@@ -750,7 +750,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         {/* 5. Testimonials */}
                         < section className="space-y-6" >
                             <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                06 — Testimonials
+                                06. Testimonials
                             </h3>
 
                             <div className="space-y-4">

@@ -223,7 +223,7 @@ export default function HomeVisionPlayer() {
         </button>
 
         <span aria-live="off" className="w-[4.75rem] shrink-0 text-center text-xs tabular-nums text-white/75">
-          {formatTime(currentTime)} / {duration > 0 ? formatTime(duration) : '—:—'}
+          {formatTime(currentTime)} / {duration > 0 ? formatTime(duration) : '--:--'}
         </span>
 
         <input

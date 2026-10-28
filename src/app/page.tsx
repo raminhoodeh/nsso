@@ -12,6 +12,7 @@ import { useUser } from '@/components/providers/UserProvider'
 import { createClient } from '@/lib/supabase/client'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { boundedClientRead } from '@/lib/client-read'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 
 
@@ -65,7 +66,7 @@ function FeatureTeaser({ label, tooltip, status, stackClassName }: FeatureTeaser
       <div
         id={tooltipId}
         role="tooltip"
-        className="invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full rounded-xl border border-white/10 bg-[#202126] p-3 text-xs leading-relaxed text-white opacity-0 shadow-xl transition-all duration-200 group-hover/feature:visible group-hover/feature:opacity-100 group-focus-within/feature:visible group-focus-within/feature:opacity-100"
+        className={`${LIGHT_PANEL.surface} invisible absolute -bottom-2 left-0 z-[60] w-full translate-y-full rounded-xl border border-white/80 p-3 text-xs leading-relaxed opacity-0 shadow-xl transition-all duration-200 group-hover/feature:visible group-hover/feature:opacity-100 group-focus-within/feature:visible group-focus-within/feature:opacity-100`}
       >
         {tooltip}
       </div>
@@ -117,7 +118,10 @@ export default function HomePage() {
       if (!viewHome) {
         try {
           const { data: { session }, error } = await boundedClientRead(() => supabase.auth.getSession())
-          if (!cancelled && !error && session) router.replace('/dashboard')
+          // A later explicit homepage navigation must also win over an Auth
+          // read that started before its query parameter changed.
+          const stillDefaultLanding = new URLSearchParams(window.location.search).get('view') !== 'home'
+          if (!cancelled && !error && session && stillDefaultLanding) router.replace('/dashboard')
         } catch {
           // Public discovery remains usable during an Auth network outage.
         }

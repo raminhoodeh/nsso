@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import { compile } from '@tailwindcss/node'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { createServer } from 'node:http'
@@ -9,8 +10,14 @@ import { inlineScriptHashes } from '../../scripts/security/build-with-csp.mjs'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = { NODE_ENV: 'production', NSSO_CSP_MODE: 'enforce', NEXT_PUBLIC_SUPABASE_URL: 'https://fixture.supabase.co' }
 const dynamicFixtureManifest = { version: 1, buildId: null, routes: {} }
-let bundle
+let bundle, css
 test.beforeAll(async () => {
+    const files = ['src/components/analytics/MetaPixelConsent.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const sources = await Promise.all(files.map(file => readFile(root + file, 'utf8')))
+    const candidates = sources.flatMap(source => [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
+    const compiler = await compile(await readFile(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
+    css = compiler.build(candidates)
+
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"', 'process.env': '{}' }, stdin: { resolveDir: root, loader: 'tsx', contents: `
         import React from 'react';import {createRoot} from 'react-dom/client';
         import {QRCodeSVG} from 'qrcode.react';import PayPal from './src/components/ui/PayPalSmartButton';
@@ -32,7 +39,7 @@ async function fixture(page, path = '/fixture-profile', extra = '') {
     const requests = []
     await page.route('**/*', async route => {
         const url = route.request().url(); requests.push(url)
-        if (url === request.url) return route.fulfill({ contentType: 'text/html', headers, body: `<div id="root"></div><script nonce="${context.nonce}">window.violations=[];document.addEventListener('securitypolicyviolation',e=>window.violations.push({directive:e.effectiveDirective,blocked:e.blockedURI}));</script><script src="/fixture.js"></script>${extra}` })
+        if (url === request.url) return route.fulfill({ contentType: 'text/html', headers, body: `<style>${css}</style><div id="root"></div><script nonce="${context.nonce}">window.violations=[];document.addEventListener('securitypolicyviolation',e=>window.violations.push({directive:e.effectiveDirective,blocked:e.blockedURI}));</script><script src="/fixture.js"></script>${extra}` })
         if (url === 'https://nsso.test/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundle })
         if (url.startsWith('https://nsso.test/vendor/')) return route.fulfill({ contentType: 'application/javascript', body: await readFile(new URL('../../public/' + new URL(url).pathname.slice(1), import.meta.url)) })
         if (url.startsWith('https://www.paypal.com/sdk/js')) return route.fulfill({ contentType: 'application/javascript', body: `const n=document.currentScript.dataset.namespace;window[n]={HostedButtons:()=>({render:c=>{const b=document.createElement('button');b.textContent='Provider checkout';c.append(b)}})};` })
@@ -95,7 +102,7 @@ test('marketing choices stay explicit and keyboard accessible before any provide
     // A high semanticTintOpacity alone is capped by the shared glass surface.
     // All reading/choice content must have an actually opaque local backing.
     const readingSurface = dialog.locator('[data-marketing-privacy-backing]')
-    await expect(readingSurface).toHaveCSS('background-color', 'rgb(8, 12, 20)')
+    await expect(readingSurface).toHaveCSS('background-color', 'rgb(227, 231, 237)')
     await expect(readingSurface.getByRole('heading', { name: 'Marketing privacy' })).toBeVisible()
     await expect(readingSurface.getByRole('link', { name: 'Read the tracking notice' })).toBeVisible()
     await expect(readingSurface.getByRole('button', { name: 'Decline', exact: true })).toBeVisible()
