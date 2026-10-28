@@ -25,6 +25,7 @@ import {
 } from '@/components/profile/profileLayout'
 import ExpandableBio from '@/components/profile/ExpandableBio'
 import { getProfileBioPreview } from '@/components/profile/profileBio'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 export default function PreviewPage() {
     const router = useRouter()
@@ -48,10 +49,10 @@ export default function PreviewPage() {
 
     if (!user || !profile || profile.user_id !== user.id) {
         return <>{header}<main className="flex min-h-screen items-center justify-center px-6 pt-28">
-            <GlassCard className="max-w-lg p-6 text-center text-white">
+            <section aria-label="Profile preview recovery" className={`${LIGHT_PANEL.surface} ${LIGHT_PANEL.focusWithin} max-w-lg rounded-2xl border border-white/80 p-6 text-center shadow-lg`}>
                 <p>Your profile preview could not be loaded. Your editing draft has been kept.</p>
-                <GlassButton className="mt-4" onClick={() => { void refreshUser(); void refreshProfile() }}>Retry preview</GlassButton>
-            </GlassCard>
+                <GlassButton tone="dark" className="mt-4" onClick={() => { void refreshUser(); void refreshProfile() }}>Retry preview</GlassButton>
+            </section>
         </main></>
     }
 

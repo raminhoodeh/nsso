@@ -2,6 +2,7 @@
 
 import { type ReactNode, useId, useState } from 'react'
 import GlassButton from '@/components/ui/GlassButton'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 interface PreviewCheckoutButtonProps {
     children: ReactNode
@@ -23,8 +24,8 @@ export default function PreviewCheckoutButton({ children, className = '', button
         {buttonClassName
             ? <button {...props} className={buttonClassName}>{children}</button>
             : <GlassButton {...props} className="w-full">{children}</GlassButton>}
-        {attempted && <p id={noticeId} role="status" className="mt-3 rounded-xl bg-[#1d3448] px-3 py-2 text-center text-sm font-medium !text-white">
-            Checkout is disabled during profile preview
+        {attempted && <p id={noticeId} role="status" className={`${LIGHT_PANEL.surface} mt-3 rounded-xl border border-white/80 px-3 py-2 text-center text-sm font-medium`}>
+            <span>Checkout is disabled during profile preview</span>
         </p>}
     </div>
 }

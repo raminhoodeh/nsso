@@ -50,7 +50,7 @@ export default function ProfileQRCodeToggle({
             title="Click to toggle QR Code"
         >
             <div
-                className={`relative w-full h-full transition-all duration-700 preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
+                className={`relative w-full h-full transition-all duration-700 motion-reduce:transition-none preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}
                 style={{ transformStyle: 'preserve-3d' }}
             >
                 {/* Front: Profile Picture */}

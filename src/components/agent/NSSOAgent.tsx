@@ -2,20 +2,38 @@
 
 import { LIGHT_PANEL } from '@/components/ui/light-panel';
 
-import { useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useUser } from '@/components/providers/UserProvider';
+
+const LoadingCloseContext = createContext<(() => void) | null>(null);
+
+function DeityChunkLoading() {
+    const onClose = useContext(LoadingCloseContext);
+    const panelRef = useRef<HTMLElement>(null);
+    useLayoutEffect(() => {
+        const panel = panelRef.current;
+        return () => {
+            if (!panel?.contains(document.activeElement)) return;
+            const dialog = panel.closest<HTMLElement>('[role="dialog"]');
+            if (dialog?.isConnected && dialog.getAttribute('aria-hidden') !== 'true') dialog.focus({ preventScroll: true });
+        };
+    }, []);
+    return <section ref={panelRef} data-deity-loading="chunk" className={`${LIGHT_PANEL.surface} flex h-full w-full flex-col items-center justify-center gap-4 p-6`}>
+        <div role="status" aria-live="polite" className="flex flex-col items-center gap-4">
+            <Loader2 aria-hidden="true" className="h-8 w-8 animate-spin text-slate-600 motion-reduce:animate-none" />
+            <p>Loading Deity…</p>
+        </div>
+        {onClose && <button type="button" onClick={onClose} aria-label="Close Deity chat" className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm`}>Close</button>}
+    </section>;
+}
 
 // Lazy load the heavy chat interface
 const AgentChatInterface = dynamic(
     () => import('./AgentChatInterface'),
     {
-        loading: () => (
-            <div className="h-full w-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-slate-600 animate-spin motion-reduce:animate-none" />
-            </div>
-        ),
+        loading: DeityChunkLoading,
         ssr: false
     }
 );
@@ -214,12 +232,14 @@ export default function NSSOAgent() {
                     `}
                 >
                     {hasOpened && (
-                        <AgentChatInterface
-                            isFullScreen={false}
-                            onClose={handleClose}
-                            onMaximize={undefined} // Disable maximize on desktop as it's already full height
-                            shortcutRequests={shortcutRequests}
-                        />
+                        <LoadingCloseContext.Provider value={handleClose}>
+                            <AgentChatInterface
+                                isFullScreen={false}
+                                onClose={handleClose}
+                                onMaximize={undefined} // Disable maximize on desktop as it's already full height
+                                shortcutRequests={shortcutRequests}
+                            />
+                        </LoadingCloseContext.Provider>
                     )}
                 </div>
             </>
