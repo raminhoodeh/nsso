@@ -77,7 +77,7 @@ for (const [kind, filename] of [['link', 'SortableLinkItem.tsx'], ['contact', 'S
         const handles = all.filter(node => attribute(node, 'ref') === '{setActivatorNodeRef}')
         assert.equal(handles.length, 1, 'Avoid duplicate desktop/mobile focusable drag controls.')
         const handle = handles[0]
-        assert.equal(tag(handle), 'LightButton', 'The ref-forwarding primitive must keep the native drag activator white.')
+        assert.equal(tag(handle), 'LightIconButton', 'The ref-forwarding primitive must keep the native drag activator compact and white.')
         assert.equal(attribute(handle, 'type'), 'button')
         assert.match(attribute(handle, 'aria-label'), /Drag to reorder/)
         assert.ok(handle.pos > toolbar.pos && handle.end < toolbar.end)

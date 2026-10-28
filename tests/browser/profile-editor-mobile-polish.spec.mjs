@@ -622,6 +622,11 @@ test('mobile link and contact controls share a toolbar above full-width fields a
             await expect(toolbar).toHaveAttribute('data-sortable-controls', kind)
             expect(await toolbar.getByRole('button', { name: removeName, exact: true }).count()).toBe(1)
             const [dragBox, deleteBox, toolbarBox] = await Promise.all([handle.boundingBox(), remove.boundingBox(), toolbar.boundingBox()])
+            expect(dragBox.width).toBe(44)
+            expect(dragBox.height).toBe(44)
+            expect(Math.abs(dragBox.x + dragBox.width / 2 - toolbarBox.x - toolbarBox.width / 2)).toBeLessThanOrEqual(1)
+            await expect(handle.locator('svg')).toHaveAttribute('width', '20')
+            await expect(handle.locator('svg')).toHaveAttribute('height', '20')
             expect(Math.abs(dragBox.y + dragBox.height / 2 - deleteBox.y - deleteBox.height / 2)).toBeLessThanOrEqual(1)
             expect(deleteBox.x).toBeGreaterThan(dragBox.x)
             expect(deleteBox.width).toBeGreaterThanOrEqual(44)
@@ -674,6 +679,14 @@ test('real editor X controls exactly share Deity white material in normal, hover
         return { normal, hover, focus }
     }
     try {
+        for (const name of ['Drag to reorder Portfolio', 'Drag to reorder Email contact method']) {
+            const handle = page.getByRole('button', { name, exact: true })
+            const toolbar = handle.locator('xpath=ancestor::*[@data-sortable-controls][1]')
+            const [dragBox, toolbarBox] = await Promise.all([handle.boundingBox(), toolbar.boundingBox()])
+            expect(dragBox.width).toBe(44)
+            expect(dragBox.height).toBe(44)
+            expect(Math.abs(dragBox.x + dragBox.width / 2 - toolbarBox.x - toolbarBox.width / 2)).toBeLessThanOrEqual(1)
+        }
         const link = await states(page.getByRole('button', { name: 'Remove Portfolio', exact: true }))
         const contact = await states(page.getByRole('button', { name: 'Remove Email contact method', exact: true }))
         expect(contact).toEqual(link)
