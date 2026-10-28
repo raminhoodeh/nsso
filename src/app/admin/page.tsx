@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import GlassCard from '@/components/ui/GlassCard'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
-import { LightButton } from '@/components/ui/LightButton'
+import { GlassSwitch } from '@/components/ui/GlassSwitch'
 import { useToast } from '@/components/ui/Toast'
 import type { User } from '@/lib/types'
 import { isAdminEmailEligible } from '@/lib/admin-access'
@@ -125,16 +125,16 @@ export default function AdminPage() {
                             <tbody>
                                 {users.map((user) => (
                                     <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
-                                        <td className="py-4 px-4">
+                                        <td className="py-2 px-4">
                                             <div className="text-white font-medium">
                                                 {user.profiles?.full_name || 'No name'}
                                             </div>
                                             <div className="text-white/50 text-sm">{user.email}</div>
                                         </td>
-                                        <td className="py-4 px-4">
+                                        <td className="py-2 px-4">
                                             <span className="text-white/70">nsso.me/{user.username}</span>
                                         </td>
-                                        <td className="py-4 px-4">
+                                        <td className="py-2 px-4">
                                             <div className="flex gap-2">
                                                 {user.user_type === 'admin' && (
                                                     <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-purple-200 text-xs">
@@ -152,46 +152,24 @@ export default function AdminPage() {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="py-4 px-4">
+                                        <td className="py-2 px-4">
                                             <div className="flex justify-center">
-                                                <LightButton
+                                                <GlassSwitch
                                                     onClick={() => toggleAdmin(user.id, user.user_type)}
                                                     disabled={user.id === currentUserId || (user.user_type !== 'admin' && !isAdminEmailEligible(user.email))}
                                                     title={!isAdminEmailEligible(user.email) && user.user_type !== 'admin' ? 'Administrator access is limited to the approved email addresses.' : undefined}
-                                                    role="switch"
-                                                    aria-checked={user.user_type === 'admin'}
+                                                    checked={user.user_type === 'admin'}
                                                     aria-label={`Administrator access for ${user.email}`}
-                                                    className="h-11 w-14 p-0"
-                                                    contentClassName="relative block h-full w-full"
-                                                >
-                                                    <span
-                                                        aria-hidden="true"
-                                                        className={`
-                              absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full shadow-sm transition-all
-                              ${user.user_type === 'admin' ? 'left-8 bg-slate-800' : 'left-1 bg-slate-500'}
-                            `}
-                                                    />
-                                                </LightButton>
+                                                />
                                             </div>
                                         </td>
-                                        <td className="py-4 px-4">
+                                        <td className="py-2 px-4">
                                             <div className="flex justify-center">
-                                                <LightButton
+                                                <GlassSwitch
                                                     onClick={() => toggleFilmEditor(user.id, user.permissions?.includes('razinflix:manage') || false)}
-                                                    role="switch"
-                                                    aria-checked={user.permissions?.includes('razinflix:manage') || false}
+                                                    checked={user.permissions?.includes('razinflix:manage') || false}
                                                     aria-label={`RazinFlix editing for ${user.email}`}
-                                                    className="h-11 w-14 p-0"
-                                                    contentClassName="relative block h-full w-full"
-                                                >
-                                                    <span
-                                                        aria-hidden="true"
-                                                        className={`
-                              absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full shadow-sm transition-all
-                              ${user.permissions?.includes('razinflix:manage') ? 'left-8 bg-slate-800' : 'left-1 bg-slate-500'}
-                            `}
-                                                    />
-                                                </LightButton>
+                                                />
                                             </div>
                                         </td>
                                     </tr>

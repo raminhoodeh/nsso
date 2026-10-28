@@ -3,6 +3,7 @@ import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
 import { compile } from '@tailwindcss/node'
+import { expectCompactSwitch } from './helpers/switch-assertions.mjs'
 
 // Real editor + real ProfileProvider + real mutation client. Only the remote
 // database/HTTP boundary is synthetic; no customer account is used by this suite.
@@ -13,9 +14,9 @@ const second = '33333333-3333-4333-8333-333333333333'
 let bundle, css
 
 test.beforeAll(async () => {
-    const files = ['src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/AskDeityButton.tsx', 'src/components/products/SalesPageCreator.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ProductsServicesEditor.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/profile/ProfileSaveStatus.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/components/payments/PayPalCodeEditor.tsx']
+    const files = ['src/components/ui/GlassSwitch.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/AskDeityButton.tsx', 'src/components/products/SalesPageCreator.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ProductsServicesEditor.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/profile/ProfileSaveStatus.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/components/payments/PayPalCodeEditor.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
-    const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
+    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\nbody{background:#344956;color:white;font-family:Arial}#root{margin:auto;max-width:1100px;padding:24px}button,input,textarea{font:inherit}[data-testid="provider-products"]{display:none}'
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'product-provider-boundaries', setup(builder) {
@@ -272,9 +273,11 @@ test('sales-page publication control reflects explicit visibility rather than a 
     await select(page, 'QA public sales page')
     const toggle = page.getByRole('switch', { name: 'Enable product sales page', exact: true })
     await expect(toggle).toHaveAttribute('aria-checked', 'true')
+    await expectCompactSwitch(toggle, { checked: true })
     await expect(page.getByText('Sales page is public', { exact: true })).toBeVisible()
     await toggle.click()
     await expect.poll(() => page.evaluate(() => window.fixtureState.products[0].sales_page_published)).toBe(false)
     expect(await page.evaluate(() => window.fixtureState.products[0].sales_page_active)).toBe(false)
+    await expectCompactSwitch(toggle, { checked: false })
     await expect(page.getByText('Sales page is not published', { exact: true })).toBeVisible()
 })
