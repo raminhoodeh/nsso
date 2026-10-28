@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Send, Maximize2, Minimize2, X, ChevronDown, ChevronUp, Check, XCircle, RotateCcw } from 'lucide-react';
+import { Send, Maximize2, Minimize2, ChevronDown, ChevronUp, Check, XCircle, RotateCcw } from 'lucide-react';
 import { splitActionPayload, parseActionList, type DeityAction } from '@/lib/deity/actionParser';
 import { mutationMessage, type MutationResult } from '@/lib/profile-mutations';
 import { safeWebUrl } from '@/lib/urls';
 import { ALLOWANCE_CTA_URL, ALLOWANCE_CTA_LABEL, isDailyAllowanceCode, boundedChatHistory } from '@/lib/deity/chat-allowance';
 import { normalizeNssoBrand } from '@/lib/deity/brand';
 import { LIGHT_PANEL } from '@/components/ui/light-panel';
+import { LightButton, LightIconButton, LightCloseButton } from '@/components/ui/LightButton';
 
 interface Message {
     id: string;
@@ -129,7 +130,7 @@ export default function AgentChatInterface(props: AgentChatInterfaceProps) {
     if (identity === null) return (
         <section aria-label="Deity assistant" aria-busy="true" data-deity-surface="opaque" className={`${LIGHT_PANEL.surface} flex h-full min-h-0 flex-col items-center justify-center gap-4 p-6`}>
             <p role="status" aria-live="polite">Loading Deity account…</p>
-            {props.onClose && <button type="button" onClick={props.onClose} aria-label="Close Deity chat" className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm`}>Close</button>}
+            {props.onClose && <LightButton onClick={props.onClose} aria-label="Close Deity chat">Close</LightButton>}
         </section>
     );
     // A conversation, draft and pending response belong to one identity. Never
@@ -622,7 +623,6 @@ Check out some of the areas I can help you with below.`;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shortcutRequests, hasInitialized, isLoading, isTyping]);
 
-    const iconButtonClass = `${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full`;
 
     return (
         <section
@@ -661,50 +661,40 @@ Check out some of the areas I can help you with below.`;
                 </div>
                 <div className="flex items-center gap-1.5 md:gap-2">
                     {!isFullScreen && onMaximize && (
-                        <button
+                        <LightIconButton
                             type="button"
                             onClick={onMaximize}
                             aria-label="Expand Deity chat"
                             title="Expand chat"
-                            className={`${iconButtonClass} hidden md:inline-flex`}
+                            className="hidden md:inline-flex"
                         >
                             <Maximize2 size={18} />
-                        </button>
+                        </LightIconButton>
                     )}
                     {isFullScreen && onMinimize && (
-                        <button
+                        <LightIconButton
                             type="button"
                             onClick={onMinimize}
                             aria-label="Minimize Deity chat"
                             title="Minimize chat"
-                            className={iconButtonClass}
                         >
                             <Minimize2 size={18} />
-                        </button>
+                        </LightIconButton>
                     )}
 
                     {canUndo && (
-                        <button
+                        <LightIconButton
                             type="button"
                             onClick={handleUndo}
                             aria-label="Undo last profile change"
                             title="Undo last change"
-                            className={iconButtonClass}
                         >
                             <RotateCcw size={18} />
-                        </button>
+                        </LightIconButton>
                     )}
 
                     {onClose && (
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            aria-label="Close Deity chat"
-                            title="Close chat"
-                            className={iconButtonClass}
-                        >
-                            <X size={18} />
-                        </button>
+                        <LightCloseButton onClick={onClose} aria-label="Close Deity chat" title="Close chat" />
                     )}
                 </div>
             </header>
@@ -864,7 +854,7 @@ Check out some of the areas I can help you with below.`;
                     onClose={closeDatabase}
                     className={`${LIGHT_PANEL.surface} fixed inset-0 z-[9999] m-auto max-h-[90dvh] w-[min(900px,94vw)] max-w-[94vw] overflow-auto rounded-2xl border border-white/80 p-3 shadow-2xl backdrop:bg-slate-950/60`}
                 >
-                    <div className="mb-3 flex items-center justify-between gap-4"><h2 className="font-semibold">The nsso database</h2><button type="button" aria-label="Close database information" onClick={closeDatabase} className={iconButtonClass}><X size={20}/></button></div>
+                    <div className="mb-3 flex items-center justify-between gap-4"><h2 className="font-semibold">The nsso database</h2><LightCloseButton aria-label="Close database information" onClick={closeDatabase} /></div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="/nsso-venn-diagram.jpg"

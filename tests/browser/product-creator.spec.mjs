@@ -1,12 +1,29 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import { compile } from '@tailwindcss/node'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import ts from 'typescript'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const actor = '11111111-1111-4111-8111-111111111111', productId = '33333333-3333-4333-8333-333333333333'
 const savedPayPal = '<form action="https://www.paypal.com/ncp/payment/AB12CD34EF56G" method="post"><input type="submit" value="Buy Now"></form>'
-let bundle
+let bundle, css
 test.beforeAll(async () => {
+    const files = ['src/components/products/SalesPageCreator.tsx', 'src/components/payments/PayPalCodeEditor.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const candidates = files.flatMap(file => {
+        const source = ts.createSourceFile(file, readFileSync(root + file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+        const literals = []
+        const visit = node => {
+            if (ts.isStringLiteralLike(node)) literals.push(node.text)
+            if (ts.isTemplateExpression(node)) literals.push(node.head.text, ...node.templateSpans.map(span => span.literal.text))
+            ts.forEachChild(node, visit)
+        }
+        visit(source)
+        return literals.flatMap(value => value.split(/\s+/))
+    })
+    const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
+    css = compiler.build(candidates)
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'creator-fixture', setup(builder) {
             builder.onResolve({ filter: /^(?:next\/(?:navigation|link)|@\/lib\/(?:supabase\/client|profile-media-client)|@\/components\/(?:providers\/ProfileProvider|ui\/(?:Toast|ImageCropperModal))|@\/app\/dashboard\/components\/DashboardGlassCard)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
@@ -35,6 +52,7 @@ async function fixture(page, { initialPayPal = null } = {}) {
     page.on('pageerror', error => errors.push(error.message))
     await page.route('https://nsso.test/fixture', route => route.fulfill({ contentType: 'text/html', body: '<div id="root"></div>' }))
     await page.goto('https://nsso.test/fixture')
+    await page.addStyleTag({ content: css })
     await page.evaluate(value => { window.fixtureSavedPayPal = value }, initialPayPal)
     await page.addScriptTag({ content: bundle })
     await expect(page.getByRole('heading', { name: 'Sales Page Creator', exact: true })).toBeVisible()

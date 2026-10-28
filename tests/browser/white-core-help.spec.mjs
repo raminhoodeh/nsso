@@ -8,7 +8,7 @@ import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-pan
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/app/dashboard/components/MyNssoTab.tsx', 'src/app/dashboard/components/NetworkTable.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const files = ['src/app/dashboard/components/MyNssoTab.tsx', 'src/app/dashboard/components/NetworkTable.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;background:#43628c;color:white;font-family:Arial}main{padding:24px}button,input,textarea{font:inherit}'
@@ -152,7 +152,7 @@ test('network discovery uses the compact shared Coming soon badge without dash p
     await expect(page.getByText('Discover nsso users', { exact: true })).toBeVisible()
     const badge = page.getByText('Coming soon', { exact: true })
     await expect(badge).toBeVisible()
-    const rendered = await badge.evaluate(element => ({ font: getComputedStyle(element).fontSize, whiteSpace: getComputedStyle(element).whiteSpace, height: element.closest('[data-tahoe-glass-surface="pill"]').getBoundingClientRect().height }))
+    const rendered = await badge.evaluate(element => ({ font: getComputedStyle(element).fontSize, whiteSpace: getComputedStyle(element).whiteSpace, height: element.closest('[data-coming-soon-badge]').getBoundingClientRect().height }))
     expect(rendered.font).toBe('10px')
     expect(rendered.whiteSpace).toBe('nowrap')
     expect(rendered.height).toBeGreaterThanOrEqual(20)

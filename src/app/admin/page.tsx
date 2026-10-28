@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import GlassCard from '@/components/ui/GlassCard'
-import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { LightButton } from '@/components/ui/LightButton'
 import { useToast } from '@/components/ui/Toast'
 import type { User } from '@/lib/types'
 import { isAdminEmailEligible } from '@/lib/admin-access'
@@ -153,46 +154,44 @@ export default function AdminPage() {
                                         </td>
                                         <td className="py-4 px-4">
                                             <div className="flex justify-center">
-                                                <TahoeGlassButton tone="light"
+                                                <LightButton
                                                     onClick={() => toggleAdmin(user.id, user.user_type)}
                                                     disabled={user.id === currentUserId || (user.user_type !== 'admin' && !isAdminEmailEligible(user.email))}
                                                     title={!isAdminEmailEligible(user.email) && user.user_type !== 'admin' ? 'Administrator access is limited to the approved email addresses.' : undefined}
                                                     role="switch"
                                                     aria-checked={user.user_type === 'admin'}
                                                     aria-label={`Administrator access for ${user.email}`}
-                                                    semanticTint={user.user_type === 'admin' ? 'light' : 'dark'}
-                                                    className="h-7 w-14 p-0"
+                                                    className="h-11 w-14 p-0"
                                                     contentClassName="relative block h-full w-full"
                                                 >
                                                     <span
                                                         aria-hidden="true"
                                                         className={`
-                              absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all
-                              ${user.user_type === 'admin' ? 'left-8' : 'left-1'}
+                              absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full shadow-sm transition-all
+                              ${user.user_type === 'admin' ? 'left-8 bg-slate-800' : 'left-1 bg-slate-500'}
                             `}
                                                     />
-                                                </TahoeGlassButton>
+                                                </LightButton>
                                             </div>
                                         </td>
                                         <td className="py-4 px-4">
                                             <div className="flex justify-center">
-                                                <TahoeGlassButton tone="light"
+                                                <LightButton
                                                     onClick={() => toggleFilmEditor(user.id, user.permissions?.includes('razinflix:manage') || false)}
                                                     role="switch"
                                                     aria-checked={user.permissions?.includes('razinflix:manage') || false}
                                                     aria-label={`RazinFlix editing for ${user.email}`}
-                                                    semanticTint={user.permissions?.includes('razinflix:manage') ? 'light' : 'dark'}
-                                                    className="h-7 w-14 p-0"
+                                                    className="h-11 w-14 p-0"
                                                     contentClassName="relative block h-full w-full"
                                                 >
                                                     <span
                                                         aria-hidden="true"
                                                         className={`
-                              absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all
-                              ${user.permissions?.includes('razinflix:manage') ? 'left-8' : 'left-1'}
+                              absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full shadow-sm transition-all
+                              ${user.permissions?.includes('razinflix:manage') ? 'left-8 bg-slate-800' : 'left-1 bg-slate-500'}
                             `}
                                                     />
-                                                </TahoeGlassButton>
+                                                </LightButton>
                                             </div>
                                         </td>
                                     </tr>

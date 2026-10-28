@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { resolvePayPalConfig } from '@/lib/payments/paypal-config'
 import { loadPayPalHostedSdk } from '@/lib/payments/paypal-sdk'
 import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
-import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
+import { LightButton } from '@/components/ui/LightButton'
 
 interface PayPalSmartButtonProps {
     html?: string | null
@@ -59,6 +59,6 @@ export default function PayPalSmartButton({ html, config, preview = false }: Pay
             </form>
         )
     }
-    if (failed) return <div role="status" className="py-2 text-center text-xs text-white/70"><p>PayPal could not load.</p><TahoeGlassButton type="button" tone="light" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-white" onClick={() => setRetry(value => value + 1)}>Retry PayPal</TahoeGlassButton></div>
+    if (failed) return <div role="status" className="py-2 text-center text-xs text-white/70"><p>PayPal could not load.</p><LightButton type="button" className="mt-2 min-h-11 px-3 py-2" onClick={() => setRetry(value => value + 1)}>Retry PayPal</LightButton></div>
     return <div ref={containerRef} className="relative z-10 w-full max-w-[320px]" data-paypal-kind="hosted-button" />
 }

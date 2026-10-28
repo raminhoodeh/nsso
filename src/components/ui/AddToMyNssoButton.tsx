@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
-import { TahoeGlassButton } from '@/components/ui/tahoe-glass'
+import { LightButton } from '@/components/ui/LightButton'
 
 interface AddToMyNssoButtonProps {
     profileUserId: string
@@ -63,19 +63,18 @@ export default function AddToMyNssoButton({
     }
 
     return (
-        <TahoeGlassButton
+        <LightButton
             type="button"
             onClick={handleClick}
             disabled={isConnected || loading}
             aria-busy={loading}
-            tone="light"
             className={`
                 min-h-11 px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed
                 ${className}
             `}
-            contentClassName={`whitespace-nowrap text-center text-[14px] font-semibold leading-normal tracking-wide ${isConnected ? 'text-green-400' : 'text-white'}`}
+            contentClassName={`whitespace-nowrap text-center text-[14px] font-semibold leading-normal tracking-wide ${isConnected ? 'text-emerald-800' : ''}`}
         >
             {loading ? 'Adding...' : isConnected ? 'Added' : 'Add to my nsso'}
-        </TahoeGlassButton>
+        </LightButton>
     )
 }

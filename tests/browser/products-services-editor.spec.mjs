@@ -3,6 +3,7 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import ts from 'typescript'
 import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -21,6 +22,7 @@ test.beforeAll(async () => {
         'src/app/dashboard/components/ConfirmDeleteDialog.tsx',
         'src/app/dashboard/components/SectionHelp.tsx',
         'src/components/ui/AskDeityButton.tsx',
+        'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts',
         'src/components/ui/light-panel.ts',
         'src/components/products/SalesPageCreator.tsx',
         'src/components/payments/PayPalCodeEditor.tsx',
@@ -31,7 +33,17 @@ test.beforeAll(async () => {
         'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx',
         'src/components/ui/tahoe-glass/TahoeGlassField.tsx',
     ]
-    const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
+    const candidates = files.flatMap(file => {
+        const source = ts.createSourceFile(file, readFileSync(root + file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+        const literals = []
+        const visit = node => {
+            if (ts.isStringLiteralLike(node)) literals.push(node.text)
+            if (ts.isTemplateExpression(node)) literals.push(node.head.text, ...node.templateSpans.map(span => span.literal.text))
+            ts.forEachChild(node, visit)
+        }
+        visit(source)
+        return literals.flatMap(value => value.split(/\s+/))
+    })
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\nhtml{background:#4d6b7b}body{background:linear-gradient(150deg,#51788f,#535c74 60%,#97858a);background-attachment:fixed}#root{max-width:1100px;margin:auto;padding:120px 16px 80px}#fixture-header{position:fixed;inset:0 0 auto;height:88px;z-index:200;background:rgba(58,79,95,.96);color:white;padding:24px;font-weight:700;border-bottom:1px solid #ffffff55}button,input,textarea,select{font:inherit}'
     const result = await build({
@@ -106,6 +118,44 @@ async function mount(page, { count = 2, payment, offering, creator = false } = {
 const productToggle = page => page.getByRole('button', { name: /^Products & Services/ })
 const choose = (page, index) => page.getByRole('button', { name: new RegExp(`Edit Fixture offering ${index}$`) })
 const writes = page => page.evaluate(() => window.fixtureWrites)
+
+async function expectWhiteAction(page, action, { icon = false } = {}) {
+    await action.scrollIntoViewIfNeeded()
+    await expect(action).toHaveAttribute('data-nsso-control', 'white')
+    await expectOpaqueLightPanel(page, action)
+    const content = action.locator('[data-light-button-content]')
+    const ink = (await content.textContent()).trim() ? content : action.locator('svg').first()
+    expect(await minimumTextContrast(ink)).toBeGreaterThanOrEqual(4.5)
+    const bounds = await action.boundingBox()
+    expect(bounds.height).toBeGreaterThanOrEqual(44)
+    expect(bounds.width).toBeGreaterThanOrEqual(44)
+    if (icon) {
+        expect(bounds.height).toBe(44)
+        expect(bounds.width).toBe(44)
+        await expect(action).toHaveCSS('opacity', '1')
+        await expect(action.locator('svg')).toHaveAttribute('width', '18')
+        await expect(action.locator('svg')).toHaveAttribute('height', '18')
+    }
+}
+
+async function expectNativeUploadFocus(page, input) {
+    const label = input.locator('..')
+    await label.scrollIntoViewIfNeeded()
+    await expectOpaqueLightPanel(page, label)
+    await page.keyboard.press('Tab')
+    await input.focus()
+    await expect(input).toBeFocused()
+    await expect(label).toHaveCSS('outline-style', 'solid')
+    await expect(label).toHaveCSS('outline-width', '2px')
+    expect((await label.boundingBox()).height).toBeGreaterThanOrEqual(44)
+}
+
+function colourContrast(first, second) {
+    const luminance = rgb => rgb.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((total, value, index) => total + value * [.2126, .7152, .0722][index], 0)
+    const a = luminance(first), b = luminance(second)
+    return (Math.max(a, b) + .05) / (Math.min(a, b) + .05)
+}
+
 async function expectTooltipFits(page) {
     const tooltip = page.getByRole('tooltip')
     await expect(tooltip).toBeVisible()
@@ -114,6 +164,79 @@ async function expectTooltipFits(page) {
     expect(bounds.x).toBeGreaterThanOrEqual(15)
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width - 15)
 }
+
+test('white offering controls preserve native upload focus, selection and distinct switch states', async ({ page }, testInfo) => {
+    await mount(page, { count: 2 })
+    const add = page.getByRole('button', { name: 'Add product or service', exact: true })
+    await expectWhiteAction(page, add)
+    await choose(page, 1).click()
+    await expect(page.getByRole('button', { name: 'Edit Fixture offering 1', exact: true, includeHidden: true })).toHaveAttribute('aria-current', 'true')
+    await expect(page.getByRole('button', { name: 'Edit Fixture offering 2', exact: true, includeHidden: true })).not.toHaveAttribute('aria-current')
+    await expectNativeUploadFocus(page, page.getByLabel('Upload image for Fixture offering 1', { exact: true }))
+    await page.getByRole('button', { name: 'Where do I find the code?', exact: true }).press('Enter')
+    const close = page.getByRole('button', { name: 'Close PayPal guide', exact: true })
+    await expectWhiteAction(page, close, { icon: true })
+    await close.press('Enter')
+    for (const [name, before, patch] of [
+        ['Enable purchase link', true, { purchase_link_active: false }],
+        ['Enable PayPal button code', true, { paypal_active: false }],
+        ['Enable product sales page', false, { sales_page_active: true, sales_page_published: true }],
+    ]) {
+        const control = page.getByRole('switch', { name, exact: true })
+        await control.scrollIntoViewIfNeeded()
+        await expect(control).toHaveAttribute('aria-checked', String(before))
+        const measure = () => control.evaluate(element => {
+            const track = element.querySelector('[data-light-button-content]'), thumb = track.querySelector('span')
+            const rgb = node => { const context = document.createElement('canvas').getContext('2d'); context.fillStyle = getComputedStyle(node).backgroundColor; context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3) }
+            return { target: { width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height }, track: rgb(track), thumb: rgb(thumb), left: thumb.getBoundingClientRect().left - track.getBoundingClientRect().left, computedLeft: getComputedStyle(thumb).left, thumbClass: thumb.className, position: getComputedStyle(thumb).position }
+        })
+        const initial = await measure()
+        expect(initial.target).toEqual({ width: 56, height: 44 })
+        expect(colourContrast(initial.track, initial.thumb)).toBeGreaterThanOrEqual(3)
+        await control.press('Space')
+        await expect(control).toHaveAttribute('aria-checked', String(!before))
+        const changed = await measure()
+        expect(changed.track).not.toEqual(initial.track)
+        expect(changed.thumb).toEqual(initial.thumb)
+        expect(Math.abs(changed.left - initial.left), JSON.stringify({ initial, changed })).toBeGreaterThanOrEqual(20)
+        expect(colourContrast(changed.track, changed.thumb)).toBeGreaterThanOrEqual(3)
+        expect((await writes(page)).at(-1)).toMatchObject({ kind: 'patch', entity: 'product', id: 'offering-1', patch })
+    }
+    expect((await writes(page)).length).toBe(3)
+    await page.screenshot({ path: testInfo.outputPath('white-offering-controls.png'), fullPage: true })
+})
+
+test('creator actions and visible 44px remove controls retain exact benefit and testimonial edits', async ({ page }, testInfo) => {
+    await mount(page, { count: 1 })
+    await choose(page, 1).click()
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const creator = page.locator('[data-sales-page-creator]')
+    await expectWhiteAction(page, creator.getByRole('button', { name: 'Back to offering', exact: true }))
+    await expectWhiteAction(page, creator.getByRole('button', { name: 'Copy AI Prompt', exact: true }).first())
+    await expectNativeUploadFocus(page, creator.getByLabel('Upload image for Fixture offering 1', { exact: true }))
+    await creator.getByRole('button', { name: 'Add benefit', exact: true }).press('Enter')
+    const benefit = creator.getByRole('button', { name: 'Remove benefit 1', exact: true })
+    await page.mouse.move(0, 0)
+    await expectWhiteAction(page, benefit, { icon: true })
+    await benefit.focus()
+    await expect(benefit).toHaveCSS('outline-style', 'solid')
+    await expect(benefit).toHaveCSS('outline-width', '2px')
+    await benefit.locator('..').screenshot({ path: testInfo.outputPath('creator-benefit-white-X.png') })
+    await benefit.press('Space')
+    await expect(creator.getByRole('textbox', { name: 'Benefit 1', exact: true })).toHaveCount(0)
+    await creator.getByRole('button', { name: 'Add testimonial', exact: true }).press('Enter')
+    const testimonial = creator.getByRole('button', { name: 'Remove testimonial 1', exact: true })
+    await page.mouse.move(0, 0)
+    await expectWhiteAction(page, testimonial, { icon: true })
+    const field = creator.getByRole('textbox', { name: 'Testimonial 1 text', exact: true })
+    const [buttonBox, fieldBox] = await Promise.all([testimonial.boundingBox(), field.boundingBox()])
+    expect(buttonBox.y + buttonBox.height).toBeLessThanOrEqual(fieldBox.y)
+    await testimonial.locator('..').screenshot({ path: testInfo.outputPath('creator-testimonial-white-X.png') })
+    await testimonial.press('Enter')
+    await expect(field).toHaveCount(0)
+    expect((await writes(page)).map(write => write.patch)).toEqual([{ benefits: [''] }, { benefits: [] }, { testimonials: [{ name: '', text: '' }] }, { testimonials: [] }])
+    await page.screenshot({ path: testInfo.outputPath('white-creator-controls.png'), fullPage: true })
+})
 
 test('the PayPal guide uses the opaque white help family without changing links or payment drafts', async ({ page }) => {
     await mount(page, { count: 1 })

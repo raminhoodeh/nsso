@@ -43,7 +43,7 @@ test('profile editing copy is warm and concise, with the first-1000 qualificatio
 
 test('Links help is a native, named, keyboard-and-touch disclosure over an opaque reading surface', () => {
     const help = source('src/app/dashboard/components/SectionHelp.tsx')
-    const buttons = elements(help).filter(node => tag(node) === 'button')
+    const buttons = elements(help).filter(node => tag(node) === 'LightIconButton')
     assert.equal(buttons.length, 1)
     assert.equal(attribute(buttons[0], 'type'), 'button')
     assert.match(attribute(buttons[0], 'aria-label'), /About/)
@@ -77,14 +77,16 @@ for (const [kind, filename] of [['link', 'SortableLinkItem.tsx'], ['contact', 'S
         const handles = all.filter(node => attribute(node, 'ref') === '{setActivatorNodeRef}')
         assert.equal(handles.length, 1, 'Avoid duplicate desktop/mobile focusable drag controls.')
         const handle = handles[0]
-        assert.equal(tag(handle), 'button')
+        assert.equal(tag(handle), 'LightButton', 'The ref-forwarding primitive must keep the native drag activator white.')
         assert.equal(attribute(handle, 'type'), 'button')
         assert.match(attribute(handle, 'aria-label'), /Drag to reorder/)
         assert.ok(handle.pos > toolbar.pos && handle.end < toolbar.end)
-        const deletion = elements(toolbar).filter(node => tag(node) === 'TahoeGlassButton')
+        const deletion = elements(toolbar).filter(node => tag(node) === 'LightCloseButton')
         assert.equal(deletion.length, 1)
         assert.match(attribute(deletion[0], 'aria-label'), /Remove/)
         assert.match(attribute(deletion[0], 'onClick'), /setConfirmDelete\(true\)/)
+        assert.equal(attribute(deletion[0], 'intent'), undefined, 'Row X controls share Deity’s neutral close material.')
+        assert.doesNotMatch(toolbar.getText(), /TahoeGlassButton|text-white|text-red-/)
         assert.ok(all.filter(node => tag(node) === 'Input').every(node => node.pos > toolbar.end), 'Input space must not contain a delete action.')
         assert.equal(all.filter(node => tag(node) === 'ConfirmDeleteDialog').length, 1, 'Deletion confirmation and the existing handler remain wired.')
     })

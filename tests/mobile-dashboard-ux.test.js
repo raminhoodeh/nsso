@@ -109,9 +109,10 @@ test('mobile navigation immediately precedes the active experience editor', () =
         /scrollbar-hide flex gap-2 overflow-x-auto[^"\n]*md:flex-col/
     )
     const roomyMobileTabs = experienceMarkup.match(
-        /className="min-h-11 shrink-0 px-5 py-2\.5 md:w-full md:px-4 md:py-3"/g
+        /className="shrink-0 px-5 py-2\.5 aria-selected:ring-2 aria-selected:ring-slate-600\/50 md:w-full md:px-4 md:py-3"/g
     ) || []
     assert.equal(roomyMobileTabs.length, 3, 'tabs keep natural width and breathing room in the horizontal scroller')
+    assert.match(fs.readFileSync(path.join(process.cwd(), 'src/components/ui/light-button-styles.ts'), 'utf8'), /min-h-11 min-w-11/, 'The shared native primitive supplies the 44px minimum.')
     assert.doesNotMatch(experienceMarkup, /min-w-\[84px\] flex-1 shrink-0/)
 })
 
@@ -149,10 +150,13 @@ test('advanced editor drag handles are native focusable keyboard controls', () =
     assert.match(sortableItemMarkup, /children\(\{ attributes, listeners, setActivatorNodeRef \}\)/)
 
     const handles = advancedModeSource.match(
-        /<button\s+ref=\{setActivatorNodeRef\}\s+type="button"\s+\{\.\.\.attributes\}\s+\{\.\.\.listeners\}[\s\S]*?aria-label="Drag to reorder (?:experience|qualification|project)"/g
+        /<LightIconButton\s+ref=\{setActivatorNodeRef\}\s+type="button"\s+\{\.\.\.attributes\}\s+\{\.\.\.listeners\}[\s\S]*?aria-label="Drag to reorder (?:experience|qualification|project)"/g
     ) || []
     assert.equal(handles.length, 3)
-    assert.match(advancedModeSource, /focus-visible:ring-2 focus-visible:ring-white\/80/)
+    const primitive = fs.readFileSync(path.join(process.cwd(), 'src/components/ui/LightButton.tsx'), 'utf8')
+    assert.match(primitive, /forwardRef/)
+    assert.match(fs.readFileSync(path.join(process.cwd(), 'src/components/ui/light-button-styles.ts'), 'utf8'), /LIGHT_PANEL\.focus/)
+    assert.match(primitive, /return <button/)
 })
 
 test('mobile form fields avoid the old nested padding gutter', () => {

@@ -5,6 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
+import { controlMaterial, expectWhiteEditorControls, keyboardFocus } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, realSceneBundle, css
@@ -69,7 +70,7 @@ test.beforeAll(async () => {
                 removeContact:async id=>{window.deleted.push({type:'contact',id});profile.contacts=profile.contacts.filter(row=>row.id!==id);refresh();return true},
                 reorderLinks:ids=>{window.reordered.push({type:'link',ids});profile.links=ids.map(id=>profile.links.find(row=>row.id===id));refresh()},
                 reorderContacts:ids=>{window.reordered.push({type:'contact',ids});profile.contacts=ids.map(id=>profile.contacts.find(row=>row.id===id));refresh()}
-            };${realScene ? `if(!profile.fixtureFieldsBound){profile.fixtureFieldsBound=true;window.fixtureFieldWrites=[];profile.updateField=async(field,value)=>{profile.profile={...profile.profile,[field]:value};window.fixtureFieldWrites.push({kind:'field',field,value});refresh();return true};profile.patchProfile=async patch=>{profile.profile={...profile.profile,...patch};window.fixtureFieldWrites.push({kind:'patch',patch});refresh();return true};}` : ''}return <><AuthenticatedLayout>{window.fixtureOptions.content==='dashboard'?<Dashboard/>:window.fixtureOptions.content==='preview'?<Preview/>:<>{!routeNeedsGlobalAccountHeader(location.pathname)&&<Header variant={window.fixtureOptions.content==='owner'?'owner':'default'} username="fixture"/>}<main style={{paddingTop:120,minHeight:1600}}>Other route content</main></>}</AuthenticatedLayout><GlobalNavigation/><div data-fixture-closed-deity role="dialog" aria-label="Synthetic Deity" aria-modal="true" aria-hidden="true" inert={true} style={{position:'fixed',inset:0,opacity:0,pointerEvents:'none'}}><textarea aria-label="Synthetic Deity message"/></div>${realScene ? `{chatOpen&&<div role="dialog" aria-label="Rendered Deity fixture" aria-modal="true" style={{position:'fixed',inset:0,zIndex:300,padding:12,background:'rgba(0,0,0,.5)'}}><Chat isFullScreen onClose={()=>setChatOpen(false)}/></div>}` : ''}<div id="fixture-outside"><button>Outside focus target</button></div></>};
+            };${realScene ? `if(!profile.fixtureFieldsBound){profile.fixtureFieldsBound=true;window.fixtureFieldWrites=[];profile.updateField=async(field,value)=>{profile.profile={...profile.profile,[field]:value};window.fixtureFieldWrites.push({kind:'field',field,value});refresh();return true};profile.patchProfile=async patch=>{profile.profile={...profile.profile,...patch};window.fixtureFieldWrites.push({kind:'patch',patch});refresh();return true};}` : ''}return <><AuthenticatedLayout>{window.fixtureOptions.content==='dashboard'?<Dashboard/>:window.fixtureOptions.content==='preview'?<Preview/>:<>{!routeNeedsGlobalAccountHeader(location.pathname)&&<Header variant={window.fixtureOptions.content==='owner'?'owner':'default'} username="fixture"/>}<main style={{paddingTop:120,minHeight:1600}}>Other route content</main></>}</AuthenticatedLayout><GlobalNavigation/><div data-fixture-closed-deity role="dialog" aria-label="Synthetic Deity" aria-modal="true" aria-hidden="true" inert={true} style={{position:'fixed',inset:0,opacity:0,pointerEvents:'none'}}><textarea aria-label="Synthetic Deity message"/></div>${realScene ? `{chatOpen&&<div role="dialog" aria-label="Rendered Deity fixture" aria-modal="true" style={{position:'fixed',inset:0,zIndex:6000,padding:12,background:'rgba(0,0,0,.5)'}}><Chat isFullScreen onClose={()=>setChatOpen(false)}/></div>}` : ''}<div id="fixture-outside"><button>Outside focus target</button></div></>};
             const fallback={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'layout-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
             const fixtureRoot=createRoot(document.getElementById('root'));window.fixtureUnmount=()=>fixtureRoot.unmount();fixtureRoot.render(${realScene ? '<UIProvider><Environment><App/></Environment></UIProvider>' : '<TahoeGlassEngineContext.Provider value={fallback}><App/></TahoeGlassEngineContext.Provider>'});
         ` },
@@ -90,7 +91,9 @@ test('top and bottom Add controls insert Links and Contact at the chosen edge an
         const original = await page.evaluate(entity => window.fixtureProfile[entity].map(row => row.id), entity)
         for (const position of ['top', 'bottom']) {
             const button = page.getByRole('button', { name: label + (position === 'bottom' ? ' at bottom' : ''), exact: true })
-            await expect(button.locator('[data-tahoe-button-content]')).toHaveCSS('color', 'rgb(255, 255, 255)')
+            await expect(button).toHaveAttribute('data-nsso-control', 'white')
+            await expect(button).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+            expect(await minimumTextContrast(button.locator('[data-light-button-content]'))).toBeGreaterThanOrEqual(4.5)
             await button.press(position === 'top' ? 'Enter' : 'Space')
             const created = await page.evaluate(() => window.created.at(-1))
             expect(created).toMatchObject({ kind, position })
@@ -646,6 +649,49 @@ test('mobile link and contact controls share a toolbar above full-width fields a
     await page.getByRole('dialog', { name: 'Delete Portfolio?', exact: true }).getByRole('button', { name: 'Delete', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Drag to reorder Portfolio', exact: true })).toHaveCount(0)
     expect(await page.evaluate(() => window.deleted)).toEqual([{ type: 'link', id: 'link-1' }])
+})
+
+test('real editor X controls exactly share Deity white material in normal, hover and keyboard-focus states', async ({ page, browserName }, testInfo) => {
+    await page.setViewportSize({ width: testInfo.project.name.includes('desktop') ? 1440 : 320, height: 900 })
+    const state = await mount(page, { realScene: true })
+    const hoverCapable = await page.evaluate(() => matchMedia('(hover: hover)').matches)
+    const states = async control => {
+        await control.scrollIntoViewIfNeeded()
+        await control.evaluate(element => element.blur())
+        await page.mouse.move(0, 0)
+        await expect(control).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+        const normal = await controlMaterial(control)
+        expect(normal).toMatchObject({ width: 44, height: 44, textShadow: 'none', opacity: '1', focusVisible: false, icon: { width: '18', height: '18' } })
+        await control.hover()
+        await expect(control).toHaveCSS('background-color', hoverCapable ? 'rgb(255, 255, 255)' : 'rgb(244, 245, 248)')
+        const hover = await controlMaterial(control)
+        await page.mouse.move(0, 0)
+        await keyboardFocus(control, page, browserName)
+        await expect(control).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+        const focus = await controlMaterial(control)
+        expect(focus.outline).toMatchObject({ width: '2px', style: 'solid' })
+        expect(focus.outlineOffset).toBe('2px')
+        return { normal, hover, focus }
+    }
+    try {
+        const link = await states(page.getByRole('button', { name: 'Remove Portfolio', exact: true }))
+        const contact = await states(page.getByRole('button', { name: 'Remove Email contact method', exact: true }))
+        expect(contact).toEqual(link)
+        await page.getByRole('button', { name: 'Ask Deity about my profile', exact: true }).press('Enter')
+        const chat = page.locator('[data-deity-surface="opaque"]')
+        await expect(chat).toBeVisible()
+        const deity = await states(chat.getByRole('button', { name: 'Close Deity chat', exact: true }))
+        expect(deity).toEqual(link)
+        await chat.getByRole('button', { name: 'Close Deity chat', exact: true }).press('Enter')
+        await expect(chat).toHaveCount(0)
+        await page.mouse.move(0, 0)
+        const controls = await expectWhiteEditorControls(page.locator('main'), { photoException: true })
+        expect(controls.filter(control => /^Add /.test(control.label)).length).toBeGreaterThanOrEqual(4)
+        expect(await page.evaluate(() => ({ deleted: window.deleted, reordered: window.reordered, created: window.created }))).toEqual({ deleted: [], reordered: [], created: [] })
+        expect(state.requests.filter(request => !['GET', 'HEAD', 'OPTIONS'].includes(request.method))).toEqual([])
+        expect(state.errors).toEqual([])
+        await page.screenshot({ path: testInfo.outputPath('shared-white-deity-editor-close.png') })
+    } finally { await page.evaluate(() => window.fixtureUnmount()) }
 })
 
 test('keyboard reordering still works after separating drag and delete targets', async ({ page }) => {

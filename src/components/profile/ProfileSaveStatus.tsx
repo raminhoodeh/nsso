@@ -1,6 +1,7 @@
 'use client'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
+import { LightButton } from '@/components/ui/LightButton'
 
 export default function ProfileSaveStatus({ floating = false, aboveBottomNav = true }: { floating?: boolean; aboveBottomNav?: boolean }) {
     const { mutationState, retryPending, loadError, refreshProfile } = useProfile()
@@ -10,7 +11,7 @@ export default function ProfileSaveStatus({ floating = false, aboveBottomNav = t
         {loadError && <p>{loadError}</p>}
         {mutationState.status !== 'saved' && <p>{mutationState.message || 'Saving your changes…'}</p>}
         {loadError
-            ? <button type="button" className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} mt-2 min-h-11 rounded-full px-3 py-2 text-sm font-medium`} onClick={() => { void refreshProfile() }}>Refresh profile</button>
-            : mutationState.status !== 'saving' && <button type="button" className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} mt-2 min-h-11 rounded-full px-3 py-2 text-sm font-medium`} onClick={() => { void retryPending() }}>Check status and retry my draft</button>}
+            ? <LightButton className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} mt-2 min-h-11 rounded-full px-3 py-2 text-sm font-medium`} onClick={() => { void refreshProfile() }}>Refresh profile</LightButton>
+            : mutationState.status !== 'saving' && <LightButton className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} mt-2 min-h-11 rounded-full px-3 py-2 text-sm font-medium`} onClick={() => { void retryPending() }}>Check status and retry my draft</LightButton>}
     </div>
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { type ReactNode, useId, useState } from 'react'
-import GlassButton from '@/components/ui/GlassButton'
+import { LightButton } from '@/components/ui/LightButton'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 interface PreviewCheckoutButtonProps {
@@ -23,7 +23,7 @@ export default function PreviewCheckoutButton({ children, className = '', button
     return <div className={className}>
         {buttonClassName
             ? <button {...props} className={buttonClassName}>{children}</button>
-            : <GlassButton {...props} className="w-full">{children}</GlassButton>}
+            : <LightButton {...props} className="w-full">{children}</LightButton>}
         {attempted && <p id={noticeId} role="status" className={`${LIGHT_PANEL.surface} mt-3 rounded-xl border border-white/80 px-3 py-2 text-center text-sm font-medium`}>
             <span>Checkout is disabled during profile preview</span>
         </p>}

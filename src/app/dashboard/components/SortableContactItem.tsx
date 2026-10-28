@@ -6,7 +6,8 @@ import { GripVertical } from 'lucide-react'
 import Input from '@/components/ui/Input'
 import { Contact } from '@/lib/types'
 import { CONTACT_METHODS } from '@/lib/contact-methods'
-import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { LightButton, LightCloseButton } from '@/components/ui/LightButton'
 import { useState } from 'react'
 import ConfirmDeleteDialog from './ConfirmDeleteDialog'
 
@@ -51,25 +52,22 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
             contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4"
         >
             <div data-sortable-controls="contact" className="-mx-3 -mt-3 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center border-b border-white/10 px-2 py-1 sm:-mx-4 sm:-mt-4">
-                <button
+                <LightButton
                     ref={setActivatorNodeRef}
                     type="button"
                     {...attributes}
                     {...listeners}
                     aria-label={`Drag to reorder ${contact.method} contact method`}
-                    className="col-start-2 flex min-h-11 cursor-grab touch-none select-none items-center justify-center rounded-lg text-white/60 outline-none transition-colors hover:text-white active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-white"
+                    className="col-start-2 min-h-11 cursor-grab touch-none select-none active:cursor-grabbing"
                 >
                     <GripVertical size={20} aria-hidden="true" />
-                </button>
-                <TahoeGlassButton tone="light"
+                </LightButton>
+                <LightCloseButton
                     type="button"
                     onClick={() => setConfirmDelete(true)}
-                    className="col-start-3 h-11 w-11 shrink-0 p-0"
-                    contentClassName="text-red-200 text-xl"
+                    className="col-start-3"
                     aria-label={`Remove ${contact.method} contact method`}
-                >
-                    ×
-                </TahoeGlassButton>
+                />
             </div>
 
             <div className="flex min-w-0 flex-col gap-3 sm:gap-4 md:flex-row md:flex-wrap md:items-center">

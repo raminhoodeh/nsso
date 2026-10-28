@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import { expectWhiteEditorControls } from './helpers/white-control-assertions.mjs'
 import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -31,7 +32,7 @@ const fixture = `
     <TahoeGlassPopover open={mode==='popover'} onOpenChange={open=>{if(!open)setMode('')}} readingMaterial="white" aria-label="White help fixture" style={{top:100,left:16,width:'min(360px,calc(100vw - 32px))'}}><p data-help-body>A small readable help panel.</p><button onClick={()=>setMode('')}>Close help fixture</button></TahoeGlassPopover>
     <ConfirmDelete open={mode==='delete'} name="synthetic item" onClose={()=>setMode('')} onConfirm={()=>{window.deleteCalls++;return new Promise(resolve=>window.resolveSyntheticDelete=resolve)}}/>
     <Cropper isOpen={mode==='crop'} onClose={()=>setMode('')} imageSrc={image} aspectRatio={1} onCropComplete={async()=>{window.cropCalls++;}}/>
-    {mode==='privacy'&&<Meta pixelId="1234567890" initialConsent="unset"/>}
+    {mode==='privacy'&&<div data-fixture-consent><Meta pixelId="1234567890" initialConsent="unset"/></div>}
     <SaveStatus/>
     <ToastViewport/>
   </>}
@@ -40,7 +41,7 @@ const fixture = `
 
 test.beforeAll(async () => {
   const sources = [
-    'src/components/ui/light-panel.ts',
+    'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts',
     'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx',
     'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx',
     'src/components/ui/tahoe-glass/TahoeGlassField.tsx',
@@ -148,7 +149,7 @@ async function expectKeyboardFocus(page, control) {
 test('white reading dialogs and help paint opaque, retain dark default, and keep keyboard focus readable', async ({ page }) => {
   const { errors } = await mount(page)
   const trigger = page.getByRole('button', { name: 'Open white dialog', exact: true })
-  await trigger.click()
+  await trigger.press('Enter')
   const panel = page.getByRole('dialog', { name: 'Reading fixture', exact: true })
   await expectWhiteBacking(page, panel)
   await expectTextContrast(panel.getByRole('heading'))
@@ -191,7 +192,7 @@ test('white removal confirmation stays busy and preserves the item after a faile
   await expectTextContrast(panel.getByRole('heading'))
   await expectTextContrast(panel.locator('p').first())
   await expectKeyboardFocus(page, panel.getByRole('button', { name: 'Delete', exact: true }))
-  await expectTextContrast(panel.getByRole('button', { name: 'Delete', exact: true }).locator('[data-tahoe-button-content]'))
+  await expectTextContrast(panel.getByRole('button', { name: 'Delete', exact: true }).locator('[data-light-button-content]'))
   await panel.getByRole('button', { name: 'Delete', exact: true }).press('Enter')
   await expect(panel.getByRole('button', { name: 'Deleting…', exact: true })).toBeDisabled()
   await expect(keep).toBeDisabled()
@@ -226,7 +227,7 @@ test('cropper uses white reading chrome and an opaque dark editing stage with wo
   await expectTarget(panel.getByRole('button', { name: 'Close image cropper', exact: true }))
   await expectTarget(panel.getByRole('button', { name: 'Cancel', exact: true }))
   await expectTarget(panel.getByRole('button', { name: 'Apply Crop', exact: true }))
-  await expectTextContrast(panel.getByRole('button', { name: 'Apply Crop', exact: true }).locator('[data-tahoe-button-content]'))
+  await expectTextContrast(panel.getByRole('button', { name: 'Apply Crop', exact: true }).locator('[data-light-button-content]'))
   await panel.getByRole('button', { name: 'Cancel', exact: true }).click()
   await expect(panel).toHaveCount(0)
   expect(await page.evaluate(() => window.cropCalls)).toBe(0)
@@ -266,8 +267,9 @@ test('white marketing consent never requests a provider before an explicit Allow
   await expect(notice).toBeFocused()
   await expectTarget(notice)
   await expectKeyboardFocus(page, notice)
+  await expectWhiteEditorControls(panel)
   for (const name of ['Decline', 'Allow']) await expectTarget(panel.getByRole('button', { name, exact: true }))
-  await expectTextContrast(panel.getByRole('button', { name: 'Allow', exact: true }).locator('[data-tahoe-button-content]'))
+  await expectTextContrast(panel.getByRole('button', { name: 'Allow', exact: true }).locator('[data-light-button-content]'))
   expect(external).toEqual([])
   await page.keyboard.press('Escape')
   await expect(panel).toBeVisible()
@@ -275,6 +277,7 @@ test('white marketing consent never requests a provider before an explicit Allow
   await expect(panel).toHaveCount(0)
   expect(external).toEqual([])
   expect(await page.context().cookies()).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'nsso_meta_marketing_consent', value: 'denied' })]))
+  await expectWhiteEditorControls(page.locator('[data-fixture-consent]'))
   await page.getByRole('button', { name: 'Privacy choices', exact: true }).click()
   await expect(panel).toBeVisible()
   expect(external).toEqual([])

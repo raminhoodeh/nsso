@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
+import sharp from 'sharp'
+import { expectWhiteEditorControls, keyboardFocus } from './helpers/white-control-assertions.mjs'
 import { compile } from '@tailwindcss/node'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -71,7 +73,7 @@ async function openMenu(page) {
     return menu
 }
 
-test('preview logo, edit shortcut and editor home menu keep one visible navbar through client transitions', async ({ page }, testInfo) => {
+test('preview logo, edit shortcut and editor home menu keep one visible navbar through client transitions', async ({ page, browserName }, testInfo) => {
     const state = await mount(page)
     const runtime = await page.evaluate(() => window.fixtureRuntime)
     await expect(page.getByRole('heading', { name: "I'm Fixture Owner", exact: true })).toBeVisible()
@@ -91,8 +93,23 @@ test('preview logo, edit shortcut and editor home menu keep one visible navbar t
     await expect(page).toHaveURL('https://nsso.test/dashboard?view=profile')
     await expect(page.getByRole('heading', { name: 'Editing fixture profile' })).toBeVisible()
     if (testInfo.project.name === 'desktop') {
-        await expect(page.locator('aside')).toBeVisible()
-        await page.locator('aside').getByRole('button', { name: 'nsso homepage', exact: true }).click()
+        const sidebar = page.locator('aside')
+        await expect(sidebar).toBeVisible()
+        await expectWhiteEditorControls(sidebar)
+        const active = sidebar.getByRole('button', { name: 'Edit Profile', exact: true })
+        await expect(active).toHaveAttribute('aria-current', 'page')
+        expect(await active.evaluate(element => getComputedStyle(element).boxShadow)).not.toBe('none')
+        const keyboardTarget = sidebar.getByRole('button', { name: 'My nsso', exact: true })
+        await keyboardFocus(keyboardTarget, page, browserName)
+        const box = await keyboardTarget.boundingBox()
+        const clip = { x: Math.floor(box.x + box.width / 2), y: Math.floor(box.y) - 7, width: 1, height: 7 }
+        const { data } = await sharp(await page.screenshot({ clip, scale: 'css' })).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+        const pixel = row => [...data.subarray(row * 4, row * 4 + 3)]
+        const luminance = rgb => rgb.map(value => value / 255).map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+        const darkOutline = luminance(pixel(4)), paleHalo = luminance(pixel(2))
+        expect((Math.max(darkOutline, paleHalo) + .05) / (Math.min(darkOutline, paleHalo) + .05), 'Painted focus outline contrasts with its pale halo on the retained dark sidebar').toBeGreaterThanOrEqual(3)
+        await page.screenshot({ path: testInfo.outputPath('white-sidebar-focus.png') })
+        await sidebar.getByRole('button', { name: 'nsso homepage', exact: true }).click()
     } else {
         const menu = await openMenu(page)
         await menu.getByRole('link', { name: 'nsso homepage', exact: true }).press('Enter')

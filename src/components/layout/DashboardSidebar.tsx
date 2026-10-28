@@ -23,7 +23,8 @@ import { boundedClientRead } from '@/lib/client-read';
 import { canAccessAdmin } from '@/lib/admin-access';
 import { isAccountDeletionAvailable } from '@/lib/delete-profile-client';
 import DeleteProfileDialog from '@/components/layout/DeleteProfileDialog';
-import { TahoeBackdropSurface, TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass';
+import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass';
+import { LightButton, lightButtonClass } from '@/components/ui/LightButton';
 import {
     getDashboardDesktopLayoutSnapshot,
     getDashboardDirectBackdropSnapshot,
@@ -151,18 +152,15 @@ function DashboardSidebarContent({
                     const Icon = item.icon;
 
                     return (
-                        <TahoeGlassButton
+                        <LightButton
                             key={item.id}
                             onClick={() => handleNavClick(item.view, item.comingSoon)}
                             radius={12}
-                            semanticTint={isActive ? 'light' : 'none'}
-                            semanticTintOpacity={0.08}
-                            tone="light"
                             className={cn(
                                 "group relative w-full px-4 py-3 transition-all duration-200",
                                 isActive
-                                    ? "text-white ring-1 ring-white/65"
-                                    : "text-white/80 hover:text-white",
+                                    ? "border-slate-500 bg-white text-slate-950 ring-2 ring-slate-500/60"
+                                    : "text-slate-800 hover:text-slate-950",
                                 item.comingSoon && "cursor-pointer"
                             )}
                             contentClassName="w-full justify-start gap-3 text-inherit"
@@ -172,7 +170,7 @@ function DashboardSidebarContent({
                                 size={20}
                                 className={cn(
                                     "transition-colors",
-                                    isActive ? "text-white" : "text-white/60 group-hover:text-white"
+                                    isActive ? "text-slate-950" : "text-slate-600 group-hover:text-slate-950"
                                 )}
                             />
                             <span className="font-medium text-[15px]" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif" }}>
@@ -184,87 +182,73 @@ function DashboardSidebarContent({
                                     {item.badge}
                                 </span>
                             )}
-                        </TahoeGlassButton>
+                        </LightButton>
                     );
                 })}
-                <TahoeGlassButton
+                <LightButton
                     onClick={() => router.push('/?view=home')}
                     radius={12}
-                    tone="light"
-                    className="group relative w-full px-4 py-3 text-white/80 transition-all duration-200 hover:text-white"
+                    className="group relative w-full px-4 py-3 text-slate-800 transition-all duration-200 hover:text-slate-800"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
-                    <Home size={20} className="text-white/60 transition-colors group-hover:text-white" />
+                    <Home size={20} className="text-slate-600 transition-colors group-hover:text-slate-950" />
                     <span className="text-[15px] font-medium">nsso homepage</span>
-                </TahoeGlassButton>
+                </LightButton>
             </nav>
 
             {/* Footer Actions */}
             <div className="p-4 mt-auto border-t border-white/5 space-y-2">
                 {isAdmin && (
-                    <TahoeGlassSurface
-                        as="a"
-                        variant="button"
-                        radius={12}
-                        href="/admin"
-                        tone="light"
-                        className="group mb-3 block w-full px-4 py-3 text-left text-white/80 transition-all hover:text-white"
-                        contentClassName="flex w-full items-center gap-3 text-left"
-                    >
-                            <LayoutDashboard size={18} className="group-hover:text-white transition-colors" />
-                            <span className="font-medium text-[14px]">Admin</span>
-                    </TahoeGlassSurface>
+                    <Link href="/admin" className={cn(lightButtonClass, 'group mb-3 flex w-full justify-start gap-3 rounded-xl px-4 py-3 text-left')}>
+                        <LayoutDashboard size={18} aria-hidden="true" />
+                        <span className="text-[14px] font-medium">Admin</span>
+                    </Link>
                 )}
 
                 {/* Preview Profile */}
-                <TahoeGlassButton
+                <LightButton
                     onClick={() => router.push('/preview')}
                     radius={12}
-                    tone="light"
-                    className="group w-full px-4 py-3 text-left text-white/80 transition-all hover:text-white"
+                    className="group w-full px-4 py-3 text-left text-slate-800 transition-all hover:text-slate-800"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
-                    <Eye size={18} className="group-hover:text-white transition-colors" />
+                    <Eye size={18} className="group-hover:text-slate-950 transition-colors" />
                     <span className="font-medium text-[14px]">Preview Profile</span>
-                </TahoeGlassButton>
+                </LightButton>
 
                 {/* Copy URL */}
-                <TahoeGlassButton
+                <LightButton
                     onClick={copyProfileUrl}
                     radius={12}
-                    tone="light"
-                    className="group w-full px-4 py-3 text-left text-white/80 transition-all hover:text-white"
+                    className="group w-full px-4 py-3 text-left text-slate-800 transition-all hover:text-slate-800"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
-                    <LinkIcon size={18} className="group-hover:text-white transition-colors" />
+                    <LinkIcon size={18} className="group-hover:text-slate-950 transition-colors" />
                     <span className="font-medium text-[14px]">Copy profile link</span>
-                </TahoeGlassButton>
+                </LightButton>
 
-                {isAccountDeletionAvailable() && <TahoeGlassButton
+                {isAccountDeletionAvailable() && <LightButton intent="muted"
                     onClick={event => { event.currentTarget.focus(); onDeleteProfile() }}
                     radius={12}
-                    tone="light"
-                    className="group w-full px-4 py-3 text-left text-slate-300 transition-all hover:text-slate-100"
+                    className="group w-full px-4 py-3 text-left text-slate-600 transition-colors hover:text-slate-800"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <Trash2 size={18} />
                     <span className="font-normal text-[13px]">Delete my profile</span>
-                </TahoeGlassButton>}
+                </LightButton>}
 
                 {/* Sign Out */}
-                <TahoeGlassButton
+                <LightButton
                     onClick={handleSignOut}
+                    intent="danger"
                     disabled={signingOut}
                     radius={12}
-                    tone="light"
-                    semanticTint="dark"
-                    semanticTintOpacity={0.1}
-                    className="group w-full px-4 py-3 text-left text-red-100 transition-all hover:text-red-400 focus-visible:text-red-400"
+                    className="group w-full px-4 py-3 text-left transition-colors focus-visible:text-rose-950"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <LogOut size={18} className="transition-colors" />
                     <span className="font-medium text-[14px]">{signingOut ? 'Signing out…' : 'Sign Out'}</span>
-                </TahoeGlassButton>
+                </LightButton>
             </div>
         </TahoeBackdropSurface>
     );

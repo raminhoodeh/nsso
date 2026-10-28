@@ -4,6 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Info } from 'lucide-react'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
 import { cn } from '@/lib/utils'
+import { LightIconButton } from '@/components/ui/LightButton'
 
 /** Compact help for section titles, readable without hover on touch screens. */
 export default function SectionHelp({ title, children }: { title: string; children: string }) {
@@ -60,13 +61,12 @@ export default function SectionHelp({ title, children }: { title: string; childr
 
     return (
         <span ref={root} className="relative inline-flex shrink-0" onPointerEnter={event => { if (event.pointerType !== 'touch') reveal() }} onPointerLeave={() => { if (!root.current?.contains(document.activeElement)) setOpen(false) }}>
-            <button
+            <LightIconButton
                 type="button"
                 aria-label={`About ${title}`}
                 aria-describedby={open ? id : undefined}
                 aria-expanded={open}
                 aria-controls={id}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-white/75 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white"
                 // Hover/focus may already have opened the tooltip before click.
                 // Activation must reveal help, not immediately toggle it closed.
                 onClick={reveal}
@@ -74,7 +74,7 @@ export default function SectionHelp({ title, children }: { title: string; childr
                 onBlur={() => setOpen(false)}
             >
                 <Info size={18} aria-hidden="true" />
-            </button>
+            </LightIconButton>
             <span ref={tooltip} hidden={!open} style={{ left: offset }} className="absolute top-full z-50 w-[min(248px,calc(100vw_-_96px))] pt-2">
                 <span id={id} role="tooltip" className={cn(LIGHT_PANEL.surface, 'block rounded-2xl border border-white/80 px-4 py-3 text-sm font-normal leading-relaxed shadow-xl')}>
                     {children}

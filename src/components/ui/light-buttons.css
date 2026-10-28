@@ -1,0 +1,24 @@
+/* Native white controls retain system colours for solid/accessibility modes. */
+@layer base {
+  @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+    .nsso-white-control {
+      background: Canvas !important;
+      color: CanvasText !important;
+      border-color: CanvasText !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      color-scheme: inherit !important;
+    }
+
+    .nsso-white-control > [data-light-button-content],
+    .nsso-white-control > [data-light-button-content] * {
+      color: CanvasText !important;
+      text-shadow: none !important;
+    }
+
+    .nsso-white-control:focus-visible,
+    .nsso-white-control:has(input:focus-visible) {
+      outline-color: Highlight !important;
+    }
+  }
+}

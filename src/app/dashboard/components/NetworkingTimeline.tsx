@@ -4,7 +4,8 @@ import { MyNssoConnection } from '@/lib/types'
 import { MapPin, Calendar, Clock, NotebookPen } from 'lucide-react'
 import Link from 'next/link'
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
-import { TahoeGlassButton, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
+import { LightIconButton } from '@/components/ui/LightButton'
 
 interface NetworkingTimelineProps {
     connections: MyNssoConnection[]
@@ -132,15 +133,14 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                                             </Link>
 
                                                             {/* Add Note Mini Button */}
-                                                            <TahoeGlassButton tone="light"
+                                                            <LightIconButton
                                                                 onClick={() => onOpenNotes(conn)}
                                                                 className="h-11 w-11 shrink-0 p-0"
-                                                                contentClassName={conn.notes ? 'text-white' : 'text-white/60'}
                                                                 title="Notes"
                                                                 aria-label={`Edit notes for ${conn.fullName}`}
                                                             >
                                                                 <NotebookPen size={18} />
-                                                            </TahoeGlassButton>
+                                                            </LightIconButton>
                                                         </div>
 
                                                         {conn.headline && (

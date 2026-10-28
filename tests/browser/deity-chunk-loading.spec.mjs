@@ -9,7 +9,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 let files, chatChunk, css
 
 test.beforeAll(async () => {
-    const source = ['src/components/agent/NSSOAgent.tsx', 'src/components/agent/AgentChatInterface.tsx', 'src/components/ui/light-panel.ts'].map(file => readFileSync(root + file, 'utf8')).join('\n')
+    const source = ['src/components/agent/NSSOAgent.tsx', 'src/components/agent/AgentChatInterface.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts'].map(file => readFileSync(root + file, 'utf8')).join('\n')
     const candidates = [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;min-height:2000px;background:#30495b;font-family:Arial}#fixture-opener{position:fixed;top:120px;left:16px;min-height:44px;padding:12px;background:white}'

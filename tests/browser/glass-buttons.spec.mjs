@@ -24,6 +24,7 @@ let bundle, css
 const fixture = `
   import React,{useState}from'react';import{createRoot}from'react-dom/client';
   import GlassButton from './src/components/ui/GlassButton';
+  import {LightIconButton} from './src/components/ui/LightButton';
   import {TahoeGlassButton,TahoeGlassSurface}from'./src/components/ui/tahoe-glass/TahoeGlassSurface';
   import {TahoeGlassEngineContext}from'./src/components/providers/TahoeGlassProvider';
   import ConfirmDeleteDialog from './src/app/dashboard/components/ConfirmDeleteDialog';
@@ -57,7 +58,7 @@ const fixture = `
 `
 
 test.beforeAll(async () => {
-    const files = ['src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/GlassButton.tsx', 'src/components/ui/CreateProfileButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/page.tsx', 'src/components/products/SalesPageCreator.tsx']
+    const files = ['src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/GlassButton.tsx', 'src/components/ui/CreateProfileButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/page.tsx', 'src/components/products/SalesPageCreator.tsx']
     const candidates = [...files.map(file => readFileSync(root + file, 'utf8')), fixture].flatMap(source => [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates)
@@ -81,12 +82,12 @@ async function finish(page, errors) {
     expect(errors).toEqual([])
 }
 
-async function labelContrast(button) {
+async function labelContrast(button, contentSelector = '[data-tahoe-button-content]') {
     const luminance = rgb => rgb.map(value => value / 255).map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
     // An accessible-name locator stops matching when its glyphs are hidden.
     // Resolve stable handles first, while preserving the native button DOM.
     const target = await button.elementHandle()
-    const label = await button.locator('[data-tahoe-button-content]').elementHandle()
+    const label = await button.locator(contentSelector).elementHandle()
     const paint = await label.evaluate(el => {
         const r = el.getBoundingClientRect(), parent = el.parentElement.getBoundingClientRect()
         const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
@@ -242,9 +243,9 @@ test('normalized white and danger callers stay legible at the real sheen peak an
     expect(await dialog.evaluate(element => getComputedStyle(element, '::before').backgroundColor)).toBe('rgb(227, 231, 237)')
     for (const name of ['Keep item', 'Delete']) {
         const action = dialog.getByRole('button', { name, exact: true })
-        await expect(action).toHaveAttribute('data-tahoe-glass-tone', 'dark')
-        await expect(action.locator('[data-tahoe-button-content]')).toHaveCSS('text-shadow', 'none')
-        expect(await labelContrast(action), `Actual confirmation ${name} contrast`).toBeGreaterThanOrEqual(4.5)
+        await expect(action).toHaveAttribute('data-nsso-control', 'white')
+        await expect(action.locator('[data-light-button-content]')).toHaveCSS('text-shadow', 'none')
+        expect(await labelContrast(action, '[data-light-button-content]'), `Actual confirmation ${name} contrast`).toBeGreaterThanOrEqual(4.5)
     }
     await dialog.getByRole('button', { name: 'Keep item' }).click()
     await expect(dialog).toHaveCount(0)
@@ -314,7 +315,7 @@ test('solid preferences reset actual nested homepage labels and important creato
             await expect(nestedLabel).toHaveCSS('color', expected)
             expect(await labelContrast(homeAction), `Actual nested home CTA in ${feature}/${scheme}`).toBeGreaterThanOrEqual(4.5)
             const creatorAction = page.getByRole('button', { name: 'Back to offering', exact: true })
-            await expect(creatorAction.locator('[data-tahoe-button-content]')).toHaveCSS('color', expected)
+            await expect(creatorAction.locator('[data-light-button-content]')).toHaveCSS('color', expected)
             await expect(creatorAction.locator('svg')).toHaveCSS('color', expected)
         }
     }
