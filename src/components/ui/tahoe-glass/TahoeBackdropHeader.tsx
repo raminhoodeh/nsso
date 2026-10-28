@@ -157,11 +157,14 @@ export const TahoeBackdropSurface = React.forwardRef<
     context?.subscribeOwnedSceneAfterRender;
   const internalRef = React.useRef<HTMLElement | null>(null);
   const insideDirectBackdrop = React.useContext(TahoeGlassDirectBackdropBoundaryContext);
+  // The core top bar joins the viewport at its upper edge. Keep its bottom
+  // curves while giving the live lens, clipping and rim the same square top.
+  const squareTop = (as === "header" || as === "nav") && radius === "0 0 24px 24px";
   const chrome = useChromeGlassOptics(internalRef,
     backdropEnabled && !insideDirectBackdrop && supportsChromeGlassGeometry(undefined, style) && ["card", "panel", "mediaFrame", "menu"].includes(variant) &&
     props["data-tahoe-readable-overlay" as keyof typeof props] !== "true" &&
     !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""),
-    as === "header" || as === "nav", chromiumAppearance);
+    as === "header" || as === "nav", chromiumAppearance, squareTop);
   const resolvedTint = chrome.enabled && semanticTint === "none" ? (tone === "dark" ? "light" : "dark") : semanticTint;
   const resolvedTintOpacity = chrome.enabled && semanticTint === "none" ? 0.18 : semanticTintOpacity;
   const filterRef = React.useRef<SVGFilterElement | null>(null);
@@ -779,7 +782,7 @@ export const TahoeBackdropSurface = React.forwardRef<
   const resolvedRadius =
     typeof radius === "number"
       ? `${radius}px`
-      : chrome.enabled && radius && radius.trim().split(/\s+/).length > 1
+      : chrome.enabled && !squareTop && radius && radius.trim().split(/\s+/).length > 1
         ? "24px"
         : radius || VARIANT_RADIUS[variant];
   const Component = as as React.ElementType;

@@ -54,6 +54,8 @@ export interface LiquidGlassOptions {
   fluid?: boolean;
   /** Tint color as #rrggbb. Colors transmitted light like pigmented glass. */
   tint?: string;
+  /** Flush upper corners for an edge-attached surface; lower corners keep their radius. */
+  squareTop?: boolean;
 }
 
 export interface LiquidGlassProps
@@ -363,6 +365,7 @@ export interface SquircleOutline {
   width: number;
   height: number;
   radius: number;
+  squareTop: boolean;
 }
 
 const outlineCache = new Map<string, SquircleOutline>();
@@ -385,8 +388,8 @@ function bezier(
 }
 
 /** Tessellated squircle outline in centered coordinates (y down). */
-export function squircleOutline(w: number, h: number, radius: number): SquircleOutline {
-  const key = `${w}|${h}|${radius}`;
+export function squircleOutline(w: number, h: number, radius: number, squareTop = false): SquircleOutline {
+  const key = `${w}|${h}|${radius}${squareTop ? "|square-top" : ""}`;
   const cached = outlineCache.get(key);
   if (cached) return cached;
   if (outlineCache.size >= 256) outlineCache.delete(outlineCache.keys().next().value!);
@@ -402,6 +405,7 @@ export function squircleOutline(w: number, h: number, radius: number): SquircleO
       width: w,
       height: h,
       radius: 0,
+      squareTop,
     };
     outlineCache.set(key, outline);
     return outline;
@@ -464,10 +468,10 @@ export function squircleOutline(w: number, h: number, radius: number): SquircleO
     }
     return run;
   };
-  const tr = mirror(false, false);
+  const tr = squareTop ? new Float64Array(0) : mirror(false, false);
   const br = mirror(false, true);
   const bl = mirror(true, true);
-  const tl = mirror(true, false);
+  const tl = squareTop ? new Float64Array(0) : mirror(true, false);
 
   // Clip polygon: corner curve points in clockwise order; polygon() draws the
   // straight edges between them. Mirroring across one axis flips a run's
@@ -480,10 +484,11 @@ export function squircleOutline(w: number, h: number, radius: number): SquircleO
       poly.push(`${(run[4 * k]! + hw).toFixed(2)}px ${(run[4 * k + 1]! + hh).toFixed(2)}px`);
     }
   };
-  push(tr, 1);
+  if (squareTop) poly.push(`0.00px 0.00px`, `${w.toFixed(2)}px 0.00px`);
+  else push(tr, 1);
   push(br, -1);
   push(bl, 1);
-  push(tl, -1);
+  if (!squareTop) push(tl, -1);
 
   const outline: SquircleOutline = {
     corners: [tr, br, bl, tl],
@@ -492,6 +497,7 @@ export function squircleOutline(w: number, h: number, radius: number): SquircleO
     width: w,
     height: h,
     radius: r,
+    squareTop,
   };
   if (outlineCache.size > 256) outlineCache.delete(outlineCache.keys().next().value!);
   outlineCache.set(key, outline);
@@ -506,7 +512,10 @@ export function squircleOutline(w: number, h: number, radius: number): SquircleO
 function outlineField(
   px: number, py: number, outline: SquircleOutline
 ): { d: number; nx: number; ny: number } {
-  const hw = outline.width / 2, hh = outline.height / 2, p = outline.extent;
+  const hw = outline.width / 2, hh = outline.height / 2;
+  // An edge-attached top is a rectangle, while the lower half retains the
+  // original squircle distance and normals byte-for-byte.
+  const p = outline.squareTop && py < 0 ? 0 : outline.extent;
   const ax = Math.abs(px), ay = Math.abs(py);
   const qx = ax - (hw - p), qy = ay - (hh - p);
   if (qx > 0 && qy > 0) {
@@ -584,9 +593,9 @@ function mapSize(w: number, h: number, scale: number) {
 }
 
 /** The full displacement plane remains under its existing 262,144-pixel cap. */
-function renderField(w: number, h: number, radius: number, bezel: number): HTMLCanvasElement | null {
+function renderField(w: number, h: number, radius: number, bezel: number, squareTop = false): HTMLCanvasElement | null {
   try {
-    const outline = squircleOutline(w, h, radius);
+    const outline = squircleOutline(w, h, radius, squareTop);
     const hw = w / 2, hh = h / 2;
     const bz = Math.max(1, Math.min(bezel, hw, hh));
     const k = pixelScale(w, h);
@@ -652,8 +661,8 @@ interface RimAtlas extends RimAtlasSampling {
   url: string;
 }
 
-function rimAtlasSampling(w: number, h: number, radius: number, requestedDpr: number): RimAtlasSampling {
-  const extent = squircleOutline(w, h, radius).extent;
+function rimAtlasSampling(w: number, h: number, radius: number, requestedDpr: number, squareTop = false): RimAtlasSampling {
+  const extent = squircleOutline(w, h, radius, squareTop).extent;
   const bw = w + RIM_PAD * 2, bh = h + RIM_PAD * 2;
   const sliceX = Math.min(Math.ceil(extent) + RIM_PAD + RIM_REACH, (bw - 1) / 2);
   const sliceY = Math.min(Math.ceil(extent) + RIM_PAD + RIM_REACH, (bh - 1) / 2);
@@ -680,18 +689,21 @@ function rimSourcePosition(position: number, atlasLength: number, originalLength
 
 /** Conservative absolute-X bounds for pixels within the rim's reach. A
  * nearest corner segment must intersect this row's +/-6px Y band, and its
- * nearest point must be within 6px in X too. Mirror symmetry lets one top
- * corner cover all four. The final distance/lighting calculation is unchanged. */
+ * nearest point must be within 6px in X too. The final distance/lighting
+ * calculation is unchanged; square-top surfaces use their lower curve. */
 function rimRowBounds(py: number, outline: SquircleOutline): [number, number] | null {
   const hw = outline.width / 2, hh = outline.height / 2;
   const reach = RIM_REACH + 1e-7;
   const absY = Math.abs(py);
   // Horizontal straight edges can light the whole row; avoid narrowing it.
   if (Math.abs(absY - hh) <= reach) return [0, Infinity];
+  if (outline.squareTop && py < 0) {
+    return absY <= hh + reach ? [Math.max(0, hw - reach), hw + reach] : null;
+  }
   let min = Infinity, max = -Infinity;
   if (absY <= hh - outline.extent + reach) min = max = hw;
-  const run = outline.corners[0];
-  const y = -absY;
+  const run = outline.corners[outline.squareTop ? 1 : 0];
+  const y = outline.squareTop ? absY : -absY;
   for (let k = 0; k < run.length / 4 - 1; k++) {
     const x1 = run[4 * k]!, y1 = run[4 * k + 1]!;
     const x2 = run[4 * k + 4]!, y2 = run[4 * k + 5]!;
@@ -702,11 +714,11 @@ function rimRowBounds(py: number, outline: SquircleOutline): [number, number] | 
   return min === Infinity ? null : [Math.max(0, min - reach), max + reach];
 }
 
-function renderRimAtlas(w: number, h: number, radius: number, dark: boolean, tint?: [number, number, number]): RimAtlas | null {
+function renderRimAtlas(w: number, h: number, radius: number, dark: boolean, tint?: [number, number, number], squareTop = false): RimAtlas | null {
   try {
-    const sampling = rimAtlasSampling(w, h, radius, window.devicePixelRatio || 1);
+    const sampling = rimAtlasSampling(w, h, radius, window.devicePixelRatio || 1, squareTop);
     const { cssWidth, cssHeight, pixelWidth, pixelHeight, sliceX, sliceY } = sampling;
-    const outline = squircleOutline(w, h, radius);
+    const outline = squircleOutline(w, h, radius, squareTop);
     const canvas = document.createElement("canvas");
     canvas.width = pixelWidth;
     canvas.height = pixelHeight;
@@ -817,23 +829,24 @@ interface PlaneOptions {
   bezel: number;
   dark: boolean;
   tint?: [number, number, number];
+  squareTop?: boolean;
 }
 
 function fieldURL(w: number, h: number, radius: number, o: PlaneOptions): string {
-  return remember(fieldCache, `${w}x${h}r${radius}b${o.bezel}d${window.devicePixelRatio}`, () => {
-    if (capsuleShape(w, h, radius)) {
+  return remember(fieldCache, `${w}x${h}r${radius}b${o.bezel}d${window.devicePixelRatio}${o.squareTop ? "s" : ""}`, () => {
+    if (!o.squareTop && capsuleShape(w, h, radius)) {
       const baked = capsuleBake(h, radius, o);
       if (baked) return slicedFieldURL(baked, w, h);
     }
-    return renderField(w, h, radius, o.bezel)?.toDataURL("image/png") ?? "";
+    return renderField(w, h, radius, o.bezel, o.squareTop)?.toDataURL("image/png") ?? "";
   });
 }
 
 function overlayURL(w: number, h: number, radius: number, o: PlaneOptions): RimAtlas | null {
-  const key = `${w}x${h}r${radius}${o.dark ? "d" : "l"}${o.tint ?? ""}d${window.devicePixelRatio}`;
+  const key = `${w}x${h}r${radius}${o.dark ? "d" : "l"}${o.tint ?? ""}d${window.devicePixelRatio}${o.squareTop ? "s" : ""}`;
   const cached = overlayCache.get(key);
   if (cached) return cached;
-  const atlas = renderRimAtlas(w, h, radius, o.dark, o.tint);
+  const atlas = renderRimAtlas(w, h, radius, o.dark, o.tint, o.squareTop);
   if (!atlas) return null;
   overlayCache.set(key, atlas);
   let pixels = [...overlayCache.values()].reduce((total, entry) => total + entry.pixelWidth * entry.pixelHeight, 0);
@@ -847,10 +860,10 @@ function overlayURL(w: number, h: number, radius: number, o: PlaneOptions): RimA
 }
 
 function capsuleBake(h: number, radius: number, o: PlaneOptions): HTMLCanvasElement | null {
-  const key = `bake|h${h}|r${radius}|b${o.bezel}|d${window.devicePixelRatio}`;
+  const key = `bake|h${h}|r${radius}|b${o.bezel}|d${window.devicePixelRatio}${o.squareTop ? "s" : ""}`;
   let baked = bakeCache.get(key);
   if (!baked) {
-    baked = renderField(h * 3, h, radius, o.bezel) ?? undefined;
+    baked = renderField(h * 3, h, radius, o.bezel, o.squareTop) ?? undefined;
     if (!baked) return null;
     if (bakeCache.size > 16) bakeCache.delete(bakeCache.keys().next().value!);
     bakeCache.set(key, baked);
@@ -1224,6 +1237,7 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
     motion,
     fluid = false,
     tint,
+    squareTop = false,
   } = options;
 
   const lensRef = React.useRef<HTMLSpanElement | null>(null);
@@ -1268,8 +1282,8 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
 
     const build = (w: number, h: number, radius: number) => {
       const bz = Math.round(bezel ?? Math.min(32, Math.min(w, h) / 2));
-      const planes = { bezel: bz, dark, tint: tintRGB };
-      const outline = squircleOutline(w, h, radius);
+      const planes = { bezel: bz, dark, tint: tintRGB, squareTop };
+      const outline = squircleOutline(w, h, radius, squareTop);
       const overlay = overlayURL(w, h, radius, planes);
       if (mode !== "refract") {
         if (heldFilter) {
@@ -1277,7 +1291,7 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
           heldFilter = null;
         }
         setMap((prev) => {
-          const id = `frost|${w}|${h}|${radius}|${appearance}|${material}|${tint ?? ""}|d${window.devicePixelRatio}`;
+          const id = `frost|${w}|${h}|${radius}|${appearance}|${material}|${tint ?? ""}|d${window.devicePixelRatio}${squareTop ? "|square-top" : ""}`;
           return prev && prev.filterId === id && prev.overlay === overlay
             ? prev
             : { field: "", overlay, clip: outline.polygon, w, h, filterId: id };
@@ -1285,7 +1299,7 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
         return;
       }
       const field = fieldURL(w, h, radius, planes);
-      const filterId = `lgf${w}x${h}r${radius}b${bz}f${Math.round(amount * 10)}${appearance === "dark" ? "d" : "l"}${material === "regular" ? "R" : "C"}${tint ?? ""}p${Math.round(dispersion * 100)}${nested ? "n" : ""}d${Math.round((window.devicePixelRatio || 1) * 1000)}`
+      const filterId = `lgf${w}x${h}r${radius}b${bz}f${Math.round(amount * 10)}${appearance === "dark" ? "d" : "l"}${material === "regular" ? "R" : "C"}${tint ?? ""}p${Math.round(dispersion * 100)}${nested ? "n" : ""}d${Math.round((window.devicePixelRatio || 1) * 1000)}${squareTop ? "s" : ""}`
         .replace(/[^a-zA-Z0-9-]/g, "");
       if (field) {
         const markup = filterMarkup({
@@ -1313,7 +1327,8 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
       const h = Math.round(lens.offsetHeight);
       if (w < 2 || h < 2) return;
       setElementSize((prev) => (prev && prev.w === w && prev.h === h ? prev : { w, h }));
-      const radius = Math.round(resolveRadius(getComputedStyle(lens).borderTopLeftRadius, w, h));
+      const lensStyle = getComputedStyle(lens);
+      const radius = Math.round(resolveRadius(squareTop ? lensStyle.borderBottomLeftRadius : lensStyle.borderTopLeftRadius, w, h));
       const prev = mapRef.current;
       if (
         fluid &&
@@ -1373,7 +1388,7 @@ export function useLiquidGlass(options: LiquidGlassOptions, rootRef: React.RefOb
       cancelAnimationFrame(fluidRaf);
       if (heldFilter) releaseFilter(heldFilter);
     };
-  }, [enabled, mode, bezel, appearance, material, tint, dark, tintRGB, refraction, dispersion, fluid, motion, rootRef]);
+  }, [enabled, mode, bezel, appearance, material, tint, squareTop, dark, tintRGB, refraction, dispersion, fluid, motion, rootRef]);
 
   // Keep the latest map for fluid's previous-size detection.
   React.useEffect(() => {
@@ -1584,6 +1599,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
       motion,
       fluid,
       tint,
+      squareTop,
       asChild,
       className,
       style,
@@ -1599,7 +1615,7 @@ export const LiquidGlass = React.forwardRef<HTMLDivElement, LiquidGlassProps>(
       else if (ref) ref.current = element;
     }, [ref]);
     const glass = useLiquidGlass(
-      { material, appearance, refraction, bezel, blur, saturation, brightness, dispersion, fallbackBlur, mode, interactive, motion, fluid, tint },
+      { material, appearance, refraction, bezel, blur, saturation, brightness, dispersion, fallbackBlur, mode, interactive, motion, fluid, tint, squareTop },
       rootRef
     );
     return <CandidateSurface
@@ -1638,6 +1654,7 @@ export const LiquidGlassButton = React.forwardRef<HTMLButtonElement, LiquidGlass
       motion,
       fluid,
       tint,
+      squareTop,
       asChild,
       className,
       style,
@@ -1653,7 +1670,7 @@ export const LiquidGlassButton = React.forwardRef<HTMLButtonElement, LiquidGlass
       else if (ref) ref.current = element;
     }, [ref]);
     const glass = useLiquidGlass(
-      { material, appearance, refraction, bezel, blur, saturation, brightness, dispersion, fallbackBlur, mode, interactive, motion, fluid, tint },
+      { material, appearance, refraction, bezel, blur, saturation, brightness, dispersion, fallbackBlur, mode, interactive, motion, fluid, tint, squareTop },
       rootRef
     );
     return <CandidateSurface
