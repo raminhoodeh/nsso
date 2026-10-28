@@ -4,6 +4,7 @@ import { compile } from '@tailwindcss/node'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, realSceneBundle, css
@@ -29,7 +30,7 @@ test.beforeAll(async () => {
                     : path === 'next/link' ? `export default function Link({href,onClick,children,...props}){return <a {...props} href={href} onClick={event=>{onClick?.(event);if(!event.defaultPrevented){event.preventDefault();window.fixtureNavigate(href)}}}>{children}</a>}`
                         : path === 'next/image' ? 'export default ({priority,fill,...props})=><img {...props}/>;'
                             : path.endsWith('supabase/client') ? 'export const createClient=()=>({auth:{signOut:async()=>{window.signOuts++;return{error:null}}},from:()=>({select(){return this},eq(){return this},single:async()=>({data:window.fixtureProfile?.profile??null,error:null})})});'
-                                : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:window.fixtureUser,loading:false,refreshUser:async()=>{}});'
+                                : path.endsWith('UserProvider') ? 'export const useUser=()=>({user:window.fixtureUser,loading:false,refreshUser:async()=>{window.fixturePreviewRefreshes.user++}});'
                                     : path.endsWith('UIProvider') ? 'export const useUI=()=>({setBackgroundDimmed:()=>{}});'
                                         : path.endsWith('ProfileProvider') ? 'export const useProfile=()=>window.fixtureProfile;'
                                             : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:(message,type)=>window.toasts.push({message,type})});'
@@ -45,7 +46,7 @@ test.beforeAll(async () => {
             import Dashboard from './src/app/dashboard/page';import Header from './src/components/layout/Header';
             import Preview from './src/app/preview/page';import {routeNeedsGlobalAccountHeader} from './src/lib/tahoe-glass/route-boundaries';
             import GlobalNavigation from './src/components/layout/GlobalNavigation';import AuthenticatedLayout from './src/components/layout/AuthenticatedLayoutWrapper';
-            window.routeSubscribers=new Set();window.destinations=[];window.toasts=[];window.deleted=[];window.created=[];window.reordered=[];window.deityEvents=[];window.signOuts=0;window.fixtureRowScrolls=[];
+            window.routeSubscribers=new Set();window.destinations=[];window.toasts=[];window.deleted=[];window.created=[];window.reordered=[];window.deityEvents=[];window.signOuts=0;window.fixtureRowScrolls=[];window.fixturePreviewRefreshes={user:0,profile:0};
             const nativeScrollIntoView=Element.prototype.scrollIntoView;Element.prototype.scrollIntoView=function(options){const row=this.closest('[data-profile-item-id]');if(row)window.fixtureRowScrolls.push({id:row.getAttribute('data-profile-item-id'),options});return nativeScrollIntoView.call(this,options)};
             window.fixtureUser={id:'qa',username:'fixture',email:window.fixtureOptions.admin?'raminhoodeh@gmail.com':'fixture@example.invalid',permissions:window.fixtureOptions.admin?['nsso:admin']:[],user_type:window.fixtureOptions.admin?'admin':'standard'};
             window.fixtureNavigate=target=>{window.destinations.push(target);history.pushState({},'',target);window.routeSubscribers.forEach(fn=>fn())};
@@ -55,7 +56,7 @@ test.beforeAll(async () => {
                 experiences:[],qualifications:[],projects:[],products:[],
                 links:[{id:'link-1',link_name:'Portfolio',link_url:'https://example.test/portfolio'},{id:'link-2',link_name:'Writing',link_url:'https://example.test/writing'}],
                 contacts:[{id:'contact-1',method:'Email',value:'test@example.invalid'},{id:'contact-2',method:'Phone',value:'+123456789'}],
-                updateField:async()=>true,patchProfile:async()=>true,refreshProfile:async()=>{},addLink:()=>{},addContact:()=>{},
+                updateField:async()=>true,patchProfile:async()=>true,refreshProfile:async()=>{window.fixturePreviewRefreshes.profile++},addLink:()=>{},addContact:()=>{},
                 createEntity:async(kind,values,position)=>{
                     const id='qa-created-'+(window.created.length+1);const entity=kind==='link'?'links':'contacts';window.created.push({kind,position,id,values});
                     const finish=()=>{if(window.fixtureCreateMode==='failed')return{status:'failed',changes:[]};const row={...values,id,user_id:'qa'};profile[entity]=position==='top'?[row,...profile[entity]]:[...profile[entity],row];refresh();return{status:'applied',changes:[{entity,id,row}]}};
@@ -537,6 +538,8 @@ test('profile and preview QR face contains only the code in an equally padded op
         await expect(qr.getByText('Tap to show QR', { exact: true })).toHaveCount(0)
         const plate = qr.locator('[data-profile-qr-plate]')
         await expect(plate.getByRole('img', { name: "Fixture Name's profile QR code", exact: true })).toHaveCount(1)
+        const matrix = await plate.locator('svg').innerHTML()
+        expect(await plate.evaluate(element => element.parentElement.getAnimations().filter(animation => animation.playState === 'running').length)).toBe(0)
         await expect(plate.locator('span:not(.sr-only)')).toHaveCount(0)
         await expect(plate.getByText('Tap for photo', { exact: true })).toHaveCount(0)
         const padding = await plate.evaluate(element => {
@@ -548,8 +551,17 @@ test('profile and preview QR face contains only the code in an equally padded op
         expect(padding.background).toBe('rgb(255, 255, 255)')
         await plate.evaluate(element => Promise.all(element.parentElement.getAnimations().map(animation => animation.finished.catch(() => {}))))
         await page.screenshot({ path: testInfo.outputPath(`profile-qr-${width}.png`) })
+        await page.emulateMedia({ reducedMotion: 'no-preference' })
         await qr.press('Space')
         await expect(photo).toHaveAttribute('aria-pressed', 'false')
+        await expect.poll(() => photo.evaluate(element => element.querySelector('[style*="preserve-3d"]').getAnimations().filter(animation => animation.playState === 'running').length)).toBeGreaterThan(0)
+        // Changing the accessibility preference also stops an in-flight flip.
+        await page.emulateMedia({ reducedMotion: 'reduce' })
+        await expect.poll(() => photo.evaluate(element => element.querySelector('[style*="preserve-3d"]').getAnimations().filter(animation => animation.playState === 'running').length)).toBe(0)
+        await photo.press('Enter')
+        await expect(qr).toHaveAttribute('aria-pressed', 'true')
+        expect(await plate.evaluate(element => element.parentElement.getAnimations().filter(animation => animation.playState === 'running').length)).toBe(0)
+        expect(await plate.locator('svg').innerHTML()).toBe(matrix)
     }
 })
 
@@ -575,7 +587,18 @@ test('loading or failed preview keeps a verified account menu so editing remains
         await expect(page.locator('[data-nsso-topbar]')).toHaveCount(1)
         await expect(page.locator('[data-mobile-nav-material]')).toHaveCount(0)
         await expect(page.getByRole('heading', { name: "I'm Fixture Name", exact: true })).toHaveCount(0)
-        if (profileState === 'error') await expect(page.getByRole('button', { name: 'Retry preview', exact: true })).toBeVisible()
+        if (profileState === 'error') {
+            const recovery = page.getByRole('region', { name: 'Profile preview recovery', exact: true })
+            await expect(recovery).toContainText('Your editing draft has been kept.')
+            await expectOpaqueLightPanel(page, recovery)
+            expect(await minimumTextContrast(recovery.locator('p'))).toBeGreaterThanOrEqual(4.5)
+            const retry = recovery.getByRole('button', { name: 'Retry preview', exact: true })
+            await expect(retry).toBeVisible()
+            expect(await minimumTextContrast(retry.locator('[data-tahoe-button-content]'))).toBeGreaterThanOrEqual(4.5)
+            await retry.press('Enter')
+            await expect(recovery).toBeVisible()
+            expect(await page.evaluate(() => window.fixturePreviewRefreshes)).toEqual({ user: 1, profile: 1 })
+        }
         const dialog = await openMenu(page, true)
         await dialog.getByRole('link', { name: 'Edit Profile', exact: true }).press('Enter')
         expect(await page.evaluate(() => window.destinations)).toEqual(['/dashboard?view=profile'])

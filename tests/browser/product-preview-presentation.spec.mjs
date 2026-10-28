@@ -4,6 +4,7 @@ import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const productId = '33333333-3333-4333-8333-333333333333'
@@ -155,7 +156,7 @@ test.beforeAll(async () => {
     const files = [
         'src/app/products/[id]/page.tsx', 'src/components/VantaBackground.tsx',
         'src/components/providers/NSSOTahoeGlassEnvironment.tsx', 'src/components/providers/TahoeGlassProvider.tsx',
-        'src/components/ui/PreviewCheckoutButton.tsx', 'src/components/ui/PayPalSmartButton.tsx',
+        'src/components/ui/PreviewCheckoutButton.tsx', 'src/components/ui/PayPalSmartButton.tsx', 'src/components/ui/light-panel.ts',
         'src/components/ui/GlassButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx',
         'src/components/ui/experimental/liquid-glass-candidate.tsx',
     ]
@@ -585,7 +586,11 @@ test('styled preview explains a keyboard checkout attempt without starting a pay
     await expect(page.getByRole('status')).toHaveCount(0)
     await expect(page.getByText('Draft preview — checkout is disabled.', { exact: true })).toHaveCount(0)
     await page.getByRole('button', { name: 'Buy Now', exact: true }).filter({ visible: true }).press('Enter')
-    await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
+    const notice = page.getByRole('status')
+    await expect(notice).toHaveText('Checkout is disabled during profile preview')
+    await expectOpaqueLightPanel(page, notice)
+    expect(await minimumTextContrast(notice.locator('span'))).toBeGreaterThanOrEqual(4.5)
+    await expect(page.getByRole('button', { name: 'Buy Now', exact: true }).filter({ visible: true })).toHaveAttribute('aria-describedby', await notice.getAttribute('id'))
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.locator('a[href="https://seller.example.test/pay"]')).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Link to Purchase', exact: true }).filter({ visible: true })).toBeEnabled()
