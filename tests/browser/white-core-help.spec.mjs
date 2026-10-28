@@ -8,25 +8,25 @@ import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-pan
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/app/dashboard/components/MyNssoTab.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const files = ['src/app/dashboard/components/MyNssoTab.tsx', 'src/app/dashboard/components/NetworkTable.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;background:#43628c;color:white;font-family:Arial}main{padding:24px}button,input,textarea{font:inherit}'
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'notes-help-fixture', setup(builder) {
-            builder.onResolve({ filter: /^(?:next\/link|@\/components\/providers\/UIProvider|@\/components\/ui\/Toast|@\/app\/dashboard\/components\/DashboardGlassCard|\.\/(?:NetworkTable|NetworkingTimeline))$/ }, args => ({ path: args.path, namespace: 'fixture' }))
+            builder.onResolve({ filter: /^(?:next\/link|@\/components\/providers\/UIProvider|@\/components\/ui\/Toast|@\/app\/dashboard\/components\/DashboardGlassCard|\.\/NetworkingTimeline)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
                 path === 'next/link' ? 'export default props=><a {...props}/>;'
                     : path.endsWith('UIProvider') ? 'const noop=()=>{};export const useUI=()=>({setBackgroundDimmed:noop});'
                         : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:message=>window.fixtureToasts.push(message)});'
-                            : path.endsWith('NetworkTable') ? 'export default ({connections,onOpenNotes})=><div>{connections.map(row=><button key={row.id} type="button" style={{minHeight:44}} onClick={()=>onOpenNotes(row)}>Edit notes for {row.fullName}</button>)}</div>;'
-                                : path.endsWith('NetworkingTimeline') ? 'export default ()=>null;'
+                            : path.endsWith('NetworkingTimeline') ? 'export default ()=>null;'
                                     : 'export default ({children})=><div>{children}</div>;' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';import{createRoot}from'react-dom/client';import Network from './src/app/dashboard/components/MyNssoTab';import Help from './src/app/dashboard/components/SectionHelp';import{TahoeGlassEngineContext}from'./src/components/providers/TahoeGlassProvider';
             window.fixtureToasts=[];const context={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'white-reading-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1},registerSurface(){},unregisterSurface(){},requestRender(){}};
             const connection={id:'synthetic-connection',connectedUserId:'synthetic-other',username:'fixture',fullName:'Fixture Connection',dateMet:'2026-10-01',location:'',notes:'Saved synthetic notes'};
-            createRoot(document.getElementById('root')).render(<TahoeGlassEngineContext.Provider value={context}><main><section><Help title="Purchases">This provider handles payment and delivery. Your profile only links to it.</Help><button type="button" style={{minHeight:44}}>Outside help target</button></section><Network initialData={{connections:[connection]}}/></main></TahoeGlassEngineContext.Provider>);
+            const emptyConnection={...connection,id:'synthetic-new-connection',username:'new-fixture',fullName:'New Connection',notes:''};
+            createRoot(document.getElementById('root')).render(<TahoeGlassEngineContext.Provider value={context}><main><section><Help title="Purchases">This provider handles payment and delivery. Your profile only links to it.</Help><button type="button" style={{minHeight:44}}>Outside help target</button></section><Network initialData={{connections:[connection,emptyConnection]}}/></main></TahoeGlassEngineContext.Provider>);
         ` } })
     bundle = result.outputFiles[0].text
 })
@@ -110,4 +110,52 @@ test('context help stays opaque and readable while keyboard and touch dismissal 
     await page.getByRole('button', { name: 'Outside help target', exact: true }).click()
     await expect(tooltip).toBeHidden()
     expect(state.writes).toEqual([])
+})
+
+test('Add notes and Edit notes remain compact one-line horizontal actions from narrow mobile to desktop', async ({ page }) => {
+    const state = await mount(page)
+    for (const width of [320, 390, 768, 1440]) {
+        await page.setViewportSize({ width, height: 900 })
+        for (const [action, name] of [['Add', 'New Connection'], ['Edit', 'Fixture Connection']]) {
+            const button = page.getByRole('button', { name: `${action} notes for ${name}`, exact: true })
+            await button.scrollIntoViewIfNeeded()
+            const size = await button.evaluate(element => {
+                const target = element.getBoundingClientRect(), style = getComputedStyle(element)
+                const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT), lines = []
+                for (let node = walker.nextNode(); node; node = walker.nextNode()) if (node.textContent.trim().endsWith('notes')) {
+                    const range = document.createRange(); range.selectNodeContents(node)
+                    for (const rect of range.getClientRects()) lines.push(Math.round(rect.top))
+                }
+                return { width: target.width, height: target.height, right: target.right, lines: [...new Set(lines)].length, paddingLeft: parseFloat(style.paddingLeft), paddingRight: parseFloat(style.paddingRight), scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }
+            })
+            expect(size.lines, `${action} notes at ${width}px`).toBe(1)
+            expect(size.width).toBeGreaterThanOrEqual(132)
+            expect(size.width).toBeLessThanOrEqual(160)
+            expect(size.height).toBe(44)
+            expect(size.paddingLeft).toBeGreaterThanOrEqual(12)
+            expect(size.paddingRight).toBeGreaterThanOrEqual(12)
+            expect(size.right).toBeLessThanOrEqual(width)
+            expect(size.scrollWidth).toBeLessThanOrEqual(size.clientWidth)
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    }
+    const add = page.getByRole('button', { name: 'Add notes for New Connection', exact: true })
+    await add.press('Enter')
+    await expect(page.getByRole('textbox', { name: 'Connection notes', exact: true })).toHaveValue('')
+    await page.keyboard.press('Escape')
+    await expect(add).toBeFocused()
+    expect(state.writes).toEqual([])
+})
+
+test('network discovery uses the compact shared Coming soon badge without dash punctuation', async ({ page }) => {
+    await mount(page)
+    await expect(page.getByText('Discover nsso users', { exact: true })).toBeVisible()
+    const badge = page.getByText('Coming soon', { exact: true })
+    await expect(badge).toBeVisible()
+    const rendered = await badge.evaluate(element => ({ font: getComputedStyle(element).fontSize, whiteSpace: getComputedStyle(element).whiteSpace, height: element.closest('[data-tahoe-glass-surface="pill"]').getBoundingClientRect().height }))
+    expect(rendered.font).toBe('10px')
+    expect(rendered.whiteSpace).toBe('nowrap')
+    expect(rendered.height).toBeGreaterThanOrEqual(20)
+    expect(rendered.height).toBeLessThanOrEqual(24)
+    await expect(page.locator('main')).not.toContainText('—')
 })

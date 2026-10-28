@@ -143,7 +143,7 @@ test('the inline profile demo keeps its clear label while playback and error fee
 
 test('video failures expose an actionable retry and an independent YouTube fallback', async ({ page }) => {
   await fixture(page, 'player')
-  await expect(page.getByText('0:00 / —:—', { exact: true })).toBeVisible()
+  await expect(page.getByText('0:00 / --:--', { exact: true })).toBeVisible()
   await page.locator('video').evaluate(element => element.dispatchEvent(new Event('error')))
   await expect(page.getByRole('alert')).toContainText('temporarily unavailable')
   await expect(page.getByRole('button', { name: 'Play video', exact: true })).toBeDisabled()

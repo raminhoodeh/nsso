@@ -16,7 +16,7 @@ import { isAccountDeletionAvailable } from '@/lib/delete-profile-client'
 import DeleteProfileDialog from '@/components/layout/DeleteProfileDialog'
 import { routeUsesMobileProfileMenu } from '@/lib/tahoe-glass/route-boundaries'
 import { useState, useEffect, useCallback, Suspense, type ReactNode } from 'react'
-import { ChevronRight, Eye, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, Sparkles, Trash2, UserRound, UsersRound, X } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Eye, Home, LayoutDashboard, Link as LinkIcon, LogOut, Newspaper, Sparkles, Trash2, UserRound, UsersRound, X } from 'lucide-react'
 import {
     TahoeGlassButton,
     TahoeGlassDialog,
@@ -64,6 +64,9 @@ function MobileMenuNavigation({ pathname, isAdmin, signingOut, close, copyProfil
         <section data-mobile-menu-group="profile" aria-labelledby="mobile-menu-profile-heading">
             <h3 id="mobile-menu-profile-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Your nsso</h3>
             <div className={groupClass}>
+                <Link href="/?view=home" onClick={close} className={cn(MENU_ROW_CLASS, pathname === '/' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={pathname === '/' ? 'page' : undefined}>
+                    <MenuRowContent icon={<Home className={iconClass} />}>nsso homepage</MenuRowContent>
+                </Link>
                 <Link href={dashboardHref('profile')} onClick={close} className={cn(MENU_ROW_CLASS, isDashboardHome && currentView === 'profile' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={isDashboardHome && currentView === 'profile' ? 'page' : undefined}>
                     <MenuRowContent icon={<UserRound className={iconClass} />}>Edit Profile</MenuRowContent>
                 </Link>
@@ -222,7 +225,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
     const isPreviewRoute = pathname === '/preview' || pathname === '/preview/'
     // Preview has no desktop sidebar, so its account menu remains available at
     // every width. The editor's shared sidebar replaces it on desktop.
-    const authenticatedVisibilityClass = isPreviewRoute ? undefined : usesProfileEditorMenu ? 'lg:hidden' : 'md:hidden'
+    const authenticatedVisibilityClass = usesProfileEditorMenu && !isPreviewRoute ? 'lg:hidden' : undefined
 
     // Determine which primary button to show on mobile (Default Mode)
     const isPreviewPage = isOwnerMode || isPreviewRoute || (user?.username && pathname?.replace(/\/+$/, '') === `/${user.username}`)
@@ -233,7 +236,7 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
             tone="dark"
             onClick={copyProfileUrl}
             aria-label="Copy page URL"
-            className="min-h-11 px-3 min-[360px]:px-4"
+            className={cn('min-h-11 px-3 min-[360px]:px-4', isPreviewRoute && 'hidden md:inline-flex')}
         >
             <span className="min-[360px]:hidden">Copy URL</span>
             <span className="hidden min-[360px]:inline">Copy page URL</span>
@@ -257,24 +260,37 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
         >
             <nav className={NSSO_TOPBAR_CONTENT_CLASS} aria-label={isPreviewRoute ? 'Profile preview' : 'Main navigation'}>
 
-                {/* Shared logo and material on editor, profile and preview. */}
-                <Link
-                    href={user ? "/?view=home" : "/"}
-                    className={cn("flex items-center", user && authenticatedVisibilityClass)}
-                    onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
-                >
-                    <Image
-                        src="/assets/nsso-logo.png"
-                        alt="nsso"
-                        width={458}
-                        height={224}
-                        className="h-8 w-auto"
-                        priority
-                    />
-                </Link>
+                <div className="flex min-w-0 items-center gap-2 md:gap-3">
+                    {isPreviewRoute && user && <GlassButton
+                        variant="ghost"
+                        size="sm"
+                        tone="dark"
+                        onClick={() => router.push('/dashboard?view=profile')}
+                        aria-label="Edit profile"
+                        className="min-h-11 px-3 min-[360px]:px-4"
+                    >
+                        <ArrowLeft aria-hidden="true" size={18} />
+                        <span>Edit profile</span>
+                    </GlassButton>}
+                    {/* Shared logo and material on editor, profile and preview. */}
+                    <Link
+                        href={user ? "/?view=home" : "/"}
+                        aria-label="nsso homepage"
+                        className={cn("flex items-center", user && authenticatedVisibilityClass)}
+                        onMouseEnter={() => router.prefetch(user ? "/?view=home" : "/")}
+                    >
+                        <Image
+                            src="/assets/nsso-logo.png"
+                            alt="nsso"
+                            width={458}
+                            height={224}
+                            className="h-8 w-auto"
+                            priority
+                        />
+                    </Link>
+                </div>
 
                 {/* --- RIGHT SIDE / DESKTOP NAV --- */}
-                {/* COMPLETELY HIDDEN ON DESKTOP IF LOGGED IN */}
                 <div className="hidden md:flex items-center gap-4">
                     {!user && (
                         <TahoeGlassSurface as="a" variant="button" href="/sign-in" onMouseEnter={() => router.prefetch('/sign-in')}
@@ -340,7 +356,9 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                         <div data-mobile-account-menu="true" className={cn(LIGHT_PANEL.surface, "flex h-full flex-col overflow-hidden rounded-l-[32px] shadow-[-24px_0_64px_rgba(0,0,0,0.28)]")}>
                             <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-500/15 pb-5 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] pt-[max(1.25rem,env(safe-area-inset-top))]">
                                 <div className="flex min-w-0 items-center gap-3">
-                                    <Image src="/assets/nsso-logo.png" alt="nsso" width={458} height={224} className="h-8 w-auto" />
+                                    <span data-mobile-menu-logo="true" className="relative block h-8 w-[69px] shrink-0 overflow-hidden">
+                                        <Image src="/assets/nsso-logo-dark.png" alt="nsso" width={3840} height={2172} sizes="140px" className="absolute left-[-43.79%] top-[-60.02%] h-[230.33%] w-[188.51%] max-w-none" />
+                                    </span>
                                     <span className="border-l border-slate-500/25 pl-3 text-lg font-semibold tracking-tight">Menu</span>
                                 </div>
                                 <button type="button" onClick={() => setMobileMenuOpen(false)} className={cn(LIGHT_PANEL.control, LIGHT_PANEL.focus, "flex h-11 w-11 shrink-0 items-center justify-center rounded-full")} aria-label="Close menu">
@@ -382,6 +400,11 @@ export default function Header({ showAuthButtons = true, variant = 'default', us
                 }
                 .animate-slide-in-right {
                     animation: slide-in-right 0.3s ease-out;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .animate-slide-in-right {
+                        animation: none;
+                    }
                 }
             `}</style>
         </NssoTopBar>

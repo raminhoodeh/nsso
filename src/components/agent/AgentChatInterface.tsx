@@ -214,7 +214,7 @@ I can help you in two powerful ways:
 1. **Profile Creation**: Tell me to "Add my experience at Google" or "Update my bio" to build your presence.
 2. **Gathering Insights**: Ask me questions like "How do I find investors?" or "Recommend design books" to tap into my exclusive database.
 
-Let's get started—what would you like to do first?`;
+Let's get started. What would you like to do first?`;
                         } else {
                             introText = `Love your profile ${firstName || 'there'}… now let’s get your name out there!
 

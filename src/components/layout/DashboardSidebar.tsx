@@ -3,6 +3,7 @@
 import { Suspense, useState, useSyncExternalStore } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import {
     LayoutDashboard,
@@ -10,6 +11,7 @@ import {
     Newspaper,
     LogOut,
     Eye,
+    Home,
     Link as LinkIcon,
     Trash2
 } from 'lucide-react';
@@ -126,9 +128,10 @@ function DashboardSidebarContent({
         >
             {/* Logo Area */}
             <div className="px-8 py-8">
-                <div
-                    className="cursor-pointer"
-                    onClick={() => router.push('/?view=home')}
+                <Link
+                    href="/?view=home"
+                    aria-label="nsso homepage"
+                    className="inline-flex rounded-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                 >
                     <Image
                         src="/assets/nsso-logo.png"
@@ -138,7 +141,7 @@ function DashboardSidebarContent({
                         className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
                         priority
                     />
-                </div>
+                </Link>
             </div>
 
             {/* Navigation Items */}
@@ -184,6 +187,16 @@ function DashboardSidebarContent({
                         </TahoeGlassButton>
                     );
                 })}
+                <TahoeGlassButton
+                    onClick={() => router.push('/?view=home')}
+                    radius={12}
+                    tone="light"
+                    className="group relative w-full px-4 py-3 text-white/80 transition-all duration-200 hover:text-white"
+                    contentClassName="w-full justify-start gap-3 text-inherit"
+                >
+                    <Home size={20} className="text-white/60 transition-colors group-hover:text-white" />
+                    <span className="text-[15px] font-medium">nsso homepage</span>
+                </TahoeGlassButton>
             </nav>
 
             {/* Footer Actions */}

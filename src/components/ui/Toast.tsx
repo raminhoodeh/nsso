@@ -100,7 +100,7 @@ function ToastContainer({
                         aria-label={`Dismiss notification: ${toast.message}`}
                         className={cn(
                             LIGHT_PANEL.surface, LIGHT_PANEL.focus,
-                            'animate-slide-up motion-reduce:animate-none min-h-12 w-full cursor-pointer rounded-2xl border px-5 py-3 text-center text-[15px] font-semibold shadow-[0_12px_32px_rgba(30,41,59,0.18)] md:w-auto',
+                            'animate-slide-up motion-reduce:animate-none! min-h-12 w-full cursor-pointer rounded-2xl border px-5 py-3 text-center text-[15px] font-semibold shadow-[0_12px_32px_rgba(30,41,59,0.18)] md:w-auto',
                             toast.type === 'success' && 'border-emerald-800/25 !text-emerald-900',
                             toast.type === 'error' && 'border-red-800/25 !text-red-900',
                             toast.type === 'info' && 'border-white/80'

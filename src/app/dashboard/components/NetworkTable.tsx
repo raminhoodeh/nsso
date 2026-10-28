@@ -83,10 +83,10 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
             <p>{connections.length ? 'No connections match your search.' : 'No connections yet.'}</p>
             {searchQuery && <TahoeGlassButton type="button" tone="light" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-white" onClick={() => setSearchQuery('')}>Clear search</TahoeGlassButton>}
         </div> : <>
-            <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_110px] gap-4 px-4 text-xs font-semibold uppercase tracking-wider text-white/70 md:grid"><span>Person</span><span>Meeting location</span><span>Date met</span><span>Notes</span></div>
+            <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_144px] gap-4 px-4 text-xs font-semibold uppercase tracking-wider text-white/70 md:grid"><span>Person</span><span>Meeting location</span><span>Date met</span><span>Notes</span></div>
             <ul className="space-y-3" aria-label="Your connections">
                 {filteredConnections.map(conn => <li key={conn.id}>
-                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" contentClassName="grid min-w-0 gap-4 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_110px] md:items-center">
+                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" contentClassName="grid min-w-0 gap-4 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_144px] md:items-center">
                         <Link href={`/${conn.username}`} className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white">
                             <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15 font-semibold text-white ring-1 ring-white/20">
                                 {conn.profilePicUrl ? <img src={conn.profilePicUrl} alt="" className="h-full w-full object-cover" /> : conn.fullName.slice(0, 2).toUpperCase()}
@@ -104,7 +104,7 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
                             </form> : <button type="button" disabled={savingLocation} aria-label={`Edit location for ${conn.fullName}`} className="flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm text-white/85 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white" onClick={() => { setEditingLocationId(conn.id); setLocationValue(conn.location || ''); setLocationError('') }}><MapPin aria-hidden="true" size={16} className="shrink-0" /><span className="break-words">{conn.location || 'Add meeting location'}</span></button>}
                         </div>
                         <div><p className="text-xs font-semibold text-white/70 md:sr-only">Date met</p><time dateTime={conn.dateMet} className="text-sm text-white/85">{formatDate(conn.dateMet)}</time></div>
-                        <TahoeGlassButton tone="light" onClick={() => onOpenNotes(conn)} className="min-h-11 justify-self-start px-3 py-2" contentClassName="gap-2 text-sm text-white" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} />{conn.notes ? 'Edit notes' : 'Add notes'}</TahoeGlassButton>
+                        <TahoeGlassButton type="button" tone="light" onClick={() => onOpenNotes(conn)} className="h-11 min-h-11 w-36 max-w-full shrink-0 justify-self-start px-4 py-0" contentClassName="gap-2 whitespace-nowrap text-sm leading-5 text-white" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} className="shrink-0" /><span className="whitespace-nowrap">{conn.notes ? 'Edit notes' : 'Add notes'}</span></TahoeGlassButton>
                     </TahoeGlassSurface>
                 </li>)}
             </ul>

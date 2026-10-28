@@ -12,6 +12,7 @@ import { boundedClientRead } from '@/lib/client-read'
 import Link from 'next/link'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
 import { cn } from '@/lib/utils'
+import ComingSoonBadge from '@/components/ui/ComingSoonBadge'
 
 interface MyNssoTabProps {
     initialData?: {
@@ -149,7 +150,10 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
                     </p>
                 </div>
 
-                <p className="mb-6 text-sm text-white/70 md:absolute md:right-8 md:top-8 md:mb-0 md:max-w-44">Discover nsso users — coming soon</p>
+                <div className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-2 md:absolute md:right-8 md:top-8 md:mb-0 md:max-w-44">
+                    <span className="whitespace-nowrap text-sm text-white/70">Discover nsso users</span>
+                    <ComingSoonBadge />
+                </div>
 
                 {connections.length === 0 && !loadError && <section aria-labelledby="network-start-title" className="mb-6 rounded-2xl border border-white/20 bg-black/25 p-5 text-white">
                     <h3 id="network-start-title" className="text-lg font-semibold">Start with someone you know</h3>

@@ -242,6 +242,7 @@ test('white notification statuses retain semantic announcements, contrast and ac
     const message = `${type} synthetic notice`
     await expect(page.getByRole(type === 'error' ? 'alert' : 'status')).toHaveText(message)
     const dismiss = page.getByRole('button', { name: `Dismiss notification: ${message}`, exact: true })
+    await expect(dismiss).toHaveCSS('animation-name', 'none')
     await expect(dismiss).toHaveCSS('opacity', '1')
     await expect(dismiss).toHaveCSS('background-color', 'rgb(227, 231, 237)')
     await expectTextContrast(dismiss)

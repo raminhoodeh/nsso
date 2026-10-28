@@ -413,7 +413,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                             "{product.testimonials[currentTestimonial].text}"
                                         </p>
                                         <p className="text-[15px] text-white/60">
-                                            — {product.testimonials[currentTestimonial].name}
+                                            {product.testimonials[currentTestimonial].name}
                                         </p>
                                     </div>
 
