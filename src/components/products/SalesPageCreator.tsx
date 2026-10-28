@@ -30,46 +30,46 @@ const PROMPTS = {
 
 ## Title Templates:
 **Title #1:**
-How to ______ without ________ 
+How to ______ without ________
 
 **Title #2:**
-The ___ Day _______ 
+The ___ Day _______
 
 **Title #3:**
-______ for _______ 
+______ for _______
 
 **Title #4:**
-The ___ Step _______ 
+The ___ Step _______
 
 **Title #5:**
-How to ______ and get ________ 
+How to ______ and get ________
 
 **Title #6:**
-The ______ Guide To (avoiding, getting, having) ____________ 
+The ______ Guide To (avoiding, getting, having) ____________
 
 **Title #7:**
-How To Think Like A _________ 
+How To Think Like A _________
 
 **Title #8:**
-XX Questions Every ________ Should Answer / Ask If They Want (or before)  ___________  
+XX Questions Every ________ Should Answer / Ask If They Want (or before)  ___________
 
 **Title #9:**
-______ Fatal Mistakes  
+______ Fatal Mistakes
 
 **Title #10:**
-Hidden _____ ________  
+Hidden _____ ________
 
 **Title #11:**
-______ Deadly Sins Of __________  
+______ Deadly Sins Of __________
 
 **Title #12:**
-XX Types Of ____________  
+XX Types Of ____________
 
 **Title #13:**
-XX Crucial ________  
+XX Crucial ________
 
 **Title #14:**
-______ Staggering Distinctions   
+______ Staggering Distinctions
 
 ## Title Rules:
 - Use direct and engaging words, with appropriate style and tone for my niche.
@@ -83,13 +83,13 @@ ______ Staggering Distinctions
 
 **Tagline #1:**
 
-The ____ Cure 
+The ____ Cure
 
 
 
 **Tagline #2:**
 
-The ____ Blueprint 
+The ____ Blueprint
 
 
 
@@ -101,7 +101,7 @@ The ____ Shortcut
 
 **Tagline #4:**
 
-The ____ Trap 
+The ____ Trap
 
 
 
@@ -113,19 +113,19 @@ The ____ Secret
 
 **Tagline #6:**
 
-The ____ Fix 
+The ____ Fix
 
 
 
 **Tagline #7:**
 
-The Instant ____ 
+The Instant ____
 
 
 
 **Tagline #8:**
 
-The Ultimate ____ 
+The Ultimate ____
 
 
 
@@ -137,7 +137,7 @@ The Ultimate ____
 - Make sure each title makes my [INSERT PRODUCT OR SERVICE] sound unique and specific
 - Follow the structure exactly.
 - Use direct and engaging words, with an appropriate style and tone for the Avatar.
-- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables. 
+- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables.
 - Write using active, visual, visceral, direct language. Limit/avoid passive constructions.
 - The Avatar should be able to see, feel, and experience what you're describing.
 - Amplify the emotional impact without using jargon or tropes. Always be direct without adjectives.
@@ -147,7 +147,7 @@ The Ultimate ____
 A 1-2 paragraph introduction that grabs attention and creates interest in my [PRODUCT OR SERVICE]. You can do this by asking questions, connecting with the reader's pains or struggles, creating curiosity, or promise to share a unique and credible solution to their pain.
 - Follow the structure exactly.
 - Use direct and engaging words, with an appropriate style and tone for the Avatar.
-- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables. 
+- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables.
 - Write using active, visual, visceral, direct language. Limit/avoid passive constructions.
 - The Avatar should be able to see, feel, and experience what you're describing.
 - Amplify the emotional impact without using jargon or tropes. Always be direct without adjectives.
@@ -157,17 +157,17 @@ A 1-2 paragraph introduction that grabs attention and creates interest in my [PR
 
 - Follow the structure exactly.
 - Use direct and engaging words, with an appropriate style and tone for the Avatar.
-- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables. 
+- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables.
 - Write using active, visual, visceral, direct language. Limit/avoid passive constructions.
 - The Avatar should be able to see, feel, and experience what you're describing.
 - Amplify the emotional impact without using jargon or tropes. Always be direct without adjectives.
 - Do this in a focused and relaxed state of flow without cutting corners, summarizing too much, or leaving out important details.`,
 
     value_proposition: `Ok, now I need to create a simple landing page that convinces my target audience to buy this [PRODUCT OR SERVICE] for just [INSERT PRICE]. Earlier you created the headline hook, title, bullet-point benefits [INSERT IF NECESSARY]. Lastly, my landing page should consist of:
-A short paragraph explaining why the real-world value of the [PRODUCT OR SERVICE] is worth 10-100X more than the [INSERT PRICE] I'm charging. 
+A short paragraph explaining why the real-world value of the [PRODUCT OR SERVICE] is worth 10-100X more than the [INSERT PRICE] I'm charging.
 - Follow the structure exactly.
 - Use direct and engaging words, with an appropriate style and tone for the Avatar.
-- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables. 
+- Write using simple, conversational language. At a 5th grade reading level. Short, punchy, easy to read sentences and action oriented. Short paragraphs. Limit words with more than 4 syllables.
 - Write using active, visual, visceral, direct language. Limit/avoid passive constructions.
 - The Avatar should be able to see, feel, and experience what you're describing.
 - Amplify the emotional impact without using jargon or tropes. Always be direct without adjectives.
