@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
-import { ArrowLeft, ArrowRight, ChevronDown, ImagePlus, Layout, Loader2, Plus, Sparkles, Trash2, Upload, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, ChevronDown, ImagePlus, Layout, Loader2, Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
 import { useProfile } from '@/components/providers/ProfileProvider'
 import PayPalCodeEditor from '@/components/payments/PayPalCodeEditor'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
@@ -13,6 +14,9 @@ import type { EditableValues } from '@/lib/profile-mutations'
 import GlassCard from './DashboardGlassCard'
 import ConfirmDeleteDialog from './ConfirmDeleteDialog'
 import SectionHelp from './SectionHelp'
+import AskDeityButton from '@/components/ui/AskDeityButton'
+import SalesPageCreator from '@/components/products/SalesPageCreator'
+import { offeringEditorHref, offeringEditorId, readOfferingPosition, rememberOfferingPosition } from '@/lib/offering-navigation'
 
 type View = 'list' | 'editor' | 'create'
 type InsertionPosition = 'top' | 'bottom'
@@ -25,11 +29,18 @@ function Toggle({ checked, label, onClick }: { checked: boolean; label: string; 
 }
 
 /** The section stays mounted while collapsed so payment drafts and receipts keep their owner. */
-export default function ProductsServicesEditor({ userId, expanded }: { userId: string; expanded: boolean }) {
-    const { products, createEntity, patchEntity, removeEntity, mutationState, productMutationState, productCreationResults, retryPending, refreshProfile, getRevision } = useProfile()
+export default function ProductsServicesEditor({ userId, expanded, requestedOffering, requestedCreator = false }: { userId: string; expanded: boolean; requestedOffering?: string | null; requestedCreator?: boolean }) {
+    const router = useRouter()
+    const { products, loading, createEntity, patchEntity, removeEntity, mutationState, productMutationState, productCreationResults, retryPending, refreshProfile, getRevision } = useProfile()
     const { showToast } = useToast()
-    const [view, setView] = useState<View>('list')
-    const [selectedId, setSelectedId] = useState<string | null>(null)
+    const requestedId = offeringEditorId(requestedOffering)
+    const requestedRoute = `${requestedId || ''}|${requestedCreator ? 'creator' : 'editor'}`
+    const observedRoute = useRef(requestedRoute)
+    const pendingRoute = useRef(true)
+    const localRouteEcho = useRef<string | null>(null)
+    const [view, setView] = useState<View>(requestedId ? 'editor' : 'list')
+    const [selectedId, setSelectedId] = useState<string | null>(requestedId)
+    const [creatorId, setCreatorId] = useState<string | null>(requestedCreator ? requestedId : null)
     const selected = products.find(product => product.id === selectedId) || null
     const productsRef = useRef(products)
     useEffect(() => { productsRef.current = products }, [products])
@@ -47,9 +58,13 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
     const [deleteId, setDeleteId] = useState<string | null>(null)
     const [pendingFields, setPendingFields] = useState<Record<string, number>>({})
     const [pendingPayments, setPendingPayments] = useState<Record<string, boolean>>({})
+    const [dirtyPayments, setDirtyPayments] = useState<Record<string, boolean>>({})
     const [crop, setCrop] = useState<{ productId: string; image: string } | null>(null)
     const [uploading, setUploading] = useState(false)
     const listRef = useRef<HTMLDivElement>(null)
+    const creatorRef = useRef<HTMLDivElement>(null)
+    const creatorWasOpen = useRef(Boolean(creatorId))
+    const restoreInitialPosition = useRef(Boolean(requestedId && !requestedCreator))
     const listButtons = useRef(new Map<string, HTMLButtonElement>())
     const addRef = useRef<HTMLButtonElement>(null)
     const bottomAddRef = useRef<HTMLButtonElement>(null)
@@ -99,11 +114,58 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
     }, [view, selectedId, expanded])
 
     useEffect(() => {
-        if (!selectedId || selected) return
+        if (loading || !selectedId || selected) return
         focusRequest.current = { kind: 'list', productId: null }
         setSelectedId(null)
         setView('list')
-    }, [selectedId, selected])
+    }, [loading, selectedId, selected])
+
+    const availableIds = products.map(product => product.id).join(',')
+    useEffect(() => {
+        if (requestedOffering === undefined) return
+        if (observedRoute.current !== requestedRoute) {
+            observedRoute.current = requestedRoute
+            pendingRoute.current = localRouteEcho.current !== requestedRoute
+            localRouteEcho.current = null
+        }
+        // A provider receipt may add/remove rows without being navigation.
+        // Reapply URL context only for a new route or its initial pending load.
+        if (loading || !pendingRoute.current) return
+        if (!requestedId) { pendingRoute.current = false; setCreatorId(null); setView('list'); return }
+        if (!productsRef.current.some(product => product.id === requestedId)) return
+        pendingRoute.current = false
+        setSelectedId(requestedId)
+        setView('editor')
+        setCreatorId(requestedCreator ? requestedId : null)
+    }, [requestedOffering, requestedId, requestedCreator, requestedRoute, loading, availableIds])
+
+    const creatorVisible = Boolean(creatorId && selectedId === creatorId && selected)
+    useEffect(() => {
+        if (!expanded) return
+        const returning = creatorWasOpen.current && !creatorVisible
+        creatorWasOpen.current = creatorVisible
+        if (creatorVisible) {
+            const frame = requestAnimationFrame(() => creatorRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' }))
+            return () => cancelAnimationFrame(frame)
+        }
+        if (!selectedId || (!returning && !restoreInitialPosition.current)) return
+        restoreInitialPosition.current = false
+        const position = readOfferingPosition(userId, selectedId)
+        if (!position) return
+        const origin = document.activeElement
+        let second = 0
+        const frame = requestAnimationFrame(() => {
+            second = requestAnimationFrame(() => {
+                const active = document.activeElement
+                const modal = document.querySelector('dialog:modal') || Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')).some(element => !element.closest('[hidden],[inert],[aria-hidden="true"]') && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+                if (modal || (active !== origin && active !== document.body)) return
+                if (listRef.current) listRef.current.scrollTop = position.listY
+                headingRef.current?.focus({ preventScroll: true })
+                window.scrollTo({ top: position.windowY, behavior: 'instant' })
+            })
+        })
+        return () => { cancelAnimationFrame(frame); cancelAnimationFrame(second) }
+    }, [creatorVisible, expanded, requestedId, selectedId, userId])
 
     // The mutation provider reports verified receipts even when retry was triggered elsewhere.
     useEffect(() => {
@@ -121,8 +183,9 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
             focusRequest.current = { kind: 'editor', origin: intent?.origin }
             setSelectedId(row.id)
             setView('editor')
+            router.replace(offeringEditorHref(row.id), { scroll: false })
         } else if (navigation.current.view === 'create') setView('list')
-    }, [creationLocked, productCreationResults])
+    }, [creationLocked, productCreationResults, router])
 
     function rememberListPosition() {
         listPosition.current = { windowY: window.scrollY, scrollTop: listRef.current?.scrollTop || 0 }
@@ -134,11 +197,33 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         setSelectedId(productId)
         setView('editor')
         setShowGuide(false)
+        setCreatorId(null)
+        router.replace(offeringEditorHref(productId), { scroll: false })
     }
 
     function backToOfferings() {
         focusRequest.current = { kind: 'list', productId: view === 'create' ? null : selectedId, addPosition: creationPosition.current, origin: document.activeElement }
         setView('list')
+        clearOfferingRoute()
+    }
+
+    function clearOfferingRoute() {
+        pendingRoute.current = false
+        localRouteEcho.current = '|editor'
+        router.replace('/dashboard?view=profile', { scroll: false })
+    }
+
+    function openCreator() {
+        if (!selected) return
+        rememberOfferingPosition(userId, selected.id, window.scrollY, listRef.current?.scrollTop || 0)
+        setCreatorId(selected.id)
+        router.push(offeringEditorHref(selected.id, 'creator'), { scroll: false })
+    }
+
+    function backFromCreator() {
+        if (!selectedId) return
+        setCreatorId(null)
+        router.replace(offeringEditorHref(selectedId), { scroll: false })
     }
 
     function startCreation(position: InsertionPosition) {
@@ -146,6 +231,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
         // An unresolved create keeps its original placement, name and receipt.
         if (!creationLocked) creationPosition.current = position
         focusRequest.current = { kind: 'create', origin: document.activeElement }
+        clearOfferingRoute()
         setView('create')
     }
 
@@ -175,6 +261,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
                     focusRequest.current = { kind: 'editor', origin }
                     setSelectedId(row.id)
                     setView('editor')
+                    router.replace(offeringEditorHref(row.id), { scroll: false })
                 } else if (navigation.current.view === 'create' && !navigation.current.expanded) {
                     // A completed creation must not reopen or scroll a section
                     // the user collapsed, or replace another offering's editor.
@@ -258,24 +345,24 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
     const failed = !saving && Boolean(failureState)
     const selectedBusy = selected ? Boolean(pendingFields[selected.id] || pendingPayments[selected.id] || uploading) : false
     const selectedDelete = products.find(product => product.id === deleteId)
-    const saveStatus = <div role="status" aria-live="polite" data-offering-save-status className={`${view === 'editor' ? 'mb-6 gap-x-3 gap-y-2' : 'gap-x-3 gap-y-2 border-t border-white/15 px-4 py-3 md:px-6'} flex flex-wrap items-center text-sm text-white/85`}><span>{saving ? 'Saving profile changes…' : failed ? failureState?.message || 'Your changes could not be saved.' : 'Profile changes saved.'}</span><SectionHelp title="Saving offerings">Confirmed offerings appear on your public nsso profile. Ordinary fields save automatically. This status covers profile changes, not unsaved PayPal code; PayPal has its own explicit save button and status. An optional nsso sales page has its own publication setting.</SectionHelp>{failed && <TahoeGlassButton type="button" disabled={retrying} onClick={() => { void retrySaves() }} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">{retrying ? 'Checking save status…' : 'Check status and retry'}</TahoeGlassButton>}</div>
+    const saveStatus = (saving || failed) && <div role="status" aria-live="polite" data-offering-save-status className={`${view === 'editor' ? 'mb-6 gap-x-3 gap-y-2' : 'gap-x-3 gap-y-2 border-t border-white/15 px-4 py-3 md:px-6'} flex flex-wrap items-center text-sm text-white/85`}><span>{saving ? 'Saving profile changes…' : failureState?.message || 'Your changes could not be saved.'}</span><SectionHelp title="Saving offerings">Confirmed offerings appear on your public nsso profile. Ordinary fields save automatically. This status covers profile changes, not unsaved PayPal code; PayPal has its own explicit save button and status. An optional nsso sales page has its own publication setting.</SectionHelp>{failed && <TahoeGlassButton type="button" disabled={retrying} onClick={() => { void retrySaves() }} tone="light" className="min-h-11 px-4 py-2" contentClassName="text-sm text-white">{retrying ? 'Checking save status…' : 'Check status and retry'}</TahoeGlassButton>}</div>
 
     return <>
         <GlassCard radius="var(--editor-card-radius)" className="w-full [--editor-card-radius:28px] md:[--editor-card-radius:40px]">
-            <div className="grid min-w-0 md:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]" data-editor-card="products" data-offerings-view={view}>
+            <div hidden={creatorVisible} className={creatorVisible ? 'hidden' : 'grid min-w-0 md:grid-cols-[minmax(240px,300px)_minmax(0,1fr)]'} data-editor-card="products" data-offerings-view={view}>
                 <aside className={`${view === 'list' ? 'block' : 'hidden'} min-w-0 border-white/15 p-4 md:block md:border-r md:p-6`} aria-label="Your offerings">
                     <TahoeGlassButton tone="light" ref={addRef} type="button" onClick={() => startCreation('top')} disabled={creating} semanticTint="light" className="min-h-11 w-full px-4 py-3" contentClassName="gap-2 text-left font-semibold text-white">
                         <Plus size={18} aria-hidden="true" /> Add product or service
                     </TahoeGlassButton>
                     <div className="mb-3 mt-5 flex items-center justify-between gap-2">
                         <p className="text-sm font-medium text-white/90">{products.length ? 'Choose an offering to edit.' : 'Your offerings'}</p>
-                        <TahoeGlassButton tone="light" type="button" onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', { detail: { initialMessage: 'I want to add a product or service...' } }))} className="h-11 w-11 shrink-0 p-0" contentClassName="text-cyan-300" aria-label="Ask Deity about products and services"><Sparkles size={16} aria-hidden="true" /></TahoeGlassButton>
+                        <AskDeityButton onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', { detail: { initialMessage: 'I want to add a product or service...' } }))} aria-label="Ask Deity about products and services" />
                     </div>
                     <div ref={listRef} data-offerings-list className="space-y-3 md:max-h-[640px] md:overflow-y-auto md:pr-1">
                         {products.map(product => <TahoeGlassButton tone="light" key={product.id} ref={node => { if (node) listButtons.current.set(product.id, node); else listButtons.current.delete(product.id) }} type="button" onClick={() => openOffering(product.id)} aria-label={`Edit ${product.name || 'Untitled offering'}`} aria-current={selectedId === product.id ? 'true' : undefined} semanticTint={selectedId === product.id ? 'light' : 'dark'} className="min-h-16 w-full rounded-2xl px-3 py-3" contentClassName="w-full min-w-0 justify-start gap-3 text-left text-white">
                             {product.image_url ? <img src={product.image_url} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover" /> : <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10"><ImagePlus size={19} aria-hidden="true" /></span>}
                             <span className="min-w-0 flex-1 break-words text-sm font-medium leading-snug">{product.name || 'Untitled offering'}</span>
-                            <span className="flex shrink-0 items-center gap-1 text-xs text-white/85">Edit <ArrowRight size={14} aria-hidden="true" /></span>
+                            <Pencil className="shrink-0 text-white/85" size={16} aria-hidden="true" />
                         </TahoeGlassButton>)}
                         {!products.length && <div className="rounded-2xl border border-dashed border-white/25 px-4 py-7 text-center"><ImagePlus className="mx-auto mb-3 text-white/60" size={27} aria-hidden="true" /><p className="font-semibold text-white">Share what you offer</p><p className="mt-2 text-sm leading-relaxed text-white/80">Add your first product or service to your profile.</p></div>}
                     </div>
@@ -321,19 +408,20 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
                                 {selected?.paypal_active && <button type="button" aria-expanded={showGuide} aria-controls="paypal-guide" onClick={() => setShowGuide(value => !value)} className="mb-3 min-h-11 rounded-lg text-sm text-white/80 underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-white">Where do I find the code?</button>}
                                 {selected?.paypal_active && showGuide && <TahoeGlassDirectBackdropBoundaryContext.Provider value={true}><TahoeGlassSurface id="paypal-guide" variant="popover" radius={12} tone="light" data-tahoe-readable-overlay="true" className="mb-4 overflow-hidden" contentClassName="rounded-[inherit] bg-[#202126]"><div className="flex items-center justify-between gap-3 border-b border-white/10 p-3"><span className="text-xs font-medium text-white/85">PayPal Dashboard &gt; Copy Code</span><TahoeGlassButton tone="light" type="button" onClick={() => setShowGuide(false)} aria-label="Close PayPal guide" className="h-11 w-11 p-0" contentClassName="text-white"><X size={16} /></TahoeGlassButton></div><a href="https://youtu.be/9KihkWujsaI?si=hwAHbrQDLvOog6U8&t=28" target="_blank" rel="noopener noreferrer" className="block p-4"><img src="/guide-paypal.png" alt="Guide: Copy the Button HTML Code. Open video tutorial." className="max-w-full rounded-lg border border-white/15" /></a></TahoeGlassSurface></TahoeGlassDirectBackdropBoundaryContext.Provider>}
                                 {products.map(product => <div key={`${userId}:${product.id}`} hidden={selectedId !== product.id || !product.paypal_active}>
-                                    <PayPalCodeEditor productId={product.id} accountId={userId} active={expanded && view === 'editor' && selectedId === product.id && product.paypal_active} getRevision={getRevision} refreshRevision={refreshProfile} initialHtml={product.paypal_html} onSavingChange={value => setPendingPayments(current => current[product.id] === value ? current : { ...current, [product.id]: value })} onSaved={async () => { if (productsRef.current.some(row => row.id === product.id) && !await refreshProfile()) throw new Error('The latest product details could not be refreshed.') }} />
+                                    <PayPalCodeEditor productId={product.id} accountId={userId} active={expanded && !creatorVisible && view === 'editor' && selectedId === product.id && product.paypal_active} getRevision={getRevision} refreshRevision={refreshProfile} initialHtml={product.paypal_html} onDirtyChange={value => setDirtyPayments(current => current[product.id] === value ? current : { ...current, [product.id]: value })} onSavingChange={value => setPendingPayments(current => current[product.id] === value ? current : { ...current, [product.id]: value })} onSaved={async () => { if (productsRef.current.some(row => row.id === product.id) && !await refreshProfile()) throw new Error('The latest product details could not be refreshed.') }} />
                                 </div>)}
                             </TahoeGlassSurface>
                         </section>
 
                         {selected && <>
-                            <section className="mt-7 border-t border-white/15 pt-6" aria-labelledby="offering-sales-page-heading"><div className="mb-3 flex items-center gap-1"><h4 id="offering-sales-page-heading" className="text-base font-bold text-white">Optional sales page</h4><SectionHelp title="nsso sales page">Build a separate nsso page with more detail about this offering. It does not process payments or deliver products. Buyers use your enabled purchase URL or PayPal checkout.</SectionHelp></div><TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" contentClassName="p-4"><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-white">Publish nsso sales page</span><Toggle checked={selected.sales_page_published ?? selected.sales_page_active} label="Enable product sales page" onClick={() => { const publish = !(selected.sales_page_published ?? selected.sales_page_active); void updateOffering(selected.id, { sales_page_active: publish, sales_page_published: publish }) }} /></div><div className="mt-2 flex items-center gap-1"><span className="text-xs text-white/80">{selected.sales_page_published == null ? 'Legacy public URL' : selected.sales_page_published ? 'Sales page is public' : 'Sales page is not published'}</span>{selected.sales_page_published == null && <SectionHelp title="Legacy sales page">This existing sales-page URL may already be public. Choose a publication setting to explicitly change its visibility. Your profile offering stays public.</SectionHelp>}</div><div className="mt-4 flex flex-wrap gap-3"><TahoeGlassButton tone="light" type="button" onClick={() => window.open(`/dashboard/products/${selected.id}/creator`, '_blank', 'noopener,noreferrer')} className="min-h-11 px-4 py-3" contentClassName="gap-2 text-sm text-white"><Layout size={16} aria-hidden="true" />Open Sales Page Creator</TahoeGlassButton>{selected.sales_page_published == null && !selected.sales_page_active && <TahoeGlassButton tone="light" type="button" onClick={() => { void updateOffering(selected.id, { sales_page_published: false, sales_page_active: false }) }} className="min-h-11 px-3 py-3" contentClassName="text-sm text-white/85">Unpublish legacy page</TahoeGlassButton>}</div></TahoeGlassSurface></section>
+                            <section className="mt-7 border-t border-white/15 pt-6" aria-labelledby="offering-sales-page-heading"><div className="mb-3 flex items-center gap-1"><h4 id="offering-sales-page-heading" className="text-base font-bold text-white">Optional sales page</h4><SectionHelp title="nsso sales page">Build a separate nsso page with more detail about this offering. It does not process payments or deliver products. Buyers use your enabled purchase URL or PayPal checkout.</SectionHelp></div><TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" contentClassName="p-4"><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium text-white">Publish nsso sales page</span><Toggle checked={selected.sales_page_published ?? selected.sales_page_active} label="Enable product sales page" onClick={() => { const publish = !(selected.sales_page_published ?? selected.sales_page_active); void updateOffering(selected.id, { sales_page_active: publish, sales_page_published: publish }) }} /></div><div className="mt-2 flex items-center gap-1"><span className="text-xs text-white/80">{selected.sales_page_published == null ? 'Legacy public URL' : selected.sales_page_published ? 'Sales page is public' : 'Sales page is not published'}</span>{selected.sales_page_published == null && <SectionHelp title="Legacy sales page">This existing sales-page URL may already be public. Choose a publication setting to explicitly change its visibility. Your profile offering stays public.</SectionHelp>}</div><div className="mt-4 flex flex-wrap gap-3"><TahoeGlassButton tone="light" type="button" onClick={openCreator} className="min-h-11 px-4 py-3" contentClassName="gap-2 text-sm text-white"><Layout size={16} aria-hidden="true" />Open Sales Page Creator</TahoeGlassButton>{selected.sales_page_published == null && !selected.sales_page_active && <TahoeGlassButton tone="light" type="button" onClick={() => { void updateOffering(selected.id, { sales_page_published: false, sales_page_active: false }) }} className="min-h-11 px-3 py-3" contentClassName="text-sm text-white/85">Unpublish legacy page</TahoeGlassButton>}</div></TahoeGlassSurface></section>
                             <div className="mt-8 border-t border-white/15 pt-5"><TahoeGlassButton tone="light" type="button" disabled={selectedBusy} onClick={() => setDeleteId(selected.id)} className="min-h-11 px-3 py-2" contentClassName="gap-2 text-sm text-rose-200"><Trash2 size={16} aria-hidden="true" />Delete offering</TahoeGlassButton>{selectedBusy && <span className="ml-3 text-xs text-white/70">Wait for saving to finish.</span>}</div>
                         </>}
                     </div>
                     {!selected && view !== 'create' && <div className="hidden min-h-[240px] items-center justify-center md:flex"><p className="text-center text-sm text-white/80">{products.length ? 'Choose an offering to edit, or select “Add product or service”.' : 'Select “Add product or service” to get started.'}</p></div>}
                 </div>
             </div>
+            {creatorVisible && creatorId && <div ref={creatorRef} className="scroll-mt-28"><SalesPageCreator key={`${userId}:${creatorId}`} productId={creatorId} embedded onBack={backFromCreator} externalPaymentDraft={Object.values(dirtyPayments).some(Boolean) || Object.values(pendingPayments).some(Boolean)} /></div>}
             {view !== 'editor' && saveStatus}
         </GlassCard>
         {crop && <ImageCropperModal isOpen={true} onClose={() => { if (!uploading) setCrop(null) }} imageSrc={crop.image} aspectRatio={1} onCropComplete={uploadCrop} loading={uploading} />}
@@ -343,6 +431,7 @@ export default function ProductsServicesEditor({ userId, expanded }: { userId: s
             focusRequest.current = { kind: 'list', productId: null }
             setSelectedId(null)
             setView('list')
+            clearOfferingRoute()
             return true
         }} />
     </>

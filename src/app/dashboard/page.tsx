@@ -26,7 +26,6 @@ import { useProfile } from '@/components/providers/ProfileProvider'
 import type { ProfilePatch } from '@/lib/profile-mutations'
 import ImageCropperModal from '@/components/ui/ImageCropperModal'
 import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-client'
-import { Sparkles } from 'lucide-react'
 import type { EarningsStats } from '@/lib/earnings'
 
 import {
@@ -46,6 +45,7 @@ import {
 } from '@dnd-kit/sortable'
 import { SortableLinkItem } from './components/SortableLinkItem'
 import SectionHelp from './components/SectionHelp'
+import AskDeityButton from '@/components/ui/AskDeityButton'
 
 function DashboardContent() {
     const { user, loading, error, refreshUser } = useUser()
@@ -366,27 +366,24 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                 {/* Profile Completeness Banner */}
                 {profileCompleteness < 20 && (
                     <TahoeGlassSurface
-                        as="button"
-                        type="button"
                         variant="card"
                         radius={20}
                         tone="light"
                         semanticTint="dark"
                         semanticTintOpacity={0.38}
-                        className="w-full overflow-hidden text-left hover:scale-[1.01]"
-                        contentClassName="p-6 flex items-center gap-4"
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
-                            detail: { initialMessage: "What is missing from my profile?" }
-                        }))}
-                        aria-label="Ask Deity what is missing from my profile"
+                        className="w-full overflow-hidden text-left"
+                        contentClassName="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 p-4"
                     >
-                            <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full ring-1 ring-white/25">
-                                <Sparkles className="w-6 h-6 text-white" />
+                            <span className="min-w-0 flex-1">
+                                <span className="block text-base font-semibold text-white">Let Deity help you build your profile</span>
+                                <span className="block text-sm text-white/75">Your profile is {profileCompleteness}% complete. Ask Deity for personalized assistance.</span>
                             </span>
-                            <span className="flex-1">
-                                <span className="mb-1 block text-lg font-semibold text-white">Let Deity help you build your profile</span>
-                                <span className="block text-sm text-white/60">Your profile is {profileCompleteness}% complete. Click here for personalized assistance.</span>
-                            </span>
+                            <AskDeityButton
+                                onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                    detail: { initialMessage: "What is missing from my profile?" }
+                                }))}
+                                aria-label="Ask Deity what is missing from my profile"
+                            />
                     </TahoeGlassSurface>
                 )}
 
@@ -404,16 +401,9 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                             </h2>
 
                             {/* Ask Deity Button */}
-                            <TahoeGlassButton tone="light"
-                                onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                            <AskDeityButton onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                     detail: { initialMessage: "How can you help me improve my profile?" }
-                                }))}
-                                className="min-h-11 shrink-0 px-2 py-1 sm:px-3"
-                                contentClassName="text-white/90"
-                            >
-                                <Sparkles className="w-4 h-4" />
-                                <span className="text-xs font-medium sm:text-sm">Ask Deity</span>
-                            </TahoeGlassButton>
+                                }))} aria-label="Ask Deity about my profile" />
                         </div>
 
                         {/* Profile Content */}
@@ -611,17 +601,9 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     </div>
                                     <div className="flex items-center gap-1 sm:gap-2">
                                         {/* Ask Deity Button */}
-                                        <TahoeGlassButton tone="light"
-                                            onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                                        <AskDeityButton onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                                                 detail: { initialMessage: "Help me find links to add to my profile..." }
-                                            }))}
-                                            className="h-11 w-11 shrink-0 p-0 sm:w-auto sm:px-3"
-                                            contentClassName="text-white/90"
-                                            aria-label="Ask Deity about links"
-                                        >
-                                            <Sparkles className="w-4 h-4" />
-                                            <span className="text-xs font-medium hidden sm:inline">Ask Deity</span>
-                                        </TahoeGlassButton>
+                                            }))} aria-label="Ask Deity about links" />
                                         <TahoeGlassButton tone="light"
                                             onClick={() => { void addProfileItem('link', 'top') }}
                                             aria-disabled={addingCollection !== null}
@@ -661,7 +643,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                             No links yet. Choose Add Link to add your first link.
                                         </p>
                                     )}
-                                    {links.length > 0 && <TahoeGlassButton type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'link'} onClick={() => { void addProfileItem('link', 'bottom') }} className="min-h-11 w-full px-3 py-2" aria-label="Add link at bottom">+ Add Link</TahoeGlassButton>}
+                                    {links.length > 0 && <TahoeGlassButton tone="light" contentClassName="gap-2 text-white font-medium" type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'link'} onClick={() => { void addProfileItem('link', 'bottom') }} className="min-h-11 w-full px-3 py-2" aria-label="Add link at bottom">+ Add Link</TahoeGlassButton>}
                                 </div>
                             </GlassCard>
 
@@ -708,12 +690,12 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                             No contact methods yet. Choose Add Contact to add one.
                                         </p>
                                     )}
-                                    {contacts.length > 0 && <TahoeGlassButton type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'contact'} onClick={() => { void addProfileItem('contact', 'bottom') }} className="min-h-11 w-full px-3 py-2" aria-label="Add contact method at bottom">+ Add Contact</TahoeGlassButton>}
+                                    {contacts.length > 0 && <TahoeGlassButton tone="light" contentClassName="gap-2 text-white font-medium" type="button" aria-disabled={addingCollection !== null} aria-busy={addingCollection === 'contact'} onClick={() => { void addProfileItem('contact', 'bottom') }} className="min-h-11 w-full px-3 py-2" aria-label="Add contact method at bottom">+ Add Contact</TahoeGlassButton>}
                                 </div>
                             </GlassCard>
 
                             {/* Advanced Mode Card (V2) */}
-                            {user && <AdvancedModeCard userId={user.id} />}
+                            {user && <AdvancedModeCard userId={user.id} requestedOffering={searchParams.get('offering')} requestedCreator={searchParams.get('offeringView') === 'creator'} />}
                         </>
                     )
                 }

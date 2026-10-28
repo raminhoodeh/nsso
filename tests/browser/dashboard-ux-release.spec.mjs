@@ -15,7 +15,7 @@ test.beforeAll(async () => {
         plugins: [{ name: 'dashboard-ux-fixture', setup(builder) {
             builder.onResolve({ filter: /^(?:next\/(?:navigation|image|link)|@\/lib\/supabase\/client|@\/components\/providers\/ProfileProvider|@\/components\/providers\/UserProvider|@\/components\/providers\/UIProvider|@\/components\/ui\/Toast|@\/components\/ui\/tahoe-glass|@\/components\/payments\/PayPalCodeEditor|@\/app\/dashboard\/components\/DashboardGlassCard)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path === 'next/navigation' ? 'export const usePathname=()=>"/dashboard";export const useSearchParams=()=>new URLSearchParams(location.search);export const useRouter=()=>({push:path=>window.destinations.push(path),prefetch(){}});'
+                path === 'next/navigation' ? 'export const usePathname=()=>"/dashboard";export const useSearchParams=()=>new URLSearchParams(location.search);export const useRouter=()=>({push:path=>window.destinations.push(path),replace(){},prefetch(){}});'
                     : path === 'next/link' ? 'export default props=><a {...props}/>;'
                         : path === 'next/image' ? 'export default ({priority,fill,...props})=><img {...props}/>;'
                             : path.endsWith('supabase/client') ? 'export const createClient=()=>({auth:{signOut:async()=>({error:null})}});'

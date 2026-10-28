@@ -143,7 +143,7 @@ test('a verified owner loads the authenticated draft fallback and every checkout
     await page.getByRole('button', { name: 'Link to Purchase', exact: true }).first().press('Enter')
     await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
     await page.getByRole('button', { name: 'Back to Sales Page Creator' }).click()
-    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([`/dashboard/products/${productId}/creator`])
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([`/dashboard?view=profile&offering=${productId}&offeringView=creator`])
     expect(await page.evaluate(() => window.fixturePrivateCalls)).toHaveLength(1)
     expect(requests[0].path).toBe('/rest/v1/rpc/get_product_details')
     expect(errors).toEqual([])

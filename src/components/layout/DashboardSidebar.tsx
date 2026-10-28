@@ -158,21 +158,13 @@ function DashboardSidebarContent({
                             className={cn(
                                 "group relative w-full px-4 py-3 transition-all duration-200",
                                 isActive
-                                    ? "text-white"
+                                    ? "text-white ring-1 ring-white/65"
                                     : "text-white/80 hover:text-white",
                                 item.comingSoon && "cursor-pointer"
                             )}
                             contentClassName="w-full justify-start gap-3 text-inherit"
                             aria-current={isActive ? 'page' : undefined}
                         >
-                            {/* Active Indicator */}
-                            {isActive && (
-                                <span
-                                    aria-hidden="true"
-                                    className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-white/80 blur-[2px]"
-                                />
-                            )}
-
                             <Icon
                                 size={20}
                                 className={cn(
@@ -239,11 +231,11 @@ function DashboardSidebarContent({
                     onClick={event => { event.currentTarget.focus(); onDeleteProfile() }}
                     radius={12}
                     tone="light"
-                    className="group w-full px-4 py-3 text-left text-red-300 transition-all hover:text-red-200"
+                    className="group w-full px-4 py-3 text-left text-slate-300 transition-all hover:text-slate-100"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <Trash2 size={18} />
-                    <span className="font-medium text-[14px]">Delete my profile</span>
+                    <span className="font-normal text-[13px]">Delete my profile</span>
                 </TahoeGlassButton>}
 
                 {/* Sign Out */}
@@ -254,10 +246,10 @@ function DashboardSidebarContent({
                     tone="light"
                     semanticTint="dark"
                     semanticTintOpacity={0.1}
-                    className="group w-full px-4 py-3 text-left text-red-200 transition-all hover:text-red-100"
+                    className="group w-full px-4 py-3 text-left text-red-100 transition-all hover:text-red-400 focus-visible:text-red-400"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
-                    <LogOut size={18} className="group-hover:text-red-100 transition-colors" />
+                    <LogOut size={18} className="transition-colors" />
                     <span className="font-medium text-[14px]">{signingOut ? 'Signing out…' : 'Sign Out'}</span>
                 </TahoeGlassButton>
             </div>
