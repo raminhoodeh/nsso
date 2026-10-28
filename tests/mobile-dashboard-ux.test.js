@@ -52,7 +52,7 @@ test('experience and products are exclusive sibling accordions', () => {
     )
     assert.match(
         advancedModeSource,
-        /const \[expandedPanel, setExpandedPanel\] = useState<ExpandedPanel>\(null\)/
+        /const \[expandedPanel, setExpandedPanel\] = useState<ExpandedPanel>\(requestedOffering \? \'products\' : null\)/
     )
     assert.doesNotMatch(advancedModeSource, /setBackgroundDimmed/)
     assert.doesNotMatch(advancedModeSource, /useUI/)
@@ -157,7 +157,7 @@ test('advanced editor drag handles are native focusable keyboard controls', () =
 
 test('mobile form fields avoid the old nested padding gutter', () => {
     assert.match(advancedModeSource, /p-3 md:p-4/)
-    assert.match(advancedModeSource, /grid gap-3 md:gap-4 md:pl-8/)
+    assert.match(advancedModeSource, /grid min-w-0 gap-3 md:gap-4/)
     assert.match(advancedModeSource, /p-3 md:max-h-\[800px\] md:overflow-y-auto md:p-10/)
     assert.match(advancedModeSource, /md:min-h-\[600px\]/)
     assert.doesNotMatch(advancedModeSource, /className="relative min-h-\[600px\]/)

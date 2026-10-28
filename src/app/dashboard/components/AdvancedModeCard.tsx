@@ -2,7 +2,7 @@
 
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState, useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react'
-import { Plus, X, ChevronDown, ChevronUp, Upload, Loader2, Sparkles, GripVertical } from 'lucide-react'
+import { Plus, X, ChevronDown, ChevronUp, Upload, Loader2, GripVertical } from 'lucide-react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent, type DraggableAttributes, type DraggableSyntheticListeners } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -15,9 +15,12 @@ import { uploadProfileMedia, runProfileMediaAttempt } from '@/lib/profile-media-
 import { useToast } from '@/components/ui/Toast'
 import { TahoeGlassButton, TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import ProductsServicesEditor from './ProductsServicesEditor'
+import AskDeityButton from '@/components/ui/AskDeityButton'
 
 interface AdvancedModeCardProps {
     userId: string
+    requestedOffering?: string | null
+    requestedCreator?: boolean
 }
 
 type ActiveSection = 'experiences' | 'qualifications' | 'projects'
@@ -52,15 +55,19 @@ function SortableItem({ id, children, className }: { id: string; children: (prop
     )
 }
 
-export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
+export default function AdvancedModeCard({ userId, requestedOffering = null, requestedCreator = false }: AdvancedModeCardProps) {
     const { showToast } = useToast()
-    const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(null)
+    const [expandedPanel, setExpandedPanel] = useState<ExpandedPanel>(requestedOffering ? 'products' : null)
+    useEffect(() => {
+        if (!requestedOffering) return
+        const frame = requestAnimationFrame(() => setExpandedPanel('products'))
+        return () => cancelAnimationFrame(frame)
+    }, [requestedOffering, requestedCreator])
     const [activeSection, setActiveSection] = useState<ActiveSection>('experiences')
     // const [isLoading, setIsLoading] = useState(false) // Driven by provider now
     const [isUploading, setIsUploading] = useState(false)
     const [adding, setAdding] = useState<ExperienceKind | null>(null)
     const addingRef = useRef(false)
-    const primaryFields = useRef(new Map<string, HTMLInputElement>())
     const [newField, setNewField] = useState<{ section: ActiveSection; id: string; origin: Element | null; generation: number } | null>(null)
     const activeEditor = useRef({ expandedPanel, activeSection, generation: 0 })
     useLayoutEffect(() => {
@@ -155,8 +162,8 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             const frame = requestAnimationFrame(() => setNewField(null))
             return () => cancelAnimationFrame(frame)
         }
-        const field = primaryFields.current.get(newField.id)
-        if (!field) return
+        const field = document.getElementById(`profile-${newField.section}-${newField.id}`)
+        if (!(field instanceof HTMLInputElement)) return
         const frame = requestAnimationFrame(() => {
             const active = document.activeElement
             // The closed Deity shell stays mounted to preserve conversation
@@ -335,16 +342,9 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Job titles</h4>
-                    <TahoeGlassButton tone="light"
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                    <AskDeityButton onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my work experience..." }
-                        }))}
-                        className="min-h-11 min-w-11 shrink-0 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
-                        contentClassName="gap-1.5 text-cyan-100"
-                    >
-                        <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
-                        <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
-                    </TahoeGlassButton>
+                        }))} aria-label="Ask Deity about job titles" />
                 </div>
                 <TahoeGlassButton tone="light" type="button" onClick={() => { void addExperience('top') }} aria-disabled={adding !== null} aria-busy={adding === 'experience'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add experience">
                     <Plus size={16} />
@@ -359,39 +359,32 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <SortableItem key={exp.id} id={exp.id} className="relative group p-3 md:p-4">
                                 {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div className="mb-3 flex items-center justify-between gap-3 md:mb-0">
-                                            <button
-                                                ref={setActivatorNodeRef}
-                                                type="button"
-                                                {...attributes}
-                                                {...listeners}
-                                                className="z-20 flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/40 outline-none transition-colors hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing md:absolute md:left-4 md:top-4 md:h-8 md:w-8 md:text-white/20"
-                                                aria-label="Drag to reorder experience"
-                                            >
-                                                <GripVertical size={16} />
-                                            </button>
-                                            <TahoeGlassButton tone="light"
-                                                onClick={() => deleteExperience(exp.id)}
-                                                className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
-                                                contentClassName="text-red-200"
-                                                aria-label="Delete experience"
-                                            >
-                                                <X size={18} />
-                                            </TahoeGlassButton>
-                                        </div>
-
-                                        <div className="grid gap-3 md:gap-4 md:pl-8">
-                                            <div>
-                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input ref={node => { if (node) primaryFields.current.set(exp.id, node); else primaryFields.current.delete(exp.id) }} type="text" aria-label="Company" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
-                                                </TahoeGlassField>
+                                        <div className="grid min-w-0 gap-3 md:gap-4">
+                                            <div data-editor-primary-row className="grid min-w-0 grid-cols-[minmax(0,7fr)_minmax(44px,3fr)] items-end gap-3">
+                                                <div data-editor-primary-field className="min-w-0">
+                                                    <div>
+                                                        <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Company</label>
+                                                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
+                                                            <input id={`profile-experiences-${exp.id}`} type="text" aria-label="Company" value={exp.company_name} onChange={(e) => updateExperience(exp.id, { company_name: e.target.value })} placeholder="e.g. Google" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
+                                                        </TahoeGlassField>
+                                                    </div>
+                                                </div>
+                                                <TahoeGlassButton tone="light" type="button" onClick={() => deleteExperience(exp.id)} className="h-11 w-11 justify-self-end p-0" contentClassName="text-red-200" aria-label="Delete experience">
+                                                    <X size={18} aria-hidden="true" />
+                                                </TahoeGlassButton>
                                             </div>
-                                            <div>
-                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" aria-label="Role" value={exp.job_title} onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })} placeholder="e.g. Senior Product Designer" className="text-white font-medium placeholder:text-white/60" />
-                                                </TahoeGlassField>
+                                            <div data-editor-detail-row className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-end gap-2">
+                                                <button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing" aria-label="Drag to reorder experience">
+                                                    <GripVertical size={18} aria-hidden="true" />
+                                                </button>
+                                                <div className="min-w-0">
+                                                    <div>
+                                                        <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Role</label>
+                                                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
+                                                            <input type="text" aria-label="Role" value={exp.job_title} onChange={(e) => updateExperience(exp.id, { job_title: e.target.value })} placeholder="e.g. Senior Product Designer" className="text-white font-medium placeholder:text-white/60" />
+                                                        </TahoeGlassField>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 md:gap-4">
                                                 <div className="min-w-0">
@@ -426,16 +419,9 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Qualifications</h4>
-                    <TahoeGlassButton tone="light"
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                    <AskDeityButton onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add my qualifications..." }
-                        }))}
-                        className="min-h-11 min-w-11 shrink-0 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
-                        contentClassName="gap-1.5 text-cyan-100"
-                    >
-                        <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
-                        <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
-                    </TahoeGlassButton>
+                        }))} aria-label="Ask Deity about qualifications" />
                 </div>
                 <TahoeGlassButton tone="light" type="button" onClick={() => { void addQualification('top') }} aria-disabled={adding !== null} aria-busy={adding === 'qualification'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add qualification">
                     <Plus size={16} />
@@ -449,39 +435,32 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <SortableItem key={qual.id} id={qual.id} className="relative group p-3 md:p-4">
                                 {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div className="mb-3 flex items-center justify-between gap-3 md:mb-0">
-                                            <button
-                                                ref={setActivatorNodeRef}
-                                                type="button"
-                                                {...attributes}
-                                                {...listeners}
-                                                className="z-20 flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/40 outline-none transition-colors hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing md:absolute md:left-4 md:top-4 md:h-8 md:w-8 md:text-white/20"
-                                                aria-label="Drag to reorder qualification"
-                                            >
-                                                <GripVertical size={16} />
-                                            </button>
-                                            <TahoeGlassButton tone="light"
-                                                onClick={() => deleteQualification(qual.id)}
-                                                className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
-                                                contentClassName="text-red-200"
-                                                aria-label="Delete qualification"
-                                            >
-                                                <X size={18} />
-                                            </TahoeGlassButton>
-                                        </div>
-
-                                        <div className="grid gap-3 md:gap-4 md:pl-8">
-                                            <div>
-                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input ref={node => { if (node) primaryFields.current.set(qual.id, node); else primaryFields.current.delete(qual.id) }} type="text" aria-label="Institution" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
-                                                </TahoeGlassField>
+                                        <div className="grid min-w-0 gap-3 md:gap-4">
+                                            <div data-editor-primary-row className="grid min-w-0 grid-cols-[minmax(0,7fr)_minmax(44px,3fr)] items-end gap-3">
+                                                <div data-editor-primary-field className="min-w-0">
+                                                    <div>
+                                                        <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Institution</label>
+                                                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
+                                                            <input id={`profile-qualifications-${qual.id}`} type="text" aria-label="Institution" value={qual.institution} onChange={(e) => updateQualification(qual.id, { institution: e.target.value })} placeholder="e.g. Stanford University" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
+                                                        </TahoeGlassField>
+                                                    </div>
+                                                </div>
+                                                <TahoeGlassButton tone="light" type="button" onClick={() => deleteQualification(qual.id)} className="h-11 w-11 justify-self-end p-0" contentClassName="text-red-200" aria-label="Delete qualification">
+                                                    <X size={18} aria-hidden="true" />
+                                                </TahoeGlassButton>
                                             </div>
-                                            <div>
-                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" aria-label="Qualification" value={qual.qualification_name} onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })} placeholder="e.g. MSc Computer Science" className="text-white font-medium placeholder:text-white/60" />
-                                                </TahoeGlassField>
+                                            <div data-editor-detail-row className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-end gap-2">
+                                                <button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing" aria-label="Drag to reorder qualification">
+                                                    <GripVertical size={18} aria-hidden="true" />
+                                                </button>
+                                                <div className="min-w-0">
+                                                    <div>
+                                                        <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Qualification</label>
+                                                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
+                                                            <input type="text" aria-label="Qualification" value={qual.qualification_name} onChange={(e) => updateQualification(qual.id, { qualification_name: e.target.value })} placeholder="e.g. MSc Computer Science" className="text-white font-medium placeholder:text-white/60" />
+                                                        </TahoeGlassField>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 md:gap-4">
                                                 <div className="min-w-0">
@@ -516,16 +495,9 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
             <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-3">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <h4 className="text-white font-semibold text-lg">Projects</h4>
-                    <TahoeGlassButton tone="light"
-                        onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
+                    <AskDeityButton onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
                             detail: { initialMessage: "I want to add a project..." }
-                        }))}
-                        className="min-h-11 min-w-11 shrink-0 px-3 py-2 group md:min-h-0 md:min-w-0 md:py-1"
-                        contentClassName="gap-1.5 text-cyan-100"
-                    >
-                        <Sparkles size={12} className="text-cyan-400 group-hover:text-cyan-300" />
-                        <span className="hidden text-xs font-medium text-cyan-100 group-hover:text-white min-[360px]:inline">Ask Deity</span>
-                    </TahoeGlassButton>
+                        }))} aria-label="Ask Deity about projects" />
                 </div>
                 <TahoeGlassButton tone="light" type="button" onClick={() => { void addProject('top') }} aria-disabled={adding !== null} aria-busy={adding === 'project'} className="h-11 w-11 shrink-0 p-0 aria-disabled:cursor-wait aria-disabled:opacity-50 md:h-8 md:w-8" contentClassName="text-white" aria-label="Add project">
                     <Plus size={16} />
@@ -539,39 +511,32 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                             <SortableItem key={proj.id} id={proj.id} className="relative group p-3 md:p-4">
                                 {({ attributes, listeners, setActivatorNodeRef }) => (
                                     <>
-                                        <div className="mb-3 flex items-center justify-between gap-3 md:mb-0">
-                                            <button
-                                                ref={setActivatorNodeRef}
-                                                type="button"
-                                                {...attributes}
-                                                {...listeners}
-                                                className="z-20 flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/40 outline-none transition-colors hover:text-white/70 focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing md:absolute md:left-4 md:top-4 md:h-8 md:w-8 md:text-white/20"
-                                                aria-label="Drag to reorder project"
-                                            >
-                                                <GripVertical size={16} />
-                                            </button>
-                                            <TahoeGlassButton tone="light"
-                                                onClick={() => deleteProject(proj.id)}
-                                                className="z-20 h-11 w-11 p-0 md:absolute md:right-4 md:top-4 md:h-10 md:w-10"
-                                                contentClassName="text-red-200"
-                                                aria-label="Delete project"
-                                            >
-                                                <X size={18} />
-                                            </TahoeGlassButton>
-                                        </div>
-
-                                        <div className="grid gap-3 md:gap-4 md:pl-8">
-                                            <div>
-                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input ref={node => { if (node) primaryFields.current.set(proj.id, node); else primaryFields.current.delete(proj.id) }} type="text" aria-label="Project name" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
-                                                </TahoeGlassField>
+                                        <div className="grid min-w-0 gap-3 md:gap-4">
+                                            <div data-editor-primary-row className="grid min-w-0 grid-cols-[minmax(0,7fr)_minmax(44px,3fr)] items-end gap-3">
+                                                <div data-editor-primary-field className="min-w-0">
+                                                    <div>
+                                                        <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project Name</label>
+                                                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
+                                                            <input id={`profile-projects-${proj.id}`} type="text" aria-label="Project name" value={proj.project_name} onChange={(e) => updateProject(proj.id, { project_name: e.target.value })} placeholder="e.g. Neo-Bank Mobile App" className="scroll-mt-40 text-white font-medium placeholder:text-white/60" />
+                                                        </TahoeGlassField>
+                                                    </div>
+                                                </div>
+                                                <TahoeGlassButton tone="light" type="button" onClick={() => deleteProject(proj.id)} className="h-11 w-11 justify-self-end p-0" contentClassName="text-red-200" aria-label="Delete project">
+                                                    <X size={18} aria-hidden="true" />
+                                                </TahoeGlassButton>
                                             </div>
-                                            <div>
-                                                <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
-                                                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
-                                                    <input type="text" aria-label="Your contribution" value={proj.contribution} onChange={(e) => updateProject(proj.id, { contribution: e.target.value })} placeholder="e.g. Lead UI/UX Designer" className="text-white/80 placeholder:text-white/60" />
-                                                </TahoeGlassField>
+                                            <div data-editor-detail-row className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)] items-end gap-2">
+                                                <button ref={setActivatorNodeRef} type="button" {...attributes} {...listeners} className="flex h-11 w-11 touch-none cursor-grab items-center justify-center rounded-xl text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/80 active:cursor-grabbing" aria-label="Drag to reorder project">
+                                                    <GripVertical size={18} aria-hidden="true" />
+                                                </button>
+                                                <div className="min-w-0">
+                                                    <div>
+                                                        <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Your Contribution</label>
+                                                        <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5 md:py-2">
+                                                            <input type="text" aria-label="Your contribution" value={proj.contribution} onChange={(e) => updateProject(proj.id, { contribution: e.target.value })} placeholder="e.g. Lead UI/UX Designer" className="text-white/80 placeholder:text-white/60" />
+                                                        </TahoeGlassField>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div>
                                                 <label className="text-xs text-white/70 uppercase tracking-widest mb-1 block">Project URL (Optional)</label>
@@ -746,7 +711,7 @@ export default function AdvancedModeCard({ userId }: AdvancedModeCardProps) {
                     aria-labelledby="products-services-editor-toggle"
                     hidden={expandedPanel !== 'products'}
                 >
-                    <ProductsServicesEditor userId={userId} expanded={expandedPanel === 'products'} />
+                    <ProductsServicesEditor userId={userId} expanded={expandedPanel === 'products'} requestedOffering={requestedOffering} requestedCreator={requestedCreator} />
                 </div>
             </section>
 

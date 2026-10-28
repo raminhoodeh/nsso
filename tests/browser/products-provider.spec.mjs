@@ -13,15 +13,17 @@ const second = '33333333-3333-4333-8333-333333333333'
 let bundle, css
 
 test.beforeAll(async () => {
-    const files = ['src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ProductsServicesEditor.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/profile/ProfileSaveStatus.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/components/payments/PayPalCodeEditor.tsx']
+    const files = ['src/components/ui/AskDeityButton.tsx', 'src/components/products/SalesPageCreator.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ProductsServicesEditor.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/profile/ProfileSaveStatus.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/components/payments/PayPalCodeEditor.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\nbody{background:#344956;color:white;font-family:Arial}#root{margin:auto;max-width:1100px;padding:24px}button,input,textarea{font:inherit}[data-testid="provider-products"]{display:none}'
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'product-provider-boundaries', setup(builder) {
-            builder.onResolve({ filter: /^(?:\.\/UserProvider|\.\/DashboardGlassCard|@\/(?:lib\/supabase\/client|components\/providers\/UserProvider|components\/ui\/Toast|components\/ui\/ImageCropperModal|app\/dashboard\/components\/DashboardGlassCard))$/ }, args => ({ path: args.path, namespace: 'fixture' }))
+            builder.onResolve({ filter: /^(?:next\/(?:navigation|link)|\.\/UserProvider|\.\/DashboardGlassCard|@\/(?:lib\/supabase\/client|components\/providers\/UserProvider|components\/ui\/Toast|components\/ui\/ImageCropperModal|app\/dashboard\/components\/DashboardGlassCard))$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path.endsWith('UserProvider') ? `const user={id:'${actor}',username:'qa-fixture'};export const useUser=()=>({user,loading:false});`
+                path === 'next/navigation' ? 'export const useRouter=()=>({push(){},replace(){}});'
+                    : path === 'next/link' ? 'export default ({children,href,onClick,...props})=><a {...props} href={href} onClick={onClick}>{children}</a>;'
+                    : path.endsWith('UserProvider') ? `const user={id:'${actor}',username:'qa-fixture'};export const useUser=()=>({user,loading:false});`
                     : path.endsWith('supabase/client') ? 'export const createClient=()=>window.fixtureDatabase;'
                         : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:()=>{}});'
                             : /PayPalCodeEditor|ImageCropperModal/.test(path) ? 'export default ()=>null;'
@@ -157,7 +159,7 @@ test('real provider preserves explicit top and bottom placement after snapshot r
     expect(await names()).toEqual(['QA first offering','QA consultation','QA guide','QA last offering'])
     await page.getByRole('button',{name:'Refresh fixture snapshot'}).click()
     const visible=page.locator('button[aria-label^="Edit QA "]')
-    expect((await visible.allTextContents()).map(text=>text.trim())).toEqual(['QA first offeringEdit','QA consultationEdit','QA guideEdit','QA last offeringEdit'])
+    expect((await visible.allTextContents()).map(text=>text.trim())).toEqual(['QA first offering','QA consultation','QA guide','QA last offering'])
     const posts=await page.evaluate(()=>window.fixturePosts)
     expect(posts.map(body=>body.changes[0].position)).toEqual(['top','bottom'])
 })
@@ -213,9 +215,15 @@ test('a successful edit to another offering cannot hide a retained failed offeri
     await expect(page.locator('[data-offering-save-status]')).toContainText('could not be accepted')
     await expect(page.locator('[data-offering-save-status]').getByRole('button', { name: 'Check status and retry', exact: true })).toBeVisible()
     expect(await page.evaluate(() => window.fixtureState.products[0].description)).toBe('Synthetic offering')
+    if (await back.isVisible()) await back.click()
+    await select(page, 'QA consultation')
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    await expect(page.getByText('Not saved', { exact: true })).toBeVisible()
+    for (const preview of await page.getByRole('button', { name: 'Preview page', exact: true }).all()) await expect(preview).toBeDisabled()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
     await page.locator('[data-offering-save-status]').getByRole('button', { name: 'Check status and retry', exact: true }).click()
     await expect.poll(() => page.evaluate(() => window.fixtureState.products[0].description)).toBe('Unsaved first offering edit')
-    await expect(page.locator('[data-offering-save-status]')).toContainText('Profile changes saved.')
+    await expect(page.locator('[data-offering-save-status]')).toHaveCount(0)
 })
 
 test('an unrelated same-name row cannot resolve a rejected creation; global retry selects its exact receipt ID', async ({ page }) => {

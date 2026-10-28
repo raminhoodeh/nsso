@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -19,6 +19,8 @@ test.beforeAll(async () => {
         'src/app/dashboard/components/DashboardGlassCard.tsx',
         'src/app/dashboard/components/ConfirmDeleteDialog.tsx',
         'src/app/dashboard/components/SectionHelp.tsx',
+        'src/components/ui/AskDeityButton.tsx',
+        'src/components/products/SalesPageCreator.tsx',
         'src/components/payments/PayPalCodeEditor.tsx',
         'src/components/ui/GlassCard.tsx',
         'src/components/ui/ImageCropperModal.tsx',
@@ -33,9 +35,12 @@ test.beforeAll(async () => {
     const result = await build({
         absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'offerings-provider-fixture', setup(builder) {
-            builder.onResolve({ filter: /^(?:@\/components\/providers\/ProfileProvider|@\/components\/ui\/Toast|next\/image)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
+            builder.onResolve({ filter: /^(?:next\/(?:navigation|link)|@\/lib\/supabase\/client|@\/components\/providers\/ProfileProvider|@\/components\/ui\/Toast|next\/image)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path.endsWith('ProfileProvider') ? 'import {useSyncExternalStore} from "react";export const useProfile=()=>useSyncExternalStore(window.fixtureSubscribe,window.fixtureSnapshot,window.fixtureSnapshot);'
+                path === 'next/navigation' ? 'export const useRouter=()=>window.fixtureRouter;'
+                    : path === 'next/link' ? 'export default ({children,href,onClick,...props})=><a {...props} href={href} onClick={onClick}>{children}</a>;'
+                    : path.endsWith('supabase/client') ? 'export const createClient=()=>({auth:{getUser:async()=>({data:{user:null},error:null})}});'
+                    : path.endsWith('ProfileProvider') ? 'import {useSyncExternalStore} from "react";export const useProfile=()=>useSyncExternalStore(window.fixtureSubscribe,window.fixtureSnapshot,window.fixtureSnapshot);'
                     : path === 'next/image' ? 'export default ({priority,fill,...props})=><img {...props}/>;'
                         : 'export const useToast=()=>({showToast:message=>window.fixtureToasts.push(message)});' }))
         } }],
@@ -44,6 +49,8 @@ test.beforeAll(async () => {
             import Editor from './src/app/dashboard/components/AdvancedModeCard';
             import {TahoeGlassEngineContext} from './src/components/providers/TahoeGlassProvider';
             const listeners=new Set();window.fixtureToasts=[];window.fixtureWrites=[];window.fixturePatchFails=false;window.fixtureDeleteFails=false;window.fixtureCreateFails=false;window.fixturePendingPatch=null;
+            const routeListeners=new Set();const notifyRoute=()=>{for(const listener of routeListeners)listener()};window.addEventListener('popstate',notifyRoute);window.fixtureNavigations=[];window.fixturePopups=[];window.open=(...args)=>{window.fixturePopups.push(args);return null};
+            window.fixtureRouter={push:(href,options)=>{window.fixtureNavigations.push({kind:'push',href,options});history.pushState(null,'',href);notifyRoute()},replace:(href,options)=>{window.fixtureNavigations.push({kind:'replace',href,options});history.replaceState(null,'',href);notifyRoute()}};
             const count=Number(new URLSearchParams(location.search).get('count')??2);
             let snapshot;const emit=patch=>{snapshot={...snapshot,...patch};for(const listener of listeners)listener()};
             window.fixtureSubscribe=listener=>{listeners.add(listener);return()=>listeners.delete(listener)};window.fixtureSnapshot=()=>snapshot;window.fixtureUpdate=emit;
@@ -56,13 +63,22 @@ test.beforeAll(async () => {
                 removeEntity:async(kind,id)=>{window.fixtureWrites.push({kind:'remove',entity:kind,id});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureDeleteFails)return false;emit({products:snapshot.products.filter(item=>item.id!==id)});return true},
                 refreshProfile:async()=>true,reorderExperiences:async()=>true,reorderQualifications:async()=>true,reorderProjects:async()=>true};
             const fallback={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'offerings-fixture',reducedMotion:true,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
-            createRoot(document.getElementById('root')).render(<TahoeGlassEngineContext.Provider value={fallback}><div id="fixture-header">nsso · Profile editor</div><main><Editor userId="${account}"/></main></TahoeGlassEngineContext.Provider>);
+            function RouteEditor(){const current=React.useSyncExternalStore(listener=>{routeListeners.add(listener);return()=>routeListeners.delete(listener)},()=>location.href);const query=new URL(current).searchParams;return <Editor userId="${account}" requestedOffering={query.get('offering')} requestedCreator={query.get('offeringView')==='creator'}/>}
+            createRoot(document.getElementById('root')).render(<TahoeGlassEngineContext.Provider value={fallback}><div id="fixture-header">nsso · Profile editor</div><main><RouteEditor/></main></TahoeGlassEngineContext.Provider>);
         ` },
     })
     bundle = result.outputFiles[0].text
+    if (process.env.NSSO_EXPORT_EDITOR_FIXTURE === '1') {
+        const directory = root + 'private/editor-product-preview'
+        mkdirSync(directory, { recursive: true, mode: 0o700 })
+        writeFileSync(directory + '/fixture.js', bundle, { mode: 0o600 })
+        writeFileSync(directory + '/fixture.css', css, { mode: 0o600 })
+        writeFileSync(directory + '/fixture-thumb.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="300" height="300" fill="#5798ad"/><circle cx="150" cy="150" r="80" fill="#edd7b6"/></svg>', { mode: 0o600 })
+        writeFileSync(directory + '/index.html', '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>', { mode: 0o600 })
+    }
 })
 
-async function mount(page, { count = 2, payment } = {}) {
+async function mount(page, { count = 2, payment, offering, creator = false } = {}) {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.route('**/*', async route => {
         const url = new URL(route.request().url())
@@ -76,11 +92,12 @@ async function mount(page, { count = 2, payment } = {}) {
         }
         if (url.pathname === '/api/profile/operations') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ status: 'not_found', operationId: url.searchParams.get('operationId') }) })
         if (url.pathname === '/api/profile/media') return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ accountId: account, url: 'https://nsso.test/fixture-thumb.svg?cropped', path: account + '/product/fixture.jpg' }) })
-        if (url.pathname === '/offerings-fixture') return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' })
+        if (url.pathname === '/offerings-fixture' || url.pathname === '/dashboard') return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' })
         throw new Error(`Unexpected fixture request: ${url.pathname}`)
     })
-    await page.goto(`https://nsso.test/offerings-fixture?count=${count}`)
-    await page.getByRole('button', { name: /^Products & Services/ }).click()
+    await page.goto(`https://nsso.test/offerings-fixture?count=${count}${offering ? '&offering=' + encodeURIComponent(offering) : ''}${creator ? '&offeringView=creator' : ''}`)
+    const toggle = page.getByRole('button', { name: /^Products & Services/ })
+    if (await toggle.getAttribute('aria-expanded') !== 'true') await toggle.click()
 }
 
 const productToggle = page => page.getByRole('button', { name: /^Products & Services/ })
@@ -385,6 +402,9 @@ test('future features stay collapsed and inactive while compact disclosure and t
     await expectTooltipFits(page)
     expect(await writes(page)).toEqual([])
     await choose(page, 1).click()
+    // Keyboard focus scrolls each help trigger into view. Keep the pointer on
+    // the fixed header so that scroll cannot introduce an unrelated hover.
+    await page.mouse.move(0, 0)
     for (const [name, explanation] of [['Purchase URL', 'existing shop, booking page or checkout'], ['PayPal checkout', 'PayPal controls the recipient'], ['nsso sales page', 'does not process payments or deliver products']]) {
         const help = page.getByRole('button', { name: 'About ' + name, exact: true }).first()
         await help.focus()
@@ -409,8 +429,108 @@ test('ordinary edits expose saving, failure, preserved input and a successful re
     await expect(description).toHaveValue('Synthetic updated description')
     await page.evaluate(() => { window.fixturePatchFails = false })
     await page.getByRole('button', { name: /Check status and retry|Retry saving/i }).click()
-    await expect(page.getByRole('status').filter({ hasText: /changes saved/i })).toBeVisible()
+    await expect(page.locator('[data-offering-save-status]')).toHaveCount(0)
     await expect(description).toHaveValue('Synthetic updated description')
+})
+
+test('query reconciliation preserves deliberately created selection and reopens that exact editor after reload', async ({ page }) => {
+    await mount(page)
+    await choose(page, 1).click()
+    await expect(page).toHaveURL(/offering=offering-1/)
+    if (await page.getByRole('button', { name: 'Back to your offerings', exact: true }).isVisible()) await page.getByRole('button', { name: 'Back to your offerings', exact: true }).click()
+    await page.getByRole('button', { name: 'Add product or service', exact: true }).click()
+    await expect(page).not.toHaveURL(/offering=/)
+    await page.getByRole('textbox', { name: 'Offering name', exact: true }).fill('Deliberately selected new offering')
+    await page.getByRole('button', { name: 'Add to public profile', exact: true }).click()
+    await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue('Deliberately selected new offering')
+    await expect(page).toHaveURL(/offering=created-offering-1/)
+    await page.evaluate(() => window.fixtureUpdate({ products: [...window.fixtureSnapshot().products, { ...window.fixtureSnapshot().products[0], id: 'independent-new-row', name: 'Independent offering receipt' }] }))
+    await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue('Deliberately selected new offering')
+    if (await page.getByRole('button', { name: 'Back to your offerings', exact: true }).isVisible()) await page.getByRole('button', { name: 'Back to your offerings', exact: true }).click()
+    await choose(page, 2).click()
+    await page.reload()
+    await expect(page.getByRole('button', { name: /^Products & Services/ })).toHaveAttribute('aria-expanded', 'true')
+    await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toHaveValue('Fixture offering 2')
+})
+
+test('same-tab creator and browser history retain the offering payment draft and restore editor/list position', async ({ page }) => {
+    await mount(page, { count: 18 })
+    await choose(page, 16).scrollIntoViewIfNeeded()
+    await choose(page, 16).click()
+    const code = page.getByRole('textbox', { name: 'PayPal button code', exact: true })
+    await code.fill('An unsaved, offering-owned PayPal draft')
+    const originalEditor = await code.elementHandle()
+    const open = page.getByRole('button', { name: 'Open Sales Page Creator', exact: true })
+    await open.scrollIntoViewIfNeeded()
+    const before = await page.evaluate(() => ({ windowY: scrollY, listY: document.querySelector('[data-offerings-list]').scrollTop }))
+    await open.click()
+    await expect(page.getByRole('heading', { name: 'Sales Page Creator', exact: true })).toBeVisible()
+    await expect(page).toHaveURL(/offering=offering-16&offeringView=creator/)
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
+    await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveCount(0)
+    const previews = page.getByRole('button', { name: 'Preview page', exact: true })
+    await expect(previews).toHaveCount(2)
+    for (const preview of await previews.all()) await expect(preview).toBeDisabled()
+    await page.getByRole('link', { name: 'Back', exact: true }).click()
+    await expect(page).toHaveURL(/offering=offering-16$/)
+    await expect(code).toHaveValue('An unsaved, offering-owned PayPal draft')
+    expect(await code.evaluate((element, original) => element === original, originalEditor)).toBe(true)
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeCloseTo(before.windowY, 0)
+    expect(await page.locator('[data-offerings-list]').evaluate(element => element.scrollTop)).toBe(before.listY)
+    await open.click()
+    await page.goBack()
+    await expect(code).toBeVisible()
+    await expect(code).toHaveValue('An unsaved, offering-owned PayPal draft')
+    await page.goForward()
+    await expect(page.getByRole('heading', { name: 'Sales Page Creator', exact: true })).toBeVisible()
+    for (const preview of await page.getByRole('button', { name: 'Preview page', exact: true }).all()) await expect(preview).toBeDisabled()
+    await productToggle(page).click()
+    await expect(productToggle(page)).toHaveAttribute('aria-expanded', 'false')
+    await page.goBack()
+    await expect(productToggle(page)).toHaveAttribute('aria-expanded', 'true')
+    await expect(code).toBeVisible()
+    await page.goForward()
+    await expect(page.getByRole('heading', { name: 'Sales Page Creator', exact: true })).toBeVisible()
+    expect(await writes(page)).toEqual([])
+})
+
+for (const newerTarget of ['offering field', 'modal']) test(`deferred creator return respects a newer ${newerTarget} focus without scrolling`, async ({ page }) => {
+    await mount(page)
+    await choose(page, 1).click()
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Sales Page Creator', exact: true })).toBeVisible()
+    await page.clock.install({ time: new Date('2026-10-28T12:00:00Z') })
+    await page.clock.pauseAt(new Date('2026-10-28T12:00:00.100Z'))
+    await page.getByRole('link', { name: 'Back', exact: true }).evaluate(link => link.click())
+    await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toBeVisible()
+    let target = page.getByRole('textbox', { name: 'Product name', exact: true })
+    if (newerTarget === 'modal') {
+        await page.evaluate(() => {
+            const modal = document.createElement('section')
+            modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.setAttribute('aria-label', 'Newer Deity fixture')
+            Object.assign(modal.style, { position: 'fixed', inset: '0', zIndex: '10000', background: '#11161d' })
+            const close = document.createElement('button'); close.type = 'button'; close.textContent = 'Close newer Deity fixture'; modal.append(close); document.body.append(modal); close.focus({ preventScroll: true })
+        })
+        target = page.getByRole('button', { name: 'Close newer Deity fixture', exact: true })
+    } else await target.evaluate(input => input.focus({ preventScroll: true }))
+    await expect(target).toBeFocused()
+    const before = await page.evaluate(() => scrollY)
+    await page.clock.runFor(64)
+    await expect(target).toBeFocused()
+    expect(await page.evaluate(() => scrollY)).toBe(before)
+    expect(await writes(page)).toEqual([])
+})
+
+test('query switching creators clears the previous product crop state without writing either product', async ({ page }) => {
+    await mount(page, { offering: 'offering-1', creator: true })
+    await expect(page.getByRole('heading', { name: 'Sales Page Creator', exact: true })).toBeVisible()
+    const image = await page.screenshot({ type: 'png' })
+    await page.locator('[data-sales-page-creator] input[type="file"]').setInputFiles({ name: 'synthetic-product.png', mimeType: 'image/png', buffer: image })
+    await expect(page.getByRole('dialog', { name: 'Crop Image', exact: true })).toBeVisible()
+    await page.evaluate(() => window.fixtureRouter.push('/dashboard?view=profile&offering=offering-2&offeringView=creator', { scroll: false }))
+    await expect(page.getByText('Editing: Fixture offering 2', { exact: true })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Crop Image', exact: true })).toHaveCount(0)
+    expect(await writes(page)).toEqual([])
 })
 
 test('selected-offering deletion requires confirmation and retains the item when cancelled or failed', async ({ page }) => {

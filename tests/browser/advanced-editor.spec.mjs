@@ -7,9 +7,11 @@ let bundle
 test.beforeAll(async () => {
     const result = await build({ absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic', define: { 'process.env.NODE_ENV': '"test"' },
         plugins: [{ name: 'advanced-label-fixture', setup(builder) {
-            builder.onResolve({ filter: /^(?:@\/components\/(?:providers\/ProfileProvider|profile\/ProfileSaveStatus|payments\/PayPalCodeEditor|ui\/(?:Toast|ImageCropperModal|tahoe-glass))|@\/app\/dashboard\/components\/DashboardGlassCard|\.\/DashboardGlassCard)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
+            builder.onResolve({ filter: /^(?:next\/(?:navigation|link)|@\/components\/(?:providers\/ProfileProvider|profile\/ProfileSaveStatus|payments\/PayPalCodeEditor|ui\/(?:Toast|ImageCropperModal|tahoe-glass))|@\/app\/dashboard\/components\/DashboardGlassCard|\.\/DashboardGlassCard)$/ }, args => ({ path: args.path, namespace: 'fixture' }))
             builder.onLoad({ filter: /.*/, namespace: 'fixture' }, ({ path }) => ({ loader: 'tsx', resolveDir: root, contents:
-                path.endsWith('ProfileProvider') ? 'import {useSyncExternalStore} from "react";export const useProfile=()=>useSyncExternalStore(window.fixtureSubscribe,window.fixtureSnapshot,window.fixtureSnapshot);'
+                path === 'next/navigation' ? 'export const useRouter=()=>({push(){},replace(){}});'
+                    : path === 'next/link' ? 'export default ({children,href,onClick,...props})=><a {...props} href={href} onClick={onClick}>{children}</a>;'
+                    : path.endsWith('ProfileProvider') ? 'import {useSyncExternalStore} from "react";export const useProfile=()=>useSyncExternalStore(window.fixtureSubscribe,window.fixtureSnapshot,window.fixtureSnapshot);'
                     : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:()=>{}});'
                         : path.endsWith('DashboardGlassCard') ? 'import React from "react";export default ({children})=><div>{children}</div>;'
                             : path.endsWith('tahoe-glass') ? 'import React from "react";const attrs=props=>Object.fromEntries(Object.entries(props).filter(([key])=>key.startsWith("aria-")||["id","role","onClick","onKeyDown","tabIndex","hidden","disabled","type"].includes(key)));export const TahoeGlassSurface=React.forwardRef(({as:Tag="div",children,...props},ref)=><Tag ref={ref} {...attrs(props)}>{children}</Tag>);export const TahoeGlassButton=React.forwardRef(({children,...props},ref)=><button ref={ref} {...attrs(props)}>{children}</button>);export const TahoeGlassField=({children})=><div>{children}</div>;export const TahoeGlassDialog=()=>null;'
@@ -151,7 +153,7 @@ for (const destination of ['another field', 'open Deity', 'a section visited and
             target = page.locator('input[aria-label="Company"][value="Fixture company"]').first()
             await target.focus()
         } else if (destination === 'open Deity') {
-            await page.getByRole('button', { name: 'Ask Deity', exact: true }).click()
+            await page.getByRole('button', { name: 'Ask Deity about job titles', exact: true }).click()
             target = page.getByRole('button', { name: 'Close Deity fixture', exact: true })
             await expect(target).toBeFocused()
         } else {

@@ -12,6 +12,7 @@ import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
 import { productCheckoutVisibility, productPageIsPublic } from '@/lib/payments/product-presentation'
 import { safeWebUrl } from '@/lib/urls'
+import { offeringEditorHref } from '@/lib/offering-navigation'
 import {
     TahoeGlassButton,
     TahoeGlassSurface,
@@ -263,7 +264,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                 onClick={() => {
                                     if (isOwner) {
                                         if (searchParams.get('source') === 'creator') {
-                                            router.push(`/dashboard/products/${product.id}/creator`)
+                                            router.push(offeringEditorHref(product.id, 'creator'))
                                         } else {
                                             router.push('/preview')
                                         }

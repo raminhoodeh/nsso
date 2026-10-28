@@ -361,8 +361,10 @@ function writeSurfaceDiagnostics(
       ? "surface-awaiting-first-frame"
       : "surface-awaiting-measurement";
   }
-  if (runtime.measured) {
-    const rect = runtime.element.getBoundingClientRect();
+  if (runtime.measured && runtime.rect) {
+    // Diagnostics describe the last measured frame. Re-reading every surface
+    // here turns a visible-count update into layout work for all hidden rows.
+    const rect = runtime.rect;
     if (rect.width <= 0 || rect.height <= 0) {
       status = "failed";
       reason = "surface-zero-size";
@@ -1179,6 +1181,11 @@ export function TahoeGlassProvider({
     let mapRebuilt = false;
     const paintEntries = shouldMeasureGeometry
       ? [...registryRef.current.values()]
+          // IntersectionObserver already accounts for viewport and ancestor
+          // clipping. Hidden editor rows cannot affect this frame's map; do
+          // not walk their stacking/opacity ancestors on every scroll tick.
+          // Visibility changes request a new map and remeasure entering rows.
+          .filter((runtime) => runtime.visible)
           .map((runtime) => ({
             runtime,
             priority: runtime.priority ?? 0,

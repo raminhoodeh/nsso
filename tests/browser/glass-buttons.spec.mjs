@@ -19,7 +19,7 @@ function actualActionMarkup(file, attribute, value) {
     return markup
 }
 const homeCreateAction = actualActionMarkup('src/app/page.tsx', 'data-home-create-profile')
-const creatorBackAction = actualActionMarkup('src/app/dashboard/products/[id]/creator/page.tsx', 'aria-label', 'Back to dashboard')
+const creatorBackAction = actualActionMarkup('src/components/products/SalesPageCreator.tsx', 'aria-label', 'Back to offering')
 let bundle, css
 const fixture = `
   import React,{useState}from'react';import{createRoot}from'react-dom/client';
@@ -31,7 +31,7 @@ const fixture = `
   import {ChevronLeft}from'lucide-react';
   const material={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'button-fixture',reducedMotion:false,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1}};
   window.buttonSubmits=[];window.buttonClaims=0;window.buttonLinks=0;window.disabledClicks=0;
-  function App(){const user=null;const router={push(){}};const[selected,setSelected]=useState(false);const[confirmOpen,setConfirmOpen]=useState(false);const[reduceMotion,setReduceMotion]=useState(false);window.showConfirmFixture=setConfirmOpen;window.setFixtureReducedMotion=setReduceMotion;return <TahoeGlassEngineContext.Provider value={{...material,diagnostics:{...material.diagnostics,reducedMotion:reduceMotion}}}><main>
+  function App(){const user=null;const router={push(){}};const leavingBusy=false;const navigateBack=()=>router.push('/dashboard?view=profile');const[selected,setSelected]=useState(false);const[confirmOpen,setConfirmOpen]=useState(false);const[reduceMotion,setReduceMotion]=useState(false);window.showConfirmFixture=setConfirmOpen;window.setFixtureReducedMotion=setReduceMotion;return <TahoeGlassEngineContext.Provider value={{...material,diagnostics:{...material.diagnostics,reducedMotion:reduceMotion}}}><main>
     <form onSubmit={event=>{event.preventDefault();window.buttonSubmits.push(new FormData(event.currentTarget).get('email'))}}>
       <label>Email<input name="email" type="email" required autoComplete="email"/></label>
       <GlassButton data-testid="sign-in" tone="dark" variant="shiny" type="submit">Sign In</GlassButton>
@@ -57,7 +57,7 @@ const fixture = `
 `
 
 test.beforeAll(async () => {
-    const files = ['src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/GlassButton.tsx', 'src/components/ui/CreateProfileButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/page.tsx', 'src/app/dashboard/products/[id]/creator/page.tsx']
+    const files = ['src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/GlassButton.tsx', 'src/components/ui/CreateProfileButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/page.tsx', 'src/components/products/SalesPageCreator.tsx']
     const candidates = [...files.map(file => readFileSync(root + file, 'utf8')), fixture].flatMap(source => [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates)
@@ -310,7 +310,7 @@ test('solid preferences reset actual nested homepage labels and important creato
             const expected = await homeAction.locator('[data-tahoe-button-content]').evaluate(el => getComputedStyle(el).color)
             await expect(nestedLabel).toHaveCSS('color', expected)
             expect(await labelContrast(homeAction), `Actual nested home CTA in ${feature}/${scheme}`).toBeGreaterThanOrEqual(4.5)
-            const creatorAction = page.getByRole('button', { name: 'Back to dashboard', exact: true })
+            const creatorAction = page.getByRole('button', { name: 'Back to offering', exact: true })
             await expect(creatorAction.locator('[data-tahoe-button-content]')).toHaveCSS('color', expected)
             await expect(creatorAction.locator('svg')).toHaveCSS('color', expected)
         }

@@ -16,10 +16,11 @@ interface Props {
     /** Keep the editor mounted while navigating, but do not render an inactive preview. */
     active?: boolean
     onSavingChange?: (saving: boolean) => void
+    onDirtyChange?: (dirty: boolean) => void
 }
 
 /** Invalid drafts remain editable locally; the last valid public button stays unchanged. */
-export default function PayPalCodeEditor({ productId, accountId, initialHtml, onSaved, getRevision, refreshRevision, active = true, onSavingChange }: Props) {
+export default function PayPalCodeEditor({ productId, accountId, initialHtml, onSaved, getRevision, refreshRevision, active = true, onSavingChange, onDirtyChange }: Props) {
     const [draft, setDraft] = useState(initialHtml || '')
     const [state, setState] = useState<'saved' | 'saving' | 'refreshing' | 'error' | 'conflict'>('saved')
     const [serverMessage, setServerMessage] = useState('')
@@ -32,10 +33,20 @@ export default function PayPalCodeEditor({ productId, accountId, initialHtml, on
     const draftValue = useRef(initialHtml || '')
     const attempt = useRef<{ html: string; operationId: string; expectedRevision: number } | null>(null)
     const savingCallback = useRef(onSavingChange)
+    const dirtyCallback = useRef(onDirtyChange)
     const busyReporter = useRef<((saving: boolean) => void) | undefined>(undefined)
     const parsed = parsePayPalInput(draft)
 
     useEffect(() => { savingCallback.current = onSavingChange }, [onSavingChange])
+    useEffect(() => { dirtyCallback.current = onDirtyChange }, [onDirtyChange])
+    useEffect(() => { dirtyCallback.current?.(draft !== savedValue) }, [draft, savedValue])
+    useEffect(() => () => { dirtyCallback.current?.(false) }, [])
+    useEffect(() => {
+        if (draft === savedValue && state !== 'saving' && state !== 'refreshing') return
+        const keepDraft = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
+        window.addEventListener('beforeunload', keepDraft)
+        return () => window.removeEventListener('beforeunload', keepDraft)
+    }, [draft, savedValue, state])
 
     const notifyPending = (value: boolean) => {
         pending.current = value
@@ -162,7 +173,7 @@ export default function PayPalCodeEditor({ productId, accountId, initialHtml, on
     const statusMessage = serverMessage || (state === 'saving' ? 'Saving payment button...' : parsed.message)
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-3" data-paypal-editor-unsaved={unsaved ? 'true' : 'false'}>
             <textarea
                 value={draft}
                 onChange={event => { draftValue.current = event.target.value; setDraft(event.target.value); setServerMessage('') }}
