@@ -30,7 +30,7 @@ interface HeaderProps {
     className?: string
 }
 
-const MENU_ROW_CLASS = 'group flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[15px] font-medium text-slate-950 outline-none transition-colors hover:bg-white/65 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950/70'
+const MENU_ROW_CLASS = 'group flex min-h-12 w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-[15px] font-medium text-slate-950 outline-none transition-colors hover:bg-white/65 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950/70'
 
 function MenuRowContent({ icon, children, trailing }: { icon: ReactNode; children: ReactNode; trailing?: ReactNode }) {
     return <>

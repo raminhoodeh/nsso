@@ -423,6 +423,8 @@ test('the mobile menu is readable, dims and isolates the page, traps focus, and 
     await expect(dialog.getByRole('button', { name: 'Close menu' })).toBeFocused()
     await page.keyboard.press('Shift+Tab')
     await expect(dialog.getByRole('button', { name: 'Sign Out', exact: true })).toBeFocused()
+    await expect(dialog.getByRole('button', { name: 'Sign Out', exact: true })).toHaveCSS('outline-style', 'solid')
+    await expect(dialog.getByRole('button', { name: 'Sign Out', exact: true })).toHaveCSS('outline-width', '2px')
     await page.keyboard.press('Escape')
     await expect(dialog).toHaveCount(0)
     await expect(trigger).toBeFocused()
