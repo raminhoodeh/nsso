@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test'
+import { expectCompactSwitch } from './switch-assertions.mjs'
 
 /** Inspect native controls with the real compiled material, never a mock button. */
 export async function controlMaterial(control) {
@@ -24,9 +25,14 @@ export async function controlMaterial(control) {
 
 /** A dark opaque coating can pass contrast; require the actual white material too. */
 export async function expectWhiteEditorControls(container, { photoException = false } = {}) {
+    // Switches retain their semantic state/compact track rather than an opaque CTA coating.
+    const switches = []
+    for (const control of await container.locator('button[role="switch"]').filter({ visible: true }).all()) {
+        switches.push(await expectCompactSwitch(control))
+    }
     const controls = await container.locator('button').evaluateAll((buttons, allowPhoto) => buttons.filter(button => {
         const box = button.getBoundingClientRect()
-        return box.width && box.height && getComputedStyle(button).visibility !== 'hidden'
+        return button.getAttribute('role') !== 'switch' && box.width && box.height && getComputedStyle(button).visibility !== 'hidden'
     }).map(button => {
         const material = button.querySelector('[data-ask-deity-lens]') || button
         const style = getComputedStyle(material)
@@ -43,7 +49,7 @@ export async function expectWhiteEditorControls(container, { photoException = fa
             width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height,
         }
     }), photoException)
-    expect(controls.length).toBeGreaterThan(0)
+    expect(controls.length + switches.length).toBeGreaterThan(0)
     for (const control of controls) {
         if (control.exemptPhoto) continue // The photo is an image frame, not an action coating.
         expect(control.legacyCoats, control.label).toBe(0)
@@ -54,7 +60,7 @@ export async function expectWhiteEditorControls(container, { photoException = fa
         expect(control.height, control.label).toBeGreaterThanOrEqual(44)
         expect(control.width, control.label).toBeGreaterThanOrEqual(44)
     }
-    return controls
+    return [...controls, ...switches]
 }
 
 export async function keyboardFocus(control, page, browserName) {

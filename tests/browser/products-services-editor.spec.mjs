@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
+import { expectCompactSwitch } from './helpers/switch-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const account = '22222222-2222-4222-8222-222222222222'
@@ -23,6 +24,7 @@ test.beforeAll(async () => {
         'src/app/dashboard/components/SectionHelp.tsx',
         'src/components/ui/AskDeityButton.tsx',
         'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts',
+        'src/components/ui/GlassSwitch.tsx',
         'src/components/ui/light-panel.ts',
         'src/components/products/SalesPageCreator.tsx',
         'src/components/payments/PayPalCodeEditor.tsx',
@@ -150,12 +152,6 @@ async function expectNativeUploadFocus(page, input) {
     expect((await label.boundingBox()).height).toBeGreaterThanOrEqual(44)
 }
 
-function colourContrast(first, second) {
-    const luminance = rgb => rgb.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((total, value, index) => total + value * [.2126, .7152, .0722][index], 0)
-    const a = luminance(first), b = luminance(second)
-    return (Math.max(a, b) + .05) / (Math.min(a, b) + .05)
-}
-
 async function expectTooltipFits(page) {
     const tooltip = page.getByRole('tooltip')
     await expect(tooltip).toBeVisible()
@@ -184,22 +180,13 @@ test('white offering controls preserve native upload focus, selection and distin
     ]) {
         const control = page.getByRole('switch', { name, exact: true })
         await control.scrollIntoViewIfNeeded()
-        await expect(control).toHaveAttribute('aria-checked', String(before))
-        const measure = () => control.evaluate(element => {
-            const track = element.querySelector('[data-light-button-content]'), thumb = track.querySelector('span')
-            const rgb = node => { const context = document.createElement('canvas').getContext('2d'); context.fillStyle = getComputedStyle(node).backgroundColor; context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3) }
-            return { target: { width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height }, track: rgb(track), thumb: rgb(thumb), left: thumb.getBoundingClientRect().left - track.getBoundingClientRect().left, computedLeft: getComputedStyle(thumb).left, thumbClass: thumb.className, position: getComputedStyle(thumb).position }
-        })
-        const initial = await measure()
-        expect(initial.target).toEqual({ width: 56, height: 44 })
-        expect(colourContrast(initial.track, initial.thumb)).toBeGreaterThanOrEqual(3)
+        const initial = await expectCompactSwitch(control, { checked: before })
         await control.press('Space')
         await expect(control).toHaveAttribute('aria-checked', String(!before))
-        const changed = await measure()
-        expect(changed.track).not.toEqual(initial.track)
-        expect(changed.thumb).toEqual(initial.thumb)
-        expect(Math.abs(changed.left - initial.left), JSON.stringify({ initial, changed })).toBeGreaterThanOrEqual(20)
-        expect(colourContrast(changed.track, changed.thumb)).toBeGreaterThanOrEqual(3)
+        const changed = await expectCompactSwitch(control, { checked: !before })
+        expect(changed.track.background).not.toEqual(initial.track.background)
+        expect(changed.thumb.background).toEqual(initial.thumb.background)
+        expect(Math.abs(changed.left - initial.left), JSON.stringify({ initial, changed })).toBeCloseTo(24, 3)
         expect((await writes(page)).at(-1)).toMatchObject({ kind: 'patch', entity: 'product', id: 'offering-1', patch })
     }
     expect((await writes(page)).length).toBe(3)
@@ -513,9 +500,7 @@ test('narrow mobile creation and purchase controls fit without horizontal overfl
     await expect(page.getByRole('textbox', { name: 'Product name', exact: true })).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
     for (const control of await page.getByRole('switch').all()) {
-        const bounds = await control.boundingBox()
-        expect(bounds.height).toBeGreaterThanOrEqual(44)
-        expect(bounds.width).toBeGreaterThanOrEqual(44)
+        await expectCompactSwitch(control)
     }
     await page.screenshot({ path: testInfo.outputPath('offerings-320px-editor.png'), fullPage: true })
     for (const title of ['Purchase URL', 'PayPal checkout', 'nsso sales page']) {

@@ -189,8 +189,8 @@ test('mobile advanced editors reserve writing room without changing desktop dens
     assert.match(paypalEditorSource, /min-h-\[112px\] resize-none[^"\n]*md:min-h-\[80px\]/)
     assert.match(paypalEditorSource, /text-base font-mono[^"\n]*md:text-xs/)
 
-    assert.match(productsEditorSource, /className="h-11 w-14 shrink-0 p-0"/)
-    assert.equal((productsEditorSource.match(/<Toggle checked=/g) || []).length, 3, 'all product switches share the 44px mobile target')
+    // Actual shared switch target/track geometry, keyboard state and exact saved
+    // product patches are verified in products-services-editor.spec.mjs.
     assert.match(productsEditorSource, /Upload image for/)
 })
 
