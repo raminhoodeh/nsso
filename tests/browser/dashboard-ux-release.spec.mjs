@@ -3,11 +3,12 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { expectOpaqueLightPanel } from './helpers/light-panel-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx', 'src/components/ui/ImageCropperModal.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ProductsServicesEditor.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SortableLinkItem.tsx', 'src/app/dashboard/components/SortableContactItem.tsx', 'src/app/dashboard/components/NetworkTable.tsx', 'src/app/dashboard/components/MyNssoTab.tsx']
+    const files = ['src/components/ui/light-panel.ts', 'src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx', 'src/components/ui/ImageCropperModal.tsx', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/ProductsServicesEditor.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/app/dashboard/components/SortableLinkItem.tsx', 'src/app/dashboard/components/SortableContactItem.tsx', 'src/app/dashboard/components/NetworkTable.tsx', 'src/app/dashboard/components/MyNssoTab.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile('@import "tailwindcss";', { base: root, onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;background:#344956;color:white;font-family:Arial}#root{padding:110px 16px 110px}#fixture-chrome{position:fixed;bottom:0;height:88px;inset-inline:0;z-index:5000;background:#27323d}button,input,textarea,select{font:inherit}'
@@ -54,16 +55,18 @@ async function mount(page, query = '') {
     await page.goto('https://nsso.test/fixture' + query)
 }
 
-async function expectReadableOverlay(dialog) {
+async function expectReadableOverlay(page, dialog, material = 'white') {
+    await expect(dialog).toHaveAttribute('data-reading-material', material)
     await expect(dialog).toHaveAttribute('data-tahoe-readable-overlay', 'true')
     const backing = await dialog.evaluate(element => {
         const style = getComputedStyle(element, '::before')
         return { color: style.backgroundColor, zIndex: style.zIndex, content: style.content }
     })
-    expect(backing.color).toBe('rgb(32, 33, 38)')
+    expect(backing.color).toBe(material === 'white' ? 'rgb(227, 231, 237)' : 'rgb(32, 33, 38)')
     expect(backing.content).not.toBe('none')
     expect(Number(backing.zIndex)).toBeGreaterThan(10)
     await expect(dialog.locator('[data-liquid-glass]')).toHaveCount(0)
+    if (material === 'white') await expectOpaqueLightPanel(page, dialog)
 }
 
 test('a standard mobile account can delete its profile and cannot see the privileged Admin item', async ({ page }) => {
@@ -71,7 +74,7 @@ test('a standard mobile account can delete its profile and cannot see the privil
     await mount(page)
     await page.getByRole('button', { name: 'Open account menu' }).click()
     const dialog = page.getByRole('dialog', { name: 'Menu', exact: true })
-    await expectReadableOverlay(dialog)
+    await expectReadableOverlay(page, dialog, 'dark')
     await expect(dialog.getByRole('link', { name: 'Account security' })).toHaveCount(0)
     await expect(dialog.getByRole('button', { name: 'Delete my profile', exact: true })).toBeVisible()
     await expect(dialog.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0)
@@ -85,7 +88,7 @@ test('links and contacts require confirmation and cancelled deletion never write
     for (const [trigger, title] of [['Remove Portfolio', 'Delete Portfolio?'], ['Remove Email contact method', 'Delete Email contact method?']]) {
         await page.getByRole('button', { name: trigger, exact: true }).click()
         const dialog = page.getByRole('dialog', { name: title, exact: true })
-        await expectReadableOverlay(dialog)
+        await expectReadableOverlay(page, dialog)
         await expect(dialog.getByRole('button', { name: 'Keep item' })).toBeFocused()
         await dialog.getByRole('button', { name: 'Keep item' }).click()
     }
@@ -113,7 +116,7 @@ test('all advanced content deletion paths confirm above fixed navigation', async
     await page.getByRole('button', { name: 'Delete offering', exact: true }).focus()
     await page.keyboard.press('Enter')
     const dialog = page.getByRole('dialog', { name: 'Delete Fixture offer?', exact: true })
-    await expectReadableOverlay(dialog)
+    await expectReadableOverlay(page, dialog)
     expect(await dialog.evaluate(element => {
         const overlay = element.closest('[data-tahoe-glass-dialog-overlay]')
         return overlay.parentElement === document.body && Number(getComputedStyle(overlay).zIndex) > Number(getComputedStyle(document.getElementById('fixture-chrome')).zIndex)
@@ -144,7 +147,7 @@ test('notes dialog portals above navigation and keeps its mobile close target us
     await page.screenshot({ path: testInfo.outputPath('network-cards.png'), fullPage: true })
     await page.getByRole('list', { name: 'Your connections' }).getByRole('button', { name: 'Edit notes for Fixture Friend', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Notes for Fixture Friend' })
-    await expectReadableOverlay(dialog)
+    await expectReadableOverlay(page, dialog)
     expect(await dialog.evaluate(element => element.closest('[data-tahoe-glass-dialog-overlay]').parentElement === document.body)).toBe(true)
     const close = await dialog.getByRole('button', { name: 'Close notes dialog' }).boundingBox()
     expect(close.width).toBeGreaterThanOrEqual(44)
@@ -159,7 +162,7 @@ test('image cropping keeps zoom and Apply accessible on short landscape phones',
     await mount(page)
     await page.getByRole('button', { name: 'Edit photo fixture' }).click()
     const dialog = page.getByRole('dialog', { name: 'Crop Image' })
-    await expectReadableOverlay(dialog)
+    await expectReadableOverlay(page, dialog)
     await expect(dialog.getByRole('slider', { name: 'Zoom' })).toBeVisible()
     const apply = dialog.getByRole('button', { name: 'Apply Crop', exact: true })
     await expect(apply).toBeEnabled()

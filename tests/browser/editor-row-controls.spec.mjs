@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 
 test.beforeAll(async () => {
-    const files = ['src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const files = ['src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/app/dashboard/components/AdvancedModeCard.tsx', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/app/dashboard/components/ConfirmDeleteDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates) + '\nbody{margin:0;background:linear-gradient(140deg,#34536c,#456f8f);color:white;font-family:Arial}button,input,textarea{font:inherit}#root{max-width:1120px;margin:auto;padding:24px 16px 120px}'
