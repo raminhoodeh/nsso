@@ -138,20 +138,20 @@ export default function HomePage() {
       <section
         data-home-hero="true"
         aria-label="Future-proof your identity"
-        className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-[clamp(1.5rem,4.5svh,3rem)] px-5 pb-16 pt-[calc(88px+env(safe-area-inset-top)+2rem)] text-center font-bold tracking-tight text-white [text-shadow:0_2px_12px_rgba(15,23,42,0.55)] lg:min-h-[min(760px,100svh)] lg:gap-10 lg:px-8 lg:pb-24 lg:pt-[calc(88px+4rem)]"
+        className="relative mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center gap-[clamp(1rem,2.5svh,1.5rem)] px-5 pb-16 pt-[calc(88px+env(safe-area-inset-top)+2rem)] text-center font-bold tracking-tight text-white [text-shadow:0_2px_12px_rgba(15,23,42,0.55)] lg:min-h-[min(760px,100svh)] lg:gap-6 lg:px-8 lg:pb-24 lg:pt-[calc(88px+4rem)]"
         style={{ fontFamily: 'var(--font-sf-pro-display)' }}
       >
-        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:gap-4">
-          <p data-home-hero-word="clarify" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Clarify</p>
+        <div className="flex flex-col items-center gap-[clamp(0.5rem,1.5svh,0.875rem)] lg:gap-2">
+          <p data-home-hero-word="clarify" className="text-[clamp(1.5rem,6.75vw,3rem)] leading-tight text-slate-200/75 lg:text-[1.625rem]">Clarify</p>
           <p data-home-hero-word="organise" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:text-3xl">Organise</p>
         </div>
         <h1 className="w-full text-[clamp(2.5rem,12vw,7.5rem)] leading-[1.03] tracking-[-0.04em] lg:whitespace-nowrap lg:text-[clamp(3.25rem,7vw,6.25rem)]">
           <span className="block lg:inline">Future-Proof</span>{' '}
           <span className="block lg:inline">Yourself</span>
         </h1>
-        <div className="flex flex-col items-center gap-[clamp(1.5rem,4.5svh,3rem)] lg:gap-4">
-          <p data-home-hero-word="present" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:order-2 lg:text-3xl">Present</p>
-          <p data-home-hero-word="discover" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:order-1 lg:text-3xl">Discover</p>
+        <div className="flex flex-col items-center gap-[clamp(0.5rem,1.5svh,0.875rem)] lg:gap-2">
+          <p data-home-hero-word="present" className="text-[clamp(1.75rem,7.5vw,3.5rem)] leading-tight text-slate-200/75 lg:order-2 lg:text-[1.625rem]">Present</p>
+          <p data-home-hero-word="discover" className="text-[clamp(1.5rem,6.75vw,3rem)] leading-tight text-slate-200/75 lg:order-1 lg:text-3xl">Discover</p>
         </div>
       </section>
 
@@ -168,7 +168,7 @@ export default function HomePage() {
 
               <div data-home-story="true" className="min-w-0 space-y-6 text-base leading-[1.75] text-slate-950/85 sm:text-lg xl:max-w-[68ch]">
                 <p>
-                  nsso stands for "new sovereign self online". Your nsso profile acts as a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
+                  <strong className="font-bold">nsso stands for "new sovereign self online".</strong> Your nsso profile acts as a unified professional homepage that triples as a link-in-bio tool, professional Resumé, and personal shop. Here you can showcase all of your skills, experiences, products and services in a cohesive manner, thereby making it easier to turn your followers into customers.
                 </p>
                 <p>
                   nsso embodies a vision to revolutionize how we present our multifaceted identities online. Inspired by the challenge of unifying fragmented digital personas, nsso offers a platform where personal and professional stories intertwine beautifully. At its heart, nsso is about celebrating individuality, empowering users to showcase their entire selves; work, passions, and aspirations - in one holistic place.
