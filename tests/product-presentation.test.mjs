@@ -65,14 +65,14 @@ test('invalid and unsupported destinations keep the generic label and existing v
     assert.deepEqual(productCheckoutVisibility({ purchase_link: 'https://www.etsy.com/listing/123', purchase_link_active: true, paypal_active: false }), { purchaseUrl: 'https://www.etsy.com/listing/123', purchaseUrls: ['https://www.etsy.com/listing/123'], paypal: false })
 })
 
-test('course destinations receive platform-specific viewing labels only for validated domain boundaries', () => {
+test('course destinations receive platform-specific purchase labels only for validated domain boundaries', () => {
     for (const [url, label] of [
-        ['https://udemy.com/course/fixture', 'View on Udemy'],
-        ['HTTPS://WWW.UDEMY.COM:443/course/fixture?coupon=fixture', 'View on Udemy'],
-        ['http://business.udemy.com/course/fixture', 'View on Udemy'],
-        ['https://coursera.org/learn/fixture', 'View on Coursera'],
-        ['https://www.coursera.org/learn/fixture?source=udemy.com', 'View on Coursera'],
-        ['https://partner.coursera.org/learn/fixture', 'View on Coursera'],
+        ['https://udemy.com/course/fixture', 'Buy on Udemy'],
+        ['HTTPS://WWW.UDEMY.COM:443/course/fixture?coupon=fixture', 'Buy on Udemy'],
+        ['http://business.udemy.com/course/fixture', 'Buy on Udemy'],
+        ['https://coursera.org/learn/fixture', 'Buy on Coursera'],
+        ['https://www.coursera.org/learn/fixture?source=udemy.com', 'Buy on Coursera'],
+        ['https://partner.coursera.org/learn/fixture', 'Buy on Coursera'],
     ]) {
         assert.equal(purchaseButtonLabel(url), label, url)
         assert.equal(isCourseMarketplaceUrl(url), true, url)

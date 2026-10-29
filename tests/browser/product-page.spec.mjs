@@ -171,7 +171,7 @@ test('two course destinations remain ordered and equal-width while live PayPal a
     await expect(merchant.locator('..')).toHaveAttribute('action', action)
     await expect(merchant.locator('..')).toHaveAttribute('method', 'post')
     await expect(merchant.locator('..')).toHaveAttribute('target', '_top')
-    for (const [label, url] of [['View on Udemy', coursePrimary], ['View on Coursera', courseSecondary]]) {
+    for (const [label, url] of [['Buy on Udemy', coursePrimary], ['Buy on Coursera', courseSecondary]]) {
         const copies = page.getByRole('link', { name: label, exact: true, includeHidden: true })
         await expect(copies).toHaveCount(2)
         for (const link of await copies.all()) {
@@ -183,8 +183,8 @@ test('two course destinations remain ordered and equal-width while live PayPal a
         await expect(visible).toHaveAttribute('data-nsso-control', 'white')
         await expectEqualPurchaseWidths(visible, merchant)
     }
-    const visibleLabels = await page.getByRole('link', { name: /^View on (Udemy|Coursera)$/, exact: true }).allTextContents()
-    expect(visibleLabels.map(text => text.trim())).toEqual(['View on Udemy', 'View on Coursera'])
+    const visibleLabels = await page.getByRole('link', { name: /^Buy on (Udemy|Coursera)$/, exact: true }).allTextContents()
+    expect(visibleLabels.map(text => text.trim())).toEqual(['Buy on Udemy', 'Buy on Coursera'])
     await expect(page.getByText(courseTerms, { exact: true })).toBeVisible()
     await expect(page.getByText(/100% Guaranteed Satisfaction/)).toHaveCount(0)
     await expect(page.getByRole('img', { name: 'Guarantee', exact: true })).toHaveCount(0)
@@ -193,7 +193,7 @@ test('two course destinations remain ordered and equal-width while live PayPal a
 
     const preview = await fixture(page, { purchaseUrl: coursePrimary, secondaryPurchaseUrl: courseSecondary, styled: true, search: '?preview=true' })
     const previewPaypal = page.getByRole('button', { name: 'Buy via PayPal', exact: true }).filter({ visible: true })
-    for (const label of ['View on Udemy', 'View on Coursera']) {
+    for (const label of ['Buy on Udemy', 'Buy on Coursera']) {
         const control = page.getByRole('button', { name: label, exact: true }).filter({ visible: true })
         await expectEqualPurchaseWidths(control, previewPaypal)
         await control.press('Enter')
@@ -201,7 +201,7 @@ test('two course destinations remain ordered and equal-width while live PayPal a
     await previewPaypal.press('Space')
     await expect(page.getByRole('status')).toHaveCount(3)
     await expect(page.locator('form,script[src*="paypal"]')).toHaveCount(0)
-    await expect(page.getByRole('link', { name: /^View on (Udemy|Coursera)$/ })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /^Buy on (Udemy|Coursera)$/ })).toHaveCount(0)
     expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
     expect(preview.requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
     expect(preview.errors).toEqual([])
@@ -209,14 +209,14 @@ test('two course destinations remain ordered and equal-width while live PayPal a
 
 test('second sales-page destinations deduplicate, reject unsafe links and obey the shared activation boundary', async ({ page }) => {
     for (const scenario of [
-        { purchaseUrl: ' HTTPS://WWW.UDEMY.COM:443/course/synthetic-ai-product/ ', secondaryPurchaseUrl: 'https://www.udemy.com/course/synthetic-ai-product/', expected: [['View on Udemy', 'https://www.udemy.com/course/synthetic-ai-product/']] },
-        { purchaseUrl: 'javascript:alert(1)', secondaryPurchaseUrl: courseSecondary, expected: [['View on Coursera', courseSecondary]] },
-        { purchaseUrl: coursePrimary, secondaryPurchaseUrl: 'https://seller.example/\nunsafe', expected: [['View on Udemy', coursePrimary]] },
+        { purchaseUrl: ' HTTPS://WWW.UDEMY.COM:443/course/synthetic-ai-product/ ', secondaryPurchaseUrl: 'https://www.udemy.com/course/synthetic-ai-product/', expected: [['Buy on Udemy', 'https://www.udemy.com/course/synthetic-ai-product/']] },
+        { purchaseUrl: 'javascript:alert(1)', secondaryPurchaseUrl: courseSecondary, expected: [['Buy on Coursera', courseSecondary]] },
+        { purchaseUrl: coursePrimary, secondaryPurchaseUrl: 'https://seller.example/\nunsafe', expected: [['Buy on Udemy', coursePrimary]] },
         { purchaseUrl: coursePrimary, secondaryPurchaseUrl: courseSecondary, purchaseActive: false, expected: [] },
     ]) {
         const state = await fixture(page, { ...scenario, styled: true })
         await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
-        const links = page.getByRole('link', { name: /^View on (Udemy|Coursera)$/, exact: true })
+        const links = page.getByRole('link', { name: /^Buy on (Udemy|Coursera)$/, exact: true })
         await expect(links).toHaveCount(scenario.expected.length)
         for (const [label, href] of scenario.expected) await expect(page.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href)
         await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)
