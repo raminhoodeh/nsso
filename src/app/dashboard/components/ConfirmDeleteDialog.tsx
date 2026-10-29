@@ -39,15 +39,15 @@ export default function ConfirmDeleteDialog({ open, name, onClose, onConfirm }: 
         readingMaterial="white"
         onOpenChange={value => { if (!value && !pending.current) { setError(''); onClose() } }}
         initialFocusRef={cancelRef}
-        tone="light"
-        semanticTint="dark"
-        semanticTintOpacity={0.38}
+        tone="dark"
+        semanticTint="light"
+        semanticTintOpacity={0.18}
         overlayClassName="z-[10000]"
         backdropClassName="bg-black/70"
         title={`Delete ${name}?`}
         description="This removes the item from your profile. This action is permanent."
         titleClassName="text-xl font-bold text-slate-950 break-words"
-        descriptionClassName="text-slate-700 leading-relaxed"
+        descriptionClassName="text-slate-900 leading-relaxed"
         className="max-w-sm p-6"
     >
         {error && <p role="alert" className="mt-3 text-sm text-rose-800">{error}</p>}

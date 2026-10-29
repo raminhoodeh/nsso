@@ -22,8 +22,8 @@ export const LightButton = forwardRef<HTMLButtonElement, LightButtonProps>(funct
         type={type}
         data-nsso-control="white"
         className={cn(lightButtonClass,
-            intent === 'muted' && 'text-slate-600 hover:text-slate-800',
-            intent === 'danger' && 'text-rose-800 hover:text-rose-950',
+            intent === 'muted' && 'text-slate-800 hover:text-slate-950',
+            intent === 'danger' && 'text-rose-950 hover:text-red-950',
             className)}
         style={radius === undefined ? style : { borderRadius: radius, ...style }}
     >

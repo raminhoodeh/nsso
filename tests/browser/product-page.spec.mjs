@@ -4,7 +4,7 @@ import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
-import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
+import { controlMaterial, renderedControlContrast } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const ownerId = '11111111-1111-4111-8111-111111111111', otherId = '22222222-2222-4222-8222-222222222222', productId = '33333333-3333-4333-8333-333333333333'
@@ -35,7 +35,7 @@ test.beforeAll(async () => {
                     : path === 'next/image' ? 'import React from "react";export default ({src,alt})=><img src={src} alt={alt}/>;'
                         : path === 'next/link' ? 'import React from "react";export default ({href,children})=><a href={href}>{children}</a>;'
                             : path.endsWith('UserProvider') ? 'import {useSyncExternalStore} from "react";export const useUser=()=>useSyncExternalStore(fn=>{window.fixtureListeners.add(fn);return()=>window.fixtureListeners.delete(fn)},()=>window.fixtureAccount);'
-                                : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,target,rel,className,contentClassName,style})=><Tag href={href} target={target} rel={rel} className={className} style={style}><div className={contentClassName}>{children}</div></Tag>;export const TahoeGlassButton=({children,onClick,...props})=><button onClick={onClick}>{children}</button>;'
+                                : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,target,rel,className,contentClassName,style})=><Tag href={href} target={target} rel={rel} className={className} style={{position:"relative",isolation:"isolate",...style}}><div className={contentClassName} style={{position:"relative",zIndex:20}}>{children}</div></Tag>;export const TahoeGlassButton=({children,onClick,...props})=><button onClick={onClick}>{children}</button>;'
                                     : 'export const createClient=()=>{window.fixtureSessionClients++;return window.fixtureSession};' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';import {createRoot} from 'react-dom/client';import Page from './src/app/products/[id]/page';
@@ -258,12 +258,11 @@ test('public product actions share white controls while merchant checkout and gu
     const checkMaterial = async action => {
         await action.scrollIntoViewIfNeeded()
         await expect(action).toHaveAttribute('data-nsso-control', 'white')
-        const backdrop = await page.evaluate(() => document.body.style.background)
-        await expectOpaqueLightPanel(page, action)
-        await page.evaluate(value => { document.body.style.background = value }, backdrop)
-        const content = action.locator('[data-light-button-content]')
-        const ink = (await content.textContent()).trim() ? content : action.locator('svg')
-        expect(await minimumTextContrast(ink)).toBeGreaterThanOrEqual(4.5)
+        const material = await controlMaterial(action)
+        expect(material.background).toBe('rgba(255, 255, 255, 0.28)')
+        expect(material.backgroundImage).not.toBe('none')
+        await expect(action).toHaveClass(/nsso-glass-control/)
+        expect(await renderedControlContrast(action)).toBeGreaterThanOrEqual(4.5)
         const bounds = await action.boundingBox()
         // Mobile compositing may report 43.999992 for an exact 44 CSS px edge.
         expect(Number(bounds.height.toFixed(3))).toBeGreaterThanOrEqual(44)

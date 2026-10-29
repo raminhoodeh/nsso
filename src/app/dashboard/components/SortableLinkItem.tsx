@@ -40,20 +40,20 @@ export function SortableLinkItem({ link, updateLink, removeLink }: Props) {
     }
 
     return (<>
-        <TahoeGlassSurface
+        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
             data-profile-item-id={link.id}
             ref={setNodeRef}
             style={style}
             variant="card"
             radius={12}
-            tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.38}
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.18}
             tracking={isDragging ? 'continuous' : 'static'}
-            className={isDragging ? 'ring-1 ring-white/30 shadow-xl' : ''}
+            className={`nsso-crystal-panel ${isDragging ? 'ring-1 ring-slate-500/30 shadow-xl' : ''}`}
             contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4"
         >
-            <div data-sortable-controls="link" className="-mx-3 -mt-3 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center border-b border-white/10 px-2 py-1 sm:-mx-4 sm:-mt-4">
+            <div data-sortable-controls="link" className="-mx-3 -mt-3 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center border-b border-slate-500/15 px-2 py-1 sm:-mx-4 sm:-mt-4">
                 <LightIconButton
                     ref={setActivatorNodeRef}
                     type="button"

@@ -76,12 +76,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
         const isExternal = !!href?.startsWith('https:')
 
         const content = (
-            <div className="text-white flex flex-wrap items-center justify-center lg:justify-start gap-2 break-words">
-                <span className="text-white/70">{method}:</span>
-                <span className={`min-w-0 break-all ${href ? 'hover:underline hover:text-white transition-colors' : ''}`}>
+            <div className="text-slate-950 flex flex-wrap items-center justify-center lg:justify-start gap-2 break-words">
+                <span className="text-slate-950">{method}:</span>
+                <span className={`min-w-0 break-all ${href ? 'hover:underline hover:text-slate-950 transition-colors' : ''}`}>
                     {contact.value}
                 </span>
-                {isExternal && <ExternalLink size={12} className="opacity-50" />}
+                {isExternal && <ExternalLink size={12} className="text-slate-950" />}
             </div>
         )
 
@@ -92,7 +92,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     href={href}
                     target={isExternal ? "_blank" : undefined}
                     rel={isExternal ? "noopener noreferrer" : undefined}
-                    className="flex min-h-11 items-center justify-center lg:justify-start hover:opacity-80 transition-opacity"
+                    className="flex min-h-11 items-center justify-center lg:justify-start hover:text-slate-950 transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950"
                 >
                     {content}
                 </a>
@@ -104,7 +104,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     return (
         <>
-            <main className="min-h-screen pb-40" style={{ paddingTop: '128px' }}>
+            <main className="min-h-screen pb-40 text-slate-950 [text-shadow:none]" style={{ paddingTop: '128px' }}>
             {/* Navigation */}
             <div className={viewer ? "md:hidden" : ""}>
                 <Header
@@ -142,11 +142,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
                         {/* Name and Headline */}
                         <div className="text-center lg:text-left">
-                            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-2">
+                            <h1 className="text-4xl lg:text-5xl font-bold text-slate-950 mb-2">
                                 <span className="font-normal">I'm </span>{profile?.full_name || 'Anonymous'}
                             </h1>
                             {profile?.headline && (
-                                <p className="text-xl lg:text-2xl text-white/70 mb-6">
+                                <p className="text-xl lg:text-2xl text-slate-950 mb-6">
                                     {profile.headline}
                                 </p>
                             )}
@@ -167,7 +167,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         {/* Mobile Contact Details (Below Headline) */}
                         {contacts.length > 0 && (
                             <div className="block lg:hidden !mt-10 space-y-2">
-                                <GlassCard className="p-4 bg-white/5 border-white/10">
+                                <GlassCard className="p-4 border-white/70">
                                     <div className="space-y-3">
                                         {contacts.map(renderContactItem)}
                                     </div>
@@ -181,7 +181,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                 <ExpandableBio
                                     text={profile.bio}
                                     collapsedText={getProfileBioPreview(username, profile.bio)}
-                                    className="text-white/90 text-lg leading-relaxed whitespace-pre-wrap"
+                                    className="text-slate-950 text-lg leading-relaxed whitespace-pre-wrap"
                                 />
                             </GlassCard>
                         )}
@@ -196,14 +196,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                         href={link.link_url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="block"
+                                        className="block rounded-[40px] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950"
                                     >
                                         <GlassCard className="p-4 hover:scale-[1.02] transition-transform cursor-pointer">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-white font-medium text-lg">
+                                                <span className="text-slate-950 font-medium text-lg">
                                                     {link.link_name || 'Untitled Link'}
                                                 </span>
-                                                <span className="text-white/50">→</span>
+                                                <span className="text-slate-950">→</span>
                                             </div>
                                         </GlassCard>
                                     </SafeExternalLink>
@@ -216,20 +216,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             {experiences.length > 0 && (
                                 <GlassCard className="p-6 h-full">
                                     <section id="profile-experience" className="scroll-mt-32">
-                                        <h2 className="text-white/70 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h2>
+                                        <h2 className="text-slate-950 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h2>
                                         <div className="space-y-6">
                                             {experiences.map(exp => (
-                                                <div key={exp.id} className="relative pl-6 border-l border-white/10">
-                                                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
-                                                    <h4 className="text-white font-semibold text-lg leading-tight mb-1">{exp.job_title}</h4>
-                                                    <p className="text-white/70 font-medium mb-1">{exp.company_name}</p>
-                                                    <p className="text-white/65 text-sm">
+                                                <div key={exp.id} className="relative pl-6 border-l border-slate-400/50">
+                                                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-slate-500/60" />
+                                                    <h4 className="text-slate-950 font-semibold text-lg leading-tight mb-1">{exp.job_title}</h4>
+                                                    <p className="text-slate-950 font-medium mb-1">{exp.company_name}</p>
+                                                    <p className="text-slate-950 text-sm">
                                                         {exp.start_year} to {exp.end_year || 'Present'}
                                                     </p>
                                                 </div>
                                             ))}
                                         </div>
-                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
+                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                                     </section>
                                 </GlassCard>
                             )}
@@ -238,20 +238,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             {qualifications.length > 0 && (
                                 <GlassCard className="p-6 h-full">
                                     <section id="profile-qualifications" className="scroll-mt-32">
-                                        <h2 className="text-white/70 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h2>
+                                        <h2 className="text-slate-950 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h2>
                                         <div className="space-y-6">
                                             {qualifications.map(qual => (
-                                                <div key={qual.id} className="relative pl-6 border-l border-white/10">
-                                                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-white/20" />
-                                                    <h4 className="text-white font-semibold text-lg leading-tight mb-1">{qual.qualification_name}</h4>
-                                                    <p className="text-white/70 font-medium mb-1">{qual.institution}</p>
-                                                    <p className="text-white/65 text-sm">
+                                                <div key={qual.id} className="relative pl-6 border-l border-slate-400/50">
+                                                    <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-slate-500/60" />
+                                                    <h4 className="text-slate-950 font-semibold text-lg leading-tight mb-1">{qual.qualification_name}</h4>
+                                                    <p className="text-slate-950 font-medium mb-1">{qual.institution}</p>
+                                                    <p className="text-slate-950 text-sm">
                                                         {qual.start_year} to {qual.end_year}
                                                     </p>
                                                 </div>
                                             ))}
                                         </div>
-                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
+                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                                     </section>
                                 </GlassCard>
                             )}
@@ -281,14 +281,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                             href={link.link_url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="block"
+                                            className="block rounded-[40px] focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950"
                                         >
                                             <GlassCard className="p-4 hover:scale-[1.02] transition-transform cursor-pointer">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-white font-medium text-lg">
+                                                    <span className="text-slate-950 font-medium text-lg">
                                                         {link.link_name || 'Untitled Link'}
                                                     </span>
-                                                    <span className="text-white/50">→</span>
+                                                    <span className="text-slate-950">→</span>
                                                 </div>
                                             </GlassCard>
                                         </SafeExternalLink>
@@ -303,7 +303,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {
                     projects.length > 0 && (
                         <section id="profile-projects" className={`${PROFILE_COLLECTION_SECTION_CLASS} scroll-mt-32`}>
-                            <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Projects</h2>
+                            <h2 className="text-3xl font-bold text-slate-950 mb-8 lg:mb-10">Projects</h2>
                             <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {projects.map((project) => {
                                     const projectUrl = safeWebUrl(project.project_url)
@@ -312,20 +312,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                         href: projectUrl,
                                         target: '_blank',
                                         rel: 'noopener noreferrer',
-                                        className: 'block h-full cursor-pointer transition-opacity hover:opacity-80'
+                                        className: 'block h-full cursor-pointer rounded-xl focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950'
                                     } : { className: 'h-full' }
 
                                     return (
                                         <Wrapper key={project.id} {...wrapperProps}>
-                                            <GlassCard className="p-6 md:p-7 flex flex-col h-full hover:bg-white/10 transition-colors group">
-                                                <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                                            <GlassCard className="p-6 md:p-7 flex flex-col h-full hover:bg-white/25 transition-colors group">
+                                                <h3 className="text-2xl font-bold text-slate-950 mb-2 flex items-center gap-2">
                                                     {project.project_name}
-                                                    {project.project_url && <ExternalLink size={16} className="opacity-50" />}
+                                                    {project.project_url && <ExternalLink size={16} className="text-slate-950" />}
                                                 </h3>
-                                                <div className="text-white/50 text-sm uppercase tracking-widest mb-4 font-bold">{project.contribution}</div>
-                                                <p className="text-white/70 leading-relaxed mb-6 flex-grow">{project.description}</p>
+                                                <div className="text-slate-950 text-sm uppercase tracking-widest mb-4 font-bold">{project.contribution}</div>
+                                                <p className="text-slate-950 leading-relaxed mb-6 flex-grow">{project.description}</p>
                                                 {project.project_photo_url && (
-                                                    <div className="w-full aspect-video rounded-xl bg-black/20 overflow-hidden">
+                                                    <div className="w-full aspect-video rounded-xl bg-white/30 overflow-hidden">
                                                         <img src={project.project_photo_url} alt={project.project_name} className="w-full h-full object-cover" />
                                                     </div>
                                                 )}
@@ -334,7 +334,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     )
                                 })}
                             </div>
-                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
+                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                         </section>
                     )
                 }
@@ -343,13 +343,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 {
                     products.length > 0 && (
                         <section id="profile-products" className={`${PROFILE_COLLECTION_SECTION_CLASS} scroll-mt-32`}>
-                            <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
+                            <h2 className="text-3xl font-bold text-slate-950 mb-8 lg:mb-10">Products & Services</h2>
                             <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {products.map(product => {
                                     const checkout = productCheckoutVisibility(product)
                                     const ProductWrapper = product.sales_page_active && product.sales_page_published !== false ? Link : 'div'
                                     const wrapperProps = product.sales_page_active && product.sales_page_published !== false
-                                        ? { href: `/products/${product.id}`, className: "block flex-grow cursor-pointer transition-opacity hover:opacity-80" }
+                                        ? { href: `/products/${product.id}`, className: "block flex-grow cursor-pointer rounded-xl focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950" }
                                         : { className: "block flex-grow" }
 
                                     return (
@@ -359,25 +359,25 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                             {/* @ts-ignore - Dynamic component props mismatch */}
                                             <ProductWrapper {...wrapperProps}>
                                                 {product.image_url && (
-                                                    <div className="w-full aspect-square rounded-xl bg-black/20 overflow-hidden mb-6">
+                                                    <div className="w-full aspect-square rounded-xl bg-white/30 overflow-hidden mb-6">
                                                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                                     </div>
                                                 )}
                                                 <div className="flex items-start justify-between gap-4 mb-2">
-                                                    <h3 className="text-xl font-bold text-white">{product.name}</h3>
+                                                    <h3 className="text-xl font-bold text-slate-950">{product.name}</h3>
                                                     {product.price !== null && (
-                                                        <TahoeGlassSurface
+                                                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
                                                             variant="pill"
-                                                            tone="light"
-                                                            semanticTint="dark"
+                                                            tone="dark"
+                                                            semanticTint="light"
                                                             semanticTintOpacity={0.18}
-                                                            className="px-3 py-1 font-medium text-white"
+                                                            className="px-3 py-1 font-medium text-slate-950"
                                                         >
                                                             {product.price}
                                                         </TahoeGlassSurface>
                                                     )}
                                                 </div>
-                                                <p className="text-white/60 text-sm leading-relaxed mb-6">{product.description}</p>
+                                                <p className="text-slate-950 text-sm leading-relaxed mb-6">{product.description}</p>
                                             </ProductWrapper>
 
                                             {/* Action Buttons (Separate from Link) */}
@@ -410,7 +410,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     )
                                 })}
                             </div>
-                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-cyan-200 underline">Back to sections ↑</a>
+                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                         </section>
                     )
                 }

@@ -212,6 +212,30 @@ body {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035));
 }
 
+/* Neutral satin reading layer. The optical scene still supplies its colour.
+   Below z20 content: no extra blur or surface registrations while scrolling. */
+.nsso-crystal-panel:not([data-tahoe-glass-backend="solid"]):not([data-tahoe-backdrop-backend="solid"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(145deg, rgb(255 255 255 / 12%), rgb(255 255 255 / 3.5%));
+}
+.nsso-crystal-panel {
+  color-scheme: light;
+}
+.nsso-crystal-panel > :last-child {
+  text-shadow: none;
+}
+.nsso-crystal-reading {
+  background: linear-gradient(145deg, rgb(255 255 255 / 42%), rgb(255 255 255 / 36%));
+  color: #020617;
+  text-shadow: none;
+  color-scheme: light;
+}
+
 @media (min-width: 1024px) {
   .home-sky-glass:not([data-tahoe-backdrop-backend="solid"])::after {
     content: "";
@@ -227,8 +251,13 @@ body {
 @media (forced-colors: active), (prefers-reduced-transparency: reduce) {
   .home-sky-glass::after,
   .home-crystal-glass::after,
-  .nsso-topbar-glass::after {
+  .nsso-topbar-glass::after,
+  .nsso-crystal-panel::after {
     display: none;
+  }
+  .nsso-crystal-reading {
+    background: Canvas;
+    color: CanvasText;
   }
 }
 

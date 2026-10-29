@@ -4,11 +4,12 @@ import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { controlMaterial } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx']
+    const files = ['src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/components/profile/ProfileGlassCard.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates)
@@ -30,6 +31,7 @@ test.beforeAll(async () => {
             import Sidebar from './src/components/layout/DashboardSidebar';
             import Ask from './src/components/ui/AskDeityButton';
             import LightGlassPanel from './src/components/ui/LightGlassPanel';
+            import DashboardGlassCard from './src/app/dashboard/components/DashboardGlassCard';
             import {TahoeGlassSurface} from './src/components/ui/tahoe-glass';
             import {TahoeGlassEngineContext} from './src/components/providers/TahoeGlassProvider';
             window.fixtureNavigation=[];window.fixtureToasts=[];window.fixtureSignouts=0;window.fixtureSubmits=0;window.fixtureDeityEvents=[];
@@ -38,8 +40,8 @@ test.beforeAll(async () => {
             const app=createRoot(document.getElementById('root'));window.fixtureDispose=()=>app.unmount();
             const ask=message=>()=>window.dispatchEvent(new CustomEvent('open-deity-chat',{detail:{initialMessage:message}}));
             const contrast=new URLSearchParams(location.search).has('contrast');
-            const scenes=[['card-white','#fff'],['light','#f4f4f4'],['sky','linear-gradient(120deg,#baddec,#739ab7)'],['dark','#10151c']];
-            app.render(<TahoeGlassEngineContext.Provider value={fallback}>{contrast?<main style={{padding:24,display:'grid',gap:24}}>{scenes.map(([name,background])=><section key={name} data-contrast-scene={name} style={{background,padding:24}}>{name==='light'?<LightGlassPanel chromiumAppearance="light" style={{padding:24}}><Ask aria-label={'Ask Deity contrast '+name}/></LightGlassPanel>:<TahoeGlassSurface variant="card" tone="light" semanticTint="dark" semanticTintOpacity={.38} style={{padding:24}}><Ask aria-label={'Ask Deity contrast '+name}/></TahoeGlassSurface>}</section>)}</main>:<><Sidebar/><main><form aria-label="Synthetic profile form" onSubmit={event=>{event.preventDefault();window.fixtureSubmits++}}><Ask onClick={ask('profile assistance')}/><Ask aria-label="Ask Deity about links" onClick={ask('link assistance')}/><Ask aria-label="Ask Deity about products and services" onClick={ask('offering assistance')}/><Ask disabled aria-label="Unavailable assistance" onClick={ask('disabled assistance')}/></form></main></>}</TahoeGlassEngineContext.Provider>);
+            const scenes=[['card-white','#fff'],['light','#f4f4f4'],['sky','linear-gradient(120deg,#baddec,#739ab7)'],['deck',"#43628c url('/assets/backgrounds/nsso-deck-blue.webp') center/cover"]];
+            app.render(<TahoeGlassEngineContext.Provider value={fallback}>{contrast?<main style={{padding:24,display:'grid',gap:24}}>{scenes.map(([name,background])=><section key={name} data-contrast-scene={name} style={{background,padding:24}}>{name==='light'?<LightGlassPanel chromiumAppearance="light" style={{padding:24}}><Ask aria-label={'Ask Deity contrast '+name}/></LightGlassPanel>:<DashboardGlassCard style={{padding:24}}><Ask aria-label={'Ask Deity contrast '+name}/></DashboardGlassCard>}</section>)}</main>:<><Sidebar/><main><form aria-label="Synthetic profile form" onSubmit={event=>{event.preventDefault();window.fixtureSubmits++}}><Ask onClick={ask('profile assistance')}/><Ask aria-label="Ask Deity about links" onClick={ask('link assistance')}/><Ask aria-label="Ask Deity about products and services" onClick={ask('offering assistance')}/><Ask disabled aria-label="Unavailable assistance" onClick={ask('disabled assistance')}/></form></main></>}</TahoeGlassEngineContext.Provider>);
         ` },
     })
     bundle = result.outputFiles[0].text
@@ -51,9 +53,10 @@ async function mount(page, { contrast = false } = {}) {
     await page.route('https://nsso.test/**', route => {
         const path = new URL(route.request().url()).pathname
         if (path === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundle })
+        if (path === '/assets/backgrounds/nsso-deck-blue.webp') return route.fulfill({ contentType: 'image/webp', body: readFileSync(root + 'public/assets/backgrounds/nsso-deck-blue.webp') })
         if (path.endsWith('.png')) return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="458" height="224"/>' })
         if (path !== '/editor-controls') throw new Error('Unexpected request in isolated editor controls fixture: ' + path)
-        return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#344956;color:white;font-family:Arial}main{padding:120px 24px}form{display:flex;flex-direction:column;align-items:flex-start;gap:12px}@media(min-width:1024px){main{padding-left:320px}}*{box-sizing:border-box}</style><div id="root"></div><script src="/fixture.js"></script>' })
+        return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#43628c url(/assets/backgrounds/nsso-deck-blue.webp) center/cover;color:white;font-family:Arial}main{padding:120px 24px}form{display:flex;flex-direction:column;align-items:flex-start;gap:12px}@media(min-width:1024px){main{padding-left:320px}}*{box-sizing:border-box}</style><div id="root"></div><script src="/fixture.js"></script>' })
     })
     await page.goto('https://nsso.test/editor-controls' + (contrast ? '?contrast=1' : ''))
     await page.addStyleTag({ content: css })
@@ -155,7 +158,7 @@ test('Ask Deity normal and hover labels retain small-text contrast on real share
     const errors = await mount(page, { contrast: true })
     await page.emulateMedia({ reducedMotion: 'reduce' })
     const samples = []
-    for (const scene of ['card-white', 'light', 'sky', 'dark']) {
+    for (const scene of ['card-white', 'light', 'sky', 'deck']) {
         const ask = page.getByRole('button', { name: 'Ask Deity contrast ' + scene, exact: true })
         await ask.scrollIntoViewIfNeeded()
         await page.mouse.move(0, 0)
@@ -173,27 +176,27 @@ test('Ask Deity normal and hover labels retain small-text contrast on real share
 
 test.describe('desktop sidebar affordances', () => {
     test.use({ viewport: { width: 1280, height: 900 }, isMobile: false, hasTouch: false })
-    test('Sign Out retains readable dark-red contrast on opaque white material and a darker hover', async ({ page }, testInfo) => {
+    test('Sign Out retains readable dark-red contrast on shared translucent glass and a darker hover', async ({ page }, testInfo) => {
         const errors = await mount(page)
         const signout = page.getByRole('complementary').getByRole('button', { name: 'Sign Out', exact: true })
         const samples = []
         await expect(signout).toHaveAttribute('data-nsso-control', 'white')
         await expect(signout.locator('[data-tahoe-button-coat], [data-tahoe-button-reflection]')).toHaveCount(0)
-        const idleExpected = await paintedColour(signout, '--color-rose-800')
-        const hoverExpected = await paintedColour(signout, '--color-rose-950')
+        const idleExpected = await paintedColour(signout, '--color-rose-950')
+        const hoverExpected = await paintedColour(signout, '--color-red-950')
         const box = await signout.boundingBox()
         expect(box.width).toBeGreaterThanOrEqual(44)
         expect(box.height).toBeGreaterThanOrEqual(44)
-        for (const backing of ['#fff', '#000']) {
+        for (const backing of ['#fff', '#43628c']) {
             await page.evaluate(colour => { document.body.style.background = colour }, backing)
             await page.mouse.move(800, 400)
-            await expect(signout).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+            await expect.poll(async () => (await controlMaterial(signout)).background).toBe('rgba(255, 255, 255, 0.28)')
             await expect.poll(() => paintedColour(signout)).toEqual(idleExpected)
             const idleColour = await paintedColour(signout)
             const idle = await labelContrast(signout)
             expect(idle, `Sign Out idle contrast on ${backing}`).toBeGreaterThanOrEqual(4.5)
             await signout.hover()
-            await expect(signout).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+            await expect.poll(async () => (await controlMaterial(signout)).background).toBe('rgba(255, 255, 255, 0.4)')
             await expect.poll(() => paintedColour(signout)).toEqual(hoverExpected)
             const hoverColour = await paintedColour(signout)
             expect(luminance(hoverColour)).toBeLessThan(luminance(idleColour))
@@ -211,7 +214,7 @@ test.describe('desktop sidebar affordances', () => {
         const active = sidebar.getByRole('button', { name: 'Edit Profile', exact: true })
         await expect(active).toHaveAttribute('aria-current', 'page')
         await expect(active).toHaveAttribute('data-nsso-control', 'white')
-        await expect(active).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+        await expect(active).toHaveClass(/nsso-glass-control/)
         const readActiveMaterial = () => active.evaluate(element => {
             const style = getComputedStyle(element)
             const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
@@ -245,7 +248,7 @@ test.describe('desktop sidebar affordances', () => {
         expect(await page.evaluate(() => window.fixtureNavigation)).toEqual(['/dashboard?view=my-nsso'])
         const remove = sidebar.getByRole('button', { name: 'Delete my profile', exact: true })
         await page.mouse.move(800, 400)
-        await expect.poll(() => paintedColour(remove)).toEqual(await paintedColour(remove, '--color-slate-600'))
+        await expect.poll(() => paintedColour(remove)).toEqual(await paintedColour(remove, '--color-slate-900'))
         expect(await labelContrast(remove)).toBeGreaterThanOrEqual(4.5)
         await remove.click()
         const dialog = page.getByRole('dialog', { name: 'Delete my profile?', exact: true })
@@ -253,10 +256,10 @@ test.describe('desktop sidebar affordances', () => {
         await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
         await expect(dialog).toHaveCount(0)
         const signout = sidebar.getByRole('button', { name: 'Sign Out', exact: true })
-        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-rose-800'))
+        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-rose-950'))
         const idleColour = await paintedColour(signout)
         await signout.hover()
-        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-rose-950'))
+        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-red-950'))
         const hoverColour = await paintedColour(signout)
         expect(luminance(hoverColour)).toBeLessThan(luminance(idleColour))
         await signout.click()

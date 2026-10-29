@@ -5,6 +5,7 @@ import { parsePayPalInput, type PayPalConfig } from '@/lib/payments/paypal-confi
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import SectionHelp from '@/app/dashboard/components/SectionHelp'
 import { LightButton } from '@/components/ui/LightButton'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 interface Props {
     productId: string
@@ -181,10 +182,10 @@ export default function PayPalCodeEditor({ productId, accountId, initialHtml, on
                 rows={3}
                 aria-label="PayPal button code"
                 aria-invalid={!parsed.ok}
-                className="min-h-[112px] resize-none w-full rounded-xl border border-white/20 bg-black/10 p-3 text-base font-mono text-white/90 outline-none focus:border-white/60 md:min-h-[80px] md:p-2 md:text-xs"
+                className={`${LIGHT_PANEL.group} ${LIGHT_PANEL.focus} min-h-[112px] resize-none w-full rounded-xl p-3 text-base font-mono text-slate-950 placeholder:text-slate-950 md:min-h-[80px] md:p-2 md:text-xs`}
                 placeholder="Paste the payment button code from PayPal"
             />
-            <p role="status" className={`text-xs ${parsed.ok ? 'text-white/70' : 'text-amber-200'}`}>
+            <p role="status" className={`text-xs ${parsed.ok ? 'text-slate-950' : 'text-amber-950'}`}>
                 {statusMessage}{unsaved && state !== 'saving' && state !== 'refreshing' ? ' Unsaved changes.' : ''}
             </p>
             <div className="flex flex-wrap items-center gap-2">

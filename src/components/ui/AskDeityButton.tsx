@@ -23,7 +23,7 @@ const AskDeityButton = forwardRef<HTMLButtonElement, AskDeityButtonProps>(functi
     >
         <span
             data-ask-deity-lens="true"
-            className={cn(LIGHT_PANEL.control, 'pointer-events-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 font-medium [text-shadow:none] group-hover:bg-white group-hover:text-slate-950 group-focus-visible:outline-solid group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-slate-950 group-active:bg-slate-200 forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]')}
+            className={cn(LIGHT_PANEL.control, 'pointer-events-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 font-medium [text-shadow:none] group-focus-visible:outline-solid group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-slate-950 forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]')}
             style={{ height: 28, fontSize: 12, lineHeight: '16px' }}
         >
             <Sparkles size={12} aria-hidden="true" />

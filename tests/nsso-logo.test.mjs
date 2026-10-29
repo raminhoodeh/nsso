@@ -65,10 +65,10 @@ test('all shared wordmark consumers reserve the correct aspect ratio without str
         };
         visit(source);
     }
-    assert.equal(count, 6, 'Cover the main Header, sidebar, shared auth shell, and password recovery logos; the light account menu uses its supplied dark wordmark.');
+    assert.equal(count, 5, 'Cover the main Header, shared auth shell, and password recovery logos; the bright sidebar and light account menu use the supplied dark wordmark.');
 });
 
-test('the light account menu preserves the supplied dark wordmark and clips only its transparent margins', async () => {
+test('the bright account menu and desktop sidebar preserve the supplied dark wordmark and clip only transparent margins', async () => {
     const metadata = await sharp(path.join(root, 'public/assets/nsso-logo-dark.png')).metadata();
     assert.equal(metadata.width, 3840);
     assert.equal(metadata.height, 2172);
@@ -84,7 +84,7 @@ test('the light account menu preserves the supplied dark wordmark and clips only
     const glyphWidth = maxX - minX + 1, glyphHeight = maxY - minY + 1;
     assert.deepEqual({ minX, minY, glyphWidth, glyphHeight }, { minX: 892, minY: 566, glyphWidth: 2037, glyphHeight: 943 });
 
-    const filename = 'src/components/layout/Header.tsx';
+    for (const [filename, frameAttribute] of [['src/components/layout/Header.tsx', 'data-mobile-menu-logo'], ['src/components/layout/DashboardSidebar.tsx', 'data-sidebar-logo']]) {
     const source = ts.createSourceFile(filename, fs.readFileSync(path.join(root, filename), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const attributesOf = node => new Map(node.attributes.properties.filter(ts.isJsxAttribute).map(attribute => [attribute.name.getText(source), attribute.initializer]));
     const consumers = [];
@@ -96,7 +96,7 @@ test('the light account menu preserves the supplied dark wordmark and clips only
         ts.forEachChild(node, visit);
     };
     visit(source);
-    assert.equal(consumers.length, 1, 'Use the dark mark only in the light account-menu heading.');
+    assert.equal(consumers.length, 1, filename + ': use exactly one supplied dark mark in the bright navigation heading.');
     const { node, attributes } = consumers[0];
     assert.equal(attributes.get('alt')?.text, 'nsso');
     for (const [name, expected] of [['width', 3840], ['height', 2172]]) {
@@ -106,7 +106,7 @@ test('the light account menu preserves the supplied dark wordmark and clips only
     }
     assert.ok(ts.isJsxElement(node.parent));
     const frame = attributesOf(node.parent.openingElement);
-    assert.equal(frame.get('data-mobile-menu-logo')?.text, 'true');
+    assert.equal(frame.get(frameAttribute)?.text, 'true');
     assert.match(frame.get('className')?.text ?? '', /h-8 w-\[69px\].*overflow-hidden/);
     assert.ok(Math.abs((69 / 32) / (glyphWidth / glyphHeight) - 1) < 0.0025, 'The visible frame must retain the glyph aspect ratio at its rounded CSS pixel size.');
     const classes = attributes.get('className')?.text ?? '';
@@ -116,5 +116,6 @@ test('the light account menu preserves the supplied dark wordmark and clips only
         const value = classes.match(new RegExp(`(?:^| )${property}-\\[(-?[\\d.]+)%\\]`));
         assert.ok(value, `Missing ${property} framing percentage`);
         assert.ok(Math.abs(Number(value[1]) - expected) < 0.01, `${property} must align the visible glyph with the clipped frame.`);
+    }
     }
 });

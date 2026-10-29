@@ -52,8 +52,8 @@ function DashboardContent() {
     const [claimOwner, setClaimOwner] = useState<string | null>(null)
     const header = !loading && <div className="lg:hidden"><Header /></div>
     if (user && !claimOwner) setClaimOwner(user.id)
-    if (loading || (user && !claimOwner)) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><p role="status">Loading your account…</p></main></>
-    if (!user) return <>{header}<main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><LightButton type="button" onClick={() => { void refreshUser() }}>Retry account</LightButton></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main></>
+    if (loading || (user && !claimOwner)) return <>{header}<main className="min-h-screen flex items-center justify-center text-slate-950"><p role="status" className="nsso-crystal-reading rounded-3xl px-6 py-4">Loading your account…</p></main></>
+    if (!user) return <>{header}<main className="min-h-screen flex items-center justify-center text-slate-950"><div className="nsso-crystal-reading mx-6 max-w-lg space-y-4 rounded-3xl p-6 text-center">{error ? <><p role="alert">Your account could not be loaded. Please retry.</p><LightButton type="button" onClick={() => { void refreshUser() }}>Retry account</LightButton></> : <Link href="/sign-in?next=/dashboard">Sign in to open your profile editor</Link>}</div></main></>
     return <>{header}<DashboardForAccount key={user.id} allowClaim={claimOwner === user.id} /></>
 }
 
@@ -348,14 +348,14 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
     if (loading) {
         return (
             <main className="min-h-screen flex items-center justify-center">
-                <div className="text-white text-xl text-center">
+                <div className="nsso-crystal-reading rounded-3xl px-6 py-4 text-slate-950 text-xl text-center">
                     All of you...<br />all in one place
                 </div>
             </main>
         )
     }
 
-    if (!profile) return <main className="min-h-screen flex items-center justify-center text-white"><div className="space-y-4 text-center"><p role="alert">Your profile could not be loaded. Please retry before editing.</p><LightButton type="button" onClick={() => { void refreshProfile() }}>Retry profile</LightButton></div></main>
+    if (!profile) return <main className="min-h-screen flex items-center justify-center text-slate-950"><div className="nsso-crystal-reading mx-6 max-w-lg space-y-4 rounded-3xl p-6 text-center"><p role="alert">Your profile could not be loaded. Please retry before editing.</p><LightButton type="button" onClick={() => { void refreshProfile() }}>Retry profile</LightButton></div></main>
 
     return (
         <main className="min-h-screen pb-12">
@@ -365,18 +365,18 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
                 {/* Profile Completeness Banner */}
                 {profileCompleteness < 20 && (
-                    <TahoeGlassSurface
+                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
                         variant="card"
                         radius={20}
-                        tone="light"
-                        semanticTint="dark"
-                        semanticTintOpacity={0.38}
-                        className="w-full overflow-hidden text-left"
+                        tone="dark"
+                        semanticTint="light"
+                        semanticTintOpacity={0.18}
+                        className="nsso-crystal-panel w-full overflow-hidden text-left"
                         contentClassName="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 p-4"
                     >
                             <span className="min-w-0 flex-1">
-                                <span className="block text-base font-semibold text-white">Let Deity help you build your profile</span>
-                                <span className="block text-sm text-white/75">Your profile is {profileCompleteness}% complete. Ask Deity for personalized assistance.</span>
+                                <span className="block text-base font-semibold text-slate-950">Let Deity help you build your profile</span>
+                                <span className="block text-sm text-slate-900">Your profile is {profileCompleteness}% complete. Ask Deity for personalized assistance.</span>
                             </span>
                             <AskDeityButton
                                 onClick={() => window.dispatchEvent(new CustomEvent('open-deity-chat', {
@@ -396,7 +396,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                     >
                         {/* Header */}
                         <div data-profile-identity-header className="mb-5 flex items-center justify-between gap-2 sm:mb-6 sm:gap-4">
-                            <h2 className="text-xl font-bold text-white sm:text-2xl">
+                            <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">
                                 {profilePicUrl ? 'Hey, wonderful' : 'Profile'}
                             </h2>
 
@@ -415,7 +415,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     type="button"
                                     variant="mediaFrame"
                                     radius={24}
-                                    className="aspect-square w-full max-w-72 overflow-hidden hover:ring-4 ring-white/30 lg:max-w-64"
+                                    className="aspect-square w-full max-w-72 overflow-hidden hover:ring-4 ring-slate-500/30 lg:max-w-64"
                                     contentClassName="block h-full w-full"
                                     onClick={() => fileInputRef.current?.click()}
                                     aria-label="Upload profile picture"
@@ -427,7 +427,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <span className="w-full h-full flex items-center justify-center text-white/50">
+                                        <span className="w-full h-full flex items-center justify-center text-slate-900">
                                             <span className="text-4xl">+</span>
                                         </span>
                                     )}
@@ -439,7 +439,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     onChange={handleFileSelect}
                                     className="hidden"
                                 />
-                                <p className="text-white/50 text-sm mt-2">Click to upload</p>
+                                <p className="text-slate-900 text-sm mt-2">Click to upload</p>
                             </div>
 
                             {/* Cropper Modal */}
@@ -459,7 +459,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between mb-1 ml-1">
-                                        <label htmlFor="profile-full-name" className="block text-white/50 text-xs font-bold uppercase tracking-wider">FULL NAME</label>
+                                        <label htmlFor="profile-full-name" className="block text-slate-900 text-xs font-bold uppercase tracking-wider">FULL NAME</label>
                                     </div>
                                     <Input
                                         id="profile-full-name"
@@ -474,10 +474,10 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
                                 <div className="space-y-4">
                                     <div className="mb-3 ml-1 flex items-center justify-between gap-3">
-                                        <label htmlFor="profile-headline" className="block text-white/50 text-xs font-bold uppercase tracking-wider">HEADLINE</label>
+                                        <label htmlFor="profile-headline" className="block text-slate-900 text-xs font-bold uppercase tracking-wider">HEADLINE</label>
                                         <div className="flex items-center gap-3">
                                             {/* Character Counter */}
-                                            <span className="text-white/40 text-[10px] font-medium">
+                                            <span className="text-slate-900 text-[10px] font-medium">
                                                 {headline.length}/120
                                             </span>
                                         </div>
@@ -495,10 +495,10 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
                                 <div>
                                     <div className="mb-3 ml-1 flex items-center justify-between gap-3">
-                                        <label htmlFor="profile-bio" className="block text-white/50 text-xs font-bold uppercase tracking-wider">BIO</label>
+                                        <label htmlFor="profile-bio" className="block text-slate-900 text-xs font-bold uppercase tracking-wider">BIO</label>
                                     </div>
                                     <TahoeGlassField
-                                        tone="light"
+                                        tone="dark"
                                         surfaceClassName="p-0"
                                         controlClassName="min-h-[384px] resize-none p-4 text-[17px] font-medium leading-[22px] md:min-h-0 profile-bio-input"
                                         data-mobile-bio-field="expanded"
@@ -512,7 +512,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
                                             placeholder="Need inspiration? Use this template: 'I am the [type of person] for [target customers] who want to [desired outcome]' and continue to elaborate on the experience of why you do this, how you do it, and what exactly is involved."
                                             rows={4}
-                                            className="text-white placeholder:text-white/50"
+                                            className="text-slate-950 placeholder:text-slate-900"
                                         />
                                     </TahoeGlassField>
                                 </div>
@@ -523,17 +523,17 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                         </div>
 
                         {/* Free profile URL */}
-                        <div className="mt-8 pt-8 border-t border-white/10">
+                        <div className="mt-8 pt-8 border-t border-slate-500/15">
                             <div className="flex items-center gap-3 mb-4">
-                                <h3 className="text-xl font-bold text-white">Profile URL</h3>
-                                <TahoeGlassSurface variant="pill" tone="light" className="px-3 py-1" contentClassName="flex items-center justify-center">
-                                    <span className="text-xs font-medium text-white/95">Premium · Free</span>
-                                </TahoeGlassSurface>
+                                <h3 className="text-xl font-bold text-slate-950">Profile URL</h3>
+                                <span className="nsso-glass-control inline-flex items-center justify-center rounded-full px-3 py-1">
+                                    <span className="text-xs font-medium text-slate-900">Premium · Free</span>
+                                </span>
                             </div>
 
                             <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                                <TahoeGlassSurface variant="recessed" radius={12} tone="light" className="h-[54px] w-full md:flex-1" contentClassName="flex h-full w-full items-center px-2">
-                                    <span className="shrink-0 pl-2 text-[18px] font-medium text-white/95 sm:text-[22px]">nsso.me/</span>
+                                <TahoeGlassSurface variant="recessed" radius={12} tone="dark" className="h-[54px] w-full md:flex-1" contentClassName="flex h-full w-full items-center px-2">
+                                    <span className="shrink-0 pl-2 text-[18px] font-medium text-slate-900 sm:text-[22px]">nsso.me/</span>
                                     <input
                                         type="text"
                                         value={customDomain}
@@ -542,7 +542,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                         aria-label="Profile username"
                                         autoCapitalize="none"
                                         autoCorrect="off"
-                                        className="min-w-0 flex-1 border-none bg-transparent text-[18px] font-medium text-white outline-none placeholder:text-white/50 sm:text-[22px]"
+                                        className="min-w-0 flex-1 border-none bg-transparent text-[18px] font-medium text-slate-950 outline-none placeholder:text-slate-900 sm:text-[22px]"
                                     />
                                     <LightIconButton
                                         onClick={handleCopyUrl}
@@ -566,15 +566,15 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                             {customDomain && customDomain !== user?.username && (
                                 <div className="mt-2" aria-live="polite">
                                     {checkingUsername ? (
-                                        <p className="text-white/50 text-sm">Checking availability...</p>
+                                        <p className="text-slate-900 text-sm">Checking availability...</p>
                                     ) : usernameAvailable === true ? (
-                                        <p className="text-green-400 text-sm">✓ This username is available!</p>
+                                        <p className="text-green-800 text-sm">✓ This username is available!</p>
                                     ) : usernameAvailable === false ? (
-                                        <p className="text-red-400 text-sm">✗ {usernameError || 'Username not available'}</p>
+                                        <p className="text-rose-800 text-sm">✗ {usernameError || 'Username not available'}</p>
                                     ) : null}
                                 </div>
                             )}
-                            <p className="mt-4 text-white/60 text-sm">Premium profile access and your nsso.me URL are currently free for the first 1000 users.</p>
+                            <p className="mt-4 text-slate-900 text-sm">Premium profile access and your nsso.me URL are currently free for the first 1000 users.</p>
                         </div>
                     </GlassCard>
                 )}
@@ -594,7 +594,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                             <GlassCard className="overflow-visible p-4 sm:p-6 lg:p-8">
                                 <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
                                     <div className="flex min-w-0 items-center gap-1">
-                                        <h2 className="text-xl font-bold text-white sm:text-2xl">Links</h2>
+                                        <h2 className="text-xl font-bold text-slate-950 sm:text-2xl">Links</h2>
                                         <SectionHelp title="Links">Where can people find you or your work online?</SectionHelp>
                                     </div>
                                     <div className="flex items-center gap-1 sm:gap-2">
@@ -637,7 +637,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     </DndContext>
 
                                     {links.length === 0 && (
-                                        <p className="text-white/50 text-center py-8">
+                                        <p className="text-slate-900 text-center py-8">
                                             No links yet. Choose Add Link to add your first link.
                                         </p>
                                     )}
@@ -649,7 +649,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                             <GlassCard className="p-4 sm:p-8">
                                 <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-white">Contact</h2>
+                                        <h2 className="text-2xl font-bold text-slate-950">Contact</h2>
                                     </div>
                                     <LightButton
                                         onClick={() => { void addProfileItem('contact', 'top') }}
@@ -683,7 +683,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     </DndContext>
 
                                     {contacts.length === 0 && (
-                                        <p className="text-white/50 text-center py-8">
+                                        <p className="text-slate-900 text-center py-8">
                                             No contact methods yet. Choose Add Contact to add one.
                                         </p>
                                     )}
@@ -704,7 +704,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
 
 export default function DashboardPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><TahoeGlassSurface variant="pill" tone="light" className="px-6 py-3" contentClassName="text-xl">Loading...</TahoeGlassSurface></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><TahoeGlassSurface variant="pill" tone="dark" className="px-6 py-3" contentClassName="text-xl">Loading...</TahoeGlassSurface></div>}>
             <DashboardContent />
         </Suspense>
     )

@@ -67,7 +67,7 @@ function PrimaryBackdropCard({
 }: PrimaryBackdropCardProps) {
   // Keep one TahoeBackdropSurface root across SSR, hydration and capability
   // changes. Only Chromium's verified live-DOM SVG route enables its direct
-  // lens; Apple mobile remains on the same darker material without allocating
+  // lens; Apple mobile remains on the same bright material without allocating
   // another owned-scene WebGL context beneath the fixed header.
   const directBackdropEnabled = useSyncExternalStore(
     subscribeDashboardBackdropPolicy,
@@ -79,7 +79,7 @@ function PrimaryBackdropCard({
     radius ?? (variant === "apple" || variant === "ultimate" ? 24 : 40);
 
   return (
-    <TahoeBackdropSurface
+    <TahoeBackdropSurface chromiumAppearance="light" materialFinish="satin"
       backdropEnabled={directBackdropEnabled}
       variant={VARIANT_SURFACE[variant]}
       radius={resolvedRadius}
@@ -98,9 +98,9 @@ function PrimaryBackdropCard({
 /**
  * Dashboard-safe glass defaults.
  *
- * White dashboard copy needs a darker material than the marketing surfaces.
- * Keeping that policy here prevents individual dashboard cards from silently
- * reverting to a completely clear optical body.
+ * Match the bright crystal material used on the homepage and sign-in page.
+ * Individual cards inherit dark readable content and a light satin backing
+ * without introducing another owned-scene rendering context.
  */
 export default function DashboardGlassCard({
   children,
@@ -108,18 +108,20 @@ export default function DashboardGlassCard({
   variant = "default",
   radius,
   style,
-  tone = "light",
-  semanticTint = "dark",
+  tone = "dark",
+  semanticTint = "light",
   semanticTintOpacity,
   refractive = false,
   selected = false,
 }: DashboardGlassCardProps) {
-  const tintOpacity = semanticTintOpacity ?? (selected ? 0.42 : 0.38);
+  const tintOpacity = semanticTintOpacity ?? (semanticTint === "none" ? 0 : selected ? 0.2 : 0.18);
 
   if (!refractive) {
     return (
       <GlassCard
-        className={className}
+        chromiumAppearance="light"
+        materialFinish="satin"
+        className={`nsso-crystal-panel ${className}`}
         variant={variant}
         radius={radius}
         style={style}
@@ -134,7 +136,7 @@ export default function DashboardGlassCard({
 
   return (
     <PrimaryBackdropCard
-      className={className}
+      className={`nsso-crystal-panel ${className}`}
       variant={variant}
       radius={radius}
       style={style}

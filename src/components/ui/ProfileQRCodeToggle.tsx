@@ -32,14 +32,14 @@ export default function ProfileQRCodeToggle({
         <TahoeGlassSurface
             variant="mediaFrame"
             radius={24}
-            tone="light"
-            semanticTint="dark"
+            tone="dark"
+            semanticTint="light"
             semanticTintOpacity={0.03}
             role="button"
             tabIndex={0}
             aria-label={isFlipped ? `Show ${fullName}'s profile photo` : `Show ${fullName}'s QR code`}
             aria-pressed={isFlipped}
-            className={`relative w-full max-w-[200px] aspect-square mx-auto lg:mx-0 cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 ${className}`}
+            className={`relative w-full max-w-[200px] aspect-square mx-auto lg:mx-0 cursor-pointer group outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${className}`}
             contentClassName="absolute inset-0 [perspective:1000px]"
             onClick={toggleFlipped}
             onKeyDown={(event) => {
@@ -67,16 +67,10 @@ export default function ProfileQRCodeToggle({
                     />
 
                     {/* Hover Hint */}
-                    <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-black/80 to-transparent px-3 pb-3 pt-7">
-                        <TahoeGlassSurface
-                            variant="pill"
-                            tone="light"
-                            semanticTint="light"
-                            semanticTintOpacity={0.06}
-                            className="border border-white/20 px-3 py-1 text-sm font-medium text-white"
-                        >
+                    <div className="absolute inset-x-0 bottom-0 flex justify-center px-3 pb-3 pt-7">
+                        <span className="nsso-crystal-reading rounded-full border border-white/70 px-3 py-1 text-sm font-medium text-slate-950 [text-shadow:none]">
                             Tap to show QR
-                        </TahoeGlassSurface>
+                        </span>
                     </div>
                 </div>}
 

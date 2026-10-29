@@ -61,51 +61,51 @@ export default function NetworkTable({ connections, onUpdateConnection, onOpenNo
     return <div className="w-full min-w-0 space-y-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="relative flex-1">
-                <Search aria-hidden="true" size={18} className="pointer-events-none absolute left-3 top-1/2 z-30 -translate-y-1/2 text-white/70" />
-                <TahoeGlassField label="Search connections" visuallyHideLabel tone="light" surfaceClassName="min-h-11 py-2.5 pl-10 pr-4">
-                    <input type="search" placeholder="Search people or meeting locations" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} className="text-base text-white placeholder:text-white/60" />
+                <Search aria-hidden="true" size={18} className="pointer-events-none absolute left-3 top-1/2 z-30 -translate-y-1/2 text-slate-900" />
+                <TahoeGlassField label="Search connections" visuallyHideLabel tone="dark" surfaceClassName="min-h-11 py-2.5 pl-10 pr-4">
+                    <input type="search" placeholder="Search people or meeting locations" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} className="text-base text-slate-950 placeholder:text-slate-900" />
                 </TahoeGlassField>
             </div>
             <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 md:w-[320px]">
-                <TahoeGlassField label="Sort connections" tone="light" surfaceClassName="min-h-11 px-3 py-2.5">
-                    <select aria-label="Sort connections" value={sortField} onChange={event => setSortField(event.target.value as SortField)} className="text-base text-white">
-                        <option value="date" className="bg-neutral-900">Date met</option>
-                        <option value="name" className="bg-neutral-900">Name</option>
-                        <option value="location" className="bg-neutral-900">Location</option>
+                <TahoeGlassField label="Sort connections" tone="dark" surfaceClassName="min-h-11 px-3 py-2.5">
+                    <select aria-label="Sort connections" value={sortField} onChange={event => setSortField(event.target.value as SortField)} className="text-base text-slate-950">
+                        <option value="date" className="bg-white">Date met</option>
+                        <option value="name" className="bg-white">Name</option>
+                        <option value="location" className="bg-white">Location</option>
                     </select>
                 </TahoeGlassField>
-                <LightButton className="min-h-11 self-end px-3 py-2" onClick={() => setSortOrder(current => current === 'asc' ? 'desc' : 'asc')} aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`} contentClassName="text-sm text-slate-800">
+                <LightButton className="min-h-11 self-end px-3 py-2" onClick={() => setSortOrder(current => current === 'asc' ? 'desc' : 'asc')} aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`} contentClassName="text-sm text-slate-900">
                     {sortField === 'date' ? (sortOrder === 'desc' ? 'Newest first ↓' : 'Oldest first ↑') : (sortOrder === 'asc' ? 'A–Z ↑' : 'Z–A ↓')}
                 </LightButton>
             </div>
         </div>
-        <p role="status" className="text-sm text-white/70">{filteredConnections.length} {filteredConnections.length === 1 ? 'connection' : 'connections'}{searchQuery.trim() ? ' found' : ''}</p>
-        {filteredConnections.length === 0 ? <div className="rounded-2xl border border-white/15 bg-black/20 p-5 text-white/80">
+        <p role="status" className="text-sm text-slate-900">{filteredConnections.length} {filteredConnections.length === 1 ? 'connection' : 'connections'}{searchQuery.trim() ? ' found' : ''}</p>
+        {filteredConnections.length === 0 ? <div className="rounded-2xl border border-slate-500/15 bg-white/40 p-5 text-slate-900">
             <p>{connections.length ? 'No connections match your search.' : 'No connections yet.'}</p>
-            {searchQuery && <LightButton type="button" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-slate-800" onClick={() => setSearchQuery('')}>Clear search</LightButton>}
+            {searchQuery && <LightButton type="button" className="mt-2 min-h-11 px-3 py-2" contentClassName="text-sm text-slate-900" onClick={() => setSearchQuery('')}>Clear search</LightButton>}
         </div> : <>
-            <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_144px] gap-4 px-4 text-xs font-semibold uppercase tracking-wider text-white/70 md:grid"><span>Person</span><span>Meeting location</span><span>Date met</span><span>Notes</span></div>
+            <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_144px] gap-4 px-4 text-xs font-semibold uppercase tracking-wider text-slate-900 md:grid"><span>Person</span><span>Meeting location</span><span>Date met</span><span>Notes</span></div>
             <ul className="space-y-3" aria-label="Your connections">
                 {filteredConnections.map(conn => <li key={conn.id}>
-                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" contentClassName="grid min-w-0 gap-4 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_144px] md:items-center">
-                        <Link href={`/${conn.username}`} className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white">
-                            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15 font-semibold text-white ring-1 ring-white/20">
+                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" className="nsso-crystal-panel" variant="card" semanticTint="light" semanticTintOpacity={0.18} radius={16} tone="dark" contentClassName="grid min-w-0 gap-4 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px_144px] md:items-center">
+                        <Link href={`/${conn.username}`} className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-slate-700">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/15 font-semibold text-slate-950 ring-1 ring-slate-500/20">
                                 {conn.profilePicUrl ? <img src={conn.profilePicUrl} alt="" className="h-full w-full object-cover" /> : conn.fullName.slice(0, 2).toUpperCase()}
                             </span>
-                            <span className="min-w-0"><span className="block break-words font-semibold text-white">{conn.fullName}</span><span className="block break-all text-sm text-white/70">nsso.me/{conn.username}</span></span>
+                            <span className="min-w-0"><span className="block break-words font-semibold text-slate-950">{conn.fullName}</span><span className="block break-all text-sm text-slate-900">nsso.me/{conn.username}</span></span>
                         </Link>
                         <div className="min-w-0">
-                            <p className="mb-1 text-xs font-semibold text-white/70 md:sr-only">Meeting location</p>
+                            <p className="mb-1 text-xs font-semibold text-slate-900 md:sr-only">Meeting location</p>
                             {editingLocationId === conn.id ? <form onSubmit={event => { event.preventDefault(); void saveLocation(conn.id) }} className="space-y-2">
-                                <TahoeGlassField label={`Location for ${conn.fullName}`} visuallyHideLabel tone="light" surfaceClassName="px-3 py-2">
-                                    <input autoFocus type="text" maxLength={300} disabled={savingLocation} value={locationValue} onChange={event => setLocationValue(event.target.value)} onKeyDown={event => { if (event.key === 'Escape' && !locationPending.current) setEditingLocationId(null) }} placeholder="Where did you meet?" className="text-base text-white placeholder:text-white/60" />
+                                <TahoeGlassField label={`Location for ${conn.fullName}`} visuallyHideLabel tone="dark" surfaceClassName="px-3 py-2">
+                                    <input autoFocus type="text" maxLength={300} disabled={savingLocation} value={locationValue} onChange={event => setLocationValue(event.target.value)} onKeyDown={event => { if (event.key === 'Escape' && !locationPending.current) setEditingLocationId(null) }} placeholder="Where did you meet?" className="text-base text-slate-950 placeholder:text-slate-900" />
                                 </TahoeGlassField>
-                                {locationError && <p role="alert" className="text-sm text-rose-200">{locationError}</p>}
+                                {locationError && <p role="alert" className="text-sm text-rose-800">{locationError}</p>}
                                 <div className="flex flex-wrap gap-2"><LightButton type="submit" disabled={savingLocation} className="min-h-11 px-3 py-2">{savingLocation ? 'Saving…' : 'Save location'}</LightButton><LightButton disabled={savingLocation} className="min-h-11 px-3 py-2" onClick={() => setEditingLocationId(null)}>Cancel</LightButton></div>
                             </form> : <LightButton disabled={savingLocation} aria-label={`Edit location for ${conn.fullName}`} className="min-h-11 w-full justify-start rounded-lg text-left text-sm" contentClassName="w-full justify-start" onClick={() => { setEditingLocationId(conn.id); setLocationValue(conn.location || ''); setLocationError('') }}><MapPin aria-hidden="true" size={16} className="shrink-0" /><span className="break-words">{conn.location || 'Add meeting location'}</span></LightButton>}
                         </div>
-                        <div><p className="text-xs font-semibold text-white/70 md:sr-only">Date met</p><time dateTime={conn.dateMet} className="text-sm text-white/85">{formatDate(conn.dateMet)}</time></div>
-                        <LightButton type="button" onClick={() => onOpenNotes(conn)} className="h-11 min-h-11 w-36 max-w-full shrink-0 justify-self-start px-4 py-0" contentClassName="gap-2 whitespace-nowrap text-sm leading-5 text-slate-800" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} className="shrink-0" /><span className="whitespace-nowrap">{conn.notes ? 'Edit notes' : 'Add notes'}</span></LightButton>
+                        <div><p className="text-xs font-semibold text-slate-900 md:sr-only">Date met</p><time dateTime={conn.dateMet} className="text-sm text-slate-900">{formatDate(conn.dateMet)}</time></div>
+                        <LightButton type="button" onClick={() => onOpenNotes(conn)} className="h-11 min-h-11 w-36 max-w-full shrink-0 justify-self-start px-4 py-0" contentClassName="gap-2 whitespace-nowrap text-sm leading-5 text-slate-900" aria-label={`${conn.notes ? 'Edit' : 'Add'} notes for ${conn.fullName}`}><NotebookPen aria-hidden="true" size={18} className="shrink-0" /><span className="whitespace-nowrap">{conn.notes ? 'Edit notes' : 'Add notes'}</span></LightButton>
                     </TahoeGlassSurface>
                 </li>)}
             </ul>

@@ -38,20 +38,20 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
     }
 
     return (<>
-        <TahoeGlassSurface
+        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
             data-profile-item-id={contact.id}
             ref={setNodeRef}
             style={style}
             variant="card"
             radius={12}
-            tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.38}
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.18}
             tracking={isDragging ? 'continuous' : 'static'}
-            className={isDragging ? 'ring-1 ring-white/30 shadow-xl' : ''}
+            className={`nsso-crystal-panel ${isDragging ? 'ring-1 ring-slate-500/30 shadow-xl' : ''}`}
             contentClassName="flex flex-col items-stretch gap-3 p-3 sm:gap-4 sm:p-4"
         >
-            <div data-sortable-controls="contact" className="-mx-3 -mt-3 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center border-b border-white/10 px-2 py-1 sm:-mx-4 sm:-mt-4">
+            <div data-sortable-controls="contact" className="-mx-3 -mt-3 grid grid-cols-[44px_minmax(0,1fr)_44px] items-center border-b border-slate-500/15 px-2 py-1 sm:-mx-4 sm:-mt-4">
                 <LightIconButton
                     ref={setActivatorNodeRef}
                     type="button"
@@ -72,15 +72,15 @@ export function SortableContactItem({ contact, updateContact, removeContact }: P
 
             <div className="flex min-w-0 flex-col gap-3 sm:gap-4 md:flex-row md:flex-wrap md:items-center">
             <div className="w-full md:w-48 shrink-0">
-                <TahoeGlassField tone="light" surfaceClassName="px-3 py-2.5">
+                <TahoeGlassField tone="dark" surfaceClassName="px-3 py-2.5">
                     <select
                         value={contact.method}
                         onChange={(e) => updateContact(contact.id, 'method', e.target.value)}
-                        className="text-white cursor-pointer appearance-none"
+                        className="text-slate-950 cursor-pointer appearance-none"
                         aria-label="Contact method"
                     >
                         {CONTACT_METHODS.map(method => (
-                            <option key={method} value={method} className="bg-neutral-900 text-white">
+                            <option key={method} value={method} className="bg-white text-slate-950">
                                 {method}
                             </option>
                         ))}

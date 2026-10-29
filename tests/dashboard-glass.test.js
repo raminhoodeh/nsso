@@ -56,15 +56,17 @@ function jsxAttributes(node, sourceFile) {
   );
 }
 
-test("dashboard cards use one readable dark material policy", () => {
+test("dashboard cards use one bright satin material policy with dark content", () => {
   const wrapper = fs.readFileSync(
     path.join(DASHBOARD_ROOT, "components/DashboardGlassCard.tsx"),
     "utf8",
   );
 
-  assert.match(wrapper, /semanticTint = "dark"/);
-  assert.match(wrapper, /selected \? 0\.42 : 0\.38/);
-  assert.match(wrapper, /tone = "light"/);
+  assert.match(wrapper, /semanticTint = "light"/);
+  assert.match(wrapper, /selected \? 0\.2 : 0\.18/);
+  assert.match(wrapper, /tone = "dark"/);
+  assert.match(wrapper, /chromiumAppearance="light"/);
+  assert.match(wrapper, /materialFinish="satin"/);
   assert.match(wrapper, /TahoeBackdropSurface/);
   assert.match(wrapper, /getDashboardDirectBackdropSnapshot/);
 
@@ -79,7 +81,7 @@ test("dashboard cards use one readable dark material policy", () => {
   }
 });
 
-test("dashboard cards carry dark transmission and white dialogs explicitly opt into opaque reading material", () => {
+test("active dashboard cards carry light satin transmission and white dialogs retain explicit readable material", () => {
   const missing = [];
 
   for (const file of dashboardFiles()) {
@@ -104,10 +106,12 @@ test("dashboard cards carry dark transmission and white dialogs explicitly opt i
           return;
         }
 
+        // News Feed is unavailable; its dormant visual implementation is outside this active-editor change.
+        const unavailableFeed = ["CreatePostCard.tsx", "FeedItemCard.tsx", "FeedTab.tsx"].some(name => file.endsWith(name));
         if (
-          (directCard || dialog) &&
-          (attributes.semanticTint !== '"dark"' ||
-            attributes.semanticTintOpacity !== "{0.38}")
+          (directCard || dialog) && !unavailableFeed &&
+          (attributes.semanticTint !== '"light"' ||
+            attributes.semanticTintOpacity !== "{0.18}" || attributes.tone !== '"dark"')
         ) {
           const line =
             sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile))
@@ -152,7 +156,9 @@ test("primary dashboard panes use the reusable backdrop engine without mobile le
   assert.match(sidebar, /<TahoeBackdropSurface/);
   assert.match(sidebar, /backdropEnabled=\{backdropEnabled\}/);
   assert.match(sidebar, /getDashboardDirectBackdropSnapshot/);
-  assert.match(sidebar, /semanticTintOpacity=\{0\.38\}/);
+  assert.match(sidebar, /semanticTintOpacity=\{0\.18\}/);
+  assert.match(sidebar, /chromiumAppearance="light"/);
+  assert.match(sidebar, /materialFinish="satin"/);
   assert.match(vanta, /getDashboardAppleMobileSnapshot/);
   assert.match(vanta, /useFullAppleMobileSource/);
   assert.match(vanta, /h-\[100dvh\] w-screen/);

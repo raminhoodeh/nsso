@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { LIGHT_PANEL } from './light-panel'
 
-/** Native white controls, shared by Deity and the core editing interface. */
+/** Native glass controls reuse their parent scene without registering more optics. */
 export const lightButtonClass = cn(
     LIGHT_PANEL.control,
     LIGHT_PANEL.focus,

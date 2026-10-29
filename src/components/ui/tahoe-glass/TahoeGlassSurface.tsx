@@ -8,7 +8,7 @@ import {
 import { TahoeGlassDirectBackdropBoundaryContext } from "@/components/ui/tahoe-glass/TahoeGlassBoundaryContext";
 import { cn } from "@/lib/utils";
 import { TAHOE_SPECULAR_SHADOW } from "@/lib/tahoe-glass/constants";
-import { useChromeGlassOptics } from "./ChromeGlassOptics";
+import { useChromeGlassOptics, type GlassAppearance } from "./ChromeGlassOptics";
 import { supportsChromeGlassGeometry } from "@/lib/tahoe-glass/chrome-policy";
 
 export type TahoeGlassSurfaceElement =
@@ -49,6 +49,9 @@ export interface TahoeGlassSurfaceProps
   /** Optional semantic wash rendered as its own layer, never as shell fill. */
   semanticTint?: TahoeGlassSemanticTint;
   semanticTintOpacity?: number;
+  /** Match a core light lens without changing separate-app materials. */
+  chromiumAppearance?: GlassAppearance;
+  materialFinish?: "clear" | "satin";
   /** Enable while a surface is animated or follows the pointer. */
   tracking?: "static" | "continuous";
   /** Explicit optical stacking override for portals and top-level overlays. */
@@ -106,6 +109,8 @@ export const TahoeGlassSurface = React.forwardRef<
     tone = "inherit",
     semanticTint = "none",
     semanticTintOpacity = 0.07,
+    chromiumAppearance = "dark",
+    materialFinish = "clear",
     children,
     style,
     href,
@@ -130,7 +135,8 @@ export const TahoeGlassSurface = React.forwardRef<
   const chrome = useChromeGlassOptics(internalRef,
     !insideDirectBackdrop && supportsChromeGlassGeometry(radius, style) && ["card", "panel", "mediaFrame"].includes(variant) &&
     props["data-tahoe-readable-overlay" as keyof typeof props] !== "true" &&
-    !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""));
+    !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""),
+    false, chromiumAppearance, false, materialFinish === "satin");
   const resolvedTint = chrome.enabled && semanticTint === "none" ? (tone === "dark" ? "light" : "dark") : semanticTint;
   const resolvedTintOpacity = chrome.enabled && semanticTint === "none" ? 0.18 : semanticTintOpacity;
 
@@ -232,6 +238,8 @@ export const TahoeGlassSurface = React.forwardRef<
       data-tahoe-button-material={isGlassButton && solidMaterial ? "solid" : undefined}
       data-tahoe-button-reduced-motion={isGlassButton && diagnostics.reducedMotion ? "true" : undefined}
       data-tahoe-glass-tone={tone}
+      data-tahoe-chromium-appearance={chromiumAppearance}
+      data-tahoe-material-finish={materialFinish}
       data-tahoe-glass-tint={resolvedTint}
       data-tahoe-chromium-optics={chrome.enabled ? (chrome.ready ? "refract" : "initializing") : undefined}
       data-tahoe-glass-state={chrome.enabled ? (chrome.ready ? "active" : "initializing") : context ? undefined : diagnostics.status}
@@ -254,10 +262,10 @@ export const TahoeGlassSurface = React.forwardRef<
               ? "Canvas"
               : "color-mix(in srgb, white 25%, transparent)",
           backdropFilter: fallbackFrost
-            ? "blur(2px) saturate(180%) brightness(1.05)"
+            ? `blur(${materialFinish === "satin" ? "5px" : "2px"}) saturate(180%) brightness(1.05)`
             : "none",
           WebkitBackdropFilter: fallbackFrost
-            ? "blur(1px) saturate(180%) brightness(1.05)"
+            ? `blur(${materialFinish === "satin" ? "5px" : "1px"}) saturate(180%) brightness(1.05)`
             : "none",
           backgroundImage: fallbackFrost
             ? "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)"
