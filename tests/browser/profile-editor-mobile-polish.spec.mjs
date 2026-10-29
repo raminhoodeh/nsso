@@ -206,6 +206,79 @@ test('identity card has one compact top-right Ask Deity control and a generously
     }
 })
 
+test('desktop bio native dragging grows its glass container, clamps at four times its height and preserves editing', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'Native mouse resizing is desktop-only.')
+    await page.setViewportSize({ width: 1440, height: 1800 })
+    const state = await mount(page, { realScene: true, standardsMode: true })
+    try {
+        const bio = page.getByRole('textbox', { name: 'BIO', exact: true })
+        const card = page.locator('[data-profile-identity-header]').locator('xpath=../..')
+        const urlHeading = page.getByRole('heading', { name: 'Profile URL', exact: true })
+        const geometry = () => bio.evaluate(element => ({
+            field: element.getBoundingClientRect().height,
+            shell: element.closest('[data-tahoe-glass-surface="recessed"]').getBoundingClientRect().height,
+            width: element.getBoundingClientRect().width,
+        }))
+        const drag = async delta => {
+            await bio.scrollIntoViewIfNeeded()
+            const box = await bio.boundingBox()
+            await page.mouse.move(box.x + box.width - 4, box.y + box.height - 4)
+            await page.mouse.down()
+            await page.mouse.move(box.x + box.width - 4, box.y + box.height - 4 + delta, { steps: 12 })
+            await page.mouse.up()
+        }
+        await expect(bio).toHaveCSS('resize', 'vertical')
+        const initial = await geometry()
+        expect(initial.field).toBe(120)
+        const initialCard = await card.boundingBox(), initialUrl = await urlHeading.boundingBox()
+        await drag(180)
+        await expect.poll(async () => (await geometry()).field).toBe(300)
+        const expanded = await geometry(), expandedCard = await card.boundingBox(), expandedUrl = await urlHeading.boundingBox()
+        expect(expanded.shell - initial.shell).toBe(180)
+        expect(expandedCard.height - initialCard.height).toBe(180)
+        expect(expandedUrl.y - initialUrl.y).toBe(180)
+        expect(expanded.width).toBe(initial.width)
+        await drag(600)
+        await expect.poll(async () => (await geometry()).field).toBe(initial.field * 4)
+        await expect(bio).toHaveValue('A fixture biography.')
+        expect(await page.evaluate(() => window.fixtureFieldWrites)).toEqual([])
+        await page.screenshot({ path: testInfo.outputPath('desktop-bio-expanded.png'), fullPage: false })
+        await drag(-1000)
+        await expect.poll(async () => (await geometry()).field).toBe(initial.field)
+        await bio.fill('A synthetic biography edited after resizing.')
+        await bio.press('Tab')
+        await expect.poll(() => page.evaluate(() => window.fixtureProfile.profile.bio)).toBe('A synthetic biography edited after resizing.')
+        await drag(200)
+        await page.setViewportSize({ width: 390, height: 844 })
+        await expect(bio).toHaveCSS('resize', 'none')
+        await expect.poll(async () => (await geometry()).field).toBe(384)
+        await expect(bio).toHaveValue('A synthetic biography edited after resizing.')
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        expect(state.errors).toEqual([])
+        expect(state.unexpected).toEqual([])
+    } finally { await page.evaluate(() => window.fixtureUnmount()) }
+})
+
+test('mobile bio retains its writing space and never exposes desktop resizing', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile', 'Touch-layout regression.')
+    const state = await mount(page, { realScene: true, standardsMode: true })
+    try {
+        const bio = page.getByRole('textbox', { name: 'BIO', exact: true })
+        for (const width of [320, 390, 767, 1024]) {
+            await page.setViewportSize({ width, height: 844 })
+            await expect(bio).toHaveCSS('resize', 'none')
+            const size = await bio.evaluate(element => {
+                const style = getComputedStyle(element)
+                return { height: element.getBoundingClientRect().height, intrinsic: element.rows * parseFloat(style.lineHeight) + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) }
+            })
+            expect(size.height).toBe(width < 768 ? 384 : size.intrinsic)
+            expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        }
+        expect(state.errors).toEqual([])
+        expect(state.unexpected).toEqual([])
+    } finally { await page.evaluate(() => window.fixtureUnmount()) }
+})
+
 test('subtitle-free mobile section titles are vertically centred beside their add controls without an empty subtitle gutter', async ({ page }) => {
     for (const width of [320, 390]) {
         await page.setViewportSize({ width, height: 844 })
@@ -220,7 +293,7 @@ test('subtitle-free mobile section titles are vertically centred beside their ad
     }
 })
 
-async function mount(page, { path = '/dashboard', admin = false, content = 'dashboard', profileState = 'ready', realScene = false } = {}) {
+async function mount(page, { path = '/dashboard', admin = false, content = 'dashboard', profileState = 'ready', realScene = false, standardsMode = false } = {}) {
     const errors = [], unexpected = [], requests = []
     if (realScene) {
         page.on('pageerror', error => errors.push(error.message))
@@ -246,7 +319,7 @@ async function mount(page, { path = '/dashboard', admin = false, content = 'dash
         if (realScene && ['/assets/nsso-logo.png', '/nsso-agent-avatar.png', '/deity logo white.png'].includes(decodeURIComponent(url.pathname))) return route.fulfill({ contentType: 'image/png', body: readFileSync(root + 'public' + decodeURIComponent(url.pathname)) })
         if (url.pathname.startsWith('/api/')) return route.fulfill({ contentType: 'application/json', body: '{}' })
         if (/\.(?:png|svg)$/.test(url.pathname)) return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="458" height="224"><rect width="458" height="224" fill="silver"/></svg>' })
-        return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script>window.fixtureOptions=' + JSON.stringify({ admin, content, profileState }) + '</script><script src="/fixture.js"></script>' })
+        return route.fulfill({ contentType: 'text/html', body: (standardsMode ? '<!doctype html>' : '') + '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script>window.fixtureOptions=' + JSON.stringify({ admin, content, profileState }) + '</script><script src="/fixture.js"></script>' })
     })
     await page.goto('https://nsso.test' + path)
     await expect(page.locator('button[aria-label="Open account menu"]')).toBeAttached()
