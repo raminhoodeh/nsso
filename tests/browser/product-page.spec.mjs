@@ -49,7 +49,7 @@ test.beforeAll(async () => {
     bundle = result.outputFiles[0].text
 })
 
-async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '', styled = false, withTestimonials = false, purchaseUrl = product.purchase_link } = {}) {
+async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '', styled = false, withTestimonials = false, purchaseUrl = product.purchase_link, secondaryPurchaseUrl = null, purchaseActive = true } = {}) {
     const requests = [], errors = []
     const pendingPublic = []
     let publicReleased = false
@@ -66,7 +66,7 @@ async function fixture(page, { published = true, account = { user: null, loading
         if (url.pathname === '/rest/v1/rpc/get_product_details') {
             if (deferPublic && !publicReleased) await new Promise(resolve => pendingPublic.push(resolve))
             if (failures-- > 0) return route.abort('failed')
-            data = published ? { ...product, purchase_link: purchaseUrl, ...(withTestimonials ? { testimonials: [{ name: 'First customer', text: 'First synthetic quote' }, { name: 'Second customer', text: 'Second synthetic quote' }] } : {}), ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
+            data = published ? { ...product, purchase_link: purchaseUrl, secondary_purchase_link: secondaryPurchaseUrl, purchase_link_active: purchaseActive, ...(withTestimonials ? { testimonials: [{ name: 'First customer', text: 'First synthetic quote' }, { name: 'Second customer', text: 'Second synthetic quote' }] } : {}), ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
         } else if (url.pathname === '/rest/v1/contacts') data = [{ method: 'Email', value: 'public-fixture@example.test' }]
         else if (url.pathname === '/rest/v1/users') data = { username: 'fixture-seller' }
         else throw new Error('Unexpected public product query')
@@ -77,7 +77,7 @@ async function fixture(page, { published = true, account = { user: null, loading
     await page.evaluate(({ account, privateMode, draft }) => {
         window.fixtureAccount = account; window.fixturePrivateMode = privateMode; window.fixtureDraft = draft
         localStorage.setItem('sb-product-fixture-auth-token', JSON.stringify({ access_token: 'expired-synthetic-token', refresh_token: 'synthetic-refresh-token', expires_at: 1, user: { id: 'previous-private-account' } }))
-    }, { account, privateMode, draft: { ...product, purchase_link: purchaseUrl, sales_page_published: false, headline: 'PRIVATE owner draft', intro_text: 'PRIVATE unsaved sales copy' } })
+    }, { account, privateMode, draft: { ...product, purchase_link: purchaseUrl, secondary_purchase_link: secondaryPurchaseUrl, purchase_link_active: purchaseActive, sales_page_published: false, headline: 'PRIVATE owner draft', intro_text: 'PRIVATE unsaved sales copy' } })
     await page.addScriptTag({ content: bundle })
     return { requests, errors, releasePublic: () => { publicReleased = true; pendingPublic.splice(0).forEach(resolve => resolve()) } }
 }
@@ -156,6 +156,90 @@ for (const [store, purchaseUrl, label] of [
     expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
     expect(preview.requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
     expect(preview.errors).toEqual([])
+})
+
+
+const courseTerms = 'Enrolment, pricing and refunds are handled by the course platform. Review its terms before enrolling.'
+const coursePrimary = 'https://www.udemy.com/course/synthetic-ai-product/?couponCode=FIXTURE'
+const courseSecondary = 'https://www.coursera.org/learn/synthetic-ai-product'
+
+test('two course destinations remain ordered and equal-width while live PayPal and every preview action stay unchanged', async ({ page }, testInfo) => {
+    const state = await fixture(page, { purchaseUrl: coursePrimary, secondaryPurchaseUrl: courseSecondary, styled: true })
+    const merchant = page.locator('form button').filter({ visible: true })
+    await expect(merchant).toHaveText('Buy via PayPal')
+    await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
+    await expect(merchant.locator('..')).toHaveAttribute('action', action)
+    await expect(merchant.locator('..')).toHaveAttribute('method', 'post')
+    await expect(merchant.locator('..')).toHaveAttribute('target', '_top')
+    for (const [label, url] of [['View on Udemy', coursePrimary], ['View on Coursera', courseSecondary]]) {
+        const copies = page.getByRole('link', { name: label, exact: true, includeHidden: true })
+        await expect(copies).toHaveCount(2)
+        for (const link of await copies.all()) {
+            await expect(link).toHaveAttribute('href', url)
+            await expect(link).toHaveAttribute('target', '_blank')
+            await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+        }
+        const visible = copies.filter({ visible: true })
+        await expect(visible).toHaveAttribute('data-nsso-control', 'white')
+        await expectEqualPurchaseWidths(visible, merchant)
+    }
+    const visibleLabels = await page.getByRole('link', { name: /^View on (Udemy|Coursera)$/, exact: true }).allTextContents()
+    expect(visibleLabels.map(text => text.trim())).toEqual(['View on Udemy', 'View on Coursera'])
+    await expect(page.getByText(courseTerms, { exact: true })).toBeVisible()
+    await expect(page.getByText(/100% Guaranteed Satisfaction/)).toHaveCount(0)
+    await expect(page.getByRole('img', { name: 'Guarantee', exact: true })).toHaveCount(0)
+    expect(state.errors).toEqual([])
+    await page.screenshot({ path: testInfo.outputPath('two-course-purchase-actions.png'), fullPage: true })
+
+    const preview = await fixture(page, { purchaseUrl: coursePrimary, secondaryPurchaseUrl: courseSecondary, styled: true, search: '?preview=true' })
+    const previewPaypal = page.getByRole('button', { name: 'Buy via PayPal', exact: true }).filter({ visible: true })
+    for (const label of ['View on Udemy', 'View on Coursera']) {
+        const control = page.getByRole('button', { name: label, exact: true }).filter({ visible: true })
+        await expectEqualPurchaseWidths(control, previewPaypal)
+        await control.press('Enter')
+    }
+    await previewPaypal.press('Space')
+    await expect(page.getByRole('status')).toHaveCount(3)
+    await expect(page.locator('form,script[src*="paypal"]')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /^View on (Udemy|Coursera)$/ })).toHaveCount(0)
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+    expect(preview.requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
+    expect(preview.errors).toEqual([])
+})
+
+test('second sales-page destinations deduplicate, reject unsafe links and obey the shared activation boundary', async ({ page }) => {
+    for (const scenario of [
+        { purchaseUrl: ' HTTPS://WWW.UDEMY.COM:443/course/synthetic-ai-product/ ', secondaryPurchaseUrl: 'https://www.udemy.com/course/synthetic-ai-product/', expected: [['View on Udemy', 'https://www.udemy.com/course/synthetic-ai-product/']] },
+        { purchaseUrl: 'javascript:alert(1)', secondaryPurchaseUrl: courseSecondary, expected: [['View on Coursera', courseSecondary]] },
+        { purchaseUrl: coursePrimary, secondaryPurchaseUrl: 'https://seller.example/\nunsafe', expected: [['View on Udemy', coursePrimary]] },
+        { purchaseUrl: coursePrimary, secondaryPurchaseUrl: courseSecondary, purchaseActive: false, expected: [] },
+    ]) {
+        const state = await fixture(page, { ...scenario, styled: true })
+        await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+        const links = page.getByRole('link', { name: /^View on (Udemy|Coursera)$/, exact: true })
+        await expect(links).toHaveCount(scenario.expected.length)
+        for (const [label, href] of scenario.expected) await expect(page.getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href)
+        await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)
+        await expect(page.locator('form button').filter({ visible: true })).toHaveText('Buy via PayPal')
+        await expect(page.getByText(courseTerms, { exact: true })).toBeVisible()
+        await expect(page.getByText(/100% Guaranteed Satisfaction/)).toHaveCount(0)
+        expect(state.errors).toEqual([])
+    }
+})
+
+test('course terms depend on a validated provider hostname while ordinary seller refund presentation is preserved', async ({ page }) => {
+    for (const scenario of [
+        { purchaseUrl: 'https://seller.example.test/course', secondaryPurchaseUrl: courseSecondary, course: true },
+        { purchaseUrl: coursePrimary, secondaryPurchaseUrl: null, purchaseActive: false, course: true },
+        { purchaseUrl: 'https://www.etsy.com/listing/synthetic', secondaryPurchaseUrl: null, course: false },
+        { purchaseUrl: 'https://udemy.com.attacker.example/course', secondaryPurchaseUrl: 'https://seller.example.test/?site=coursera.org', course: false },
+    ]) {
+        await fixture(page, { ...scenario, styled: true })
+        await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+        await expect(page.getByText(courseTerms, { exact: true })).toHaveCount(scenario.course ? 1 : 0)
+        await expect(page.getByText(/100% Guaranteed Satisfaction/)).toHaveCount(scenario.course ? 0 : 1)
+        await expect(page.getByRole('img', { name: 'Guarantee', exact: true })).toHaveCount(scenario.course ? 0 : 1)
+    }
 })
 
 for (const purchaseUrl of ['javascript:alert(1)', 'https://seller.example.test/\nunsafe']) {

@@ -103,8 +103,8 @@ test('rendering URL policy preserves ordinary links while blocking executable pr
 });
 
 test('payment visibility is independent of sales-page publication and legacy publication stays unchanged', () => {
-    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'https://seller.test', purchase_link_active: false, paypal_active: false }), { purchaseUrl: null, paypal: false });
-    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'javascript:alert(1)', purchase_link_active: true, paypal_active: true }), { purchaseUrl: null, paypal: true });
+    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'https://seller.test', purchase_link_active: false, paypal_active: false }), { purchaseUrl: null, purchaseUrls: [], paypal: false });
+    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'javascript:alert(1)', purchase_link_active: true, paypal_active: true }), { purchaseUrl: null, purchaseUrls: [], paypal: true });
     assert.equal(productPageIsPublic({ sales_page_published: false }), false);
     assert.equal(productPageIsPublic({ sales_page_published: true }), true);
     assert.equal(productPageIsPublic({ sales_page_published: null }), true);

@@ -16,6 +16,7 @@ import {verifyAuthCascades} from './auth-cascade-proof.mjs'
 import {verifyAccountDeletion} from './account-deletion-proof.mjs'
 import {verifyProfileInsertion} from './profile-insertion-proof.mjs'
 import {verifyInsertionUpgrade} from './profile-insertion-upgrade-proof.mjs'
+import {verifySecondaryPurchaseLinkUpgrade} from './profile-secondary-link-upgrade-proof.mjs'
 
 if(process.env.NSSO_ALLOW_LOCAL_SECURITY_REHEARSAL!=='1')throw Error('Explicit local rehearsal opt-in required')
 const [statusFile,evidenceArg,existing]=process.argv.slice(2)
@@ -156,6 +157,9 @@ try{
  })
  await check('forward insertion migration preserves mixed NULL legacy ordering and all authored content',async()=>{
   verifyInsertionUpgrade({sql,repo,owner})
+ })
+ await check('second destination forward migration preserves authored rows, authority, historical replay and safe Undo',async()=>{
+  verifySecondaryPurchaseLinkUpgrade({sql,repo,owner})
  })
  await check('final health detects column grants, disabled profile RLS and Storage write-policy drift',async()=>{
   const healthy=()=>service.rpc('nsso_security_health').then(ok)

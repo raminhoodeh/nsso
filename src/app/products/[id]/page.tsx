@@ -10,7 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
-import { productCheckoutVisibility, productPageIsPublic, purchaseButtonLabel } from '@/lib/payments/product-presentation'
+import { isCourseMarketplaceUrl, productCheckoutVisibility, productPageIsPublic, purchaseButtonLabel } from '@/lib/payments/product-presentation'
 import { safeWebUrl } from '@/lib/urls'
 import { offeringEditorHref } from '@/lib/offering-navigation'
 import {
@@ -32,7 +32,7 @@ function PurchaseLink({ href }: { href: string }) {
             target="_blank"
             rel="noopener noreferrer"
             data-nsso-control="white"
-            className={cn(lightButtonClass, 'h-11 w-full rounded-xl px-4 text-base font-semibold tracking-wide')}
+            className={cn(lightButtonClass, 'h-11 w-full whitespace-nowrap rounded-xl px-4 text-base font-semibold tracking-wide')}
         >
             <span data-light-button-content="true">{purchaseButtonLabel(destination)}</span>
         </a>
@@ -54,6 +54,7 @@ interface Product {
     video_url: string
     image_url: string
     purchase_link: string
+    secondary_purchase_link?: string | null
     payment_config: unknown
     paypal_active: boolean
     purchase_link_active: boolean
@@ -242,6 +243,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
     const youtubeId = product.video_url ? extractYouTubeId(product.video_url) : null
     const checkout = productCheckoutVisibility(product)
+    const courseMarketplaceProduct = [product.purchase_link, product.secondary_purchase_link].some(isCourseMarketplaceUrl)
     // An explicit preview must be inert before optional account verification
     // finishes; it never grants access to an unpublished product.
     const preview = searchParams.get('preview') === 'true' || (isOwner && product.sales_page_published === false)
@@ -329,11 +331,11 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             </p>
 
                             {/* Purchase Link Button */}
-                            {checkout.purchaseUrl && (
-                                <div className="w-full max-w-[15rem] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full">{purchaseButtonLabel(checkout.purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
+                            {checkout.purchaseUrls.map(purchaseUrl => (
+                                <div key={purchaseUrl} className="w-full max-w-[15rem] mb-3">
+                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:h-11 [&>button]:whitespace-nowrap">{purchaseButtonLabel(purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} />}
                                 </div>
-                            )}
+                            ))}
 
                             {/* PayPal Button */}
                             {checkout.paypal && !!product.payment_config && (
@@ -375,7 +377,9 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                         {/* Guarantee Card */}
                         <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-6">
-                            <div className="grid grid-cols-[17.5%_82.5%] items-center gap-6">
+                            {courseMarketplaceProduct ? <p className="text-[17px] text-white/80 leading-[22px]">
+                                Enrolment, pricing and refunds are handled by the course platform. Review its terms before enrolling.
+                            </p> : <div className="grid grid-cols-[17.5%_82.5%] items-center gap-6">
                                 <div className="relative w-full aspect-square">
                                     <Image
                                         src="/guaranteed-logo.png"
@@ -387,7 +391,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                 <p className="text-[17px] font-bold text-white leading-[22px] px-4" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 700 }}>
                                     100% Guaranteed Satisfaction! If the {product.name} is not for you, I'll refund you – no questions asked.
                                 </p>
-                            </div>
+                            </div>}
                         </TahoeGlassSurface>
 
                         {/* Testimonial Carousel */}
@@ -470,11 +474,11 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             </p>
 
                             {/* Purchase Link Button */}
-                            {checkout.purchaseUrl && (
-                                <div className="w-full max-w-[15rem] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full">{purchaseButtonLabel(checkout.purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
+                            {checkout.purchaseUrls.map(purchaseUrl => (
+                                <div key={purchaseUrl} className="w-full max-w-[15rem] mb-3">
+                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:h-11 [&>button]:whitespace-nowrap">{purchaseButtonLabel(purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} />}
                                 </div>
-                            )}
+                            ))}
 
                             {/* PayPal / Apple Pay */}
                             {checkout.paypal && !!product.payment_config && (

@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'www.nsso.me',
+        port: '',
+        pathname: '/images/products/**',
+        search: '',
+      },
+      {
+        protocol: 'https',
         hostname: 'ymckairbwictbfsfpqzt.supabase.co',
       },
       {
