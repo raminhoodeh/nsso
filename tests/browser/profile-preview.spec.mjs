@@ -101,6 +101,17 @@ async function expectOneLineWhitePurchase(page, purchase) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 }
 
+async function expectMatchingPurchaseWidths(purchase, paypal) {
+    const purchaseBox = await purchase.boundingBox(), paypalBox = await paypal.boundingBox()
+    expect(purchaseBox).not.toBeNull()
+    expect(paypalBox).not.toBeNull()
+    // Both actual controls use a 15rem cap; allow only subpixel layout noise.
+    expect(Math.abs(purchaseBox.width - 240)).toBeLessThanOrEqual(.05)
+    expect(Math.abs(paypalBox.width - 240)).toBeLessThanOrEqual(.05)
+    expect(Math.abs(purchaseBox.width - paypalBox.width)).toBeLessThanOrEqual(.05)
+    expect(Number(paypalBox.height.toFixed(3))).toBeGreaterThanOrEqual(44)
+}
+
 for (const [store, purchaseUrl, label] of [
     ['Etsy', 'https://shop.etsy.com/listing/12345/synthetic?ref=nsso', 'Buy on Etsy'],
     ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic', 'Buy on Shopify'],
@@ -122,11 +133,19 @@ for (const [store, purchaseUrl, label] of [
     await expect(purchase).toHaveAttribute('rel', 'noopener noreferrer')
     await expectOneLineWhitePurchase(page, purchase)
     await purchase.screenshot({ path: testInfo.outputPath('public-purchase-cta.png') })
-    const merchant = page.getByRole('button', { name: 'Buy fixture offer', exact: true })
+    const merchant = page.getByRole('button', { name: 'Buy via PayPal', exact: true })
     await expect(merchant).toBeVisible()
+    await expect(merchant).toHaveText('Buy via PayPal')
+    await expect(merchant).toHaveAttribute('type', 'submit')
     await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
     await expect(merchant).not.toHaveAttribute('data-nsso-control')
+    await expectMatchingPurchaseWidths(purchase, merchant)
+    await merchant.screenshot({ path: testInfo.outputPath('public-paypal-cta.png') })
+    await expect(page.getByRole('button', { name: 'Buy fixture offer', exact: true })).toHaveCount(0)
     await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
+    await expect(page.locator('form')).toHaveAttribute('method', 'post')
+    await expect(page.locator('form')).toHaveAttribute('target', '_top')
+    await expect(page.locator('form input[type="hidden"]')).toHaveCount(0)
     await expect(page.locator('script[src*="paypal"]')).toHaveCount(0)
     expect(unexpected).toEqual([])
 })
@@ -163,10 +182,19 @@ for (const [store, purchaseUrl, label] of [
     expect(await page.evaluate(() => innerWidth)).toBe(page.viewportSize().width)
     const purchase = page.getByRole('button', { name: label, exact: true })
     await expectOneLineWhitePurchase(page, purchase)
+    const merchant = page.getByRole('button', { name: 'Buy via PayPal', exact: true })
+    await expect(merchant).toHaveText('Buy via PayPal')
+    await expect(merchant).toHaveAttribute('type', 'button')
+    await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
+    await expect(merchant).not.toHaveAttribute('data-nsso-control')
+    await expectMatchingPurchaseWidths(purchase, merchant)
+    expect(await page.evaluate(() => window.fixtureProfile.products[0].payment_config.label)).toBe('Buy fixture offer')
+    await expect(page.getByRole('button', { name: 'Buy fixture offer', exact: true })).toHaveCount(0)
     await purchase.screenshot({ path: testInfo.outputPath('preview-purchase-cta.png') })
+    await merchant.screenshot({ path: testInfo.outputPath('preview-paypal-cta.png') })
     await purchase.press('Enter')
     await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
-    await page.getByRole('button', { name: 'Buy fixture offer', exact: true }).press('Space')
+    await merchant.press('Space')
     await expect(page.getByRole('status')).toHaveCount(2)
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.locator('a').filter({ hasText: label })).toHaveCount(0)
@@ -196,7 +224,7 @@ test('profile preview uses autosaved content, shows no banner, and explains chec
     await expect(page.getByText('Checkout is disabled during profile preview', { exact: true })).toHaveCount(0)
     await page.getByRole('button', { name: 'View purchase page', exact: true }).press('Enter')
     await expect(page.getByRole('status').filter({ hasText: 'Checkout is disabled during profile preview' })).toHaveCount(1)
-    await page.getByRole('button', { name: 'Buy fixture offer', exact: true }).press('Space')
+    await page.getByRole('button', { name: 'Buy via PayPal', exact: true }).press('Space')
     await expect(page.getByRole('status').filter({ hasText: 'Checkout is disabled during profile preview' })).toHaveCount(2)
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.locator('a[href="https://seller.example.test/pay"]')).toHaveCount(0)

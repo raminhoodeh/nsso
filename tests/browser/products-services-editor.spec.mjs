@@ -224,7 +224,7 @@ test('purchase label hints follow edits in the offering and creator without chan
     await expect(link).toHaveValue(shopify)
     await expect(page.getByText('Button preview: Buy on Shopify', { exact: true })).toBeVisible()
     await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveValue(paypal)
-    const merchant = page.getByRole('button', { name: 'Buy Now', exact: true })
+    const merchant = page.getByRole('button', { name: 'Buy via PayPal', exact: true })
     await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
     await expect(merchant).toHaveAttribute('type', 'button')
     await expect(page.locator('form[action]')).toHaveCount(0)

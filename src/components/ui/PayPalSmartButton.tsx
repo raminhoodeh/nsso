@@ -49,16 +49,16 @@ export default function PayPalSmartButton({ html, config, preview = false }: Pay
     }, [hostedId, currency, preview, retry, attempt])
 
     if (!payment) return html || config ? <p className="py-2 text-center text-xs text-white/70">Payment button unavailable. Please contact the seller.</p> : null
-    const buttonClass = 'min-h-11 w-full rounded-md border border-amber-400/50 bg-[#ffc439] px-5 py-3 text-center font-semibold text-black disabled:cursor-default disabled:opacity-75'
-    if (preview) return <PreviewCheckoutButton className="w-full max-w-[320px]" buttonClassName={buttonClass}>{payment.kind === 'payment-form' ? payment.label : 'Pay with PayPal'}</PreviewCheckoutButton>
+    const buttonClass = 'min-h-11 w-full whitespace-nowrap rounded-md border border-amber-400/50 bg-[#ffc439] px-5 py-3 text-center font-semibold text-black disabled:cursor-default disabled:opacity-75'
+    if (preview) return <PreviewCheckoutButton className="w-full max-w-[15rem]" buttonClassName={buttonClass}>Buy via PayPal</PreviewCheckoutButton>
     if (payment.kind === 'payment-form') {
         return (
-            <form action={payment.action} method="post" target="_top" className="w-full max-w-[320px]" data-paypal-kind="payment-form">
+            <form action={payment.action} method="post" target="_top" className="w-full max-w-[15rem]" data-paypal-kind="payment-form">
                 {payment.fields.map(field => <input key={field.name} type="hidden" name={field.name} value={field.value} />)}
-                <button type="submit" className={buttonClass}>{payment.label}</button>
+                <button type="submit" className={buttonClass}>Buy via PayPal</button>
             </form>
         )
     }
     if (failed) return <div role="status" className="py-2 text-center text-xs text-white/70"><p>PayPal could not load.</p><LightButton type="button" className="mt-2 min-h-11 px-3 py-2" onClick={() => setRetry(value => value + 1)}>Retry PayPal</LightButton></div>
-    return <div ref={containerRef} className="relative z-10 w-full max-w-[320px]" data-paypal-kind="hosted-button" />
+    return <div ref={containerRef} className="relative z-10 w-full max-w-[15rem]" data-paypal-kind="hosted-button" />
 }

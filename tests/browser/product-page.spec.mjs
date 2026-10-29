@@ -82,6 +82,31 @@ async function fixture(page, { published = true, account = { user: null, loading
     return { requests, errors, releasePublic: () => { publicReleased = true; pendingPublic.splice(0).forEach(resolve => resolve()) } }
 }
 
+async function expectEqualPurchaseWidths(purchase, paypal) {
+    const [purchaseBox, paypalBox] = await Promise.all([purchase.boundingBox(), paypal.boundingBox()])
+    for (const box of [purchaseBox, paypalBox]) {
+        expect(Math.abs(box.width - 240)).toBeLessThanOrEqual(.05)
+        expect(Number(box.height.toFixed(3))).toBeGreaterThanOrEqual(44)
+    }
+    expect(Math.abs(purchaseBox.width - paypalBox.width)).toBeLessThanOrEqual(.05)
+    expect(Math.abs(purchaseBox.x - paypalBox.x)).toBeLessThanOrEqual(.05)
+    for (const control of [purchase, paypal]) {
+        const label = await control.evaluate(element => {
+            const text = [], walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+            for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                if (!node.textContent.trim()) continue
+                const range = document.createRange(); range.selectNodeContents(node)
+                text.push(...[...range.getClientRects()].filter(rect => rect.width && rect.height))
+            }
+            const box = element.getBoundingClientRect()
+            return { lines: [...new Set(text.map(rect => Math.round(rect.top * 1000) / 1000))], left: Math.min(...text.map(rect => rect.left)), right: Math.max(...text.map(rect => rect.right)), targetLeft: box.left, targetRight: box.right }
+        })
+        expect(label.lines).toHaveLength(1)
+        expect(label.left).toBeGreaterThanOrEqual(label.targetLeft - .05)
+        expect(label.right).toBeLessThanOrEqual(label.targetRight + .05)
+    }
+}
+
 for (const [store, purchaseUrl, label] of [
     ['Etsy', 'https://www.etsy.com/listing/12345/synthetic?ref=nsso#details', 'Buy on Etsy'],
     ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic?variant=123', 'Buy on Shopify'],
@@ -99,17 +124,31 @@ for (const [store, purchaseUrl, label] of [
         await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
     }
     const merchant = page.locator('form button').filter({ visible: true })
+    await expect(merchant).toHaveText('Buy via PayPal')
     await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
     await expect(merchant.locator('..')).toHaveAttribute('action', action)
+    await expect(merchant.locator('..')).toHaveAttribute('method', 'post')
+    await expect(merchant.locator('..')).toHaveAttribute('target', '_top')
+    // These are the two real responsive purchase placements: mobile content
+    // card and desktop context card. Only the appropriate one is displayed.
+    const visibleIndex = page.viewportSize().width >= 1024 ? 1 : 0
+    await expect(links.nth(visibleIndex)).toBeVisible()
+    await expect(links.nth(1 - visibleIndex)).toBeHidden()
+    await expectEqualPurchaseWidths(links.nth(visibleIndex), merchant)
     expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
     expect(requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
     expect(errors).toEqual([])
 
-    const preview = await fixture(page, { purchaseUrl, search: '?preview=true' })
-    await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(2)
-    await page.getByRole('button', { name: label, exact: true }).first().press('Enter')
+    const preview = await fixture(page, { purchaseUrl, search: '?preview=true', styled: true })
+    await expect(page.getByRole('button', { name: label, exact: true, includeHidden: true })).toHaveCount(2)
+    await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true, includeHidden: true })).toHaveCount(2)
+    const previewPurchase = page.getByRole('button', { name: label, exact: true }).filter({ visible: true })
+    const previewPaypal = page.getByRole('button', { name: 'Buy via PayPal', exact: true }).filter({ visible: true })
+    await expectEqualPurchaseWidths(previewPurchase, previewPaypal)
+    await expect(previewPaypal).toHaveAttribute('type', 'button')
+    await previewPurchase.press('Enter')
     await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
-    await page.getByRole('button', { name: 'Buy fixture product', exact: true }).first().press('Space')
+    await previewPaypal.press('Space')
     await expect(page.getByRole('status')).toHaveCount(2)
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.locator('a').filter({ hasText: label })).toHaveCount(0)
@@ -155,9 +194,11 @@ test('public product actions share white controls while merchant checkout and gu
     await expect(purchase).toHaveAttribute('target', '_blank')
     await expect(purchase).toHaveAttribute('rel', 'noopener noreferrer')
     const merchant = page.locator('form button').filter({ visible: true })
+    await expect(merchant).toHaveText('Buy via PayPal')
     await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
     await expect(merchant).not.toHaveAttribute('data-nsso-control')
     await expect(merchant.locator('..')).toHaveAttribute('action', action)
+    await expectEqualPurchaseWidths(purchase, merchant)
     const next = page.getByRole('button', { name: 'Next testimonial', exact: true })
     const previous = page.getByRole('button', { name: 'Previous testimonial', exact: true })
     await checkMaterial(next)
@@ -239,9 +280,9 @@ test('an explicit preview stays inert while account verification is pending and 
     await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.getByRole('link', { name: 'View purchase page' })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Buy fixture product', exact: true })).toHaveCount(2)
+    await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true })).toHaveCount(2)
     await expect(page.getByText('Checkout is disabled during profile preview', { exact: true })).toHaveCount(0)
-    for (const button of await page.getByRole('button', { name: 'Buy fixture product', exact: true }).all()) {
+    for (const button of await page.getByRole('button', { name: 'Buy via PayPal', exact: true }).all()) {
         await expect(button).toBeEnabled()
         await button.click()
     }
@@ -258,8 +299,8 @@ test('a verified owner loads the authenticated draft fallback and every checkout
     await expect(page.getByRole('heading', { name: 'PRIVATE owner draft' })).toBeVisible()
     await expect(page.getByText('Draft preview — checkout is disabled.', { exact: true })).toHaveCount(0)
     await expect(page.locator('form')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Buy fixture product', exact: true })).toHaveCount(2)
-    for (const button of await page.getByRole('button', { name: 'Buy fixture product', exact: true }).all()) await expect(button).toBeEnabled()
+    await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true })).toHaveCount(2)
+    for (const button of await page.getByRole('button', { name: 'Buy via PayPal', exact: true }).all()) await expect(button).toBeEnabled()
     await expect(page.getByRole('button', { name: 'View purchase page', exact: true })).toHaveCount(2)
     await page.getByRole('button', { name: 'View purchase page', exact: true }).first().press('Enter')
     await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
