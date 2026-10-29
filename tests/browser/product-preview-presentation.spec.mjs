@@ -446,11 +446,13 @@ test('profile-to-product transition releases the cloud renderer for deck blue an
     await support.scrollIntoViewIfNeeded()
     const textColor = await support.evaluate(element => {
         const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
-        const context = canvas.getContext('2d'); context.fillStyle = getComputedStyle(element).color; context.fillRect(0, 0, 1, 1)
-        return [...context.getImageData(0, 0, 1, 1).data]
+        const context = canvas.getContext('2d'), style = getComputedStyle(element)
+        const paint = color => { context.clearRect(0, 0, 1, 1); context.fillStyle = color; context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data] }
+        return { actual: paint(style.color), expected: paint(style.getPropertyValue('--color-slate-950')) }
     })
-    for (const channel of textColor.slice(0, 3)) expect(channel).toBeGreaterThanOrEqual(250)
-    expect(textColor[3]).toBeGreaterThanOrEqual(225)
+    expect(textColor.actual).toEqual(textColor.expected)
+    expect(textColor.actual[3]).toBe(255)
+    expect(await minimumTextContrast(support)).toBeGreaterThanOrEqual(4.5)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await expect(page.locator('form:visible')).toHaveCount(1)
     await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)

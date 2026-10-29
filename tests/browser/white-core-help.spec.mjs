@@ -3,6 +3,7 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
 import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -48,6 +49,37 @@ async function mount(page) {
     })
     await page.goto('https://nsso.test/white-help')
     return state
+}
+
+// Rounded tooltip corners are outside the label's text painting area. Sample
+// the actual line rectangles, so unrelated content behind those cutouts cannot
+// be mistaken for the background beneath the help text.
+async function minimumTooltipTextContrast(tooltip) {
+    const paint = await tooltip.evaluate(element => {
+        const box = element.getBoundingClientRect()
+        const range = document.createRange(); range.selectNodeContents(element)
+        const rectangles = [...range.getClientRects()].map(rect => ({ x: rect.x - box.x, y: rect.y - box.y, width: rect.width, height: rect.height }))
+        const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
+        const context = canvas.getContext('2d'); context.fillStyle = getComputedStyle(element).color; context.fillRect(0, 0, 1, 1)
+        const ink = [...context.getImageData(0, 0, 1, 1).data]
+        const original = element.style.color; element.dataset.originalContrastColor = original; element.style.color = 'transparent'
+        return { rectangles, ink }
+    })
+    let screenshot
+    try { screenshot = await tooltip.screenshot({ scale: 'css' }) }
+    finally { await tooltip.evaluate(element => { element.style.color = element.dataset.originalContrastColor; delete element.dataset.originalContrastColor }) }
+    const { data, info } = await sharp(screenshot).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    const luminance = rgb => rgb.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0)
+    let minimum = Infinity
+    for (const rect of paint.rectangles) for (let y = Math.max(0, Math.ceil(rect.y)); y < Math.min(info.height, Math.floor(rect.y + rect.height)); y += 2) for (let x = Math.max(0, Math.ceil(rect.x)); x < Math.min(info.width, Math.floor(rect.x + rect.width)); x += 2) {
+        const offset = (y * info.width + x) * 4
+        const background = [...data.subarray(offset, offset + 3)]
+        const foreground = background.map((channel, index) => paint.ink[index] * paint.ink[3] / 255 + channel * (1 - paint.ink[3] / 255))
+        const a = luminance(foreground), b = luminance(background)
+        minimum = Math.min(minimum, (Math.max(a, b) + .05) / (Math.min(a, b) + .05))
+    }
+    expect(Number.isFinite(minimum), 'at least one actual help text line must be sampled').toBe(true)
+    return { minimum, rectangles: paint.rectangles, ink: paint.ink }
 }
 
 test('connection notes use an opaque white material, dark readable fields and preserved modal focus', async ({ page }) => {
@@ -98,7 +130,10 @@ test('context help stays opaque and readable while keyboard and touch dismissal 
     const tooltip = page.getByRole('tooltip')
     await expect(tooltip).toContainText('This provider handles payment and delivery.')
     await expectOpaqueLightPanel(page, tooltip)
-    expect(await minimumTextContrast(tooltip)).toBeGreaterThanOrEqual(4.5)
+    const previousSample = await minimumTextContrast(tooltip)
+    const textPaint = await minimumTooltipTextContrast(tooltip)
+    await test.info().attach('tooltip-painted-text-contrast', { body: JSON.stringify({ previousWholeBoxMinimum: previousSample, ...textPaint }), contentType: 'application/json' })
+    expect(textPaint.minimum).toBeGreaterThanOrEqual(4.5)
     const bounds = await tooltip.boundingBox()
     expect(bounds.x).toBeGreaterThanOrEqual(15)
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(page.viewportSize().width - 15)

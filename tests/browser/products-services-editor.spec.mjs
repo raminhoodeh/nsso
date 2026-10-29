@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
+import { controlMaterial, renderedControlContrast } from './helpers/white-control-assertions.mjs'
 import { expectCompactSwitch } from './helpers/switch-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
@@ -125,10 +126,11 @@ const writes = page => page.evaluate(() => window.fixtureWrites)
 async function expectWhiteAction(page, action, { icon = false } = {}) {
     await action.scrollIntoViewIfNeeded()
     await expect(action).toHaveAttribute('data-nsso-control', 'white')
-    await expectOpaqueLightPanel(page, action)
-    const content = action.locator('[data-light-button-content]')
-    const ink = (await content.textContent()).trim() ? content : action.locator('svg').first()
-    expect(await minimumTextContrast(ink)).toBeGreaterThanOrEqual(4.5)
+    await expect(action).toHaveClass(/nsso-glass-control/)
+    const material = await controlMaterial(action)
+    expect(material.background).toBe('rgba(255, 255, 255, 0.28)')
+    expect(material.backgroundImage).not.toBe('none')
+    expect(await renderedControlContrast(action)).toBeGreaterThanOrEqual(4.5)
     const bounds = await action.boundingBox()
     expect(bounds.height).toBeGreaterThanOrEqual(44)
     expect(bounds.width).toBeGreaterThanOrEqual(44)
@@ -144,7 +146,11 @@ async function expectWhiteAction(page, action, { icon = false } = {}) {
 async function expectNativeUploadFocus(page, input) {
     const label = input.locator('..')
     await label.scrollIntoViewIfNeeded()
-    await expectOpaqueLightPanel(page, label)
+    await expect(label).toHaveClass(/nsso-glass-control/)
+    const material = await controlMaterial(label)
+    expect(material.background).toBe('rgba(255, 255, 255, 0.28)')
+    expect(material.backgroundImage).not.toBe('none')
+    expect(await minimumTextContrast(label)).toBeGreaterThanOrEqual(4.5)
     await page.keyboard.press('Tab')
     await input.focus()
     await expect(input).toBeFocused()
