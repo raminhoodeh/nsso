@@ -288,7 +288,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             variant="card" radius={20} tone="dark"
                             semanticTint="light" semanticTintOpacity={0.18}
                             className="nsso-crystal-panel"
-                            contentClassName="space-y-8 p-6 md:p-8"
+                            contentClassName="space-y-8 p-4 md:p-8"
                         >
                         {/* Headline Hook */}
                         <h1 className="text-[29px] font-bold text-slate-950 uppercase tracking-wide leading-[38px]" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
