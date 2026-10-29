@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -27,7 +29,7 @@ function PurchaseLink({ href }: { href: string }) {
     const destination = safeWebUrl(href)
     if (!destination) return <p className="text-xs text-slate-950">Purchase link unavailable. Please contact the seller.</p>
     return (
-        <a
+        <NativeGlassLens as="a"
             href={destination}
             target="_blank"
             rel="noopener noreferrer"
@@ -35,7 +37,7 @@ function PurchaseLink({ href }: { href: string }) {
             className={cn(lightButtonClass, 'h-11 w-full whitespace-nowrap rounded-xl px-4 text-base font-semibold tracking-wide')}
         >
             <span data-light-button-content="true">{purchaseButtonLabel(destination)}</span>
-        </a>
+        </NativeGlassLens>
     )
 }
 

@@ -4,6 +4,8 @@ import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { lightButtonClass } from './light-button-styles'
+import { LiquidGlassMaterial } from './apple-tahoe-liquid-glass-button'
+import { useTahoeNativeLens } from './tahoe-glass/useTahoeNativeLens'
 export { lightButtonClass } from './light-button-styles'
 
 export interface LightButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,17 +18,21 @@ export const LightButton = forwardRef<HTMLButtonElement, LightButtonProps>(funct
     { className, contentClassName, children, type = 'button', intent = 'default', radius, style, ...props },
     ref,
 ) {
+    const lens = useTahoeNativeLens(ref)
     return <button
         {...props}
-        ref={ref}
+        ref={lens.ref}
         type={type}
         data-nsso-control="white"
-        className={cn(lightButtonClass,
-            intent === 'muted' && 'text-slate-800 hover:text-slate-950',
+        data-tahoe-native-lens={lens.enabled ? 'supplied' : undefined}
+        data-tahoe-native-solid={lens.solid ? 'true' : undefined}
+        className={cn(lightButtonClass, lens.enabled && 'nsso-supplied-glass',
+            intent === 'muted' && 'text-slate-900 hover:text-slate-950',
             intent === 'danger' && 'text-rose-950 hover:text-red-950',
             className)}
         style={radius === undefined ? style : { borderRadius: radius, ...style }}
     >
+        {lens.enabled && <LiquidGlassMaterial mode={lens.mode} solid={lens.solid} />}
         <span data-light-button-content="true" className={cn('pointer-events-none inline-flex min-w-0 items-center justify-center gap-2', contentClassName)}>{children}</span>
     </button>
 })

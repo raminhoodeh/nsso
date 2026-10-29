@@ -9,7 +9,9 @@ import { TahoeGlassDirectBackdropBoundaryContext } from "@/components/ui/tahoe-g
 import { cn } from "@/lib/utils";
 import { TAHOE_SPECULAR_SHADOW } from "@/lib/tahoe-glass/constants";
 import { useChromeGlassOptics, type GlassAppearance } from "./ChromeGlassOptics";
+import type { TahoeGlassMaterialSelection } from "@/lib/tahoe-glass/types";
 import { supportsChromeGlassGeometry } from "@/lib/tahoe-glass/chrome-policy";
+import { LiquidGlassMaterial } from "@/components/ui/apple-tahoe-liquid-glass-button";
 
 export type TahoeGlassSurfaceElement =
   | "div"
@@ -52,6 +54,8 @@ export interface TahoeGlassSurfaceProps
   /** Match a core light lens without changing separate-app materials. */
   chromiumAppearance?: GlassAppearance;
   materialFinish?: "clear" | "satin";
+  /** Opt into the supplied shared scene or retain candidate optics explicitly. */
+  materialFamily?: TahoeGlassMaterialSelection;
   /** Enable while a surface is animated or follows the pointer. */
   tracking?: "static" | "continuous";
   /** Explicit optical stacking override for portals and top-level overlays. */
@@ -111,6 +115,7 @@ export const TahoeGlassSurface = React.forwardRef<
     semanticTintOpacity = 0.07,
     chromiumAppearance = "dark",
     materialFinish = "clear",
+    materialFamily = "inherit",
     children,
     style,
     href,
@@ -123,6 +128,9 @@ export const TahoeGlassSurface = React.forwardRef<
   forwardedRef,
 ) {
   const context = React.useContext(TahoeGlassEngineContext);
+  const resolvedMaterialFamily = materialFamily === "inherit"
+    ? context?.materialFamily ?? "candidate"
+    : materialFamily;
   const insideDirectBackdrop = React.useContext(
     TahoeGlassDirectBackdropBoundaryContext,
   );
@@ -133,7 +141,7 @@ export const TahoeGlassSurface = React.forwardRef<
   const internalRef = React.useRef<HTMLElement | null>(null);
   const id = React.useId();
   const chrome = useChromeGlassOptics(internalRef,
-    !insideDirectBackdrop && supportsChromeGlassGeometry(radius, style) && ["card", "panel", "mediaFrame"].includes(variant) &&
+    resolvedMaterialFamily === "candidate" && !insideDirectBackdrop && supportsChromeGlassGeometry(radius, style) && ["card", "panel", "mediaFrame"].includes(variant) &&
     props["data-tahoe-readable-overlay" as keyof typeof props] !== "true" &&
     !["dialog", "alertdialog", "tooltip", "menu"].includes(props.role ?? ""),
     false, chromiumAppearance, false, materialFinish === "satin");
@@ -172,13 +180,24 @@ export const TahoeGlassSurface = React.forwardRef<
   React.useLayoutEffect(() => {
     if (internalRef.current) enforceClearOpticalRoot(internalRef.current);
     requestRender?.("surface-props-change");
-  }, [className, requestRender, style]);
+  }, [className, requestRender, resolvedMaterialFamily, style]);
 
   const activeOptics =
     !chrome.enabled && !insideDirectBackdrop &&
     diagnostics.status === "active" &&
     (diagnostics.backend === "svg" || diagnostics.backend === "webgl");
   const solidMaterial = diagnostics.backend === "solid";
+  const suppliedMaterial = resolvedMaterialFamily === "supplied";
+  const suppliedMaterialMode = diagnostics.status === "active" && diagnostics.backend === "webgl"
+    ? "webgl" : diagnostics.backend === "svg" ? "svg" : "blur";
+  const suppliedMaterialSolid = solidMaterial && diagnostics.status !== "initializing";
+  const opticalEngine = chrome.enabled
+    ? "candidate-chromium"
+    : insideDirectBackdrop || !context
+      ? "material-only"
+      : resolvedMaterialFamily === "supplied"
+        ? "supplied-shared"
+        : "candidate-shared-fallback";
   const fallbackFrost = !activeOptics && !solidMaterial;
   const resolvedRadius =
     typeof radius === "number"
@@ -240,6 +259,10 @@ export const TahoeGlassSurface = React.forwardRef<
       data-tahoe-glass-tone={tone}
       data-tahoe-chromium-appearance={chromiumAppearance}
       data-tahoe-material-finish={materialFinish}
+      data-tahoe-material-family={resolvedMaterialFamily}
+      data-tahoe-optical-engine={opticalEngine}
+      data-tahoe-material-implementation={suppliedMaterial ? "supplied-original" : "derived"}
+      data-tahoe-material-mode={suppliedMaterial ? suppliedMaterialSolid ? "solid" : suppliedMaterialMode : undefined}
       data-tahoe-glass-tint={resolvedTint}
       data-tahoe-chromium-optics={chrome.enabled ? (chrome.ready ? "refract" : "initializing") : undefined}
       data-tahoe-glass-state={chrome.enabled ? (chrome.ready ? "active" : "initializing") : context ? undefined : diagnostics.status}
@@ -250,7 +273,7 @@ export const TahoeGlassSurface = React.forwardRef<
       }
     >
       {chrome.layers}
-      <span
+      {suppliedMaterial ? <LiquidGlassMaterial mode={suppliedMaterialMode} solid={suppliedMaterialSolid} /> : <span
         aria-hidden="true"
         data-tahoe-button-coat={isGlassButton ? "true" : undefined}
         className="pointer-events-none absolute inset-0 z-0 rounded-[inherit]"
@@ -272,9 +295,9 @@ export const TahoeGlassSurface = React.forwardRef<
             : "none",
           boxShadow: TAHOE_SPECULAR_SHADOW,
         }}
-      />
+      />}
 
-      {isGlassButton && <span aria-hidden="true" data-tahoe-button-reflection="true" />}
+      {isGlassButton && !suppliedMaterial && <span aria-hidden="true" data-tahoe-button-reflection="true" />}
 
       {resolvedTint !== "none" && (
         <span
@@ -289,7 +312,7 @@ export const TahoeGlassSurface = React.forwardRef<
         />
       )}
 
-      <span
+      {!suppliedMaterial && <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-10 rounded-[inherit] p-px"
         style={{
@@ -302,7 +325,7 @@ export const TahoeGlassSurface = React.forwardRef<
           maskComposite: "exclude",
           opacity: "calc(0.62 + var(--rim-intensity) * 0.24)",
         }}
-      />
+      />}
 
       <Content
         data-tahoe-button-content={isGlassButton ? "true" : undefined}

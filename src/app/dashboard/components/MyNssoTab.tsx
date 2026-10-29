@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { useState, useEffect, useRef } from 'react'
 import { MyNssoConnection } from '@/lib/types'
 import NetworkTable from './NetworkTable'
@@ -163,7 +165,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
                         <li>Ask someone to scan it with their phone camera and open your profile.</li>
                         <li>They can sign in and choose “Add to My nsso”. You will both see the connection here; notes stay private.</li>
                     </ol>
-                    <Link href="/preview" className="nsso-glass-control mt-4 inline-flex min-h-11 items-center rounded-xl border border-slate-500/30 px-4 py-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-slate-700">Open my profile and QR</Link>
+                    <NativeGlassLens as={Link} href="/preview" className="nsso-glass-control mt-4 inline-flex min-h-11 items-center rounded-xl border border-slate-500/30 px-4 py-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-slate-700">Open my profile and QR</NativeGlassLens>
                 </section>}
 
                 {/* Top Section: Table View */}

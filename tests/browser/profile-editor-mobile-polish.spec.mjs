@@ -330,6 +330,13 @@ async function expectRealDashboardDeck(page, state) {
     await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
     await expect(page.locator('#vanta-bg')).toHaveCount(0)
     await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-source', /nsso-deck-blue/)
+    await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-material-family', 'supplied')
+    const identityCard = page.locator('[data-profile-identity-header]').locator('xpath=ancestor::*[@data-tahoe-glass-surface][1]')
+    await expect(identityCard).toHaveAttribute('data-tahoe-optical-engine', 'supplied-shared')
+    await expect(identityCard).toHaveAttribute('data-tahoe-material-implementation', 'supplied-original')
+    await expect(identityCard).not.toHaveAttribute('data-tahoe-chromium-optics')
+    await expect(identityCard.locator(':scope > [data-supplied-glass-layer="coat"]')).toHaveCount(1)
+    await expect(identityCard.locator(':scope > [data-supplied-glass-layer="rim"]')).toHaveCount(1)
     const decoded = await page.evaluate(async () => {
         const image = new Image(); image.src = '/assets/backgrounds/nsso-deck-blue.webp'; await image.decode()
         const source = document.querySelector('[data-nsso-deck-background="true"]')

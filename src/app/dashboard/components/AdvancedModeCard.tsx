@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import GlassCard from '@/app/dashboard/components/DashboardGlassCard'
 import { useState, useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react'
 import { Plus, ChevronDown, ChevronUp, Upload, Loader2, GripVertical } from 'lucide-react'
@@ -548,7 +550,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                                             <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${proj.project_photo_url})` }} />
                                                         </TahoeGlassSurface>
                                                     )}
-                                                    <label className={`${lightButtonClass} cursor-pointer has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-slate-950`}>
+                                                    <NativeGlassLens as="label" className={`${lightButtonClass} cursor-pointer has-[:focus-visible]:outline-solid has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-slate-950`}>
                                                         {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} aria-hidden="true" />}
                                                         <span>{proj.project_photo_url ? 'Change Photo' : 'Upload Photo'}</span>
                                                         <input type="file" aria-label={`Upload photo for ${proj.project_name || 'project'}`} accept="image/*" className="sr-only" onChange={(e) => {
@@ -556,7 +558,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                                             if (file) handleImageSelect(file, 'project', proj.id)
                                                             e.target.value = ''
                                                         }} />
-                                                    </label>
+                                                    </NativeGlassLens>
                                                 </div>
                                             </div>
                                         </div>

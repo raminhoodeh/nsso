@@ -214,7 +214,7 @@ body {
 
 /* Neutral satin reading layer. The optical scene still supplies its colour.
    Below z20 content: no extra blur or surface registrations while scrolling. */
-.nsso-crystal-panel:not([data-tahoe-glass-backend="solid"]):not([data-tahoe-backdrop-backend="solid"])::after {
+.nsso-crystal-panel:not([data-tahoe-material-implementation="supplied-original"]):not([data-tahoe-glass-backend="solid"]):not([data-tahoe-backdrop-backend="solid"])::after {
   content: "";
   position: absolute;
   inset: 0;

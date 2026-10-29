@@ -1,3 +1,4 @@
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft, Cookie } from 'lucide-react'
@@ -57,13 +58,13 @@ export default function RaminTrackingPrivacyPage() {
                     <p className="mt-3 leading-7 text-white/70">
                         Meta Pixel remains off until you select Allow. Your choice is stored for 180 days in the <code className="text-white">nsso_meta_marketing_consent</code> cookie. You can change it at any time using Privacy choices on Ramin&apos;s profile.
                     </p>
-                    {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Preserve document navigation into the existing consent preferences entry point. */}
-                    <a
+                    {/* Preserve document navigation into the existing consent preferences entry point. */}
+                    <NativeGlassLens as="a"
                         href="/ramin#privacy-choices"
                         className={cn(lightButtonClass, 'mt-5 rounded-xl')}
                     >
                         Manage tracking choices
-                    </a>
+                    </NativeGlassLens>
                 </section>
 
                 <section className="mt-10 border-t border-white/15 pt-8">

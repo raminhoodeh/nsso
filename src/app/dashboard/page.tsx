@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, Suspense } from 'react'
@@ -526,9 +528,9 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                         <div className="mt-8 pt-8 border-t border-slate-500/15">
                             <div className="flex items-center gap-3 mb-4">
                                 <h3 className="text-xl font-bold text-slate-950">Profile URL</h3>
-                                <span className="nsso-glass-control inline-flex items-center justify-center rounded-full px-3 py-1">
+                                <NativeGlassLens as="span" className="nsso-glass-control inline-flex items-center justify-center rounded-full px-3 py-1">
                                     <span className="text-xs font-medium text-slate-900">Premium · Free</span>
-                                </span>
+                                </NativeGlassLens>
                             </div>
 
                             <div className="flex flex-col gap-3 md:flex-row md:items-center">

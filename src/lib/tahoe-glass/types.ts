@@ -1,3 +1,6 @@
+export type TahoeGlassMaterialFamily = "candidate" | "supplied";
+export type TahoeGlassMaterialSelection = "inherit" | TahoeGlassMaterialFamily;
+
 export type TahoeGlassBackend = "svg" | "webgl" | "css-blur" | "solid";
 
 export type TahoeGlassStatus = "initializing" | "active" | "fallback" | "failed";

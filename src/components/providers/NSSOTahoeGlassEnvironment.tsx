@@ -10,6 +10,7 @@ import type { TahoeGlassWebGLSource } from "@/lib/tahoe-glass/types";
 import {
   routeOwnsTahoeScene,
   routeUsesDeckBackground,
+  routeSuppressesGlobalTahoeSurfaces,
 } from "@/lib/tahoe-glass/route-boundaries";
 import {
   DECK_BACKGROUND_ASSET,
@@ -35,6 +36,12 @@ export default function NSSOTahoeGlassEnvironment({
   const pathname = usePathname();
   const vantaCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const usesDeckBackground = routeUsesDeckBackground(pathname);
+  // Personal apps retain their own material policy. Core nsso surfaces share
+  // the supplied convex engine without restarting or duplicating the scene.
+  const materialFamily = routeSuppressesGlobalTahoeSurfaces(pathname) ||
+    /^\/(?:film|places|dreamsea)(?:\/|$)/.test(pathname)
+      ? "candidate"
+      : "supplied";
 
   const exposeVantaCanvas = React.useCallback(
     (canvas: HTMLCanvasElement | null) => {
@@ -70,6 +77,7 @@ export default function NSSOTahoeGlassEnvironment({
 
   return (
     <TahoeGlassProvider
+      materialFamily={materialFamily}
       className="min-h-screen"
       contentClassName="min-h-screen"
       scene={scene}

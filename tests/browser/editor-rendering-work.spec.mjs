@@ -10,7 +10,8 @@ const fixture = `
     import React from 'react';import {createRoot} from 'react-dom/client';
     import Environment from './src/components/providers/NSSOTahoeGlassEnvironment';
     import {UIProvider} from './src/components/providers/UIProvider';
-    import {TahoeGlassSurface,TahoeGlassButton,TahoeGlassField,TahoeBackdropSurface} from './src/components/ui/tahoe-glass';
+    import {TahoeGlassSurface,TahoeGlassField,TahoeBackdropSurface} from './src/components/ui/tahoe-glass';
+    import {LightButton} from './src/components/ui/LightButton';
     const app=createRoot(document.getElementById('root'));window.disposeFixture=()=>app.unmount();
     app.render(<UIProvider><Environment>
         <TahoeBackdropSurface as="nav" variant="menu" data-testid="editor-nav" style={{position:'fixed',top:8,left:12,right:12,height:72,zIndex:40}} contentClassName="p-4">Profile editor navigation</TahoeBackdropSurface>
@@ -20,7 +21,7 @@ const fixture = `
                     <h2>Editor section {index+1}</h2>
                     <TahoeGlassField label={'Name '+index}><input defaultValue={'Synthetic row '+index}/></TahoeGlassField>
                     <TahoeGlassField label={'Description '+index}><textarea defaultValue="Synthetic editor content; no account or writes."/></TahoeGlassField>
-                    <TahoeGlassButton type="button">Edit row {index+1}</TahoeGlassButton>
+                    <LightButton type="button">Edit row {index+1}</LightButton>
                 </TahoeGlassSurface>
             </section>)}
         </main>
@@ -28,7 +29,7 @@ const fixture = `
 `
 
 test.beforeAll(async () => {
-    const files = ['src/components/providers/TahoeGlassProvider.tsx', 'src/components/providers/NSSOTahoeGlassEnvironment.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const files = ['src/components/providers/TahoeGlassProvider.tsx', 'src/components/providers/NSSOTahoeGlassEnvironment.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/apple-tahoe-liquid-glass-button.tsx']
     const source = files.map(file => readFileSync(root + file, 'utf8')).join('\n') + fixture
     const candidates = [...source.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
@@ -95,6 +96,10 @@ for (const pathname of ['/dashboard', '/dashboard/products/synthetic/creator']) 
         const errors = []; page.on('pageerror', error => errors.push(error.message))
         const requests = await mount(page, pathname)
         if (testInfo.project.name === 'desktop') await expect(page.getByTestId('editor-nav')).toHaveAttribute('data-tahoe-chromium-optics', 'refract')
+        else await expect(page.getByTestId('editor-nav')).toHaveAttribute('data-tahoe-material-family', 'candidate')
+        await expect(page.locator('[data-tahoe-native-lens="supplied"]')).toHaveCount(36)
+        await expect(page.locator('[data-tahoe-glass-provider]')).toHaveCount(1)
+        await expect(page.locator('[data-tahoe-native-lens] canvas')).toHaveCount(0)
         const metrics = await page.evaluate(async () => {
             const counts = { styles: 0, distantStyles: 0, rects: 0, distantRects: 0, pngs: 0 }
             const nativeStyle = window.getComputedStyle, nativeRect = Element.prototype.getBoundingClientRect, nativePng = HTMLCanvasElement.prototype.toDataURL
@@ -122,6 +127,7 @@ for (const pathname of ['/dashboard', '/dashboard/products/synthetic/creator']) 
         await page.getByRole('textbox', { name: 'Name 35', exact: true }).scrollIntoViewIfNeeded()
         await expect(page.locator('[data-perf-row="35"] [data-tahoe-glass-surface="recessed"]').first()).toHaveAttribute('data-tahoe-glass-visible', 'true')
         await expect(page.locator('[data-perf-row="35"] [data-tahoe-glass-surface="recessed"]').first()).toHaveAttribute('data-tahoe-glass-measured', 'true')
+        await expect(page.locator('[data-perf-row="35"] [data-tahoe-native-lens="supplied"]')).toHaveAttribute('data-tahoe-glass-visible', 'true')
         await page.getByRole('textbox', { name: 'Name 35', exact: true }).fill('Still editable after scrolling')
         await expect(page.getByRole('textbox', { name: 'Name 35', exact: true })).toHaveValue('Still editable after scrolling')
         await page.evaluate(() => window.disposeFixture())

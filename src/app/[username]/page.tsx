@@ -1,3 +1,4 @@
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
 import { loadPublicProfile, loadPublicProfileMetadata, loadPublicProfileViewer } from '@/lib/public-profile'
 import { notFound } from 'next/navigation'
 import GlassCard from '@/components/profile/ProfileGlassCard'
@@ -119,11 +120,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
             {/* Profile Content */}
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} space-y-12 lg:space-y-20`}>
                 <nav id="profile-sections" aria-label="Profile sections" className="flex scroll-mt-32 flex-wrap justify-center gap-2 lg:justify-start">
-                    <a href="#profile-about" className={lightButtonClass}>About</a>
-                    {experiences.length > 0 && <a href="#profile-experience" className={lightButtonClass}>Experience</a>}
-                    {qualifications.length > 0 && <a href="#profile-qualifications" className={lightButtonClass}>Qualifications</a>}
-                    {projects.length > 0 && <a href="#profile-projects" className={lightButtonClass}>Projects</a>}
-                    {products.length > 0 && <a href="#profile-products" className={lightButtonClass}>Products & Services</a>}
+                    <NativeGlassLens as="a" href="#profile-about" className={lightButtonClass}>About</NativeGlassLens>
+                    {experiences.length > 0 && <NativeGlassLens as="a" href="#profile-experience" className={lightButtonClass}>Experience</NativeGlassLens>}
+                    {qualifications.length > 0 && <NativeGlassLens as="a" href="#profile-qualifications" className={lightButtonClass}>Qualifications</NativeGlassLens>}
+                    {projects.length > 0 && <NativeGlassLens as="a" href="#profile-projects" className={lightButtonClass}>Projects</NativeGlassLens>}
+                    {products.length > 0 && <NativeGlassLens as="a" href="#profile-products" className={lightButtonClass}>Products & Services</NativeGlassLens>}
                 </nav>
 
                 {/* 1. Identity & Resume Section */}
@@ -384,7 +385,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                             <div className="space-y-3 mt-auto">
                                                 {checkout.purchaseUrls.map(purchaseUrl => (
                                                     <div key={purchaseUrl} className="w-full flex justify-center">
-                                                        <a
+                                                        <NativeGlassLens as="a"
                                                             href={purchaseUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
@@ -393,7 +394,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                             aria-label={`${purchaseButtonLabel(purchaseUrl)}: ${product.name}`}
                                                         >
                                                             <span data-light-button-content="true">{purchaseButtonLabel(purchaseUrl)}</span>
-                                                        </a>
+                                                        </NativeGlassLens>
                                                     </div>
                                                 ))}
                                                 {product.paypal_active && product.payment_config && (

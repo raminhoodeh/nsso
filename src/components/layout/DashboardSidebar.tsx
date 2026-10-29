@@ -1,5 +1,7 @@
 'use client';
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { Suspense, useState, useSyncExternalStore } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -162,7 +164,7 @@ function DashboardSidebarContent({
                             className={cn(
                                 "group relative w-full px-4 py-3 transition-all duration-200",
                                 isActive
-                                    ? "border-slate-500 text-slate-950 ring-2 ring-slate-500/60"
+                                    ? "border border-slate-500 text-slate-950 ring-2 ring-slate-500/60"
                                     : "text-slate-900 hover:text-slate-950",
                                 item.comingSoon && "cursor-pointer"
                             )}
@@ -202,10 +204,10 @@ function DashboardSidebarContent({
             {/* Footer Actions */}
             <div className="p-4 mt-auto border-t border-slate-500/15 space-y-2">
                 {isAdmin && (
-                    <Link href="/admin" className={cn(lightButtonClass, 'group mb-3 flex w-full justify-start gap-3 rounded-xl px-4 py-3 text-left')}>
+                    <NativeGlassLens as={Link} href="/admin" className={cn(lightButtonClass, 'group mb-3 flex w-full justify-start gap-3 rounded-xl px-4 py-3 text-left')}>
                         <LayoutDashboard size={18} aria-hidden="true" />
                         <span className="text-[14px] font-medium">Admin</span>
-                    </Link>
+                    </NativeGlassLens>
                 )}
 
                 {/* Preview Profile */}

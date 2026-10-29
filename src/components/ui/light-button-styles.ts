@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import { LIGHT_PANEL } from './light-panel'
 
-/** Native glass controls reuse their parent scene without registering more optics. */
+/** Native controls share the supplied material and the scene's lens registry. */
 export const lightButtonClass = cn(
     LIGHT_PANEL.control,
     LIGHT_PANEL.focus,

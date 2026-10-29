@@ -50,7 +50,7 @@ export async function renderedControlContrast(control, { includeBackground = fal
             samples.push({ x: rect.x - box.x, y: rect.y - box.y, width: rect.width, height: rect.height, ink: rgba(icon) })
         }
         // Preserve geometry and material; hide only foreground descendants.
-        const hidden = label === material ? [...label.children] : [label]
+        const hidden = label === material ? [...label.children].filter(element => !element.hasAttribute('data-supplied-glass-layer')) : [label]
         for (const element of hidden) { element.dataset.contrastVisibility = element.style.visibility; element.style.visibility = 'hidden' }
         return { samples, opacity: Number(getComputedStyle(button).opacity) }
     })
@@ -93,6 +93,9 @@ export async function expectWhiteEditorControls(container, { photoException = fa
     }).map(button => {
         const material = button.querySelector('[data-ask-deity-lens]') || button
         const style = getComputedStyle(material)
+        const coat = material.querySelector(':scope > [data-supplied-glass-layer="coat"]')
+        const rim = material.querySelector(':scope > [data-supplied-glass-layer="rim"]')
+        const provider = material.closest('[data-tahoe-glass-provider]')
         const canvas = document.createElement('canvas')
         canvas.width = canvas.height = 1
         const context = canvas.getContext('2d')
@@ -101,8 +104,15 @@ export async function expectWhiteEditorControls(container, { photoException = fa
             label: button.getAttribute('aria-label') || button.textContent.trim(),
             exemptPhoto: allowPhoto && button.getAttribute('aria-label') === 'Upload profile picture',
             glass: material.classList.contains('nsso-glass-control'),
+            supplied: material.dataset.tahoeNativeLens === 'supplied',
+            registered: material.hasAttribute('data-tahoe-glass-state'),
+            provider: provider && { family: provider.dataset.tahoeMaterialFamily, state: provider.dataset.tahoeGlassState, backend: provider.dataset.tahoeGlassBackend },
+            childCanvases: material.querySelectorAll('canvas').length,
+            suppliedLayers: { coat: material.querySelectorAll(':scope > [data-supplied-glass-layer="coat"]').length, rim: material.querySelectorAll(':scope > [data-supplied-glass-layer="rim"]').length },
+            coat: coat && { background: rgba(getComputedStyle(coat).backgroundColor), image: getComputedStyle(coat).backgroundImage, shadow: getComputedStyle(coat).boxShadow, filter: getComputedStyle(coat).backdropFilter },
+            rim: rim && { image: getComputedStyle(rim).backgroundImage, events: getComputedStyle(rim).pointerEvents },
             gradient: style.backgroundImage,
-            solidMode: matchMedia('(forced-colors: active), (prefers-reduced-transparency: reduce)').matches,
+            solidMode: matchMedia('(forced-colors: active), (prefers-reduced-transparency: reduce)').matches || material.dataset.tahoeNativeSolid === 'true',
             disabled: button.disabled || button.getAttribute('aria-disabled') === 'true',
             material: button.dataset.nssoControl || (button.hasAttribute('data-ask-deity-control') ? 'white-lens' : material.dataset.nssoControl),
             legacyCoats: button.querySelectorAll('[data-tahoe-button-coat]').length,
@@ -116,9 +126,30 @@ export async function expectWhiteEditorControls(container, { photoException = fa
         expect(control.legacyCoats, control.label).toBe(0)
         expect(['white', 'white-lens'], control.label).toContain(control.material)
         expect(control.glass, control.label + ' shared glass material').toBe(true)
-        if (control.solidMode) {
+        if (control.supplied) {
+            expect(control.provider, control.label + ' real supplied scene provider').toMatchObject({ family: 'supplied' })
+            expect(control.registered, control.label + ' actual shared lens registration').toBe(true)
+            expect(control.childCanvases, control.label + ' no per-control canvas').toBe(0)
+            expect(control.suppliedLayers, control.label + ' canonical supplied material').toEqual({ coat: 1, rim: 1 })
+            expect(control.rim.events, control.label + ' decorative rim').toBe('none')
+            if (control.solidMode) {
+                expect(control.coat.background[3], control.label + ' system solid coat').toBe(255)
+            } else {
+                expect(control.background[3], control.label + ' transparent native shell').toBe(0)
+                expect(control.gradient, control.label + ' no replacement shell paint').toBe('none')
+                const webgl = control.provider.state === 'active' && control.provider.backend === 'webgl'
+                expect(control.coat.background[3], control.label + ' original supplied coat').toBe(webgl ? 0 : 64)
+                if (!webgl) {
+                    expect(control.coat.background.slice(0, 3), control.label + ' neutral original coat').toEqual([255, 255, 255])
+                    expect(control.coat.image, control.label + ' original supplied sheen').not.toBe('none')
+                }
+                expect(control.coat.shadow, control.label + ' original bevel formula').not.toBe('none')
+            }
+        } else if (control.solidMode) {
             expect(control.background[3], control.label + ' system solid fallback').toBe(255)
         } else {
+            // Candidate or missing-provider fixtures intentionally keep the
+            // previous static native material; do not call that supplied glass.
             expect(control.background[3], control.label + ' transparent transmission').toBeGreaterThan(0)
             expect(control.background[3], control.label + ' transparent transmission').toBeLessThan(255)
             expect(Math.min(...control.background.slice(0, 3)), control.label + ' neutral bright material').toBeGreaterThanOrEqual(235)

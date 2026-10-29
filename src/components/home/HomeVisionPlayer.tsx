@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import {
   ExternalLink,
   Maximize2,
@@ -264,7 +266,7 @@ export default function HomeVisionPlayer() {
           className="hidden h-11 w-24 cursor-pointer accent-slate-950 disabled:cursor-wait md:block"
         />
 
-        <a
+        <NativeGlassLens as="a"
           href={VIDEO_URL}
           target="_blank"
           rel="noopener noreferrer"
@@ -273,7 +275,7 @@ export default function HomeVisionPlayer() {
           title="Watch on YouTube"
         >
           <ExternalLink size={19} />
-        </a>
+        </NativeGlassLens>
 
         <LightIconButton
           type="button"

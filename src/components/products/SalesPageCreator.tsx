@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { type ReactNode, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -434,7 +436,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                                 <div className="h-full w-full rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${product.image_url})` }} />
                                             </TahoeGlassSurface>
                                         )}
-                                        <label className={cn(lightButtonClass, 'cursor-pointer has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40')}>
+                                        <NativeGlassLens as="label" className={cn(lightButtonClass, 'cursor-pointer has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40')}>
                                             {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                                             <span className="text-sm">{product.image_url ? 'Change Image' : 'Upload Image'}</span>
                                             <input
@@ -449,7 +451,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                                     e.target.value = ''
                                                 }}
                                             />
-                                        </label>
+                                        </NativeGlassLens>
                                     </div>
                                 </div>
                                 {/* Cropper Modal */}

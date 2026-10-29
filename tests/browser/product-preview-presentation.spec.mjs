@@ -158,6 +158,7 @@ test.beforeAll(async () => {
         'src/components/providers/NSSOTahoeGlassEnvironment.tsx', 'src/components/providers/TahoeGlassProvider.tsx',
         'src/components/ui/PreviewCheckoutButton.tsx', 'src/components/ui/PayPalSmartButton.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts',
         'src/components/ui/GlassButton.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx',
+        'src/components/ui/apple-tahoe-liquid-glass-button.tsx', 'src/components/ui/tahoe-glass/NativeGlassLens.tsx',
         'src/components/ui/experimental/liquid-glass-candidate.tsx',
     ]
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
@@ -347,6 +348,7 @@ test('cold tool routes decode the real grain asset without loading clouds or run
         await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
         await expect(page.locator('#vanta-bg')).toHaveCount(0)
         await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-source', /nsso-deck-blue/)
+        await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-material-family', 'supplied')
     }
     const decoded = await page.evaluate(async () => {
         const image = new Image(); image.src = '/assets/backgrounds/nsso-deck-blue.webp'; await image.decode()
@@ -355,7 +357,12 @@ test('cold tool routes decode the real grain asset without loading clouds or run
     expect(decoded).toEqual({ width: 1920, height: 1360 })
     const glass = page.getByTestId('fixture-static-glass')
     await expect(glass).toBeVisible()
-    const glassIsReady = () => glass.evaluate(element => element.hasAttribute('data-tahoe-chromium-optics') ? element.dataset.tahoeChromiumOptics === 'refract' : element.dataset.tahoeGlassMeasured === 'true')
+    await expect(glass).toHaveAttribute('data-tahoe-optical-engine', 'supplied-shared')
+    await expect(glass).toHaveAttribute('data-tahoe-material-implementation', 'supplied-original')
+    await expect(glass).not.toHaveAttribute('data-tahoe-chromium-optics')
+    await expect(glass.locator(':scope > [data-supplied-glass-layer="coat"]')).toHaveCount(1)
+    await expect(glass.locator(':scope > [data-supplied-glass-layer="rim"]')).toHaveCount(1)
+    const glassIsReady = () => glass.evaluate(element => element.dataset.tahoeGlassMeasured === 'true')
     await expect.poll(glassIsReady).toBe(true)
     await glass.scrollIntoViewIfNeeded()
     await page.setViewportSize({ width: page.viewportSize().width, height: page.viewportSize().height - 72 })
@@ -395,6 +402,7 @@ test('homepage, authentication and preview or public profile routes retain their
         await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(0)
         await expect(page.locator('#vanta-bg canvas')).toHaveCount(1)
         await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-source', /vanta-clouds/)
+        await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-material-family', 'supplied')
         expect(await page.evaluate(() => window.fixtureCanvas === document.querySelector('#vanta-bg canvas'))).toBe(true)
     }
     expect(requests.filter(path => path === '/assets/backgrounds/nsso-deck-blue.webp')).toEqual([])

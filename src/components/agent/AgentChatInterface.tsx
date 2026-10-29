@@ -1,5 +1,7 @@
 "use client";
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Send, Maximize2, Minimize2, ChevronDown, ChevronUp, Check, XCircle, RotateCcw } from 'lucide-react';
@@ -734,7 +736,7 @@ Check out some of the areas I can help you with below.`;
                                     : action.status === 'undone' ? <p role="status" className="text-xs text-slate-600">Undone and saved.</p>
                                     : action.status === 'rejected' ? <p role="status" className="text-xs text-slate-600">Rejected</p>
                                     : action.status === 'applying' ? <p role="status" className="text-xs text-sky-900">Saving change...</p>
-                                    : <><button type="button" disabled={isTyping} aria-label="Apply suggested profile change" onClick={() => {void handleApplyAction(msg.id,action)}} className={`${LIGHT_PANEL.focus} inline-flex min-h-11 items-center gap-1 rounded-full border border-sky-200 bg-[#dceaf5] px-3 text-xs font-medium text-sky-950 transition-colors hover:bg-[#c9e0f2] disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none`}><Check size={14}/>{action.status === 'conflict' ? 'Refresh for review' : action.status === 'outcomeUnknown' ? 'Check save status' : action.status === 'failed' ? 'Retry' : 'Apply'}</button>{action.status!=='outcomeUnknown' && <button type="button" aria-label="Reject suggested profile change" onClick={() => handleRejectAction(msg.id,action.operationId)} className={`${LIGHT_PANEL.focus} ml-2 inline-flex min-h-11 items-center gap-1 rounded-full border border-rose-200 bg-[#f9e5e9] px-3 text-xs text-rose-900 transition-colors hover:bg-[#f5d6df] motion-reduce:transition-none`}><XCircle size={14}/>Reject</button>}</>}
+                                    : <><LightButton contentClassName="gap-1" type="button" disabled={isTyping} aria-label="Apply suggested profile change" onClick={() => {void handleApplyAction(msg.id,action)}} className={`${LIGHT_PANEL.focus} inline-flex min-h-11 items-center gap-1 rounded-full border border-sky-200 bg-[#dceaf5] px-3 text-xs font-medium text-sky-950 transition-colors hover:bg-[#c9e0f2] disabled:pointer-events-none disabled:opacity-40 motion-reduce:transition-none`}><Check size={14}/>{action.status === 'conflict' ? 'Refresh for review' : action.status === 'outcomeUnknown' ? 'Check save status' : action.status === 'failed' ? 'Retry' : 'Apply'}</LightButton>{action.status!=='outcomeUnknown' && <LightButton intent="danger" contentClassName="gap-1" type="button" aria-label="Reject suggested profile change" onClick={() => handleRejectAction(msg.id,action.operationId)} className={`${LIGHT_PANEL.focus} ml-2 inline-flex min-h-11 items-center gap-1 rounded-full border border-rose-200 bg-[#f9e5e9] px-3 text-xs text-rose-900 transition-colors hover:bg-[#f5d6df] motion-reduce:transition-none`}><XCircle size={14}/>Reject</LightButton>}</>}
                                     {action.error && <p role="status" className="max-w-md text-xs text-amber-900">{action.error}</p>}
                                 </div>)}
                             </div></div>
@@ -760,7 +762,7 @@ Check out some of the areas I can help you with below.`;
             <footer className="w-full shrink-0 border-t border-slate-500/15 bg-[#eef0f4]">
                 <div ref={categoryToggleRef} className="px-3 pt-1 group-data-[minimal=true]/deity:hidden">
                     <div className="flex flex-col items-center">
-                        <button
+                        <NativeGlassLens as="button"
                             type="button"
                             onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
                             aria-expanded={isCategoriesExpanded}
@@ -769,7 +771,7 @@ Check out some of the areas I can help you with below.`;
                         >
                             What you can ask me about
                             {isCategoriesExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </button>
+                        </NativeGlassLens>
                     </div>
                 </div>
 
@@ -782,7 +784,7 @@ Check out some of the areas I can help you with below.`;
                 >
                     <div className="flex flex-wrap justify-center gap-1.5 overflow-y-auto px-3 pb-1 scrollbar-none">
                         {Object.keys(CATEGORY_QUESTIONS).map(cat => (
-                            <button
+                            <LightButton
                                 type="button"
                                 key={cat}
                                 onClick={() => handleCategoryClick(cat)}
@@ -793,9 +795,9 @@ Check out some of the areas I can help you with below.`;
                                     }`}
                             >
                                 {cat}
-                            </button>
+                            </LightButton>
                         ))}
-                        <button
+                        <NativeGlassLens as="button"
                             type="button"
                             ref={databaseTriggerRef}
                             className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} mb-1 min-h-11 rounded-full px-3 py-2 text-xs font-bold tracking-wide`}
@@ -805,7 +807,7 @@ Check out some of the areas I can help you with below.`;
                             aria-haspopup="dialog"
                         >
                             nsso DATABASE
-                        </button>
+                        </NativeGlassLens>
                     </div>
                 </div>
 
@@ -833,14 +835,14 @@ Check out some of the areas I can help you with below.`;
                             autoComplete="off"
                             className="block max-h-40 min-h-14 w-full resize-none overflow-y-auto rounded-2xl border border-slate-400/70 bg-[#fbfcfe] px-3 py-3 pr-14 text-base leading-6 text-slate-950 outline-none placeholder:text-slate-600 focus:border-slate-700 focus:ring-2 focus:ring-slate-700/25"
                         />
-                        <button
+                        <NativeGlassLens as="button"
                             type="submit"
                             disabled={!inputValue.trim() || isLoading}
                             aria-label="Send message"
                             className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} absolute bottom-1.5 right-1.5 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full`}
                         >
                             <Send size={18} />
-                        </button>
+                        </NativeGlassLens>
                     </form>
                 </div>
             </footer>
