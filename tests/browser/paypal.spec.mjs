@@ -65,7 +65,9 @@ test('NCP checkout stays a native provider form even when obsolete price and suc
     await render(page, { html: ncp, isPlatformOwner: true, price: 'USD 999', productName: 'Fixture', successUrl: 'https://attacker.invalid/file' });
     await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G');
     await expect(page.locator('form')).toHaveAttribute('method', 'post');
-    await expect(page.getByRole('button', { name: 'Buy Now' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Buy via PayPal' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Buy Now', exact: true })).toHaveCount(0);
+    expect(await page.evaluate(html => window.parsePayPal(html).config.label, ncp)).toBe('Buy Now');
     await expect(page.locator('input')).toHaveCount(0);
     expect(await page.evaluate(() => window.sdkLoaded || 0)).toBe(0);
 });
@@ -112,9 +114,9 @@ test('preview is inert and semantic URL rendering preserves invalid text without
     await fixture(page);
     await render(page, { config: { version: 1, kind: 'hosted-button', hostedButtonId: 'FIXTUREGBP', currency: 'GBP' }, preview: true });
     await expect(page.getByText('Checkout is disabled during profile preview', { exact: true })).toHaveCount(0);
-    await page.getByRole('button', { name: 'Pay with PayPal' }).press('Enter');
+    await page.getByRole('button', { name: 'Buy via PayPal' }).press('Enter');
     await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview');
-    await expect(page.getByRole('button', { name: 'Pay with PayPal' })).toHaveAttribute('aria-describedby', await page.getByRole('status').getAttribute('id'));
+    await expect(page.getByRole('button', { name: 'Buy via PayPal' })).toHaveAttribute('aria-describedby', await page.getByRole('status').getAttribute('id'));
     await expect(page.locator('form')).toHaveCount(0);
     expect(await page.evaluate(() => window.sdkLoaded || 0)).toBe(0);
     await page.evaluate(() => window.renderLink('javascript:window.fixturePwned=1'));

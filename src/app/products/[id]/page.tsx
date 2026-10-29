@@ -330,14 +330,14 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrl && (
-                                <div className="w-full max-w-[280px] mb-3">
+                                <div className="w-full max-w-[15rem] mb-3">
                                     {preview ? <PreviewCheckoutButton className="w-full">{purchaseButtonLabel(checkout.purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
                             {/* PayPal Button */}
                             {checkout.paypal && !!product.payment_config && (
-                                <div className="w-full max-w-[280px] flex justify-center mt-2">
+                                <div className="w-full max-w-[15rem] flex justify-center mt-2">
                                     <PayPalSmartButton 
                                         config={product.payment_config}
                                         preview={preview}
@@ -471,14 +471,14 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrl && (
-                                <div className="w-full max-w-[280px] mb-3">
+                                <div className="w-full max-w-[15rem] mb-3">
                                     {preview ? <PreviewCheckoutButton className="w-full">{purchaseButtonLabel(checkout.purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
                             {/* PayPal / Apple Pay */}
                             {checkout.paypal && !!product.payment_config && (
-                                <div className="w-full max-w-[320px] flex justify-center mt-2">
+                                <div className="w-full max-w-[15rem] flex justify-center mt-2">
                                         <PayPalSmartButton 
                                             config={product.payment_config}
                                             preview={preview}
