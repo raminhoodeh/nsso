@@ -263,7 +263,13 @@ function measureSurfacePresentation(
     if (Number.isFinite(ownOpacity)) opacity *= ownOpacity;
     if (opacity <= 0.01) return { clipRect: null, opacity: 0 };
 
-    if (current !== element) {
+    // Root overflow clips the viewport, which was already intersected above.
+    // Its document rect moves by -scrollY while clientHeight stays at the
+    // viewport height; treating it as an ordinary ancestor drops visible
+    // lenses after scrolling. Keep ordinary nested scrollers/clips intact.
+    const clipsViewport = current === document.documentElement ||
+      current === document.scrollingElement;
+    if (current !== element && !clipsViewport) {
       const clipsX = ["auto", "hidden", "clip", "scroll"].includes(
         computed.overflowX,
       );

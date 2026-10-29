@@ -55,7 +55,7 @@ async function mount(page) {
         const path = new URL(route.request().url()).pathname
         if (path === '/fixture.js') return route.fulfill({ contentType: 'application/javascript', body: bundle })
         if (path === '/fixture.css') return route.fulfill({ contentType: 'text/css', body: css })
-        return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' })
+        return route.fulfill({ contentType: 'text/html', body: '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>' })
     })
     await page.goto('https://nsso.test/supplied-optics')
     await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-state', 'active')
@@ -80,12 +80,18 @@ function changedRegion(a, b, rect) {
     return { changed, total, fraction: changed / total, mean: difference / total }
 }
 
-test('supplied source material drives every native lens through one actual refracting scene', async ({ page }, testInfo) => {
+for (const deepScroll of [false, true]) test(`supplied source material drives every native lens through one actual refracting scene${deepScroll ? ' after deep document scroll' : ''}`, async ({ page }, testInfo) => {
     const errors = await mount(page)
+    if (deepScroll) {
+        await page.addStyleTag({ content: 'html,body{height:auto;min-height:100%}[data-tahoe-glass-provider]{height:auto!important;min-height:2400px}' })
+        await page.evaluate(() => scrollTo(0, 1200))
+        await expect.poll(() => page.evaluate(() => scrollY)).toBe(1200)
+    }
     const lenses = page.locator('[data-tahoe-native-lens="supplied"]')
     await expect(lenses).toHaveCount(3)
     for (const lens of await lenses.all()) {
         await expect(lens).toHaveAttribute('data-tahoe-glass-visible', 'true')
+        await expect(lens).toHaveAttribute('data-tahoe-glass-state', 'active')
         await expect(lens.locator('[data-supplied-glass-layer="coat"]')).toHaveCount(1)
         await expect(lens.locator('[data-supplied-glass-layer="rim"]')).toHaveCount(1)
         await expect(lens.locator('canvas')).toHaveCount(0)
@@ -119,7 +125,7 @@ test('supplied source material drives every native lens through one actual refra
         expect(region.fraction, 'real displacement at native lens ' + index).toBeGreaterThan(.04)
         expect(region.changed).toBeGreaterThan(80)
     }
-    const evidence = { regions, backend: await page.locator('[data-tahoe-glass-provider]').getAttribute('data-tahoe-glass-backend') }
+    const evidence = { regions, deepScroll, backend: await page.locator('[data-tahoe-glass-provider]').getAttribute('data-tahoe-glass-backend') }
     console.log('SUPPLIED_REFRACTION_PIXELS ' + testInfo.project.name + ' ' + JSON.stringify(evidence))
     await testInfo.attach('multiple-supplied-lens-pixels', { body: JSON.stringify(evidence), contentType: 'application/json' })
     expect(errors).toEqual([])
