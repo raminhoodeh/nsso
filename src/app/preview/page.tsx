@@ -25,7 +25,8 @@ import {
     PROFILE_PAGE_CONTAINER_CLASS,
 } from '@/components/profile/profileLayout'
 import ExpandableBio from '@/components/profile/ExpandableBio'
-import { getProfileBioPreview } from '@/components/profile/profileBio'
+import ExpandableProfileText from '@/components/profile/ExpandableProfileText'
+import ExpandableProfileList from '@/components/profile/ExpandableProfileList'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 export default function PreviewPage() {
@@ -109,8 +110,8 @@ export default function PreviewPage() {
                         {profile?.bio && (
                             <GlassCard className="p-6 !mt-10">
                                 <ExpandableBio
+                                    key={user.id}
                                     text={profile.bio}
-                                    collapsedText={getProfileBioPreview(user?.username, profile.bio)}
                                     className="text-slate-950 text-lg leading-relaxed whitespace-pre-wrap"
                                 />
                             </GlassCard>
@@ -141,13 +142,13 @@ export default function PreviewPage() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 !mt-24">
+                        <div className="grid grid-cols-1 items-start md:grid-cols-2 gap-6 !mt-24">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
-                                <GlassCard className="p-6 h-full">
+                                <GlassCard className="p-6">
                                     <div>
                                         <h3 className="text-slate-950 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h3>
-                                        <div className="space-y-6">
+                                        <ExpandableProfileList key={`${user.id}:experiences`} context="Experiences" className="space-y-6">
                                             {experiences.map(exp => (
                                                 <div key={exp.id} className="relative pl-6 border-l border-slate-400/50">
                                                     <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-slate-500/60" />
@@ -158,17 +159,17 @@ export default function PreviewPage() {
                                                     </p>
                                                 </div>
                                             ))}
-                                        </div>
+                                        </ExpandableProfileList>
                                     </div>
                                 </GlassCard>
                             )}
 
                             {/* Qualifications Section */}
                             {qualifications.length > 0 && (
-                                <GlassCard className="p-6 h-full">
+                                <GlassCard className="p-6">
                                     <div>
                                         <h3 className="text-slate-950 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h3>
-                                        <div className="space-y-6">
+                                        <ExpandableProfileList key={`${user.id}:qualifications`} context="Qualifications" className="space-y-6">
                                             {qualifications.map(qual => (
                                                 <div key={qual.id} className="relative pl-6 border-l border-slate-400/50">
                                                     <div className="absolute -left-[5px] top-2 w-2.5 h-2.5 rounded-full bg-slate-500/60" />
@@ -179,7 +180,7 @@ export default function PreviewPage() {
                                                     </p>
                                                 </div>
                                             ))}
-                                        </div>
+                                        </ExpandableProfileList>
                                     </div>
                                 </GlassCard>
                             )}
@@ -257,25 +258,27 @@ export default function PreviewPage() {
                                     href: projectUrl,
                                     target: '_blank',
                                     rel: 'noopener noreferrer',
-                                    className: 'block h-full cursor-pointer rounded-xl focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950'
-                                } : { className: 'h-full' }
+                                    className: 'block cursor-pointer rounded-xl focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950'
+                                } : { className: 'block' }
 
                                 return (
-                                    <Wrapper key={project.id} {...wrapperProps}>
-                                        <GlassCard className="p-6 md:p-7 flex flex-col h-full hover:bg-white/25 transition-colors group">
+                                    <GlassCard key={project.id} className="p-6 md:p-7 flex flex-col hover:bg-white/25 transition-colors group">
+                                        <Wrapper {...wrapperProps}>
                                             <h3 className="text-2xl font-bold text-slate-950 mb-2 flex items-center gap-2">
                                                 {project.project_name}
-                                                {project.project_url && <ExternalLink size={16} className="text-slate-950" />}
+                                                {projectUrl && <ExternalLink size={16} className="text-slate-950" />}
                                             </h3>
-                                            <div className="text-slate-950 text-sm uppercase tracking-widest mb-4 font-bold">{project.contribution}</div>
-                                            <p className="text-slate-950 leading-relaxed mb-6 flex-grow">{project.description}</p>
-                                            {project.project_photo_url && (
+                                        </Wrapper>
+                                        <div className="text-slate-950 text-sm uppercase tracking-widest mb-4 font-bold">{project.contribution}</div>
+                                        <ExpandableProfileText text={project.description || ''} context={`project ${project.project_name}`} className="text-slate-950 leading-relaxed mb-6" />
+                                        {project.project_photo_url && (
+                                            <Wrapper {...wrapperProps} aria-label={projectUrl ? `Open ${project.project_name}` : undefined}>
                                                 <div className="w-full aspect-video rounded-xl bg-white/30 overflow-hidden">
                                                     <img src={project.project_photo_url} alt={project.project_name} className="w-full h-full object-cover" />
                                                 </div>
-                                            )}
-                                        </GlassCard>
-                                    </Wrapper>
+                                            </Wrapper>
+                                        )}
+                                    </GlassCard>
                                 )
                             })}
                         </div>
@@ -292,11 +295,11 @@ export default function PreviewPage() {
                                 const ProductWrapper = product.sales_page_active && product.sales_page_published !== false ? Link : 'div'
                                 // Fix TS error by explicitly typing or checking
                                 const wrapperProps = product.sales_page_active && product.sales_page_published !== false
-                                    ? { href: `/products/${product.id}?preview=true`, className: "block flex-grow cursor-pointer rounded-xl focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950" }
-                                    : { className: "block flex-grow" }
+                                    ? { href: `/products/${product.id}?preview=true`, className: "block cursor-pointer rounded-xl focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-950" }
+                                    : { className: "block" }
 
                                 return (
-                                    <GlassCard key={product.id} className="p-6 flex flex-col h-full group">
+                                    <GlassCard key={product.id} className="p-6 flex flex-col group">
                                         {/* @ts-ignore - Dynamic component props mismatch */}
                                         <ProductWrapper {...wrapperProps}>
 
@@ -319,8 +322,8 @@ export default function PreviewPage() {
                                                     </TahoeGlassSurface>
                                                 )}
                                             </div>
-                                            <p className="text-slate-950 text-sm leading-relaxed mb-6">{product.description}</p>
                                         </ProductWrapper>
+                                        <ExpandableProfileText text={product.description || ''} context={`product ${product.name}`} className="text-slate-950 text-sm leading-relaxed mb-6" />
 
                                         {/* Action Buttons */}
                                         <div className="space-y-3 mt-auto">

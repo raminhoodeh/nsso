@@ -1,6 +1,4 @@
-'use client'
-
-import { useId, useState } from 'react'
+import ExpandableProfileText from './ExpandableProfileText'
 
 interface ExpandableBioProps {
     text: string
@@ -8,35 +6,6 @@ interface ExpandableBioProps {
     className?: string
 }
 
-export default function ExpandableBio({ text, collapsedText, className }: ExpandableBioProps) {
-    const [isExpanded, setIsExpanded] = useState(false)
-    const contentId = useId()
-    const fullText = text.trimEnd()
-    const canCollapse = Boolean(
-        collapsedText &&
-        fullText.startsWith(collapsedText) &&
-        fullText.length > collapsedText.length,
-    )
-    const visibleText = canCollapse && !isExpanded ? collapsedText : fullText
-
-    return (
-        <p className={className}>
-            <span id={contentId}>{visibleText}</span>
-            {canCollapse && (
-                <>
-                    {' '}
-                    <button
-                        type="button"
-                        aria-controls={contentId}
-                        aria-expanded={isExpanded}
-                        aria-label={isExpanded ? 'Collapse bio' : 'Show full bio'}
-                        onClick={() => setIsExpanded((expanded) => !expanded)}
-                        className="inline-flex min-h-11 items-center px-2 font-semibold text-sky-950 underline decoration-sky-950/50 underline-offset-4 transition-colors hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-                    >
-                        {isExpanded ? 'see less' : 'see more'}
-                    </button>
-                </>
-            )}
-        </p>
-    )
+export default function ExpandableBio({ text, className }: ExpandableBioProps) {
+    return <ExpandableProfileText text={text} context="bio" className={className} />
 }

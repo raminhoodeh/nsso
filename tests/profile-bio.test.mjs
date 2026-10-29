@@ -1,27 +1,45 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getProfileBioPreview, JOHN_BIO_PREVIEW } from '../src/components/profile/profileBio.ts'
+import { getProfileBioPreview, getProfileTextPreview } from '../src/components/profile/profileBio.ts'
 
-test('every long bio gets a bounded preview that is an exact prefix of the saved content', () => {
-  for (const username of ['ramin', 'john', 'new-creator', undefined]) {
+const characters = text => [...new Intl.Segmenter('en', { granularity: 'grapheme' }).segment(text)]
+
+test('bodies through 75 characters stay intact and longer bodies reserve room for the ellipsis', () => {
+    for (const length of [0, 1, 74, 75]) assert.equal(getProfileTextPreview('a'.repeat(length)), undefined)
+    for (const length of [76, 1000]) {
+        const full = 'a'.repeat(length)
+        const preview = getProfileTextPreview(full)
+        assert.equal(preview, 'a'.repeat(74))
+        assert.equal(characters(`${preview}…`).length, 75)
+        assert.ok(full.startsWith(preview))
+    }
+})
+
+test('a boundary never cuts a family emoji, skin tone, flag or combining accent', () => {
+    for (const cluster of ['👨‍👩‍👧‍👦', '👍🏽', '🇦🇪', 'e\u0301']) {
+        const full = `${'a'.repeat(73)}${cluster}bc`
+        const preview = getProfileTextPreview(full)
+        assert.equal(preview, `${'a'.repeat(73)}${cluster}`)
+        assert.equal(characters(`${preview}…`).length, 75)
+        assert.ok(full.startsWith(preview))
+    }
+    assert.equal(getProfileTextPreview('👨‍👩‍👧‍👦'.repeat(75)), undefined)
+})
+
+test('line breaks and long words remain exact saved-text prefixes', () => {
+    const full = `First line.\n\n${'unbroken'.repeat(100)}   `
+    const preview = getProfileTextPreview(full)
+    assert.equal(preview, full.slice(0, 74))
+    assert.ok(preview.includes('\n\n'))
+    assert.equal(getProfileTextPreview(' '.repeat(1000)), undefined)
+    assert.equal(getProfileTextPreview('\n\t\n'), undefined)
+})
+
+test('every profile identity uses the same display-only bio policy', () => {
     const bio = 'I build products and teach. '.repeat(100)
-    const preview = getProfileBioPreview(username, bio)
-    assert.ok(preview.length >= 240 && preview.length <= 600)
-    assert.ok(bio.startsWith(preview))
-  }
-})
-
-test('short bios stay intact and an opening paragraph is preferred', () => {
-  assert.equal(getProfileBioPreview('creator', 'A short bio.'), undefined)
-  const first = 'My work brings together people, ideas and creative practice. '.repeat(5).trim()
-  const bio = `${first}\n\n${'A longer story follows. '.repeat(50)}`
-  assert.equal(getProfileBioPreview('creator', bio), first)
-  assert.equal(getProfileBioPreview('john', `${JOHN_BIO_PREVIEW}\n\n${'More. '.repeat(100)}`), JOHN_BIO_PREVIEW)
-})
-
-test('unbroken text and trailing whitespace do not stop generic collapsing', () => {
-  const text = 'a'.repeat(1000) + '   '
-  const preview = getProfileBioPreview('creator', text)
-  assert.equal(preview.length, 400)
-  assert.ok(text.startsWith(preview))
+    for (const username of ['ramin', 'john', 'new-creator', null, undefined]) {
+        assert.equal(getProfileBioPreview(username, bio), getProfileTextPreview(bio))
+        assert.ok(bio.startsWith(getProfileBioPreview(username, bio)))
+    }
+    assert.equal(getProfileBioPreview('creator', 'A short bio.'), undefined)
 })
