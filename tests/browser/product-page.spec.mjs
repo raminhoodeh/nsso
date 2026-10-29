@@ -49,7 +49,7 @@ test.beforeAll(async () => {
     bundle = result.outputFiles[0].text
 })
 
-async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '', styled = false, withTestimonials = false } = {}) {
+async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '', styled = false, withTestimonials = false, purchaseUrl = product.purchase_link } = {}) {
     const requests = [], errors = []
     const pendingPublic = []
     let publicReleased = false
@@ -66,7 +66,7 @@ async function fixture(page, { published = true, account = { user: null, loading
         if (url.pathname === '/rest/v1/rpc/get_product_details') {
             if (deferPublic && !publicReleased) await new Promise(resolve => pendingPublic.push(resolve))
             if (failures-- > 0) return route.abort('failed')
-            data = published ? { ...product, ...(withTestimonials ? { testimonials: [{ name: 'First customer', text: 'First synthetic quote' }, { name: 'Second customer', text: 'Second synthetic quote' }] } : {}), ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
+            data = published ? { ...product, purchase_link: purchaseUrl, ...(withTestimonials ? { testimonials: [{ name: 'First customer', text: 'First synthetic quote' }, { name: 'Second customer', text: 'Second synthetic quote' }] } : {}), ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
         } else if (url.pathname === '/rest/v1/contacts') data = [{ method: 'Email', value: 'public-fixture@example.test' }]
         else if (url.pathname === '/rest/v1/users') data = { username: 'fixture-seller' }
         else throw new Error('Unexpected public product query')
@@ -77,9 +77,58 @@ async function fixture(page, { published = true, account = { user: null, loading
     await page.evaluate(({ account, privateMode, draft }) => {
         window.fixtureAccount = account; window.fixturePrivateMode = privateMode; window.fixtureDraft = draft
         localStorage.setItem('sb-product-fixture-auth-token', JSON.stringify({ access_token: 'expired-synthetic-token', refresh_token: 'synthetic-refresh-token', expires_at: 1, user: { id: 'previous-private-account' } }))
-    }, { account, privateMode, draft: { ...product, sales_page_published: false, headline: 'PRIVATE owner draft', intro_text: 'PRIVATE unsaved sales copy' } })
+    }, { account, privateMode, draft: { ...product, purchase_link: purchaseUrl, sales_page_published: false, headline: 'PRIVATE owner draft', intro_text: 'PRIVATE unsaved sales copy' } })
     await page.addScriptTag({ content: bundle })
     return { requests, errors, releasePublic: () => { publicReleased = true; pendingPublic.splice(0).forEach(resolve => resolve()) } }
+}
+
+for (const [store, purchaseUrl, label] of [
+    ['Etsy', 'https://www.etsy.com/listing/12345/synthetic?ref=nsso#details', 'Buy on Etsy'],
+    ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic?variant=123', 'Buy on Shopify'],
+    ['generic', 'https://shop.example.test/products/synthetic', 'View purchase page'],
+    ['lookalike', 'https://etsy.com.evil.example.test/listing/12345', 'View purchase page'],
+]) test(`${store} sales-page purchase labels preserve the exact destination and inert preview`, async ({ page }) => {
+    const { requests, errors } = await fixture(page, { purchaseUrl, styled: true })
+    await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+    const links = page.getByRole('link', { name: label, exact: true, includeHidden: true })
+    await expect(links).toHaveCount(2)
+    await expect(page.getByRole('link', { name: label, exact: true })).toHaveCount(1)
+    for (const link of await links.all()) {
+        await expect(link).toHaveAttribute('href', purchaseUrl)
+        await expect(link).toHaveAttribute('target', '_blank')
+        await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    }
+    const merchant = page.locator('form button').filter({ visible: true })
+    await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
+    await expect(merchant.locator('..')).toHaveAttribute('action', action)
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+    expect(requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
+    expect(errors).toEqual([])
+
+    const preview = await fixture(page, { purchaseUrl, search: '?preview=true' })
+    await expect(page.getByRole('button', { name: label, exact: true })).toHaveCount(2)
+    await page.getByRole('button', { name: label, exact: true }).first().press('Enter')
+    await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
+    await page.getByRole('button', { name: 'Buy fixture product', exact: true }).first().press('Space')
+    await expect(page.getByRole('status')).toHaveCount(2)
+    await expect(page.locator('form')).toHaveCount(0)
+    await expect(page.locator('a').filter({ hasText: label })).toHaveCount(0)
+    await expect(page.locator('script[src*="paypal"]')).toHaveCount(0)
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+    expect(preview.requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
+    expect(preview.errors).toEqual([])
+})
+
+for (const purchaseUrl of ['javascript:alert(1)', 'https://seller.example.test/\nunsafe']) {
+    test(`invalid sales-page purchase URL ${JSON.stringify(purchaseUrl)} remains guarded`, async ({ page }) => {
+        const { errors } = await fixture(page, { purchaseUrl })
+        await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+        await expect(page.getByRole('link', { name: /Buy on Etsy|Buy on Shopify|View purchase page/ })).toHaveCount(0)
+        await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)
+        await expect(page.locator('form')).toHaveCount(2)
+        for (const form of await page.locator('form').all()) await expect(form).toHaveAttribute('action', action)
+        expect(errors).toEqual([])
+    })
 }
 
 test('public product actions share white controls while merchant checkout and guarded destinations remain intact', async ({ page }, testInfo) => {
@@ -100,7 +149,7 @@ test('public product actions share white controls while merchant checkout and gu
     const { errors, requests } = await fixture(page, { styled: true, withTestimonials: true })
     expect(await page.evaluate(() => window.innerWidth)).toBe(page.viewportSize().width)
     await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
-    const purchase = page.getByRole('link', { name: 'Link to Purchase', exact: true }).filter({ visible: true })
+    const purchase = page.getByRole('link', { name: 'View purchase page', exact: true }).filter({ visible: true })
     await checkMaterial(purchase)
     await expect(purchase).toHaveAttribute('href', product.purchase_link)
     await expect(purchase).toHaveAttribute('target', '_blank')
@@ -165,7 +214,7 @@ test('published checkout and public creator details load with expired persisted 
     await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
     await expect(page.locator('form')).toHaveCount(2)
     for (const form of await page.locator('form').all()) await expect(form).toHaveAttribute('action', action)
-    await expect(page.getByRole('link', { name: 'Link to Purchase' })).toHaveCount(2)
+    await expect(page.getByRole('link', { name: 'View purchase page' })).toHaveCount(2)
     await expect(page.getByText('public-fixture@example.test', { exact: false })).toBeVisible()
     await expect(page.getByRole('link', { name: 'nsso.me/fixture-seller' })).toHaveAttribute('href', '/fixture-seller')
     expect(requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
@@ -189,7 +238,7 @@ test('an explicit preview stays inert while account verification is pending and 
     await fixture(page, { account: { user: null, loading: true, error: null }, search: '?preview=true&source=creator' })
     await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
     await expect(page.locator('form')).toHaveCount(0)
-    await expect(page.getByRole('link', { name: 'Link to Purchase' })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'View purchase page' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Buy fixture product', exact: true })).toHaveCount(2)
     await expect(page.getByText('Checkout is disabled during profile preview', { exact: true })).toHaveCount(0)
     for (const button of await page.getByRole('button', { name: 'Buy fixture product', exact: true }).all()) {
@@ -211,8 +260,8 @@ test('a verified owner loads the authenticated draft fallback and every checkout
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Buy fixture product', exact: true })).toHaveCount(2)
     for (const button of await page.getByRole('button', { name: 'Buy fixture product', exact: true }).all()) await expect(button).toBeEnabled()
-    await expect(page.getByRole('button', { name: 'Link to Purchase', exact: true })).toHaveCount(2)
-    await page.getByRole('button', { name: 'Link to Purchase', exact: true }).first().press('Enter')
+    await expect(page.getByRole('button', { name: 'View purchase page', exact: true })).toHaveCount(2)
+    await page.getByRole('button', { name: 'View purchase page', exact: true }).first().press('Enter')
     await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
     await page.getByRole('button', { name: 'Back to Sales Page Creator' }).click()
     expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([`/dashboard?view=profile&offering=${productId}&offeringView=creator`])

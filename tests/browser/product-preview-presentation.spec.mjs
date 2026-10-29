@@ -593,7 +593,7 @@ test('styled preview explains a keyboard checkout attempt without starting a pay
     await expect(page.getByRole('button', { name: 'Buy Now', exact: true }).filter({ visible: true })).toHaveAttribute('aria-describedby', await notice.getAttribute('id'))
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.locator('a[href="https://seller.example.test/pay"]')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Link to Purchase', exact: true }).filter({ visible: true })).toBeEnabled()
+    await expect(page.getByRole('button', { name: 'View purchase page', exact: true }).filter({ visible: true })).toBeEnabled()
     expect(requests.some(path => path.includes('/sdk/js'))).toBe(false)
     await page.screenshot({ path: testInfo.outputPath('product-preview-checkout-notice.png') })
     expect(errors).toEqual([])
