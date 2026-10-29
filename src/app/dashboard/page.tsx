@@ -500,7 +500,7 @@ function DashboardForAccount({ allowClaim }: { allowClaim: boolean }) {
                                     <TahoeGlassField
                                         tone="light"
                                         surfaceClassName="p-0"
-                                        controlClassName="min-h-[384px] resize-none p-4 text-[17px] font-medium leading-[22px] md:min-h-0"
+                                        controlClassName="min-h-[384px] resize-none p-4 text-[17px] font-medium leading-[22px] md:min-h-0 profile-bio-input"
                                         data-mobile-bio-field="expanded"
                                     >
                                         <textarea

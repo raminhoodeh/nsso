@@ -240,9 +240,10 @@ test('the profile bio provides four times the mobile writing capacity', () => {
     assert.ok(bioMarker >= 0 && bioFieldStart >= 0, 'the expanded mobile bio field is present')
     assert.match(
         bioFieldMarkup,
-        /controlClassName="min-h-\[384px\][^"\n]*md:min-h-0"/
+        /controlClassName="min-h-\[384px\][^"\n]*md:min-h-0[^"\n]*"/
     )
     assert.match(bioFieldMarkup, /rows=\{4\}/, 'desktop keeps the existing four-row intrinsic size')
+    assert.match(bioFieldMarkup, /profile-bio-input/, 'bounded desktop resizing stays scoped to BIO')
 })
 
 test('identity fields reserve space without repeating Ask Deity actions', () => {
