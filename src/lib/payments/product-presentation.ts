@@ -18,8 +18,8 @@ export function purchaseButtonLabel(value: unknown): string {
     const hostname = new URL(destination).hostname.toLowerCase()
     if (isHostname(hostname, 'etsy.com')) return 'Buy on Etsy'
     if (hostname.endsWith('.myshopify.com')) return 'Buy on Shopify'
-    if (isHostname(hostname, 'udemy.com')) return 'View on Udemy'
-    if (isHostname(hostname, 'coursera.org')) return 'View on Coursera'
+    if (isHostname(hostname, 'udemy.com')) return 'Buy on Udemy'
+    if (isHostname(hostname, 'coursera.org')) return 'Buy on Coursera'
     return 'View purchase page'
 }
 

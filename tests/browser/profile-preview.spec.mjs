@@ -279,7 +279,7 @@ test('two course destinations render safe ordered white public links and inert p
     await page.goto('https://nsso.test/public-profile')
     await page.addStyleTag({ content: publicCss })
     const merchant = page.getByRole('button', { name: 'Buy via PayPal', exact: true })
-    for (const [label, url] of [['View on Udemy', primary], ['View on Coursera', secondary]]) {
+    for (const [label, url] of [['Buy on Udemy', primary], ['Buy on Coursera', secondary]]) {
         const purchase = page.getByRole('link', { name: label + ': Fixture offer', exact: true })
         await expect(purchase).toHaveText(label)
         await expect(purchase).toHaveAttribute('href', url)
@@ -288,7 +288,7 @@ test('two course destinations render safe ordered white public links and inert p
         await expectOneLineWhitePurchase(page, purchase)
         await expectMatchingPurchaseWidths(purchase, merchant)
     }
-    expect((await page.getByRole('link', { name: /^View on (Udemy|Coursera): Fixture offer$/ }).allTextContents()).map(text => text.trim())).toEqual(['View on Udemy', 'View on Coursera'])
+    expect((await page.getByRole('link', { name: /^Buy on (Udemy|Coursera): Fixture offer$/ }).allTextContents()).map(text => text.trim())).toEqual(['Buy on Udemy', 'Buy on Coursera'])
     await expect(merchant).toHaveAttribute('type', 'submit')
     await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
     await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
@@ -299,7 +299,7 @@ test('two course destinations render safe ordered white public links and inert p
 
     const preview = await fixture(page, { purchaseUrl: primary, secondaryPurchaseUrl: secondary, styled: true })
     const previewPaypal = page.getByRole('button', { name: 'Buy via PayPal', exact: true })
-    for (const label of ['View on Udemy', 'View on Coursera']) {
+    for (const label of ['Buy on Udemy', 'Buy on Coursera']) {
         const control = page.getByRole('button', { name: label, exact: true })
         await expectOneLineWhitePurchase(page, control)
         await expectMatchingPurchaseWidths(control, previewPaypal)
@@ -308,7 +308,7 @@ test('two course destinations render safe ordered white public links and inert p
     await previewPaypal.press('Space')
     await expect(page.getByRole('status')).toHaveCount(3)
     await expect(page.locator('form,script[src*="paypal"]')).toHaveCount(0)
-    await expect(page.getByRole('link', { name: /^View on (Udemy|Coursera)$/ })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /^Buy on (Udemy|Coursera)$/ })).toHaveCount(0)
     expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
     expect(await page.evaluate(() => window.fixtureAuthCalls)).toBe(0)
     expect(preview.errors).toEqual([])
@@ -325,14 +325,14 @@ test('public and preview second destinations honor deduplication, unsafe URL rej
     ]) {
         const html = await renderPublicProfile(primary, secondary, active)
         await page.setContent(html)
-        const links = page.getByRole('link', { name: /^View on (Udemy|Coursera): Fixture offer$/ })
+        const links = page.getByRole('link', { name: /^Buy on (Udemy|Coursera): Fixture offer$/ })
         await expect(links).toHaveCount(expected)
         if (expected) await expect(links).toHaveAttribute('href', canonical)
         await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)
         await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
         const state = await fixture(page, { purchaseUrl: primary, secondaryPurchaseUrl: secondary, purchaseActive: active })
         await expect(page.getByRole('heading', { name: "I'm Fixture creator" })).toBeVisible()
-        await expect(page.getByRole('button', { name: /^View on (Udemy|Coursera)$/ })).toHaveCount(expected)
+        await expect(page.getByRole('button', { name: /^Buy on (Udemy|Coursera)$/ })).toHaveCount(expected)
         await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true })).toBeVisible()
         expect(state.errors).toEqual([])
         expect(state.unexpected).toEqual([])
