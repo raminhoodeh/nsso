@@ -4,7 +4,7 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen relative text-white">
+        <div className="min-h-screen relative text-slate-950">
             {/* Main Content Area */}
             <main className="relative z-10 w-full transition-all duration-300">
                 {children}

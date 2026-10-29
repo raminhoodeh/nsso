@@ -132,7 +132,7 @@ export default function DeleteProfileDialog({ open, onOpenChange }: { open: bool
         <p role="status" aria-live="polite" className="sr-only">{deleting ? 'Deleting your profile and signing you out…' : ''}</p>
         <div className="mt-6 flex justify-end gap-3">
             {!localSessionIssue && <LightButton ref={cancel} type="button" disabled={deleting} onClick={() => onOpenChange(false)} className="min-h-11 px-5 py-2 font-medium focus-visible:ring-2 focus-visible:ring-slate-950 disabled:opacity-60" contentClassName="text-sm text-slate-950">{error ? 'Close' : 'Cancel'}</LightButton>}
-            {localSessionIssue ? <LightButton type="button" onClick={() => window.location.replace('/')} className="min-h-11 px-5 py-2" contentClassName="text-sm text-slate-950">Return to homepage</LightButton> : <button type="button" disabled={deleting} onClick={() => { void remove() }} className="min-h-11 rounded-full bg-red-800 px-5 py-2 font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-red-900 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60">{deleting ? 'Deleting…' : 'Yes'}</button>}
+            {localSessionIssue ? <LightButton type="button" onClick={() => window.location.replace('/')} className="min-h-11 px-5 py-2" contentClassName="text-sm text-slate-950">Return to homepage</LightButton> : <LightButton intent="danger" type="button" disabled={deleting} onClick={() => { void remove() }} className="min-h-11 rounded-full px-5 py-2 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-red-900 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60">{deleting ? 'Deleting…' : 'Yes'}</LightButton>}
         </div>
     </dialog>, document.body)
 }

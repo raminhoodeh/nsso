@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import {
   ExternalLink,
   Maximize2,
@@ -212,7 +214,7 @@ export default function HomeVisionPlayer() {
       <div
         role="group"
         aria-label="Playback controls"
-        className="flex min-h-16 w-full items-center gap-3 border-t border-white/10 bg-[#080c14] px-3 py-3 sm:px-5"
+        className="flex min-h-16 w-full items-center gap-3 border-t border-white/50 bg-white/60 text-slate-950 px-3 py-3 sm:px-5"
       >
         <LightIconButton
           type="button"
@@ -224,7 +226,7 @@ export default function HomeVisionPlayer() {
           {isPlaying ? <Pause size={19} fill="currentColor" /> : <Play size={19} fill="currentColor" />}
         </LightIconButton>
 
-        <span aria-live="off" className="w-[4.75rem] shrink-0 text-center text-xs tabular-nums text-white/75">
+        <span aria-live="off" className="w-[4.75rem] shrink-0 text-center text-xs tabular-nums text-slate-950">
           {formatTime(currentTime)} / {duration > 0 ? formatTime(duration) : '--:--'}
         </span>
 
@@ -238,7 +240,7 @@ export default function HomeVisionPlayer() {
           disabled={!timelineAvailable}
           aria-label="Video progress"
           aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
-          className="h-11 min-w-0 flex-1 cursor-pointer accent-white disabled:cursor-wait"
+          className="h-11 min-w-0 flex-1 cursor-pointer accent-slate-950 disabled:cursor-wait"
         />
 
         <LightIconButton
@@ -261,10 +263,10 @@ export default function HomeVisionPlayer() {
           disabled={!controlsAvailable}
           aria-label="Video volume"
           aria-valuetext={`${Math.round((isMuted ? 0 : volume) * 100)} percent`}
-          className="hidden h-11 w-24 cursor-pointer accent-white disabled:cursor-wait md:block"
+          className="hidden h-11 w-24 cursor-pointer accent-slate-950 disabled:cursor-wait md:block"
         />
 
-        <a
+        <NativeGlassLens as="a"
           href={VIDEO_URL}
           target="_blank"
           rel="noopener noreferrer"
@@ -273,7 +275,7 @@ export default function HomeVisionPlayer() {
           title="Watch on YouTube"
         >
           <ExternalLink size={19} />
-        </a>
+        </NativeGlassLens>
 
         <LightIconButton
           type="button"
@@ -286,12 +288,12 @@ export default function HomeVisionPlayer() {
         </LightIconButton>
       </div>
 
-      {isLoading && !error && <p role="status" className="bg-[#080c14] px-4 pb-3 text-sm text-white/80">Loading video…</p>}
+      {isLoading && !error && <p role="status" className="bg-white/60 px-4 pb-3 text-sm text-slate-950">Loading video…</p>}
 
       {error || playbackNotice ? (
         <div
           role={error ? 'alert' : 'status'}
-          className="border-t border-red-300/20 bg-red-950 px-4 py-3 text-sm text-red-100"
+          className="border-t border-red-800/20 bg-red-100/90 px-4 py-3 text-sm text-red-950"
         >
           {error ?? playbackNotice}{' '}
           {error && <LightButton type="button" onClick={() => { const video = videoRef.current; if (!video) return; setError(null); video.removeAttribute('src'); video.load(); togglePlayback() }} className="mr-3 min-h-11 px-4 py-2" contentClassName="text-sm">Retry video</LightButton>}

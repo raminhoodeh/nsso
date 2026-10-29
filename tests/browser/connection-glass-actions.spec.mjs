@@ -4,14 +4,15 @@ import { compile } from '@tailwindcss/node';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expectWhiteEditorControls } from './helpers/white-control-assertions.mjs';
+import { DECK_BACKGROUND_ASSET, DECK_BACKGROUND_COLOR } from '../../src/lib/deck-background.ts';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 let bundle, css;
 test.beforeAll(async () => {
-    const files = ['src/components/ui/AddToMyNssoButton.tsx', 'src/components/logic/QRScanHandler.tsx', 'src/app/dashboard/components/NetworkingTimeline.tsx', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts'];
+    const files = ['src/components/ui/AddToMyNssoButton.tsx', 'src/components/logic/QRScanHandler.tsx', 'src/app/dashboard/components/NetworkingTimeline.tsx', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx'];
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)));
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} });
-    css = compiler.build(candidates);
+    css = compiler.build(candidates) + `\nbody{margin:0;min-height:100vh;background:${DECK_BACKGROUND_COLOR} url('${DECK_BACKGROUND_ASSET}') center/cover fixed;font-family:Arial}`;
     const result = await build({
         absWorkingDir: root, bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
         define: { 'process.env.NODE_ENV': '"test"' },
@@ -27,10 +28,12 @@ test.beforeAll(async () => {
             import QR from './src/components/logic/QRScanHandler';
             import Connect from './src/components/ui/AddToMyNssoButton';
             import Timeline from './src/app/dashboard/components/NetworkingTimeline';
+            import {TahoeGlassEngineContext} from './src/components/providers/TahoeGlassProvider';
             window.fixtureNavigation=[];window.fixtureToasts=[];window.fixtureNotes=[];
             const root=createRoot(document.getElementById('root'));
+            const context={diagnostics:{status:'fallback',backend:'css-blur',source:'synthetic-scene',reason:'connection-action-fixture',reducedMotion:false,reducedTransparency:false,surfaceCount:0,visibleSurfaceCount:0,dpr:1},registerSurface(){},unregisterSurface(){},requestRender(){}};
             const connection={id:'synthetic-connection',username:'synthetic',fullName:'Synthetic connection',headline:'A synthetic profile',dateMet:'2026-10-28T10:00:00Z',location:'Synthetic event',notes:'Private synthetic note'};
-            window.fixtureRender=kind=>root.render(kind==='qr'?<QR scannedUserId="scanned-fixture" currentUser={{id:'viewer-fixture'}}/>:kind==='timeline'?<Timeline connections={[connection]} onOpenNotes={conn=>window.fixtureNotes.push(conn.id)}/>:<Connect profileUserId="scanned-fixture" isLoggedIn={kind!=='guest'} initialIsConnected={false}/>);
+            window.fixtureRender=kind=>root.render(<TahoeGlassEngineContext.Provider value={context}>{kind==='qr'?<QR scannedUserId="scanned-fixture" currentUser={{id:'viewer-fixture'}}/>:kind==='timeline'?<Timeline connections={[connection]} onOpenNotes={conn=>window.fixtureNotes.push(conn.id)}/>:<Connect profileUserId="scanned-fixture" isLoggedIn={kind!=='guest'} initialIsConnected={false}/>}</TahoeGlassEngineContext.Provider>);
             window.fixtureUnmount=()=>root.render(null);
         ` },
     });
@@ -43,6 +46,7 @@ async function fixture(page, kind) {
     const pending = new Promise(resolve => { release = resolve; });
     await page.route('**/*', async route => {
         const url = new URL(route.request().url());
+        if (url.origin === 'https://nsso.test' && url.pathname === DECK_BACKGROUND_ASSET) return route.fulfill({ contentType: 'image/webp', body: readFileSync(root + 'public' + DECK_BACKGROUND_ASSET) });
         if (url.pathname === '/fixture') return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1"><div id="root"></div>' });
         if (url.pathname === '/api/my-nsso/connect') {
             requests.push({ method: route.request().method(), body: route.request().postDataJSON() });
@@ -53,6 +57,7 @@ async function fixture(page, kind) {
     });
     await page.goto('https://nsso.test/fixture?source=qr');
     await page.addStyleTag({ content: css });
+    await page.evaluate(async asset => { const image = new Image(); image.src = asset; await image.decode(); }, DECK_BACKGROUND_ASSET);
     await page.addScriptTag({ content: bundle });
     await page.evaluate(kind => window.fixtureRender(kind), kind);
     return { requests, release };

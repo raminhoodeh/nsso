@@ -27,6 +27,16 @@ const BINS = 24;
 const DISP_SCALE = 35;
 const LIGHT_SOURCE = { x: 0.5, y: 0.0 }; // Fixed scene light source (top-center)
 
+const bindTex = (gl: WebGLRenderingContext, tex: WebGLTexture, src: TexImageSource, unit: number) => {
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    };
+
 // --- Viewport Wrapper Component ---
 export const LiquidGlassViewport = React.forwardRef<HTMLDivElement, LiquidGlassViewportProps>(
   ({ bgImage, fallbackMode = "webgl", className, children, ...props }, ref) => {
@@ -166,6 +176,10 @@ export const LiquidGlassViewport = React.forwardRef<HTMLDivElement, LiquidGlassV
       return `conic-gradient(from ${fromDeg.toFixed(1)}deg at 50% 50%, ${stops.join(", ")})`;
     }, []);
 
+    const fallbackToCSSBlur = React.useCallback(() => {
+      setMode("blur");
+    }, []);
+
     const initWebGL = React.useCallback((canvas: HTMLCanvasElement) => {
       try {
         const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
@@ -235,17 +249,9 @@ export const LiquidGlassViewport = React.forwardRef<HTMLDivElement, LiquidGlassV
       } catch (err) {
         return false;
       }
-    }, [bgImage]);
+    }, [bgImage, fallbackToCSSBlur]);
 
-    const bindTex = (gl: WebGLRenderingContext, tex: WebGLTexture, src: TexImageSource, unit: number) => {
-      gl.activeTexture(gl.TEXTURE0 + unit);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    };
+
 
     const glSetDisplacement = React.useCallback((url: string) => {
       const gl = glRef.current;
@@ -256,9 +262,7 @@ export const LiquidGlassViewport = React.forwardRef<HTMLDivElement, LiquidGlassV
       img.src = url;
     }, []);
 
-    const fallbackToCSSBlur = React.useCallback(() => {
-      setMode("blur");
-    }, []);
+
 
     const registerButton = React.useCallback((id: string, element: HTMLButtonElement) => {
       buttonsRef.current[id] = element;
@@ -422,7 +426,7 @@ export const LiquidGlassViewport = React.forwardRef<HTMLDivElement, LiquidGlassV
             className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden will-change-[filter] [transform:translateZ(0)]"
             style={{ filter: mode === "svg" ? `url(#${filterId0})` : "none" }}
           >
-            <div className="absolute inset-0 w-[102%] h-[102%] -left-[1%] -top-[1%] bg-cover bg-center" style={{ backgroundImage: `url(${bgImage})` }} />
+            <div className="absolute inset-0 w-[102%] h-[102%] -left-[1%] -top-[1%] bg-cover bg-center" style={{ backgroundImage: `url(${JSON.stringify(bgImage)})` }} />
           </div>
 
           <svg className="absolute w-0 h-0 overflow-hidden pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -449,6 +453,57 @@ export const LiquidGlassViewport = React.forwardRef<HTMLDivElement, LiquidGlassV
   }
 );
 LiquidGlassViewport.displayName = "LiquidGlassViewport";
+
+/** The supplied component's canonical coat, bevel and generated conic rim.
+ * Both the original reference and native production lenses render these layers.
+ */
+export function LiquidGlassMaterial({ mode, solid = false }: {
+  mode: "svg" | "webgl" | "blur";
+  solid?: boolean;
+}) {
+  return <>
+        {/* Specular layer / bevel highlight styles */}
+        <span
+          aria-hidden="true"
+          data-supplied-glass-layer="coat"
+          className="absolute inset-0 rounded-[inherit] pointer-events-none z-0"
+          style={{
+            background: solid ? "Canvas" : mode === "webgl" ? "transparent" : "color-mix(in srgb, white 25%, transparent)",
+            backdropFilter: solid || mode === "webgl" ? "none" : "blur(2px) saturate(180%) brightness(1.05)",
+            WebkitBackdropFilter: solid || mode === "webgl" ? "none" : "blur(1px) saturate(180%) brightness(1.05)",
+            backgroundImage: solid || mode === "webgl" ? "none" : "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)",
+            boxShadow: solid ? "none" : `
+              inset 0 0 0 1px color-mix(in srgb, white calc(var(--rim-intensity) * 20%), transparent),
+              inset calc(var(--cos) * 1.8px) calc(var(--sin) * 3px) 0px -2px color-mix(in srgb, white calc(var(--rim-intensity) * 90%), transparent),
+              inset calc(var(--cos) * -2px) calc(var(--sin) * -2px) 0px -2px color-mix(in srgb, white calc(var(--rim-intensity) * 80%), transparent),
+              inset calc(var(--cos) * -3px) calc(var(--sin) * -8px) 1px -6px color-mix(in srgb, white calc(var(--rim-intensity) * 60%), transparent),
+              inset calc(var(--cos) * -0.3px) calc(var(--sin) * -1px) 4px 0px color-mix(in srgb, black 12%, transparent),
+              inset calc(var(--cos) * -1.5px) calc(var(--sin) * 2.5px) 0px -2px color-mix(in srgb, black 20%, transparent),
+              inset calc(var(--cos) * 0px) calc(var(--sin) * 3px) 4px -2px color-mix(in srgb, black 20%, transparent),
+              inset calc(var(--cos) * 2px) calc(var(--sin) * -6.5px) 1px -4px color-mix(in srgb, black 10%, transparent),
+              calc(var(--cos) * 4px) calc(var(--sin) * 4px) 10px 0px color-mix(in srgb, black 15%, transparent),
+              calc(var(--cos) * 9px) calc(var(--sin) * 9px) 18px 0px color-mix(in srgb, black 10%, transparent)
+            `
+          }}
+        />
+
+        {/* Highlight outer rim */}
+        <span
+          aria-hidden="true"
+          data-supplied-glass-layer="rim"
+          className="absolute inset-0 z-10 rounded-[inherit] p-[1px] pointer-events-none"
+          style={{
+            background: solid ? "none" : "var(--rim-gradient)",
+            WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+            WebkitMaskComposite: "xor",
+            mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+            maskComposite: "exclude",
+            opacity: "calc(0.62 + var(--rim-intensity) * 0.24)",
+          }}
+        />
+
+  </>;
+}
 
 // --- Glass Button Component ---
 export const LiquidGlassButton = React.forwardRef<HTMLButtonElement, LiquidGlassButtonProps>(
@@ -487,41 +542,7 @@ export const LiquidGlassButton = React.forwardRef<HTMLButtonElement, LiquidGlass
         } as React.CSSProperties}
         {...props}
       >
-        {/* Specular layer / bevel highlight styles */}
-        <span
-          className="absolute inset-0 rounded-[inherit] pointer-events-none z-0"
-          style={{
-            background: renderMode === "webgl" ? "transparent" : "color-mix(in srgb, white 25%, transparent)",
-            backdropFilter: renderMode === "webgl" ? "none" : "blur(2px) saturate(180%) brightness(1.05)",
-            WebkitBackdropFilter: renderMode === "webgl" ? "none" : "blur(1px) saturate(180%) brightness(1.05)",
-            backgroundImage: renderMode === "webgl" ? "none" : "radial-gradient(circle at calc(50% - var(--cos) * 50%) calc(50% - var(--sin) * 50%), rgba(255,255,255,0.2) 0%, transparent 60%)",
-            boxShadow: `
-              inset 0 0 0 1px color-mix(in srgb, white calc(var(--rim-intensity) * 20%), transparent),
-              inset calc(var(--cos) * 1.8px) calc(var(--sin) * 3px) 0px -2px color-mix(in srgb, white calc(var(--rim-intensity) * 90%), transparent),
-              inset calc(var(--cos) * -2px) calc(var(--sin) * -2px) 0px -2px color-mix(in srgb, white calc(var(--rim-intensity) * 80%), transparent),
-              inset calc(var(--cos) * -3px) calc(var(--sin) * -8px) 1px -6px color-mix(in srgb, white calc(var(--rim-intensity) * 60%), transparent),
-              inset calc(var(--cos) * -0.3px) calc(var(--sin) * -1px) 4px 0px color-mix(in srgb, black 12%, transparent),
-              inset calc(var(--cos) * -1.5px) calc(var(--sin) * 2.5px) 0px -2px color-mix(in srgb, black 20%, transparent),
-              inset calc(var(--cos) * 0px) calc(var(--sin) * 3px) 4px -2px color-mix(in srgb, black 20%, transparent),
-              inset calc(var(--cos) * 2px) calc(var(--sin) * -6.5px) 1px -4px color-mix(in srgb, black 10%, transparent),
-              calc(var(--cos) * 4px) calc(var(--sin) * 4px) 10px 0px color-mix(in srgb, black 15%, transparent),
-              calc(var(--cos) * 9px) calc(var(--sin) * 9px) 18px 0px color-mix(in srgb, black 10%, transparent)
-            `
-          }}
-        />
-
-        {/* Highlight outer rim */}
-        <span
-          className="absolute inset-0 z-10 rounded-[inherit] p-[1px] pointer-events-none"
-          style={{
-            background: "var(--rim-gradient)",
-            WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-            WebkitMaskComposite: "xor",
-            mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-            maskComposite: "exclude",
-            opacity: "calc(0.62 + var(--rim-intensity) * 0.24)",
-          }}
-        />
+        <LiquidGlassMaterial mode={renderMode} />
 
         {/* Inner Label wrapper with horizontal flex layout to align icon and text side-by-side */}
         <span className="relative z-20 text-sm font-semibold tracking-wide text-black/85 select-none pointer-events-none flex items-center justify-center gap-2">

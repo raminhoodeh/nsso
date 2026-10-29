@@ -13,6 +13,7 @@ import {
 } from "@/lib/tahoe-glass/optics";
 import type {
   TahoeGlassBackend,
+  TahoeGlassMaterialFamily,
   TahoeGlassDiagnostics,
   TahoeGlassFallback,
   TahoeGlassPreferredBackend,
@@ -43,6 +44,8 @@ interface SurfaceRuntime {
 }
 
 interface TahoeGlassEngineContextValue {
+  /** Optical family requested by this scene; omitted legacy hosts keep candidate routing. */
+  materialFamily?: TahoeGlassMaterialFamily;
   diagnostics: TahoeGlassDiagnostics;
   registerSurface: (
     id: string,
@@ -260,7 +263,13 @@ function measureSurfacePresentation(
     if (Number.isFinite(ownOpacity)) opacity *= ownOpacity;
     if (opacity <= 0.01) return { clipRect: null, opacity: 0 };
 
-    if (current !== element) {
+    // Root overflow clips the viewport, which was already intersected above.
+    // Its document rect moves by -scrollY while clientHeight stays at the
+    // viewport height; treating it as an ordinary ancestor drops visible
+    // lenses after scrolling. Keep ordinary nested scrollers/clips intact.
+    const clipsViewport = current === document.documentElement ||
+      current === document.scrollingElement;
+    if (current !== element && !clipsViewport) {
       const clipsX = ["auto", "hidden", "clip", "scroll"].includes(
         computed.overflowX,
       );
@@ -293,6 +302,8 @@ export interface TahoeGlassProviderProps
   extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
   /** The single visual scene refracted by every registered surface. */
   scene: React.ReactNode;
+  /** Select original supplied convex/rim optics for core surfaces and native lenses. */
+  materialFamily?: TahoeGlassMaterialFamily;
   children?: React.ReactNode;
   sceneClassName?: string;
   sceneStyle?: React.CSSProperties;
@@ -455,6 +466,7 @@ export function useTahoeGlassControls(): {
 
 export function TahoeGlassProvider({
   scene,
+  materialFamily = "candidate",
   children,
   className,
   sceneClassName,
@@ -1578,6 +1590,7 @@ export function TahoeGlassProvider({
 
   const contextValue = React.useMemo<TahoeGlassEngineContextValue>(
     () => ({
+      materialFamily,
       diagnostics,
       registerSurface,
       unregisterSurface,
@@ -1591,6 +1604,7 @@ export function TahoeGlassProvider({
       retryBackend,
     }),
     [
+      materialFamily,
       diagnostics,
       consumeSceneFrameRequest,
       getOwnedSceneCanvas,
@@ -1621,6 +1635,7 @@ export function TahoeGlassProvider({
         style={style}
         {...props}
         data-tahoe-glass-provider="true"
+        data-tahoe-material-family={materialFamily}
         data-tahoe-glass-state={diagnostics.status}
         data-tahoe-glass-backend={diagnostics.backend}
         data-tahoe-glass-source={diagnostics.source}

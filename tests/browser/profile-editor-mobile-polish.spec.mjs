@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
-import { controlMaterial, expectWhiteEditorControls, keyboardFocus } from './helpers/white-control-assertions.mjs'
+import { controlMaterial, expectWhiteEditorControls, keyboardFocus, renderedControlContrast } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, realSceneBundle, css
@@ -92,7 +92,7 @@ test('top and bottom Add controls insert Links and Contact at the chosen edge an
         for (const position of ['top', 'bottom']) {
             const button = page.getByRole('button', { name: label + (position === 'bottom' ? ' at bottom' : ''), exact: true })
             await expect(button).toHaveAttribute('data-nsso-control', 'white')
-            await expect(button).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+            await expect(button).toHaveCSS('background-color', 'rgba(255, 255, 255, 0.28)')
             expect(await minimumTextContrast(button.locator('[data-light-button-content]'))).toBeGreaterThanOrEqual(4.5)
             await button.press(position === 'top' ? 'Enter' : 'Space')
             const created = await page.evaluate(() => window.created.at(-1))
@@ -330,6 +330,13 @@ async function expectRealDashboardDeck(page, state) {
     await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
     await expect(page.locator('#vanta-bg')).toHaveCount(0)
     await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-source', /nsso-deck-blue/)
+    await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-material-family', 'supplied')
+    const identityCard = page.locator('[data-profile-identity-header]').locator('xpath=ancestor::*[@data-tahoe-glass-surface][1]')
+    await expect(identityCard).toHaveAttribute('data-tahoe-optical-engine', 'supplied-shared')
+    await expect(identityCard).toHaveAttribute('data-tahoe-material-implementation', 'supplied-original')
+    await expect(identityCard).not.toHaveAttribute('data-tahoe-chromium-optics')
+    await expect(identityCard.locator(':scope > [data-supplied-glass-layer="coat"]')).toHaveCount(1)
+    await expect(identityCard.locator(':scope > [data-supplied-glass-layer="rim"]')).toHaveCount(1)
     const decoded = await page.evaluate(async () => {
         const image = new Image(); image.src = '/assets/backgrounds/nsso-deck-blue.webp'; await image.decode()
         const source = document.querySelector('[data-nsso-deck-background="true"]')
@@ -379,16 +386,26 @@ test('real dashboard deck scene survives query views, scrolling and resizing wit
 })
 
 test('real dashboard fields stay usable over deck grain and the actual Deity chat stays opaque', async ({ page }, testInfo) => {
-    const state = await mount(page, { realScene: true })
+    const state = await mount(page, { realScene: true, standardsMode: true })
     try {
         const name = page.getByRole('textbox', { name: 'FULL NAME', exact: true })
         await expect(name).toHaveValue('Fixture Name')
         await name.fill('Fixture Deck Person')
         await name.press('Tab')
         await expect.poll(() => page.evaluate(() => window.fixtureProfile.profile.full_name)).toBe('Fixture Deck Person')
-        expect(await name.evaluate(element => ({ color: getComputedStyle(element).color, font: parseFloat(getComputedStyle(element).fontSize), width: element.getBoundingClientRect().width }))).toMatchObject({ color: 'rgb(255, 255, 255)' })
+        const nameInk = await name.evaluate(element => {
+            const style = getComputedStyle(element), canvas = document.createElement('canvas')
+            canvas.width = canvas.height = 1
+            const context = canvas.getContext('2d')
+            const rgba = value => { context.clearRect(0, 0, 1, 1); context.fillStyle = value; context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data] }
+            const expected = style.getPropertyValue('--color-slate-950')
+            if (!expected) throw new Error('Missing opaque core ink token')
+            return { actual: rgba(style.color), expected: rgba(expected) }
+        })
+        expect(nameInk.actual).toEqual(nameInk.expected)
+        expect(nameInk.actual[3]).toBe(255)
         expect(await name.evaluate(element => element.getBoundingClientRect().width)).toBeGreaterThan(200)
-        expect(await page.locator('[data-profile-identity-header]').evaluate(element => element.closest('[data-tahoe-glass-tint]')?.getAttribute('data-tahoe-glass-tint'))).toBe('dark')
+        expect(await page.locator('[data-profile-identity-header]').evaluate(element => element.closest('[data-tahoe-glass-tint]')?.getAttribute('data-tahoe-glass-tint'))).toBe('light')
         const bio = page.getByRole('textbox', { name: 'BIO', exact: true })
         await bio.fill('A clearly readable, synthetic biography over the exact deck background.')
         await bio.press('Tab')
@@ -731,25 +748,42 @@ test('mobile link and contact controls share a toolbar above full-width fields a
 
 test('real editor X controls exactly share Deity white material in normal, hover and keyboard-focus states', async ({ page, browserName }, testInfo) => {
     await page.setViewportSize({ width: testInfo.project.name.includes('desktop') ? 1440 : 320, height: 900 })
-    const state = await mount(page, { realScene: true })
-    const hoverCapable = await page.evaluate(() => matchMedia('(hover: hover)').matches)
+    const state = await mount(page, { realScene: true, standardsMode: true })
     const states = async control => {
         await control.scrollIntoViewIfNeeded()
         await control.evaluate(element => element.blur())
         await page.mouse.move(0, 0)
-        await expect(control).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+        await expect(control).toHaveAttribute('data-tahoe-native-lens', 'supplied')
+        await expect(control).toHaveAttribute('data-tahoe-glass-measured', 'true')
+        await expect(control).toHaveAttribute('data-tahoe-glass-state', 'active')
+        await expect(control).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+        await expect(control.locator(':scope > [data-supplied-glass-layer="coat"]')).toHaveCount(1)
+        await expect(control.locator(':scope > [data-supplied-glass-layer="rim"]')).toHaveCount(1)
+        const canonical = await control.evaluate(element => {
+            const coat = element.querySelector(':scope > [data-supplied-glass-layer="coat"]')
+            const style = getComputedStyle(coat), canvas = document.createElement('canvas')
+            canvas.width = canvas.height = 1
+            const context = canvas.getContext('2d'); context.fillStyle = style.backgroundColor; context.fillRect(0, 0, 1, 1)
+            return { backend: element.dataset.tahoeGlassBackend, background: [...context.getImageData(0, 0, 1, 1).data], shadow: style.boxShadow, childCanvases: element.querySelectorAll('canvas').length, inline: { coat: coat.getAttribute('style'), rim: element.querySelector(':scope > [data-supplied-glass-layer="rim"]').getAttribute('style') } }
+        })
+        expect(canonical.background).toEqual(canonical.backend === 'webgl' ? [0, 0, 0, 0] : [255, 255, 255, 64])
+        expect(canonical.shadow.split('inset').length).toBeGreaterThan(6)
+        expect(canonical.childCanvases).toBe(0)
         const normal = await controlMaterial(control)
         expect(normal).toMatchObject({ width: 44, height: 44, textShadow: 'none', opacity: '1', focusVisible: false, icon: { width: '18', height: '18' } })
+        expect(await renderedControlContrast(control)).toBeGreaterThanOrEqual(4.5)
         await control.hover()
-        await expect(control).toHaveCSS('background-color', hoverCapable ? 'rgb(255, 255, 255)' : 'rgb(244, 245, 248)')
+        await expect(control).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
         const hover = await controlMaterial(control)
+        expect(await renderedControlContrast(control)).toBeGreaterThanOrEqual(4.5)
         await page.mouse.move(0, 0)
         await keyboardFocus(control, page, browserName)
-        await expect(control).toHaveCSS('background-color', 'rgb(244, 245, 248)')
+        await expect(control).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+        expect(await renderedControlContrast(control)).toBeGreaterThanOrEqual(4.5)
         const focus = await controlMaterial(control)
         expect(focus.outline).toMatchObject({ width: '2px', style: 'solid' })
         expect(focus.outlineOffset).toBe('2px')
-        return { normal, hover, focus }
+        return { normal, hover, focus, canonical: canonical.inline }
     }
     try {
         for (const name of ['Drag to reorder Portfolio', 'Drag to reorder Email contact method']) {

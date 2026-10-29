@@ -69,7 +69,7 @@ export default function AdminPage() {
     if (loading) {
         return (
             <main className="min-h-screen flex items-center justify-center">
-                <TahoeGlassSurface variant="pill" tone="light" className="px-6 py-3" contentClassName="text-xl text-center">
+                <TahoeGlassSurface variant="pill" tone="dark" className="px-6 py-3" contentClassName="text-xl text-center">
                     All of you...<br />all in one place
                 </TahoeGlassSurface>
             </main>
@@ -77,36 +77,36 @@ export default function AdminPage() {
     }
 
     return (
-        <main className="min-h-screen pb-12">
+        <main className="min-h-screen pb-12 text-slate-950">
 
             <div className="pt-[120px] px-6 lg:px-[165px] max-w-[1470px] mx-auto">
-                <GlassCard className="p-6 lg:p-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">Administrative Overview</h1>
-                    <p className="text-white/70 mb-8">Manage users and permissions. Premium access is free for everyone.</p>
+                <GlassCard chromiumAppearance="light" materialFinish="satin" tone="dark" semanticTint="light" semanticTintOpacity={0.18} className="nsso-crystal-panel p-6 lg:p-8">
+                    <h1 className="text-3xl font-bold text-slate-950 mb-2">Administrative Overview</h1>
+                    <p className="text-slate-950 mb-8">Manage users and permissions. Premium access is free for everyone.</p>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
-                            <div className="text-3xl font-bold text-white">{users.length}</div>
-                            <div className="text-white/50 text-sm">Total Users</div>
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" radius={12} tone="dark" semanticTint="light" semanticTintOpacity={0.18} className="nsso-crystal-panel p-4" contentClassName="text-center">
+                            <div className="text-3xl font-bold text-slate-950">{users.length}</div>
+                            <div className="text-slate-950 text-sm">Total Users</div>
                         </TahoeGlassSurface>
-                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
-                            <div className="text-3xl font-bold text-white">
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" radius={12} tone="dark" semanticTint="light" semanticTintOpacity={0.18} className="nsso-crystal-panel p-4" contentClassName="text-center">
+                            <div className="text-3xl font-bold text-slate-950">
                                 {users.filter(u => u.is_premium).length}
                             </div>
-                            <div className="text-white/50 text-sm">Premium</div>
+                            <div className="text-slate-950 text-sm">Premium</div>
                         </TahoeGlassSurface>
-                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
-                            <div className="text-3xl font-bold text-white">
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" radius={12} tone="dark" semanticTint="light" semanticTintOpacity={0.18} className="nsso-crystal-panel p-4" contentClassName="text-center">
+                            <div className="text-3xl font-bold text-slate-950">
                                 {users.filter(u => u.user_type === 'admin').length}
                             </div>
-                            <div className="text-white/50 text-sm">Admins</div>
+                            <div className="text-slate-950 text-sm">Admins</div>
                         </TahoeGlassSurface>
-                        <TahoeGlassSurface variant="card" radius={12} tone="light" className="p-4" contentClassName="text-center">
-                            <div className="text-3xl font-bold text-white">
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" radius={12} tone="dark" semanticTint="light" semanticTintOpacity={0.18} className="nsso-crystal-panel p-4" contentClassName="text-center">
+                            <div className="text-3xl font-bold text-slate-950">
                                 {users.filter(u => u.permissions?.includes('razinflix:manage')).length}
                             </div>
-                            <div className="text-white/50 text-sm">Film editors</div>
+                            <div className="text-slate-950 text-sm">Film editors</div>
                         </TahoeGlassSurface>
                     </div>
 
@@ -114,39 +114,39 @@ export default function AdminPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-white/10">
-                                    <th className="text-left text-white/50 text-sm font-medium py-3 px-4">User Info</th>
-                                    <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Handle</th>
-                                    <th className="text-left text-white/50 text-sm font-medium py-3 px-4">Status</th>
-                                    <th className="text-center text-white/50 text-sm font-medium py-3 px-4">Make Admin</th>
-                                    <th className="text-center text-white/50 text-sm font-medium py-3 px-4">RazinFlix editor</th>
+                                <tr className="border-b border-slate-500/20">
+                                    <th className="text-left text-slate-950 text-sm font-medium py-3 px-4">User Info</th>
+                                    <th className="text-left text-slate-950 text-sm font-medium py-3 px-4">Handle</th>
+                                    <th className="text-left text-slate-950 text-sm font-medium py-3 px-4">Status</th>
+                                    <th className="text-center text-slate-950 text-sm font-medium py-3 px-4">Make Admin</th>
+                                    <th className="text-center text-slate-950 text-sm font-medium py-3 px-4">RazinFlix editor</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {users.map((user) => (
-                                    <tr key={user.id} className="border-b border-white/5 hover:bg-white/5">
+                                    <tr key={user.id} className="border-b border-slate-500/20 hover:bg-white/5">
                                         <td className="py-2 px-4">
-                                            <div className="text-white font-medium">
+                                            <div className="text-slate-950 font-medium">
                                                 {user.profiles?.full_name || 'No name'}
                                             </div>
-                                            <div className="text-white/50 text-sm">{user.email}</div>
+                                            <div className="text-slate-950 text-sm">{user.email}</div>
                                         </td>
                                         <td className="py-2 px-4">
-                                            <span className="text-white/70">nsso.me/{user.username}</span>
+                                            <span className="text-slate-950">nsso.me/{user.username}</span>
                                         </td>
                                         <td className="py-2 px-4">
                                             <div className="flex gap-2">
                                                 {user.user_type === 'admin' && (
-                                                    <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-purple-200 text-xs">
+                                                    <TahoeGlassSurface variant="pill" tone="dark" className="px-2 py-1" contentClassName="text-purple-900 text-xs">
                                                         Admin
                                                     </TahoeGlassSurface>
                                                 )}
                                                 {user.is_premium ? (
-                                                    <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-yellow-200 text-xs">
+                                                    <TahoeGlassSurface variant="pill" tone="dark" className="px-2 py-1" contentClassName="text-amber-900 text-xs">
                                                         Premium
                                                     </TahoeGlassSurface>
                                                 ) : (
-                                                    <TahoeGlassSurface variant="pill" tone="light" className="px-2 py-1" contentClassName="text-gray-200 text-xs">
+                                                    <TahoeGlassSurface variant="pill" tone="dark" className="px-2 py-1" contentClassName="text-slate-950 text-xs">
                                                         Free
                                                     </TahoeGlassSurface>
                                                 )}
@@ -179,7 +179,7 @@ export default function AdminPage() {
                     </div>
 
                     {users.length === 0 && (
-                        <div className="text-center py-12 text-white/50">
+                        <div className="text-center py-12 text-slate-950">
                             No users found.
                         </div>
                     )}

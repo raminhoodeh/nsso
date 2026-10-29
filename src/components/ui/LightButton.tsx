@@ -4,6 +4,9 @@ import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { lightButtonClass } from './light-button-styles'
+import { LiquidGlassMaterial } from './apple-tahoe-liquid-glass-button'
+import { useTahoeNativeLens } from './tahoe-glass/useTahoeNativeLens'
+import { SuppliedGlassReadability } from './tahoe-glass/SuppliedGlassReadability'
 export { lightButtonClass } from './light-button-styles'
 
 export interface LightButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,17 +19,22 @@ export const LightButton = forwardRef<HTMLButtonElement, LightButtonProps>(funct
     { className, contentClassName, children, type = 'button', intent = 'default', radius, style, ...props },
     ref,
 ) {
+    const lens = useTahoeNativeLens(ref)
     return <button
         {...props}
-        ref={ref}
+        ref={lens.ref}
         type={type}
         data-nsso-control="white"
-        className={cn(lightButtonClass,
-            intent === 'muted' && 'text-slate-600 hover:text-slate-800',
-            intent === 'danger' && 'text-rose-800 hover:text-rose-950',
-            className)}
+        data-tahoe-native-lens={lens.enabled ? 'supplied' : undefined}
+        data-tahoe-native-solid={lens.solid ? 'true' : undefined}
+        className={cn(lightButtonClass, lens.enabled && 'nsso-supplied-glass',
+            intent === 'muted' && 'text-slate-900 hover:text-slate-950',
+            className,
+            intent === 'danger' && 'text-nsso-danger hover:text-nsso-danger-hover')}
         style={radius === undefined ? style : { borderRadius: radius, ...style }}
     >
+        {lens.enabled && <LiquidGlassMaterial mode={lens.mode} solid={lens.solid} />}
+        {lens.enabled && <SuppliedGlassReadability mode={lens.mode} solid={lens.solid} native />}
         <span data-light-button-content="true" className={cn('pointer-events-none inline-flex min-w-0 items-center justify-center gap-2', contentClassName)}>{children}</span>
     </button>
 })

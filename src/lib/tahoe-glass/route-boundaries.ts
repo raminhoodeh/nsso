@@ -2,12 +2,13 @@ const ROUTE_OWNED_TAHOE_SCENES = [
   "/film/razinflix",
   "/places/dubai",
   "/dreamsea/privacy",
+  // Development comparison routes own the supplied/candidate demo scene.
+  "/glass-reference",
+  "/glass-candidate",
 ] as const;
 
 const ROUTES_WITHOUT_GLOBAL_TAHOE_SURFACES = [
   ...ROUTE_OWNED_TAHOE_SCENES,
-  "/glass-reference",
-  "/glass-candidate",
 ] as const;
 
 const ROUTES_KEEPING_PROFILE_SCENE = new Set([

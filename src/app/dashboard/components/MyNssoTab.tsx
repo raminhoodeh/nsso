@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { useState, useEffect, useRef } from 'react'
 import { MyNssoConnection } from '@/lib/types'
 import NetworkTable from './NetworkTable'
@@ -131,7 +133,7 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <TahoeGlassSurface variant="pill" tone="light" className="px-6 py-3" contentClassName="text-xl text-center">
+                <TahoeGlassSurface variant="pill" tone="dark" className="px-6 py-3" contentClassName="text-xl text-center">
                     All of you...<br />all in one place
                 </TahoeGlassSurface>
             </div>
@@ -140,36 +142,36 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
     return (
         <div className="space-y-6">
-            {loadError && <div role="alert" className="rounded-xl border border-white/20 p-4 text-white"><p>{loadError}</p><LightButton type="button" className="mt-3 min-h-11 px-4 py-2" contentClassName="text-sm text-slate-800" onClick={() => { void loadConnections() }}>Retry connections</LightButton></div>}
+            {loadError && <div role="alert" className="rounded-xl border border-slate-500/20 p-4 text-slate-950"><p>{loadError}</p><LightButton type="button" className="mt-3 min-h-11 px-4 py-2" contentClassName="text-sm text-slate-900" onClick={() => { void loadConnections() }}>Retry connections</LightButton></div>}
             <GlassCard refractive className="relative p-4 sm:p-6 lg:p-8">
                 {/* Header Section */}
                 <div className="text-left space-y-2 mb-6 md:pr-52">
-                    <h2 className="text-2xl font-bold text-white sm:text-3xl">My nsso Network</h2>
-                    <p className="text-white/80 max-w-lg">
+                    <h2 className="text-2xl font-bold text-slate-950 sm:text-3xl">My nsso Network</h2>
+                    <p className="text-slate-900 max-w-lg">
                         Your personal timeline of everyone you&apos;ve met.
                         Scan QR codes to build your journey.
                     </p>
                 </div>
 
                 <div className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-2 md:absolute md:right-8 md:top-8 md:mb-0 md:max-w-44">
-                    <span className="whitespace-nowrap text-sm text-white/70">Discover nsso users</span>
+                    <span className="whitespace-nowrap text-sm text-slate-900">Discover nsso users</span>
                     <ComingSoonBadge />
                 </div>
 
-                {connections.length === 0 && !loadError && <section aria-labelledby="network-start-title" className="mb-6 rounded-2xl border border-white/20 bg-black/25 p-5 text-white">
+                {connections.length === 0 && !loadError && <section aria-labelledby="network-start-title" className="mb-6 rounded-2xl border border-slate-500/20 bg-white/40 p-5 text-slate-950">
                     <h3 id="network-start-title" className="text-lg font-semibold">Start with someone you know</h3>
-                    <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-white/85">
+                    <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-900">
                         <li>Open your profile and tap the profile photo to show your QR code.</li>
                         <li>Ask someone to scan it with their phone camera and open your profile.</li>
                         <li>They can sign in and choose “Add to My nsso”. You will both see the connection here; notes stay private.</li>
                     </ol>
-                    <Link href="/preview" className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-white/30 bg-white/10 px-4 py-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-white">Open my profile and QR</Link>
+                    <NativeGlassLens as={Link} href="/preview" className="nsso-glass-control mt-4 inline-flex min-h-11 items-center rounded-xl border border-slate-500/30 px-4 py-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-slate-700">Open my profile and QR</NativeGlassLens>
                 </section>}
 
                 {/* Top Section: Table View */}
                 <div className="space-y-4 mb-12">
                     {/*  <div className="flex items-center gap-2 px-2">
-                        <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Quick Access</span>
+                        <span className="text-xs font-bold text-slate-900 uppercase tracking-widest">Quick Access</span>
                         <div className="h-[1px] flex-1 bg-white/10" />
                     </div> */}
                     <NetworkTable
@@ -181,14 +183,14 @@ export default function MyNssoTab({ initialData }: MyNssoTabProps) {
 
                 {/* Bottom Section: Timeline View */}
                 {connections.length > 0 && (
-                    <div className="space-y-8 pt-8 border-t border-white/5 relative">
+                    <div className="space-y-8 pt-8 border-t border-slate-500/15 relative">
                         {/*  <div className="flex items-center justify-center mb-12">
-                             <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 uppercase tracking-widest backdrop-blur-md">
+                             <span className="px-4 py-1.5 rounded-full bg-white/5 border border-slate-500/15 text-xs font-bold text-slate-900 uppercase tracking-widest backdrop-blur-md">
                                 Your Journey
                             </span>
                         </div> */}
 
-                        <h3 className="text-center text-xl font-bold text-white/90">Your Journey</h3>
+                        <h3 className="text-center text-xl font-bold text-slate-900">Your Journey</h3>
 
                         <NetworkingTimeline
                             connections={connections}
@@ -286,11 +288,11 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
                     maxLength={3333}
                     rows={8}
                     placeholder="Add notes about your meeting, context, or follow-ups..."
-                    className="text-base text-slate-950 placeholder:text-slate-600"
+                    className="text-base text-slate-950 placeholder:text-slate-900"
                 />
             </TahoeGlassField>
             {error && <p role="alert" className="mb-3 text-sm text-rose-800">{error}</p>}
-            <div className="flex flex-wrap justify-between items-center text-xs text-slate-700 gap-3">
+            <div className="flex flex-wrap justify-between items-center text-xs text-slate-900 gap-3">
                 <span>{content.length} / 3333 characters</span>
                 <LightButton onClick={() => { void saveNotes() }} disabled={busy || confirmRemoval} className={cn(buttonClass, 'font-semibold')}>
                     {saving ? 'Saving...' : 'Save Notes'}
@@ -299,7 +301,7 @@ function NotesModal({ isOpen, onClose, connection, onSave, onRemove }: NotesModa
             <div className="mt-5 pt-4 border-t border-slate-500/20">
                 {confirmRemoval ? (
                     <div className="space-y-3">
-                        <p className="text-sm text-slate-700">
+                        <p className="text-sm text-slate-900">
                             Remove {connection.fullName} from your My nsso? This removes them from your list and deletes your private notes, including any unsaved notes. Their record of you stays unchanged.
                         </p>
                         <div className="flex flex-wrap gap-2">

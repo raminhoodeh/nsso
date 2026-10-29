@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
-import { expectOpaqueLightPanel, minimumTextContrast } from './helpers/light-panel-assertions.mjs'
+import { controlMaterial, renderedControlContrast } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const actor = '11111111-1111-4111-8111-111111111111'
@@ -36,7 +36,7 @@ test.beforeAll(async () => {
                             : path.endsWith('ProfileProvider') ? 'import {useSyncExternalStore} from "react";export const useProfile=()=>useSyncExternalStore(window.fixtureSubscribe,()=>window.fixtureProfile);'
                                 : path.endsWith('Toast') ? 'export const useToast=()=>({showToast:(message,type)=>window.fixtureToasts.push({message,type})});'
                                     : path.endsWith('CreateProfileButton') ? 'export default ()=>null;'
-                                        : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,role,tabIndex,onClick,onKeyDown,className,contentClassName,style,...props})=><Tag href={href} role={role} tabIndex={tabIndex} onClick={onClick} onKeyDown={onKeyDown} className={className} style={style} aria-label={props["aria-label"]} aria-pressed={props["aria-pressed"]}><div className={contentClassName}>{children}</div></Tag>;export const TahoeBackdropHeader=({children,className,style})=><header className={className} style={style}>{children}</header>;export const TahoeGlassButton=({children,onClick,disabled,...props})=><button onClick={onClick} disabled={disabled} aria-label={props["aria-label"]}>{children}</button>;export const TahoeGlassDialog=({open,children,...props})=>open?<div role="dialog" aria-label={props["aria-label"]}>{children}</div>:null;'
+                                        : path.endsWith('tahoe-glass') ? 'import React from "react";export const TahoeGlassSurface=({as:Tag="div",children,href,role,tabIndex,onClick,onKeyDown,className,contentClassName,style,...props})=><Tag href={href} role={role} tabIndex={tabIndex} onClick={onClick} onKeyDown={onKeyDown} className={className} style={{position:"relative",isolation:"isolate",...style}} aria-label={props["aria-label"]} aria-pressed={props["aria-pressed"]}><div className={contentClassName} style={{position:"relative",zIndex:20}}>{children}</div></Tag>;export const TahoeBackdropHeader=({children,className,style})=><header className={className} style={style}>{children}</header>;export const TahoeGlassButton=({children,onClick,disabled,...props})=><button onClick={onClick} disabled={disabled} aria-label={props["aria-label"]}>{children}</button>;export const TahoeGlassDialog=({open,children,...props})=>open?<div role="dialog" aria-label={props["aria-label"]}>{children}</div>:null;'
                                             : 'export const createClient=()=>({auth:{signOut:async()=>{window.fixtureAuthCalls++;return{error:null}}}});' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';import {createRoot} from 'react-dom/client';import Preview from './src/app/preview/page';
@@ -59,7 +59,7 @@ test.beforeAll(async () => {
                     : path === 'next/headers' ? 'export const cookies=async()=>({get:()=>undefined});'
                         : path === 'next/navigation' ? 'export const notFound=()=>{throw Error("Unexpected missing synthetic profile")};'
                             : path === 'next/link' ? 'export default({children,href,...props})=><a href={href} {...props}>{children}</a>;'
-                                : path.endsWith('/tahoe-glass') ? 'export const TahoeGlassSurface=({as:Tag="div",children,href,target,rel,className,contentClassName,style,...props})=><Tag href={href} target={target} rel={rel} className={className} style={style} aria-label={props["aria-label"]}><div className={contentClassName}>{children}</div></Tag>;export const TahoeGlassButton=({children})=><button type="button">{children}</button>;'
+                                : path.endsWith('/tahoe-glass') ? 'export const TahoeGlassSurface=({as:Tag="div",children,href,target,rel,className,contentClassName,style,...props})=><Tag href={href} target={target} rel={rel} className={className} style={{position:"relative",isolation:"isolate",...style}} aria-label={props["aria-label"]}><div className={contentClassName} style={{position:"relative",zIndex:20}}>{children}</div></Tag>;export const TahoeGlassButton=({children})=><button type="button">{children}</button>;'
                                     : path.endsWith('/ProfileGlassCard') ? 'export default({children,className,style})=><div className={className} style={style}>{children}</div>;'
                                         : path.endsWith('/ExpandableBio') ? 'export default({text})=><p>{text}</p>;'
                                             : 'export default()=>null;' }))
@@ -75,11 +75,13 @@ test.beforeAll(async () => {
 async function expectOneLineWhitePurchase(page, purchase) {
     await purchase.scrollIntoViewIfNeeded()
     await expect(purchase).toHaveAttribute('data-nsso-control', 'white')
-    const background = await page.evaluate(() => document.body.style.background)
-    try { await expectOpaqueLightPanel(page, purchase) }
-    finally { await page.evaluate(value => { document.body.style.background = value }, background) }
+    // Resolve finite stylesheet-insertion transitions before inspecting the real glass.
+    const material = await controlMaterial(purchase)
+    expect(material.background).toBe('rgba(255, 255, 255, 0.28)')
+    expect(material.backgroundImage).not.toBe('none')
+    await expect(purchase).toHaveClass(/nsso-glass-control/)
+    expect(await renderedControlContrast(purchase)).toBeGreaterThanOrEqual(4.5)
     const text = purchase.locator('[data-light-button-content]')
-    expect(await minimumTextContrast(text)).toBeGreaterThanOrEqual(4.5)
     const geometry = await text.evaluate(element => {
         const rectangles = [], walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
         for (let node = walker.nextNode(); node; node = walker.nextNode()) {

@@ -1,5 +1,7 @@
 "use client";
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { LIGHT_PANEL } from '@/components/ui/light-panel';
 
 import { createContext, useContext, useState, useEffect, useLayoutEffect, useRef } from 'react';
@@ -25,7 +27,7 @@ function DeityChunkLoading() {
             <Loader2 aria-hidden="true" className="h-8 w-8 animate-spin text-slate-600 motion-reduce:animate-none" />
             <p>Loading Deity…</p>
         </div>
-        {onClose && <button type="button" onClick={onClose} aria-label="Close Deity chat" className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm`}>Close</button>}
+        {onClose && <NativeGlassLens as="button" type="button" onClick={onClose} aria-label="Close Deity chat" className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm`}>Close</NativeGlassLens>}
     </section>;
 }
 
@@ -171,7 +173,7 @@ export default function NSSOAgent() {
         <>
             {/* Persistent Entry Point (Pill) */}
             {!isOpen && (
-                <button
+                <NativeGlassLens as="button"
                     ref={launcherRef}
                     type="button"
                     onClick={handleOpen}
@@ -193,7 +195,7 @@ export default function NSSOAgent() {
                         alt="Deity"
                         className="h-7 w-auto translate-y-[2px] object-contain brightness-0"
                     />
-                </button>
+                </NativeGlassLens>
             )}
 
             {/* Pop-up Mode - ALWAYS RENDERED but HIDDEN when closed to persist state */}

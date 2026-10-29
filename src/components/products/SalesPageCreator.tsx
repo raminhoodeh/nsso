@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { type ReactNode, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -286,7 +288,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
         return (
             <CreatorRouteContent>
                 <main className="relative z-[1] flex min-h-screen items-center justify-center">
-                    <TahoeGlassSurface variant="pill" tone="light" contentClassName="px-6 py-3 text-center text-xl">
+                    <TahoeGlassSurface variant="pill" tone="dark" contentClassName="px-6 py-3 text-center text-xl">
                         Loading...
                     </TahoeGlassSurface>
                 </main>
@@ -298,7 +300,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
         return (
             <CreatorRouteContent>
                 <main className="relative z-[1] flex min-h-screen items-center justify-center">
-                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} tone="light" contentClassName="px-8 py-6 text-center text-xl">
+                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" className="nsso-crystal-panel" variant="card" semanticTint="light" semanticTintOpacity={0.18} tone="dark" contentClassName="px-8 py-6 text-center text-xl">
                         Product not found.
                     </TahoeGlassSurface>
                 </main>
@@ -308,14 +310,14 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
 
     return (
         <CreatorRouteContent>
-        <PageRegion className={embedded ? 'min-w-0' : 'relative z-[1] min-h-screen pb-32 md:pb-12'} data-sales-page-creator="true">
+        <PageRegion className={embedded ? 'min-w-0 text-slate-950' : 'relative z-[1] min-h-screen pb-32 text-slate-950 md:pb-12'} data-sales-page-creator="true">
             {/* Header Removed to avoid duplicate logo */}
 
             <div className={embedded ? 'min-w-0' : 'pt-[120px] lg:pt-10 px-6 lg:px-8 max-w-[1470px] mx-auto'}>
 
                 <PageCard {...(embedded ? {} : { refractive: true })} className={embedded ? 'p-4 md:p-6' : 'p-8 lg:p-12'}>
                 {/* Header */}
-                    <TahoeGlassSurface as="header" variant="menu" radius={20} tone="light" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
+                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" semanticTint="light" semanticTintOpacity={0.18} as="header" variant="menu" radius={20} tone="dark" className="mb-8" contentClassName="flex flex-col justify-between gap-4 p-4 md:flex-row md:items-center">
                         <div className="flex items-center gap-4">
                             <LightIconButton
                                 onClick={() => navigateBack()}
@@ -326,15 +328,15 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 <ChevronLeft size={24} />
                             </LightIconButton>
                             <div>
-                                <h1 className="text-[20px] font-bold text-white" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                                <h1 className="text-[20px] font-bold text-slate-950" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     Sales Page Creator
                                 </h1>
-                                <p className="text-[15px] text-white/60">Editing: {product.name}</p>
+                                <p className="text-[15px] text-slate-900">Editing: {product.name}</p>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <TahoeGlassSurface variant="pill" tone="light" contentClassName="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-white/70">
+                            <TahoeGlassSurface variant="pill" tone="dark" contentClassName="flex items-center gap-2 px-3 py-2 text-[13px] font-medium text-slate-900">
                                 {saving ? (
                                     <>
                                         <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
@@ -357,12 +359,12 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                             </LightButton>
                         </div>
                     </TahoeGlassSurface>
-                    {leaveMessage && <div className="mb-5 space-y-3"><p role="alert" className="text-sm text-amber-200">{leaveMessage}</p>{!embedded && paymentDirty && <LightButton intent="danger" type="button" onClick={discardLocalPaymentDraft} disabled={leavingBusy} className="min-h-11 px-4 py-2" contentClassName="text-sm">Discard local payment draft and go back</LightButton>}</div>}
-                    {(paymentDirty || externalPaymentDraft) && <p role="status" className="mb-5 text-sm text-white/85">Save your PayPal button changes before opening a preview.{embedded && ' Back keeps your draft in the offering editor.'}</p>}
+                    {leaveMessage && <div className="mb-5 space-y-3"><p role="alert" className="text-sm text-amber-800">{leaveMessage}</p>{!embedded && paymentDirty && <LightButton intent="danger" type="button" onClick={discardLocalPaymentDraft} disabled={leavingBusy} className="min-h-11 px-4 py-2" contentClassName="text-sm">Discard local payment draft and go back</LightButton>}</div>}
+                    {(paymentDirty || externalPaymentDraft) && <p role="status" className="mb-5 text-sm text-slate-900">Save your PayPal button changes before opening a preview.{embedded && ' Back keeps your draft in the offering editor.'}</p>}
 
                     {/* Standard Product Fields */}
                     <div className="mb-8">
-                        <h2 className="text-[17px] font-bold text-white uppercase tracking-wider mb-6" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                        <h2 className="text-[17px] font-bold text-slate-950 uppercase tracking-wider mb-6" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                             Product Details
                         </h2>
 
@@ -372,12 +374,12 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 {/* Product Name */}
                                 <TahoeGlassField
                                     label="Product Name"
-                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                    labelClassName="text-xs uppercase tracking-widest text-slate-900"
                                     tone="dark"
                                     semanticTint="light"
                                     semanticTintOpacity={0.16}
                                     surfaceClassName="px-4 py-4"
-                                    controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                 >
                                     <input
                                         type="text"
@@ -389,12 +391,12 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 {/* Price */}
                                 <TahoeGlassField
                                     label="Price (Include Currency)"
-                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                    labelClassName="text-xs uppercase tracking-widest text-slate-900"
                                     tone="dark"
                                     semanticTint="light"
                                     semanticTintOpacity={0.16}
                                     surfaceClassName="px-4 py-4"
-                                    controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                 >
                                     <input
                                         type="text"
@@ -407,12 +409,12 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 {/* Description */}
                                 <TahoeGlassField
                                     label="Description"
-                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                    labelClassName="text-xs uppercase tracking-widest text-slate-900"
                                     tone="dark"
                                     semanticTint="light"
                                     semanticTintOpacity={0.16}
                                     surfaceClassName="px-4 py-4"
-                                    controlClassName="resize-none text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    controlClassName="resize-none text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                 >
                                     <textarea
                                         value={product.description || ''}
@@ -427,14 +429,14 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                             <div className="space-y-6">
                                 {/* Product Image */}
                                 <div>
-                                    <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Product Image</label>
+                                    <label className="text-xs text-slate-900 uppercase tracking-widest mb-2 block">Product Image</label>
                                     <div className="flex items-center gap-4">
                                         {product.image_url && (
                                             <TahoeGlassSurface variant="mediaFrame" radius={8} className="h-16 w-16" contentClassName="h-full w-full p-1">
                                                 <div className="h-full w-full rounded-md bg-cover bg-center" style={{ backgroundImage: `url(${product.image_url})` }} />
                                             </TahoeGlassSurface>
                                         )}
-                                        <label className={cn(lightButtonClass, 'cursor-pointer has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40')}>
+                                        <NativeGlassLens as="label" className={cn(lightButtonClass, 'cursor-pointer has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40')}>
                                             {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                                             <span className="text-sm">{product.image_url ? 'Change Image' : 'Upload Image'}</span>
                                             <input
@@ -449,7 +451,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                                     e.target.value = ''
                                                 }}
                                             />
-                                        </label>
+                                        </NativeGlassLens>
                                     </div>
                                 </div>
                                 {/* Cropper Modal */}
@@ -468,12 +470,12 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 <div>
                                     <TahoeGlassField
                                         label="Purchase Link"
-                                        labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                        labelClassName="text-xs uppercase tracking-widest text-slate-900"
                                         tone="dark"
                                         semanticTint="light"
                                         semanticTintOpacity={0.16}
                                         surfaceClassName="px-4 py-4"
-                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                     >
                                         <input
                                             type="text"
@@ -482,18 +484,18 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                             placeholder="https://..."
                                         />
                                     </TahoeGlassField>
-                                    {purchaseUrl && <p className="mt-2 text-xs text-white/75">Button preview: {purchaseButtonLabel(purchaseUrl)}</p>}
+                                    {purchaseUrl && <p className="mt-2 text-xs text-slate-900">Button preview: {purchaseButtonLabel(purchaseUrl)}</p>}
                                 </div>
 
                                 <div>
                                     <TahoeGlassField
                                         label="Second Purchase Link (optional)"
-                                        labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                        labelClassName="text-xs uppercase tracking-widest text-slate-900"
                                         tone="dark"
                                         semanticTint="light"
                                         semanticTintOpacity={0.16}
                                         surfaceClassName="px-4 py-4"
-                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                     >
                                         <input
                                             type="url"
@@ -502,12 +504,12 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                             placeholder="https://..."
                                         />
                                     </TahoeGlassField>
-                                    {secondaryPurchaseUrl && <p className="mt-2 text-xs text-white/75">Button preview: {purchaseButtonLabel(secondaryPurchaseUrl)}</p>}
+                                    {secondaryPurchaseUrl && <p className="mt-2 text-xs text-slate-900">Button preview: {purchaseButtonLabel(secondaryPurchaseUrl)}</p>}
                                 </div>
 
                                 <div>
-                                    <p className="mb-2 text-xs uppercase tracking-widest text-white/50">PayPal Button Code</p>
-                                    {embedded ? <Link href={backHref} onClick={event => { event.preventDefault(); navigateBack() }} className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm text-white underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-white"><ChevronLeft size={16} aria-hidden="true" />Edit PayPal button code in your offering</Link> : <PayPalCodeEditor
+                                    <p className="mb-2 text-xs uppercase tracking-widest text-slate-900">PayPal Button Code</p>
+                                    {embedded ? <Link href={backHref} onClick={event => { event.preventDefault(); navigateBack() }} className="inline-flex min-h-11 items-center gap-2 rounded-lg text-sm text-slate-950 underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-slate-700"><ChevronLeft size={16} aria-hidden="true" />Edit PayPal button code in your offering</Link> : <PayPalCodeEditor
                                         key={product.id}
                                         productId={product.id}
                                         accountId={product.user_id}
@@ -524,11 +526,11 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                     </div>
 
                     {/* Info Box */}
-                    <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={18} tone="light" className="mb-12" contentClassName="p-6">
-                        <h2 className="text-[17px] font-bold text-white mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" semanticTint="light" semanticTintOpacity={0.18} radius={18} tone="dark" className="nsso-crystal-panel mb-12" contentClassName="p-6">
+                        <h2 className="text-[17px] font-bold text-slate-950 mb-2" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                             AI-Assisted Creator
                         </h2>
-                        <p className="text-[15px] leading-[20px] text-white/80">
+                        <p className="text-[15px] leading-[20px] text-slate-900">
                             Each field for your Product Sales Page contains an AI prompt to help you write the required copy for the page. Simply click on each field label to copy the preset prompt to your clipboard, and paste it into Deity or your preferred AI tool (ChatGPT, Claude, Gemini etc.) Feel free to edit as you wish, and use the content of the prompt to help you understand the copy that's required for each section of your Product Sales Page.
                         </p>
                     </TahoeGlassSurface>
@@ -538,7 +540,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
 
                         {/* 1. Header Section */}
                         <section className="space-y-6">
-                            <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-slate-950 uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 01. The Hook
                             </h3>
 
@@ -546,7 +548,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 {/* Headline */}
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
+                                        <label className="text-slate-900 text-xs font-bold uppercase tracking-wider">
                                             Headline Hook
                                         </label>
                                         <LightButton
@@ -562,7 +564,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         semanticTint="light"
                                         semanticTintOpacity={0.16}
                                         surfaceClassName="px-4 py-4"
-                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                     >
                                         <input
                                             type="text"
@@ -577,7 +579,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 {/* Tagline */}
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
+                                        <label className="text-slate-900 text-xs font-bold uppercase tracking-wider">
                                             Tagline
                                         </label>
                                         <LightButton
@@ -593,7 +595,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         semanticTint="light"
                                         semanticTintOpacity={0.16}
                                         surfaceClassName="px-4 py-4"
-                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                     >
                                         <input
                                             type="text"
@@ -609,7 +611,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
 
                         {/* 2. The Pitch */}
                         <section className="space-y-6">
-                            <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-slate-950 uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 02. The Pitch
                             </h3>
 
@@ -617,7 +619,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 {/* Intro */}
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
-                                        <label className="text-white/50 text-xs font-bold uppercase tracking-wider">
+                                        <label className="text-slate-900 text-xs font-bold uppercase tracking-wider">
                                             Introduction / Problem
                                         </label>
                                         <LightButton
@@ -633,7 +635,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         semanticTint="light"
                                         semanticTintOpacity={0.16}
                                         surfaceClassName="px-4 py-4"
-                                        controlClassName="resize-none text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                        controlClassName="resize-none text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                     >
                                         <textarea
                                             value={product.intro_text || ''}
@@ -650,7 +652,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         {/* 3. Benefits */}
                         < section className="space-y-6" >
                             <div className="flex items-center justify-between">
-                                <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                                <h3 className="text-[17px] font-bold text-slate-950 uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     03. Benefits
                                 </h3>
                                 <LightButton
@@ -665,14 +667,14 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                             <div className="space-y-3">
                                 {(product.benefits || []).map((benefit, index) => (
                                     <div key={index} className="flex items-center gap-3 group relative">
-                                        <List size={20} className="text-white/20 flex-shrink-0" />
+                                        <List size={20} className="text-slate-900 flex-shrink-0" />
                                         <TahoeGlassField
                                             className="flex-1"
                                             tone="dark"
                                             semanticTint="light"
                                             semanticTintOpacity={0.16}
                                             surfaceClassName="px-3 py-3 pr-12"
-                                            controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                            controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                         >
                                             <input
                                                 type="text"
@@ -712,7 +714,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         {/* 4. Core Value Proposition */}
                         <section className="space-y-6">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                                <h3 className="text-[17px] font-bold text-slate-950 uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                     04. Core Value Proposition
                                 </h3>
                                 <LightButton
@@ -730,7 +732,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                     semanticTint="light"
                                     semanticTintOpacity={0.16}
                                     surfaceClassName="px-4 py-4"
-                                    controlClassName="resize-none text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    controlClassName="resize-none text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                 >
                                     <textarea
                                         value={product.value_proposition || ''}
@@ -745,19 +747,19 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
 
                         {/* 5. Video */}
                         <section className="space-y-6">
-                            <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-slate-950 uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 05. Video Embed
                             </h3>
 
                             <div>
                                 <TahoeGlassField
                                     label={<><Video size={14} /> YouTube URL</>}
-                                    labelClassName="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white/50"
-                                    tone="light"
-                                    semanticTint="dark"
+                                    labelClassName="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-900"
+                                    tone="dark"
+                                    semanticTint="light"
                                     semanticTintOpacity={0.08}
                                     surfaceClassName="px-4 py-4"
-                                    controlClassName="text-[17px] font-medium leading-[22px] text-white placeholder:text-white/50"
+                                    controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                 >
                                     <input
                                         type="text"
@@ -771,13 +773,13 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
 
                         {/* 5. Testimonials */}
                         < section className="space-y-6" >
-                            <h3 className="text-[17px] font-bold text-white uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-slate-950 uppercase tracking-wider" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 06. Testimonials
                             </h3>
 
                             <div className="space-y-4">
                                 {(product.testimonials || []).map((t, index) => (
-                                    <TahoeGlassSurface key={index} variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={14} tone="light" className="group" contentClassName="relative p-4">
+                                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" key={index} variant="card" semanticTint="light" semanticTintOpacity={0.18} radius={14} tone="dark" className="nsso-crystal-panel group" contentClassName="relative p-4">
                                         <LightCloseButton
                                             onClick={() => {
                                                 const newTestimonials = (product.testimonials || []).filter((_, i) => i !== index)
@@ -794,7 +796,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                                 semanticTint="light"
                                                 semanticTintOpacity={0.16}
                                                 surfaceClassName="px-3 py-3"
-                                                controlClassName="resize-none text-[15px] font-medium leading-[20px] text-[#545454] placeholder:text-[#545454]/50"
+                                                controlClassName="resize-none text-[15px] font-medium leading-[20px] text-slate-950 placeholder:text-slate-900"
                                             >
                                                 <textarea
                                                     value={t.text}
@@ -814,7 +816,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                                 semanticTint="light"
                                                 semanticTintOpacity={0.16}
                                                 surfaceClassName="px-3 py-3"
-                                                controlClassName="text-[15px] font-medium leading-[20px] text-[#545454] placeholder:text-[#545454]/50"
+                                                controlClassName="text-[15px] font-medium leading-[20px] text-slate-950 placeholder:text-slate-900"
                                             >
                                                 <input
                                                     type="text"
@@ -844,8 +846,8 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                         </section >
 
                         {/* Bottom Actions */}
-                        <div className="flex flex-col md:flex-row gap-4 pt-8 border-t border-white/10">
-                            <Link href={backHref} onClick={event => { event.preventDefault(); navigateBack() }} aria-disabled={leavingBusy || undefined} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-lg px-1 py-2 text-sm font-medium text-white/90 underline underline-offset-4 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white aria-disabled:cursor-wait aria-disabled:opacity-50"><ChevronLeft size={16} aria-hidden="true" />Back</Link>
+                        <div className="flex flex-col md:flex-row gap-4 pt-8 border-t border-slate-500/15">
+                            <Link href={backHref} onClick={event => { event.preventDefault(); navigateBack() }} aria-disabled={leavingBusy || undefined} className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-lg px-1 py-2 text-sm font-medium text-slate-900 underline underline-offset-4 outline-none hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-slate-700 aria-disabled:cursor-wait aria-disabled:opacity-50"><ChevronLeft size={16} aria-hidden="true" />Back</Link>
                             <LightButton
                                 onClick={() => router.push(`/products/${productId}?source=creator&preview=true`)}
                                 disabled={previewDisabled}

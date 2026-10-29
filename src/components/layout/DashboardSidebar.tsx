@@ -1,5 +1,7 @@
 'use client';
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { Suspense, useState, useSyncExternalStore } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -116,32 +118,35 @@ function DashboardSidebarContent({
     };
 
     return (
-        <TahoeBackdropSurface
+        <TahoeBackdropSurface chromiumAppearance="light" materialFinish="satin"
             as="aside"
             backdropEnabled={backdropEnabled}
             variant="panel"
             radius="0 28px 28px 0"
-            className="fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] transition-colors duration-300 lg:block"
-            contentClassName="flex h-full flex-col"
-            tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.38}
+            className="nsso-crystal-panel fixed bottom-0 left-0 top-0 z-50 hidden w-[280px] transition-colors duration-300 lg:block"
+            contentClassName="flex h-full flex-col text-slate-950"
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.18}
         >
             {/* Logo Area */}
             <div className="px-8 py-8">
                 <Link
                     href="/?view=home"
                     aria-label="nsso homepage"
-                    className="inline-flex rounded-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                    className="inline-flex rounded-sm focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-700"
                 >
-                    <Image
-                        src="/assets/nsso-logo.png"
-                        alt="nsso"
-                        width={458}
-                        height={224}
-                        className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
-                        priority
-                    />
+                    <span data-sidebar-logo="true" className="relative block h-8 w-[69px] shrink-0 overflow-hidden">
+                        <Image
+                            src="/assets/nsso-logo-dark.png"
+                            alt="nsso"
+                            width={3840}
+                            height={2172}
+                            sizes="140px"
+                            className="absolute left-[-43.79%] top-[-60.02%] h-[230.33%] w-[188.51%] max-w-none opacity-90 transition-opacity hover:opacity-100"
+                            priority
+                        />
+                    </span>
                 </Link>
             </div>
 
@@ -159,8 +164,8 @@ function DashboardSidebarContent({
                             className={cn(
                                 "group relative w-full px-4 py-3 transition-all duration-200",
                                 isActive
-                                    ? "border-slate-500 bg-white text-slate-950 ring-2 ring-slate-500/60"
-                                    : "text-slate-800 hover:text-slate-950",
+                                    ? "border border-slate-500 text-slate-950 ring-2 ring-slate-500/60"
+                                    : "text-slate-900 hover:text-slate-950",
                                 item.comingSoon && "cursor-pointer"
                             )}
                             contentClassName="w-full justify-start gap-3 text-inherit"
@@ -170,7 +175,7 @@ function DashboardSidebarContent({
                                 size={20}
                                 className={cn(
                                     "transition-colors",
-                                    isActive ? "text-slate-950" : "text-slate-600 group-hover:text-slate-950"
+                                    isActive ? "text-slate-950" : "text-slate-900 group-hover:text-slate-950"
                                 )}
                             />
                             <span className="font-medium text-[15px]" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif" }}>
@@ -188,28 +193,28 @@ function DashboardSidebarContent({
                 <LightButton
                     onClick={() => router.push('/?view=home')}
                     radius={12}
-                    className="group relative w-full px-4 py-3 text-slate-800 transition-all duration-200 hover:text-slate-800"
+                    className="group relative w-full px-4 py-3 text-slate-900 transition-all duration-200 hover:text-slate-900"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
-                    <Home size={20} className="text-slate-600 transition-colors group-hover:text-slate-950" />
+                    <Home size={20} className="text-slate-900 transition-colors group-hover:text-slate-950" />
                     <span className="text-[15px] font-medium">nsso homepage</span>
                 </LightButton>
             </nav>
 
             {/* Footer Actions */}
-            <div className="p-4 mt-auto border-t border-white/5 space-y-2">
+            <div className="p-4 mt-auto border-t border-slate-500/15 space-y-2">
                 {isAdmin && (
-                    <Link href="/admin" className={cn(lightButtonClass, 'group mb-3 flex w-full justify-start gap-3 rounded-xl px-4 py-3 text-left')}>
+                    <NativeGlassLens as={Link} href="/admin" className={cn(lightButtonClass, 'group mb-3 flex w-full justify-start gap-3 rounded-xl px-4 py-3 text-left')}>
                         <LayoutDashboard size={18} aria-hidden="true" />
                         <span className="text-[14px] font-medium">Admin</span>
-                    </Link>
+                    </NativeGlassLens>
                 )}
 
                 {/* Preview Profile */}
                 <LightButton
                     onClick={() => router.push('/preview')}
                     radius={12}
-                    className="group w-full px-4 py-3 text-left text-slate-800 transition-all hover:text-slate-800"
+                    className="group w-full px-4 py-3 text-left text-slate-900 transition-all hover:text-slate-900"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <Eye size={18} className="group-hover:text-slate-950 transition-colors" />
@@ -220,7 +225,7 @@ function DashboardSidebarContent({
                 <LightButton
                     onClick={copyProfileUrl}
                     radius={12}
-                    className="group w-full px-4 py-3 text-left text-slate-800 transition-all hover:text-slate-800"
+                    className="group w-full px-4 py-3 text-left text-slate-900 transition-all hover:text-slate-900"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <LinkIcon size={18} className="group-hover:text-slate-950 transition-colors" />
@@ -230,7 +235,7 @@ function DashboardSidebarContent({
                 {isAccountDeletionAvailable() && <LightButton intent="muted"
                     onClick={event => { event.currentTarget.focus(); onDeleteProfile() }}
                     radius={12}
-                    className="group w-full px-4 py-3 text-left text-slate-600 transition-colors hover:text-slate-800"
+                    className="group w-full px-4 py-3 text-left text-slate-900 transition-colors hover:text-slate-900"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <Trash2 size={18} />
@@ -243,7 +248,7 @@ function DashboardSidebarContent({
                     intent="danger"
                     disabled={signingOut}
                     radius={12}
-                    className="group w-full px-4 py-3 text-left transition-colors focus-visible:text-rose-950"
+                    className="group w-full px-4 py-3 text-left transition-colors focus-visible:text-nsso-danger"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <LogOut size={18} className="transition-colors" />

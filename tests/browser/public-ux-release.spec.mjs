@@ -108,7 +108,11 @@ test('vision player reads metadata present at mount and attaches media only on p
   await expect(page.getByText('0:00 / 1:40', { exact: true })).toBeVisible()
   const controls = page.getByRole('group', { name: 'Playback controls', exact: true })
   await expectWhiteEditorControls(controls)
-  await expect(controls).toHaveCSS('background-color', 'rgb(8, 12, 20)')
+  expect(await controls.evaluate(element => {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
+    const context = canvas.getContext('2d'); context.fillStyle = getComputedStyle(element).backgroundColor
+    context.fillRect(0, 0, 1, 1); return [...context.getImageData(0, 0, 1, 1).data]
+  })).toEqual([255, 255, 255, 153])
   for (const action of ['Play video', 'Mute video', 'Enter fullscreen']) {
     const box = await controls.getByRole('button', { name: action, exact: true }).boundingBox()
     expect(box.width).toBe(44); expect(box.height).toBe(44)
@@ -116,7 +120,7 @@ test('vision player reads metadata present at mount and attaches media only on p
   const youtube = controls.getByRole('link', { name: 'Watch this video on YouTube', exact: true })
   if (page.viewportSize().width >= 640) {
     await expect(youtube).toBeVisible()
-    expect(await controlMaterial(youtube)).toMatchObject({ width: 44, height: 44, background: 'rgb(244, 245, 248)', textShadow: 'none' })
+    expect(await controlMaterial(youtube)).toMatchObject({ width: 44, height: 44, background: 'rgba(255, 255, 255, 0.28)', textShadow: 'none' })
   } else await expect(youtube).toBeHidden()
   await page.getByRole('button', { name: 'Play video', exact: true }).click()
   await expect(page.locator('video')).toHaveAttribute('src', '/nsso-vision-ukYfrg0ZNbA.mp4')

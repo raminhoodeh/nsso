@@ -15,12 +15,12 @@ interface NetworkingTimelineProps {
 export default function NetworkingTimeline({ connections, onOpenNotes }: NetworkingTimelineProps) {
     if (connections.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 text-center opacity-70">
-                <TahoeGlassSurface variant="pill" tone="light" className="h-16 w-16 mb-6" contentClassName="flex h-full items-center justify-center">
-                    <Clock className="text-white/40" size={32} />
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <TahoeGlassSurface variant="pill" tone="dark" className="h-16 w-16 mb-6" contentClassName="flex h-full items-center justify-center">
+                    <Clock className="text-slate-900" size={32} />
                 </TahoeGlassSurface>
-                <h3 className="text-xl font-bold text-white mb-2">Your timeline starts here</h3>
-                <p className="text-white/50 max-w-sm">
+                <h3 className="text-xl font-bold text-slate-950 mb-2">Your timeline starts here</h3>
+                <p className="text-slate-900 max-w-sm">
                     Scan a QR code to make your first memory. Your journey will appear here chronologically.
                 </p>
             </div>
@@ -54,14 +54,14 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
     return (
         <div className="relative pl-8 md:pl-0">
             {/* The Timeline Line (Vertical) */}
-            <div className="absolute left-[3px] md:left-1/2 top-4 bottom-0 w-[2px] bg-gradient-to-b from-white/20 via-white/10 to-transparent transform md:-translate-x-1/2" />
+            <div className="absolute left-[3px] md:left-1/2 top-4 bottom-0 w-[2px] bg-gradient-to-b from-slate-500/35 via-slate-500/20 to-transparent transform md:-translate-x-1/2" />
 
             <div className="space-y-12">
                 {sortedGroups.map(([month, groupConns]) => (
                     <div key={month} className="relative">
                         {/* Month Header */}
                         <div className="flex justify-center mb-8 relative z-10">
-                            <TahoeGlassSurface variant="pill" tone="light" className="px-4 py-1.5" contentClassName="text-xs font-bold uppercase tracking-widest text-white/70">
+                            <TahoeGlassSurface variant="pill" tone="dark" className="px-4 py-1.5" contentClassName="text-xs font-bold uppercase tracking-widest text-slate-900">
                                 {month}
                             </TahoeGlassSurface>
                         </div>
@@ -79,30 +79,30 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                     <div key={conn.id} className="relative md:flex md:items-center md:justify-between group">
 
                                         {/* Timeline Dot */}
-                                        <div className="absolute left-[-29px] md:left-1/2 md:top-1/2 w-[10px] h-[10px] rounded-full bg-white border-2 border-[#1a1a1a] shadow-[0_0_0_4px_rgba(255,255,255,0.1)] transform md:-translate-x-1/2 md:-translate-y-1/2 z-20 group-hover:scale-125 transition-transform duration-300" />
+                                        <div className="absolute left-[-29px] md:left-1/2 md:top-1/2 w-[10px] h-[10px] rounded-full bg-white border-2 border-slate-600 shadow-[0_0_0_4px_rgba(255,255,255,0.1)] transform md:-translate-x-1/2 md:-translate-y-1/2 z-20 group-hover:scale-125 transition-transform duration-300" />
 
                                         {/* Connector Line (Mobile Only - Horizontal small dash) */}
-                                        <div className="absolute left-[-19px] top-4 w-4 h-[2px] bg-white/20 md:hidden" />
+                                        <div className="absolute left-[-19px] top-4 w-4 h-[2px] bg-slate-500/25 md:hidden" />
 
                                         {/* Card Container - Left Side */}
                                         <div className={`md:w-[45%] ${isRight ? 'md:order-2 md:ml-auto' : 'md:order-1 md:mr-auto'}`}>
                                             <GlassCard className="p-5 relative overflow-hidden group/card">
 
                                                 {/* Header: Contextual Stamp */}
-                                                <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-white/70">
+                                                <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-900">
                                                     <div className="flex items-center gap-1">
                                                         <Calendar size={10} />
                                                         {new Date(conn.dateMet).getDate()} {month.split(' ')[0]}
                                                     </div>
-                                                    <span className="w-0.5 h-0.5 rounded-full bg-white/30" />
+                                                    <span className="w-0.5 h-0.5 rounded-full bg-slate-500/35" />
                                                     <div className="flex items-center gap-1">
                                                         <Clock size={10} />
                                                         {new Date(conn.dateMet).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </div>
                                                     {conn.location && (
                                                         <>
-                                                            <span className="w-0.5 h-0.5 rounded-full bg-white/30" />
-                                                            <div className="flex items-center gap-1 text-white/60">
+                                                            <span className="w-0.5 h-0.5 rounded-full bg-slate-500/35" />
+                                                            <div className="flex items-center gap-1 text-slate-900">
                                                                 <MapPin size={10} />
                                                                 {conn.location}
                                                             </div>
@@ -113,11 +113,11 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                                 {/* Body: Profile */}
                                                 <div className="flex items-start gap-4">
                                                     <Link href={`/${conn.username}`} className="shrink-0">
-                                                        <div className="w-12 h-12 rounded-full bg-white/10 overflow-hidden ring-2 ring-white/10 group-hover/card:ring-white/30 transition-all">
+                                                        <div className="w-12 h-12 rounded-full bg-white/10 overflow-hidden ring-2 ring-slate-500/10 group-hover/card:ring-slate-500/30 transition-all">
                                                             {conn.profilePicUrl ? (
                                                                 <img src={conn.profilePicUrl} alt={conn.fullName} className="w-full h-full object-cover" />
                                                             ) : (
-                                                                <div className="w-full h-full flex items-center justify-center text-white/40 font-bold">
+                                                                <div className="w-full h-full flex items-center justify-center text-slate-900 font-bold">
                                                                     {conn.fullName.substring(0, 2).toUpperCase()}
                                                                 </div>
                                                             )}
@@ -127,7 +127,7 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex justify-between items-start">
                                                             <Link href={`/${conn.username}`}>
-                                                                <h4 className="text-white font-bold text-lg leading-tight hover:underline bg-clip-text truncate pr-2">
+                                                                <h4 className="text-slate-950 font-bold text-lg leading-tight hover:underline bg-clip-text truncate pr-2">
                                                                     {conn.fullName}
                                                                 </h4>
                                                             </Link>
@@ -144,18 +144,18 @@ export default function NetworkingTimeline({ connections, onOpenNotes }: Network
                                                         </div>
 
                                                         {conn.headline && (
-                                                            <p className="text-white/50 text-xs mb-2 truncate">
+                                                            <p className="text-slate-900 text-xs mb-2 truncate">
                                                                 {conn.headline}
                                                             </p>
                                                         )}
 
                                                         {/* Note Snippet */}
                                                         {conn.notes ? (
-                                                            <TahoeGlassSurface variant="recessed" radius={8} tone="light" className="mt-3 p-2.5" contentClassName="text-xs text-white/70 italic border-l-2 border-white/20 line-clamp-2">
+                                                            <TahoeGlassSurface variant="recessed" radius={8} tone="dark" className="mt-3 p-2.5" contentClassName="text-xs text-slate-900 italic border-l-2 border-slate-500/20 line-clamp-2">
                                                                 &quot;{conn.notes}&quot;
                                                             </TahoeGlassSurface>
                                                         ) : (
-                                                            <div className="mt-2 text-[11px] text-white/20 italic group-hover/card:text-white/40 transition-colors">
+                                                            <div className="mt-2 text-[11px] text-slate-900 italic group-hover/card:text-slate-900 transition-colors">
                                                                 No notes added yet
                                                             </div>
                                                         )}

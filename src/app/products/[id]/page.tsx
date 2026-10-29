@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -25,9 +27,9 @@ function ProductRouteContent({ children }: { children: ReactNode }) {
 
 function PurchaseLink({ href }: { href: string }) {
     const destination = safeWebUrl(href)
-    if (!destination) return <p className="text-xs text-white/70">Purchase link unavailable. Please contact the seller.</p>
+    if (!destination) return <p className="text-xs text-slate-950">Purchase link unavailable. Please contact the seller.</p>
     return (
-        <a
+        <NativeGlassLens as="a"
             href={destination}
             target="_blank"
             rel="noopener noreferrer"
@@ -35,7 +37,7 @@ function PurchaseLink({ href }: { href: string }) {
             className={cn(lightButtonClass, 'h-11 w-full whitespace-nowrap rounded-xl px-4 text-base font-semibold tracking-wide')}
         >
             <span data-light-button-content="true">{purchaseButtonLabel(destination)}</span>
-        </a>
+        </NativeGlassLens>
     )
 }
 
@@ -220,7 +222,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
             <ProductRouteContent>
                 <div className="relative z-[1] flex min-h-screen flex-col items-center justify-center gap-5 p-5">
                     {recoveryNavigation}
-                    <TahoeGlassSurface variant="pill" tone="light" contentClassName="px-6 py-3 text-white/80">
+                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="pill" className="nsso-crystal-panel" tone="dark" semanticTint="light" semanticTintOpacity={0.18} contentClassName="px-6 py-3 text-slate-950">
                         Loading...
                     </TahoeGlassSurface>
                 </div>
@@ -233,7 +235,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
             <ProductRouteContent>
                 <div className="relative z-[1] flex min-h-screen flex-col items-center justify-center gap-5 p-5">
                     {recoveryNavigation}
-                    <TahoeGlassSurface variant="card" tone="light" contentClassName="px-8 py-6 text-white/80">
+                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" className="nsso-crystal-panel" tone="dark" contentClassName="px-8 py-6 text-slate-950">
                         {loadError ? <div role="status" className="space-y-3 text-center"><p>This product could not be loaded. Please retry.</p><LightButton type="button" onClick={() => setRetry(value => value + 1)} className="min-h-11 px-4 py-2" contentClassName="text-sm">Retry product</LightButton></div> : 'Product not found'}
                     </TahoeGlassSurface>
                 </div>
@@ -250,7 +252,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
     return (
         <ProductRouteContent>
-        <main className="relative z-[1] min-h-screen p-4 md:p-8">
+        <main className="relative z-[1] min-h-screen p-4 text-slate-950 [text-shadow:none] md:p-8">
             <div className="max-w-[1400px] mx-auto">
                 {/* Golden Ratio Grid: 1.618fr 1fr */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-8">
@@ -283,29 +285,36 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             </LightButton>
                         </div>
 
+                        <TahoeGlassSurface
+                            chromiumAppearance="light" materialFinish="satin"
+                            variant="card" radius={20} tone="dark"
+                            semanticTint="light" semanticTintOpacity={0.18}
+                            className="nsso-crystal-panel"
+                            contentClassName="space-y-8 p-4 md:p-8"
+                        >
                         {/* Headline Hook */}
-                        <h1 className="text-[29px] font-bold text-white uppercase tracking-wide leading-[38px]" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                        <h1 className="text-[29px] font-bold text-slate-950 uppercase tracking-wide leading-[38px]" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                             {product.headline}
                         </h1>
 
                         {/* Tagline */}
-                        <h2 className="text-[29px] font-bold text-white leading-[38px]" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                        <h2 className="text-[29px] font-bold text-slate-950 leading-[38px]" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                             {product.tagline}
                         </h2>
 
                         {/* Intro */}
-                        <p className="text-[17px] text-white/80 leading-[22px] whitespace-pre-wrap" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 510 }}>
+                        <p className="text-[17px] text-slate-950 leading-[22px] whitespace-pre-wrap" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 510 }}>
                             {product.intro_text}
                         </p>
 
                         {/* Mobile-only Product Card — shown early so users see the product before the bullet list */}
-                        <TahoeGlassSurface
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
                             variant="panel"
                             radius={20}
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.38}
-                            className="w-full lg:hidden"
+                            tone="dark"
+                            semanticTint="light"
+                            semanticTintOpacity={0.18}
+                            className="nsso-crystal-panel w-full lg:hidden"
                             contentClassName="flex w-full flex-col items-center p-6"
                         >
                             {/* Product Image */}
@@ -321,12 +330,12 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             )}
 
                             {/* Product Name */}
-                            <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-slate-950 mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.name}
                             </h3>
 
                             {/* Price */}
-                            <p className="text-[29px] font-bold text-white mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <p className="text-[29px] font-bold text-slate-950 mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.price}
                             </p>
 
@@ -349,7 +358,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                 </div>
                             )}
                             {product.value_proposition && (
-                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-white/90">
+                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-slate-950">
                                     {product.value_proposition}
                                 </p>
                             )}
@@ -363,8 +372,8 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                     // Strip any markdown bold asterisks
                                     const cleanBenefit = benefit.replace(/\*\*/g, '').replace(/\*/g, '');
                                     return (
-                                        <li key={index} className="flex items-start gap-3 text-[17px] text-white/80 leading-[22px]" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif" }}>
-                                            <span className="text-white/40 mt-1" style={{ fontStyle: 'normal', fontWeight: 400 }}>•</span>
+                                        <li key={index} className="flex items-start gap-3 text-[17px] text-slate-950 leading-[22px]" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif" }}>
+                                            <span className="text-slate-950 mt-1" style={{ fontStyle: 'normal', fontWeight: 400 }}>•</span>
                                             <span style={{
                                                 fontWeight: isIncludes ? 400 : 510,
                                                 fontStyle: isIncludes ? 'italic' : 'normal',
@@ -375,9 +384,11 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             </ul>
                         )}
 
+                        </TahoeGlassSurface>
+
                         {/* Guarantee Card */}
-                        <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-6">
-                            {courseMarketplaceProduct ? <p className="text-[17px] text-white/80 leading-[22px]">
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" radius={20} className="nsso-crystal-panel" tone="dark" contentClassName="p-6">
+                            {courseMarketplaceProduct ? <p className="text-[17px] text-slate-950 leading-[22px]">
                                 Enrolment, pricing and refunds are handled by the course platform. Review its terms before enrolling.
                             </p> : <div className="grid grid-cols-[17.5%_82.5%] items-center gap-6">
                                 <div className="relative w-full aspect-square">
@@ -388,7 +399,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                         className="object-contain"
                                     />
                                 </div>
-                                <p className="text-[17px] font-bold text-white leading-[22px] px-4" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 700 }}>
+                                <p className="text-[17px] font-bold text-slate-950 leading-[22px] px-4" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 700 }}>
                                     100% Guaranteed Satisfaction! If the {product.name} is not for you, I'll refund you – no questions asked.
                                 </p>
                             </div>}
@@ -396,7 +407,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                         {/* Testimonial Carousel */}
                         {product.testimonials && product.testimonials.length > 0 && (
-                            <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-3 md:p-8">
+                            <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" radius={20} className="nsso-crystal-panel" tone="dark" contentClassName="p-3 md:p-8">
                                 <div className="flex items-center gap-2 md:gap-4">
                                     {product.testimonials.length > 1 && (
                                         <LightIconButton
@@ -408,10 +419,10 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                     )}
 
                                     <div className="flex-1 space-y-4">
-                                        <p className="text-[17px] font-bold text-white leading-[22px]" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 700 }}>
+                                        <p className="text-[17px] font-bold text-slate-950 leading-[22px]" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif", fontWeight: 700 }}>
                                             "{product.testimonials[currentTestimonial].text}"
                                         </p>
-                                        <p className="text-[15px] text-white/60">
+                                        <p className="text-[15px] text-slate-950">
                                             {product.testimonials[currentTestimonial].name}
                                         </p>
                                     </div>
@@ -429,10 +440,10 @@ function ProductSalesContent({ productId }: { productId: string }) {
                         )}
 
                         {/* Footer Attribution */}
-                        <div className="mt-12 pt-8 border-t border-white/10">
+                        <div className="mt-12 pt-8 border-t border-slate-400/40">
                             <Link
                                 href="/"
-                                className="text-white/60 hover:text-white/80 transition-colors text-sm font-medium"
+                                className="nsso-crystal-reading inline-flex min-h-11 items-center rounded-full px-4 py-2 text-slate-950 hover:text-slate-950 transition-colors text-sm font-medium focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950"
                             >
                                 Sales page created with nsso →
                             </Link>
@@ -442,13 +453,13 @@ function ProductSalesContent({ productId }: { productId: string }) {
                     {/* RIGHT COLUMN - Conversion & Context */}
                     <div className="space-y-6">
                         {/* Product Card */}
-                        <TahoeGlassSurface
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
                             variant="panel"
                             radius={20}
-                            tone="light"
-                            semanticTint="dark"
-                            semanticTintOpacity={0.38}
-                            className="hidden w-full lg:block"
+                            tone="dark"
+                            semanticTint="light"
+                            semanticTintOpacity={0.18}
+                            className="nsso-crystal-panel hidden w-full lg:block"
                             contentClassName="flex w-full flex-col items-center p-6"
                         >
                             {/* Product Image */}
@@ -464,12 +475,12 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             )}
 
                             {/* Product Name */}
-                            <h3 className="text-[17px] font-bold text-white mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <h3 className="text-[17px] font-bold text-slate-950 mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.name}
                             </h3>
 
                             {/* Price */}
-                            <p className="text-[29px] font-bold text-white mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
+                            <p className="text-[29px] font-bold text-slate-950 mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
                                 {product.price}
                             </p>
 
@@ -494,7 +505,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                             {/* Value Proposition */}
                             {product.value_proposition && (
-                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-white/90">
+                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-slate-950">
                                     {product.value_proposition}
                                 </p>
                             )}
@@ -502,7 +513,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                         {/* YouTube Video Embed */}
                         {youtubeId && (
-                            <TahoeGlassSurface variant="mediaFrame" radius={20} tone="light" contentClassName="p-4">
+                            <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="mediaFrame" radius={20} tone="dark" contentClassName="p-4">
                                 <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                                     <iframe
                                         className="absolute inset-0 w-full h-full rounded-[12px]"
@@ -517,20 +528,20 @@ function ProductSalesContent({ productId }: { productId: string }) {
 
                         {/* Contact Details */}
                         {!CONTACT_DETAILS_HIDDEN_PRODUCT_IDS.has(product.id) && (ownerUsername || userContacts.length > 0) && (
-                            <TahoeGlassSurface variant="card" radius={20} tone="light" contentClassName="p-6">
-                                <h4 className="text-[15px] font-bold text-white mb-4 uppercase tracking-wider">
+                            <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" radius={20} className="nsso-crystal-panel" tone="dark" contentClassName="p-6">
+                                <h4 className="text-[15px] font-bold text-slate-950 mb-4 uppercase tracking-wider">
                                     Contact
                                 </h4>
                                 <div className="space-y-2">
                                     {/* Website link - always first */}
                                     {ownerUsername && (
-                                        <p className="text-[15px] text-white/80">
-                                            Website: <a href={`/${ownerUsername}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">nsso.me/{ownerUsername}</a>
+                                        <p className="text-[15px] text-slate-950">
+                                            Website: <a href={`/${ownerUsername}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-slate-950 transition-colors focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">nsso.me/{ownerUsername}</a>
                                         </p>
                                     )}
                                     {/* Other contacts */}
                                     {userContacts.map((contact, index) => (
-                                        <p key={index} className="text-[15px] text-white/80">
+                                        <p key={index} className="text-[15px] text-slate-950">
                                             {contact.method === 'Other' ? contact.custom_method_name : contact.method}: {contact.value}
                                         </p>
                                     ))}

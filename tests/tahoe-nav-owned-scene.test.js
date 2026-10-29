@@ -470,14 +470,15 @@ test("keeps the navbar as a semantic wrapper around the reusable backdrop surfac
   assert.match(source, /backdropEnabled\?: boolean/);
   assert.match(source, /displacementProfile\?: TahoeDisplacementProfile/);
   assert.match(source, /materialLighting\?: "radial" \| "uniform"/);
-  assert.match(source, /backdropEnabled = true/);
+  assert.match(source, /backdropEnabled: requestedBackdropEnabled = true/);
+  assert.match(source, /const backdropEnabled = requestedBackdropEnabled && !suppliedShared/);
   assert.match(
     source,
     /backdropEnabled && platformRoute === "webgl-owned-scene"/,
   );
   assert.match(source, /if \(!backdropEnabled\)/);
   assert.match(source, /\{backdropEnabled && !chrome\.enabled \? \(\s*<svg/);
-  assert.match(source, /if \(chrome\.enabled\) \{[\s\S]*?setMapReady\(false\);[\s\S]*?return;/);
+  assert.match(source, /if \(chrome\.enabled \|\| suppliedShared\) \{[\s\S]*?setMapReady\(false\);[\s\S]*?return;/);
   assert.match(
     source,
     /TahoeGlassDirectBackdropBoundaryContext\.Provider/,

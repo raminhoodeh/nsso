@@ -95,6 +95,7 @@ test('cold static routes do not mount Vanta and feed identical original pixels t
         assert.match(html, /data-nsso-deck-background="true"/)
         assert.match(html, /Preserved page content/)
         assert.equal(providerProps.sourceLabel, 'nsso-deck-blue')
+        assert.equal(providerProps.materialFamily, 'supplied')
         assert.equal(providerProps.sceneStyle.backgroundColor, '#43628c')
         assert.equal(providerProps.webglSource, deck.DECK_BACKGROUND_IMAGE_SOURCE)
         assert.equal(providerProps.webglSource.kind, 'image')
@@ -106,18 +107,29 @@ test('cold static routes do not mount Vanta and feed identical original pixels t
 })
 
 test('excluded profile routes still mount their source and route-owned tools are not wrapped twice', () => {
-    for (const pathname of ['/', '/sign-in', '/sign-up', '/preview', '/fixture-profile', '/glass-candidate', '/dreamsea/prompts']) {
+    for (const pathname of ['/', '/sign-in', '/sign-up', '/preview', '/fixture-profile', '/dreamsea/prompts']) {
         const { html, providerProps, vantaRenders } = renderEnvironment(pathname)
         assert.equal(vantaRenders, 1, pathname)
         assert.equal(providerProps.sourceLabel, 'vanta-clouds')
         assert.equal(providerProps.webglSource.kind, 'canvas')
+        assert.equal(providerProps.materialFamily, pathname.startsWith('/dreamsea/') ? 'candidate' : 'supplied')
         assert.doesNotMatch(html, /data-nsso-deck-background/)
     }
-    for (const pathname of ['/film/razinflix', '/places/dubai', '/dreamsea/privacy']) {
+    for (const pathname of ['/film/razinflix', '/places/dubai', '/dreamsea/privacy', '/glass-reference', '/glass-candidate']) {
         const { html, providerProps, vantaRenders } = renderEnvironment(pathname)
         assert.equal(vantaRenders, 0, pathname)
         assert.equal(providerProps, undefined)
         assert.equal(html, '<main>Preserved page content</main>')
+    }
+})
+
+test('comparison demos own their scenes without loosening their production guards', () => {
+    for (const pathname of ['/glass-reference', '/glass-candidate']) {
+        assert.equal(routes.routeOwnsTahoeScene(pathname), true, pathname)
+        assert.equal(routes.routeOwnsTahoeScene(`${pathname}/`), true, pathname)
+        const source = read(`src/app${pathname}/page.tsx`)
+        assert.match(source, /process\.env\.NODE_ENV/)
+        assert.match(source, /notFound\(\)/)
     }
 })
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -65,48 +67,48 @@ function MobileMenuNavigation({ pathname, isAdmin, signingOut, close, copyProfil
         <section data-mobile-menu-group="profile" aria-labelledby="mobile-menu-profile-heading">
             <h3 id="mobile-menu-profile-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Your nsso</h3>
             <div className={groupClass}>
-                <Link href="/?view=home" onClick={close} className={cn(MENU_ROW_CLASS, pathname === '/' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={pathname === '/' ? 'page' : undefined}>
+                <NativeGlassLens as={Link} href="/?view=home" onClick={close} className={cn(MENU_ROW_CLASS, pathname === '/' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={pathname === '/' ? 'page' : undefined}>
                     <MenuRowContent icon={<Home className={iconClass} />}>nsso homepage</MenuRowContent>
-                </Link>
-                <Link href={dashboardHref('profile')} onClick={close} className={cn(MENU_ROW_CLASS, isDashboardHome && currentView === 'profile' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={isDashboardHome && currentView === 'profile' ? 'page' : undefined}>
+                </NativeGlassLens>
+                <NativeGlassLens as={Link} href={dashboardHref('profile')} onClick={close} className={cn(MENU_ROW_CLASS, isDashboardHome && currentView === 'profile' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={isDashboardHome && currentView === 'profile' ? 'page' : undefined}>
                     <MenuRowContent icon={<UserRound className={iconClass} />}>Edit Profile</MenuRowContent>
-                </Link>
-                <Link href={dashboardHref('my-nsso')} onClick={close} className={cn(MENU_ROW_CLASS, isDashboardHome && currentView === 'my-nsso' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={isDashboardHome && currentView === 'my-nsso' ? 'page' : undefined}>
+                </NativeGlassLens>
+                <NativeGlassLens as={Link} href={dashboardHref('my-nsso')} onClick={close} className={cn(MENU_ROW_CLASS, isDashboardHome && currentView === 'my-nsso' && 'bg-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]')} aria-current={isDashboardHome && currentView === 'my-nsso' ? 'page' : undefined}>
                     <MenuRowContent icon={<UsersRound className={iconClass} />}>My nsso</MenuRowContent>
-                </Link>
-                <button type="button" onClick={() => runAfterClose('deity')} className={MENU_ROW_CLASS}>
+                </NativeGlassLens>
+                <NativeGlassLens as="button" type="button" onClick={() => runAfterClose('deity')} className={MENU_ROW_CLASS}>
                     <MenuRowContent icon={<Sparkles className={iconClass} />}>Deity</MenuRowContent>
-                </button>
-                <button type="button" onClick={() => runAfterClose('news')} className={MENU_ROW_CLASS}>
+                </NativeGlassLens>
+                <NativeGlassLens as="button" type="button" onClick={() => runAfterClose('news')} className={MENU_ROW_CLASS}>
                     <MenuRowContent icon={<Newspaper className={iconClass} />} trailing={<span className="shrink-0 rounded-full border border-slate-500/20 bg-white/55 px-2 py-1 text-[10px] font-semibold text-slate-700">Coming soon</span>}>News Feed</MenuRowContent>
-                </button>
+                </NativeGlassLens>
             </div>
         </section>
         <section data-mobile-menu-group="sharing" aria-labelledby="mobile-menu-sharing-heading">
             <h3 id="mobile-menu-sharing-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Preview &amp; share</h3>
             <div className={groupClass}>
-                <Link href="/preview" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/preview' ? 'page' : undefined}>
+                <NativeGlassLens as={Link} href="/preview" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/preview' ? 'page' : undefined}>
                     <MenuRowContent icon={<Eye className={iconClass} />}>Preview Profile</MenuRowContent>
-                </Link>
-                <button type="button" onClick={() => { void copyProfileUrl(); close() }} className={MENU_ROW_CLASS}>
+                </NativeGlassLens>
+                <NativeGlassLens as="button" type="button" onClick={() => { void copyProfileUrl(); close() }} className={MENU_ROW_CLASS}>
                     <MenuRowContent icon={<LinkIcon className={iconClass} />}>Copy profile URL</MenuRowContent>
-                </button>
+                </NativeGlassLens>
             </div>
         </section>
         <section data-mobile-menu-group="account" aria-labelledby="mobile-menu-account-heading">
             <h3 id="mobile-menu-account-heading" className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Account</h3>
             <div className={groupClass}>
-                {isAdmin && <Link href="/admin" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/admin' ? 'page' : undefined}>
+                {isAdmin && <NativeGlassLens as={Link} href="/admin" onClick={close} className={MENU_ROW_CLASS} aria-current={pathname === '/admin' ? 'page' : undefined}>
                     <MenuRowContent icon={<LayoutDashboard className={iconClass} />}>Admin</MenuRowContent>
-                </Link>}
-                {isAccountDeletionAvailable() && <button type="button" onClick={() => runAfterClose('delete-profile')} className={cn(MENU_ROW_CLASS, 'text-rose-900')}>
+                </NativeGlassLens>}
+                {isAccountDeletionAvailable() && <NativeGlassLens as="button" type="button" onClick={() => runAfterClose('delete-profile')} className={cn(MENU_ROW_CLASS, 'text-rose-900')}>
                     <MenuRowContent icon={<Trash2 className={iconClass} />}>Delete my profile</MenuRowContent>
-                </button>}
+                </NativeGlassLens>}
             </div>
         </section>
-        <button type="button" onClick={() => { void handleSignOut() }} disabled={signingOut} className={cn(MENU_ROW_CLASS, 'border border-rose-900/10 bg-white/35 text-rose-900 hover:bg-white/65 disabled:cursor-wait disabled:opacity-60')}>
+        <NativeGlassLens as="button" type="button" onClick={() => { void handleSignOut() }} disabled={signingOut} className={cn(MENU_ROW_CLASS, 'border border-rose-900/10 bg-white/35 text-rose-900 hover:bg-white/65 disabled:cursor-wait disabled:opacity-60')}>
             <MenuRowContent icon={<LogOut className={iconClass} />} trailing={<span aria-hidden="true" />}>{signingOut ? 'Signing out…' : 'Sign Out'}</MenuRowContent>
-        </button>
+        </NativeGlassLens>
     </nav>
 }
 

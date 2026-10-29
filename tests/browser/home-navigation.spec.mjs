@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, layoutCss
 test.beforeAll(async () => {
-  const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx', 'src/components/layout/Header.tsx', 'src/components/layout/NssoTopBar.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx']
+  const files = ['src/app/page.tsx', 'src/components/home/HomeProfileDemo.tsx', 'src/components/home/HomeProfileClaim.tsx', 'src/components/ui/Input.tsx', 'src/components/layout/Header.tsx', 'src/components/layout/DashboardSidebar.tsx', 'src/components/layout/NssoTopBar.tsx', 'src/components/ui/light-panel.ts', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx']
   const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
   const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
   layoutCss = compiler.build(candidates)
@@ -26,7 +26,7 @@ test.beforeAll(async () => {
           : path === 'next/link' ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>};"
           : path.endsWith('tahoe-glass') ? `import React from 'react';
               export {TahoeGlassField} from './src/components/ui/tahoe-glass/TahoeGlassField';
-              export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,chromiumAppearance,...props}){return <Tag {...props} data-fixture-tone={tone} data-fixture-appearance={chromiumAppearance}><span className={contentClassName}>{children}</span></Tag>}
+              export function TahoeGlassSurface({as:Tag='div',children,contentClassName,variant,radius,tone,semanticTint,semanticTintOpacity,tracking,opticalPriority,chromiumAppearance,materialFinish,...props}){return <Tag {...props} data-fixture-tone={tone} data-fixture-appearance={chromiumAppearance}><span className={contentClassName}>{children}</span></Tag>}
               export function TahoeGlassButton(props){return <TahoeGlassSurface as="button" {...props}/>}
               export function TahoeBackdropSurface({backdropEnabled,materialFinish,...props}){return <TahoeGlassSurface {...props}/>}
               export function TahoeBackdropHeader({displacementProfile,materialLighting,...props}){return <TahoeGlassSurface {...props}/>}
@@ -81,8 +81,10 @@ async function fixture(page, screen='home', options={}) {
   // Header actions live inside a viewport-sized, scrollable drawer. Mount its
   // real CSS before rendering; an unstyled inline dialog expands the supplied
   // high-resolution mark to its intrinsic canvas and moves actions offscreen.
-  // Sidebar behavior probes remain independent of its desktop-only CSS layout.
-  if (screen === 'header') await page.addStyleTag({ content: layoutCss })
+  // Sidebar callback probes use its real desktop layout and clipped logo.
+  // Mobile navigation is exercised by the separate header/drawer probes.
+  if (screen === 'sidebar') await page.setViewportSize({ width: 1280, height: 900 })
+  if (screen === 'header' || screen === 'sidebar') await page.addStyleTag({ content: layoutCss })
   await page.evaluate(({screen,options})=>{Object.assign(window,options);window.fixtureRender(screen)},{screen,options})
   await expect(page.getByRole(screen==='sidebar'?'complementary':'navigation')).toBeVisible()
   if (screen === 'header' && options.fixtureUser) {

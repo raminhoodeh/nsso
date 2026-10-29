@@ -37,19 +37,19 @@ function BottomNavContent() {
     }
 
     return (
-        <TahoeBackdropSurface
+        <TahoeBackdropSurface chromiumAppearance="light" materialFinish="satin"
             as="nav"
             variant="menu"
             radius="24px 24px 0 0"
             aria-label="Dashboard"
-            className="fixed bottom-0 left-0 right-0 z-[5000] overflow-hidden md:hidden"
-            contentClassName="w-full bg-[#080c14]/40"
-            tone="light"
-            semanticTint="dark"
-            semanticTintOpacity={0.42}
+            className="nsso-crystal-panel fixed bottom-0 left-0 right-0 z-[5000] overflow-hidden md:hidden"
+            contentClassName="w-full text-slate-950"
+            tone="dark"
+            semanticTint="light"
+            semanticTintOpacity={0.18}
             displacementProfile="prism-bottom"
             materialLighting="uniform"
-            data-mobile-nav-material="dark-refractive"
+            data-mobile-nav-material="bright-refractive"
         >
             <div
                 className="grid min-h-[64px] grid-cols-4 items-center gap-1 pl-[max(12px,env(safe-area-inset-left))] pr-[max(12px,env(safe-area-inset-right))] pt-2"
@@ -64,10 +64,10 @@ function BottomNavContent() {
                             type="button"
                             onClick={() => handleItemClick(item.id)}
                             className={cn(
-                                'relative flex h-14 w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border px-1 py-1.5 text-white outline-none transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#080c14]',
+                                'nsso-glass-control relative flex h-14 w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border px-1 py-1.5 text-slate-950 outline-none transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 focus-visible:ring-offset-white',
                                 isActive
-                                    ? 'border-white/35 bg-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.20),0_4px_14px_rgba(0,0,0,0.18)]'
-                                    : 'border-white/10 bg-black/[0.12] hover:border-white/25 hover:bg-white/[0.10]'
+                                    ? 'border-slate-500/60 ring-1 ring-slate-500/50'
+                                    : 'border-white/70 hover:border-slate-500/40'
                             )}
                             aria-label={item.label}
                             aria-current={isActive ? 'page' : undefined}
@@ -92,14 +92,14 @@ function BottomNavContent() {
                                             src={item.icon}
                                             alt={item.label}
                                             fill
-                                            className="object-contain"
+                                            className="object-contain brightness-0 opacity-80"
                                         />
                                     </span>
                                 )}
                             </span>
                             <span className={cn(
                                 'max-w-full truncate text-[10px] font-semibold leading-3',
-                                isActive || item.id === 'deity' ? 'text-white' : 'text-white/80'
+                                isActive || item.id === 'deity' ? 'text-slate-950' : 'text-slate-900'
                             )}>
                                 {item.label}
                             </span>

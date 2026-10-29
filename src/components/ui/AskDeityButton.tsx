@@ -4,6 +4,9 @@ import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import { Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LIGHT_PANEL } from './light-panel'
+import { LiquidGlassMaterial } from './apple-tahoe-liquid-glass-button'
+import { useTahoeNativeLens } from './tahoe-glass/useTahoeNativeLens'
+import { SuppliedGlassReadability } from './tahoe-glass/SuppliedGlassReadability'
 
 type AskDeityButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'>
 
@@ -12,6 +15,7 @@ const AskDeityButton = forwardRef<HTMLButtonElement, AskDeityButtonProps>(functi
     { className, style, type = 'button', 'aria-label': label = 'Ask Deity', ...props },
     ref,
 ) {
+    const lens = useTahoeNativeLens<HTMLSpanElement>()
     return <button
         {...props}
         ref={ref}
@@ -22,10 +26,15 @@ const AskDeityButton = forwardRef<HTMLButtonElement, AskDeityButtonProps>(functi
         style={{ ...style, minHeight: 44, minWidth: 44, padding: '0 2px', border: 0, background: 'transparent' }}
     >
         <span
+            ref={lens.ref}
             data-ask-deity-lens="true"
-            className={cn(LIGHT_PANEL.control, 'pointer-events-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 font-medium [text-shadow:none] group-hover:bg-white group-hover:text-slate-950 group-focus-visible:outline-solid group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-slate-950 group-active:bg-slate-200 forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]')}
+            data-tahoe-native-lens={lens.enabled ? 'supplied' : undefined}
+            data-tahoe-native-solid={lens.solid ? 'true' : undefined}
+            className={cn(LIGHT_PANEL.control, lens.enabled && 'nsso-supplied-glass', 'pointer-events-none inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 font-medium [text-shadow:none] group-focus-visible:outline-solid group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-slate-950 forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]')}
             style={{ height: 28, fontSize: 12, lineHeight: '16px' }}
         >
+            {lens.enabled && <LiquidGlassMaterial mode={lens.mode} solid={lens.solid} />}
+            {lens.enabled && <SuppliedGlassReadability mode={lens.mode} solid={lens.solid} native />}
             <Sparkles size={12} aria-hidden="true" />
             <span>Ask Deity</span>
         </span>

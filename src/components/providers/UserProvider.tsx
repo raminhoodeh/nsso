@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { fetchCurrentAccount } from '@/lib/current-account'
 import type { User } from '@/lib/types'
 import { LightButton } from '@/components/ui/LightButton'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 interface UserContextType {
     user: User | null
@@ -75,7 +76,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     return <UserContext.Provider value={{ user, loading, error, refreshUser: fetchUser }}>
         {children}
-        {error && <div role="status" className="fixed inset-x-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[100] mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-white/20 bg-slate-950 px-4 py-3 text-sm text-white shadow-xl">
+        {error && <div role="status" className={`${LIGHT_PANEL.surface} ${LIGHT_PANEL.focusWithin} fixed inset-x-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[100] mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-white/80 px-4 py-3 text-sm shadow-xl`}>
             <p className="flex-1">{user ? error : 'Your account could not be loaded. Please retry.'}</p>
             <LightButton type="button" onClick={() => { void fetchUser() }} className="min-h-11 px-3 py-2" contentClassName="text-sm">Retry</LightButton>
         </div>}

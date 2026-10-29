@@ -15,6 +15,8 @@ export interface GlassCardProps {
     tone?: TahoeGlassContentTone
     semanticTint?: TahoeGlassSemanticTint
     semanticTintOpacity?: number
+    chromiumAppearance?: "light" | "dark"
+    materialFinish?: "clear" | "satin"
 }
 
 const VARIANT_SURFACE: Record<NonNullable<GlassCardProps['variant']>, TahoeGlassSurfaceVariant> = {
@@ -35,6 +37,8 @@ export default function GlassCard({
     tone = 'inherit',
     semanticTint = 'none',
     semanticTintOpacity,
+    chromiumAppearance,
+    materialFinish,
 }: GlassCardProps) {
     const resolvedRadius = radius ?? (variant === 'apple' || variant === 'ultimate' ? 24 : 40)
 
@@ -48,6 +52,8 @@ export default function GlassCard({
             tone={tone}
             semanticTint={semanticTint}
             semanticTintOpacity={semanticTintOpacity}
+            chromiumAppearance={chromiumAppearance}
+            materialFinish={materialFinish}
         >
             {children}
         </TahoeGlassSurface>

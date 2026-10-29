@@ -94,7 +94,7 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                 <Skeleton className="h-8 w-64 mb-12 bg-white/10" />
 
                 {/* Section 1 Skeleton */}
-                <div className="mb-10 pb-10 border-b border-white/10">
+                <div className="mb-10 pb-10 border-b border-slate-500/15">
                     <Skeleton className="h-6 w-48 mb-4 bg-white/10" />
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <Skeleton className="h-[200px] w-full rounded-2xl bg-white/5" />
@@ -114,23 +114,23 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
     return (
         <div className="space-y-6">
             <GlassCard refractive className="p-6 lg:p-8 relative pt-[48px]">
-                <h2 className="text-2xl font-bold text-white mb-12 lg:mb-8">Referral records & payout details</h2>
+                <h2 className="text-2xl font-bold text-slate-950 mb-12 lg:mb-8">Referral records & payout details</h2>
 
                 {/* Section 1: Referral Identity */}
-                <div className="mb-10 pb-10 border-b border-white/10">
-                    <h3 className="text-xl font-bold text-white mb-4">Archived referral code</h3>
+                <div className="mb-10 pb-10 border-b border-slate-500/15">
+                    <h3 className="text-xl font-bold text-slate-950 mb-4">Archived referral code</h3>
 
                     {/* Two-column layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Left Column: Referral Code Display with Copy Button */}
                         <div className="space-y-3">
-                            <TahoeGlassSurface variant="recessed" radius={12} tone="light" className="h-[54px] max-w-md" contentClassName="flex h-full items-center">
+                            <TahoeGlassSurface variant="recessed" radius={12} tone="dark" className="h-[54px] max-w-md" contentClassName="flex h-full items-center">
                                     {/* Read-only code display */}
                                     <input
                                         type="text"
                                         value={stats?.referralCode || ''}
                                         readOnly
-                                        className="flex-1 min-w-0 bg-transparent border-none outline-none text-[22px] font-medium text-white px-4 select-all cursor-pointer"
+                                        className="flex-1 min-w-0 bg-transparent border-none outline-none text-[22px] font-medium text-slate-950 px-4 select-all cursor-pointer"
                                         style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}
                                         onClick={copyReferralCode}
                                     />
@@ -161,16 +161,16 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                             </div>
 
                             {/* Earnings Page Link */}
-                            <p className="text-white/60 text-sm">
-                                Check out our <a href="/earnings" target="_blank" rel="noopener noreferrer" className="text-white underline hover:no-underline">Referral programme status</a> for more information
+                            <p className="text-slate-900 text-sm">
+                                Check out our <a href="/earnings" target="_blank" rel="noopener noreferrer" className="text-slate-950 underline hover:no-underline">Referral programme status</a> for more information
                             </p>
                         </div>
 
                         <div className="space-y-4">
-                            <p className="text-white/70 text-sm leading-relaxed">
+                            <p className="text-slate-900 text-sm leading-relaxed">
                                 Premium profile access is currently free. Paid subscriptions and new subscription-based referral commissions are paused.
                             </p>
-                            <p className="text-white/70 text-sm leading-relaxed">
+                            <p className="text-slate-900 text-sm leading-relaxed">
                                 This code and your referral records are retained for reference. Your PayPal payout details can still be updated below.
                             </p>
                         </div>
@@ -178,33 +178,33 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                 </div>
 
                 {/* Section 2: Earnings Statistics */}
-                <div className="mb-10 pb-10 border-b border-white/10">
+                <div className="mb-10 pb-10 border-b border-slate-500/15">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Left Column: Total Users */}
-                        <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="p-6">
-                            <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">Recorded active referrals</h4>
-                            <p className="text-4xl font-bold text-white">{stats?.activeReferrals || 0}</p>
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" semanticTint="light" semanticTintOpacity={0.18} radius={16} tone="dark" className="nsso-crystal-panel p-6">
+                            <h4 className="text-slate-900 text-sm font-medium uppercase tracking-wider mb-2">Recorded active referrals</h4>
+                            <p className="text-4xl font-bold text-slate-950">{stats?.activeReferrals || 0}</p>
                         </TahoeGlassSurface>
 
                         {/* Programme status */}
-                        <TahoeGlassSurface variant="card" semanticTint="dark" semanticTintOpacity={0.38} radius={16} tone="light" className="p-6">
-                            <h4 className="text-white/60 text-sm font-medium uppercase tracking-wider mb-2">New referral commissions</h4>
-                            <p className="text-2xl font-bold text-white">Paused</p>
+                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="card" semanticTint="light" semanticTintOpacity={0.18} radius={16} tone="dark" className="nsso-crystal-panel p-6">
+                            <h4 className="text-slate-900 text-sm font-medium uppercase tracking-wider mb-2">New referral commissions</h4>
+                            <p className="text-2xl font-bold text-slate-950">Paused</p>
                         </TahoeGlassSurface>
                     </div>
                 </div>
 
                 {/* Section 3: Payout Destination */}
                 <div>
-                    <h3 className="text-xl font-bold text-white mb-4">PayPal Username</h3>
+                    <h3 className="text-xl font-bold text-slate-950 mb-4">PayPal Username</h3>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Left: Input and Button */}
                         <div>
                             <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-4">
-                                <TahoeGlassSurface variant="recessed" radius={12} tone="light" className="h-[54px] w-full md:flex-1" contentClassName="flex h-full items-center px-4">
+                                <TahoeGlassSurface variant="recessed" radius={12} tone="dark" className="h-[54px] w-full md:flex-1" contentClassName="flex h-full items-center px-4">
                                         {/* Prefix */}
-                                        <span className="text-[22px] font-medium text-white/96 shrink-0" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
+                                        <span className="text-[22px] font-medium text-slate-900 shrink-0" style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}>
                                             paypal.me/
                                         </span>
 
@@ -214,7 +214,7 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
                                             value={paypalSlug}
                                             onChange={(e) => setPaypalSlug(e.target.value)}
                                             placeholder="username"
-                                            className="flex-1 min-w-0 bg-transparent border-none outline-none text-[22px] font-medium text-white placeholder:text-white/50"
+                                            className="flex-1 min-w-0 bg-transparent border-none outline-none text-[22px] font-medium text-slate-950 placeholder:text-slate-900"
                                             style={{ fontFamily: "'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif", fontWeight: 510 }}
                                         />
                                 </TahoeGlassSurface>
@@ -234,8 +234,8 @@ export default function EarningsTab({ initialData }: EarningsTabProps) {
 
                         {/* Right: Explanatory Text */}
                         <div className="flex items-center">
-                            <p className="text-white/70 text-sm leading-relaxed">
-                                Go to <a href="https://www.paypal.me" target="_blank" rel="noopener noreferrer" className="text-white underline hover:no-underline">www.paypal.me</a> and click on "My PayPal Me" in the upper right corner. Log in with your account credentials. It will show you your paypal.me link there.
+                            <p className="text-slate-900 text-sm leading-relaxed">
+                                Go to <a href="https://www.paypal.me" target="_blank" rel="noopener noreferrer" className="text-slate-950 underline hover:no-underline">www.paypal.me</a> and click on "My PayPal Me" in the upper right corner. Log in with your account credentials. It will show you your paypal.me link there.
                             </p>
                         </div>
                     </div>

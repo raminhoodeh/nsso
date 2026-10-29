@@ -4,6 +4,7 @@ import { compile } from '@tailwindcss/node'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expectWhiteEditorControls } from './helpers/white-control-assertions.mjs'
+import { DECK_BACKGROUND_ASSET, DECK_BACKGROUND_COLOR } from '../../src/lib/deck-background.ts'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, securityCss
@@ -64,6 +65,7 @@ async function fixture(page, path, initialMode = 'ok') {
     const isSecurity = new URL(path, 'https://nsso.test').pathname === '/dashboard/security'
     await page.route('**/*', route => {
         const url = new URL(route.request().url())
+        if (isSecurity && url.origin === 'https://nsso.test' && url.pathname === DECK_BACKGROUND_ASSET) return route.fulfill({ contentType: 'image/webp', body: readFileSync(root + 'public' + DECK_BACKGROUND_ASSET) })
         if (url.hostname === 'nsso.test' && !url.pathname.startsWith('/api/')) return route.fulfill({ contentType: 'text/html', body: (isSecurity ? '<meta name="viewport" content="width=device-width,initial-scale=1">' : '') + '<div id="root"></div>' })
         if (url.pathname.startsWith('/api/')) {
             requests.push({ path: url.pathname, method: route.request().method(), body: route.request().postData() })
@@ -73,7 +75,12 @@ async function fixture(page, path, initialMode = 'ok') {
         throw new Error('Unexpected nonlocal request in isolated account fixture: ' + url.origin)
     })
     await page.goto('https://nsso.test' + path)
-    if (isSecurity) await page.addStyleTag({ content: securityCss })
+    // The app shell supplies this exact static deck scene on security routes.
+    // Keep native translucent controls over those pixels, not the bare black html fallback.
+    if (isSecurity) {
+        await page.addStyleTag({ content: securityCss + `\nbody{min-height:100vh;background:${DECK_BACKGROUND_COLOR} url('${DECK_BACKGROUND_ASSET}') center/cover fixed}` })
+        await page.evaluate(async asset => { const image = new Image(); image.src = asset; await image.decode() }, DECK_BACKGROUND_ASSET)
+    }
     await page.evaluate(mode => { window.fixtureInitialMode = mode }, initialMode)
     await page.addScriptTag({ content: bundle })
     return requests

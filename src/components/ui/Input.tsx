@@ -37,15 +37,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({
     label,
     prefix,
     error,
-    tone = 'light',
+    tone = 'dark',
     className = '',
     ...props
 }, ref) => {
     return (
         <TahoeGlassField
-            className="w-full [&>p[role=alert]]:mt-1 [&>p[role=alert]]:text-[13px] [&>p[role=alert]]:text-red-400"
+            className="w-full [&>p[role=alert]]:mt-1 [&>p[role=alert]]:text-[13px] [&>p[role=alert]]:text-red-950"
             label={label || undefined}
-            labelClassName={`mb-2 text-[13px] font-medium ${tone === 'dark' ? 'text-slate-950/70' : 'text-white/70'}`}
+            labelClassName={`mb-2 text-[13px] font-medium ${tone === 'dark' ? 'text-slate-950' : 'text-white/70'}`}
             error={error || undefined}
             tone={tone}
             surfaceClassName={`focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 ${tone === 'dark' ? 'focus-within:outline-slate-950/60' : 'focus-within:outline-white/80'} ${error ? 'ring-2 ring-red-400' : ''} ${className}`}

@@ -74,7 +74,7 @@ function AccountSecurityForm({ userId, refreshUser }: { userId: string; refreshU
         } catch { setMessage('Other sessions could not be signed out. Please retry.') }
         finally { setBusy(false) }
     }
-    return <main className="mx-auto max-w-xl space-y-5 px-5 pb-20 pt-32 text-white">
+    return <main className="mx-auto max-w-xl space-y-5 px-5 pb-20 pt-32 text-slate-950">
         <h1 className="text-3xl font-semibold">Account security</h1>
         <p>Administrator access and RazinFlix editing require an authenticator code. Ordinary profile editing stays available after your normal sign-in.</p>
         {verified ? <p role="status">Your current session has passed two-step verification.</p> : <>
@@ -84,8 +84,8 @@ function AccountSecurityForm({ userId, refreshUser }: { userId: string; refreshU
             {qr && <div className="space-y-3 rounded-2xl bg-white p-5 text-black"><p>Scan this code privately with your authenticator app. Keep access to your sign-in email and authenticator for recovery.</p>{/* Auth-generated QR is an image, never mounted as HTML. */}
                 <img src={qr} alt="Authenticator setup QR code" className="mx-auto h-56 w-56" /><p>On this phone, enter the setup key in your authenticator instead of scanning.</p><label className="block">Authenticator setup key<input readOnly value={setupKey} autoComplete="off" className="mt-2 w-full rounded border border-black/30 p-2 font-mono text-sm" onFocus={event => event.target.select()} /></label><LightButton type="button" disabled={busy} onClick={() => { void cancelEnrollment() }} className="min-h-11 px-4 py-2" contentClassName="text-sm">Cancel this setup</LightButton></div>}
             {factorId && <form onSubmit={verify} className="space-y-4">
-                {factors.length > 1 && <label className="block">Authenticator<select value={factorId} onChange={event => setFactorId(event.target.value)} className="block w-full rounded-xl bg-slate-900 p-3">{factors.map((factor, index) => <option key={factor.id} value={factor.id}>{factor.friendly_name || `Authenticator ${index + 1}`}</option>)}</select></label>}
-                <label className="block">Six-digit authenticator code<input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" required className="mt-2 block w-full rounded-xl bg-slate-900 p-3 text-base" /></label>
+                {factors.length > 1 && <label className="block">Authenticator<select value={factorId} onChange={event => setFactorId(event.target.value)} className="block w-full rounded-xl bg-white/75 p-3">{factors.map((factor, index) => <option key={factor.id} value={factor.id}>{factor.friendly_name || `Authenticator ${index + 1}`}</option>)}</select></label>}
+                <label className="block">Six-digit authenticator code<input value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" required className="mt-2 block w-full rounded-xl bg-white/75 p-3 text-base" /></label>
                 <LightButton type="submit" disabled={busy || code.length !== 6} className="min-h-12 px-4 py-2 disabled:opacity-50" contentClassName="text-sm">{busy ? 'Checking…' : 'Verify and continue'}</LightButton>
             </form>}
         </>}
@@ -97,7 +97,7 @@ function AccountSecurityForm({ userId, refreshUser }: { userId: string; refreshU
 
 export default function AccountSecurityPage() {
     const { user, loading, refreshUser } = useUser()
-    if (loading) return <main className="p-8 pt-32 text-white">Loading security settings…</main>
-    if (!user) return <main className="p-8 pt-32 text-white"><Link href="/sign-in?next=/dashboard/security">Sign in to manage account security</Link></main>
+    if (loading) return <main className="p-8 pt-32 text-slate-950">Loading security settings…</main>
+    if (!user) return <main className="p-8 pt-32 text-slate-950"><Link href="/sign-in?next=/dashboard/security">Sign in to manage account security</Link></main>
     return <AccountSecurityForm key={user.id} userId={user.id} refreshUser={refreshUser} />
 }

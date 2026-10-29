@@ -48,7 +48,7 @@ export default function PayPalSmartButton({ html, config, preview = false }: Pay
         }
     }, [hostedId, currency, preview, retry, attempt])
 
-    if (!payment) return html || config ? <p className="py-2 text-center text-xs text-white/70">Payment button unavailable. Please contact the seller.</p> : null
+    if (!payment) return html || config ? <p className="py-2 text-center text-xs text-slate-950">Payment button unavailable. Please contact the seller.</p> : null
     const buttonClass = 'min-h-11 w-full whitespace-nowrap rounded-md border border-amber-400/50 bg-[#ffc439] px-5 py-3 text-center font-semibold text-black disabled:cursor-default disabled:opacity-75'
     if (preview) return <PreviewCheckoutButton className="w-full max-w-[15rem]" buttonClassName={buttonClass}>Buy via PayPal</PreviewCheckoutButton>
     if (payment.kind === 'payment-form') {
@@ -59,6 +59,6 @@ export default function PayPalSmartButton({ html, config, preview = false }: Pay
             </form>
         )
     }
-    if (failed) return <div role="status" className="py-2 text-center text-xs text-white/70"><p>PayPal could not load.</p><LightButton type="button" className="mt-2 min-h-11 px-3 py-2" onClick={() => setRetry(value => value + 1)}>Retry PayPal</LightButton></div>
+    if (failed) return <div role="status" className="py-2 text-center text-xs text-slate-950"><p>PayPal could not load.</p><LightButton type="button" className="mt-2 min-h-11 px-3 py-2" onClick={() => setRetry(value => value + 1)}>Retry PayPal</LightButton></div>
     return <div ref={containerRef} className="relative z-10 w-full max-w-[15rem]" data-paypal-kind="hosted-button" />
 }
