@@ -10,7 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
-import { productCheckoutVisibility, productPageIsPublic } from '@/lib/payments/product-presentation'
+import { productCheckoutVisibility, productPageIsPublic, purchaseButtonLabel } from '@/lib/payments/product-presentation'
 import { safeWebUrl } from '@/lib/urls'
 import { offeringEditorHref } from '@/lib/offering-navigation'
 import {
@@ -34,7 +34,7 @@ function PurchaseLink({ href }: { href: string }) {
             data-nsso-control="white"
             className={cn(lightButtonClass, 'h-11 w-full rounded-xl px-4 text-base font-semibold tracking-wide')}
         >
-            <span data-light-button-content="true">Link to Purchase</span>
+            <span data-light-button-content="true">{purchaseButtonLabel(destination)}</span>
         </a>
     )
 }
@@ -331,7 +331,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full">Link to Purchase</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
+                                    {preview ? <PreviewCheckoutButton className="w-full">{purchaseButtonLabel(checkout.purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 
@@ -472,7 +472,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrl && (
                                 <div className="w-full max-w-[280px] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full">Link to Purchase</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
+                                    {preview ? <PreviewCheckoutButton className="w-full">{purchaseButtonLabel(checkout.purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={checkout.purchaseUrl} />}
                                 </div>
                             )}
 

@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/tahoe-glass'
 import { LightButton, LightIconButton, LightCloseButton, lightButtonClass } from '@/components/ui/LightButton'
 import { cn } from '@/lib/utils'
+import { purchaseButtonLabel } from '@/lib/payments/product-presentation'
+import { safeWebUrl } from '@/lib/urls'
 
 function CreatorRouteContent({ children }: { children: ReactNode }) {
     return <>{children}</>
@@ -188,6 +190,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
 
     const {products,loading,patchEntity,refreshProfile,getRevision,mutationState,productMutationState} = useProfile()
     const product = products.find(row => row.id === productId) || null
+    const purchaseUrl = safeWebUrl(product?.purchase_link)
     const productState = productMutationState || mutationState
     const saving = mutationState.status === 'saving' || productState.status === 'saving'
     const saved = mutationState.status === 'saved' && productState.status === 'saved'
@@ -461,22 +464,25 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                 )}
 
                                 {/* Purchase Link */}
-                                <TahoeGlassField
-                                    label="Purchase Link"
-                                    labelClassName="text-xs uppercase tracking-widest text-white/50"
-                                    tone="dark"
-                                    semanticTint="light"
-                                    semanticTintOpacity={0.16}
-                                    surfaceClassName="px-4 py-4"
-                                    controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
-                                >
-                                    <input
-                                        type="text"
-                                        value={product.purchase_link || ''}
-                                        onChange={(e) => updateProduct({ purchase_link: e.target.value })}
-                                        placeholder="https://..."
-                                    />
-                                </TahoeGlassField>
+                                <div>
+                                    <TahoeGlassField
+                                        label="Purchase Link"
+                                        labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.16}
+                                        surfaceClassName="px-4 py-4"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    >
+                                        <input
+                                            type="text"
+                                            value={product.purchase_link || ''}
+                                            onChange={(e) => updateProduct({ purchase_link: e.target.value })}
+                                            placeholder="https://..."
+                                        />
+                                    </TahoeGlassField>
+                                    {purchaseUrl && <p className="mt-2 text-xs text-white/75">Button preview: {purchaseButtonLabel(purchaseUrl)}</p>}
+                                </div>
 
                                 <div>
                                     <p className="mb-2 text-xs uppercase tracking-widest text-white/50">PayPal Button Code</p>

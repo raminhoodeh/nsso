@@ -14,7 +14,7 @@ import GlassButton from '@/components/ui/GlassButton'
 import { LightButton } from '@/components/ui/LightButton'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
-import { productCheckoutVisibility } from '@/lib/payments/product-presentation'
+import { productCheckoutVisibility, purchaseButtonLabel } from '@/lib/payments/product-presentation'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeWebUrl } from '@/lib/urls'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
@@ -326,8 +326,8 @@ export default function PreviewPage() {
                                         <div className="space-y-3 mt-auto">
                                             {checkout.purchaseUrl && (
                                                 <div className="w-full flex justify-center">
-                                                    <PreviewCheckoutButton className="w-[11.625rem]">
-                                                        Link to Purchase
+                                                    <PreviewCheckoutButton className="w-full max-w-[15rem] [&>button]:whitespace-nowrap">
+                                                        {purchaseButtonLabel(checkout.purchaseUrl)}
                                                     </PreviewCheckoutButton>
                                                 </div>
                                             )}

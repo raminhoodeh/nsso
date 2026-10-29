@@ -31,6 +31,7 @@ test.beforeAll(async () => {
         'src/components/ui/GlassCard.tsx',
         'src/components/ui/ImageCropperModal.tsx',
         'src/components/ui/PayPalSmartButton.tsx',
+        'src/components/ui/PreviewCheckoutButton.tsx',
         'src/components/ui/tahoe-glass/TahoeGlassOverlays.tsx',
         'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx',
         'src/components/ui/tahoe-glass/TahoeGlassField.tsx',
@@ -191,6 +192,49 @@ test('white offering controls preserve native upload focus, selection and distin
     }
     expect((await writes(page)).length).toBe(3)
     await page.screenshot({ path: testInfo.outputPath('white-offering-controls.png'), fullPage: true })
+})
+
+test('purchase label hints follow edits in the offering and creator without changing checkout settings', async ({ page }, testInfo) => {
+    await mount(page, { count: 1 })
+    await choose(page, 1).click()
+    const link = page.getByRole('textbox', { name: 'Purchase link', exact: true })
+    const scenarios = [
+        ['https://www.etsy.com/listing/123456/synthetic-guide', 'Buy on Etsy'],
+        ['https://synthetic-shop.myshopify.com/products/guide', 'Buy on Shopify'],
+        ['https://seller.example.test/guide?provider=etsy.com', 'View purchase page'],
+        ['https://etsy.com.attacker.example/guide', 'View purchase page'],
+        ['javascript:alert(1)', null],
+    ]
+    for (const [url, label] of scenarios) {
+        await link.fill(url)
+        await expect(link).toHaveValue(url)
+        if (label) await expect(page.getByText('Button preview: ' + label, { exact: true })).toBeVisible()
+        else await expect(page.getByText(/^Button preview:/)).toHaveCount(0)
+    }
+    const etsy = scenarios[0][0], shopify = scenarios[1][0]
+    await link.fill(etsy)
+    await expect(page.getByText('Button preview: Buy on Etsy', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const creator = page.locator('[data-sales-page-creator]')
+    await expect(creator.getByText('Button preview: Buy on Etsy', { exact: true })).toBeVisible()
+    const creatorLink = creator.getByRole('textbox', { name: 'Purchase Link', exact: true })
+    await creatorLink.fill(shopify)
+    await expect(creator.getByText('Button preview: Buy on Shopify', { exact: true })).toBeVisible()
+    await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
+    await expect(link).toHaveValue(shopify)
+    await expect(page.getByText('Button preview: Buy on Shopify', { exact: true })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveValue(paypal)
+    const merchant = page.getByRole('button', { name: 'Buy Now', exact: true })
+    await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
+    await expect(merchant).toHaveAttribute('type', 'button')
+    await expect(page.locator('form[action]')).toHaveCount(0)
+    await merchant.press('Enter')
+    await expect(page.getByRole('status').filter({ hasText: 'Checkout is disabled during profile preview' })).toBeVisible()
+    await expect(page.getByRole('switch', { name: 'Enable purchase link', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable PayPal button code', exact: true })).toHaveAttribute('aria-checked', 'true')
+    expect(await writes(page)).toEqual([...scenarios.map(([url]) => url), etsy, shopify].map(url => ({ kind: 'patch', entity: 'product', id: 'offering-1', patch: { purchase_link: url } })))
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
+    await page.screenshot({ path: testInfo.outputPath('purchase-label-hint-editor.png'), fullPage: true })
 })
 
 test('creator actions and visible 44px remove controls retain exact benefit and testimonial edits', async ({ page }, testInfo) => {
