@@ -12,6 +12,7 @@ import { useChromeGlassOptics, type GlassAppearance } from "./ChromeGlassOptics"
 import type { TahoeGlassMaterialSelection } from "@/lib/tahoe-glass/types";
 import { supportsChromeGlassGeometry } from "@/lib/tahoe-glass/chrome-policy";
 import { LiquidGlassMaterial } from "@/components/ui/apple-tahoe-liquid-glass-button";
+import { SuppliedGlassReadability } from "./SuppliedGlassReadability";
 
 export type TahoeGlassSurfaceElement =
   | "div"
@@ -299,6 +300,8 @@ export const TahoeGlassSurface = React.forwardRef<
 
       {isGlassButton && !suppliedMaterial && <span aria-hidden="true" data-tahoe-button-reflection="true" />}
 
+      {suppliedMaterial && tone === "dark" && <SuppliedGlassReadability mode={suppliedMaterialMode} solid={suppliedMaterialSolid} />}
+
       {resolvedTint !== "none" && (
         <span
           aria-hidden="true"
@@ -329,7 +332,7 @@ export const TahoeGlassSurface = React.forwardRef<
 
       <Content
         data-tahoe-button-content={isGlassButton ? "true" : undefined}
-        className={cn("relative z-20", TONE_CLASS[tone], contentClassName)}
+        className={cn("relative z-20", suppliedMaterial && tone === "dark" ? "text-slate-950 [text-shadow:none]" : TONE_CLASS[tone], contentClassName)}
       >
         {children}
       </Content>

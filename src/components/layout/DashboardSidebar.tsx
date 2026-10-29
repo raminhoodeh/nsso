@@ -248,7 +248,7 @@ function DashboardSidebarContent({
                     intent="danger"
                     disabled={signingOut}
                     radius={12}
-                    className="group w-full px-4 py-3 text-left transition-colors focus-visible:text-rose-950"
+                    className="group w-full px-4 py-3 text-left transition-colors focus-visible:text-nsso-danger"
                     contentClassName="w-full justify-start gap-3 text-inherit"
                 >
                     <LogOut size={18} className="transition-colors" />

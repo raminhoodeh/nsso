@@ -51,6 +51,12 @@
   --font-sans: var(--font-sf-pro);
 }
 
+/* Dark red remains legible through the supplied transparent glass in WebKit. */
+@theme {
+  --color-nsso-danger: #3b0714;
+  --color-nsso-danger-hover: #24030b;
+}
+
 /* ============================================
    Base Styles
    ============================================ */

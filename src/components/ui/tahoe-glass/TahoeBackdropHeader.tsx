@@ -31,6 +31,7 @@ import { useChromeGlassOptics, type GlassAppearance } from "./ChromeGlassOptics"
 import type { TahoeGlassMaterialSelection } from "@/lib/tahoe-glass/types";
 import { supportsChromeGlassGeometry } from "@/lib/tahoe-glass/chrome-policy";
 import { LiquidGlassMaterial } from "@/components/ui/apple-tahoe-liquid-glass-button";
+import { SuppliedGlassReadability } from "./SuppliedGlassReadability";
 
 type TahoeBackdropMode = "svg" | "css-blur" | "solid";
 type TahoeOwnedSceneState = "idle" | "initializing" | "active" | "failed";
@@ -1003,6 +1004,8 @@ export const TahoeBackdropSurface = React.forwardRef<
           }}
         />}
 
+        {suppliedMaterial && tone === "dark" && <SuppliedGlassReadability mode={suppliedMaterialMode} solid={mode === "solid"} />}
+
         {resolvedTint !== "none" && (
           <span
             aria-hidden="true"
@@ -1036,7 +1039,7 @@ export const TahoeBackdropSurface = React.forwardRef<
           <div
             className={cn(
               "relative z-20",
-              TONE_CLASS[tone],
+              suppliedMaterial && tone === "dark" ? "text-slate-950 [text-shadow:none]" : TONE_CLASS[tone],
               contentClassName,
             )}
           >

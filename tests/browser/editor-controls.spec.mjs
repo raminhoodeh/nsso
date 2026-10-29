@@ -8,7 +8,7 @@ import { renderedControlContrast } from './helpers/white-control-assertions.mjs'
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/components/profile/ProfileGlassCard.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx', 'src/components/ui/apple-tahoe-liquid-glass-button.tsx', 'src/components/ui/tahoe-glass/NativeGlassLens.tsx', 'src/components/providers/TahoeGlassProvider.tsx']
+    const files = ['src/components/layout/DashboardSidebar.tsx', 'src/components/layout/DeleteProfileDialog.tsx', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/ComingSoonBadge.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/app/dashboard/components/DashboardGlassCard.tsx', 'src/components/profile/ProfileGlassCard.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx', 'src/components/ui/apple-tahoe-liquid-glass-button.tsx', 'src/components/ui/tahoe-glass/NativeGlassLens.tsx', 'src/components/ui/tahoe-glass/SuppliedGlassReadability.tsx', 'src/components/providers/TahoeGlassProvider.tsx']
     const candidates = files.flatMap(file => [...readFileSync(root + file, 'utf8').matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/)))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
     css = compiler.build(candidates)
@@ -186,8 +186,8 @@ test.describe('desktop sidebar affordances', () => {
             await expect(signout).toHaveAttribute('data-nsso-control', 'white')
             await expect(signout).toHaveAttribute('data-tahoe-native-lens', 'supplied')
             await expect(signout.locator('[data-tahoe-button-coat], [data-tahoe-button-reflection]')).toHaveCount(0)
-            const idleExpected = await paintedColour(signout, '--color-rose-950')
-            const hoverExpected = await paintedColour(signout, '--color-red-950')
+            const idleExpected = await paintedColour(signout, '--color-nsso-danger')
+            const hoverExpected = await paintedColour(signout, '--color-nsso-danger-hover')
             const box = await signout.boundingBox()
             expect(box.width).toBeGreaterThanOrEqual(44)
             expect(box.height).toBeGreaterThanOrEqual(44)
@@ -260,10 +260,10 @@ test.describe('desktop sidebar affordances', () => {
         await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
         await expect(dialog).toHaveCount(0)
         const signout = sidebar.getByRole('button', { name: 'Sign Out', exact: true })
-        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-rose-950'))
+        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-nsso-danger'))
         const idleColour = await paintedColour(signout)
         await signout.hover()
-        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-red-950'))
+        await expect.poll(() => paintedColour(signout)).toEqual(await paintedColour(signout, '--color-nsso-danger-hover'))
         const hoverColour = await paintedColour(signout)
         expect(luminance(hoverColour)).toBeLessThan(luminance(idleColour))
         await signout.click()

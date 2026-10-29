@@ -4,6 +4,7 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import { LiquidGlassMaterial } from '@/components/ui/apple-tahoe-liquid-glass-button'
 import { useTahoeNativeLens } from './useTahoeNativeLens'
+import { SuppliedGlassReadability } from './SuppliedGlassReadability'
 
 type NativeGlassLensOwnProps = {
     as?: React.ElementType
@@ -30,6 +31,7 @@ export const NativeGlassLens = React.forwardRef<HTMLElement, NativeGlassLensOwnP
         data-tahoe-native-solid={lens.solid ? 'true' : undefined}
     >
         {lens.enabled && <LiquidGlassMaterial mode={lens.mode} solid={lens.solid} />}
+        {lens.enabled && <SuppliedGlassReadability mode={lens.mode} solid={lens.solid} native />}
         {children}
     </Component>
 }) as NativeGlassLensComponent

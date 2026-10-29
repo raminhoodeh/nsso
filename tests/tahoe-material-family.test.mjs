@@ -54,6 +54,7 @@ const dependencies = {
         useChromeGlassOptics: (_ref, eligible) => ({ enabled: eligible, ready: eligible, layers: null }),
     },
 }
+dependencies['./SuppliedGlassReadability'] = loadSurface('src/components/ui/tahoe-glass/SuppliedGlassReadability.tsx', dependencies)
 dependencies['@/components/ui/apple-tahoe-liquid-glass-button'] = loadSurface('src/components/ui/apple-tahoe-liquid-glass-button.tsx', dependencies)
 const { TahoeGlassSurface } = loadSurface('src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', dependencies)
 const { TahoeBackdropSurface } = loadSurface('src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx', dependencies)
@@ -66,6 +67,19 @@ function renderWithFamily(Component, props = {}, materialFamily = 'supplied', di
         value: { materialFamily, diagnostics },
     }, React.createElement(Component, props, React.createElement(BoundaryProbe))))
 }
+
+test('the separate reading layer is limited to dark copy on the supplied active WebGL path', () => {
+    for (const Component of [TahoeGlassSurface, TahoeBackdropSurface]) {
+        for (const [status, backend] of [['active', 'svg'], ['active', 'webgl'], ['fallback', 'css-blur'], ['fallback', 'solid']]) {
+            const diagnostics = { ...activeDiagnostics, status, backend }
+            const html = renderWithFamily(Component, { tone: 'dark' }, 'supplied', diagnostics)
+            assert.equal((html.match(/data-tahoe-control-readability="true"/g) || []).length, status === 'active' && backend === 'webgl' ? 1 : 0)
+            assert.equal((html.match(/data-supplied-glass-layer=/g) || []).length, 2)
+        }
+        const candidate = renderWithFamily(Component, { tone: 'dark' }, 'candidate', { ...activeDiagnostics, backend: 'webgl' })
+        assert.doesNotMatch(candidate, /data-tahoe-control-readability=/)
+    }
+})
 
 test('core shared surface metadata distinguishes supplied optics from the candidate override', () => {
     const supplied = renderWithFamily(TahoeGlassSurface)

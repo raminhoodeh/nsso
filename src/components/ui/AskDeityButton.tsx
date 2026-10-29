@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { LIGHT_PANEL } from './light-panel'
 import { LiquidGlassMaterial } from './apple-tahoe-liquid-glass-button'
 import { useTahoeNativeLens } from './tahoe-glass/useTahoeNativeLens'
+import { SuppliedGlassReadability } from './tahoe-glass/SuppliedGlassReadability'
 
 type AskDeityButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'>
 
@@ -33,6 +34,7 @@ const AskDeityButton = forwardRef<HTMLButtonElement, AskDeityButtonProps>(functi
             style={{ height: 28, fontSize: 12, lineHeight: '16px' }}
         >
             {lens.enabled && <LiquidGlassMaterial mode={lens.mode} solid={lens.solid} />}
+            {lens.enabled && <SuppliedGlassReadability mode={lens.mode} solid={lens.solid} native />}
             <Sparkles size={12} aria-hidden="true" />
             <span>Ask Deity</span>
         </span>

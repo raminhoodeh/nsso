@@ -42,7 +42,7 @@ const fixture = `
 `
 
 test.beforeAll(async () => {
-    const files = ['src/app/dashboard/components/DashboardGlassCard.tsx', 'src/components/profile/ProfileGlassCard.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/apple-tahoe-liquid-glass-button.tsx', 'src/components/ui/tahoe-glass/NativeGlassLens.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx', 'src/components/providers/TahoeGlassProvider.tsx']
+    const files = ['src/app/dashboard/components/DashboardGlassCard.tsx', 'src/components/profile/ProfileGlassCard.tsx', 'src/components/ui/GlassCard.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/AskDeityButton.tsx', 'src/components/ui/apple-tahoe-liquid-glass-button.tsx', 'src/components/ui/tahoe-glass/NativeGlassLens.tsx', 'src/components/ui/tahoe-glass/SuppliedGlassReadability.tsx', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeBackdropHeader.tsx', 'src/components/providers/TahoeGlassProvider.tsx']
     const sources = files.map(file => readFileSync(root + file, 'utf8')).join('\n') + fixture
     const candidates = [...sources.matchAll(/["'`]([^"'`\n]+)["'`]/g)].flatMap(match => match[1].split(/\s+/))
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })

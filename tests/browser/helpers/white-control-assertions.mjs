@@ -50,7 +50,7 @@ export async function renderedControlContrast(control, { includeBackground = fal
             samples.push({ x: rect.x - box.x, y: rect.y - box.y, width: rect.width, height: rect.height, ink: rgba(icon) })
         }
         // Preserve geometry and material; hide only foreground descendants.
-        const hidden = label === material ? [...label.children].filter(element => !element.hasAttribute('data-supplied-glass-layer')) : [label]
+        const hidden = label === material ? [...label.children].filter(element => !element.hasAttribute('data-supplied-glass-layer') && !element.hasAttribute('data-tahoe-control-readability')) : [label]
         for (const element of hidden) { element.dataset.contrastVisibility = element.style.visibility; element.style.visibility = 'hidden' }
         return { samples, opacity: Number(getComputedStyle(button).opacity) }
     })
@@ -111,6 +111,7 @@ export async function expectWhiteEditorControls(container, { photoException = fa
             suppliedLayers: { coat: material.querySelectorAll(':scope > [data-supplied-glass-layer="coat"]').length, rim: material.querySelectorAll(':scope > [data-supplied-glass-layer="rim"]').length },
             coat: coat && { background: rgba(getComputedStyle(coat).backgroundColor), image: getComputedStyle(coat).backgroundImage, shadow: getComputedStyle(coat).boxShadow, filter: getComputedStyle(coat).backdropFilter },
             rim: rim && { image: getComputedStyle(rim).backgroundImage, events: getComputedStyle(rim).pointerEvents },
+            readability: [...material.querySelectorAll(':scope > [data-tahoe-control-readability]')].map(element => ({ background: rgba(getComputedStyle(element).backgroundColor), events: getComputedStyle(element).pointerEvents, decorative: element.getAttribute('aria-hidden') })),
             gradient: style.backgroundImage,
             solidMode: matchMedia('(forced-colors: active), (prefers-reduced-transparency: reduce)').matches || material.dataset.tahoeNativeSolid === 'true',
             disabled: button.disabled || button.getAttribute('aria-disabled') === 'true',
@@ -138,6 +139,7 @@ export async function expectWhiteEditorControls(container, { photoException = fa
                 expect(control.background[3], control.label + ' transparent native shell').toBe(0)
                 expect(control.gradient, control.label + ' no replacement shell paint').toBe('none')
                 const webgl = control.provider.state === 'active' && control.provider.backend === 'webgl'
+                expect(control.readability, control.label + ' separate minimal WebGL reading layer').toEqual(webgl ? [{ background: [255, 255, 255, 31], events: 'none', decorative: 'true' }] : [])
                 expect(control.coat.background[3], control.label + ' original supplied coat').toBe(webgl ? 0 : 64)
                 if (!webgl) {
                     expect(control.coat.background.slice(0, 3), control.label + ' neutral original coat').toEqual([255, 255, 255])
