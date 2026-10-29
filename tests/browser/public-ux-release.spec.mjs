@@ -86,10 +86,10 @@ for (const options of [{ available: false }, { availabilityError: true }]) test(
 test('generic long bio expands and collapses without losing any saved text', async ({ page }) => {
   await fixture(page, 'bio')
   const before = await page.locator('p > span').textContent()
-  expect(before.length).toBeLessThanOrEqual(600)
-  await page.getByRole('button', { name: 'Show full bio' }).click()
+  expect(before.length).toBeLessThanOrEqual(75)
+  await page.getByRole('button', { name: 'Read more about bio' }).click()
   expect((await page.locator('p > span').textContent()).length).toBeGreaterThan(2000)
-  await page.getByRole('button', { name: 'Collapse bio' }).click()
+  await page.getByRole('button', { name: 'Read less about bio' }).click()
   expect(await page.locator('p > span').textContent()).toBe(before)
 })
 
