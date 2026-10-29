@@ -281,3 +281,34 @@ test('sales-page publication control reflects explicit visibility rather than a 
     await expectCompactSwitch(toggle, { checked: false })
     await expect(page.getByText('Sales page is not published', { exact: true })).toBeVisible()
 })
+
+
+test('real provider persists the second course destination from both editors across snapshot refreshes', async ({ page }) => {
+    const primary = 'https://www.udemy.com/course/synthetic-primary/'
+    const secondary = 'https://www.coursera.org/learn/synthetic-secondary'
+    const replacement = 'https://www.coursera.org/learn/synthetic-updated'
+    await mount(page, [{ ...product(first, 'QA course'), purchase_link: primary, purchase_link_active: true }])
+    await select(page, 'QA course')
+    const input = page.getByRole('textbox', { name: 'Second purchase link (optional)', exact: true })
+    await input.fill(secondary)
+    await expect.poll(() => page.evaluate(() => window.fixtureState.products[0].secondary_purchase_link)).toBe(secondary)
+    await page.getByRole('button', { name: 'Refresh fixture snapshot', exact: true }).click()
+    await expect(input).toHaveValue(secondary)
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const creator = page.locator('[data-sales-page-creator]')
+    const creatorInput = creator.getByRole('textbox', { name: 'Second Purchase Link (optional)', exact: true })
+    await expect(creatorInput).toHaveValue(secondary)
+    await creatorInput.fill(replacement)
+    await expect.poll(() => page.evaluate(() => window.fixtureState.products[0].secondary_purchase_link)).toBe(replacement)
+    await page.getByRole('button', { name: 'Refresh fixture snapshot', exact: true }).click()
+    await expect(creatorInput).toHaveValue(replacement)
+    await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
+    await expect(input).toHaveValue(replacement)
+    await expect(page.getByRole('textbox', { name: 'Purchase link', exact: true })).toHaveValue(primary)
+    expect(await page.evaluate(() => window.fixtureState.products[0].purchase_link)).toBe(primary)
+    expect(await page.evaluate(() => window.fixtureState.products[0].paypal_active)).toBe(false)
+    const posts = await page.evaluate(() => window.fixturePosts)
+    expect(posts).toHaveLength(2)
+    expect(posts.map(body => body.changes)).toEqual([secondary, replacement].map(url => [{ kind: 'product.patch', id: first, patch: { secondary_purchase_link: url } }]))
+    expect(posts.every(body => body.version === 1)).toBe(true)
+})

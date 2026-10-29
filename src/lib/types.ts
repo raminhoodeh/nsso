@@ -94,6 +94,7 @@ export interface Product {
     image_url: string | null
     description: string | null
     purchase_link: string | null
+    secondary_purchase_link?: string | null
     purchase_link_active: boolean
     paypal_html: string | null
     paypal_active: boolean

@@ -45,7 +45,7 @@ test.beforeAll(async () => {
             window.updatePreviewFixture=(account,profile)=>{if(account)window.fixtureAccount=account;if(profile)window.fixtureProfile=profile;window.fixtureListeners.forEach(fn=>fn())};
             window.fixtureRefreshes=0;window.fixtureNavigation=[];window.fixtureToasts=[];window.fixtureAuthCalls=0;
             window.fixtureAccount={user:{id:'${actor}',username:'fixture'},loading:false,error:null,refreshUser:async()=>{window.fixtureRefreshes++}};
-            window.fixtureProfile={profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Current draft headline',bio:'Current local bio',profile_pic_url:'/avatar.jpg'},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'£12',description:'Offering',sales_page_active:true,sales_page_published:true,purchase_link_active:true,purchase_link:window.fixturePurchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'}}],loading:false,mutationState:{status:'saved',message:''},refreshProfile:async()=>{window.fixtureRefreshes++},retryPending:async()=>{window.fixtureRefreshes++}};
+            window.fixtureProfile={profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Current draft headline',bio:'Current local bio',profile_pic_url:'/avatar.jpg'},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'£12',description:'Offering',sales_page_active:true,sales_page_published:true,purchase_link_active:window.fixturePurchaseActive,purchase_link:window.fixturePurchaseUrl,secondary_purchase_link:window.fixtureSecondaryPurchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'}}],loading:false,mutationState:{status:'saved',message:''},refreshProfile:async()=>{window.fixtureRefreshes++},retryPending:async()=>{window.fixtureRefreshes++}};
             createRoot(document.getElementById('root')).render(<Preview/>);
         ` } })
     bundle = result.outputFiles[0].text
@@ -65,7 +65,7 @@ test.beforeAll(async () => {
                                             : 'export default()=>null;' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import{renderToStaticMarkup}from'react-dom/server';import PublicProfile from'./src/app/[username]/page';import{setPublicFixture}from'@/lib/public-profile';
-            export async function render(purchaseUrl){setPublicFixture({user:{id:'${actor}',username:'fixture-public',is_premium:true},profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Synthetic public profile',bio:'Synthetic public bio',profile_pic_url:null},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'GBP 12',description:'Synthetic public offering',sales_page_active:false,sales_page_published:false,purchase_link_active:true,purchase_link:purchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'}}]});return renderToStaticMarkup(await PublicProfile({params:Promise.resolve({username:'fixture-public'})}));}
+            export async function render(purchaseUrl,secondaryPurchaseUrl=null,purchaseActive=true){setPublicFixture({user:{id:'${actor}',username:'fixture-public',is_premium:true},profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Synthetic public profile',bio:'Synthetic public bio',profile_pic_url:null},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'GBP 12',description:'Synthetic public offering',sales_page_active:false,sales_page_published:false,purchase_link_active:purchaseActive,purchase_link:purchaseUrl,secondary_purchase_link:secondaryPurchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'}}]});return renderToStaticMarkup(await PublicProfile({params:Promise.resolve({username:'fixture-public'})}));}
         ` } })
     const fixtureModule = { exports: {} }
     new Function('require', 'module', 'exports', publicResult.outputFiles[0].text)(createRequire(root + 'package.json'), fixtureModule, fixtureModule.exports)
@@ -158,7 +158,7 @@ test('invalid public profile purchase URL remains non-executable while PayPal fo
     await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
 })
 
-async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', styled = false } = {}) {
+async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', secondaryPurchaseUrl = null, purchaseActive = true, styled = false } = {}) {
     const errors = [], unexpected = []
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', route => {
@@ -168,7 +168,7 @@ async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', 
     })
     await page.goto('https://nsso.test/preview')
     if (styled) await page.addStyleTag({ content: publicCss })
-    await page.evaluate(value => { window.fixturePurchaseUrl = value }, purchaseUrl)
+    await page.evaluate(({ purchaseUrl, secondaryPurchaseUrl, purchaseActive }) => { window.fixturePurchaseUrl = purchaseUrl; window.fixtureSecondaryPurchaseUrl = secondaryPurchaseUrl; window.fixturePurchaseActive = purchaseActive }, { purchaseUrl, secondaryPurchaseUrl, purchaseActive })
     await page.addScriptTag({ content: bundle })
     return { errors, unexpected }
 }
@@ -264,4 +264,77 @@ test('clipboard failures are reported without a false success toast', async ({ p
     await page.evaluate(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw new Error('Synthetic denied clipboard') } } }))
     await page.getByRole('button', { name: 'Copy page URL', exact: true }).click()
     await expect.poll(() => page.evaluate(() => window.fixtureToasts)).toEqual([{ message: 'Could not copy the profile URL. Please try again.', type: 'error' }])
+})
+
+
+test('two course destinations render safe ordered white public links and inert profile-preview controls', async ({ page }, testInfo) => {
+    const primary = 'https://www.udemy.com/course/synthetic-ai-product/?couponCode=FIXTURE'
+    const secondary = 'https://www.coursera.org/learn/synthetic-ai-product'
+    const html = await renderPublicProfile(primary, secondary)
+    const unexpected = []
+    await page.route('**/*', route => {
+        if (route.request().url() !== 'https://nsso.test/public-profile') { unexpected.push(route.request().url()); return route.abort() }
+        return route.fulfill({ contentType: 'text/html', body: '<meta name="viewport" content="width=device-width,initial-scale=1">' + html })
+    })
+    await page.goto('https://nsso.test/public-profile')
+    await page.addStyleTag({ content: publicCss })
+    const merchant = page.getByRole('button', { name: 'Buy via PayPal', exact: true })
+    for (const [label, url] of [['View on Udemy', primary], ['View on Coursera', secondary]]) {
+        const purchase = page.getByRole('link', { name: label + ': Fixture offer', exact: true })
+        await expect(purchase).toHaveText(label)
+        await expect(purchase).toHaveAttribute('href', url)
+        await expect(purchase).toHaveAttribute('target', '_blank')
+        await expect(purchase).toHaveAttribute('rel', 'noopener noreferrer')
+        await expectOneLineWhitePurchase(page, purchase)
+        await expectMatchingPurchaseWidths(purchase, merchant)
+    }
+    expect((await page.getByRole('link', { name: /^View on (Udemy|Coursera): Fixture offer$/ }).allTextContents()).map(text => text.trim())).toEqual(['View on Udemy', 'View on Coursera'])
+    await expect(merchant).toHaveAttribute('type', 'submit')
+    await expect(merchant).toHaveCSS('background-color', 'rgb(255, 196, 57)')
+    await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
+    await expect(page.locator('form')).toHaveAttribute('method', 'post')
+    await expect(page.locator('form')).toHaveAttribute('target', '_top')
+    expect(unexpected).toEqual([])
+    await page.screenshot({ path: testInfo.outputPath('two-course-public-profile.png'), fullPage: true })
+
+    const preview = await fixture(page, { purchaseUrl: primary, secondaryPurchaseUrl: secondary, styled: true })
+    const previewPaypal = page.getByRole('button', { name: 'Buy via PayPal', exact: true })
+    for (const label of ['View on Udemy', 'View on Coursera']) {
+        const control = page.getByRole('button', { name: label, exact: true })
+        await expectOneLineWhitePurchase(page, control)
+        await expectMatchingPurchaseWidths(control, previewPaypal)
+        await control.press('Enter')
+    }
+    await previewPaypal.press('Space')
+    await expect(page.getByRole('status')).toHaveCount(3)
+    await expect(page.locator('form,script[src*="paypal"]')).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /^View on (Udemy|Coursera)$/ })).toHaveCount(0)
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+    expect(await page.evaluate(() => window.fixtureAuthCalls)).toBe(0)
+    expect(preview.errors).toEqual([])
+    expect(preview.unexpected).toEqual([])
+})
+
+test('public and preview second destinations honor deduplication, unsafe URL rejection and strict activation', async ({ page }) => {
+    const canonical = 'https://www.coursera.org/learn/synthetic'
+    for (const [primary, secondary, active, expected] of [
+        [' HTTPS://WWW.COURSERA.ORG:443/learn/synthetic ', canonical, true, 1],
+        ['javascript:alert(1)', canonical, true, 1],
+        [canonical, 'https://seller.example/\nunsafe', true, 1],
+        [canonical, 'https://www.udemy.com/course/synthetic', false, 0],
+    ]) {
+        const html = await renderPublicProfile(primary, secondary, active)
+        await page.setContent(html)
+        const links = page.getByRole('link', { name: /^View on (Udemy|Coursera): Fixture offer$/ })
+        await expect(links).toHaveCount(expected)
+        if (expected) await expect(links).toHaveAttribute('href', canonical)
+        await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)
+        await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
+        const state = await fixture(page, { purchaseUrl: primary, secondaryPurchaseUrl: secondary, purchaseActive: active })
+        await expect(page.getByRole('heading', { name: "I'm Fixture creator" })).toBeVisible()
+        await expect(page.getByRole('button', { name: /^View on (Udemy|Coursera)$/ })).toHaveCount(expected)
+        await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true })).toBeVisible()
+        expect(state.errors).toEqual([])
+        expect(state.unexpected).toEqual([])
+    }
 })

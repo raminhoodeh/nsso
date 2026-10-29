@@ -324,13 +324,13 @@ export default function PreviewPage() {
 
                                         {/* Action Buttons */}
                                         <div className="space-y-3 mt-auto">
-                                            {checkout.purchaseUrl && (
-                                                <div className="w-full flex justify-center">
-                                                    <PreviewCheckoutButton className="w-full max-w-[15rem] [&>button]:whitespace-nowrap">
-                                                        {purchaseButtonLabel(checkout.purchaseUrl)}
+                                            {checkout.purchaseUrls.map(purchaseUrl => (
+                                                <div key={purchaseUrl} className="w-full flex justify-center">
+                                                    <PreviewCheckoutButton className="w-full max-w-[15rem] [&>button]:h-11 [&>button]:whitespace-nowrap">
+                                                        {purchaseButtonLabel(purchaseUrl)}
                                                     </PreviewCheckoutButton>
                                                 </div>
-                                            )}
+                                            ))}
                                             {checkout.paypal && product.payment_config && (
                                                 <div className="w-full flex justify-center">
                                                     <PayPalSmartButton config={product.payment_config} preview />

@@ -191,6 +191,7 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
     const {products,loading,patchEntity,refreshProfile,getRevision,mutationState,productMutationState} = useProfile()
     const product = products.find(row => row.id === productId) || null
     const purchaseUrl = safeWebUrl(product?.purchase_link)
+    const secondaryPurchaseUrl = safeWebUrl(product?.secondary_purchase_link)
     const productState = productMutationState || mutationState
     const saving = mutationState.status === 'saving' || productState.status === 'saving'
     const saved = mutationState.status === 'saved' && productState.status === 'saved'
@@ -482,6 +483,26 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         />
                                     </TahoeGlassField>
                                     {purchaseUrl && <p className="mt-2 text-xs text-white/75">Button preview: {purchaseButtonLabel(purchaseUrl)}</p>}
+                                </div>
+
+                                <div>
+                                    <TahoeGlassField
+                                        label="Second Purchase Link (optional)"
+                                        labelClassName="text-xs uppercase tracking-widest text-white/50"
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.16}
+                                        surfaceClassName="px-4 py-4"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-[#545454] placeholder:text-[#545454]/50"
+                                    >
+                                        <input
+                                            type="url"
+                                            value={product.secondary_purchase_link || ''}
+                                            onChange={(e) => updateProduct({ secondary_purchase_link: e.target.value })}
+                                            placeholder="https://..."
+                                        />
+                                    </TahoeGlassField>
+                                    {secondaryPurchaseUrl && <p className="mt-2 text-xs text-white/75">Button preview: {purchaseButtonLabel(secondaryPurchaseUrl)}</p>}
                                 </div>
 
                                 <div>

@@ -8,7 +8,7 @@ const hooks = registerHooks({ resolve(specifier, context, next) {
     }
     return next(specifier, context)
 } })
-const { purchaseButtonLabel, productCheckoutVisibility } = await import('../src/lib/payments/product-presentation.ts')
+const { purchaseButtonLabel, productCheckoutVisibility, isCourseMarketplaceUrl } = await import('../src/lib/payments/product-presentation.ts')
 hooks.deregister()
 
 test('Etsy purchase labels follow the actual website hostname across valid web URLs', () => {
@@ -59,10 +59,59 @@ test('invalid and unsupported destinations keep the generic label and existing v
         'https://etsy.com/a\nb', 'https://etsy.com/a\\b', 'https://etsy.com/' + 'x'.repeat(4096),
     ]) {
         assert.equal(purchaseButtonLabel(url), 'View purchase page', String(url))
-        assert.deepEqual(productCheckoutVisibility({ purchase_link: url, purchase_link_active: true, paypal_active: true }), { purchaseUrl: null, paypal: true })
+        assert.deepEqual(productCheckoutVisibility({ purchase_link: url, purchase_link_active: true, paypal_active: true }), { purchaseUrl: null, purchaseUrls: [], paypal: true })
     }
-    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'https://www.etsy.com/listing/123', purchase_link_active: false, paypal_active: true }), { purchaseUrl: null, paypal: true })
-    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'https://www.etsy.com/listing/123', purchase_link_active: true, paypal_active: false }), { purchaseUrl: 'https://www.etsy.com/listing/123', paypal: false })
+    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'https://www.etsy.com/listing/123', purchase_link_active: false, paypal_active: true }), { purchaseUrl: null, purchaseUrls: [], paypal: true })
+    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'https://www.etsy.com/listing/123', purchase_link_active: true, paypal_active: false }), { purchaseUrl: 'https://www.etsy.com/listing/123', purchaseUrls: ['https://www.etsy.com/listing/123'], paypal: false })
+})
+
+test('course destinations receive platform-specific viewing labels only for validated domain boundaries', () => {
+    for (const [url, label] of [
+        ['https://udemy.com/course/fixture', 'View on Udemy'],
+        ['HTTPS://WWW.UDEMY.COM:443/course/fixture?coupon=fixture', 'View on Udemy'],
+        ['http://business.udemy.com/course/fixture', 'View on Udemy'],
+        ['https://coursera.org/learn/fixture', 'View on Coursera'],
+        ['https://www.coursera.org/learn/fixture?source=udemy.com', 'View on Coursera'],
+        ['https://partner.coursera.org/learn/fixture', 'View on Coursera'],
+    ]) {
+        assert.equal(purchaseButtonLabel(url), label, url)
+        assert.equal(isCourseMarketplaceUrl(url), true, url)
+    }
+    for (const url of [
+        'https://notudemy.com/course/fixture', 'https://udemy.com.evil.example/course/fixture',
+        'https://coursera.org.evil.example/learn/fixture', 'https://fakecoursera.org/learn/fixture',
+        'https://seller.example/udemy.com?next=https://coursera.org',
+        'https://udemy.com@evil.example/course/fixture', 'https://evil.example@coursera.org/learn/fixture',
+        'javascript:alert("coursera.org")', 'ftp://udemy.com/course/fixture', null, {}, '',
+    ]) {
+        assert.equal(purchaseButtonLabel(url), 'View purchase page', String(url))
+        assert.equal(isCourseMarketplaceUrl(url), false, String(url))
+    }
+})
+
+test('two validated purchase destinations retain normalized primary-secondary order without changing PayPal', () => {
+    const input = { purchase_link: '  HTTPS://WWW.UDEMY.COM:443/course/fixture  ', secondary_purchase_link: 'https://www.coursera.org/learn/fixture?source=nsso', purchase_link_active: true, paypal_active: true }
+    const original = structuredClone(input)
+    const urls = ['https://www.udemy.com/course/fixture', 'https://www.coursera.org/learn/fixture?source=nsso']
+    assert.deepEqual(productCheckoutVisibility(input), { purchaseUrl: urls[0], purchaseUrls: urls, paypal: true })
+    assert.deepEqual(input, original)
+})
+
+test('normalized duplicate destinations produce one action and a safe secondary can stand alone', () => {
+    const udemy = 'https://www.udemy.com/course/fixture'
+    assert.deepEqual(productCheckoutVisibility({ purchase_link: 'HTTPS://WWW.UDEMY.COM:443/course/fixture', secondary_purchase_link: udemy, purchase_link_active: true }), { purchaseUrl: udemy, purchaseUrls: [udemy], paypal: false })
+    for (const unsafe of [undefined, null, '', 'javascript:alert(1)', 'https://user:password@example.test', {}]) {
+        assert.deepEqual(productCheckoutVisibility({ purchase_link: unsafe, secondary_purchase_link: udemy, purchase_link_active: true }), { purchaseUrl: udemy, purchaseUrls: [udemy], paypal: false })
+        assert.deepEqual(productCheckoutVisibility({ purchase_link: udemy, secondary_purchase_link: unsafe, purchase_link_active: true }), { purchaseUrl: udemy, purchaseUrls: [udemy], paypal: false })
+    }
+})
+
+test('both purchase destinations require the explicit active flag and neither flag affects the other payment channel', () => {
+    const primary = 'https://www.udemy.com/course/fixture', secondary = 'https://www.coursera.org/learn/fixture'
+    for (const inactive of [undefined, null, false, 0, 1, 'true']) {
+        assert.deepEqual(productCheckoutVisibility({ purchase_link: primary, secondary_purchase_link: secondary, purchase_link_active: inactive, paypal_active: true }), { purchaseUrl: null, purchaseUrls: [], paypal: true })
+    }
+    assert.deepEqual(productCheckoutVisibility({ purchase_link: primary, secondary_purchase_link: secondary, purchase_link_active: true, paypal_active: 'true' }), { purchaseUrl: primary, purchaseUrls: [primary, secondary], paypal: false })
 })
 
 test('purchase-label classification performs no fetches or checkout side effects', () => {

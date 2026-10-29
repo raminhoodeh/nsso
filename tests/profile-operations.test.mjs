@@ -53,6 +53,32 @@ test('strict operation schema rejects model authority, unknown fields, malformed
     assert.deepEqual(normalizeProfileChange({kind:'link.patch',id,patch:{link_url:' https://EXAMPLE.test/portfolio '}}),{kind:'link.patch',id,patch:{link_url:'https://example.test/portfolio'}});
 });
 
+test('owner product operations accept and normalize the second destination under the same URL boundary as the primary',()=>{
+    const url='  HTTPS://WWW.COURSERA.ORG:443/learn/fixture?source=nsso  ';
+    for(const kind of ['product.add','product.patch']) {
+        const change=kind==='product.add'
+            ? {kind,values:{name:'Synthetic course',secondary_purchase_link:url}}
+            : {kind,id,patch:{secondary_purchase_link:url}};
+        assert.equal(isProfileChange(change),true);
+        const normalized=normalizeProfileChange(change);
+        assert.equal((normalized.values||normalized.patch).secondary_purchase_link,'https://www.coursera.org/learn/fixture?source=nsso');
+        for(const empty of ['',null]) {
+            const draft=kind==='product.add'?{kind,values:{name:'Synthetic course',secondary_purchase_link:empty}}:{kind,id,patch:{secondary_purchase_link:empty}};
+            assert.equal(isProfileChange(draft),true,'An optional destination can be cleared without deleting the offering');
+            assert.equal((normalizeProfileChange(draft).values||normalizeProfileChange(draft).patch).secondary_purchase_link,empty);
+        }
+    }
+    for(const field of ['purchase_link','secondary_purchase_link']) for(const unsafe of [
+        'javascript:alert(1)','data:text/html,fixture','//evil.example/course','/relative',
+        'https://user:password@example.test/course','https://example.test/a\\b',
+        'https://example.test/a\nb','https://example.test/'+ 'x'.repeat(4096),{},123,
+    ]) {
+        assert.equal(isProfileChange({kind:'product.patch',id,patch:{[field]:unsafe}}),false,field+': '+String(unsafe));
+        assert.equal(isProfileChange({kind:'product.add',values:{name:'Synthetic course',[field]:unsafe}}),false,field+': '+String(unsafe));
+    }
+    assert.equal(isProfileChange({kind:'product.patch',id,patch:{purchase_link:'https://www.udemy.com/course/fixture',secondary_purchase_link:'javascript:alert(1)'}}),false);
+});
+
 test('tool normalization persists both link fields and turns wording into a reviewable field patch without invented metadata',()=>{
     assert.deepEqual(normalizeToolCall('update_link',{linkId:id,name:'Portfolio',url:'https://example.test'}).change,{kind:'link.patch',id,patch:{link_name:'Portfolio',link_url:'https://example.test'}});
     assert.deepEqual(normalizeToolCall('suggest_wording',{target:'bio',improved:''}).change,{kind:'profile.patch',patch:{bio:''}});
