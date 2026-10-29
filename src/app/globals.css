@@ -145,6 +145,31 @@ body {
   display: none;
 }
 
+/* BIO alone is vertically resizable with a desktop pointer. The four-row
+   starting height (4 x 22px + 32px padding) can grow to four times that size;
+   its auto-height glass shell and identity card stay in document flow. */
+.profile-bio-input {
+  display: block;
+}
+
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .profile-bio-input {
+    height: 120px;
+    min-height: 120px;
+    max-height: 480px;
+    overflow: auto;
+    resize: vertical;
+  }
+}
+
+@media (width < 768px), (hover: none), (pointer: coarse), (pointer: none) {
+  .profile-bio-input {
+    /* Native resizing writes an inline height. Ignore it outside desktop so
+       rotating/resizing never carries a desktop height into the mobile UI. */
+    height: auto !important;
+  }
+}
+
 /* Custom White Scrollbar */
 .custom-scrollbar {
   scrollbar-width: thin;
