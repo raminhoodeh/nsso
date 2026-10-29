@@ -212,15 +212,20 @@ test.describe('desktop sidebar affordances', () => {
         await expect(active).toHaveAttribute('aria-current', 'page')
         await expect(active).toHaveAttribute('data-nsso-control', 'white')
         await expect(active).toHaveCSS('background-color', 'rgb(255, 255, 255)')
-        const activeMaterial = await active.evaluate(element => {
+        const readActiveMaterial = () => active.evaluate(element => {
             const style = getComputedStyle(element)
             const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
             const context = canvas.getContext('2d'); context.fillStyle = style.borderTopColor; context.fillRect(0, 0, 1, 1)
             return { sides: ['Top', 'Right', 'Bottom', 'Left'].map(side => ({ width: style[`border${side}Width`], style: style[`border${side}Style`], colour: style[`border${side}Color`] })), borderPaint: [...context.getImageData(0, 0, 1, 1).data], radius: style.borderRadius, shadow: style.boxShadow }
         })
+        const expectedBorderPaint = [...(await paintedColour(active, '--color-slate-500')), 255]
+        // The fixture attaches CSS after mount, starting the real 200ms border
+        // transition. White background alone does not prove the border settled.
+        await expect.poll(async () => (await readActiveMaterial()).borderPaint).toEqual(expectedBorderPaint)
+        const activeMaterial = await readActiveMaterial()
         expect(activeMaterial.sides.every(side => side.width === '1px' && side.style === 'solid')).toBe(true)
         expect(new Set(activeMaterial.sides.map(side => side.colour)).size).toBe(1)
-        expect(activeMaterial.borderPaint).toEqual([...(await paintedColour(active, '--color-slate-500')), 255])
+        expect(activeMaterial.borderPaint).toEqual(expectedBorderPaint)
         expect(activeMaterial.radius).toBe('12px')
         expect(activeMaterial.shadow).toMatch(/0px 0px 0px 2px/)
         const activeBox = await active.boundingBox()
