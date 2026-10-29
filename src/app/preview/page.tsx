@@ -326,7 +326,7 @@ export default function PreviewPage() {
                                         <div className="space-y-3 mt-auto">
                                             {checkout.purchaseUrl && (
                                                 <div className="w-full flex justify-center">
-                                                    <PreviewCheckoutButton className="w-[11.625rem]">
+                                                    <PreviewCheckoutButton className="w-full max-w-[15rem] [&>button]:whitespace-nowrap">
                                                         {purchaseButtonLabel(checkout.purchaseUrl)}
                                                     </PreviewCheckoutButton>
                                                 </div>

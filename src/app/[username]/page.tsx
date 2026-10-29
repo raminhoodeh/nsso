@@ -5,7 +5,6 @@ import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeContactUrl, safeWebUrl } from '@/lib/urls'
 import { purchaseButtonLabel } from '@/lib/payments/product-presentation'
-import ShinyLink from '@/components/ui/ShinyLink'
 import { lightButtonClass } from '@/components/ui/light-button-styles'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import Link from 'next/link'
@@ -347,7 +346,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             <h2 className="text-3xl font-bold text-white mb-8 lg:mb-10">Products & Services</h2>
                             <div className={PROFILE_COLLECTION_GRID_CLASS}>
                                 {products.map(product => {
-                                    const purchaseLabel = purchaseButtonLabel(safeWebUrl(product.purchase_link))
+                                    const purchaseUrl = safeWebUrl(product.purchase_link)
+                                    const purchaseLabel = purchaseButtonLabel(purchaseUrl)
                                     const ProductWrapper = product.sales_page_active && product.sales_page_published !== false ? Link : 'div'
                                     const wrapperProps = product.sales_page_active && product.sales_page_published !== false
                                         ? { href: `/products/${product.id}`, className: "block flex-grow cursor-pointer transition-opacity hover:opacity-80" }
@@ -383,17 +383,18 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
                                             {/* Action Buttons (Separate from Link) */}
                                             <div className="space-y-3 mt-auto">
-                                                {product.purchase_link_active && product.purchase_link && (
+                                                {product.purchase_link_active && purchaseUrl && (
                                                     <div className="w-full flex justify-center">
-                                                        <ShinyLink
-                                                            href={product.purchase_link}
+                                                        <a
+                                                            href={purchaseUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="w-[11.625rem]"
+                                                            data-nsso-control="white"
+                                                            className={`${lightButtonClass} min-h-11 w-full max-w-[15rem] whitespace-nowrap`}
                                                             aria-label={`${purchaseLabel}: ${product.name}`}
                                                         >
-                                                            {purchaseLabel}
-                                                        </ShinyLink>
+                                                            <span data-light-button-content="true">{purchaseLabel}</span>
+                                                        </a>
                                                     </div>
                                                 )}
                                                 {product.paypal_active && product.payment_config && (
