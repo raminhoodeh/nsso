@@ -142,10 +142,10 @@ export default function PreviewPage() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 items-start md:grid-cols-2 gap-6 !mt-24">
+                        <div className="grid grid-cols-1 items-stretch md:grid-cols-2 gap-6 !mt-24">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
-                                <GlassCard className="p-6">
+                                <GlassCard className="p-6 h-full">
                                     <div>
                                         <h3 className="text-slate-950 text-sm uppercase tracking-wider mb-6 font-bold">Experiences</h3>
                                         <ExpandableProfileList key={`${user.id}:experiences`} context="Experiences" className="space-y-6">
@@ -166,7 +166,7 @@ export default function PreviewPage() {
 
                             {/* Qualifications Section */}
                             {qualifications.length > 0 && (
-                                <GlassCard className="p-6">
+                                <GlassCard className="p-6 h-full">
                                     <div>
                                         <h3 className="text-slate-950 text-sm uppercase tracking-wider mb-6 font-bold">Qualifications</h3>
                                         <ExpandableProfileList key={`${user.id}:qualifications`} context="Qualifications" className="space-y-6">
@@ -262,7 +262,7 @@ export default function PreviewPage() {
                                 } : { className: 'block' }
 
                                 return (
-                                    <GlassCard key={project.id} className="p-6 md:p-7 flex flex-col hover:bg-white/25 transition-colors group">
+                                    <GlassCard key={project.id} className="p-6 md:p-7 h-full flex flex-col hover:bg-white/25 transition-colors group">
                                         <Wrapper {...wrapperProps}>
                                             <h3 className="text-2xl font-bold text-slate-950 mb-2 flex items-center gap-2">
                                                 {project.project_name}
@@ -299,7 +299,7 @@ export default function PreviewPage() {
                                     : { className: "block" }
 
                                 return (
-                                    <GlassCard key={product.id} className="p-6 flex flex-col group">
+                                    <GlassCard key={product.id} className="p-6 h-full flex flex-col group">
                                         {/* @ts-ignore - Dynamic component props mismatch */}
                                         <ProductWrapper {...wrapperProps}>
 

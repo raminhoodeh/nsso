@@ -4,32 +4,32 @@ import { getProfileBioPreview, getProfileTextPreview } from '../src/components/p
 
 const characters = text => [...new Intl.Segmenter('en', { granularity: 'grapheme' }).segment(text)]
 
-test('bodies through 75 characters stay intact and longer bodies reserve room for the ellipsis', () => {
-    for (const length of [0, 1, 74, 75]) assert.equal(getProfileTextPreview('a'.repeat(length)), undefined)
-    for (const length of [76, 1000]) {
+test('bodies through 200 characters stay intact and longer bodies reserve room for the ellipsis', () => {
+    for (const length of [0, 1, 199, 200]) assert.equal(getProfileTextPreview('a'.repeat(length)), undefined)
+    for (const length of [201, 1000]) {
         const full = 'a'.repeat(length)
         const preview = getProfileTextPreview(full)
-        assert.equal(preview, 'a'.repeat(74))
-        assert.equal(characters(`${preview}…`).length, 75)
+        assert.equal(preview, 'a'.repeat(199))
+        assert.equal(characters(`${preview}…`).length, 200)
         assert.ok(full.startsWith(preview))
     }
 })
 
 test('a boundary never cuts a family emoji, skin tone, flag or combining accent', () => {
     for (const cluster of ['👨‍👩‍👧‍👦', '👍🏽', '🇦🇪', 'e\u0301']) {
-        const full = `${'a'.repeat(73)}${cluster}bc`
+        const full = `${'a'.repeat(198)}${cluster}bc`
         const preview = getProfileTextPreview(full)
-        assert.equal(preview, `${'a'.repeat(73)}${cluster}`)
-        assert.equal(characters(`${preview}…`).length, 75)
+        assert.equal(preview, `${'a'.repeat(198)}${cluster}`)
+        assert.equal(characters(`${preview}…`).length, 200)
         assert.ok(full.startsWith(preview))
     }
-    assert.equal(getProfileTextPreview('👨‍👩‍👧‍👦'.repeat(75)), undefined)
+    assert.equal(getProfileTextPreview('👨‍👩‍👧‍👦'.repeat(200)), undefined)
 })
 
 test('line breaks and long words remain exact saved-text prefixes', () => {
     const full = `First line.\n\n${'unbroken'.repeat(100)}   `
     const preview = getProfileTextPreview(full)
-    assert.equal(preview, full.slice(0, 74))
+    assert.equal(preview, full.slice(0, 199))
     assert.ok(preview.includes('\n\n'))
     assert.equal(getProfileTextPreview(' '.repeat(1000)), undefined)
     assert.equal(getProfileTextPreview('\n\t\n'), undefined)

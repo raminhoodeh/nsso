@@ -1,8 +1,8 @@
-export const PROFILE_TEXT_PREVIEW_LIMIT = 75
+export const PROFILE_TEXT_PREVIEW_LIMIT = 200
 
 const graphemes = new Intl.Segmenter('en', { granularity: 'grapheme' })
 
-/** An exact saved-text prefix, reserving one of the 75 characters for the ellipsis. */
+/** An exact saved-text prefix, reserving one of the 200 characters for the ellipsis. */
 export function getProfileTextPreview(text: string): string | undefined {
     if (!text.trim()) return undefined
 

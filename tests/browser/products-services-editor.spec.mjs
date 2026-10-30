@@ -66,19 +66,19 @@ test.beforeAll(async () => {
             import React from 'react';import {createRoot} from 'react-dom/client';
             import Editor from './src/app/dashboard/components/AdvancedModeCard';
             import {TahoeGlassEngineContext} from './src/components/providers/TahoeGlassProvider';
-            const listeners=new Set();window.fixtureToasts=[];window.fixtureWrites=[];window.fixturePatchFails=false;window.fixtureDeleteFails=false;window.fixtureCreateFails=false;window.fixturePendingPatch=null;
+            const listeners=new Set();window.fixtureToasts=[];window.fixtureWrites=[];window.fixturePatchFails=false;window.fixtureDeleteFails=false;window.fixtureCreateFails=false;window.fixturePendingPatch=null;window.fixtureHeldPatches=new Map();window.fixtureSettledPatches=[];let patchSequence=0;
             const routeListeners=new Set();const notifyRoute=()=>{for(const listener of routeListeners)listener()};window.addEventListener('popstate',notifyRoute);window.fixtureNavigations=[];window.fixturePopups=[];window.open=(...args)=>{window.fixturePopups.push(args);return null};
             window.fixtureRouter={push:(href,options)=>{window.fixtureNavigations.push({kind:'push',href,options});history.pushState(null,'',href);notifyRoute()},replace:(href,options)=>{window.fixtureNavigations.push({kind:'replace',href,options});history.replaceState(null,'',href);notifyRoute()}};
             const count=Number(new URLSearchParams(location.search).get('count')??2);
             let snapshot;const emit=patch=>{snapshot={...snapshot,...patch};for(const listener of listeners)listener()};
             window.fixtureSubscribe=listener=>{listeners.add(listener);return()=>listeners.delete(listener)};window.fixtureSnapshot=()=>snapshot;window.fixtureUpdate=emit;
             const offering=index=>({id:'offering-'+index,user_id:'${account}',name:'Fixture offering '+index,price:'GBP '+(index*10),description:'A clearly described synthetic offering for testing.',image_url:index===1?'/fixture-thumb.svg':null,purchase_link_active:true,purchase_link:'https://seller.example.test/offering-'+index,paypal_active:true,paypal_html:${JSON.stringify(paypal)},sales_page_active:false,sales_page_published:false});
-            // Like the real provider's latest-draft overlay, receipt completion
-            // must never replay an older patch over the current optimistic row.
-            // Only the current operation owns the visible pending/save status.
-            const settlePatch=async pending=>{if(window.fixtureHoldPatches)await new Promise(resolve=>{window.fixtureReleasePatch=resolve});await new Promise(resolve=>setTimeout(resolve,90));if(window.fixturePatchFails){if(window.fixturePendingPatch===pending)emit({mutationState:{status:'failed',message:'Changes could not be saved. Your changes are still here.'}});return false}if(window.fixturePendingPatch===pending){emit({mutationState:{status:'saved',message:''}});window.fixturePendingPatch=null}return true};
+            // Production publishes canonical receipts beneath the latest draft overlay.
+            // The optimistic row is already current here: replaying an old receipt
+            // patch over it would invent a rollback absent from ProfileProvider.
+            const settlePatch=async pending=>{if(window.fixtureHoldPatches)await new Promise(resolve=>{const release=()=>{window.fixtureHeldPatches.delete(pending.sequence);resolve()};window.fixtureHeldPatches.set(pending.sequence,release);window.fixtureReleasePatch=release});await new Promise(resolve=>setTimeout(resolve,90));if(window.fixturePatchFails){if(window.fixturePendingPatch===pending)emit({mutationState:{status:'failed',message:'Changes could not be saved. Your changes are still here.'}});window.fixtureSettledPatches.push({sequence:pending.sequence,applied:false});return false}if(window.fixturePendingPatch===pending){window.fixturePendingPatch=null;emit({mutationState:{status:'saved',message:''}})}window.fixtureSettledPatches.push({sequence:pending.sequence,applied:true});return true};
             snapshot={products:Array.from({length:count},(_,index)=>offering(index+1)),experiences:[],qualifications:[],projects:[],loading:false,loadError:null,mutationState:{status:'saved',message:''},getRevision:()=>snapshot.revision??0,
-                patchEntity:async(kind,id,patch)=>{window.fixtureWrites.push({kind:'patch',entity:kind,id,patch});window.fixturePendingPatch={id,patch};emit({products:snapshot.products.map(item=>item.id===id?{...item,...patch}:item),mutationState:{status:'saving',message:'Saving changes…'}});return settlePatch(window.fixturePendingPatch)},
+                patchEntity:async(kind,id,patch)=>{window.fixtureWrites.push({kind:'patch',entity:kind,id,patch});const pending={id,patch,sequence:++patchSequence};window.fixturePendingPatch=pending;emit({products:snapshot.products.map(item=>item.id===id?{...item,...patch}:item),mutationState:{status:'saving',message:'Saving changes…'}});return settlePatch(pending)},
                 retryPending:async()=>{if(!window.fixturePendingPatch)return;emit({mutationState:{status:'saving',message:'Saving changes…'}});await settlePatch(window.fixturePendingPatch)},
                 createEntity:async(kind,values,position='bottom')=>{window.fixtureWrites.push({kind:'create',entity:kind,values,position});emit({mutationState:{status:'saving',message:'Saving changes…'}});if(window.fixtureHoldCreate)await new Promise(resolve=>{window.fixtureReleaseCreate=resolve});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureCreateFails){emit({mutationState:{status:'failed',message:'Offering could not be created.'}});return{status:'rejected',operationId:'fixture-create',changes:[]}}const row={...offering(100),...values,id:'created-offering-'+window.fixtureWrites.filter(write=>write.kind==='create').length};emit({products:position==='top'?[row,...snapshot.products]:[...snapshot.products,row],mutationState:{status:'saved',message:''}});return{status:'applied',operationId:'fixture-create',revision:1,changes:[{entity:'products',id:row.id,row}]}},
                 removeEntity:async(kind,id)=>{window.fixtureWrites.push({kind:'remove',entity:kind,id});await new Promise(resolve=>setTimeout(resolve,60));if(window.fixtureDeleteFails)return false;emit({products:snapshot.products.filter(item=>item.id!==id)});return true},
@@ -250,6 +250,65 @@ test('purchase label hints follow edits in the offering and creator without chan
     expect(await writes(page)).toEqual([...scenarios.map(([url]) => url), etsy, shopify].map(url => ({ kind: 'patch', entity: 'product', id: 'offering-1', patch: { purchase_link: url } })))
     expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
     await page.screenshot({ path: testInfo.outputPath('purchase-label-hint-editor.png'), fullPage: true })
+})
+
+test('delayed older save receipts cannot replace newer purchase drafts or their labels in either editor', async ({ page }, testInfo) => {
+    await mount(page, { count: 1 })
+    await choose(page, 1).click()
+    await page.evaluate(() => { window.fixtureHoldPatches = true })
+    const original = await page.evaluate(() => window.fixtureSnapshot().products[0])
+    const etsy = 'https://www.etsy.com/listing/123456/synthetic-guide'
+    const shopify = 'https://synthetic-shop.myshopify.com/products/guide'
+    const checkPreview = async (container, label) => {
+        if (label) await expect(container.getByText('Button preview: ' + label, { exact: true })).toBeVisible()
+        else await expect(container.getByText(/^Button preview:/)).toHaveCount(0)
+    }
+    const delayedEdits = async (input, container, scenarios) => {
+        let previous
+        for (const [url, label] of scenarios) {
+            await input.fill(url)
+            await expect(input).toHaveValue(url)
+            await checkPreview(container, label)
+            const sequence = await page.evaluate(() => window.fixturePendingPatch.sequence)
+            await expect.poll(() => page.evaluate(sequence => window.fixtureHeldPatches.has(sequence), sequence)).toBe(true)
+            if (previous !== undefined) {
+                // Deliver the older receipt only after a different draft is visible.
+                await page.evaluate(sequence => window.fixtureHeldPatches.get(sequence)(), previous)
+                await expect.poll(() => page.evaluate(sequence => window.fixtureSettledPatches.some(receipt => receipt.sequence === sequence), previous)).toBe(true)
+                await expect(input).toHaveValue(url)
+                await checkPreview(container, label)
+                expect(await page.evaluate(() => window.fixturePendingPatch.sequence)).toBe(sequence)
+            }
+            previous = sequence
+        }
+        await page.evaluate(sequence => window.fixtureHeldPatches.get(sequence)(), previous)
+        await expect.poll(() => page.evaluate(() => window.fixturePendingPatch)).toBe(null)
+        await expect(input).toHaveValue(scenarios.at(-1)[0])
+    }
+    const link = page.getByRole('textbox', { name: 'Button destination', exact: true })
+    await delayedEdits(link, page, [
+        [etsy, 'Buy on Etsy'],
+        [shopify, 'Buy on Shopify'],
+        ['https://seller.example.test/guide?provider=etsy.com', 'View purchase page'],
+        ['https://etsy.com.attacker.example/guide', 'View purchase page'],
+        ['javascript:alert(1)', null],
+    ])
+    const openCreator = page.getByRole('button', { name: 'Open Sales Page Creator', exact: true })
+    if (testInfo.project.use.isMobile) await openCreator.tap()
+    else await openCreator.click()
+    await expect(page).toHaveURL(/(?:\?|&)offeringView=creator(?:&|$)/)
+    const creator = page.locator('[data-sales-page-creator]')
+    await delayedEdits(creator.getByRole('textbox', { name: 'Button destination', exact: true }), creator, [
+        [shopify, 'Buy on Shopify'], [etsy, 'Buy on Etsy'], [shopify, 'Buy on Shopify'],
+    ])
+    await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
+    await expect(link).toHaveValue(shopify)
+    await checkPreview(page, 'Buy on Shopify')
+    const saved = await page.evaluate(() => window.fixtureSnapshot().products[0])
+    for (const field of ['paypal_html', 'paypal_active', 'purchase_link_active', 'sales_page_active', 'sales_page_published']) expect(saved[field]).toEqual(original[field])
+    expect(await page.evaluate(() => window.fixtureSettledPatches)).toHaveLength(8)
+    expect((await writes(page)).every(write => write.kind === 'patch' && Object.keys(write.patch).join() === 'purchase_link')).toBe(true)
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
 })
 
 test('creator actions and visible 44px remove controls retain exact benefit and testimonial edits', async ({ page }, testInfo) => {
@@ -988,7 +1047,7 @@ test('destination tooltip text stays entirely readable in narrow and keyboard-he
     }
 })
 
-test('very short destination help is keyboard-scrollable and Escape restores its trigger', async ({ page }, testInfo) => {
+test('very short destination help supports scrolling, Escape and the native editor tab order', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 240 })
     await mount(page, { count: 1 })
     // The isolated fixture's nav is a div; mark it like the real fixed nsso
@@ -999,7 +1058,19 @@ test('very short destination help is keyboard-scrollable and Escape restores its
         if (creatorView) await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
         const scope = creatorView ? page.locator('[data-sales-page-creator]') : page.locator('[data-offering-editor]')
         const help = scope.getByRole('button', { name: 'About Button destination', exact: true })
+        const destination = scope.getByRole('textbox', { name: 'Button destination', exact: true })
+        const enableDestination = scope.getByRole('switch', { name: 'Enable button destination', exact: true })
+        const destinationUrl = creatorView ? 'https://www.nsso.me/sign-up' : 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+        await destination.fill(destinationUrl)
         await page.mouse.move(0, 0)
+        // Compare the portal handoff with this engine's native order. WebKit's
+        // default policy skips buttons, while Chromium visits the enable switch.
+        await help.focus()
+        await help.press('Escape')
+        await expect(page.getByRole('tooltip')).toHaveCount(0)
+        await help.press('Tab')
+        const nativeNextIsSwitch = !creatorView && await enableDestination.evaluate(element => element === document.activeElement)
+        if (!nativeNextIsSwitch) await expect(destination).toBeFocused()
         await help.focus()
         await help.press('Enter')
         const tooltip = page.getByRole('tooltip').filter({ visible: true })
@@ -1035,8 +1106,40 @@ test('very short destination help is keyboard-scrollable and Escape restores its
                 && element.contains(document.elementFromPoint(firstLine.left + 1, firstLine.top + firstLine.height / 2))
         })
         expect(beginningVisible).toBe(true)
-        await help.press('Escape')
+        await help.focus()
+        await help.press('Tab')
+        await expect(tooltip).toBeFocused()
+        await tooltip.press('Shift+Tab')
+        await expect(help).toBeFocused()
+        await help.press('Tab')
+        await expect(tooltip).toBeFocused()
+        await tooltip.press('Tab')
         await expect(tooltip).toHaveCount(0)
+        if (nativeNextIsSwitch) {
+            // Keep the real form's enable switch in its native tab position.
+            await expect(enableDestination).toBeFocused()
+            await page.keyboard.press('Tab')
+        }
+        await expect(destination).toBeFocused()
+        await expect(destination).toHaveValue(destinationUrl)
+        await destination.press('Tab')
+        const textHelp = scope.getByRole('button', { name: 'About Button text', exact: true })
+        if (await textHelp.evaluate(element => element === document.activeElement)) {
+            await textHelp.press('Escape')
+            await page.keyboard.press('Tab')
+        }
+        const text = scope.getByRole('textbox', { name: 'Button text (optional)', exact: true })
+        await expect(text).toBeFocused()
+        const label = creatorView ? 'Open the creator offering' : 'Open the offering'
+        await text.fill('')
+        await text.pressSequentially(label)
+        await expect(text).toHaveValue(label)
+        await expect(scope.getByText('Button preview: ' + label, { exact: true })).toBeVisible()
+        await expect(destination).toHaveValue(destinationUrl)
+        expect(await page.evaluate(() => window.fixtureSnapshot().products[0].paypal_html)).toBe(paypal)
     }
-    expect(await writes(page)).toEqual([])
+    const changes = await writes(page)
+    expect(changes.length).toBeGreaterThan(0)
+    expect(changes.every(write => write.kind === 'patch' && write.id === 'offering-1' && ['purchase_link', 'purchase_button_label'].includes(Object.keys(write.patch).join()))).toBe(true)
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
 })

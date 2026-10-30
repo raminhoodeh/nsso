@@ -762,16 +762,23 @@ Check out some of the areas I can help you with below.`;
             <footer className="w-full shrink-0 border-t border-slate-500/15 bg-[#eef0f4]">
                 <div ref={categoryToggleRef} className="px-3 pt-1 group-data-[minimal=true]/deity:hidden">
                     <div className="flex flex-col items-center">
-                        <NativeGlassLens as="button"
+                        <button
                             type="button"
-                            onClick={() => setIsCategoriesExpanded(!isCategoriesExpanded)}
+                            onClick={() => setIsCategoriesExpanded(value => !value)}
                             aria-expanded={isCategoriesExpanded}
                             aria-controls="deity-category-options"
-                            className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-wider`}
+                            className={`${LIGHT_PANEL.focus} inline-flex min-h-8 items-center gap-1 rounded-full text-xs font-medium ${isCategoriesExpanded ? 'px-2 text-slate-600 hover:text-slate-950' : ''}`}
                         >
-                            What you can ask me about
-                            {isCategoriesExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </NativeGlassLens>
+                            {isCategoriesExpanded ? <>
+                                Minimise
+                                <ChevronUp aria-hidden="true" size={12} />
+                            </> : <NativeGlassLens as="span"
+                                className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.silver} inline-flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-wider`}
+                            >
+                                What you can ask me about
+                                <ChevronDown aria-hidden="true" size={14} />
+                            </NativeGlassLens>}
+                        </button>
                     </div>
                 </div>
 

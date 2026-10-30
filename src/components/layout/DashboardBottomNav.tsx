@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
 import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 // Navigation Configuration
 const NAV_ITEMS = [
@@ -66,7 +67,7 @@ function BottomNavContent() {
                             className={cn(
                                 'nsso-glass-control relative flex h-14 w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl border px-1 py-1.5 text-slate-950 outline-none transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 focus-visible:ring-offset-white',
                                 isActive
-                                    ? 'border-slate-500/60 ring-1 ring-slate-500/50'
+                                    ? LIGHT_PANEL.silver
                                     : 'border-white/70 hover:border-slate-500/40'
                             )}
                             aria-label={item.label}

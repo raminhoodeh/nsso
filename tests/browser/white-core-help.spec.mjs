@@ -126,6 +126,11 @@ test('notes save remains single-flight and blocks dismissal until the same synth
 test('context help stays opaque and readable while keyboard and touch dismissal remain unchanged', async ({ page }) => {
     const state = await mount(page)
     const trigger = page.getByRole('button', { name: 'About Purchases', exact: true })
+    const target = await trigger.boundingBox()
+    expect(target.width).toBeGreaterThanOrEqual(24)
+    expect(target.width).toBeLessThanOrEqual(44)
+    await expect(trigger.locator('svg')).toHaveAttribute('width', '14')
+    await expect(trigger).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
     await trigger.press('Enter')
     const tooltip = page.getByRole('tooltip')
     await expect(tooltip).toContainText('This provider handles payment and delivery.')
@@ -145,6 +150,34 @@ test('context help stays opaque and readable while keyboard and touch dismissal 
     await page.getByRole('button', { name: 'Outside help target', exact: true }).click()
     await expect(tooltip).toBeHidden()
     expect(state.writes).toEqual([])
+})
+
+test('help enters the top layer above a later full-screen overlay and escapes a clipped, transformed parent', async ({ page }) => {
+    await mount(page)
+    const trigger = page.getByRole('button', { name: 'About Purchases', exact: true })
+    await trigger.evaluate(element => {
+        const parent = element.parentElement.parentElement
+        Object.assign(parent.style, { height: '32px', overflow: 'hidden', transform: 'translateZ(0)', isolation: 'isolate' })
+    })
+    await trigger.press('Enter')
+    const tooltip = page.getByRole('tooltip')
+    await expect(tooltip).toBeVisible()
+    await expect.poll(() => tooltip.evaluate(element => element.closest('[popover]').matches(':popover-open'))).toBe(true)
+    expect(await tooltip.evaluate(element => element.closest('[popover]').parentElement === document.body)).toBe(true)
+    await page.evaluate(() => {
+        const cover = document.createElement('div')
+        cover.id = 'synthetic-occluding-glass'
+        Object.assign(cover.style, { position: 'fixed', inset: '0', zIndex: '2147483647', background: '#54769e', backdropFilter: 'blur(12px)' })
+        document.body.append(cover)
+    })
+    expect(await tooltip.evaluate(element => {
+        const box = element.getBoundingClientRect()
+        return element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))
+    })).toBe(true)
+    await expectOpaqueLightPanel(page, tooltip)
+    await page.keyboard.press('Escape')
+    await expect(tooltip).toHaveCount(0)
+    await expect(trigger).toBeFocused()
 })
 
 test('Add notes and Edit notes remain compact one-line horizontal actions from narrow mobile to desktop', async ({ page }) => {
