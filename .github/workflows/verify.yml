@@ -20,7 +20,8 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:d65108d1a8095d8b0c4a5e32bf1807a40a5ce90ff0c78473e1116b1c243235e8
       options: --user 1001
-    timeout-minutes: 25
+    # Allow the full browser suite and production build to finish on slower runners.
+    timeout-minutes: 35
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://ci-fixture.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-fixture-not-a-production-key
