@@ -223,6 +223,9 @@ test.describe('desktop sidebar affordances', () => {
         await expect(active).toHaveClass(/nsso-silver-glass/)
         const backend = browserName === 'webkit' ? 'webgl' : 'svg'
         await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-backend', backend)
+        // This fixture installs CSS after the native button's first paint;
+        // supplied attributes can be ready during its 200ms shell transition.
+        await expect(active).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
         const activeMaterial = await suppliedMaterial(active)
         expect(activeMaterial).toMatchObject({ shell: 'rgba(0, 0, 0, 0)', family: 'supplied', layers: 2, childCanvases: 0 })
         expect(activeMaterial.shadow).not.toBe('none')

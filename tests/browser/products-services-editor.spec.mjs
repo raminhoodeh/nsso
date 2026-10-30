@@ -829,25 +829,35 @@ test('the actual cropper supports product image selection and preserves crop on 
         await expect(cropper).toHaveAttribute('data-tahoe-readable-overlay', 'true')
         await expect(cropper.getByRole('slider', { name: 'Zoom', exact: true })).toBeVisible()
         await page.route('**/api/profile/media', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Synthetic upload unavailable' }) }))
+        stage = 'wait for decoded image and crop readiness'
+        const applyCrop = cropper.getByRole('button', { name: 'Apply Crop', exact: true })
+        // The zoom control appears before image decoding and crop calculation
+        // finish. Do not spend the HTTP response budget on a disabled control.
+        await expect.poll(() => cropper.locator('img.reactEasyCrop_Image').evaluate(image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0), { timeout: 10000 }).toBe(true)
+        await expect(applyCrop).toBeEnabled({ timeout: 10000 })
         stage = 'receive rejected upload'
         const [rejectedUpload] = await Promise.all([
             page.waitForResponse(isMediaResponse, { timeout: 5000 }),
-            cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click(),
+            applyCrop.click(),
         ])
         expect(rejectedUpload.status()).toBe(503)
         stage = 'retain crop after rejected upload'
         await expect(cropper.getByRole('alert')).toContainText('crop is still here')
+        expect(await writes(page)).toEqual([])
         await page.unroute('**/api/profile/media')
+        await expect(applyCrop).toBeEnabled()
         stage = 'receive successful retry upload'
         const [retryUpload] = await Promise.all([
             page.waitForResponse(isMediaResponse, { timeout: 5000 }),
-            cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click(),
+            applyCrop.click(),
         ])
         expect(retryUpload.status()).toBe(200)
         stage = 'submit retried image patch'
         await expect.poll(() => writes(page)).toContainEqual(expect.objectContaining({ kind: 'patch', id: 'offering-1', patch: expect.objectContaining({ image_url: 'https://nsso.test/fixture-thumb.svg?cropped' }) }))
         stage = 'close cropper after saved image'
         await expect(cropper).toHaveCount(0)
+        expect(mediaResponses).toEqual([503, 200])
+        expect(await writes(page)).toEqual([{ kind: 'patch', entity: 'product', id: 'offering-1', patch: { image_url: 'https://nsso.test/fixture-thumb.svg?cropped' } }])
     } catch (error) {
         const diagnostics = {
             stage, mediaResponses, pageErrors,
