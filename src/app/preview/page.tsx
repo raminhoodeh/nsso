@@ -23,10 +23,12 @@ import {
     PROFILE_COLLECTION_GRID_CLASS,
     PROFILE_COLLECTION_SECTION_CLASS,
     PROFILE_PAGE_CONTAINER_CLASS,
+    PROFILE_PAGE_TOP_CLEARANCE_CLASS,
 } from '@/components/profile/profileLayout'
 import ExpandableBio from '@/components/profile/ExpandableBio'
 import ExpandableProfileText from '@/components/profile/ExpandableProfileText'
 import ExpandableProfileList from '@/components/profile/ExpandableProfileList'
+import ProfileTimelineDisclosureGroup from '@/components/profile/ProfileTimelineDisclosureGroup'
 import { LIGHT_PANEL } from '@/components/ui/light-panel'
 
 export default function PreviewPage() {
@@ -59,9 +61,9 @@ export default function PreviewPage() {
     }
 
     return (
-        <>{header}<main className="min-h-screen text-slate-950 [text-shadow:none]">
+        <>{header}<main data-profile-page="preview" className="min-h-screen text-slate-950 [text-shadow:none]">
             {/* Profile Content */}
-            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} pt-[calc(120px+env(safe-area-inset-top))] md:pt-[120px] pb-16`}>
+            <div className={`${PROFILE_PAGE_CONTAINER_CLASS} ${PROFILE_PAGE_TOP_CLEARANCE_CLASS} pb-16`}>
                 <ProfileSaveStatus />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
 
@@ -142,6 +144,7 @@ export default function PreviewPage() {
                             </div>
                         )}
 
+                        <ProfileTimelineDisclosureGroup key={JSON.stringify([user.id, experiences.map(item => item.id), qualifications.map(item => item.id)])}>
                         <div className="grid grid-cols-1 items-stretch md:grid-cols-2 gap-6 !mt-24">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
@@ -185,6 +188,7 @@ export default function PreviewPage() {
                                 </GlassCard>
                             )}
                         </div>
+                        </ProfileTimelineDisclosureGroup>
                     </div>
 
                     {/* Right Column - Connections & Links */}

@@ -65,7 +65,7 @@ test('Dreamsea identity and diagnostic demos remain unchanged', () => {
     assert.equal(routes.routeOwnsTahoeScene('/dreamsea/privacy'), true)
 })
 
-function renderEnvironment(pathname) {
+function renderEnvironment(pathname, desktopChrome = false) {
     let vantaRenders = 0
     let providerProps
     const { default: Environment } = loadTypeScript('src/components/providers/NSSOTahoeGlassEnvironment.tsx', {
@@ -83,6 +83,8 @@ function renderEnvironment(pathname) {
         '@/components/ui/DimmingOverlay': { __esModule: true, default: () => null },
         '@/lib/tahoe-glass/route-boundaries': routes,
         '@/lib/deck-background': deck,
+        '@/lib/tahoe-glass/chrome-policy': { useDesktopChromeGlassPolicy: (_resolve, eligible) => desktopChrome && eligible },
+        '@/lib/tahoe-glass/nav-platform': loadTypeScript('src/lib/tahoe-glass/nav-platform.ts'),
     })
     const html = renderToStaticMarkup(React.createElement(Environment, null, React.createElement('main', null, 'Preserved page content')))
     return { html, providerProps, vantaRenders }
@@ -162,4 +164,16 @@ test('route changes do not key and remount the shared provider or page content',
     }
     visit(source)
     assert.equal(providerCount, 1)
+})
+
+test('only desktop Chrome profile editors opt into available static-scene WebGL', () => {
+    for (const pathname of ['/dashboard', '/dashboard/', '/dashboard/products/fixture-offering/creator']) {
+        assert.equal(renderEnvironment(pathname, true).providerProps.preferWebGLWhenAvailable, true, pathname)
+        assert.equal(renderEnvironment(pathname, false).providerProps.preferWebGLWhenAvailable, false, 'mobile/Safari retain auto on ' + pathname)
+    }
+    for (const pathname of ['/', '/sign-in', '/sign-up', '/preview', '/ramin', '/products/fixture-offering', '/dashboard/security', '/admin', '/deity']) {
+        const { providerProps } = renderEnvironment(pathname, true)
+        assert.equal(providerProps.preferWebGLWhenAvailable, false, pathname)
+        assert.equal(providerProps.preferredBackend, 'auto', pathname)
+    }
 })

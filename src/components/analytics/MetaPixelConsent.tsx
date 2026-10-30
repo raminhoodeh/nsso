@@ -16,6 +16,7 @@ import {
 interface MetaPixelConsentProps {
     pixelId: string
     initialConsent: MetaPixelConsentState
+    showPrivacyChoices?: boolean
 }
 
 type MetaFbq = ((...args: unknown[]) => void) & {
@@ -70,6 +71,7 @@ function initializePixel(pixelId: string) {
 export default function MetaPixelConsent({
     pixelId,
     initialConsent,
+    showPrivacyChoices = true,
 }: MetaPixelConsentProps) {
     const [consent, setConsent] = useState(initialConsent)
     const [preferencesOpen, setPreferencesOpen] = useState(initialConsent === 'unset')
@@ -191,7 +193,7 @@ export default function MetaPixelConsent({
                         </div>
                     </div>
                 </TahoeGlassDialog>
-            ) : (
+            ) : showPrivacyChoices ? (
                 <LightButton
                     type="button"
                     onClick={() => setPreferencesOpen(true)}
@@ -202,7 +204,7 @@ export default function MetaPixelConsent({
                     <Cookie aria-hidden="true" className="h-4 w-4" />
                     Privacy choices
                 </LightButton>
-            )}
+            ) : null}
         </>
     )
 }

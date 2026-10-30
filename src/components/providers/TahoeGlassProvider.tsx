@@ -21,6 +21,7 @@ import type {
   TahoeGlassWebGLSource,
 } from "@/lib/tahoe-glass/types";
 import { TahoeWebGLRenderer } from "@/lib/tahoe-glass/webgl";
+import { TahoeDisplacementFieldCache } from "@/lib/tahoe-glass/field-cache";
 import {
   TahoeGlassDebugOverlay,
   type TahoeGlassDebugSurface,
@@ -136,11 +137,12 @@ function createsStackingContext(
 
 function surfaceStackingChain(
   element: HTMLElement,
+  readStyle: (element: HTMLElement) => CSSStyleDeclaration,
 ): SurfacePaintEntry["stackingChain"] {
   const chain: SurfacePaintEntry["stackingChain"] = [];
   let current: HTMLElement | null = element;
   while (current) {
-    const computed = window.getComputedStyle(current);
+    const computed = readStyle(current);
     if (createsStackingContext(current, computed)) {
       const parsed = Number.parseInt(computed.zIndex, 10);
       chain.push({
@@ -241,6 +243,7 @@ function measureSurfacePresentation(
   element: HTMLElement,
   rect: DOMRectReadOnly,
   viewportRect: DOMRectReadOnly,
+  readStyle: (element: HTMLElement) => CSSStyleDeclaration,
 ): { clipRect: DOMRectReadOnly | null; opacity: number } {
   let clipRect: DOMRectReadOnly | null = intersectSurfaceRects(
     rect,
@@ -250,7 +253,7 @@ function measureSurfacePresentation(
   let current: HTMLElement | null = element;
 
   while (current && clipRect) {
-    const computed = window.getComputedStyle(current);
+    const computed = readStyle(current);
     if (
       computed.display === "none" ||
       computed.visibility === "hidden" ||
@@ -312,6 +315,8 @@ export interface TahoeGlassProviderProps
   /** Allows pointer and accessibility interaction with an owned map scene. */
   sceneInteractive?: boolean;
   preferredBackend?: TahoeGlassPreferredBackend;
+  /** Opt-in static editors prefer available WebGL while retaining SVG fallback. */
+  preferWebGLWhenAvailable?: boolean;
   fallback?: TahoeGlassFallback;
   /** Required for an honest WebGL path; arbitrary DOM cannot be sampled. */
   webglSource?: TahoeGlassWebGLSource;
@@ -474,6 +479,7 @@ export function TahoeGlassProvider({
   sourceLabel: domSourceLabel = "dom-scene",
   sceneInteractive = false,
   preferredBackend = "auto",
+  preferWebGLWhenAvailable = false,
   fallback = "webgl",
   webglSource,
   respectReducedMotion = true,
@@ -495,9 +501,11 @@ export function TahoeGlassProvider({
   const feImage0Ref = React.useRef<SVGFEImageElement>(null);
   const feImage1Ref = React.useRef<SVGFEImageElement>(null);
   const registryRef = React.useRef(new Map<string, SurfaceRuntime>());
+  const fieldCacheRef = React.useRef(new TahoeDisplacementFieldCache());
   const surfaceResizeObserverRef = React.useRef<ResizeObserver | null>(null);
   const intersectionObserverRef = React.useRef<IntersectionObserver | null>(null);
   const rendererRef = React.useRef<TahoeWebGLRenderer | null>(null);
+  const preferredWebGLSvgFallbackRef = React.useRef(false);
   const compositeCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const lastDebugFrameRef = React.useRef(0);
   const activeFilterRef = React.useRef<0 | 1>(0);
@@ -753,10 +761,12 @@ export function TahoeGlassProvider({
   React.useEffect(() => {
     const ownedSceneAfterRenderListeners =
       ownedSceneAfterRenderListenersRef.current;
+    const fieldCache = fieldCacheRef.current;
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       ownedSceneAfterRenderListeners.clear();
+      fieldCache.clear();
     };
   }, []);
 
@@ -968,15 +978,17 @@ export function TahoeGlassProvider({
     if (!canvas) return;
     const lost = (event: Event) => {
       event.preventDefault();
+      if (preferredWebGLSvgFallbackRef.current) rendererRef.current?.dispose();
       rendererRef.current = null;
       commitWebglOutputReady(false);
       const current = diagnosticsRef.current;
       commitDiagnostics({
         ...current,
-        status: "fallback",
-        backend: fallback === "solid" ? "solid" : "css-blur",
+        status: preferredWebGLSvgFallbackRef.current ? "initializing" : "fallback",
+        backend: preferredWebGLSvgFallbackRef.current ? "svg" : fallback === "solid" ? "solid" : "css-blur",
         reason: "webgl-context-lost",
       });
+      if (preferredWebGLSvgFallbackRef.current) requestRender("lost-preferred-webgl-svg-ready");
     };
     const restored = () =>
       setEnvironmentRevision((revision) => revision + 1);
@@ -986,12 +998,14 @@ export function TahoeGlassProvider({
       canvas.removeEventListener("webglcontextlost", lost);
       canvas.removeEventListener("webglcontextrestored", restored);
     };
-  }, [commitDiagnostics, commitWebglOutputReady, fallback]);
+  }, [commitDiagnostics, commitWebglOutputReady, fallback, requestRender]);
 
   React.useEffect(() => {
     let cancelled = false;
     const sourceAbort = new AbortController();
     const capabilities = detectTahoeGlassCapabilities();
+    const svgAllowed = capabilities.svgDisplacement && !capabilities.safariFamily;
+    preferredWebGLSvgFallbackRef.current = preferredBackend === "auto" && preferWebGLWhenAvailable && svgAllowed;
     const viewportDprCap = Math.sqrt(
       MAX_VIEWPORT_MAP_PIXELS /
         Math.max(1, window.innerWidth * window.innerHeight),
@@ -1046,11 +1060,10 @@ export function TahoeGlassProvider({
       return;
     }
 
-    const svgAllowed =
-      capabilities.svgDisplacement && !capabilities.safariFamily;
     const wantsSvg =
       preferredBackend === "svg" ||
-      (preferredBackend === "auto" && svgAllowed);
+      (preferredBackend === "auto" && svgAllowed &&
+        !(preferWebGLWhenAvailable && capabilities.webgl && webglSource));
 
     if (wantsSvg && svgAllowed) {
       commitDiagnostics({
@@ -1104,8 +1117,8 @@ export function TahoeGlassProvider({
             error instanceof Error ? error.message : "webgl-initialization-failed";
           commitDiagnostics({
             ...base,
-            status: "fallback",
-            backend: fallback === "solid" ? "solid" : "css-blur",
+            status: preferredWebGLSvgFallbackRef.current ? "initializing" : "fallback",
+            backend: preferredWebGLSvgFallbackRef.current ? "svg" : fallback === "solid" ? "solid" : "css-blur",
             source: domSourceLabel,
             reason: message,
           });
@@ -1147,6 +1160,7 @@ export function TahoeGlassProvider({
     fallback,
     maxDpr,
     preferredBackend,
+    preferWebGLWhenAvailable,
     requestRender,
     respectReducedMotion,
     respectReducedTransparency,
@@ -1191,6 +1205,18 @@ export function TahoeGlassProvider({
     let presentationChanged = false;
     let visibleSurfaceCount = current.visibleSurfaceCount;
     let mapRebuilt = false;
+    // A single geometry read phase sees one coherent style snapshot. Nested
+    // fields share ancestors, so avoid resolving the same style hundreds of
+    // times per scroll frame. The cache is discarded before the next frame.
+    const frameStyles = new WeakMap<HTMLElement, CSSStyleDeclaration>();
+    const readStyle = (element: HTMLElement) => {
+      let computed = frameStyles.get(element);
+      if (!computed) {
+        computed = window.getComputedStyle(element);
+        frameStyles.set(element, computed);
+      }
+      return computed;
+    };
     const paintEntries = shouldMeasureGeometry
       ? [...registryRef.current.values()]
           // IntersectionObserver already accounts for viewport and ancestor
@@ -1201,7 +1227,7 @@ export function TahoeGlassProvider({
           .map((runtime) => ({
             runtime,
             priority: runtime.priority ?? 0,
-            stackingChain: surfaceStackingChain(runtime.element),
+            stackingChain: surfaceStackingChain(runtime.element, readStyle),
           }))
           .sort(compareSurfacePaintOrder)
       : [];
@@ -1214,6 +1240,7 @@ export function TahoeGlassProvider({
           runtime.element,
           rect,
           viewportRect,
+          readStyle,
         );
         geometryChanged ||= surfaceRectChanged(runtime.rect, rect);
         presentationChanged ||=
@@ -1315,13 +1342,17 @@ export function TahoeGlassProvider({
           const fieldKey = `${rect.width.toFixed(2)}:${rect.height.toFixed(2)}:${fieldDpr.toFixed(3)}:${runtime.displacementProfile}`;
           if (!runtime.field || runtime.fieldKey !== fieldKey) {
             runtime.drawn = false;
-            runtime.field = createTahoeDisplacementField(
+            const sharedFieldKey = `${rect.width}:${rect.height}:${fieldDpr}:${runtime.displacementProfile}`;
+            // Fields contain geometry only and are never mutated by painting
+            // or rim analysis. Reuse identical shapes and recently seen rows
+            // without changing their optical formula or raster resolution.
+            runtime.field = fieldCacheRef.current.getOrCreate(sharedFieldKey, () => createTahoeDisplacementField(
               rect.width,
               rect.height,
               fieldDpr,
               0,
               runtime.displacementProfile,
-            );
+            ));
             runtime.fieldKey = fieldKey;
           }
           if (!runtime.field) {
@@ -1527,12 +1558,16 @@ export function TahoeGlassProvider({
           webglUploadedRevisionRef.current = -1;
           commitDiagnostics({
             ...frameDiagnostics,
-            status: "fallback",
-            backend: fallback === "solid" ? "solid" : "css-blur",
+            status: preferredWebGLSvgFallbackRef.current ? "initializing" : "fallback",
+            backend: preferredWebGLSvgFallbackRef.current ? "svg" : fallback === "solid" ? "solid" : "css-blur",
             source: domSourceLabel,
             reason:
               error instanceof Error ? error.message : "webgl-render-failed",
           });
+          if (preferredWebGLSvgFallbackRef.current) {
+            requestRender("failed-preferred-webgl-svg-ready");
+            return;
+          }
         }
       }
     } else if (
@@ -1568,6 +1603,7 @@ export function TahoeGlassProvider({
     fallback,
     filterId0,
     filterId1,
+    requestRender,
     scheduleRender,
   ]);
 

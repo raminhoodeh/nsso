@@ -27,6 +27,7 @@ const opticsBundle = buildSync({
     entryPoints: ['src/lib/tahoe-glass/optics.ts'], bundle: true, write: false,
     platform: 'node', format: 'cjs', target: 'node24',
 }).outputFiles[0].text
+const cacheBundle = buildSync({ entryPoints: ['src/lib/tahoe-glass/field-cache.ts'], bundle: true, write: false, platform: 'node', format: 'cjs' }).outputFiles[0].text
 
 function harness() {
     const registry = new Map()
@@ -50,6 +51,8 @@ function harness() {
         },
     })
     vm.runInContext(opticsBundle, opticsContext)
+    const cacheContext = vm.createContext({ module: { exports: {} } })
+    vm.runInContext(cacheBundle, cacheContext)
     const context = vm.createContext({
         React: { useCallback: callback => callback },
         registryRef: { current: registry },
@@ -59,6 +62,7 @@ function harness() {
         writeSurfaceDiagnostics() {}, refreshCounts() {},
         requestRender(reason) { renders.push(reason) },
         createTahoeDisplacementField: opticsContext.module.exports.createTahoeDisplacementField,
+        fieldCacheRef: { current: new cacheContext.module.exports.TahoeDisplacementFieldCache() },
     })
     // Execute the actual production registration callback, cache key, and
     // generation branch. Only React scheduling and the canvas sink are mocked.
@@ -150,4 +154,23 @@ test('provider paint signatures distinguish optical profiles at unchanged geomet
     const before = createSignature([entry])
     entry.runtime.displacementProfile = 'prism-top'
     assert.notEqual(createSignature([entry]), before)
+})
+
+test('shared geometry never aliases distinct fractional dimensions or DPR that share legacy rounded keys', () => {
+    const app = harness()
+    app.registerSurface('first', {})
+    app.registerSurface('second', {})
+    const first = measure(app.registry.get('first'))
+    const second = measure(app.registry.get('second'))
+    first.rect.width = 342.001
+    second.rect.width = 342.004
+    const firstField = app.renderField(first, 0.7499)
+    const secondField = app.renderField(second, 0.7501)
+    assert.equal(first.fieldKey, second.fieldKey, 'The old per-surface keys deliberately collide in this regression')
+    assert.notEqual(firstField, secondField)
+    assert.equal(firstField.cssWidth, 342.001)
+    assert.equal(secondField.cssWidth, 342.004)
+    assert.equal(firstField.dpr, 0.7499)
+    assert.equal(secondField.dpr, 0.7501)
+    assert.equal(app.generatedFields(), 2)
 })

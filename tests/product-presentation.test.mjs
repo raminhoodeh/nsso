@@ -42,6 +42,40 @@ test('action defaults require genuine host, page and secure endpoint boundaries'
     ]) assert.equal(purchaseButtonLabel(url), 'View purchase page', url)
 })
 
+test('Amazon storefront and short product links get clear labels while preserving the exact destination', () => {
+    for (const url of [
+        'https://www.amazon.co.uk/dp/B0SYNTHETIC?tag=fixture#details',
+        'https://amazon.com/dp/B0SYNTHETIC', 'https://m.amazon.co.uk/dp/B0SYNTHETIC',
+        'https://smile.amazon.com/dp/B0SYNTHETIC', 'HTTPS://WWW.AMAZON.AE:443/dp/B0SYNTHETIC',
+        'https://www.amazon.de/dp/B0SYNTHETIC', 'https://www.amazon.co.jp/dp/B0SYNTHETIC',
+        'https://www.amazon.com.au/dp/B0SYNTHETIC', 'https://www.amazon.com.be/dp/B0SYNTHETIC',
+        'https://www.amazon.ie/dp/B0SYNTHETIC', 'https://www.amazon.co.za/dp/B0SYNTHETIC',
+        'https://amzn.to/Synthetic123', 'https://amzn.eu/d/Synthetic123',
+        'https://amzn.asia/d/Synthetic123', 'https://a.co/d/Synthetic123',
+    ]) {
+        assert.equal(purchaseButtonLabel(url), 'Buy on Amazon', url)
+        assert.equal(purchaseButtonLabel(url, 'Read my book'), 'Read my book', 'Explicit text has precedence')
+        assert.equal(productPurchaseButtonLabel({ purchase_link: url }, url), 'Buy on Amazon')
+        assert.deepEqual(productCheckoutVisibility({ purchase_link: url, purchase_link_active: true }).purchaseUrls, [new URL(url).href])
+    }
+})
+
+test('Amazon default labels require an explicit supported host and never infer from credentials, queries or paths', () => {
+    for (const url of [
+        'https://notamazon.co.uk/dp/123', 'https://amazon.co.uk.attacker.test/dp/123',
+        'https://www.amazon.com.attacker.test/dp/123', 'https://amazon-shop.example/dp/123',
+        'https://amazon.fake/dp/123', 'https://amazon.xyz/dp/123', 'https://evil.amazon.co.uk/dp/123',
+        'https://аmazon.co.uk/dp/123', 'https://seller.example/amazon.co.uk?next=https://amazon.com',
+        'https://amazon.co.uk@attacker.example/dp/123', 'https://user:password@amazon.co.uk/dp/123',
+        'https://amzn.to.attacker.example/Synthetic123', 'https://a.co.attacker.example/d/Synthetic123',
+        'https://amzn.to/', 'https://a.co/', 'https://www.amzn.to/Synthetic123',
+        'https://amazon.co.uk:8443/dp/123', 'http://amazon.co.uk/dp/123',
+        'javascript:alert("amazon.co.uk")',
+    ]) assert.equal(purchaseButtonLabel(url), 'View purchase page', url)
+    assert.equal(purchaseButtonLabel('https://www.amazon.co.uk/dp/123', ''), 'Buy on Amazon')
+    assert.equal(purchaseButtonLabel('javascript:alert(1)', 'Buy on Amazon'), 'View purchase page')
+})
+
 test('optional per-destination labels are plain bounded text, reset to automatic, and never authorize a URL', () => {
     const primary = 'https://apps.apple.com/gb/app/synthetic/id12345'
     const secondary = 'https://www.nsso.me/sign-up'
@@ -169,6 +203,8 @@ test('purchase-label classification performs no fetches or checkout side effects
     try {
         assert.equal(purchaseButtonLabel('https://www.etsy.com/listing/123'), 'Buy on Etsy')
         assert.equal(purchaseButtonLabel('https://synthetic.myshopify.com/products/123'), 'Buy on Shopify')
+        assert.equal(purchaseButtonLabel('https://www.amazon.co.uk/dp/B0SYNTHETIC'), 'Buy on Amazon')
+        assert.equal(purchaseButtonLabel('https://amzn.eu/d/Synthetic123'), 'Buy on Amazon')
         assert.equal(purchaseButtonLabel('https://custom-shop.example/products/123'), 'View purchase page')
     } finally { globalThis.fetch = original }
 })

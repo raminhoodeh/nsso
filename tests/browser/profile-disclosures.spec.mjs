@@ -3,6 +3,7 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import ts from 'typescript'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const actor = '11111111-1111-4111-8111-111111111111'
@@ -42,30 +43,40 @@ const fixture = `
  </main>}
  document.addEventListener('click',event=>{const anchor=event.target.closest?.('a');if(anchor&&!event.defaultPrevented){event.preventDefault();window.fixtureNavigation.push(anchor.getAttribute('href'))}});
  const app=createRoot(document.getElementById('root'));window.disposeDisclosures=()=>{app.unmount();window.fixtureDisposed=true};
- (async()=>{const view=new URLSearchParams(location.search).get('view');const contents=view==='public'?await Public({params:Promise.resolve({username:'fixture'})}):view==='preview'?<Preview/>:<Standalone/>;app.render(<Host>{contents}</Host>)})();
+ window.renderDisclosureView=async()=>{const query=new URLSearchParams(location.search),view=query.get('view');const contents=view==='public'?await Public({params:Promise.resolve({username:query.get('profile')||'fixture'})}):view==='preview'?<Preview/>:<Standalone/>;app.render(<Host>{contents}</Host>)};void window.renderDisclosureView();
 `
 
 test.beforeAll(async () => {
-    const files = ['src/app/[username]/page.tsx', 'src/app/preview/page.tsx', 'src/components/providers/TahoeGlassProvider.tsx', ...sourceFiles('src/components/profile'), ...sourceFiles('src/components/ui')]
-    const candidates = (files.map(file => readFileSync(root + file, 'utf8')).join('\n') + fixture).matchAll(/["'`]([^"'`\n]+)["'`]/g)
+    const files = ['src/app/[username]/page.tsx', 'src/app/preview/page.tsx', 'src/components/providers/TahoeGlassProvider.tsx', 'src/components/analytics/MetaPixelConsent.tsx', ...sourceFiles('src/components/profile'), ...sourceFiles('src/components/ui')]
+    const candidates = [...files.map(file=>[file,readFileSync(root+file,'utf8')]),['fixture.tsx',fixture]].flatMap(([file,contents])=>{
+        const source=ts.createSourceFile(file,contents,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),literals=[]
+        const visit=node=>{
+            if(ts.isStringLiteralLike(node))literals.push(node.text)
+            if(ts.isTemplateExpression(node))literals.push(node.head.text,...node.templateSpans.map(span=>span.literal.text))
+            ts.forEachChild(node,visit)
+        }
+        visit(source)
+        return literals.flatMap(value=>value.split(/\s+/))
+    })
     const compiler = await compile(readFileSync(root + 'src/app/globals.css', 'utf8'), { base: root + 'src/app', onDependency() {} })
-    css = compiler.build([...candidates].flatMap(match => match[1].split(/\s+/))) + '\nbody{margin:0;font-family:Arial;color:#020617}*{box-sizing:border-box}article,section{min-width:0}'
-    const result = await build({absWorkingDir:root,bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'},plugins:[{name:'read-only-disclosure-data',setup(builder){
-        builder.onResolve({filter:/^(?:next\/(?:navigation|headers|link)|@\/lib\/public-profile|@\/components\/(?:providers\/(?:UserProvider|ProfileProvider)|layout\/Header|profile\/ProfileSaveStatus|logic\/QRScanHandler|analytics\/MetaPixelConsent|ui\/(?:Toast|CreateProfileButton|AddToMyNssoButton|ProfileQRCodeToggle)))$/},args=>({path:args.path,namespace:'fixture'}))
+    css = compiler.build(candidates) + '\nbody{margin:0;font-family:Arial;color:#020617}*{box-sizing:border-box}article,section{min-width:0}'
+    const result = await build({absWorkingDir:root,bundle:true,write:false,platform:'browser',format:'iife',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"','process.env.NEXT_PUBLIC_META_PIXEL_ID':'"1234567890"'},plugins:[{name:'read-only-disclosure-data',setup(builder){
+        builder.onResolve({filter:/^(?:next\/(?:navigation|headers|link)|@\/lib\/public-profile|@\/components\/(?:providers\/(?:UserProvider|ProfileProvider)|layout\/Header|profile\/ProfileSaveStatus|logic\/QRScanHandler|ui\/(?:Toast|CreateProfileButton|AddToMyNssoButton|ProfileQRCodeToggle)))$/},args=>({path:args.path,namespace:'fixture'}))
         builder.onLoad({filter:/.*/,namespace:'fixture'},({path})=>({loader:'tsx',resolveDir:root,contents:
             path==='next/navigation'?'export const useRouter=()=>({push:path=>window.fixtureNavigation.push(path),prefetch(){}});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const notFound=()=>{throw Error("Synthetic profile missing")};'
-            :path==='next/headers'?'export const cookies=async()=>({get:()=>undefined});'
+            :path==='next/headers'?'export const cookies=async()=>({get:()=>({value:new URLSearchParams(location.search).get("consent")||undefined})});'
             :path==='next/link'?'import React from "react";export default function Link({children,onClick,...props}){return<a {...props} onClick={event=>{onClick?.(event);if(!event.defaultPrevented){event.preventDefault();window.fixtureNavigation.push(props.href)}}}>{children}</a>}'
-            :path==='@/lib/public-profile'?'export const loadPublicProfile=async()=>window.fixtureData;export const loadPublicProfileMetadata=async()=>window.fixtureData;export const loadPublicProfileViewer=async()=>({viewer:null,connectionExists:false});'
+            :path==='@/lib/public-profile'?'export const loadPublicProfile=async()=>window.fixtureData;export const loadPublicProfileMetadata=async()=>window.fixtureData;export const loadPublicProfileViewer=async()=>({viewer:new URLSearchParams(location.search).get("viewer")==="owner"?window.fixtureData.user:null,connectionExists:false});'
             :path.endsWith('UserProvider')?'export const useUser=()=>window.fixtureAccount;'
             :path.endsWith('ProfileProvider')?'export const useProfile=()=>window.fixtureProfile;'
+            :path.endsWith('layout/Header')?'export default()=> <header data-fixture-profile-header style={{position:"fixed",top:0,left:0,right:0,height:88,zIndex:5000,background:"#c8d4e0"}}>Profile header</header>;'
             :path.endsWith('Toast')?'export const useToast=()=>({showToast(){}});'
             :'export default()=>null;'}))
     }}],stdin:{resolveDir:root,loader:'tsx',contents:fixture}})
     bundle=result.outputFiles[0].text
 })
 
-async function mount(page, view = 'standalone') {
+async function mount(page, view = 'standalone', options = {}) {
     const errors=[],external=[]
     page.on('pageerror',error=>errors.push(error.message))
     await page.route('**/*', route=>{
@@ -76,7 +87,7 @@ async function mount(page, view = 'standalone') {
         if(url.pathname==='/assets/backgrounds/nsso-deck-blue.webp')return route.fulfill({contentType:'image/webp',body:readFileSync(root+'public'+url.pathname)})
         return route.fulfill({contentType:'text/html',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>'})
     })
-    await page.goto('https://nsso.test/profile-disclosures?view='+view)
+    await page.goto('https://nsso.test/profile-disclosures?'+new URLSearchParams({view,...options}))
     await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-state','active')
     return {errors,external}
 }
@@ -177,6 +188,9 @@ test('Read more uses the real Premium chip material with a compact lens and acce
 
 for(const view of ['public','preview'])test(`actual ${view} profile keeps side-by-side cards aligned when expanding without navigation or checkout bypass`,async({page},testInfo)=>{
     const state=await mount(page,view)
+    await expect(page.getByRole('link',{name:/Back to sections/})).toHaveCount(0)
+    await expect(page.locator('a[href="#profile-sections"]')).toHaveCount(0)
+    await expect(page.getByRole('button',{name:/Privacy (?:choices|settings)/i})).toHaveCount(0)
     await page.locator('img').evaluateAll(images=>Promise.all(images.map(image=>image.decode().catch(()=>{}))))
     const bioChip=page.getByRole('button',{name:'Read more about bio',exact:true})
     await expect(bioChip).toBeVisible()
@@ -217,21 +231,26 @@ for(const view of ['public','preview'])test(`actual ${view} profile keeps side-b
     }else expect(Math.abs(productAfter.height-productBefore.height)).toBeLessThanOrEqual(.1)
     await expect(offering.getByRole('link').first()).toHaveAttribute('href',view==='preview'?'/products/offering-alpha?preview=true':'/products/offering-alpha')
     await expect(unpublished.locator('a')).toHaveCount(0)
-    for(const [heading,shown,count]of[['Experiences','Experience',6],['Qualifications','Qualification',5]]){
+    for(const [heading,shown,count,partnerShown,partnerCount]of[['Experiences','Experience',6,'Qualification',5],['Qualifications','Qualification',5,'Experience',6]]){
         const section=cardFor(heading),partner=cardFor(heading==='Experiences'?'Qualifications':'Experiences')
         const partnerBefore=await cardBounds(partner)
         if(desktop)await expectAlignedCards(section,partner)
         await expect(section.getByRole('heading',{name:shown+' 5',exact:true})).toBeHidden()
         await section.getByRole('button',{name:'Read more about '+heading,exact:true}).click()
         await expect(section.getByRole('heading',{name:shown+' '+count,exact:true})).toBeVisible()
-        await expect(partner.getByRole('button',{name:/^Read more about/})).toHaveAttribute('aria-expanded','false')
+        await expect(partner.getByRole('button',{name:/^Read less about/})).toHaveAttribute('aria-expanded','true')
+        await expect(partner.getByRole('heading',{name:partnerShown+' '+partnerCount,exact:true})).toBeVisible()
         const partnerAfter=await cardBounds(partner)
         if(desktop){
             await expectAlignedCards(section,partner)
             expect(partnerAfter.height).toBeGreaterThan(partnerBefore.height)
-        }else expect(Math.abs(partnerAfter.height-partnerBefore.height)).toBeLessThanOrEqual(.1)
-        await section.getByRole('button',{name:'Read less about '+heading,exact:true}).click()
+        }else expect(partnerAfter.height).toBeGreaterThan(partnerBefore.height)
+        const collapse=partner.getByRole('button',{name:/^Read (?:more|less) about/})
+        await collapse.click()
+        await expect(collapse).toBeFocused()
+        await expect(collapse).toHaveAttribute('aria-expanded','false')
         await expect(section.getByRole('heading',{name:shown+' 5',exact:true})).toBeHidden()
+        await expect(partner.getByRole('heading',{name:partnerShown+' 5',exact:true})).toBeHidden()
         if(desktop)await expectAlignedCards(section,partner)
     }
     if(view==='preview'){
@@ -244,4 +263,84 @@ for(const view of ['public','preview'])test(`actual ${view} profile keeps side-b
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
     await page.screenshot({path:testInfo.outputPath(view+'-profile-disclosures.png'),fullPage:true})
     await finish(page,state)
+})
+
+test('profile and preview start close to the shared header, with no reserved header space when the public owner header is hidden',async({page},testInfo)=>{
+    for(const width of [320,390,1440]){
+        await page.setViewportSize({width,height:900})
+        for(const [view,options] of [['public',{}],['public',{viewer:'owner'}],['preview',{}]]){
+            const state=await mount(page,view,options)
+            const header=page.locator('[data-fixture-profile-header]')
+            const headerVisible=await header.isVisible()
+            const content=view==='public'?page.getByRole('navigation',{name:'Profile sections',exact:true}):page.getByRole('heading',{name:"I'm Synthetic creator",exact:true})
+            const top=await content.evaluate(element=>element.getBoundingClientRect().top+scrollY)
+            const hiddenOwnerHeader=view==='public'&&options.viewer==='owner'&&width>=768
+            expect(headerVisible).toBe(!hiddenOwnerHeader)
+            expect(top).toBe(hiddenOwnerHeader?32:104)
+            if(headerVisible){
+                const bounds=await header.boundingBox()
+                expect(top-(bounds.y+bounds.height)).toBe(16)
+            }
+            if(view==='public'){
+                const navigation=await content.boundingBox(),identity=await page.locator('#profile-about').boundingBox()
+                expect(identity.y-navigation.y-navigation.height).toBe(width>=1024?40:32)
+                await expect(page.getByRole('link',{name:'About',exact:true})).toHaveAttribute('href','#profile-about')
+            }
+            expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+            await page.screenshot({path:testInfo.outputPath(`${view}-${options.viewer||'guest'}-top-${width}.png`)})
+            await finish(page,state)
+        }
+    }
+})
+
+for(const view of ['public','preview'])test(`actual ${view} timeline sharing resets with collection identity and handles a short or absent partner`,async({page})=>{
+    const state=await mount(page,view)
+    await page.getByRole('button',{name:'Read more about Experiences',exact:true}).press('Enter')
+    await expect(page.getByRole('button',{name:'Read less about Qualifications',exact:true})).toHaveAttribute('aria-expanded','true')
+    await page.evaluate(async()=>{
+        const experiences=window.fixtureData.experiences.map(row=>({...row,id:row.id+'-replacement'}))
+        window.fixtureData.experiences=experiences;window.fixtureProfile.experiences=experiences
+        await window.renderDisclosureView()
+    })
+    for(const context of ['Experiences','Qualifications'])await expect(page.getByRole('button',{name:'Read more about '+context,exact:true})).toHaveAttribute('aria-expanded','false')
+    await page.evaluate(async()=>{
+        const qualifications=window.fixtureData.qualifications.slice(0,2)
+        window.fixtureData.qualifications=qualifications;window.fixtureProfile.qualifications=qualifications
+        await window.renderDisclosureView()
+    })
+    await expect(page.getByRole('button',{name:/Read (?:more|less) about Qualifications/})).toHaveCount(0)
+    await page.getByRole('button',{name:'Read more about Experiences',exact:true}).press('Enter')
+    await expect(page.getByRole('heading',{name:'Experience 6',exact:true})).toBeVisible()
+    await expect(page.getByRole('heading',{name:'Qualification 2',exact:true})).toBeVisible()
+    await page.evaluate(async()=>{
+        window.fixtureData.experiences=[];window.fixtureProfile.experiences=[]
+        window.fixtureData.qualifications=[];window.fixtureProfile.qualifications=[]
+        await window.renderDisclosureView()
+    })
+    await expect(page.locator('[data-profile-list-disclosure]')).toHaveCount(0)
+    expect(await page.evaluate(()=>window.fixtureWrites)).toEqual([])
+    await finish(page,state)
+})
+
+test('Ramin public profile omits the privacy footer control while initial consent and the notice hash entry remain available',async({page})=>{
+    for(const consent of ['denied','unset']){
+        const state=await mount(page,'public',{profile:'ramin',consent})
+        await expect(page.getByRole('button',{name:/Privacy (?:choices|settings)/i})).toHaveCount(0)
+        const dialog=page.getByRole('dialog',{name:'Marketing privacy',exact:true})
+        if(consent==='denied'){
+            await expect(dialog).toHaveCount(0)
+            await page.evaluate(()=>{location.hash='privacy-choices'})
+        }
+        await expect(dialog).toBeVisible()
+        await expect(page.locator('script[src*="connect.facebook.net"]')).toHaveCount(0)
+        const decline=dialog.getByRole('button',{name:'Decline',exact:true})
+        await decline.focus();await decline.press('Enter')
+        await expect(dialog).toHaveCount(0)
+        await expect(page.getByRole('button',{name:/Privacy (?:choices|settings)/i})).toHaveCount(0)
+        expect(await page.evaluate(()=>typeof window.fbq)).toBe('undefined')
+        expect(await page.evaluate(()=>location.hash)).toBe('')
+        expect(await page.context().cookies()).toEqual(expect.arrayContaining([expect.objectContaining({name:'nsso_meta_marketing_consent',value:'denied'})]))
+        expect(await page.evaluate(()=>JSON.stringify(window.fixtureData)===window.fixtureOriginal)).toBe(true)
+        await finish(page,state)
+    }
 })

@@ -71,6 +71,39 @@ interface Contact {
     custom_method_name?: string
 }
 
+function ProductPurchaseCard({ product, preview, className, position, compact = false }: {
+    product: Product
+    preview: boolean
+    className?: string
+    position: 'primary-mobile' | 'primary-desktop' | 'closing-mobile'
+    compact?: boolean
+}) {
+    const checkout = productCheckoutVisibility(product)
+    return <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
+        variant="panel" radius={20} tone="dark" semanticTint="light" semanticTintOpacity={0.18}
+        data-product-purchase-card={position}
+        className={cn('nsso-crystal-panel w-full', className)}
+        contentClassName="flex w-full flex-col items-center p-6"
+    >
+        {product.image_url && <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-[12px]">
+            <Image src={product.image_url} alt={product.name} fill className="object-cover" />
+        </div>}
+        {!compact && <>
+            <h3 className="mb-2 text-center text-[17px] font-bold text-slate-950" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>{product.name}</h3>
+            <p className="mb-4 text-center text-[29px] font-bold text-slate-950" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>{product.price}</p>
+        </>}
+        {checkout.purchaseUrls.map(purchaseUrl => <div key={purchaseUrl} className="mb-3 w-full max-w-[15rem]">
+            {preview
+                ? <PreviewCheckoutButton className="w-full [&>button]:min-h-11 [&>button]:whitespace-normal [&>button]:[overflow-wrap:anywhere] [&>button]:px-4 [&>button]:py-2 [&>button]:text-center">{productPurchaseButtonLabel(product, purchaseUrl)}</PreviewCheckoutButton>
+                : <PurchaseLink href={purchaseUrl} label={productPurchaseButtonLabel(product, purchaseUrl)} />}
+        </div>)}
+        {checkout.paypal && !!product.payment_config && <div className="mt-2 flex w-full max-w-[15rem] justify-center">
+            <PayPalSmartButton config={product.payment_config} preview={preview} price={product.price} productName={product.name} />
+        </div>}
+        {!compact && product.value_proposition && <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-slate-950">{product.value_proposition}</p>}
+    </TahoeGlassSurface>
+}
+
 const CONTACT_DETAILS_HIDDEN_PRODUCT_IDS = new Set([
     '50a34188-30dc-4fc0-82c4-721250250536',
 ])
@@ -207,8 +240,8 @@ function ProductSalesContent({ productId }: { productId: string }) {
         return match && match[2].length === 11 ? match[2] : null
     }
 
-    // The standalone product route has no account bottom bar. A failed or
-    // pending product read must still leave an explicit, safe way out without
+    // The standalone product route has no account bottom bar. A failed
+    // product read must still leave an explicit, safe way out without
     // trusting a creator id, return URL, or unverified session from the query.
     const recoveryNavigation = <LightButton
         onClick={() => router.push(verifiedAccountId ? '/dashboard' : '/')}
@@ -223,8 +256,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
         return (
             <ProductRouteContent>
                 <div className="relative z-[1] flex min-h-screen flex-col items-center justify-center gap-5 p-5">
-                    {recoveryNavigation}
-                    <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin" variant="pill" className="nsso-crystal-panel" tone="dark" semanticTint="light" semanticTintOpacity={0.18} contentClassName="px-6 py-3 text-slate-950">
+                    <TahoeGlassSurface role="status" chromiumAppearance="light" materialFinish="satin" variant="pill" className="nsso-crystal-panel" tone="dark" semanticTint="light" semanticTintOpacity={0.18} contentClassName="px-6 py-3 text-slate-950">
                         Loading...
                     </TahoeGlassSurface>
                 </div>
@@ -309,62 +341,8 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             {product.intro_text}
                         </p>
 
-                        {/* Mobile-only Product Card — shown early so users see the product before the bullet list */}
-                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
-                            variant="panel"
-                            radius={20}
-                            tone="dark"
-                            semanticTint="light"
-                            semanticTintOpacity={0.18}
-                            className="nsso-crystal-panel w-full lg:hidden"
-                            contentClassName="flex w-full flex-col items-center p-6"
-                        >
-                            {/* Product Image */}
-                            {product.image_url && (
-                                <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
-                                    <Image
-                                        src={product.image_url}
-                                        alt={product.name}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                            )}
-
-                            {/* Product Name */}
-                            <h3 className="text-[17px] font-bold text-slate-950 mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                {product.name}
-                            </h3>
-
-                            {/* Price */}
-                            <p className="text-[29px] font-bold text-slate-950 mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                {product.price}
-                            </p>
-
-                            {/* Purchase Link Button */}
-                            {checkout.purchaseUrls.map(purchaseUrl => (
-                                <div key={purchaseUrl} className="w-full max-w-[15rem] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:min-h-11 [&>button]:whitespace-normal [&>button]:[overflow-wrap:anywhere] [&>button]:px-4 [&>button]:py-2 [&>button]:text-center">{productPurchaseButtonLabel(product, purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} label={productPurchaseButtonLabel(product, purchaseUrl)} />}
-                                </div>
-                            ))}
-
-                            {/* PayPal Button */}
-                            {checkout.paypal && !!product.payment_config && (
-                                <div className="w-full max-w-[15rem] flex justify-center mt-2">
-                                    <PayPalSmartButton 
-                                        config={product.payment_config}
-                                        preview={preview}
-                                        price={product.price}
-                                        productName={product.name}
-                                    />
-                                </div>
-                            )}
-                            {product.value_proposition && (
-                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-slate-950">
-                                    {product.value_proposition}
-                                </p>
-                            )}
-                        </TahoeGlassSurface>
+                        {/* The first product card stays near the introduction. */}
+                        <ProductPurchaseCard product={product} preview={preview} position="primary-mobile" className="lg:hidden" />
 
                         {/* Benefits */}
                         {product.benefits && product.benefits.length > 0 && (
@@ -376,10 +354,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                                     return (
                                         <li key={index} className="flex items-start gap-3 text-[17px] text-slate-950 leading-[22px]" style={{ fontFamily: "'SF Pro', -apple-system, sans-serif" }}>
                                             <span className="text-slate-950 mt-1" style={{ fontStyle: 'normal', fontWeight: 400 }}>•</span>
-                                            <span style={{
-                                                fontWeight: isIncludes ? 400 : 510,
-                                                fontStyle: isIncludes ? 'italic' : 'normal',
-                                            }}>{cleanBenefit}</span>
+                                            <span className={cn(isIncludes ? 'font-normal italic' : 'font-[510] not-italic', 'md:font-normal md:italic')}>{cleanBenefit}</span>
                                         </li>
                                     );
                                 })}
@@ -441,77 +416,11 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             </TahoeGlassSurface>
                         )}
 
-                        {/* Footer Attribution */}
-                        <div className="mt-12 pt-8 border-t border-slate-400/40">
-                            <Link
-                                href="/"
-                                className="nsso-crystal-reading inline-flex min-h-11 items-center rounded-full px-4 py-2 text-slate-950 hover:text-slate-950 transition-colors text-sm font-medium focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950"
-                            >
-                                Sales page created with nsso →
-                            </Link>
-                        </div>
                     </div>
 
                     {/* RIGHT COLUMN - Conversion & Context */}
                     <div className="space-y-6">
-                        {/* Product Card */}
-                        <TahoeGlassSurface chromiumAppearance="light" materialFinish="satin"
-                            variant="panel"
-                            radius={20}
-                            tone="dark"
-                            semanticTint="light"
-                            semanticTintOpacity={0.18}
-                            className="nsso-crystal-panel hidden w-full lg:block"
-                            contentClassName="flex w-full flex-col items-center p-6"
-                        >
-                            {/* Product Image */}
-                            {product.image_url && (
-                                <div className="relative w-full aspect-square rounded-[12px] overflow-hidden mb-4">
-                                    <Image
-                                        src={product.image_url}
-                                        alt={product.name}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                            )}
-
-                            {/* Product Name */}
-                            <h3 className="text-[17px] font-bold text-slate-950 mb-2 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                {product.name}
-                            </h3>
-
-                            {/* Price */}
-                            <p className="text-[29px] font-bold text-slate-950 mb-4 text-center" style={{ fontFamily: "'SF Pro Display', -apple-system, sans-serif" }}>
-                                {product.price}
-                            </p>
-
-                            {/* Purchase Link Button */}
-                            {checkout.purchaseUrls.map(purchaseUrl => (
-                                <div key={purchaseUrl} className="w-full max-w-[15rem] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:min-h-11 [&>button]:whitespace-normal [&>button]:[overflow-wrap:anywhere] [&>button]:px-4 [&>button]:py-2 [&>button]:text-center">{productPurchaseButtonLabel(product, purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} label={productPurchaseButtonLabel(product, purchaseUrl)} />}
-                                </div>
-                            ))}
-
-                            {/* PayPal / Apple Pay */}
-                            {checkout.paypal && !!product.payment_config && (
-                                <div className="w-full max-w-[15rem] flex justify-center mt-2">
-                                        <PayPalSmartButton 
-                                            config={product.payment_config}
-                                            preview={preview}
-                                            price={product.price}
-                                            productName={product.name}
-                                            />
-                                </div>
-                            )}
-
-                            {/* Value Proposition */}
-                            {product.value_proposition && (
-                                <p data-product-purchase-support className="mt-4 text-center text-[15px] font-medium leading-[22px] text-slate-950">
-                                    {product.value_proposition}
-                                </p>
-                            )}
-                        </TahoeGlassSurface>
+                        <ProductPurchaseCard product={product} preview={preview} position="primary-desktop" className="hidden lg:block" />
 
                         {/* YouTube Video Embed */}
                         {youtubeId && (
@@ -552,6 +461,17 @@ function ProductSalesContent({ productId }: { productId: string }) {
                         )}
                     </div>
                 </div>
+
+                {/* A second, compact purchase opportunity after all mobile content. */}
+                {(product.image_url || checkout.purchaseUrls.length > 0 || (checkout.paypal && !!product.payment_config)) && <div className="mx-3 mt-8 lg:hidden">
+                    <ProductPurchaseCard product={product} preview={preview} position="closing-mobile" compact />
+                </div>}
+
+                <footer data-product-attribution className="mx-3 mt-12 border-t border-slate-400/40 pt-8 md:mx-16">
+                    <Link href="/" className="nsso-crystal-reading inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:text-slate-950 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">
+                        Sales page created with nsso →
+                    </Link>
+                </footer>
             </div>
         </main>
         </ProductRouteContent>
