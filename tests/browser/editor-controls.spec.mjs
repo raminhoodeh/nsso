@@ -247,6 +247,13 @@ test.describe('desktop sidebar affordances', () => {
         const activeBox = await active.boundingBox()
         expect(activeBox.width).toBeGreaterThanOrEqual(44)
         expect(activeBox.height).toBeGreaterThanOrEqual(44)
+        // Selection must remain visible without keyboard focus when system
+        // accessibility preferences replace translucent coats with solids.
+        await expect(active).not.toBeFocused()
+        await page.emulateMedia({ forcedColors: 'active' })
+        await expect(active).toHaveCSS('outline-style', 'solid')
+        await expect(active).toHaveCSS('outline-width', '2px')
+        await page.emulateMedia({ forcedColors: 'none' })
         await expect(active.locator('.blur-\\[2px\\]')).toHaveCount(0)
         await page.keyboard.press('Tab')
         await active.focus()

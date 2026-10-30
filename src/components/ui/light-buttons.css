@@ -115,8 +115,8 @@
       color: CanvasText;
     }
     .nsso-silver-glass:is([aria-current="page"], [aria-current="true"], [aria-selected="true"]) {
-      outline: 2px solid Highlight;
-      outline-offset: 2px;
+      outline: 2px solid Highlight !important;
+      outline-offset: 2px !important;
     }
     .nsso-white-control,
     .nsso-glass-control,
