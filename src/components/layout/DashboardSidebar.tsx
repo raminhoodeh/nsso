@@ -27,6 +27,7 @@ import { isAccountDeletionAvailable } from '@/lib/delete-profile-client';
 import DeleteProfileDialog from '@/components/layout/DeleteProfileDialog';
 import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass';
 import { LightButton, lightButtonClass } from '@/components/ui/LightButton';
+import { LIGHT_PANEL } from '@/components/ui/light-panel';
 import {
     getDashboardDesktopLayoutSnapshot,
     getDashboardDirectBackdropSnapshot,
@@ -164,7 +165,7 @@ function DashboardSidebarContent({
                             className={cn(
                                 "group relative w-full px-4 py-3 transition-all duration-200",
                                 isActive
-                                    ? "border border-slate-500 text-slate-950 ring-2 ring-slate-500/60"
+                                    ? LIGHT_PANEL.silver
                                     : "text-slate-900 hover:text-slate-950",
                                 item.comingSoon && "cursor-pointer"
                             )}

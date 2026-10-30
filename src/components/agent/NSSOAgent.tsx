@@ -1,6 +1,7 @@
 "use client";
 
 import { NativeGlassLens } from '@/components/ui/tahoe-glass/NativeGlassLens'
+import { TahoeBackdropSurface } from '@/components/ui/tahoe-glass/TahoeBackdropHeader'
 
 import { LIGHT_PANEL } from '@/components/ui/light-panel';
 
@@ -44,12 +45,23 @@ export default function NSSOAgent() {
     const { user, loading } = useUser();
     const ownerId = loading && !user ? undefined : user?.id ?? 'signed-out';
     const [isOpen, setIsOpen] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(false);
     const [hasOpened, setHasOpened] = useState(false);
     const [shortcutRequests, setShortcutRequests] = useState<{ id: string; message: string; ownerId?: string }[]>([]);
     const launcherRef = useRef<HTMLButtonElement>(null);
     const chatWindowRef = useRef<HTMLDivElement>(null);
     const restoreLauncherFocusRef = useRef(false);
     const openerRef = useRef<HTMLElement | null>(null);
+
+    // A CSS-hidden optical surface still owns renderer work in WebKit.
+    // Match the desktop launcher breakpoint before mounting its backdrop.
+    useEffect(() => {
+        const desktop = window.matchMedia('(min-width: 768px)');
+        const update = () => setIsDesktop(desktop.matches);
+        update();
+        desktop.addEventListener('change', update);
+        return () => desktop.removeEventListener('change', update);
+    }, []);
 
     // Listen for custom event to open chat
     useEffect(() => {
@@ -172,30 +184,41 @@ export default function NSSOAgent() {
     return (
         <>
             {/* Persistent Entry Point (Pill) */}
-            {!isOpen && (
-                <NativeGlassLens as="button"
-                    ref={launcherRef}
-                    type="button"
-                    onClick={handleOpen}
-                    aria-label="Open Deity assistant"
-                    aria-haspopup="dialog"
-                    className={`${LIGHT_PANEL.control} ${LIGHT_PANEL.focus} group fixed bottom-6 right-6 z-[6000] hidden h-[56px] items-center rounded-full pl-2 pr-6 shadow-xl shadow-slate-950/15 transition-transform duration-300 hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none md:inline-flex`}
+            {!isOpen && isDesktop && (
+                <TahoeBackdropSurface
+                    data-deity-launcher-glass="true"
+                    variant="menu"
+                    materialFamily="candidate"
+                    chromiumAppearance="light"
+                    tone="dark"
+                    radius={9999}
+                    materialLighting="uniform"
+                    className="fixed bottom-6 right-6 z-[6000] hidden rounded-full shadow-xl shadow-slate-950/15 md:block"
                 >
-                    <span className="mr-3 flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full bg-[#e0e5ed]">
+                    <button
+                        ref={launcherRef}
+                        type="button"
+                        onClick={handleOpen}
+                        aria-label="Open Deity assistant"
+                        aria-haspopup="dialog"
+                        className={`${LIGHT_PANEL.focus} group inline-flex h-[56px] items-center rounded-full pl-2 pr-6 text-slate-950`}
+                    >
+                        <span className="mr-3 flex h-[42px] w-[42px] items-center justify-center overflow-hidden rounded-full bg-[#e0e5ed]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src="/nsso-agent-avatar.png"
+                                alt=""
+                                className="h-full w-full object-cover"
+                            />
+                        </span>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src="/nsso-agent-avatar.png"
-                            alt=""
-                            className="h-full w-full object-cover"
+                            src="/deity logo white.png"
+                            alt="Deity"
+                            className="h-7 w-auto translate-y-[2px] object-contain brightness-0"
                         />
-                    </span>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src="/deity logo white.png"
-                        alt="Deity"
-                        className="h-7 w-auto translate-y-[2px] object-contain brightness-0"
-                    />
-                </NativeGlassLens>
+                    </button>
+                </TahoeBackdropSurface>
             )}
 
             {/* Pop-up Mode - ALWAYS RENDERED but HIDDEN when closed to persist state */}

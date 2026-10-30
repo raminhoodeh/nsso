@@ -19,6 +19,8 @@ import { TahoeGlassField, TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import { LightButton, LightIconButton, LightCloseButton, lightButtonClass } from '@/components/ui/LightButton'
 import ProductsServicesEditor from './ProductsServicesEditor'
 import AskDeityButton from '@/components/ui/AskDeityButton'
+import { LIGHT_PANEL } from '@/components/ui/light-panel'
+import { cn } from '@/lib/utils'
 
 interface AdvancedModeCardProps {
     userId: string
@@ -316,7 +318,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                 id={`${controls}-toggle`}
                 radius={24}
                 onClick={() => setExpandedPanel(current => current === panel ? null : panel)}
-                className="group w-full overflow-hidden p-0 text-left"
+                className={cn(LIGHT_PANEL.silver, 'group w-full overflow-hidden p-0 text-left')}
                 contentClassName="p-4 sm:p-6 flex items-center justify-between gap-4 w-full h-full"
                 aria-expanded={expanded}
                 aria-controls={controls}
@@ -610,7 +612,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                     id="experience-tab-experiences"
                                     onClick={() => setActiveSection('experiences')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'experiences')}
-                                    className="shrink-0 px-5 py-2.5 aria-selected:ring-2 aria-selected:ring-slate-600/50 md:w-full md:px-4 md:py-3"
+                                    className={cn('shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3', activeSection === 'experiences' && LIGHT_PANEL.silver)}
                                     contentClassName="w-full justify-center whitespace-nowrap text-[15px] md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'experiences'}
@@ -625,7 +627,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                     id="experience-tab-qualifications"
                                     onClick={() => setActiveSection('qualifications')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'qualifications')}
-                                    className="shrink-0 px-5 py-2.5 aria-selected:ring-2 aria-selected:ring-slate-600/50 md:w-full md:px-4 md:py-3"
+                                    className={cn('shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3', activeSection === 'qualifications' && LIGHT_PANEL.silver)}
                                     contentClassName="w-full justify-center whitespace-nowrap text-[15px] md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'qualifications'}
@@ -640,7 +642,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                                     id="experience-tab-projects"
                                     onClick={() => setActiveSection('projects')}
                                     onKeyDown={(event) => handleSectionTabKeyDown(event, 'projects')}
-                                    className="shrink-0 px-5 py-2.5 aria-selected:ring-2 aria-selected:ring-slate-600/50 md:w-full md:px-4 md:py-3"
+                                    className={cn('shrink-0 px-5 py-2.5 md:w-full md:px-4 md:py-3', activeSection === 'projects' && LIGHT_PANEL.silver)}
                                     contentClassName="w-full justify-center whitespace-nowrap text-[15px] md:justify-start md:text-left md:text-base"
                                     role="tab"
                                     aria-selected={activeSection === 'projects'}

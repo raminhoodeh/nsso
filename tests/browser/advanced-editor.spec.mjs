@@ -70,6 +70,8 @@ test('advanced editor fields keep accessible names across section and product se
     for (const name of ['Project name','Your contribution','Project URL (optional)','Project description']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
     await page.getByRole('button',{name:/^Products & Services/}).click()
     await page.getByRole('button',{name:'Edit Fixture offer',exact:true}).click()
+    await expect(page.getByRole('button',{name:'Edit Fixture offer',exact:true})).toHaveAttribute('aria-current','true')
+    await expect(page.getByRole('button',{name:'Edit Fixture offer',exact:true})).toHaveClass(/\bnsso-silver-glass\b/)
     for (const name of ['Product name','Price (include the currency)','Product description','Purchase link']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
 })
 

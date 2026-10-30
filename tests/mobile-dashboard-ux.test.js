@@ -109,7 +109,7 @@ test('mobile navigation immediately precedes the active experience editor', () =
         /scrollbar-hide flex gap-2 overflow-x-auto[^"\n]*md:flex-col/
     )
     const roomyMobileTabs = experienceMarkup.match(
-        /className="shrink-0 px-5 py-2\.5 aria-selected:ring-2 aria-selected:ring-slate-600\/50 md:w-full md:px-4 md:py-3"/g
+        /className=\{cn\('shrink-0 px-5 py-2\.5 md:w-full md:px-4 md:py-3', activeSection === '(?:experiences|qualifications|projects)' && LIGHT_PANEL\.silver\)\}/g
     ) || []
     assert.equal(roomyMobileTabs.length, 3, 'tabs keep natural width and breathing room in the horizontal scroller')
     assert.match(fs.readFileSync(path.join(process.cwd(), 'src/components/ui/light-button-styles.ts'), 'utf8'), /min-h-11 min-w-11/, 'The shared native primitive supplies the 44px minimum.')

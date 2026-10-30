@@ -901,6 +901,9 @@ test('Links help stays open while the pointer crosses into its text and Escape w
     await expect(tooltip).toHaveText('Where can people find you or your work online?')
     const button = await help.boundingBox()
     await page.mouse.move(button.x + button.width / 2, button.y + button.height + 4)
+    // A user may pause between the symbol and panel. This must stay open
+    // independently of actionability checks or a fast computer's timing.
+    await page.waitForTimeout(350)
     await expect(tooltip).toBeVisible()
     await tooltip.hover()
     await expect(tooltip).toBeVisible()

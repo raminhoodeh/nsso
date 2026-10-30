@@ -3,7 +3,7 @@ import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { controlMaterial, expectWhiteEditorControls, keyboardFocus } from './helpers/white-control-assertions.mjs'
+import { controlMaterial, expectWhiteEditorControls, keyboardFocus, renderedControlContrast } from './helpers/white-control-assertions.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 let bundle, css
@@ -55,6 +55,45 @@ async function mount(page) {
     await page.goto('https://nsso.test/rows')
     await page.getByRole('button', { name: /^Experience & Education/ }).click()
 }
+
+async function expectSilver(control) {
+    await expect(control).toHaveClass(/\bnsso-silver-glass\b/)
+    await controlMaterial(control)
+    const paint = await renderedControlContrast(control, { includeBackground: true })
+    expect(paint.contrast).toBeGreaterThanOrEqual(4.5)
+    expect(Math.min(...paint.centerBackground), 'silver control stays bright over the blue editor background').toBeGreaterThanOrEqual(225)
+    expect(Math.max(...paint.centerBackground) - Math.min(...paint.centerBackground), 'silver material has no strong blue cast').toBeLessThanOrEqual(20)
+}
+
+test('accordion bars stay silver and the bright selected tab follows pointer and keyboard selection', async ({ page }, testInfo) => {
+    await mount(page)
+    const experience = page.getByRole('button', { name: 'Experience & Education', exact: true })
+    const products = page.getByRole('button', { name: 'Products & Services', exact: true })
+    const tabs = page.getByRole('tablist', { name: 'Experience and education sections' })
+    await expectSilver(experience)
+    await expectSilver(products)
+    await expectSilver(tabs.getByRole('tab', { name: 'Job Titles', exact: true }))
+    const projects = tabs.getByRole('tab', { name: 'Projects', exact: true })
+    await projects.click()
+    await page.mouse.move(0, 0)
+    await expect(projects).toHaveAttribute('aria-selected', 'true')
+    await expect(projects).toHaveAttribute('tabindex', '0')
+    await expectSilver(projects)
+    await page.screenshot({ path: testInfo.outputPath('silver-editor-selection.png'), fullPage: true })
+    await expect(tabs.getByRole('tab', { name: 'Job Titles', exact: true })).not.toHaveClass(/\bnsso-silver-glass\b/)
+    await projects.press('Home')
+    const jobTitles = tabs.getByRole('tab', { name: 'Job Titles', exact: true })
+    await expect(jobTitles).toBeFocused()
+    await expect(jobTitles).toHaveAttribute('aria-selected', 'true')
+    await expectSilver(jobTitles)
+    await expect(projects).not.toHaveClass(/\bnsso-silver-glass\b/)
+    await products.click()
+    await expect(experience).toHaveAttribute('aria-expanded', 'false')
+    await expect(products).toHaveAttribute('aria-expanded', 'true')
+    await expectSilver(experience)
+    await expectSilver(products)
+    expect(await page.evaluate(() => ({ reorders: window.reorders, removals: window.removals }))).toEqual({ reorders: [], removals: [] })
+})
 
 for (const [kind, tab, primary, detail, collection] of [
     ['experience', 'Job Titles', 'Company', 'Role', 'experiences'],

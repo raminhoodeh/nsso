@@ -33,7 +33,7 @@ const fixture = `
  const source={kind:'image',src:'/assets/backgrounds/nsso-deck-blue.webp',fit:'cover',label:'real-disclosure-deck'};
  const scene=<img src={source.src} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>;
  function Host({children}){return<TahoeGlassProvider materialFamily="supplied" preferredBackend="auto" fallback="webgl" sourceLabel={source.label} scene={scene} webglSource={source} onDiagnosticsChange={value=>window.fixtureDiagnostics=value}>{children}</TahoeGlassProvider>}
- const cases={short74:'a'.repeat(74),exact75:'b'.repeat(75),long76:'c'.repeat(76),unbroken:'x'.repeat(260),unicode:'👨‍👩‍👧‍👦'.repeat(76),whitespace:${JSON.stringify('  Opening paragraph.\n\n' + fullBody + '  ')},empty:'',blank:${JSON.stringify(' \n ')}};window.fixtureTextCases=cases;
+ const cases={short199:'a'.repeat(199),exact200:'b'.repeat(200),long201:'c'.repeat(201),unbroken:'x'.repeat(260),unicode:'👨‍👩‍👧‍👦'.repeat(201),whitespace:${JSON.stringify('  Opening paragraph.\n\n' + fullBody + '  ')},empty:'',blank:${JSON.stringify(' \n ')}};window.fixtureTextCases=cases;
  function Standalone(){const[change,setChange]=React.useState('first '+fullBody);window.changeStandaloneText=setChange;const[listVersion,setListVersion]=React.useState(0);window.changeStandaloneList=()=>setListVersion(v=>v+1);return<main style={{maxWidth:900,margin:'0 auto',padding:24}}>
  <NativeGlassLens as="span" data-premium-reference className="nsso-glass-control inline-flex items-center justify-center rounded-full px-3 py-1"><span className="text-xs font-medium text-slate-900">Premium · Free</span></NativeGlassLens>
  {Object.entries(cases).map(([context,text])=><article key={context} data-case={context} style={{marginTop:16}}><Text context={context} text={text}/></article>)}
@@ -82,22 +82,28 @@ async function mount(page, view = 'standalone') {
 }
 const graphemes=text=>[...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(text)].length
 const body=container=>container.locator('[data-profile-text-content]')
+const cardBounds=card=>card.evaluate(element=>{const r=element.getBoundingClientRect();return{height:r.height,y:r.y+scrollY}})
+async function expectAlignedCards(first,second){
+    const [left,right]=await Promise.all([cardBounds(first),cardBounds(second)])
+    expect(Math.abs(left.y-right.y)).toBeLessThanOrEqual(.1)
+    expect(Math.abs(left.height-right.height)).toBeLessThanOrEqual(.1)
+}
 async function finish(page,state){expect(state).toEqual({errors:[],external:[]});await page.evaluate(()=>window.disposeDisclosures())}
 
-test('75-character previews preserve boundaries, Unicode, whitespace and complete saved text',async({page})=>{
+test('200-character previews preserve boundaries, Unicode, whitespace and complete saved text',async({page})=>{
     const state=await mount(page)
     const texts=await page.evaluate(()=>window.fixtureTextCases)
-    for(const name of ['short74','exact75','empty','blank']){
+    for(const name of ['short199','exact200','empty','blank']){
         const item=page.locator('[data-case="'+name+'"]')
         await expect(item.getByRole('button')).toHaveCount(0)
         expect((await item.textContent()).trim()).toBe(texts[name].trim())
     }
-    for(const name of ['long76','unbroken','unicode','whitespace']){
+    for(const name of ['long201','unbroken','unicode','whitespace']){
         const item=page.locator('[data-case="'+name+'"]'),chip=item.getByRole('button')
         const before=await body(item).textContent()
-        expect(graphemes(before)).toBeLessThanOrEqual(75)
+        expect(graphemes(before)).toBeLessThanOrEqual(200)
         expect(before.endsWith('…')).toBe(true)
-        if(name==='unicode')expect(before).toBe('👨‍👩‍👧‍👦'.repeat(74)+'…')
+        if(name==='unicode')expect(before).toBe('👨‍👩‍👧‍👦'.repeat(199)+'…')
         await expect(chip).toHaveText('Read more')
         await expect(chip).toHaveAttribute('aria-expanded','false')
         const id=await chip.getAttribute('aria-controls')
@@ -115,7 +121,7 @@ test('75-character previews preserve boundaries, Unicode, whitespace and complet
 
 test('disclosures support keyboard focus, independent state and reset when content changes',async({page})=>{
     const state=await mount(page)
-    const first=page.locator('[data-case="long76"]'),second=page.locator('[data-case="unbroken"]')
+    const first=page.locator('[data-case="long201"]'),second=page.locator('[data-case="unbroken"]')
     const chip=first.getByRole('button')
     await chip.focus();await page.keyboard.press('Enter')
     await expect(chip).toBeFocused();await expect(chip).toHaveAttribute('aria-expanded','true')
@@ -126,7 +132,7 @@ test('disclosures support keyboard focus, independent state and reset when conte
     await changing.getByRole('button').click()
     await page.evaluate(()=>window.changeStandaloneText('replacement '.repeat(20)))
     await expect(changing.getByRole('button')).toHaveAttribute('aria-expanded','false')
-    expect(graphemes(await body(changing).textContent())).toBeLessThanOrEqual(75)
+    expect(graphemes(await body(changing).textContent())).toBeLessThanOrEqual(200)
     await finish(page,state)
 })
 
@@ -154,7 +160,7 @@ test('experience-style lists reveal only items after four and retain focus on co
 
 test('Read more uses the real Premium chip material with a compact lens and accessible target',async({page})=>{
     const state=await mount(page)
-    const chip=page.locator('[data-case="long76"]').getByRole('button'),lens=chip.locator('[data-profile-read-more-lens]')
+    const chip=page.locator('[data-case="long201"]').getByRole('button'),lens=chip.locator('[data-profile-read-more-lens]')
     await chip.scrollIntoViewIfNeeded()
     await expect(lens).toHaveAttribute('data-tahoe-native-lens','supplied')
     await expect(lens).toHaveAttribute('data-tahoe-glass-state','active')
@@ -169,8 +175,9 @@ test('Read more uses the real Premium chip material with a compact lens and acce
     await finish(page,state)
 })
 
-for(const view of ['public','preview'])test(`actual ${view} profile expands safely without navigation, tall neighbors or checkout bypass`,async({page},testInfo)=>{
+for(const view of ['public','preview'])test(`actual ${view} profile keeps side-by-side cards aligned when expanding without navigation or checkout bypass`,async({page},testInfo)=>{
     const state=await mount(page,view)
+    await page.locator('img').evaluateAll(images=>Promise.all(images.map(image=>image.decode().catch(()=>{}))))
     const bioChip=page.getByRole('button',{name:'Read more about bio',exact:true})
     await expect(bioChip).toBeVisible()
     await bioChip.click()
@@ -178,14 +185,19 @@ for(const view of ['public','preview'])test(`actual ${view} profile expands safe
     expect(await bioText.textContent()).toBe(bio)
     await page.getByRole('button',{name:'Read less about bio',exact:true}).click()
     const cardFor=name=>page.getByRole('heading',{name,exact:true}).locator('xpath=ancestor::*[@data-tahoe-glass-surface="card"][1]')
-    const alpha=cardFor('Project Alpha'),beta=cardFor('Project Beta'),offering=cardFor('Offering Alpha')
-    const before=await beta.evaluate(element=>{const r=element.getBoundingClientRect();return{height:r.height,y:r.y+scrollY}})
+    const alpha=cardFor('Project Alpha'),beta=cardFor('Project Beta'),offering=cardFor('Offering Alpha'),unpublished=cardFor('Offering Unpublished')
+    const desktop=testInfo.project.name==='desktop'
+    const before=await cardBounds(beta)
+    if(desktop)await expectAlignedCards(alpha,beta)
     await alpha.getByRole('button',{name:'Read more about project Project Alpha',exact:true}).click()
     expect(await body(alpha).textContent()).toBe(fullBody)
-    expect(graphemes(await body(beta).textContent())).toBeLessThanOrEqual(75)
-    const after=await beta.evaluate(element=>{const r=element.getBoundingClientRect();return{height:r.height,y:r.y+scrollY}})
-    expect(Math.abs(after.height-before.height)).toBeLessThanOrEqual(.1)
-    if(testInfo.project.name==='desktop')expect(Math.abs(after.y-before.y)).toBeLessThanOrEqual(.1)
+    expect(graphemes(await body(beta).textContent())).toBeLessThanOrEqual(200)
+    const after=await cardBounds(beta)
+    if(desktop){
+        await expectAlignedCards(alpha,beta)
+        expect(after.height).toBeGreaterThan(before.height)
+        expect(Math.abs(after.y-before.y)).toBeLessThanOrEqual(.1)
+    }else expect(Math.abs(after.height-before.height)).toBeLessThanOrEqual(.1)
     expect(await page.evaluate(()=>window.fixtureNavigation)).toEqual([])
     await expect(page.locator('a button')).toHaveCount(0)
     const title=alpha.getByRole('link',{name:'Project Alpha',exact:true}),image=alpha.getByRole('link',{name:'Open Project Alpha',exact:true})
@@ -193,17 +205,34 @@ for(const view of ['public','preview'])test(`actual ${view} profile expands safe
     await title.click();await image.click()
     expect(await page.evaluate(()=>window.fixtureNavigation)).toEqual(['https://example.test/project-alpha','https://example.test/project-alpha'])
     await expect(beta.locator('a')).toHaveCount(0)
+    const productBefore=await cardBounds(unpublished)
+    if(desktop)await expectAlignedCards(offering,unpublished)
     await offering.getByRole('button',{name:'Read more about product Offering Alpha',exact:true}).click()
     expect(await body(offering).textContent()).toBe(fullBody)
+    expect(await body(unpublished).textContent()).toBe('A short description.')
+    const productAfter=await cardBounds(unpublished)
+    if(desktop){
+        await expectAlignedCards(offering,unpublished)
+        expect(productAfter.height).toBeGreaterThan(productBefore.height)
+    }else expect(Math.abs(productAfter.height-productBefore.height)).toBeLessThanOrEqual(.1)
     await expect(offering.getByRole('link').first()).toHaveAttribute('href',view==='preview'?'/products/offering-alpha?preview=true':'/products/offering-alpha')
-    await expect(cardFor('Offering Unpublished').locator('a')).toHaveCount(0)
+    await expect(unpublished.locator('a')).toHaveCount(0)
     for(const [heading,shown,count]of[['Experiences','Experience',6],['Qualifications','Qualification',5]]){
-        const section=page.getByRole('heading',{name:heading,exact:true}).locator('xpath=ancestor::*[@data-tahoe-glass-surface="card"][1]')
+        const section=cardFor(heading),partner=cardFor(heading==='Experiences'?'Qualifications':'Experiences')
+        const partnerBefore=await cardBounds(partner)
+        if(desktop)await expectAlignedCards(section,partner)
         await expect(section.getByRole('heading',{name:shown+' 5',exact:true})).toBeHidden()
         await section.getByRole('button',{name:'Read more about '+heading,exact:true}).click()
         await expect(section.getByRole('heading',{name:shown+' '+count,exact:true})).toBeVisible()
+        await expect(partner.getByRole('button',{name:/^Read more about/})).toHaveAttribute('aria-expanded','false')
+        const partnerAfter=await cardBounds(partner)
+        if(desktop){
+            await expectAlignedCards(section,partner)
+            expect(partnerAfter.height).toBeGreaterThan(partnerBefore.height)
+        }else expect(Math.abs(partnerAfter.height-partnerBefore.height)).toBeLessThanOrEqual(.1)
         await section.getByRole('button',{name:'Read less about '+heading,exact:true}).click()
         await expect(section.getByRole('heading',{name:shown+' 5',exact:true})).toBeHidden()
+        if(desktop)await expectAlignedCards(section,partner)
     }
     if(view==='preview'){
         await offering.getByRole('button',{name:'Buy on Etsy',exact:true}).click()
