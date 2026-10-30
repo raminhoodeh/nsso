@@ -43,7 +43,7 @@ test('profile editing copy is warm and concise, with the first-1000 qualificatio
 
 test('Links help is a native, named, keyboard-and-touch disclosure over an opaque reading surface', () => {
     const help = source('src/app/dashboard/components/SectionHelp.tsx')
-    const buttons = elements(help).filter(node => tag(node) === 'LightIconButton')
+    const buttons = elements(help).filter(node => tag(node) === 'button')
     assert.equal(buttons.length, 1)
     assert.equal(attribute(buttons[0], 'type'), 'button')
     assert.match(attribute(buttons[0], 'aria-label'), /About/)
@@ -56,8 +56,10 @@ test('Links help is a native, named, keyboard-and-touch disclosure over an opaqu
     assert.match(help.text, /removeEventListener\('pointerdown', dismiss\)/)
     const tooltips = elements(help).filter(node => attribute(node, 'role') === 'tooltip')
     assert.equal(tooltips.length, 1)
-    assert.equal(attribute(tooltips[0].parent, 'hidden'), '{!open}')
-    assert.match(attribute(tooltips[0].parent, 'className'), /pt-2/)
+    assert.equal(attribute(tooltips[0], 'popover'), 'manual')
+    assert.match(help.text, /createPortal\(/)
+    assert.match(help.text, /document\.body/)
+    assert.match(help.text, /popup\.showPopover\(\)/)
     assert.match(help.text, /addEventListener\('keydown', dismissWithEscape\)/)
     assert.match(help.text, /removeEventListener\('keydown', dismissWithEscape\)/)
     assert.match(attribute(tooltips[0], 'className'), /LIGHT_PANEL\.surface/)

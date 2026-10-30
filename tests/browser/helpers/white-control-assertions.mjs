@@ -87,9 +87,20 @@ export async function expectWhiteEditorControls(container, { photoException = fa
     for (const control of await container.locator('button[role="switch"]').filter({ visible: true }).all()) {
         switches.push(await expectCompactSwitch(control))
     }
+    // Contextual info icons are deliberately tiny, quiet targets rather than
+    // CTA lenses. Check that contract separately instead of demanding a pill.
+    for (const help of await container.locator('button[data-profile-help-trigger]').filter({ visible: true }).all()) {
+        const bounds = await help.boundingBox()
+        expect(bounds.width).toBeGreaterThanOrEqual(24)
+        expect(bounds.width).toBeLessThanOrEqual(44)
+        expect(bounds.height).toBeGreaterThanOrEqual(24)
+        expect(bounds.height).toBeLessThanOrEqual(44)
+        await expect(help.locator('svg')).toHaveAttribute('width', '14')
+        await expect(help).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+    }
     const controls = await container.locator('button').evaluateAll((buttons, allowPhoto) => buttons.filter(button => {
         const box = button.getBoundingClientRect()
-        return button.getAttribute('role') !== 'switch' && box.width && box.height && getComputedStyle(button).visibility !== 'hidden'
+        return button.getAttribute('role') !== 'switch' && !button.hasAttribute('data-profile-help-trigger') && box.width && box.height && getComputedStyle(button).visibility !== 'hidden'
     }).map(button => {
         const material = button.querySelector('[data-ask-deity-lens]') || button
         const style = getComputedStyle(material)
@@ -164,7 +175,7 @@ export async function expectWhiteEditorControls(container, { photoException = fa
     }
     const rendered = container.locator('button').filter({ visible: true })
     for (const button of await rendered.all()) {
-        if (await button.getAttribute('role') === 'switch' || await button.isDisabled() || await button.getAttribute('aria-disabled') === 'true') continue
+        if (await button.getAttribute('role') === 'switch' || await button.getAttribute('data-profile-help-trigger') || await button.isDisabled() || await button.getAttribute('aria-disabled') === 'true') continue
         if (photoException && await button.getAttribute('aria-label') === 'Upload profile picture') continue
         const label = await button.getAttribute('aria-label') || (await button.textContent()).trim()
         const paint = await renderedControlContrast(button, { includeBackground: true })

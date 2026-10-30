@@ -212,29 +212,38 @@ test.describe('desktop sidebar affordances', () => {
         await testInfo.attach('sign-out-rendered-contrast', { body: JSON.stringify(samples, null, 2), contentType: 'application/json' })
     })
 
-    test('selection outlines the whole navigation item; footer actions preserve safe behaviour and clearer emphasis', async ({ page }) => {
+    test('selection uses bright silver supplied glass; footer actions preserve safe behaviour and clearer emphasis', async ({ page, browserName }, testInfo) => {
         const errors = await mount(page)
         const sidebar = page.getByRole('complementary')
         const active = sidebar.getByRole('button', { name: 'Edit Profile', exact: true })
         await expect(active).toHaveAttribute('aria-current', 'page')
         await expect(active).toHaveAttribute('data-nsso-control', 'white')
+        await expect(active).toHaveAttribute('data-tahoe-native-lens', 'supplied')
         await expect(active).toHaveClass(/nsso-glass-control/)
-        const readActiveMaterial = () => active.evaluate(element => {
-            const style = getComputedStyle(element)
-            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1
-            const context = canvas.getContext('2d'); context.fillStyle = style.borderTopColor; context.fillRect(0, 0, 1, 1)
-            return { sides: ['Top', 'Right', 'Bottom', 'Left'].map(side => ({ width: style[`border${side}Width`], style: style[`border${side}Style`], colour: style[`border${side}Color`] })), borderPaint: [...context.getImageData(0, 0, 1, 1).data], radius: style.borderRadius, shadow: style.boxShadow }
+        await expect(active).toHaveClass(/nsso-silver-glass/)
+        const backend = browserName === 'webkit' ? 'webgl' : 'svg'
+        await expect(page.locator('[data-tahoe-glass-provider]')).toHaveAttribute('data-tahoe-glass-backend', backend)
+        const activeMaterial = await suppliedMaterial(active)
+        expect(activeMaterial).toMatchObject({ shell: 'rgba(0, 0, 0, 0)', family: 'supplied', layers: 2, childCanvases: 0 })
+        expect(activeMaterial.shadow).not.toBe('none')
+        await expect(active.locator(':scope > [data-supplied-glass-layer="coat"]')).toHaveCount(1)
+        await expect(active.locator(':scope > [data-supplied-glass-layer="rim"]')).toHaveCount(1)
+        const silverLayer = await active.evaluate(element => {
+            const before = getComputedStyle(element, '::before')
+            return { radius: getComputedStyle(element).borderRadius, content: before.content, events: before.pointerEvents, background: before.backgroundImage,
+                silver: Number(before.zIndex), coat: Number(getComputedStyle(element.querySelector('[data-supplied-glass-layer="coat"]')).zIndex), rim: Number(getComputedStyle(element.querySelector('[data-supplied-glass-layer="rim"]')).zIndex) }
         })
-        const expectedBorderPaint = [...(await paintedColour(active, '--color-slate-500')), 255]
-        // The fixture attaches CSS after mount, starting the real 200ms border
-        // transition. White background alone does not prove the border settled.
-        await expect.poll(async () => (await readActiveMaterial()).borderPaint).toEqual(expectedBorderPaint)
-        const activeMaterial = await readActiveMaterial()
-        expect(activeMaterial.sides.every(side => side.width === '1px' && side.style === 'solid')).toBe(true)
-        expect(new Set(activeMaterial.sides.map(side => side.colour)).size).toBe(1)
-        expect(activeMaterial.borderPaint).toEqual(expectedBorderPaint)
-        expect(activeMaterial.radius).toBe('12px')
-        expect(activeMaterial.shadow).toMatch(/0px 0px 0px 2px/)
+        expect(silverLayer).toMatchObject({ radius: '12px', content: '""', events: 'none' })
+        expect(silverLayer.background).not.toBe('none')
+        expect(silverLayer.silver).toBeLessThan(silverLayer.coat)
+        expect(silverLayer.coat).toBeLessThan(silverLayer.rim)
+        const paint = await renderedControlContrast(active, { includeBackground: true })
+        expect(paint.contrast).toBeGreaterThanOrEqual(4.5)
+        expect(Math.min(...paint.centerBackground), 'silver selection stays bright over the real blue deck').toBeGreaterThanOrEqual(225)
+        expect(Math.max(...paint.centerBackground) - Math.min(...paint.centerBackground), 'silver selection keeps a neutral white cast').toBeLessThanOrEqual(20)
+        console.log('SILVER_SELECTION ' + browserName + ' ' + JSON.stringify({ backend, paint, silverLayer, material: activeMaterial }))
+        await testInfo.attach('silver-selection-rendered-material', { body: JSON.stringify({ backend, paint, silverLayer, material: activeMaterial }, null, 2), contentType: 'application/json' })
+        await page.screenshot({ path: testInfo.outputPath('silver-supplied-sidebar.png') })
         const activeBox = await active.boundingBox()
         expect(activeBox.width).toBeGreaterThanOrEqual(44)
         expect(activeBox.height).toBeGreaterThanOrEqual(44)

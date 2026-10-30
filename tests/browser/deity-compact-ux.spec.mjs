@@ -95,6 +95,36 @@ async function textContrast(locator, pseudo = null) {
 for (const browserName of ['chromium', 'webkit']) {
     test.describe(`${browserName} compact Deity`, () => {
         test.use({ compactBrowserName: browserName })
+        test('expanded guidance becomes a compact Minimise text control without losing keyboard focus', async ({ page }) => {
+            const { errors, requests } = await mount(page, { width: 390, height: 844 })
+            const expand = page.getByRole('button', { name: 'What you can ask me about', exact: true })
+            await expect(expand).toHaveAttribute('aria-expanded', 'false')
+            const initialHeight = await expand.evaluate(element => element.getBoundingClientRect().height)
+            await expand.focus()
+            await page.keyboard.press('Enter')
+            const minimise = page.getByRole('button', { name: 'Minimise', exact: true })
+            await expect(minimise).toBeFocused()
+            await expect(minimise).toHaveAttribute('aria-expanded', 'true')
+            const compact = await minimise.evaluate(element => ({
+                height: element.getBoundingClientRect().height,
+                width: element.getBoundingClientRect().width,
+                nestedLenses: element.querySelectorAll('[data-native-glass-lens]').length,
+                background: getComputedStyle(element).backgroundColor,
+            }))
+            expect(compact.height).toBeGreaterThanOrEqual(24)
+            expect(compact.height).toBeLessThan(initialHeight)
+            expect(compact.width).toBeLessThan(120)
+            expect(compact.nestedLenses).toBe(0)
+            expect(compact.background).toBe('rgba(0, 0, 0, 0)')
+            await expect(page.getByRole('button', { name: 'nsso DATABASE', exact: true })).toBeVisible()
+            await page.keyboard.press('Space')
+            await expect(expand).toBeFocused()
+            await expect(expand).toHaveAttribute('aria-expanded', 'false')
+            await expect(page.getByRole('button', { name: 'nsso DATABASE', exact: true })).toBeHidden()
+            expect(requests).toEqual([])
+            expect(errors).toEqual([])
+        })
+
         test('loading and loaded Deity share an opaque pastel white panel', async ({ page }, testInfo) => {
             const { errors, requests } = await mount(page, { width: 390, height: 844 }, { bootstrap: true })
             const shell = page.locator('[data-deity-surface="opaque"]')

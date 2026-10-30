@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'esbuild'
 import sharp from 'sharp'
-import { expectWhiteEditorControls, keyboardFocus } from './helpers/white-control-assertions.mjs'
+import { controlMaterial, expectWhiteEditorControls, keyboardFocus, renderedControlContrast } from './helpers/white-control-assertions.mjs'
 import { compile } from '@tailwindcss/node'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -72,6 +72,36 @@ async function openMenu(page) {
     await expect(menu).toBeVisible()
     return menu
 }
+
+test('account navigation keeps the selected destination silver after pointer and focus leave it', async ({ page }, testInfo) => {
+    const state = await mount(page)
+    await topbar(page).getByRole('button', { name: 'Edit profile', exact: true }).click()
+    await expect(page).toHaveURL('https://nsso.test/dashboard?view=profile')
+    const desktop = testInfo.project.name === 'desktop'
+    let navigation = desktop ? page.locator('aside') : await openMenu(page)
+    const item = name => navigation.getByRole(desktop ? 'button' : 'link', { name, exact: true })
+    await expect(item('Edit Profile')).toHaveAttribute('aria-current', 'page')
+    await expect(item('Edit Profile')).toHaveClass(/\bnsso-silver-glass\b/)
+    await expect(item('My nsso')).not.toHaveClass(/\bnsso-silver-glass\b/)
+    await item('My nsso').click()
+    await expect(page).toHaveURL('https://nsso.test/dashboard?view=my-nsso')
+    if (!desktop) navigation = await openMenu(page)
+    await expect(item('Edit Profile')).not.toHaveAttribute('aria-current', 'page')
+    await expect(item('Edit Profile')).not.toHaveClass(/\bnsso-silver-glass\b/)
+    const selected = item('My nsso')
+    await expect(selected).toHaveAttribute('aria-current', 'page')
+    await expect(selected).toHaveClass(/\bnsso-silver-glass\b/)
+    await page.mouse.move(0, 0)
+    await selected.press('Tab')
+    await controlMaterial(selected)
+    const paint = await renderedControlContrast(selected, { includeBackground: true })
+    expect(paint.contrast).toBeGreaterThanOrEqual(4.5)
+    expect(Math.min(...paint.centerBackground)).toBeGreaterThanOrEqual(225)
+    expect(Math.max(...paint.centerBackground) - Math.min(...paint.centerBackground)).toBeLessThanOrEqual(20)
+    await page.screenshot({ path: testInfo.outputPath('silver-account-selection.png') })
+    expect(state.writes).toEqual([])
+    expect(state.errors).toEqual([])
+})
 
 test('preview logo, edit shortcut and editor home menu keep one visible navbar through client transitions', async ({ page, browserName }, testInfo) => {
     const state = await mount(page)
