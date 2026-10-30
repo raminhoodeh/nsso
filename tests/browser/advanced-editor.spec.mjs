@@ -70,7 +70,15 @@ test('advanced editor fields keep accessible names across section and product se
     for (const name of ['Project name','Your contribution','Project URL (optional)','Project description']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
     await page.getByRole('button',{name:/^Products & Services/}).click()
     await page.getByRole('button',{name:'Edit Fixture offer',exact:true}).click()
-    for (const name of ['Product name','Price (include the currency)','Product description','Purchase link']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
+    for (const name of ['Product name','Price (include the currency)','Product description','Button destination','Second button destination (optional)','Button text (optional)','Second button text (optional)']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
+    await expect(page.getByRole('textbox',{name:'Button destination',exact:true})).toHaveValue('https://seller.example.test')
+    const help=page.getByRole('button',{name:'About Button destination',exact:true})
+    await help.focus()
+    await help.press('Enter')
+    await expect(page.getByRole('tooltip')).toContainText('actual purchase page or checkout')
+    await help.press('Escape')
+    await expect(page.getByRole('tooltip')).toHaveCount(0)
+    await expect(help).toBeFocused()
 })
 
 for (const [kind, collection, tab, name] of [

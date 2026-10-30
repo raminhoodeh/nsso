@@ -73,7 +73,10 @@ test.beforeAll(async () => {
             let snapshot;const emit=patch=>{snapshot={...snapshot,...patch};for(const listener of listeners)listener()};
             window.fixtureSubscribe=listener=>{listeners.add(listener);return()=>listeners.delete(listener)};window.fixtureSnapshot=()=>snapshot;window.fixtureUpdate=emit;
             const offering=index=>({id:'offering-'+index,user_id:'${account}',name:'Fixture offering '+index,price:'GBP '+(index*10),description:'A clearly described synthetic offering for testing.',image_url:index===1?'/fixture-thumb.svg':null,purchase_link_active:true,purchase_link:'https://seller.example.test/offering-'+index,paypal_active:true,paypal_html:${JSON.stringify(paypal)},sales_page_active:false,sales_page_published:false});
-            const settlePatch=async pending=>{if(window.fixtureHoldPatches)await new Promise(resolve=>{window.fixtureReleasePatch=resolve});await new Promise(resolve=>setTimeout(resolve,90));if(window.fixturePatchFails){emit({mutationState:{status:'failed',message:'Changes could not be saved. Your changes are still here.'}});return false}emit({products:snapshot.products.map(item=>item.id===pending.id?{...item,...pending.patch}:item),mutationState:{status:'saved',message:''}});window.fixturePendingPatch=null;return true};
+            // Like the real provider's latest-draft overlay, receipt completion
+            // must never replay an older patch over the current optimistic row.
+            // Only the current operation owns the visible pending/save status.
+            const settlePatch=async pending=>{if(window.fixtureHoldPatches)await new Promise(resolve=>{window.fixtureReleasePatch=resolve});await new Promise(resolve=>setTimeout(resolve,90));if(window.fixturePatchFails){if(window.fixturePendingPatch===pending)emit({mutationState:{status:'failed',message:'Changes could not be saved. Your changes are still here.'}});return false}if(window.fixturePendingPatch===pending){emit({mutationState:{status:'saved',message:''}});window.fixturePendingPatch=null}return true};
             snapshot={products:Array.from({length:count},(_,index)=>offering(index+1)),experiences:[],qualifications:[],projects:[],loading:false,loadError:null,mutationState:{status:'saved',message:''},getRevision:()=>snapshot.revision??0,
                 patchEntity:async(kind,id,patch)=>{window.fixtureWrites.push({kind:'patch',entity:kind,id,patch});window.fixturePendingPatch={id,patch};emit({products:snapshot.products.map(item=>item.id===id?{...item,...patch}:item),mutationState:{status:'saving',message:'Saving changes…'}});return settlePatch(window.fixturePendingPatch)},
                 retryPending:async()=>{if(!window.fixturePendingPatch)return;emit({mutationState:{status:'saving',message:'Saving changes…'}});await settlePatch(window.fixturePendingPatch)},
@@ -223,7 +226,10 @@ test('purchase label hints follow edits in the offering and creator without chan
     const etsy = scenarios[0][0], shopify = scenarios[1][0]
     await link.fill(etsy)
     await expect(page.getByText('Button preview: Buy on Etsy', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const openCreator = page.getByRole('button', { name: 'Open Sales Page Creator', exact: true })
+    if (testInfo.project.use.isMobile) await openCreator.tap()
+    else await openCreator.click()
+    await expect(page).toHaveURL(/(?:\?|&)offeringView=creator(?:&|$)/)
     const creator = page.locator('[data-sales-page-creator]')
     await expect(creator.getByText('Button preview: Buy on Etsy', { exact: true })).toBeVisible()
     const creatorLink = creator.getByRole('textbox', { name: 'Button destination', exact: true })
