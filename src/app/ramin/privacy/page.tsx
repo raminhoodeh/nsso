@@ -56,7 +56,7 @@ export default function RaminTrackingPrivacyPage() {
                 <section className="mt-10 border-t border-white/15 pt-8">
                     <h2 className="text-xl font-semibold">Your choice</h2>
                     <p className="mt-3 leading-7 text-white/70">
-                        Meta Pixel remains off until you select Allow. Your choice is stored for 180 days in the <code className="text-white">nsso_meta_marketing_consent</code> cookie. You can change it at any time using Privacy choices on Ramin&apos;s profile.
+                        Meta Pixel remains off until you select Allow. Your choice is stored for 180 days in the <code className="text-white">nsso_meta_marketing_consent</code> cookie. You can change it at any time using the link below.
                     </p>
                     {/* Preserve document navigation into the existing consent preferences entry point. */}
                     <NativeGlassLens as="a"

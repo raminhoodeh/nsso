@@ -411,8 +411,11 @@ test('homepage, authentication and preview or public profile routes retain their
 })
 
 test('profile-to-product transition releases the cloud renderer for deck blue and restores preview safely', async ({ page, browserName }, testInfo) => {
+    // Two moving-cloud mounts and two real-renderer disposals need a finite
+    // graphics budget beyond one page load; per-assert deadlines stay bounded.
+    test.setTimeout(60_000)
     const paintDeadline = browserName === 'chromium' && needsSoftwareWebGL ? 15_000 : 5_000
-    const { errors, unexpected, requests, measurements } = await mount(page, { reducedMotion: 'no-preference' })
+    const { errors, unexpected, requests, measurements } = await test.step('Mount the real moving profile scene', () => mount(page, { reducedMotion: 'no-preference' }))
     const softwareCompletion = browserName === 'chromium' && needsSoftwareWebGL
     let normalMotionDraws, completedCloudWork
     if (softwareCompletion) {
@@ -447,8 +450,10 @@ test('profile-to-product transition releases the cloud renderer for deck blue an
     expect(softwareCompletion ? completedCloudWork.vantaScheduled : await page.evaluate(() => window.fixtureFrameMetrics.vantaScheduled)).toBeGreaterThanOrEqual(3)
     measurements.checkpoints.push({ stage: 'excluded-preview-normal-motion', observedAnimationTicks: softwareCompletion ? undefined : 12,
         cloudDraws: normalMotionDraws, completedCloudWork })
-    await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
+    await test.step('Navigate from the moving profile to the first product', async () => {
+        await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
+        await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
+    })
     const support = page.locator('[data-product-purchase-support]:visible')
     await expect(support).toHaveCount(1)
     await support.scrollIntoViewIfNeeded()
@@ -462,7 +467,8 @@ test('profile-to-product transition releases the cloud renderer for deck blue an
     expect(textColor.actual[3]).toBe(255)
     expect(await minimumTextContrast(support)).toBeGreaterThanOrEqual(4.5)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    await expect(page.locator('form:visible')).toHaveCount(1)
+    await expect(page.locator('[data-product-purchase-card^="primary-"] form:visible')).toHaveCount(1)
+    await expect(page.locator('form:visible')).toHaveCount(page.viewportSize().width < 1024 ? 2 : 1)
     await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)
     await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
     await expect.poll(() => page.evaluate(() => window.fixtureFrameMetrics.vantaPending())).toBe(0)
@@ -494,10 +500,12 @@ test('profile-to-product transition releases the cloud renderer for deck blue an
     expect(requests.some(path => path.includes('siri-gradient'))).toBe(false)
     await page.screenshot({ path: testInfo.outputPath('product-blue-background.png') })
     await expectBlueBackground(page)
-    await page.getByRole('button', { name: 'Back to Profile', exact: true }).click()
-    await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(0)
-    await expect(page.locator('#vanta-bg canvas')).toHaveCount(1, { timeout: paintDeadline })
-    await page.waitForFunction(() => window.VANTA.current?.renderer?.info.render.calls > 0 && (!window.fixtureFenceSoftwareCloudFrames || window.fixtureCloudCompletions.get(window.VANTA.current.renderer)?.completed >= 1), null, { timeout: paintDeadline })
+    await test.step('Return to the profile and paint a fresh moving cloud scene', async () => {
+        await page.getByRole('button', { name: 'Back to Profile', exact: true }).click()
+        await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(0)
+        await expect(page.locator('#vanta-bg canvas')).toHaveCount(1, { timeout: paintDeadline })
+        await page.waitForFunction(() => window.VANTA.current?.renderer?.info.render.calls > 0 && (!window.fixtureFenceSoftwareCloudFrames || window.fixtureCloudCompletions.get(window.VANTA.current.renderer)?.completed >= 1), null, { timeout: paintDeadline })
+    })
     expect(await page.evaluate(() => window.fixtureCanvas !== document.querySelector('#vanta-bg canvas'))).toBe(true)
     await page.evaluate(() => {
         window.fixtureReturnedRenderer = window.VANTA.current.renderer
@@ -507,12 +515,14 @@ test('profile-to-product transition releases the cloud renderer for deck blue an
         window.fixtureReturnedRenderer.dispose = () => { window.fixtureReturnedDisposeCalls++; return dispose() }
     })
     expect(await page.evaluate(() => window.fixtureReturnedContext !== window.fixtureInitialContext && !window.fixtureReturnedContext.isContextLost())).toBe(true)
-    await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
-    await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)
-    await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
-    await expect.poll(() => page.evaluate(() => window.fixtureFrameMetrics.vantaPending())).toBe(0)
-    expect(await page.evaluate(() => ({ calls: window.fixtureReturnedDisposeCalls, attached: window.fixtureReturnedRenderer.domElement.isConnected, ...window.fixtureReturnedRenderer.info.memory, programs: window.fixtureReturnedRenderer.info.programs.length }))).toEqual({ calls: 1, attached: false, geometries: 0, textures: 0, programs: 0 })
+    await test.step('Reopen the product, verify deck blue and release the returned renderer', async () => {
+        await page.getByRole('button', { name: 'Open fixture offering', exact: true }).click()
+        await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
+        await expect(page.locator('#vanta-bg canvas')).toHaveCount(0)
+        await expect(page.locator('[data-nsso-deck-background="true"]')).toHaveCount(1)
+        await expect.poll(() => page.evaluate(() => window.fixtureFrameMetrics.vantaPending())).toBe(0)
+        expect(await page.evaluate(() => ({ calls: window.fixtureReturnedDisposeCalls, attached: window.fixtureReturnedRenderer.domElement.isConnected, ...window.fixtureReturnedRenderer.info.memory, programs: window.fixtureReturnedRenderer.info.programs.length }))).toEqual({ calls: 1, attached: false, geometries: 0, textures: 0, programs: 0 })
+    })
     if (softwareCompletion) {
         const released = await page.evaluate(() => { const record = window.fixtureCloudCompletions.get(window.fixtureReturnedRenderer); return { disposed: record.disposed, createdBuffers: record.createdBuffers, deletedBuffers: record.deletedBuffers, createdSyncs: record.createdSyncs, deletedSyncs: record.deletedSyncs } })
         expect(released).toMatchObject({ disposed: true, createdBuffers: 1, deletedBuffers: 1 })
@@ -595,8 +605,9 @@ test('styled preview explains a keyboard checkout attempt without starting a pay
     await expect(page.getByRole('heading', { name: 'Your next chapter starts here', exact: true })).toBeVisible({ timeout: paintDeadline })
     await expect(page.getByRole('status')).toHaveCount(0)
     await expect(page.getByText('Draft preview — checkout is disabled.', { exact: true })).toHaveCount(0)
-    const paypal = page.getByRole('button', { name: 'Buy via PayPal', exact: true }).filter({ visible: true })
-    const purchase = page.getByRole('button', { name: 'View purchase page', exact: true }).filter({ visible: true })
+    const primary = page.locator('[data-product-purchase-card^="primary-"]').filter({ visible: true })
+    const paypal = primary.getByRole('button', { name: 'Buy via PayPal', exact: true })
+    const purchase = primary.getByRole('button', { name: 'View purchase page', exact: true })
     const [paypalBox, purchaseBox] = await Promise.all([paypal.boundingBox(), purchase.boundingBox()])
     expect(Math.abs(paypalBox.width - 240)).toBeLessThanOrEqual(.05)
     expect(Math.abs(purchaseBox.width - paypalBox.width)).toBeLessThanOrEqual(.05)
@@ -607,12 +618,20 @@ test('styled preview explains a keyboard checkout attempt without starting a pay
     await expect(notice).toHaveText('Checkout is disabled during profile preview')
     await expectOpaqueLightPanel(page, notice)
     expect(await minimumTextContrast(notice.locator('span'))).toBeGreaterThanOrEqual(4.5)
-    await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true }).filter({ visible: true })).toHaveAttribute('aria-describedby', await notice.getAttribute('id'))
+    await expect(paypal).toHaveAttribute('aria-describedby', await notice.getAttribute('id'))
     await expect(page.locator('form')).toHaveCount(0)
     await expect(page.locator('a[href="https://seller.example.test/pay"]')).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'View purchase page', exact: true }).filter({ visible: true })).toBeEnabled()
+    await expect(purchase).toBeEnabled()
     expect(requests.some(path => path.includes('/sdk/js'))).toBe(false)
     await page.screenshot({ path: testInfo.outputPath('product-preview-checkout-notice.png') })
+    if (page.viewportSize().width < 1024) {
+        const closing = page.locator('[data-product-purchase-card="closing-mobile"]')
+        await expect(closing).toBeVisible()
+        await closing.getByRole('button', { name: 'Buy via PayPal', exact: true }).press('Enter')
+        await expect(closing.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
+        await expect(page.locator('form')).toHaveCount(0)
+        await expect(page.locator('a[href="https://seller.example.test/pay"]')).toHaveCount(0)
+    }
     expect(errors).toEqual([])
     expect(unexpected).toEqual([])
 })

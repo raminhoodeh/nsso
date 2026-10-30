@@ -19,10 +19,12 @@ import Header from '@/components/layout/Header'
 import ExpandableBio from '@/components/profile/ExpandableBio'
 import ExpandableProfileText from '@/components/profile/ExpandableProfileText'
 import ExpandableProfileList from '@/components/profile/ExpandableProfileList'
+import ProfileTimelineDisclosureGroup from '@/components/profile/ProfileTimelineDisclosureGroup'
 import {
     PROFILE_COLLECTION_GRID_CLASS,
     PROFILE_COLLECTION_SECTION_CLASS,
     PROFILE_PAGE_CONTAINER_CLASS,
+    PROFILE_PAGE_TOP_CLEARANCE_CLASS,
 } from '@/components/profile/profileLayout'
 import MetaPixelConsent from '@/components/analytics/MetaPixelConsent'
 import { cookies } from 'next/headers'
@@ -106,7 +108,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
     return (
         <>
-            <main className="min-h-screen pb-40 text-slate-950 [text-shadow:none]" style={{ paddingTop: '128px' }}>
+            <main data-profile-page="public" className={`min-h-screen pb-40 text-slate-950 [text-shadow:none] ${PROFILE_PAGE_TOP_CLEARANCE_CLASS} ${viewer ? 'md:pt-8' : ''}`}>
             {/* Navigation */}
             <div className={viewer ? "md:hidden" : ""}>
                 <Header
@@ -120,7 +122,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
             {/* Profile Content */}
             <div className={`${PROFILE_PAGE_CONTAINER_CLASS} space-y-12 lg:space-y-20`}>
-                <nav id="profile-sections" aria-label="Profile sections" className="flex scroll-mt-32 flex-wrap justify-center gap-2 lg:justify-start">
+                <nav id="profile-sections" aria-label="Profile sections" className="!mb-8 flex scroll-mt-32 flex-wrap justify-center gap-2 lg:!mb-10 lg:justify-start">
                     <NativeGlassLens as="a" href="#profile-about" className={lightButtonClass}>About</NativeGlassLens>
                     {experiences.length > 0 && <NativeGlassLens as="a" href="#profile-experience" className={lightButtonClass}>Experience</NativeGlassLens>}
                     {qualifications.length > 0 && <NativeGlassLens as="a" href="#profile-qualifications" className={lightButtonClass}>Qualifications</NativeGlassLens>}
@@ -129,7 +131,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 </nav>
 
                 {/* 1. Identity & Resume Section */}
-                <div id="profile-about" className="grid scroll-mt-32 grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                <div id="profile-about" className="grid scroll-mt-32 grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 !mt-0">
 
                     {/* Left Column - Primary Identity & Resume */}
                     <div className="space-y-6">
@@ -213,6 +215,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             </div>
                         )}
 
+                        <ProfileTimelineDisclosureGroup key={JSON.stringify([user.id, experiences.map(item => item.id), qualifications.map(item => item.id)])}>
                         <div className="grid grid-cols-1 items-stretch md:grid-cols-2 gap-10 !mt-10">
                             {/* Experience Section */}
                             {experiences.length > 0 && (
@@ -231,7 +234,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                 </div>
                                             ))}
                                         </ExpandableProfileList>
-                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                                     </section>
                                 </GlassCard>
                             )}
@@ -253,11 +255,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                 </div>
                                             ))}
                                         </ExpandableProfileList>
-                                        <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                                     </section>
                                 </GlassCard>
                             )}
                         </div>
+                        </ProfileTimelineDisclosureGroup>
                     </div >
 
                     {/* Right Column - Navigation & Contacts */}
@@ -338,7 +340,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     )
                                 })}
                             </div>
-                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                         </section>
                     )
                 }
@@ -414,7 +415,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     )
                                 })}
                             </div>
-                            <a href="#profile-sections" className="mt-4 inline-flex min-h-11 items-center text-sm text-sky-950 underline underline-offset-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950">Back to sections ↑</a>
                         </section>
                     )
                 }
@@ -427,7 +427,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 <div className="pt-12 flex justify-center pb-1">
                     <CreateProfileButton returnTo={`/${encodeURIComponent(username)}`} />
                 </div>
-                {pixelId && <MetaPixelConsent pixelId={pixelId} initialConsent={initialPixelConsent} />}
+                {pixelId && <MetaPixelConsent pixelId={pixelId} initialConsent={initialPixelConsent} showPrivacyChoices={false} />}
             </div >
             </main >
         </>

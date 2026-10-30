@@ -4,6 +4,22 @@ export const PRODUCT_CARD_SELECT = 'id,user_id,name,price,image_url,description,
 
 const isHostname = (hostname: string, domain: string) => hostname === domain || hostname.endsWith(`.${domain}`)
 
+// Explicit storefront roots avoid treating lookalike domains as Amazon.
+const AMAZON_STOREFRONTS = new Set([
+    'amazon.com', 'amazon.ca', 'amazon.com.mx', 'amazon.com.br',
+    'amazon.co.uk', 'amazon.de', 'amazon.fr', 'amazon.it', 'amazon.es',
+    'amazon.nl', 'amazon.se', 'amazon.pl', 'amazon.com.be', 'amazon.ie',
+    'amazon.com.tr', 'amazon.in', 'amazon.ae', 'amazon.sa', 'amazon.eg',
+    'amazon.co.za', 'amazon.co.jp', 'amazon.sg', 'amazon.com.au',
+])
+const AMAZON_SHORT_LINKS = new Set(['amzn.to', 'amzn.eu', 'amzn.asia', 'a.co'])
+
+function isAmazonDestination(url: URL): boolean {
+    const root = url.hostname.replace(/^(?:www|m|smile)\./, '')
+    return AMAZON_STOREFRONTS.has(root)
+        || (AMAZON_SHORT_LINKS.has(url.hostname) && /^\/[A-Za-z0-9_/-]+$/.test(url.pathname))
+}
+
 export function isCourseMarketplaceUrl(value: unknown): boolean {
     const destination = safeWebUrl(value)
     if (!destination) return false
@@ -35,6 +51,7 @@ export function purchaseButtonLabel(value: unknown, override?: unknown): string 
     const url = new URL(destination)
     const hostname = url.hostname.toLowerCase()
     if (url.protocol === 'https:' && !url.port) {
+        if (isAmazonDestination(url)) return 'Buy on Amazon'
         if (hostname === 'apps.apple.com' && /^\/(?:[a-z]{2}\/)?app\/(?:[^/]+\/)?id\d+\/?$/i.test(url.pathname)) return 'Download on the App Store'
         if ((hostname === 'nsso.me' || hostname === 'www.nsso.me') && /^\/sign-up\/?$/.test(url.pathname)) return 'Sign up to nsso'
         if (isBookingDestination(url)) return 'Book a call'

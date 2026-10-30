@@ -116,6 +116,7 @@ async function expectMatchingPurchaseWidths(purchase, paypal) {
 
 for (const [store, purchaseUrl, label] of [
     ['Etsy', 'https://shop.etsy.com/listing/12345/synthetic?ref=nsso', 'Buy on Etsy'],
+    ['Amazon UK', 'https://www.amazon.co.uk/dp/B0SYNTHETIC', 'Buy on Amazon'],
     ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic', 'Buy on Shopify'],
     ['App Store', 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789', 'Download on the App Store'],
     ['nsso signup', 'https://www.nsso.me/sign-up', 'Sign up to nsso'],
@@ -180,6 +181,7 @@ async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', 
 
 for (const [store, purchaseUrl, label] of [
     ['Etsy', 'https://etsy.com/listing/12345/synthetic', 'Buy on Etsy'],
+    ['Amazon UK', 'https://www.amazon.co.uk/dp/B0SYNTHETIC', 'Buy on Amazon'],
     ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic', 'Buy on Shopify'],
     ['App Store', 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789', 'Download on the App Store'],
     ['nsso signup', 'https://www.nsso.me/sign-up', 'Sign up to nsso'],

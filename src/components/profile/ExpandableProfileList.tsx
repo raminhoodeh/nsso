@@ -1,7 +1,8 @@
 'use client'
 
-import { Children, useId, useState, type ReactNode } from 'react'
+import { Children, useContext, useId, useState, type ReactNode } from 'react'
 import ReadMoreChip from './ReadMoreChip'
+import { ProfileTimelineDisclosureContext } from './ProfileTimelineDisclosureGroup'
 
 interface ExpandableProfileListProps {
     children: ReactNode
@@ -10,8 +11,12 @@ interface ExpandableProfileListProps {
 }
 
 function ProfileListDisclosure({ items, context, className }: Omit<ExpandableProfileListProps, 'children'> & { items: ReactNode[] }) {
-    const [expanded, setExpanded] = useState(false)
+    const [localExpanded, setLocalExpanded] = useState(false)
+    const timeline = useContext(ProfileTimelineDisclosureContext)
+    const expanded = timeline?.expanded ?? localExpanded
+    const setExpanded = timeline?.setExpanded ?? setLocalExpanded
     const remainingId = useId()
+    const descriptionId = useId()
     const canExpand = items.length > 4
 
     return <div data-profile-list-disclosure={context} className={className}>
@@ -19,6 +24,7 @@ function ProfileListDisclosure({ items, context, className }: Omit<ExpandablePro
         {canExpand && <ReadMoreChip
             aria-controls={remainingId}
             aria-expanded={expanded}
+            aria-describedby={timeline ? descriptionId : undefined}
             aria-label={`${expanded ? 'Read less' : 'Read more'} about ${context}`}
             onClick={event => {
                 // Keep focus outside the region being hidden, including in
@@ -27,6 +33,7 @@ function ProfileListDisclosure({ items, context, className }: Omit<ExpandablePro
                 setExpanded(value => !value)
             }}
         >{expanded ? 'Read less' : 'Read more'}</ReadMoreChip>}
+        {canExpand && timeline && <span id={descriptionId} className="sr-only">Experiences and qualifications expand and collapse together.</span>}
         {canExpand && <div id={remainingId} hidden={!expanded} className={className}>
             {items.slice(4)}
         </div>}

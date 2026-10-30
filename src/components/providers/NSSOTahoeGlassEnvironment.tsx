@@ -7,6 +7,8 @@ import VantaBackground from "@/components/VantaBackground";
 import { TahoeGlassProvider } from "@/components/providers/TahoeGlassProvider";
 import DimmingOverlay from "@/components/ui/DimmingOverlay";
 import type { TahoeGlassWebGLSource } from "@/lib/tahoe-glass/types";
+import { useDesktopChromeGlassPolicy } from "@/lib/tahoe-glass/chrome-policy";
+import { resolveTahoeNavPlatformRoute } from "@/lib/tahoe-glass/nav-platform";
 import {
   routeOwnsTahoeScene,
   routeUsesDeckBackground,
@@ -36,6 +38,12 @@ export default function NSSOTahoeGlassEnvironment({
   const pathname = usePathname();
   const vantaCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const usesDeckBackground = routeUsesDeckBackground(pathname);
+  const editorRoute = pathname.replace(/\/+$/, "") === "/dashboard" ||
+    /^\/dashboard\/products\/[^/]+\/creator\/?$/.test(pathname);
+  // Static deck pixels can be sampled directly. On desktop Chrome this avoids
+  // serializing and repainting a full SVG displacement image on every scroll.
+  // The existing mobile/Safari and non-editor backend policies stay intact.
+  const preferEditorWebGL = useDesktopChromeGlassPolicy(resolveTahoeNavPlatformRoute, editorRoute);
   // Personal apps retain their own material policy. Core nsso surfaces share
   // the supplied convex engine without restarting or duplicating the scene.
   const materialFamily = routeSuppressesGlobalTahoeSurfaces(pathname) ||
@@ -88,6 +96,7 @@ export default function NSSOTahoeGlassEnvironment({
       }}
       sourceLabel={sourceLabel}
       preferredBackend="auto"
+      preferWebGLWhenAvailable={preferEditorWebGL}
       fallback="webgl"
       webglSource={webglSource}
     >

@@ -605,7 +605,7 @@ export default function AdvancedModeCard({ userId, requestedOffering = null, req
                             contentClassName="p-3 md:p-6"
                         >
                             <h3 className="sr-only md:not-sr-only md:mb-4 md:block md:text-xs md:font-bold md:uppercase md:tracking-widest md:text-slate-900">Experience & Education</h3>
-                            <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0" role="tablist" aria-label="Experience and education sections">
+                            <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0 max-md:[&_[role=tab]]:shadow-none! max-md:[&_[role=tab]::before]:shadow-none! max-md:[&_[data-supplied-glass-layer=coat]]:shadow-none!" data-editor-section-tabs="true" role="tablist" aria-label="Experience and education sections">
                                 <LightButton
                                     ref={(node) => { sectionTabRefs.current.experiences = node }}
                                     type="button"
