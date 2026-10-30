@@ -162,8 +162,8 @@ test('help enters the top layer above a later full-screen overlay and escapes a 
     await trigger.press('Enter')
     const tooltip = page.getByRole('tooltip')
     await expect(tooltip).toBeVisible()
-    await expect.poll(() => tooltip.evaluate(element => element.matches(':popover-open'))).toBe(true)
-    expect(await tooltip.evaluate(element => element.parentElement === document.body)).toBe(true)
+    await expect.poll(() => tooltip.evaluate(element => element.closest('[popover]').matches(':popover-open'))).toBe(true)
+    expect(await tooltip.evaluate(element => element.closest('[popover]').parentElement === document.body)).toBe(true)
     await page.evaluate(() => {
         const cover = document.createElement('div')
         cover.id = 'synthetic-occluding-glass'

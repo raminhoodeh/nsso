@@ -56,7 +56,7 @@ test('Links help is a native, named, keyboard-and-touch disclosure over an opaqu
     assert.match(help.text, /removeEventListener\('pointerdown', dismiss\)/)
     const tooltips = elements(help).filter(node => attribute(node, 'role') === 'tooltip')
     assert.equal(tooltips.length, 1)
-    assert.equal(attribute(tooltips[0], 'popover'), 'manual')
+    assert.equal(attribute(tooltips[0].parent, 'popover'), 'manual')
     assert.match(help.text, /createPortal\(/)
     assert.match(help.text, /document\.body/)
     assert.match(help.text, /popup\.showPopover\(\)/)
