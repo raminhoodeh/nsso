@@ -24,6 +24,7 @@ import { LightButton, LightIconButton, LightCloseButton, lightButtonClass } from
 import { cn } from '@/lib/utils'
 import { purchaseButtonLabel } from '@/lib/payments/product-presentation'
 import { safeWebUrl } from '@/lib/urls'
+import SectionHelp from '@/app/dashboard/components/SectionHelp'
 
 function CreatorRouteContent({ children }: { children: ReactNode }) {
     return <>{children}</>
@@ -466,11 +467,13 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                     />
                                 )}
 
-                                {/* Purchase Link */}
+                                {/* Direct action destinations */}
                                 <div>
+                                    <div className="mb-2 flex items-center gap-1">
+                                        <label htmlFor="creator-purchase-link" className="text-xs uppercase tracking-widest text-slate-900">Button destination</label>
+                                        <SectionHelp title="Button destination">Link to the actual purchase page or checkout for this offering—or its download, booking or signup page. Your profile button goes directly there. The image/title can open your separately published nsso sales page instead. The destination handles its own pricing, payment and delivery.</SectionHelp>
+                                    </div>
                                     <TahoeGlassField
-                                        label="Purchase Link"
-                                        labelClassName="text-xs uppercase tracking-widest text-slate-900"
                                         tone="dark"
                                         semanticTint="light"
                                         semanticTintOpacity={0.16}
@@ -478,19 +481,18 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                     >
                                         <input
-                                            type="text"
+                                            id="creator-purchase-link"
+                                            type="url"
                                             value={product.purchase_link || ''}
                                             onChange={(e) => updateProduct({ purchase_link: e.target.value })}
                                             placeholder="https://..."
                                         />
                                     </TahoeGlassField>
-                                    {purchaseUrl && <p className="mt-2 text-xs text-slate-900">Button preview: {purchaseButtonLabel(purchaseUrl)}</p>}
-                                </div>
-
-                                <div>
+                                    <div className="mb-2 mt-4 flex items-center gap-1">
+                                        <label htmlFor="creator-purchase-button-label" className="text-xs uppercase tracking-widest text-slate-900">Button text (optional)</label>
+                                        <SectionHelp title="Button text">Choose a short action such as Download, Book a call or Sign up. Leave this blank to use the automatic wording for your destination. This changes the button text, not its destination or checkout.</SectionHelp>
+                                    </div>
                                     <TahoeGlassField
-                                        label="Second Purchase Link (optional)"
-                                        labelClassName="text-xs uppercase tracking-widest text-slate-900"
                                         tone="dark"
                                         semanticTint="light"
                                         semanticTintOpacity={0.16}
@@ -498,13 +500,58 @@ export default function SalesPageCreator({ productId, embedded = false, onBack, 
                                         controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
                                     >
                                         <input
+                                            id="creator-purchase-button-label"
+                                            type="text"
+                                            maxLength={60}
+                                            value={product.purchase_button_label || ''}
+                                            onChange={(e) => updateProduct({ purchase_button_label: e.target.value })}
+                                            placeholder={purchaseButtonLabel(purchaseUrl)}
+                                        />
+                                    </TahoeGlassField>
+                                    {purchaseUrl && <p className="mt-2 text-xs text-slate-900">Button preview: {purchaseButtonLabel(purchaseUrl, product.purchase_button_label)}</p>}
+                                </div>
+
+                                <div>
+                                    <div className="mb-2 flex items-center gap-1">
+                                        <label htmlFor="creator-secondary-purchase-link" className="text-xs uppercase tracking-widest text-slate-900">Second button destination (optional)</label>
+                                        <SectionHelp title="Second button destination">Add another actual purchase, download, booking or signup page for the same offering. It appears as a separate direct button on your profile and sales page. Leave it blank if one destination is enough.</SectionHelp>
+                                    </div>
+                                    <TahoeGlassField
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.16}
+                                        surfaceClassName="px-4 py-4"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
+                                    >
+                                        <input
+                                            id="creator-secondary-purchase-link"
                                             type="url"
                                             value={product.secondary_purchase_link || ''}
                                             onChange={(e) => updateProduct({ secondary_purchase_link: e.target.value })}
                                             placeholder="https://..."
                                         />
                                     </TahoeGlassField>
-                                    {secondaryPurchaseUrl && <p className="mt-2 text-xs text-slate-900">Button preview: {purchaseButtonLabel(secondaryPurchaseUrl)}</p>}
+                                    <div className="mb-2 mt-4 flex items-center gap-1">
+                                        <label htmlFor="creator-secondary-purchase-button-label" className="text-xs uppercase tracking-widest text-slate-900">Second button text (optional)</label>
+                                        <SectionHelp title="Second button text">Choose the wording for the second destination button. Leave this blank to use its automatic wording. This does not change the first button or PayPal checkout.</SectionHelp>
+                                    </div>
+                                    <TahoeGlassField
+                                        tone="dark"
+                                        semanticTint="light"
+                                        semanticTintOpacity={0.16}
+                                        surfaceClassName="px-4 py-4"
+                                        controlClassName="text-[17px] font-medium leading-[22px] text-slate-950 placeholder:text-slate-900"
+                                    >
+                                        <input
+                                            id="creator-secondary-purchase-button-label"
+                                            type="text"
+                                            maxLength={60}
+                                            value={product.secondary_purchase_button_label || ''}
+                                            onChange={(e) => updateProduct({ secondary_purchase_button_label: e.target.value })}
+                                            placeholder={purchaseButtonLabel(secondaryPurchaseUrl)}
+                                        />
+                                    </TahoeGlassField>
+                                    {secondaryPurchaseUrl && <p className="mt-2 text-xs text-slate-900">Button preview: {purchaseButtonLabel(secondaryPurchaseUrl, product.secondary_purchase_button_label)}</p>}
                                 </div>
 
                                 <div>

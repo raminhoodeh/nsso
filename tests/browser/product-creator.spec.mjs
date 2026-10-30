@@ -10,7 +10,7 @@ const actor = '11111111-1111-4111-8111-111111111111', productId = '33333333-3333
 const savedPayPal = '<form action="https://www.paypal.com/ncp/payment/AB12CD34EF56G" method="post"><input type="submit" value="Buy Now"></form>'
 let bundle, css
 test.beforeAll(async () => {
-    const files = ['src/components/products/SalesPageCreator.tsx', 'src/components/payments/PayPalCodeEditor.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
+    const files = ['src/components/products/SalesPageCreator.tsx', 'src/app/dashboard/components/SectionHelp.tsx', 'src/components/payments/PayPalCodeEditor.tsx', 'src/components/ui/LightButton.tsx', 'src/components/ui/light-button-styles.ts', 'src/components/ui/light-panel.ts', 'src/components/ui/tahoe-glass/TahoeGlassSurface.tsx', 'src/components/ui/tahoe-glass/TahoeGlassField.tsx']
     const candidates = files.flatMap(file => {
         const source = ts.createSourceFile(file, readFileSync(root + file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
         const literals = []
@@ -39,18 +39,18 @@ test.beforeAll(async () => {
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import React from 'react';import {createRoot} from 'react-dom/client';import Creator from './src/app/dashboard/products/[id]/creator/page';
             window.fixtureListeners=new Set();window.fixtureSubscribe=fn=>{window.fixtureListeners.add(fn);return()=>window.fixtureListeners.delete(fn)};
-            window.fixtureNavigation=[];window.fixtureToasts=[];window.fixtureUploads=0;window.fixturePatches=0;window.fixtureAuthFailure=false;
+            window.fixtureNavigation=[];window.fixtureToasts=[];window.fixtureUploads=0;window.fixturePatches=0;window.fixturePatchPayloads=[];window.fixtureAuthFailure=false;
             window.fixtureRouter={push:path=>window.fixtureNavigation.push(path)};
             window.updateCreatorStatus=status=>{window.fixtureProfile={...window.fixtureProfile,mutationState:{status,message:status==='saved'?'':'Your change is not confirmed.'}};window.fixtureListeners.forEach(fn=>fn())};
-            window.fixtureProfile={products:[{id:'${productId}',user_id:'${actor}',name:'Fixture offer',price:'£12',benefits:[],testimonials:[],paypal_html:window.fixtureSavedPayPal||null}],loading:false,patchEntity:async()=>{window.fixturePatches++;return true},refreshProfile:async()=>{},getRevision:()=>0,retryPending:async()=>{},mutationState:{status:'saved',message:''}};
+            window.fixtureProfile={products:[{id:'${productId}',user_id:'${actor}',name:'Fixture offer',price:'£12',benefits:[],testimonials:[],paypal_html:window.fixtureSavedPayPal||null}],loading:false,patchEntity:async(kind,id,patch)=>{window.fixturePatches++;window.fixturePatchPayloads.push({kind,id,patch});window.fixtureProfile={...window.fixtureProfile,products:window.fixtureProfile.products.map(row=>row.id===id?{...row,...patch}:row)};window.fixtureListeners.forEach(fn=>fn());return true},refreshProfile:async()=>{},getRevision:()=>0,retryPending:async()=>{},mutationState:{status:'saved',message:''}};
             createRoot(document.getElementById('root')).render(<Creator/>);
         ` } })
     bundle = result.outputFiles[0].text
 })
-async function fixture(page, { initialPayPal = null } = {}) {
+async function fixture(page, { initialPayPal = null, narrow = false } = {}) {
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
-    await page.route('https://nsso.test/fixture', route => route.fulfill({ contentType: 'text/html', body: '<div id="root"></div>' }))
+    await page.route('https://nsso.test/fixture', route => route.fulfill({ contentType: 'text/html', body: (narrow ? '<meta name="viewport" content="width=device-width,initial-scale=1">' : '') + '<div id="root"></div>' }))
     await page.goto('https://nsso.test/fixture')
     await page.addStyleTag({ content: css })
     await page.evaluate(value => { window.fixtureSavedPayPal = value }, initialPayPal)
@@ -65,6 +65,41 @@ test('both creator preview actions explicitly disable checkout on their destinat
     await page.getByRole('button', { name: 'Preview page', exact: true }).nth(1).click()
     expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([`/products/${productId}?source=creator&preview=true`, `/products/${productId}?source=creator&preview=true`])
     expect(errors).toEqual([])
+})
+
+test('standalone creator uses destination help and optional button text without touching payment configuration', async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 844 })
+    const errors = await fixture(page, { initialPayPal: savedPayPal, narrow: true })
+    const destination = page.getByRole('textbox', { name: 'Button destination', exact: true })
+    await expect(destination).toHaveAttribute('type', 'url')
+    const help = page.getByRole('button', { name: 'About Button destination', exact: true })
+    await help.focus()
+    await help.press('Enter')
+    const tooltip = page.getByRole('tooltip').filter({ visible: true })
+    await expect(tooltip).toContainText('actual purchase page or checkout')
+    await expect(tooltip).toContainText('download, booking or signup')
+    const bounds = await tooltip.boundingBox()
+    expect(bounds.x).toBeGreaterThanOrEqual(15)
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(305)
+    await help.press('Escape')
+    await expect(tooltip).toHaveCount(0)
+    const target = 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+    await destination.fill(target)
+    await expect(page.getByText('Button preview: Download on the App Store', { exact: true })).toBeVisible()
+    const label = page.getByRole('textbox', { name: 'Button text (optional)', exact: true })
+    await expect(label).toHaveAttribute('maxlength', '60')
+    await label.fill('Get my app')
+    await expect(page.getByText('Button preview: Get my app', { exact: true })).toBeVisible()
+    await label.fill('')
+    await expect(page.getByText('Button preview: Download on the App Store', { exact: true })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveValue(savedPayPal)
+    expect(await page.evaluate(() => window.fixturePatchPayloads)).toEqual([
+        { kind: 'product', id: productId, patch: { purchase_link: target } },
+        { kind: 'product', id: productId, patch: { purchase_button_label: 'Get my app' } },
+        { kind: 'product', id: productId, patch: { purchase_button_label: '' } },
+    ])
+    expect(errors).toEqual([])
+    await page.screenshot({ path: testInfo.outputPath('standalone-button-destination-320.png'), fullPage: true })
 })
 
 test('pending, rejected and uncertain saves never show Saved or allow a stale preview', async ({ page }) => {

@@ -13,7 +13,7 @@ export interface EditableValues {
     experience: { company_name?: string; job_title?: string; start_year?: number | null; end_year?: number | null; description?: string | null }
     qualification: { institution?: string; qualification_name?: string; start_year?: number | null; end_year?: number | null }
     project: { project_name?: string; contribution?: string; description?: string | null; project_photo_url?: string | null; project_url?: string | null }
-    product: { name?: string; price?: string | null; image_url?: string | null; description?: string | null; purchase_link?: string | null; secondary_purchase_link?: string | null; purchase_link_active?: boolean; paypal_active?: boolean; sales_page_active?: boolean; sales_page_published?: boolean; headline?: string | null; tagline?: string | null; intro_text?: string | null; value_proposition?: string | null; video_url?: string | null; benefits?: string[]; testimonials?: { name: string; text: string }[] }
+    product: { name?: string; price?: string | null; image_url?: string | null; description?: string | null; purchase_link?: string | null; secondary_purchase_link?: string | null; purchase_button_label?: string | null; secondary_purchase_button_label?: string | null; purchase_link_active?: boolean; paypal_active?: boolean; sales_page_active?: boolean; sales_page_published?: boolean; headline?: string | null; tagline?: string | null; intro_text?: string | null; value_proposition?: string | null; video_url?: string | null; benefits?: string[]; testimonials?: { name: string; text: string }[] }
 }
 type RowChange = { [K in RowKind]: { kind: `${K}.add`; values: EditableValues[K]; position?: InsertionPosition } | { kind: `${K}.patch`; id: string; patch: EditableValues[K] } | { kind: `${K}.remove`; id: string } }[RowKind]
 export type ProfileChange = { kind: 'profile.patch'; patch: ProfilePatch } | RowChange | { kind: 'collection.reorder'; collection: OrderCollection; order: string[] }
@@ -30,6 +30,7 @@ const text = (maximum: number, nullable = false): Rule => value => (nullable && 
 const web: Rule = value => value === null || value === '' || !!safeWebUrl(value)
 const year: Rule = value => value === null || (Number.isInteger(value) && Number(value) >= 1000 && Number(value) <= 3000)
 const boolean: Rule = value => typeof value === 'boolean'
+const buttonLabel: Rule = value => value === null || (typeof value === 'string' && value.length <= 60 && !/[\u0000-\u001f\u007f]/.test(value))
 const rules: Record<string, Record<string, Rule>> = {
     profile: { full_name: text(300, true), headline: text(120, true), bio: text(32768, true), profile_pic_url: web },
     link: { link_name: text(300), link_url: value => value === '' || !!safeWebUrl(value) },
@@ -37,7 +38,7 @@ const rules: Record<string, Record<string, Rule>> = {
     experience: { company_name: text(300), job_title: text(300), start_year: year, end_year: year, description: text(32768, true) },
     qualification: { institution: text(300), qualification_name: text(300), start_year: year, end_year: year },
     project: { project_name: text(300), contribution: text(300), description: text(32768, true), project_photo_url: web, project_url: web },
-    product: { name: text(300), price: text(200, true), image_url: web, description: text(32768, true), purchase_link: web, secondary_purchase_link: web, purchase_link_active: boolean, paypal_active: boolean, sales_page_active: boolean, sales_page_published: boolean, headline: text(120, true), tagline: text(500, true), intro_text: text(32768, true), value_proposition: text(32768, true), video_url: web, benefits: value => Array.isArray(value) && value.length <= 50 && value.every(text(2000)), testimonials: value => Array.isArray(value) && value.length <= 50 && value.every(item => object(item) && Object.keys(item).length === 2 && keys(item, ['name', 'text']) && text(300)(item.name) && text(4000)(item.text)) },
+    product: { name: text(300), price: text(200, true), image_url: web, description: text(32768, true), purchase_link: web, secondary_purchase_link: web, purchase_button_label: buttonLabel, secondary_purchase_button_label: buttonLabel, purchase_link_active: boolean, paypal_active: boolean, sales_page_active: boolean, sales_page_published: boolean, headline: text(120, true), tagline: text(500, true), intro_text: text(32768, true), value_proposition: text(32768, true), video_url: web, benefits: value => Array.isArray(value) && value.length <= 50 && value.every(text(2000)), testimonials: value => Array.isArray(value) && value.length <= 50 && value.every(item => object(item) && Object.keys(item).length === 2 && keys(item, ['name', 'text']) && text(300)(item.name) && text(4000)(item.text)) },
 }
 const required: Record<RowKind, string[]> = { link: ['link_name', 'link_url'], contact: ['method', 'value'], experience: ['company_name', 'job_title'], qualification: ['institution', 'qualification_name'], project: ['project_name', 'contribution'], product: ['name'] }
 

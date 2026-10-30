@@ -79,6 +79,22 @@ test('owner product operations accept and normalize the second destination under
     assert.equal(isProfileChange({kind:'product.patch',id,patch:{purchase_link:'https://www.udemy.com/course/fixture',secondary_purchase_link:'javascript:alert(1)'}}),false);
 });
 
+test('optional button wording is bounded owner-authored text and cannot change URLs or checkout authority',()=>{
+    for(const field of ['purchase_button_label','secondary_purchase_button_label']) {
+        for(const label of [null,'','  ','Download the app','x'.repeat(60),'<b>Plain text, not HTML</b>']) {
+            const change={kind:'product.patch',id,patch:{[field]:label}};
+            assert.equal(isProfileChange(change),true);
+            assert.deepEqual(normalizeProfileChange(change),change,'Custom text must not be normalized as a URL or silently rewritten');
+            assert.equal(isProfileChange({kind:'product.add',values:{name:'Synthetic named offering',[field]:label}}),true);
+        }
+        for(const label of [123,{},[],'x'.repeat(61),'line\nbreak','tab\ttext','control\u007ftext']) {
+            assert.equal(isProfileChange({kind:'product.patch',id,patch:{[field]:label}}),false);
+        }
+    }
+    assert.equal(isProfileChange({kind:'product.patch',id,patch:{purchase_button_label:'Download now',purchase_link:'javascript:alert(1)'}}),false);
+    assert.equal(isProfileChange({kind:'product.patch',id,patch:{purchase_button_label:'Buy now',payment_config:{recipient:'untrusted'}}}),false);
+});
+
 test('tool normalization persists both link fields and turns wording into a reviewable field patch without invented metadata',()=>{
     assert.deepEqual(normalizeToolCall('update_link',{linkId:id,name:'Portfolio',url:'https://example.test'}).change,{kind:'link.patch',id,patch:{link_name:'Portfolio',link_url:'https://example.test'}});
     assert.deepEqual(normalizeToolCall('suggest_wording',{target:'bio',improved:''}).change,{kind:'profile.patch',patch:{bio:''}});

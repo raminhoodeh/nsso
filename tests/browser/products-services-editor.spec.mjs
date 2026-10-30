@@ -181,7 +181,7 @@ test('white offering controls preserve native upload focus, selection and distin
     await expectWhiteAction(page, close, { icon: true })
     await close.press('Enter')
     for (const [name, before, patch] of [
-        ['Enable purchase link', true, { purchase_link_active: false }],
+        ['Enable button destination', true, { purchase_link_active: false }],
         ['Enable PayPal button code', true, { paypal_active: false }],
         ['Enable product sales page', false, { sales_page_active: true, sales_page_published: true }],
     ]) {
@@ -203,10 +203,13 @@ test('white offering controls preserve native upload focus, selection and distin
 test('purchase label hints follow edits in the offering and creator without changing checkout settings', async ({ page }, testInfo) => {
     await mount(page, { count: 1 })
     await choose(page, 1).click()
-    const link = page.getByRole('textbox', { name: 'Purchase link', exact: true })
+    const link = page.getByRole('textbox', { name: 'Button destination', exact: true })
     const scenarios = [
         ['https://www.etsy.com/listing/123456/synthetic-guide', 'Buy on Etsy'],
         ['https://synthetic-shop.myshopify.com/products/guide', 'Buy on Shopify'],
+        ['https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789', 'Download on the App Store'],
+        ['https://www.nsso.me/sign-up', 'Sign up to nsso'],
+        ['https://calendar.app.google/syntheticBooking', 'Book a call'],
         ['https://seller.example.test/guide?provider=etsy.com', 'View purchase page'],
         ['https://etsy.com.attacker.example/guide', 'View purchase page'],
         ['javascript:alert(1)', null],
@@ -223,7 +226,7 @@ test('purchase label hints follow edits in the offering and creator without chan
     await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
     const creator = page.locator('[data-sales-page-creator]')
     await expect(creator.getByText('Button preview: Buy on Etsy', { exact: true })).toBeVisible()
-    const creatorLink = creator.getByRole('textbox', { name: 'Purchase Link', exact: true })
+    const creatorLink = creator.getByRole('textbox', { name: 'Button destination', exact: true })
     await creatorLink.fill(shopify)
     await expect(creator.getByText('Button preview: Buy on Shopify', { exact: true })).toBeVisible()
     await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
@@ -236,7 +239,7 @@ test('purchase label hints follow edits in the offering and creator without chan
     await expect(page.locator('form[action]')).toHaveCount(0)
     await merchant.press('Enter')
     await expect(page.getByRole('status').filter({ hasText: 'Checkout is disabled during profile preview' })).toBeVisible()
-    await expect(page.getByRole('switch', { name: 'Enable purchase link', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable button destination', exact: true })).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByRole('switch', { name: 'Enable PayPal button code', exact: true })).toHaveAttribute('aria-checked', 'true')
     expect(await writes(page)).toEqual([...scenarios.map(([url]) => url), etsy, shopify].map(url => ({ kind: 'patch', entity: 'product', id: 'offering-1', patch: { purchase_link: url } })))
     expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
@@ -553,7 +556,7 @@ test('narrow mobile creation and purchase controls fit without horizontal overfl
         await expectCompactSwitch(control)
     }
     await page.screenshot({ path: testInfo.outputPath('offerings-320px-editor.png'), fullPage: true })
-    for (const title of ['Purchase URL', 'PayPal checkout', 'nsso sales page']) {
+    for (const title of ['Button destination', 'PayPal checkout', 'nsso sales page']) {
         await page.getByRole('button', { name: 'About ' + title, exact: true }).first().click()
         await expectTooltipFits(page)
         await page.keyboard.press('Escape')
@@ -595,7 +598,7 @@ test('future features stay collapsed and inactive while compact disclosure and t
     // Keyboard focus scrolls each help trigger into view. Keep the pointer on
     // the fixed header so that scroll cannot introduce an unrelated hover.
     await page.mouse.move(0, 0)
-    for (const [name, explanation] of [['Purchase URL', 'existing shop, booking page or checkout'], ['PayPal checkout', 'PayPal controls the recipient'], ['nsso sales page', 'does not process payments or deliver products']]) {
+    for (const [name, explanation] of [['Button destination', 'actual purchase page or checkout'], ['PayPal checkout', 'PayPal controls the recipient'], ['nsso sales page', 'does not process payments or deliver products']]) {
         const help = page.getByRole('button', { name: 'About ' + name, exact: true }).first()
         await help.focus()
         await page.keyboard.press('Enter')
@@ -841,9 +844,9 @@ test('an in-flight PayPal save finishes for its original offering without replac
 test('second purchase link hints and drafts move between both editors without changing the primary or PayPal', async ({ page }, testInfo) => {
     await mount(page, { count: 1 })
     await choose(page, 1).click()
-    const primary = page.getByRole('textbox', { name: 'Purchase link', exact: true })
+    const primary = page.getByRole('textbox', { name: 'Button destination', exact: true })
     const originalPrimary = await primary.inputValue()
-    const secondary = page.getByRole('textbox', { name: 'Second purchase link (optional)', exact: true })
+    const secondary = page.getByRole('textbox', { name: 'Second button destination (optional)', exact: true })
     await expect(secondary).toHaveAttribute('type', 'url')
     const coursera = 'https://www.coursera.org/learn/synthetic-course'
     const udemy = 'https://www.udemy.com/course/synthetic-companion/'
@@ -852,7 +855,7 @@ test('second purchase link hints and drafts move between both editors without ch
     await expect(primary).toHaveValue(originalPrimary)
     await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
     const creator = page.locator('[data-sales-page-creator]')
-    const creatorSecondary = creator.getByRole('textbox', { name: 'Second Purchase Link (optional)', exact: true })
+    const creatorSecondary = creator.getByRole('textbox', { name: 'Second button destination (optional)', exact: true })
     await expect(creatorSecondary).toHaveValue(coursera)
     await expect(creatorSecondary).toHaveAttribute('type', 'url')
     await expect(creator.getByText('Button preview: Buy on Coursera', { exact: true })).toBeVisible()
@@ -863,9 +866,171 @@ test('second purchase link hints and drafts move between both editors without ch
     await expect(primary).toHaveValue(originalPrimary)
     await expect(page.getByText('Button preview: Buy on Udemy', { exact: true })).toBeVisible()
     await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveValue(paypal)
-    await expect(page.getByRole('switch', { name: 'Enable purchase link', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable button destination', exact: true })).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByRole('switch', { name: 'Enable PayPal button code', exact: true })).toHaveAttribute('aria-checked', 'true')
     expect(await writes(page)).toEqual([coursera, udemy].map(url => ({ kind: 'patch', entity: 'product', id: 'offering-1', patch: { secondary_purchase_link: url } })))
     expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
     await page.screenshot({ path: testInfo.outputPath('second-link-editor-hint.png'), fullPage: true })
+})
+
+test('button destination help explains the actual purchase page and works by keyboard and touch in both editors', async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 844 })
+    await mount(page, { count: 1 })
+    await choose(page, 1).click()
+    for (const creatorView of [false, true]) {
+        if (creatorView) await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+        const scope = creatorView ? page.locator('[data-sales-page-creator]') : page.locator('[data-offering-editor]')
+        const input = scope.getByRole('textbox', { name: 'Button destination', exact: true })
+        await expect(input).toHaveAttribute('type', 'url')
+        const help = scope.getByRole('button', { name: 'About Button destination', exact: true })
+        await page.mouse.move(0, 0)
+        await help.focus()
+        await help.press('Enter')
+        const tooltip = page.getByRole('tooltip').filter({ visible: true })
+        await expect(tooltip).toContainText('actual purchase page or checkout')
+        await expect(tooltip).toContainText('download, booking or signup')
+        await expect(tooltip).toContainText('image/title')
+        await expectTooltipFits(page)
+        await help.press('Escape')
+        await expect(tooltip).toHaveCount(0)
+        await expect(help).toBeFocused()
+        if (testInfo.project.name === 'mobile') await help.tap()
+        else await help.click()
+        await expect(tooltip).toContainText('actual purchase page or checkout')
+        await page.screenshot({ path: testInfo.outputPath(`button-destination-help-${creatorView ? 'creator' : 'offering'}.png`), fullPage: true })
+        await page.getByRole('heading', { name: creatorView ? 'Sales Page Creator' : 'Fixture offering 1', exact: true }).click()
+        await expect(tooltip).toHaveCount(0)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    }
+    expect(await writes(page)).toEqual([])
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
+})
+
+test('optional button text autosaves, survives editor changes, resets to automatic and retains failed drafts', async ({ page }) => {
+    await mount(page, { count: 2 })
+    await choose(page, 1).click()
+    const app = 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+    const signup = 'https://www.nsso.me/sign-up'
+    await page.getByRole('textbox', { name: 'Button destination', exact: true }).fill(app)
+    await page.getByRole('textbox', { name: 'Second button destination (optional)', exact: true }).fill(signup)
+    const label = page.getByRole('textbox', { name: 'Button text (optional)', exact: true })
+    const secondaryLabel = page.getByRole('textbox', { name: 'Second button text (optional)', exact: true })
+    await expect(label).toHaveAttribute('maxlength', '60')
+    await expect(secondaryLabel).toHaveAttribute('maxlength', '60')
+    await label.fill('Get my app')
+    await secondaryLabel.fill('Create a profile')
+    await expect(page.getByText('Button preview: Get my app', { exact: true })).toBeVisible()
+    await expect(page.getByText('Button preview: Create a profile', { exact: true })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveValue(paypal)
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const creator = page.locator('[data-sales-page-creator]')
+    await expect(creator.getByRole('textbox', { name: 'Button text (optional)', exact: true })).toHaveValue('Get my app')
+    await expect(creator.getByRole('textbox', { name: 'Second button text (optional)', exact: true })).toHaveValue('Create a profile')
+    await creator.getByRole('textbox', { name: 'Button text (optional)', exact: true }).fill('')
+    await creator.getByRole('textbox', { name: 'Second button text (optional)', exact: true }).fill('')
+    await expect(creator.getByText('Button preview: Download on the App Store', { exact: true })).toBeVisible()
+    await expect(creator.getByText('Button preview: Sign up to nsso', { exact: true })).toBeVisible()
+    await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
+    await expect(label).toHaveValue('')
+    await expect(secondaryLabel).toHaveValue('')
+    await page.evaluate(() => { window.fixturePatchFails = true })
+    await label.fill('Keep this custom draft')
+    await expect(page.getByRole('status').filter({ hasText: 'Changes could not be saved.' })).toBeVisible()
+    await expect(label).toHaveValue('Keep this custom draft')
+    await page.evaluate(() => { window.fixturePatchFails = false })
+    await page.getByRole('button', { name: 'Check status and retry', exact: true }).click()
+    await expect(page.locator('[data-offering-save-status]')).toHaveCount(0)
+    await expect(page.getByText('Button preview: Keep this custom draft', { exact: true })).toBeVisible()
+    await expect(page.getByRole('switch', { name: 'Enable button destination', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable PayPal button code', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable product sales page', exact: true })).toHaveAttribute('aria-checked', 'false')
+    expect((await writes(page)).every(write => write.kind === 'patch' && !Object.hasOwn(write.patch, 'paypal_active') && !Object.hasOwn(write.patch, 'sales_page_active') && !Object.hasOwn(write.patch, 'purchase_link_active'))).toBe(true)
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
+})
+
+test('destination tooltip text stays entirely readable in narrow and keyboard-height viewports', async ({ page }) => {
+    for (const viewport of [{ width: 320, height: 844 }, { width: 390, height: 844 }, { width: 390, height: 400 }]) {
+        await page.setViewportSize(viewport)
+        await mount(page, { count: 1 })
+        await choose(page, 1).click()
+        for (const creatorView of [false, true]) {
+            if (creatorView) await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+            const scope = creatorView ? page.locator('[data-sales-page-creator]') : page.locator('[data-offering-editor]')
+            const help = scope.getByRole('button', { name: 'About Button destination', exact: true })
+            await page.mouse.move(0, 0)
+            await help.focus()
+            await help.press('Enter')
+            const tooltip = page.getByRole('tooltip').filter({ visible: true })
+            await expect(tooltip).toContainText('actual purchase page or checkout')
+            await expect.poll(() => tooltip.evaluate(element => {
+                const rect = element.getBoundingClientRect()
+                const view = visualViewport
+                const left = view?.offsetLeft || 0, top = view?.offsetTop || 0
+                return rect.left >= left + 15 && rect.top >= top && rect.right <= left + (view?.width || innerWidth) - 15 && rect.bottom <= top + (view?.height || innerHeight)
+            })).toBe(true)
+            const reading = await tooltip.evaluate(element => {
+                const rect = element.getBoundingClientRect()
+                const sample = (x, y) => element.contains(document.elementFromPoint(x, y))
+                return { contentFits: element.scrollHeight <= element.clientHeight + 1, firstTextExposed: sample(rect.left + 20, rect.top + 20), lastTextExposed: sample(rect.left + 20, rect.bottom - 20) }
+            })
+            expect(reading).toEqual({ contentFits: true, firstTextExposed: true, lastTextExposed: true })
+            await help.press('Escape')
+            await expect(tooltip).toHaveCount(0)
+            await expect(help).toBeFocused()
+        }
+        expect(await writes(page)).toEqual([])
+    }
+})
+
+test('very short destination help is keyboard-scrollable and Escape restores its trigger', async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 240 })
+    await mount(page, { count: 1 })
+    // The isolated fixture's nav is a div; mark it like the real fixed nsso
+    // topbar so the shared help can reserve its visible chrome band.
+    await page.locator('#fixture-header').evaluate(element => element.setAttribute('data-nsso-topbar', 'true'))
+    await choose(page, 1).click()
+    for (const creatorView of [false, true]) {
+        if (creatorView) await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+        const scope = creatorView ? page.locator('[data-sales-page-creator]') : page.locator('[data-offering-editor]')
+        const help = scope.getByRole('button', { name: 'About Button destination', exact: true })
+        await page.mouse.move(0, 0)
+        await help.focus()
+        await help.press('Enter')
+        const tooltip = page.getByRole('tooltip').filter({ visible: true })
+        await expect(tooltip).toHaveAttribute('tabindex', '0')
+        await expect(tooltip).toHaveCSS('overflow-y', 'auto')
+        const bounds = await tooltip.boundingBox()
+        expect(bounds.y).toBeGreaterThanOrEqual(104)
+        expect(bounds.y + bounds.height).toBeLessThanOrEqual(224)
+        await page.keyboard.press('Tab')
+        await expect(tooltip).toBeFocused()
+        await page.keyboard.press('End')
+        await expect.poll(() => tooltip.evaluate(element => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThanOrEqual(1)
+        await page.evaluate(() => window.dispatchEvent(new Event('resize')))
+        await expect.poll(() => tooltip.evaluate(element => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThanOrEqual(1)
+        await tooltip.press('Escape')
+        await expect(tooltip).toHaveCount(0)
+        await expect(help).toBeFocused()
+        if (testInfo.project.name === 'mobile') await help.tap()
+        else await help.press('Enter')
+        await expect(tooltip).toBeVisible()
+        await expect.poll(() => tooltip.evaluate(element => element.scrollTop)).toBe(0)
+        const beginningVisible = await tooltip.evaluate(element => {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+            let text = walker.nextNode()
+            while (text && !text.textContent.trim()) text = walker.nextNode()
+            if (!text) return false
+            const range = document.createRange()
+            range.setStart(text, 0)
+            range.setEnd(text, Math.min(12, text.textContent.length))
+            const firstLine = range.getClientRects()[0]
+            const panel = element.getBoundingClientRect()
+            return firstLine && firstLine.top >= panel.top && firstLine.bottom <= panel.bottom
+                && element.contains(document.elementFromPoint(firstLine.left + 1, firstLine.top + firstLine.height / 2))
+        })
+        expect(beginningVisible).toBe(true)
+        await help.press('Escape')
+        await expect(tooltip).toHaveCount(0)
+    }
+    expect(await writes(page)).toEqual([])
 })

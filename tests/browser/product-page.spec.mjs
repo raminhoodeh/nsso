@@ -49,7 +49,7 @@ test.beforeAll(async () => {
     bundle = result.outputFiles[0].text
 })
 
-async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '', styled = false, withTestimonials = false, purchaseUrl = product.purchase_link, secondaryPurchaseUrl = null, purchaseActive = true } = {}) {
+async function fixture(page, { published = true, account = { user: null, loading: false, error: null }, privateMode = 'ok', failPublicOnce = false, malformedArrays = false, deferPublic = false, search = '', styled = false, withTestimonials = false, purchaseUrl = product.purchase_link, secondaryPurchaseUrl = null, purchaseActive = true, purchaseLabel = null, secondaryPurchaseLabel = null } = {}) {
     const requests = [], errors = []
     const pendingPublic = []
     let publicReleased = false
@@ -66,7 +66,7 @@ async function fixture(page, { published = true, account = { user: null, loading
         if (url.pathname === '/rest/v1/rpc/get_product_details') {
             if (deferPublic && !publicReleased) await new Promise(resolve => pendingPublic.push(resolve))
             if (failures-- > 0) return route.abort('failed')
-            data = published ? { ...product, purchase_link: purchaseUrl, secondary_purchase_link: secondaryPurchaseUrl, purchase_link_active: purchaseActive, ...(withTestimonials ? { testimonials: [{ name: 'First customer', text: 'First synthetic quote' }, { name: 'Second customer', text: 'Second synthetic quote' }] } : {}), ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
+            data = published ? { ...product, purchase_link: purchaseUrl, secondary_purchase_link: secondaryPurchaseUrl, purchase_link_active: purchaseActive, purchase_button_label: purchaseLabel, secondary_purchase_button_label: secondaryPurchaseLabel, ...(withTestimonials ? { testimonials: [{ name: 'First customer', text: 'First synthetic quote' }, { name: 'Second customer', text: 'Second synthetic quote' }] } : {}), ...(malformedArrays ? { benefits: [null, {}, 'Readable benefit'], testimonials: [{ name: 'Valid', text: 'Readable quote' }, null, {}] } : {}) } : null
         } else if (url.pathname === '/rest/v1/contacts') data = [{ method: 'Email', value: 'public-fixture@example.test' }]
         else if (url.pathname === '/rest/v1/users') data = { username: 'fixture-seller' }
         else throw new Error('Unexpected public product query')
@@ -77,12 +77,12 @@ async function fixture(page, { published = true, account = { user: null, loading
     await page.evaluate(({ account, privateMode, draft }) => {
         window.fixtureAccount = account; window.fixturePrivateMode = privateMode; window.fixtureDraft = draft
         localStorage.setItem('sb-product-fixture-auth-token', JSON.stringify({ access_token: 'expired-synthetic-token', refresh_token: 'synthetic-refresh-token', expires_at: 1, user: { id: 'previous-private-account' } }))
-    }, { account, privateMode, draft: { ...product, purchase_link: purchaseUrl, secondary_purchase_link: secondaryPurchaseUrl, purchase_link_active: purchaseActive, sales_page_published: false, headline: 'PRIVATE owner draft', intro_text: 'PRIVATE unsaved sales copy' } })
+    }, { account, privateMode, draft: { ...product, purchase_link: purchaseUrl, secondary_purchase_link: secondaryPurchaseUrl, purchase_link_active: purchaseActive, purchase_button_label: purchaseLabel, secondary_purchase_button_label: secondaryPurchaseLabel, sales_page_published: false, headline: 'PRIVATE owner draft', intro_text: 'PRIVATE unsaved sales copy' } })
     await page.addScriptTag({ content: bundle })
     return { requests, errors, releasePublic: () => { publicReleased = true; pendingPublic.splice(0).forEach(resolve => resolve()) } }
 }
 
-async function expectEqualPurchaseWidths(purchase, paypal) {
+async function expectEqualPurchaseWidths(purchase, paypal, { purchaseMayWrap = false } = {}) {
     const [purchaseBox, paypalBox] = await Promise.all([purchase.boundingBox(), paypal.boundingBox()])
     for (const box of [purchaseBox, paypalBox]) {
         expect(Math.abs(box.width - 240)).toBeLessThanOrEqual(.05)
@@ -101,7 +101,10 @@ async function expectEqualPurchaseWidths(purchase, paypal) {
             const box = element.getBoundingClientRect()
             return { lines: [...new Set(text.map(rect => Math.round(rect.top * 1000) / 1000))], left: Math.min(...text.map(rect => rect.left)), right: Math.max(...text.map(rect => rect.right)), targetLeft: box.left, targetRight: box.right }
         })
-        expect(label.lines).toHaveLength(1)
+        if (control === purchase && purchaseMayWrap) {
+            expect(label.lines.length).toBeGreaterThanOrEqual(1)
+            expect(label.lines.length).toBeLessThanOrEqual(2)
+        } else expect(label.lines).toHaveLength(1)
         expect(label.left).toBeGreaterThanOrEqual(label.targetLeft - .05)
         expect(label.right).toBeLessThanOrEqual(label.targetRight + .05)
     }
@@ -110,6 +113,9 @@ async function expectEqualPurchaseWidths(purchase, paypal) {
 for (const [store, purchaseUrl, label] of [
     ['Etsy', 'https://www.etsy.com/listing/12345/synthetic?ref=nsso#details', 'Buy on Etsy'],
     ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic?variant=123', 'Buy on Shopify'],
+    ['App Store', 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789', 'Download on the App Store'],
+    ['nsso signup', 'https://www.nsso.me/sign-up', 'Sign up to nsso'],
+    ['booking', 'https://calendar.app.google/syntheticBooking', 'Book a call'],
     ['generic', 'https://shop.example.test/products/synthetic', 'View purchase page'],
     ['lookalike', 'https://etsy.com.evil.example.test/listing/12345', 'View purchase page'],
 ]) test(`${store} sales-page purchase labels preserve the exact destination and inert preview`, async ({ page }) => {
@@ -134,7 +140,7 @@ for (const [store, purchaseUrl, label] of [
     const visibleIndex = page.viewportSize().width >= 1024 ? 1 : 0
     await expect(links.nth(visibleIndex)).toBeVisible()
     await expect(links.nth(1 - visibleIndex)).toBeHidden()
-    await expectEqualPurchaseWidths(links.nth(visibleIndex), merchant)
+    await expectEqualPurchaseWidths(links.nth(visibleIndex), merchant, { purchaseMayWrap: store === 'App Store' })
     expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
     expect(requests.some(request => request.path.startsWith('/auth/'))).toBe(false)
     expect(errors).toEqual([])
@@ -144,7 +150,7 @@ for (const [store, purchaseUrl, label] of [
     await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true, includeHidden: true })).toHaveCount(2)
     const previewPurchase = page.getByRole('button', { name: label, exact: true }).filter({ visible: true })
     const previewPaypal = page.getByRole('button', { name: 'Buy via PayPal', exact: true }).filter({ visible: true })
-    await expectEqualPurchaseWidths(previewPurchase, previewPaypal)
+    await expectEqualPurchaseWidths(previewPurchase, previewPaypal, { purchaseMayWrap: store === 'App Store' })
     await expect(previewPaypal).toHaveAttribute('type', 'button')
     await previewPurchase.press('Enter')
     await expect(page.getByRole('status')).toHaveText('Checkout is disabled during profile preview')
@@ -225,6 +231,62 @@ test('second sales-page destinations deduplicate, reject unsafe links and obey t
         await expect(page.getByText(/100% Guaranteed Satisfaction/)).toHaveCount(0)
         expect(state.errors).toEqual([])
     }
+})
+
+test('per-destination sales-page button text preserves safe URL order, fallback and inert preview', async ({ page }) => {
+    const primary = 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+    const secondary = 'https://www.nsso.me/sign-up'
+    for (const scenario of [
+        { purchaseUrl: primary, secondaryPurchaseUrl: secondary, purchaseLabel: 'Get my app', secondaryPurchaseLabel: 'Create a profile', expected: [['Get my app', primary], ['Create a profile', secondary]] },
+        { purchaseUrl: primary, secondaryPurchaseUrl: secondary, purchaseLabel: '   ', secondaryPurchaseLabel: '', expected: [['Download on the App Store', primary], ['Sign up to nsso', secondary]] },
+        { purchaseUrl: 'javascript:alert(1)', secondaryPurchaseUrl: secondary, purchaseLabel: 'Untrusted action', secondaryPurchaseLabel: 'Create a profile', expected: [['Create a profile', secondary]] },
+        { purchaseUrl: secondary, secondaryPurchaseUrl: ' HTTPS://WWW.NSSO.ME:443/sign-up ', purchaseLabel: 'Primary signup', secondaryPurchaseLabel: 'Duplicate signup', expected: [['Primary signup', secondary]] },
+        { purchaseUrl: primary, secondaryPurchaseUrl: secondary, purchaseLabel: 'Get my app', secondaryPurchaseLabel: 'Create a profile', purchaseActive: false, expected: [] },
+    ]) {
+        const state = await fixture(page, { ...scenario, styled: true })
+        await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+        const links = page.locator('a[data-nsso-control="white"]').filter({ visible: true })
+        expect((await links.allTextContents()).map(text => text.trim())).toEqual(scenario.expected.map(([label]) => label))
+        for (const [label, url] of scenario.expected) await expect(page.getByRole('link', { name: label, exact: true }).filter({ visible: true })).toHaveAttribute('href', url)
+        await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)
+        await expect(page.getByRole('link', { name: 'Untrusted action', exact: true })).toHaveCount(0)
+        await expect(page.locator('form button').filter({ visible: true })).toHaveText('Buy via PayPal')
+        expect(state.errors).toEqual([])
+
+        const preview = await fixture(page, { ...scenario, search: '?preview=true', styled: true })
+        await expect(page.getByRole('heading', { name: product.headline })).toBeVisible()
+        for (const [label] of scenario.expected) await page.getByRole('button', { name: label, exact: true }).filter({ visible: true }).press('Enter')
+        await expect(page.getByRole('status')).toHaveCount(scenario.expected.length)
+        await expect(page.locator('form,a[href^="javascript:"]')).toHaveCount(0)
+        expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+        expect(preview.errors).toEqual([])
+    }
+})
+
+test('long custom sales-page button text wraps on narrow screens without changing its target or PayPal', async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 844 })
+    const label = 'A'.repeat(60)
+    const target = 'https://seller.example.test/purchase'
+    const state = await fixture(page, { purchaseUrl: target, purchaseLabel: label, styled: true })
+    const link = page.getByRole('link', { name: label, exact: true }).filter({ visible: true })
+    await expect(link).toHaveAttribute('href', target)
+    await expect(link).toHaveText(label)
+    await link.scrollIntoViewIfNeeded()
+    expect(await link.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+    const bounds = await link.boundingBox()
+    expect(bounds.height).toBeGreaterThanOrEqual(44)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await expect(page.locator('form button').filter({ visible: true })).toHaveText('Buy via PayPal')
+    await link.screenshot({ path: testInfo.outputPath('custom-sales-page-action-320.png') })
+    expect(state.errors).toEqual([])
+    const preview = await fixture(page, { purchaseUrl: target, purchaseLabel: label, search: '?preview=true', styled: true })
+    const control = page.getByRole('button', { name: label, exact: true }).filter({ visible: true })
+    await control.scrollIntoViewIfNeeded()
+    expect(await control.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+    await control.press('Space')
+    await expect(page.getByRole('status')).toContainText('Checkout is disabled during profile preview')
+    await expect(page.locator('form')).toHaveCount(0)
+    expect(preview.errors).toEqual([])
 })
 
 test('course terms depend on a validated provider hostname while ordinary seller refund presentation is preserved', async ({ page }) => {

@@ -45,7 +45,7 @@ test.beforeAll(async () => {
             window.updatePreviewFixture=(account,profile)=>{if(account)window.fixtureAccount=account;if(profile)window.fixtureProfile=profile;window.fixtureListeners.forEach(fn=>fn())};
             window.fixtureRefreshes=0;window.fixtureNavigation=[];window.fixtureToasts=[];window.fixtureAuthCalls=0;
             window.fixtureAccount={user:{id:'${actor}',username:'fixture'},loading:false,error:null,refreshUser:async()=>{window.fixtureRefreshes++}};
-            window.fixtureProfile={profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Current draft headline',bio:'Current local bio',profile_pic_url:'/avatar.jpg'},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'£12',description:'Offering',sales_page_active:true,sales_page_published:true,purchase_link_active:window.fixturePurchaseActive,purchase_link:window.fixturePurchaseUrl,secondary_purchase_link:window.fixtureSecondaryPurchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'}}],loading:false,mutationState:{status:'saved',message:''},refreshProfile:async()=>{window.fixtureRefreshes++},retryPending:async()=>{window.fixtureRefreshes++}};
+            window.fixtureProfile={profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Current draft headline',bio:'Current local bio',profile_pic_url:'/avatar.jpg'},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'£12',description:'Offering',sales_page_active:true,sales_page_published:true,purchase_link_active:window.fixturePurchaseActive,purchase_link:window.fixturePurchaseUrl,secondary_purchase_link:window.fixtureSecondaryPurchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'},...window.fixtureProductOptions}],loading:false,mutationState:{status:'saved',message:''},refreshProfile:async()=>{window.fixtureRefreshes++},retryPending:async()=>{window.fixtureRefreshes++}};
             createRoot(document.getElementById('root')).render(<Preview/>);
         ` } })
     bundle = result.outputFiles[0].text
@@ -65,7 +65,7 @@ test.beforeAll(async () => {
                                             : 'export default()=>null;' }))
         } }], stdin: { resolveDir: root, loader: 'tsx', contents: `
             import{renderToStaticMarkup}from'react-dom/server';import PublicProfile from'./src/app/[username]/page';import{setPublicFixture}from'@/lib/public-profile';
-            export async function render(purchaseUrl,secondaryPurchaseUrl=null,purchaseActive=true){setPublicFixture({user:{id:'${actor}',username:'fixture-public',is_premium:true},profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Synthetic public profile',bio:'Synthetic public bio',profile_pic_url:null},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'GBP 12',description:'Synthetic public offering',sales_page_active:false,sales_page_published:false,purchase_link_active:purchaseActive,purchase_link:purchaseUrl,secondary_purchase_link:secondaryPurchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'}}]});return renderToStaticMarkup(await PublicProfile({params:Promise.resolve({username:'fixture-public'})}));}
+            export async function render(purchaseUrl,secondaryPurchaseUrl=null,purchaseActive=true,productOptions={}){setPublicFixture({user:{id:'${actor}',username:'fixture-public',is_premium:true},profile:{user_id:'${actor}',full_name:'Fixture creator',headline:'Synthetic public profile',bio:'Synthetic public bio',profile_pic_url:null},links:[],contacts:[],experiences:[],qualifications:[],projects:[],products:[{id:'product-fixture',name:'Fixture offer',price:'GBP 12',description:'Synthetic public offering',sales_page_active:false,sales_page_published:false,purchase_link_active:purchaseActive,purchase_link:purchaseUrl,secondary_purchase_link:secondaryPurchaseUrl,paypal_active:true,payment_config:{version:1,kind:'payment-form',action:'https://www.paypal.com/ncp/payment/AB12CD34EF56G',fields:[],label:'Buy fixture offer'},...productOptions}]});return renderToStaticMarkup(await PublicProfile({params:Promise.resolve({username:'fixture-public'})}));}
         ` } })
     const fixtureModule = { exports: {} }
     new Function('require', 'module', 'exports', publicResult.outputFiles[0].text)(createRequire(root + 'package.json'), fixtureModule, fixtureModule.exports)
@@ -117,6 +117,9 @@ async function expectMatchingPurchaseWidths(purchase, paypal) {
 for (const [store, purchaseUrl, label] of [
     ['Etsy', 'https://shop.etsy.com/listing/12345/synthetic?ref=nsso', 'Buy on Etsy'],
     ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic', 'Buy on Shopify'],
+    ['App Store', 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789', 'Download on the App Store'],
+    ['nsso signup', 'https://www.nsso.me/sign-up', 'Sign up to nsso'],
+    ['booking', 'https://calendar.app.google/syntheticBooking', 'Book a call'],
     ['generic', 'https://shop.example.test/synthetic', 'View purchase page'],
     ['lookalike', 'https://etsy.com.evil.example.test/synthetic', 'View purchase page'],
 ]) test(`${store} public profile renders the store label and exact safe native purchase link`, async ({ page }, testInfo) => {
@@ -160,7 +163,7 @@ test('invalid public profile purchase URL remains non-executable while PayPal fo
     await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
 })
 
-async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', secondaryPurchaseUrl = null, purchaseActive = true, styled = false } = {}) {
+async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', secondaryPurchaseUrl = null, purchaseActive = true, styled = false, productOptions = {} } = {}) {
     const errors = [], unexpected = []
     page.on('pageerror', error => errors.push(error.message))
     await page.route('**/*', route => {
@@ -170,7 +173,7 @@ async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', 
     })
     await page.goto('https://nsso.test/preview')
     if (styled) await page.addStyleTag({ content: publicCss })
-    await page.evaluate(({ purchaseUrl, secondaryPurchaseUrl, purchaseActive }) => { window.fixturePurchaseUrl = purchaseUrl; window.fixtureSecondaryPurchaseUrl = secondaryPurchaseUrl; window.fixturePurchaseActive = purchaseActive }, { purchaseUrl, secondaryPurchaseUrl, purchaseActive })
+    await page.evaluate(({ purchaseUrl, secondaryPurchaseUrl, purchaseActive, productOptions }) => { window.fixturePurchaseUrl = purchaseUrl; window.fixtureSecondaryPurchaseUrl = secondaryPurchaseUrl; window.fixturePurchaseActive = purchaseActive; window.fixtureProductOptions = productOptions }, { purchaseUrl, secondaryPurchaseUrl, purchaseActive, productOptions })
     await page.addScriptTag({ content: bundle })
     return { errors, unexpected }
 }
@@ -178,6 +181,9 @@ async function fixture(page, { purchaseUrl = 'https://seller.example.test/pay', 
 for (const [store, purchaseUrl, label] of [
     ['Etsy', 'https://etsy.com/listing/12345/synthetic', 'Buy on Etsy'],
     ['Shopify', 'https://fixture-shop.myshopify.com/products/synthetic', 'Buy on Shopify'],
+    ['App Store', 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789', 'Download on the App Store'],
+    ['nsso signup', 'https://www.nsso.me/sign-up', 'Sign up to nsso'],
+    ['booking', 'https://calendar.app.google/syntheticBooking', 'Book a call'],
     ['generic', 'https://shop.example.test/synthetic', 'View purchase page'],
 ]) test(`${store} profile-preview labels remain inert for external purchase and PayPal attempts`, async ({ page }, testInfo) => {
     const { errors, unexpected } = await fixture(page, { purchaseUrl, styled: true })
@@ -338,5 +344,77 @@ test('public and preview second destinations honor deduplication, unsafe URL rej
         await expect(page.getByRole('button', { name: 'Buy via PayPal', exact: true })).toBeVisible()
         expect(state.errors).toEqual([])
         expect(state.unexpected).toEqual([])
+    }
+})
+
+test('profile action labels are independent of published detail links and preview never opens a destination', async ({ page }) => {
+    const primary = 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+    const secondary = 'https://www.nsso.me/sign-up'
+    const image = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="silver"/></svg>')
+    const labels = { purchase_button_label: 'Get my app', secondary_purchase_button_label: 'Create a profile', image_url: image }
+    for (const [active, published, detailsVisible] of [[true, true, true], [true, false, false], [false, true, false]]) {
+        const html = await renderPublicProfile(primary, secondary, true, { ...labels, sales_page_active: active, sales_page_published: published })
+        await page.setContent(html)
+        const app = page.getByRole('link', { name: 'Get my app: Fixture offer', exact: true })
+        const signup = page.getByRole('link', { name: 'Create a profile: Fixture offer', exact: true })
+        await expect(app).toHaveAttribute('href', primary)
+        await expect(signup).toHaveAttribute('href', secondary)
+        await expect(page.locator('a[href="/products/product-fixture"]')).toHaveCount(detailsVisible ? 1 : 0)
+        if (detailsVisible) await expect(page.getByRole('img', { name: 'Fixture offer', exact: true }).locator('xpath=ancestor::a')).toHaveAttribute('href', '/products/product-fixture')
+        await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
+        expect((await page.getByRole('link', { name: /^(Get my app|Create a profile): Fixture offer$/ }).allTextContents()).map(text => text.trim())).toEqual(['Get my app', 'Create a profile'])
+    }
+    const state = await fixture(page, { purchaseUrl: primary, secondaryPurchaseUrl: secondary, productOptions: { ...labels, sales_page_active: true, sales_page_published: true }, styled: true })
+    const detail = page.locator('a[href="/products/product-fixture?preview=true"]')
+    await expect(detail).toHaveCount(1)
+    for (const label of ['Get my app', 'Create a profile']) {
+        await page.getByRole('button', { name: label, exact: true }).press('Enter')
+        await expect(page.getByRole('link', { name: label, exact: true })).toHaveCount(0)
+    }
+    await expect(page.getByRole('status')).toHaveCount(2)
+    await expect(page.locator('form')).toHaveCount(0)
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual([])
+    await detail.press('Enter')
+    expect(await page.evaluate(() => window.fixtureNavigation)).toEqual(['/products/product-fixture?preview=true'])
+    expect(state.errors).toEqual([])
+    expect(state.unexpected).toEqual([])
+})
+
+test('custom profile action text remains plain text, fits narrow cards and cannot enable unsafe or inactive destinations', async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 844 })
+    const primary = 'https://seller.example.test/download'
+    const longLabel = 'A'.repeat(60)
+    const html = await renderPublicProfile(primary, null, true, { purchase_button_label: longLabel })
+    await page.setContent('<meta name="viewport" content="width=device-width,initial-scale=1">' + html)
+    await page.addStyleTag({ content: publicCss })
+    const link = page.getByRole('link', { name: longLabel + ': Fixture offer', exact: true })
+    await expect(link).toHaveAttribute('href', primary)
+    await expect(link).toHaveText(longLabel)
+    await link.scrollIntoViewIfNeeded()
+    const bounds = await link.boundingBox()
+    const textBounds = await link.locator('[data-light-button-content]').boundingBox()
+    expect(bounds.height).toBeGreaterThanOrEqual(44)
+    expect(textBounds.x).toBeGreaterThanOrEqual(bounds.x)
+    expect(textBounds.x + textBounds.width).toBeLessThanOrEqual(bounds.x + bounds.width + .1)
+    expect(await link.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await link.screenshot({ path: testInfo.outputPath('custom-profile-action-320.png') })
+    const state = await fixture(page, { purchaseUrl: primary, styled: true, productOptions: { purchase_button_label: longLabel } })
+    const preview = page.getByRole('button', { name: longLabel, exact: true })
+    await preview.scrollIntoViewIfNeeded()
+    expect(await preview.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+    await preview.press('Space')
+    await expect(page.getByRole('status')).toContainText('Checkout is disabled during profile preview')
+    expect(state.errors).toEqual([])
+
+    const plain = '<img src=x onerror=alert(1)>'
+    await page.setContent(await renderPublicProfile(primary, null, true, { purchase_button_label: plain }))
+    await expect(page.getByRole('link', { name: plain + ': Fixture offer', exact: true })).toHaveText(plain)
+    await expect(page.locator('img[src="x"]')).toHaveCount(0)
+    for (const [url, enabled] of [['javascript:alert(1)', true], [primary, false]]) {
+        await page.setContent(await renderPublicProfile(url, null, enabled, { purchase_button_label: 'Download now' }))
+        await expect(page.getByRole('link', { name: 'Download now: Fixture offer', exact: true })).toHaveCount(0)
+        await expect(page.locator('a[href^="javascript:"]')).toHaveCount(0)
+        await expect(page.locator('form')).toHaveAttribute('action', 'https://www.paypal.com/ncp/payment/AB12CD34EF56G')
     }
 })
