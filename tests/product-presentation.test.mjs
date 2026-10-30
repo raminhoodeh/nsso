@@ -8,8 +8,57 @@ const hooks = registerHooks({ resolve(specifier, context, next) {
     }
     return next(specifier, context)
 } })
-const { purchaseButtonLabel, productCheckoutVisibility, isCourseMarketplaceUrl } = await import('../src/lib/payments/product-presentation.ts')
+const { purchaseButtonLabel, productPurchaseButtonLabel, productCheckoutVisibility, isCourseMarketplaceUrl } = await import('../src/lib/payments/product-presentation.ts')
 hooks.deregister()
+
+test('download, signup and booking destinations get clear action labels without a sales-page hop', () => {
+    for (const [url, label] of [
+        ['https://apps.apple.com/gb/app/dreamsea/id6761101193', 'Download on the App Store'],
+        ['https://apps.apple.com/app/id12345?source=nsso', 'Download on the App Store'],
+        ['https://www.nsso.me/sign-up', 'Sign up to nsso'],
+        ['https://nsso.me/sign-up/?source=profile', 'Sign up to nsso'],
+        ['https://calendar.app.google/Synthetic123', 'Book a call'],
+        ['https://calendar.google.com/calendar/appointments/schedules/synthetic', 'Book a call'],
+        ['https://calendly.com/synthetic-person/30min', 'Book a call'],
+        ['https://www.calendly.com/synthetic-person', 'Book a call'],
+    ]) {
+        assert.equal(purchaseButtonLabel(url), label, url)
+        assert.equal(productPurchaseButtonLabel({ purchase_link: url }, url), label)
+        assert.deepEqual(productCheckoutVisibility({ purchase_link: url, purchase_link_active: true }).purchaseUrls, [url])
+    }
+})
+
+test('action defaults require genuine host, page and secure endpoint boundaries', () => {
+    for (const url of [
+        'https://apps.apple.com.attacker.test/gb/app/name/id123', 'https://apps.apple.com/gb/',
+        'https://apps.apple.com/gb/app/name', 'https://apple.com/gb/app/name/id123',
+        'https://apps.apple.com:8443/gb/app/name/id123', 'http://apps.apple.com/gb/app/name/id123',
+        'https://nsso.me.attacker.test/sign-up', 'https://fake.nsso.me/sign-up',
+        'https://nsso.me/sign-in', 'https://www.nsso.me/sign-up-other', 'https://nsso.me:8443/sign-up',
+        'https://calendar.app.google.attacker.test/synthetic', 'https://calendar.app.google/',
+        'https://calendar.google.com/calendar/u/0/r', 'https://calendly.com/', 'https://calendly.com/blog/article',
+        'https://calendly.com/pricing', 'https://calendly.com/app/login', 'https://calendly.com.attacker.test/user/call',
+        'https://seller.example/?next=https://www.nsso.me/sign-up',
+    ]) assert.equal(purchaseButtonLabel(url), 'View purchase page', url)
+})
+
+test('optional per-destination labels are plain bounded text, reset to automatic, and never authorize a URL', () => {
+    const primary = 'https://apps.apple.com/gb/app/synthetic/id12345'
+    const secondary = 'https://www.nsso.me/sign-up'
+    const product = { purchase_link: primary, secondary_purchase_link: secondary, purchase_button_label: '  Get the app  ', secondary_purchase_button_label: 'Create your profile' }
+    assert.equal(productPurchaseButtonLabel(product, primary), 'Get the app')
+    assert.equal(productPurchaseButtonLabel(product, secondary), 'Create your profile')
+    for (const empty of ['', '   ', null, undefined]) assert.equal(purchaseButtonLabel(primary, empty), 'Download on the App Store')
+    for (const invalid of [123, {}, 'x'.repeat(61), 'bad\nlabel', 'bad\tlabel', 'bad\u007flabel']) assert.equal(purchaseButtonLabel(primary, invalid), 'Download on the App Store')
+    assert.equal(purchaseButtonLabel(primary, 'x'.repeat(60)), 'x'.repeat(60))
+    assert.equal(purchaseButtonLabel(primary, '<img onerror="alert(1)">'), '<img onerror="alert(1)">', 'Rendering must treat custom copy as text, not HTML')
+    assert.equal(purchaseButtonLabel('javascript:alert(1)', 'Download now'), 'View purchase page')
+    assert.deepEqual(productCheckoutVisibility({ ...product, purchase_link_active: false, paypal_active: true }), { purchaseUrl: null, purchaseUrls: [], paypal: true })
+    const duplicate = { ...product, purchase_link: ' HTTPS://APPS.APPLE.COM:443/gb/app/synthetic/id12345 ', secondary_purchase_link: primary }
+    assert.equal(productPurchaseButtonLabel(duplicate, primary), 'Get the app', 'Duplicate URLs retain primary text precedence')
+    assert.equal(productPurchaseButtonLabel({ ...product, purchase_link: 'javascript:alert(1)' }, secondary), 'Create your profile')
+    assert.equal(productPurchaseButtonLabel(product, 'https://other.example/checkout'), 'View purchase page', 'Labels cannot attach to unrelated destinations')
+})
 
 test('Etsy purchase labels follow the actual website hostname across valid web URLs', () => {
     for (const url of [

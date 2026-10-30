@@ -289,14 +289,14 @@ test('real provider persists the second course destination from both editors acr
     const replacement = 'https://www.coursera.org/learn/synthetic-updated'
     await mount(page, [{ ...product(first, 'QA course'), purchase_link: primary, purchase_link_active: true }])
     await select(page, 'QA course')
-    const input = page.getByRole('textbox', { name: 'Second purchase link (optional)', exact: true })
+    const input = page.getByRole('textbox', { name: 'Second button destination (optional)', exact: true })
     await input.fill(secondary)
     await expect.poll(() => page.evaluate(() => window.fixtureState.products[0].secondary_purchase_link)).toBe(secondary)
     await page.getByRole('button', { name: 'Refresh fixture snapshot', exact: true }).click()
     await expect(input).toHaveValue(secondary)
     await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
     const creator = page.locator('[data-sales-page-creator]')
-    const creatorInput = creator.getByRole('textbox', { name: 'Second Purchase Link (optional)', exact: true })
+    const creatorInput = creator.getByRole('textbox', { name: 'Second button destination (optional)', exact: true })
     await expect(creatorInput).toHaveValue(secondary)
     await creatorInput.fill(replacement)
     await expect.poll(() => page.evaluate(() => window.fixtureState.products[0].secondary_purchase_link)).toBe(replacement)
@@ -304,11 +304,108 @@ test('real provider persists the second course destination from both editors acr
     await expect(creatorInput).toHaveValue(replacement)
     await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
     await expect(input).toHaveValue(replacement)
-    await expect(page.getByRole('textbox', { name: 'Purchase link', exact: true })).toHaveValue(primary)
+    await expect(page.getByRole('textbox', { name: 'Button destination', exact: true })).toHaveValue(primary)
     expect(await page.evaluate(() => window.fixtureState.products[0].purchase_link)).toBe(primary)
     expect(await page.evaluate(() => window.fixtureState.products[0].paypal_active)).toBe(false)
     const posts = await page.evaluate(() => window.fixturePosts)
     expect(posts).toHaveLength(2)
     expect(posts.map(body => body.changes)).toEqual([secondary, replacement].map(url => [{ kind: 'product.patch', id: first, patch: { secondary_purchase_link: url } }]))
     expect(posts.every(body => body.version === 1)).toBe(true)
+})
+
+test('real provider journals custom button text from both editors and clearing restores automatic labels', async ({ page }) => {
+    const primary = 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+    const secondary = 'https://www.nsso.me/sign-up'
+    await mount(page, [{ ...product(first, 'QA app'), purchase_link: primary, secondary_purchase_link: secondary, purchase_link_active: true }])
+    await select(page, 'QA app')
+    const primaryText = page.getByRole('textbox', { name: 'Button text (optional)', exact: true })
+    const secondaryText = page.getByRole('textbox', { name: 'Second button text (optional)', exact: true })
+    await primaryText.fill('Get my app')
+    await secondaryText.fill('Create a profile')
+    await expect.poll(() => page.evaluate(() => ({ primary: window.fixtureState.products[0].purchase_button_label, secondary: window.fixtureState.products[0].secondary_purchase_button_label }))).toEqual({ primary: 'Get my app', secondary: 'Create a profile' })
+    await page.getByRole('button', { name: 'Refresh fixture snapshot', exact: true }).click()
+    await expect(primaryText).toHaveValue('Get my app')
+    await expect(secondaryText).toHaveValue('Create a profile')
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const creator = page.locator('[data-sales-page-creator]')
+    await expect(creator.getByRole('textbox', { name: 'Button text (optional)', exact: true })).toHaveValue('Get my app')
+    await creator.getByRole('textbox', { name: 'Button text (optional)', exact: true }).fill('')
+    await creator.getByRole('textbox', { name: 'Second button text (optional)', exact: true }).fill('Join nsso')
+    await expect.poll(() => page.evaluate(() => ({ primary: window.fixtureState.products[0].purchase_button_label, secondary: window.fixtureState.products[0].secondary_purchase_button_label }))).toEqual({ primary: '', secondary: 'Join nsso' })
+    await page.getByRole('button', { name: 'Refresh fixture snapshot', exact: true }).click()
+    await expect(creator.getByText('Button preview: Download on the App Store', { exact: true })).toBeVisible()
+    await expect(creator.getByText('Button preview: Join nsso', { exact: true })).toBeVisible()
+    await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
+    await expect(primaryText).toHaveValue('')
+    await expect(secondaryText).toHaveValue('Join nsso')
+    const row = await page.evaluate(() => window.fixtureState.products[0])
+    expect(row.purchase_link).toBe(primary)
+    expect(row.secondary_purchase_link).toBe(secondary)
+    expect(row.paypal_active).toBe(false)
+    expect(row.sales_page_published).toBe(false)
+    const posts = await page.evaluate(() => window.fixturePosts)
+    expect(posts.length).toBeGreaterThanOrEqual(2)
+    for (const body of posts) {
+        expect(body.version).toBe(1)
+        for (const change of body.changes) {
+            expect(change.kind).toBe('product.patch')
+            expect(change.id).toBe(first)
+            expect(Object.keys(change.patch).every(key => ['purchase_button_label', 'secondary_purchase_button_label'].includes(key))).toBe(true)
+        }
+    }
+})
+
+test('an older destination save response preserves the newer destination and button text draft', async ({ page }) => {
+    const olderUrl = 'https://www.etsy.com/listing/123456/synthetic-guide'
+    const newerUrl = 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+    await mount(page, [{ ...product(first, 'QA app'), purchase_link: 'https://seller.example.test/app', purchase_link_active: true }])
+    await select(page, 'QA app')
+
+    const requests = [], release = []
+    await page.route('https://nsso.test/api/profile/operations', async route => {
+        if (route.request().method() !== 'POST') return route.fallback()
+        expect(route.request().headers()['x-nsso-account']).toBe(actor)
+        const body = route.request().postDataJSON()
+        const index = requests.length
+        const gate = new Promise(resolve => { release[index] = resolve })
+        requests.push(body)
+        // The server has accepted the first edit, but its response is held.
+        // Hold the next request before applying it so the later assertions
+        // prove the real provider's draft overlay, not a fresh server value.
+        let result = index === 0 ? await page.evaluate(body => window.fixtureApply(body), body) : null
+        await gate
+        result ??= await page.evaluate(body => window.fixtureApply(body), body)
+        await route.fulfill({ status: 200, json: result })
+    })
+
+    const destination = page.getByRole('textbox', { name: 'Button destination', exact: true })
+    const text = page.getByRole('textbox', { name: 'Button text (optional)', exact: true })
+    await destination.fill(olderUrl)
+    await text.fill('Older saved text')
+    await expect.poll(() => requests.length).toBe(1)
+    expect(requests[0].changes).toEqual([{ kind: 'product.patch', id: first, patch: { purchase_link: olderUrl, purchase_button_label: 'Older saved text' } }])
+
+    await destination.fill(newerUrl)
+    await text.fill('Get the latest app')
+    await expect(destination).toHaveValue(newerUrl)
+    await expect(text).toHaveValue('Get the latest app')
+    release[0]()
+    await expect.poll(() => requests.length).toBe(2)
+    expect(requests[1].expectedRevision).toBe(1)
+    expect(requests[1].operationId).not.toBe(requests[0].operationId)
+    expect(await page.evaluate(() => ({ url: window.fixtureState.products[0].purchase_link, label: window.fixtureState.products[0].purchase_button_label }))).toEqual({ url: olderUrl, label: 'Older saved text' })
+    await expect(destination).toHaveValue(newerUrl)
+    await expect(text).toHaveValue('Get the latest app')
+    await expect(page.getByText('Button preview: Get the latest app', { exact: true })).toBeVisible()
+    await expect(page.locator('[data-offering-save-status]')).toContainText('Saving')
+
+    release[1]()
+    await expect.poll(() => page.evaluate(() => window.fixtureState.revision)).toBe(2)
+    await expect(page.locator('[data-offering-save-status]')).toHaveCount(0)
+    await page.getByRole('button', { name: 'Refresh fixture snapshot', exact: true }).click()
+    await expect(destination).toHaveValue(newerUrl)
+    await expect(text).toHaveValue('Get the latest app')
+    expect(requests[1].changes).toEqual([{ kind: 'product.patch', id: first, patch: { purchase_link: newerUrl, purchase_button_label: 'Get the latest app' } }])
+    expect(await page.evaluate(() => window.fixtureState.products[0].paypal_active)).toBe(false)
+    expect(await page.evaluate(() => window.fixtureState.products[0].sales_page_published)).toBe(false)
 })

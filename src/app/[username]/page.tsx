@@ -5,7 +5,7 @@ import GlassCard from '@/components/profile/ProfileGlassCard'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import SafeExternalLink from '@/components/ui/SafeExternalLink'
 import { safeContactUrl, safeWebUrl } from '@/lib/urls'
-import { productCheckoutVisibility, purchaseButtonLabel } from '@/lib/payments/product-presentation'
+import { productCheckoutVisibility, productPurchaseButtonLabel } from '@/lib/payments/product-presentation'
 import { lightButtonClass } from '@/components/ui/light-button-styles'
 import { TahoeGlassSurface } from '@/components/ui/tahoe-glass'
 import Link from 'next/link'
@@ -393,10 +393,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             data-nsso-control="white"
-                                                            className={`${lightButtonClass} h-11 w-full max-w-[15rem] whitespace-nowrap`}
-                                                            aria-label={`${purchaseButtonLabel(purchaseUrl)}: ${product.name}`}
+                                                            className={`${lightButtonClass} min-h-11 w-full max-w-[15rem] whitespace-normal [overflow-wrap:anywhere] px-4 py-2 text-center`}
+                                                            aria-label={`${productPurchaseButtonLabel(product, purchaseUrl)}: ${product.name}`}
                                                         >
-                                                            <span data-light-button-content="true">{purchaseButtonLabel(purchaseUrl)}</span>
+                                                            <span data-light-button-content="true">{productPurchaseButtonLabel(product, purchaseUrl)}</span>
                                                         </NativeGlassLens>
                                                     </div>
                                                 ))}

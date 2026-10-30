@@ -12,7 +12,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import PayPalSmartButton from '@/components/ui/PayPalSmartButton'
 import PreviewCheckoutButton from '@/components/ui/PreviewCheckoutButton'
-import { isCourseMarketplaceUrl, productCheckoutVisibility, productPageIsPublic, purchaseButtonLabel } from '@/lib/payments/product-presentation'
+import { isCourseMarketplaceUrl, productCheckoutVisibility, productPageIsPublic, productPurchaseButtonLabel } from '@/lib/payments/product-presentation'
 import { safeWebUrl } from '@/lib/urls'
 import { offeringEditorHref } from '@/lib/offering-navigation'
 import {
@@ -25,7 +25,7 @@ function ProductRouteContent({ children }: { children: ReactNode }) {
     return <>{children}</>
 }
 
-function PurchaseLink({ href }: { href: string }) {
+function PurchaseLink({ href, label }: { href: string; label: string }) {
     const destination = safeWebUrl(href)
     if (!destination) return <p className="text-xs text-slate-950">Purchase link unavailable. Please contact the seller.</p>
     return (
@@ -34,9 +34,9 @@ function PurchaseLink({ href }: { href: string }) {
             target="_blank"
             rel="noopener noreferrer"
             data-nsso-control="white"
-            className={cn(lightButtonClass, 'h-11 w-full whitespace-nowrap rounded-xl px-4 text-base font-semibold tracking-wide')}
+            className={cn(lightButtonClass, 'min-h-11 w-full whitespace-normal [overflow-wrap:anywhere] rounded-xl px-4 py-2 text-center text-base font-semibold tracking-wide')}
         >
-            <span data-light-button-content="true">{purchaseButtonLabel(destination)}</span>
+            <span data-light-button-content="true">{label}</span>
         </NativeGlassLens>
     )
 }
@@ -57,6 +57,8 @@ interface Product {
     image_url: string
     purchase_link: string
     secondary_purchase_link?: string | null
+    purchase_button_label?: string | null
+    secondary_purchase_button_label?: string | null
     payment_config: unknown
     paypal_active: boolean
     purchase_link_active: boolean
@@ -342,7 +344,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrls.map(purchaseUrl => (
                                 <div key={purchaseUrl} className="w-full max-w-[15rem] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:h-11 [&>button]:whitespace-nowrap">{purchaseButtonLabel(purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} />}
+                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:min-h-11 [&>button]:whitespace-normal [&>button]:[overflow-wrap:anywhere] [&>button]:px-4 [&>button]:py-2 [&>button]:text-center">{productPurchaseButtonLabel(product, purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} label={productPurchaseButtonLabel(product, purchaseUrl)} />}
                                 </div>
                             ))}
 
@@ -487,7 +489,7 @@ function ProductSalesContent({ productId }: { productId: string }) {
                             {/* Purchase Link Button */}
                             {checkout.purchaseUrls.map(purchaseUrl => (
                                 <div key={purchaseUrl} className="w-full max-w-[15rem] mb-3">
-                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:h-11 [&>button]:whitespace-nowrap">{purchaseButtonLabel(purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} />}
+                                    {preview ? <PreviewCheckoutButton className="w-full [&>button]:min-h-11 [&>button]:whitespace-normal [&>button]:[overflow-wrap:anywhere] [&>button]:px-4 [&>button]:py-2 [&>button]:text-center">{productPurchaseButtonLabel(product, purchaseUrl)}</PreviewCheckoutButton> : <PurchaseLink href={purchaseUrl} label={productPurchaseButtonLabel(product, purchaseUrl)} />}
                                 </div>
                             ))}
 

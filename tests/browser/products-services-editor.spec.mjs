@@ -184,7 +184,7 @@ test('white offering controls preserve native upload focus, selection and distin
     await expectWhiteAction(page, close, { icon: true })
     await close.press('Enter')
     for (const [name, before, patch] of [
-        ['Enable purchase link', true, { purchase_link_active: false }],
+        ['Enable button destination', true, { purchase_link_active: false }],
         ['Enable PayPal button code', true, { paypal_active: false }],
         ['Enable product sales page', false, { sales_page_active: true, sales_page_published: true }],
     ]) {
@@ -206,10 +206,13 @@ test('white offering controls preserve native upload focus, selection and distin
 test('purchase label hints follow edits in the offering and creator without changing checkout settings', async ({ page }, testInfo) => {
     await mount(page, { count: 1 })
     await choose(page, 1).click()
-    const link = page.getByRole('textbox', { name: 'Purchase link', exact: true })
+    const link = page.getByRole('textbox', { name: 'Button destination', exact: true })
     const scenarios = [
         ['https://www.etsy.com/listing/123456/synthetic-guide', 'Buy on Etsy'],
         ['https://synthetic-shop.myshopify.com/products/guide', 'Buy on Shopify'],
+        ['https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789', 'Download on the App Store'],
+        ['https://www.nsso.me/sign-up', 'Sign up to nsso'],
+        ['https://calendar.app.google/syntheticBooking', 'Book a call'],
         ['https://seller.example.test/guide?provider=etsy.com', 'View purchase page'],
         ['https://etsy.com.attacker.example/guide', 'View purchase page'],
         ['javascript:alert(1)', null],
@@ -223,10 +226,13 @@ test('purchase label hints follow edits in the offering and creator without chan
     const etsy = scenarios[0][0], shopify = scenarios[1][0]
     await link.fill(etsy)
     await expect(page.getByText('Button preview: Buy on Etsy', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const openCreator = page.getByRole('button', { name: 'Open Sales Page Creator', exact: true })
+    if (testInfo.project.use.isMobile) await openCreator.tap()
+    else await openCreator.click()
+    await expect(page).toHaveURL(/(?:\?|&)offeringView=creator(?:&|$)/)
     const creator = page.locator('[data-sales-page-creator]')
     await expect(creator.getByText('Button preview: Buy on Etsy', { exact: true })).toBeVisible()
-    const creatorLink = creator.getByRole('textbox', { name: 'Purchase Link', exact: true })
+    const creatorLink = creator.getByRole('textbox', { name: 'Button destination', exact: true })
     await creatorLink.fill(shopify)
     await expect(creator.getByText('Button preview: Buy on Shopify', { exact: true })).toBeVisible()
     await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
@@ -239,14 +245,14 @@ test('purchase label hints follow edits in the offering and creator without chan
     await expect(page.locator('form[action]')).toHaveCount(0)
     await merchant.press('Enter')
     await expect(page.getByRole('status').filter({ hasText: 'Checkout is disabled during profile preview' })).toBeVisible()
-    await expect(page.getByRole('switch', { name: 'Enable purchase link', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable button destination', exact: true })).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByRole('switch', { name: 'Enable PayPal button code', exact: true })).toHaveAttribute('aria-checked', 'true')
     expect(await writes(page)).toEqual([...scenarios.map(([url]) => url), etsy, shopify].map(url => ({ kind: 'patch', entity: 'product', id: 'offering-1', patch: { purchase_link: url } })))
     expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
     await page.screenshot({ path: testInfo.outputPath('purchase-label-hint-editor.png'), fullPage: true })
 })
 
-test('delayed older save receipts cannot replace newer purchase drafts or their labels in either editor', async ({ page }) => {
+test('delayed older save receipts cannot replace newer purchase drafts or their labels in either editor', async ({ page }, testInfo) => {
     await mount(page, { count: 1 })
     await choose(page, 1).click()
     await page.evaluate(() => { window.fixtureHoldPatches = true })
@@ -279,7 +285,7 @@ test('delayed older save receipts cannot replace newer purchase drafts or their 
         await expect.poll(() => page.evaluate(() => window.fixturePendingPatch)).toBe(null)
         await expect(input).toHaveValue(scenarios.at(-1)[0])
     }
-    const link = page.getByRole('textbox', { name: 'Purchase link', exact: true })
+    const link = page.getByRole('textbox', { name: 'Button destination', exact: true })
     await delayedEdits(link, page, [
         [etsy, 'Buy on Etsy'],
         [shopify, 'Buy on Shopify'],
@@ -287,9 +293,12 @@ test('delayed older save receipts cannot replace newer purchase drafts or their 
         ['https://etsy.com.attacker.example/guide', 'View purchase page'],
         ['javascript:alert(1)', null],
     ])
-    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const openCreator = page.getByRole('button', { name: 'Open Sales Page Creator', exact: true })
+    if (testInfo.project.use.isMobile) await openCreator.tap()
+    else await openCreator.click()
+    await expect(page).toHaveURL(/(?:\?|&)offeringView=creator(?:&|$)/)
     const creator = page.locator('[data-sales-page-creator]')
-    await delayedEdits(creator.getByRole('textbox', { name: 'Purchase Link', exact: true }), creator, [
+    await delayedEdits(creator.getByRole('textbox', { name: 'Button destination', exact: true }), creator, [
         [shopify, 'Buy on Shopify'], [etsy, 'Buy on Etsy'], [shopify, 'Buy on Shopify'],
     ])
     await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
@@ -612,7 +621,7 @@ test('narrow mobile creation and purchase controls fit without horizontal overfl
         await expectCompactSwitch(control)
     }
     await page.screenshot({ path: testInfo.outputPath('offerings-320px-editor.png'), fullPage: true })
-    for (const title of ['Purchase URL', 'PayPal checkout', 'nsso sales page']) {
+    for (const title of ['Button destination', 'PayPal checkout', 'nsso sales page']) {
         await page.getByRole('button', { name: 'About ' + title, exact: true }).first().click()
         await expectTooltipFits(page)
         await page.keyboard.press('Escape')
@@ -654,7 +663,7 @@ test('future features stay collapsed and inactive while compact disclosure and t
     // Keyboard focus scrolls each help trigger into view. Keep the pointer on
     // the fixed header so that scroll cannot introduce an unrelated hover.
     await page.mouse.move(0, 0)
-    for (const [name, explanation] of [['Purchase URL', 'existing shop, booking page or checkout'], ['PayPal checkout', 'PayPal controls the recipient'], ['nsso sales page', 'does not process payments or deliver products']]) {
+    for (const [name, explanation] of [['Button destination', 'actual purchase page or checkout'], ['PayPal checkout', 'PayPal controls the recipient'], ['nsso sales page', 'does not process payments or deliver products']]) {
         const help = page.getByRole('button', { name: 'About ' + name, exact: true }).first()
         await help.focus()
         await page.keyboard.press('Enter')
@@ -820,25 +829,35 @@ test('the actual cropper supports product image selection and preserves crop on 
         await expect(cropper).toHaveAttribute('data-tahoe-readable-overlay', 'true')
         await expect(cropper.getByRole('slider', { name: 'Zoom', exact: true })).toBeVisible()
         await page.route('**/api/profile/media', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Synthetic upload unavailable' }) }))
+        stage = 'wait for decoded image and crop readiness'
+        const applyCrop = cropper.getByRole('button', { name: 'Apply Crop', exact: true })
+        // The zoom control appears before image decoding and crop calculation
+        // finish. Do not spend the HTTP response budget on a disabled control.
+        await expect.poll(() => cropper.locator('img.reactEasyCrop_Image').evaluate(image => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0), { timeout: 10000 }).toBe(true)
+        await expect(applyCrop).toBeEnabled({ timeout: 10000 })
         stage = 'receive rejected upload'
         const [rejectedUpload] = await Promise.all([
             page.waitForResponse(isMediaResponse, { timeout: 5000 }),
-            cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click(),
+            applyCrop.click(),
         ])
         expect(rejectedUpload.status()).toBe(503)
         stage = 'retain crop after rejected upload'
         await expect(cropper.getByRole('alert')).toContainText('crop is still here')
+        expect(await writes(page)).toEqual([])
         await page.unroute('**/api/profile/media')
+        await expect(applyCrop).toBeEnabled()
         stage = 'receive successful retry upload'
         const [retryUpload] = await Promise.all([
             page.waitForResponse(isMediaResponse, { timeout: 5000 }),
-            cropper.getByRole('button', { name: 'Apply Crop', exact: true }).click(),
+            applyCrop.click(),
         ])
         expect(retryUpload.status()).toBe(200)
         stage = 'submit retried image patch'
         await expect.poll(() => writes(page)).toContainEqual(expect.objectContaining({ kind: 'patch', id: 'offering-1', patch: expect.objectContaining({ image_url: 'https://nsso.test/fixture-thumb.svg?cropped' }) }))
         stage = 'close cropper after saved image'
         await expect(cropper).toHaveCount(0)
+        expect(mediaResponses).toEqual([503, 200])
+        expect(await writes(page)).toEqual([{ kind: 'patch', entity: 'product', id: 'offering-1', patch: { image_url: 'https://nsso.test/fixture-thumb.svg?cropped' } }])
     } catch (error) {
         const diagnostics = {
             stage, mediaResponses, pageErrors,
@@ -900,9 +919,9 @@ test('an in-flight PayPal save finishes for its original offering without replac
 test('second purchase link hints and drafts move between both editors without changing the primary or PayPal', async ({ page }, testInfo) => {
     await mount(page, { count: 1 })
     await choose(page, 1).click()
-    const primary = page.getByRole('textbox', { name: 'Purchase link', exact: true })
+    const primary = page.getByRole('textbox', { name: 'Button destination', exact: true })
     const originalPrimary = await primary.inputValue()
-    const secondary = page.getByRole('textbox', { name: 'Second purchase link (optional)', exact: true })
+    const secondary = page.getByRole('textbox', { name: 'Second button destination (optional)', exact: true })
     await expect(secondary).toHaveAttribute('type', 'url')
     const coursera = 'https://www.coursera.org/learn/synthetic-course'
     const udemy = 'https://www.udemy.com/course/synthetic-companion/'
@@ -911,7 +930,7 @@ test('second purchase link hints and drafts move between both editors without ch
     await expect(primary).toHaveValue(originalPrimary)
     await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
     const creator = page.locator('[data-sales-page-creator]')
-    const creatorSecondary = creator.getByRole('textbox', { name: 'Second Purchase Link (optional)', exact: true })
+    const creatorSecondary = creator.getByRole('textbox', { name: 'Second button destination (optional)', exact: true })
     await expect(creatorSecondary).toHaveValue(coursera)
     await expect(creatorSecondary).toHaveAttribute('type', 'url')
     await expect(creator.getByText('Button preview: Buy on Coursera', { exact: true })).toBeVisible()
@@ -922,9 +941,215 @@ test('second purchase link hints and drafts move between both editors without ch
     await expect(primary).toHaveValue(originalPrimary)
     await expect(page.getByText('Button preview: Buy on Udemy', { exact: true })).toBeVisible()
     await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveValue(paypal)
-    await expect(page.getByRole('switch', { name: 'Enable purchase link', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable button destination', exact: true })).toHaveAttribute('aria-checked', 'true')
     await expect(page.getByRole('switch', { name: 'Enable PayPal button code', exact: true })).toHaveAttribute('aria-checked', 'true')
     expect(await writes(page)).toEqual([coursera, udemy].map(url => ({ kind: 'patch', entity: 'product', id: 'offering-1', patch: { secondary_purchase_link: url } })))
     expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
     await page.screenshot({ path: testInfo.outputPath('second-link-editor-hint.png'), fullPage: true })
+})
+
+test('button destination help explains the actual purchase page and works by keyboard and touch in both editors', async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 844 })
+    await mount(page, { count: 1 })
+    await choose(page, 1).click()
+    for (const creatorView of [false, true]) {
+        if (creatorView) await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+        const scope = creatorView ? page.locator('[data-sales-page-creator]') : page.locator('[data-offering-editor]')
+        const input = scope.getByRole('textbox', { name: 'Button destination', exact: true })
+        await expect(input).toHaveAttribute('type', 'url')
+        const help = scope.getByRole('button', { name: 'About Button destination', exact: true })
+        await page.mouse.move(0, 0)
+        await help.focus()
+        await help.press('Enter')
+        const tooltip = page.getByRole('tooltip').filter({ visible: true })
+        await expect(tooltip).toContainText('actual purchase page or checkout')
+        await expect(tooltip).toContainText('download, booking or signup')
+        await expect(tooltip).toContainText('image/title')
+        await expectTooltipFits(page)
+        await help.press('Escape')
+        await expect(tooltip).toHaveCount(0)
+        await expect(help).toBeFocused()
+        if (testInfo.project.name === 'mobile') await help.tap()
+        else await help.click()
+        await expect(tooltip).toContainText('actual purchase page or checkout')
+        await page.screenshot({ path: testInfo.outputPath(`button-destination-help-${creatorView ? 'creator' : 'offering'}.png`), fullPage: true })
+        await page.getByRole('heading', { name: creatorView ? 'Sales Page Creator' : 'Fixture offering 1', exact: true }).click()
+        await expect(tooltip).toHaveCount(0)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    }
+    expect(await writes(page)).toEqual([])
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
+})
+
+test('optional button text autosaves, survives editor changes, resets to automatic and retains failed drafts', async ({ page }) => {
+    await mount(page, { count: 2 })
+    await choose(page, 1).click()
+    const app = 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+    const signup = 'https://www.nsso.me/sign-up'
+    await page.getByRole('textbox', { name: 'Button destination', exact: true }).fill(app)
+    await page.getByRole('textbox', { name: 'Second button destination (optional)', exact: true }).fill(signup)
+    const label = page.getByRole('textbox', { name: 'Button text (optional)', exact: true })
+    const secondaryLabel = page.getByRole('textbox', { name: 'Second button text (optional)', exact: true })
+    await expect(label).toHaveAttribute('maxlength', '60')
+    await expect(secondaryLabel).toHaveAttribute('maxlength', '60')
+    await label.fill('Get my app')
+    await secondaryLabel.fill('Create a profile')
+    await expect(page.getByText('Button preview: Get my app', { exact: true })).toBeVisible()
+    await expect(page.getByText('Button preview: Create a profile', { exact: true })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'PayPal button code', exact: true })).toHaveValue(paypal)
+    await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+    const creator = page.locator('[data-sales-page-creator]')
+    await expect(creator.getByRole('textbox', { name: 'Button text (optional)', exact: true })).toHaveValue('Get my app')
+    await expect(creator.getByRole('textbox', { name: 'Second button text (optional)', exact: true })).toHaveValue('Create a profile')
+    await creator.getByRole('textbox', { name: 'Button text (optional)', exact: true }).fill('')
+    await creator.getByRole('textbox', { name: 'Second button text (optional)', exact: true }).fill('')
+    await expect(creator.getByText('Button preview: Download on the App Store', { exact: true })).toBeVisible()
+    await expect(creator.getByText('Button preview: Sign up to nsso', { exact: true })).toBeVisible()
+    await creator.getByRole('button', { name: 'Back to offering', exact: true }).press('Enter')
+    await expect(label).toHaveValue('')
+    await expect(secondaryLabel).toHaveValue('')
+    await page.evaluate(() => { window.fixturePatchFails = true })
+    await label.fill('Keep this custom draft')
+    await expect(page.getByRole('status').filter({ hasText: 'Changes could not be saved.' })).toBeVisible()
+    await expect(label).toHaveValue('Keep this custom draft')
+    await page.evaluate(() => { window.fixturePatchFails = false })
+    await page.getByRole('button', { name: 'Check status and retry', exact: true }).click()
+    await expect(page.locator('[data-offering-save-status]')).toHaveCount(0)
+    await expect(page.getByText('Button preview: Keep this custom draft', { exact: true })).toBeVisible()
+    await expect(page.getByRole('switch', { name: 'Enable button destination', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable PayPal button code', exact: true })).toHaveAttribute('aria-checked', 'true')
+    await expect(page.getByRole('switch', { name: 'Enable product sales page', exact: true })).toHaveAttribute('aria-checked', 'false')
+    expect((await writes(page)).every(write => write.kind === 'patch' && !Object.hasOwn(write.patch, 'paypal_active') && !Object.hasOwn(write.patch, 'sales_page_active') && !Object.hasOwn(write.patch, 'purchase_link_active'))).toBe(true)
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
+})
+
+test('destination tooltip text stays entirely readable in narrow and keyboard-height viewports', async ({ page }) => {
+    for (const viewport of [{ width: 320, height: 844 }, { width: 390, height: 844 }, { width: 390, height: 400 }]) {
+        await page.setViewportSize(viewport)
+        await mount(page, { count: 1 })
+        await choose(page, 1).click()
+        for (const creatorView of [false, true]) {
+            if (creatorView) await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+            const scope = creatorView ? page.locator('[data-sales-page-creator]') : page.locator('[data-offering-editor]')
+            const help = scope.getByRole('button', { name: 'About Button destination', exact: true })
+            await page.mouse.move(0, 0)
+            await help.focus()
+            await help.press('Enter')
+            const tooltip = page.getByRole('tooltip').filter({ visible: true })
+            await expect(tooltip).toContainText('actual purchase page or checkout')
+            await expect.poll(() => tooltip.evaluate(element => {
+                const rect = element.getBoundingClientRect()
+                const view = visualViewport
+                const left = view?.offsetLeft || 0, top = view?.offsetTop || 0
+                return rect.left >= left + 15 && rect.top >= top && rect.right <= left + (view?.width || innerWidth) - 15 && rect.bottom <= top + (view?.height || innerHeight)
+            })).toBe(true)
+            const reading = await tooltip.evaluate(element => {
+                const rect = element.getBoundingClientRect()
+                const sample = (x, y) => element.contains(document.elementFromPoint(x, y))
+                return { contentFits: element.scrollHeight <= element.clientHeight + 1, firstTextExposed: sample(rect.left + 20, rect.top + 20), lastTextExposed: sample(rect.left + 20, rect.bottom - 20) }
+            })
+            expect(reading).toEqual({ contentFits: true, firstTextExposed: true, lastTextExposed: true })
+            await help.press('Escape')
+            await expect(tooltip).toHaveCount(0)
+            await expect(help).toBeFocused()
+        }
+        expect(await writes(page)).toEqual([])
+    }
+})
+
+test('very short destination help supports scrolling, Escape and the native editor tab order', async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 240 })
+    await mount(page, { count: 1 })
+    // The isolated fixture's nav is a div; mark it like the real fixed nsso
+    // topbar so the shared help can reserve its visible chrome band.
+    await page.locator('#fixture-header').evaluate(element => element.setAttribute('data-nsso-topbar', 'true'))
+    await choose(page, 1).click()
+    for (const creatorView of [false, true]) {
+        if (creatorView) await page.getByRole('button', { name: 'Open Sales Page Creator', exact: true }).click()
+        const scope = creatorView ? page.locator('[data-sales-page-creator]') : page.locator('[data-offering-editor]')
+        const help = scope.getByRole('button', { name: 'About Button destination', exact: true })
+        const destination = scope.getByRole('textbox', { name: 'Button destination', exact: true })
+        const enableDestination = scope.getByRole('switch', { name: 'Enable button destination', exact: true })
+        const destinationUrl = creatorView ? 'https://www.nsso.me/sign-up' : 'https://apps.apple.com/gb/app/synthetic-dream-journal/id123456789'
+        await destination.fill(destinationUrl)
+        await page.mouse.move(0, 0)
+        // Compare the portal handoff with this engine's native order. WebKit's
+        // default policy skips buttons, while Chromium visits the enable switch.
+        await help.focus()
+        await help.press('Escape')
+        await expect(page.getByRole('tooltip')).toHaveCount(0)
+        await help.press('Tab')
+        const nativeNextIsSwitch = !creatorView && await enableDestination.evaluate(element => element === document.activeElement)
+        if (!nativeNextIsSwitch) await expect(destination).toBeFocused()
+        await help.focus()
+        await help.press('Enter')
+        const tooltip = page.getByRole('tooltip').filter({ visible: true })
+        await expect(tooltip).toHaveAttribute('tabindex', '0')
+        await expect(tooltip).toHaveCSS('overflow-y', 'auto')
+        const bounds = await tooltip.boundingBox()
+        expect(bounds.y).toBeGreaterThanOrEqual(104)
+        expect(bounds.y + bounds.height).toBeLessThanOrEqual(224)
+        await page.keyboard.press('Tab')
+        await expect(tooltip).toBeFocused()
+        await page.keyboard.press('End')
+        await expect.poll(() => tooltip.evaluate(element => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThanOrEqual(1)
+        await page.evaluate(() => window.dispatchEvent(new Event('resize')))
+        await expect.poll(() => tooltip.evaluate(element => element.scrollHeight - element.scrollTop - element.clientHeight)).toBeLessThanOrEqual(1)
+        await tooltip.press('Escape')
+        await expect(tooltip).toHaveCount(0)
+        await expect(help).toBeFocused()
+        if (testInfo.project.name === 'mobile') await help.tap()
+        else await help.press('Enter')
+        await expect(tooltip).toBeVisible()
+        await expect.poll(() => tooltip.evaluate(element => element.scrollTop)).toBe(0)
+        const beginningVisible = await tooltip.evaluate(element => {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+            let text = walker.nextNode()
+            while (text && !text.textContent.trim()) text = walker.nextNode()
+            if (!text) return false
+            const range = document.createRange()
+            range.setStart(text, 0)
+            range.setEnd(text, Math.min(12, text.textContent.length))
+            const firstLine = range.getClientRects()[0]
+            const panel = element.getBoundingClientRect()
+            return firstLine && firstLine.top >= panel.top && firstLine.bottom <= panel.bottom
+                && element.contains(document.elementFromPoint(firstLine.left + 1, firstLine.top + firstLine.height / 2))
+        })
+        expect(beginningVisible).toBe(true)
+        await help.focus()
+        await help.press('Tab')
+        await expect(tooltip).toBeFocused()
+        await tooltip.press('Shift+Tab')
+        await expect(help).toBeFocused()
+        await help.press('Tab')
+        await expect(tooltip).toBeFocused()
+        await tooltip.press('Tab')
+        await expect(tooltip).toHaveCount(0)
+        if (nativeNextIsSwitch) {
+            // Keep the real form's enable switch in its native tab position.
+            await expect(enableDestination).toBeFocused()
+            await page.keyboard.press('Tab')
+        }
+        await expect(destination).toBeFocused()
+        await expect(destination).toHaveValue(destinationUrl)
+        await destination.press('Tab')
+        const textHelp = scope.getByRole('button', { name: 'About Button text', exact: true })
+        if (await textHelp.evaluate(element => element === document.activeElement)) {
+            await textHelp.press('Escape')
+            await page.keyboard.press('Tab')
+        }
+        const text = scope.getByRole('textbox', { name: 'Button text (optional)', exact: true })
+        await expect(text).toBeFocused()
+        const label = creatorView ? 'Open the creator offering' : 'Open the offering'
+        await text.fill('')
+        await text.pressSequentially(label)
+        await expect(text).toHaveValue(label)
+        await expect(scope.getByText('Button preview: ' + label, { exact: true })).toBeVisible()
+        await expect(destination).toHaveValue(destinationUrl)
+        expect(await page.evaluate(() => window.fixtureSnapshot().products[0].paypal_html)).toBe(paypal)
+    }
+    const changes = await writes(page)
+    expect(changes.length).toBeGreaterThan(0)
+    expect(changes.every(write => write.kind === 'patch' && write.id === 'offering-1' && ['purchase_link', 'purchase_button_label'].includes(Object.keys(write.patch).join()))).toBe(true)
+    expect(await page.evaluate(() => window.fixturePopups)).toEqual([])
 })

@@ -72,7 +72,15 @@ test('advanced editor fields keep accessible names across section and product se
     await page.getByRole('button',{name:'Edit Fixture offer',exact:true}).click()
     await expect(page.getByRole('button',{name:'Edit Fixture offer',exact:true})).toHaveAttribute('aria-current','true')
     await expect(page.getByRole('button',{name:'Edit Fixture offer',exact:true})).toHaveClass(/\bnsso-silver-glass\b/)
-    for (const name of ['Product name','Price (include the currency)','Product description','Purchase link']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
+    for (const name of ['Product name','Price (include the currency)','Product description','Button destination','Second button destination (optional)','Button text (optional)','Second button text (optional)']) await expect(page.getByRole('textbox',{name,exact:true})).toBeVisible()
+    await expect(page.getByRole('textbox',{name:'Button destination',exact:true})).toHaveValue('https://seller.example.test')
+    const help=page.getByRole('button',{name:'About Button destination',exact:true})
+    await help.focus()
+    await help.press('Enter')
+    await expect(page.getByRole('tooltip')).toContainText('actual purchase page or checkout')
+    await help.press('Escape')
+    await expect(page.getByRole('tooltip')).toHaveCount(0)
+    await expect(help).toBeFocused()
 })
 
 for (const [kind, collection, tab, name] of [

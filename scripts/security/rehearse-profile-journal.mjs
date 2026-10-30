@@ -33,6 +33,7 @@ if(sql("SELECT to_regprocedure('public.apply_profile_operation(jsonb)') IS NOT N
 if(!gateway)migration('nsso_profile_auth_cascade')
 if(sql("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='display_order')")!=='t')migration('profile_insertion_positions')
 if(sql("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='secondary_purchase_link')")!=='t')migration('product_secondary_purchase_link')
+if(sql("SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='purchase_button_label')")!=='t')migration('product_button_labels')
 const runtimeFiles=readdirSync(resolve(repo,'supabase/migrations')).filter(x=>x.endsWith('_nsso_runtime_limits.sql'))
 if(runtimeFiles.length===1&&sql("SELECT to_regprocedure('public.consume_nsso_request_limit(text,text)') IS NOT NULL")!=='t')sql(readFileSync(resolve(repo,'supabase/migrations',runtimeFiles[0]),'utf8'))
 if(sql("SELECT to_regprocedure('public.intelligent_search(public.vector,text,public.vector,double precision,integer,text[],integer)') IS NOT NULL")==='t'&&sql("SELECT to_regprocedure('private.validate_retrieval_request(public.vector,double precision,integer,text,text[],integer,public.vector)') IS NOT NULL")!=='t')migration('nsso_retrieval_bounds')
@@ -118,6 +119,7 @@ try{
    {kind:'product.add',values:{name:'No raw',paypal_html:'<script/>'}},
    {kind:'product.add',values:{name:'No config',payment_config:null}},
    ...['javascript:alert(1)','https://trusted.test\\@evil.test','https://u:p@example.test','https://example.test:99999','https://example.test/\nunsafe','https://example.test/'+ 'x'.repeat(4096)].map(secondary_purchase_link=>({kind:'product.add',values:{name:'Invalid second destination',secondary_purchase_link}})),
+   ...['purchase_button_label','secondary_purchase_button_label'].flatMap(field=>['x'.repeat(61),123,true,{},[], 'bad\nlabel','bad\tlabel','bad\rlabel','bad'+String.fromCharCode(1)+'label','bad'+String.fromCharCode(127)+'label'].map(value=>({kind:'product.add',values:{name:'Invalid button label',[field]:value}}))),
    {kind:'product.add',values:{name:'No malformed nested data',testimonials:[{name:'Name',text:'Text',script:'bad'}]}},
    {kind:'product.add',values:{name:'Too many benefits',benefits:Array(51).fill('Benefit')}},
    {kind:'link.patch',id:randomUUID(),patch:{link_name:'Missing target'}},
@@ -205,6 +207,53 @@ try{
   }
   const removed=await apply(operation((await snapshot()).revision,[{kind:'product.remove',id}]));assert.equal(removed.status,'applied')
   assert.equal((await undo(removed.operationId,removed.revision)).status,'applied');assert.equal((await snapshot()).products.find(row=>row.id===id).secondary_purchase_link,secondary)
+ })
+ await check('button labels are owner-journal metadata with public readback, replay, clearing and field-scoped Undo',async()=>{
+  const primary='https://apps.apple.com/gb/app/synthetic/id12345',secondary='https://www.nsso.me/sign-up'
+  const add=operation((await snapshot()).revision,[{kind:'product.add',values:{
+   name:'Synthetic labelled offering',purchase_link:primary,secondary_purchase_link:secondary,purchase_link_active:true,
+   purchase_button_label:'Get the app',secondary_purchase_button_label:'Join the community',sales_page_published:true,
+  }}])
+  const added=await apply(add);assert.equal(added.status,'applied');assert.deepEqual(await apply(add),added)
+  const product=added.changes[0].row,id=product.id
+  assert.equal(product.purchase_button_label,'Get the app');assert.equal(product.secondary_purchase_button_label,'Join the community')
+  for(const rows of [(await snapshot()).products,await rpc('get_own_products')]){
+   const row=rows.find(row=>row.id===id);assert.equal(row.purchase_button_label,product.purchase_button_label);assert.equal(row.secondary_purchase_button_label,product.secondary_purchase_button_label)
+  }
+  const publicCard=await request('/products?id=eq.'+id+'&select=id,purchase_link,secondary_purchase_link,purchase_button_label,secondary_purchase_button_label,purchase_link_active','anon')
+  assert.equal(publicCard.http,200);assert.deepEqual(publicCard.data,[{id,purchase_link:primary,secondary_purchase_link:secondary,purchase_button_label:'Get the app',secondary_purchase_button_label:'Join the community',purchase_link_active:true}])
+  const published=await rpc('get_product_details',{p_product_id:id},'anon')
+  assert.equal(published.purchase_button_label,product.purchase_button_label);assert.equal(published.secondary_purchase_button_label,product.secondary_purchase_button_label)
+  for(const key of ['paypal_html','success_url','display_order'])assert.equal(Object.hasOwn(published,key),false)
+  for(const field of ['purchase_button_label','secondary_purchase_button_label']){
+   assert.equal(sql("SELECT bool_and(has_column_privilege(role,'public.products',"+literal(field)+",'SELECT') AND NOT has_column_privilege(role,'public.products',"+literal(field)+",'UPDATE') AND NOT has_column_privilege(role,'public.products',"+literal(field)+",'INSERT')) FROM unnest(ARRAY['anon','authenticated']) role"),'t')
+   for(const who of ['anon','owner'])assert.ok([401,403].includes((await request('/products?id=eq.'+id,who,{[field]:'Forbidden direct label'},'PATCH')).http))
+   const other=await rpc('get_profile_snapshot',{},'other')
+   assert.equal((await rpc('apply_profile_operation',{p_operation:operation(other.revision,[{kind:'product.patch',id,patch:{[field]:'Foreign label'}}])},'other')).status,'rejected')
+   const patch=operation((await snapshot()).revision,[{kind:'product.patch',id,patch:{[field]:'x'.repeat(60)}}])
+   const changed=await apply(patch);assert.equal(changed.status,'applied');assert.deepEqual(await apply(patch),changed)
+   assert.equal((await snapshot()).products.find(row=>row.id===id)[field],'x'.repeat(60))
+   const unrelated=await apply(operation(changed.revision,[{kind:'product.patch',id,patch:{name:'Keep newer offering title',purchase_link_active:false}}]));assert.equal(unrelated.status,'applied')
+   const undoId=randomUUID(),undone=await undo(patch.operationId,unrelated.revision,undoId)
+   assert.equal(undone.status,'applied');assert.deepEqual(await undo(patch.operationId,unrelated.revision,undoId),undone)
+   const after=(await snapshot()).products.find(row=>row.id===id)
+   assert.equal(after[field],product[field]);assert.equal(after.name,'Keep newer offering title');assert.equal(after.purchase_link,primary);assert.equal(after.secondary_purchase_link,secondary);assert.equal(after.purchase_link_active,false);assert.equal(after.paypal_active,product.paypal_active)
+   for(const cleared of [null,'']){
+    const clear=operation((await snapshot()).revision,[{kind:'product.patch',id,patch:{[field]:cleared}}]),saved=await apply(clear)
+    assert.equal(saved.status,'applied');assert.equal((await snapshot()).products.find(row=>row.id===id)[field],cleared)
+    assert.equal((await undo(clear.operationId,saved.revision)).status,'applied')
+   }
+  }
+  const beforeInvalid=await snapshot()
+  const nul=await request('/rpc/apply_profile_operation','owner',{p_operation:operation(beforeInvalid.revision,[{kind:'product.patch',id,patch:{purchase_button_label:'bad'+String.fromCharCode(0)+'label'}}])})
+  assert.equal(nul.http,400);assert.equal((await snapshot()).revision,beforeInvalid.revision)
+  const removed=await apply(operation(beforeInvalid.revision,[{kind:'product.remove',id}]));assert.equal(removed.status,'applied')
+  assert.equal((await undo(removed.operationId,removed.revision)).status,'applied')
+  const restored=(await snapshot()).products.find(row=>row.id===id)
+  assert.equal(restored.purchase_button_label,product.purchase_button_label);assert.equal(restored.secondary_purchase_button_label,product.secondary_purchase_button_label)
+  const unpublished=await apply(operation((await snapshot()).revision,[{kind:'product.patch',id,patch:{sales_page_published:false}}]));assert.equal(unpublished.status,'applied')
+  assert.equal(await rpc('get_product_details',{p_product_id:id},'anon'),null)
+  assert.equal(await rpc('get_product_details',{p_product_id:id},'other'),null)
  })
  await check('reorders require an exact unique owner set and persist atomically',async()=>{
   const prior=await snapshot();let idsInOrder=prior.links.map(x=>x.id).reverse()
