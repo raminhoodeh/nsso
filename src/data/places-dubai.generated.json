@@ -3,16 +3,88 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 109,
-    "eventCount": 32,
-    "placeCount": 188,
-    "generatedAt": "2026-09-29T04:33:34.633Z",
+    "curatedRecordCount": 111,
+    "eventCount": 34,
+    "placeCount": 189,
+    "generatedAt": "2026-11-06T18:12:46Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
     "attribution": "Place IDs and current location data supplied by Google Maps Platform."
   },
   "places": [
+    {
+      "id": "manarat-al-saadiyat-events",
+      "name": "Manarat Al Saadiyat",
+      "aliases": [
+        "Manarat Al Saadiyat Abu Dhabi"
+      ],
+      "description": "Saadiyat Cultural District's arts venue in Abu Dhabi, pinned here for verified ArtDep guided visits to Frieze Abu Dhabi. Event tickets and fair admission are separate; confirm the tour meeting point before travelling.",
+      "sourceUrls": [
+        "https://www.artdepuae.com/home-2",
+        "https://www.artdepuae.com/real-estate-listing",
+        "https://www.friezeabudhabi.com/en/visitor-information",
+        "https://manaratalsaadiyat.ae/"
+      ],
+      "locationHint": "Manarat Al Saadiyat, Sheikh Khalifa Bin Zayed Al Nahyan Highway, Saadiyat Cultural District, Abu Dhabi, UAE",
+      "placeId": "ChIJdyeUFkJnXj4RZ37L2WWmKpo",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "arts-culture-heritage",
+        "tags": [
+          "arts-culture-heritage"
+        ]
+      },
+      "events": [
+        {
+          "id": "artdep-frieze-abu-dhabi-walk-2026-11-21",
+          "title": "ArtDep — Frieze Abu Dhabi Guided Art Walk",
+          "description": "Explore selected galleries and contemporary artworks at Frieze Abu Dhabi with art historian Elizaveta Kushnareva. A guided group visit focused on the ideas and context behind the art, at Manarat Al Saadiyat in Abu Dhabi.",
+          "startsAt": "2026-11-21T14:00:00+04:00",
+          "endsAt": "2026-11-22T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.artdepuae.com/real-estate-listing",
+          "sourceUrl": "https://www.artdepuae.com/real-estate-listing",
+          "verifiedAt": "2026-11-06T18:12:46Z",
+          "verifiedUntil": "2026-11-22T00:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 2pm UAE time · AED 250 + 5% VAT through 6 Nov; AED 280 + 5% VAT from 7 Nov",
+          "taxonomyTags": [
+            "art-exhibitions",
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "Tour price excludes Frieze Abu Dhabi admission: buy fair entry separately at https://www.friezeabudhabi.com/en/tickets. Confirm the meeting point with ArtDep; this pin marks the venue, not the group meeting point. The 22 November session is sold out as checked on 6 November. Tour end time is unpublished.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Abu Dhabi",
+      "address": "Sheikh Khalifa Bin Zayed Al Nahyan Hwy - Al Saadiyat Island - Cultural District - Abu Dhabi",
+      "coordinates": {
+        "lat": 24.5342114,
+        "lng": 54.4189099
+      },
+      "googleTypes": [
+        "art_gallery",
+        "art_museum",
+        "tourist_attraction"
+      ],
+      "primaryGoogleType": "art_gallery",
+      "resolution": {
+        "status": "resolved",
+        "source": "firecrawl-maps",
+        "matchedAt": "2026-11-06T18:12:46Z",
+        "osm": null,
+        "matchedName": "Manarat Al Saadiyat",
+        "websiteUri": "https://manaratalsaadiyat.ae/",
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Manarat+Al+Saadiyat+Abu+Dhabi&query_place_id=ChIJdyeUFkJnXj4RZ37L2WWmKpo"
+    },
     {
       "id": "the-courtyard-al-quoz",
       "name": "The Courtyard — Al Quoz",
@@ -3036,6 +3108,31 @@
     },
     {
       "id": "cabinet-of-curiosity",
+      "events": [
+        {
+          "id": "artdep-salon-of-thinkers-2026-11-14",
+          "title": "ArtDep — Salon of Thinkers: How do you know what you really want?",
+          "description": "A cinema-and-philosophy evening about desire, with film clips and conversation led by filmmaker Nezar Andary and media scholar Vaios Papanagnou. A thoughtful date for people who enjoy films, ideas and discussing what shapes their choices.",
+          "startsAt": "2026-11-14T18:00:00+04:00",
+          "endsAt": "2026-11-15T00:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.artdepuae.com/real-estate-listing",
+          "sourceUrl": "https://www.artdepuae.com/real-estate-listing",
+          "verifiedAt": "2026-11-06T18:12:46Z",
+          "verifiedUntil": "2026-11-15T00:00:00+04:00",
+          "dateLabel": "14 Nov 2026 · 6pm UAE time · AED 179 + 5% VAT through 10 Nov; AED 199 + 5% VAT from 11 Nov",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "Advance booking via ArtDep. Venue: Cabinet of Curiosity, Warehouse 18, Goshi Warehouses Village, Al Quoz, Dubai. End time is unpublished. Confirm availability and current price with the organiser.",
+          "calendar": {
+            "startDate": "2026-11-14",
+            "endDateExclusive": "2026-11-15"
+          }
+        }
+      ],
       "name": "Cabinet of Curiosity",
       "aliases": [],
       "description": "Cabinet of Curiosity is a hidden gem in the Goshi Warehouses of Al Quoz 3, billed as the UAE's most curious antique collection. It's a one-stop destination for around 1,500 carefully curated pieces — unique antiques, eclectic furniture, art, and decorative objects — and also hosts rotating art exhibitions and cultural talks.",
