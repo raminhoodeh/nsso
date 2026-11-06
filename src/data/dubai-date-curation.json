@@ -5241,6 +5241,221 @@
           }
         }
       ]
+    },
+    {
+      "id": "buhais-geology-park",
+      "name": "Buhais Geology Park",
+      "aliases": [
+        "Buhais Geological Park",
+        "Jebel Buhais Geological Park"
+      ],
+      "description": "Explore fossil-inspired exhibition pods, local rocks and fossils, and an outdoor geological trail overlooking Jebel Buhais. The centre also has an immersive theatre and a café with mountain views.",
+      "sourceUrls": [
+        "https://www.visitsharjah.com/activities/nature-and-wildlife/buhais-geological-park/",
+        "https://epaashj.ae/"
+      ],
+      "locationHint": "Jebel Buhais, near Filli Roundabout, Sharjah, UAE",
+      "placeId": "ChIJD_kmdp2f9T4RDIj_9YuT57o",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "nature-wildlife",
+        "tags": [
+          "nature-wildlife",
+          "arts-culture-heritage"
+        ]
+      }
+    },
+    {
+      "id": "al-thuraya-astronomy-centre",
+      "name": "Al Thuraya Astronomy Centre",
+      "aliases": [
+        "Al Thuraya Astronomy Center",
+        "Al Thuraya Observatory",
+        "Dubai Astronomy Group"
+      ],
+      "description": "An astronomy centre and observatory in Mushrif Park, created by Dubai Astronomy Group. Contact the group to confirm current centre access before travelling; its stargazing programmes may take place at other venues.",
+      "sourceUrls": [
+        "https://dubaiastronomy.com/contact-us/",
+        "https://dubaiastronomy.com/observatory-services/",
+        "https://dubaiastronomy.com/upcoming-programs/"
+      ],
+      "locationHint": "Al Thuraya Astronomy Centre, Mushrif Park - Mushraif - Dubai",
+      "placeId": "ChIJv9lgkmFcXz4RtVw00vrNoYw",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities",
+          "nature-wildlife"
+        ]
+      }
+    },
+    {
+      "id": "le-piaf-dubai",
+      "name": "Le Piaf Dubai",
+      "aliases": [
+        "Le Piaf",
+        "Le Piaf Dubaï",
+        "Le Piaf Emirates Towers",
+        "Le Piaf Restaurant"
+      ],
+      "description": "A French restaurant and piano bar at Emirates Towers, with intimate seating, traditional cooking and evenings of live piano and singalongs. Reserve a table and confirm the live-music programme for your chosen evening.",
+      "sourceUrls": [
+        "https://lepiaf-restaurant.com/dubai/",
+        "https://www.sevenrooms.com/reservations/lepiaf"
+      ],
+      "locationHint": "First floor, Emirates Towers Hotel, hotel entrance, Trade Centre 2, Dubai, UAE",
+      "placeId": "ChIJM2AB2UtDXz4RFLYY2MZK6Cg",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      }
+    },
+    {
+      "id": "vntg-wine-cheese-bar-dubai",
+      "name": "VNTG Wine & Cheese Bar Dubai",
+      "aliases": [
+        "VNTG",
+        "VNTG Wine and Cheese Bar",
+        "VNTG Grape & Cheese Society",
+        "VNTG Business Bay"
+      ],
+      "description": "A wine and cheese bar at JW Marriott Marquis, serving sharing plates and sommelier-selected tasting flights for comparing wines together. Check the current tasting selection and reserve through the venue.",
+      "sourceUrls": [
+        "https://www.vntg.ae/",
+        "https://www.opentable.com/r/vntg-business-bay"
+      ],
+      "locationHint": "JW Marriott Marquis - Ground Level - Business Bay - Dubai",
+      "placeId": "ChIJ7XIOJxppXz4RK0Bi4JHRkuo",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "food-drink",
+        "tags": [
+          "food-drink"
+        ]
+      }
+    },
+    {
+      "id": "silver-soul-al-quoz",
+      "name": "Silver Soul — Al Quoz",
+      "aliases": [
+        "Silver Soul",
+        "Silver Soul Dubai",
+        "SilverSoul",
+        "Silver Soul ring workshop"
+      ],
+      "description": "A hands-on silver-ring workshop inside Ivy’s Secret Garden in Al Quoz. Choose a design and spend around two hours crafting your own silver ring with expert guidance. A creative date with a wearable keepsake; book the workshop with the studio before visiting.",
+      "sourceUrls": [
+        "https://www.silversoul.ae/",
+        "https://www.silversoul.ae/booking"
+      ],
+      "locationHint": "Ivy's secret garden - Unit 14 - R450 1st floor - Al Qouz Ind.fourth - Al Quoz - Dubai",
+      "placeId": "ChIJDaXGaHxpXz4RRArcA357CAs",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop"
+        ]
+      }
+    },
+    {
+      "id": "pots-and-paints-cafe",
+      "name": "Pots & Paints Café — Jumeirah",
+      "aliases": [
+        "Pots & Paints Cafe",
+        "Pots and Paints",
+        "Pots n Paints",
+        "Pots and Paints Cafe",
+        "Ceramic Corner Cafe"
+      ],
+      "description": "A creative café and ceramic-painting studio on the first floor of Town Centre Jumeirah. Choose a ready-made ceramic piece and paint it over coffee or food. The team glazes and kiln-fires your design for collection, usually after seven days. Canvas and tote-bag painting are also offered.",
+      "sourceUrls": [
+        "https://potsnpaintscafe.com/",
+        "https://potsnpaintscafe.com/pages/contact"
+      ],
+      "locationHint": "First Floor, Town Centre Jumeirah, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJXx1OfY1DXz4RsIyG9pMOk40",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop",
+          "food-drink"
+        ]
+      }
+    },
+    {
+      "id": "tufting-time-jumeirah",
+      "name": "Tufting Time — Jumeirah",
+      "aliases": [
+        "Tufting Time Jumeirah",
+        "Tufting Time Town Centre",
+        "TuftingTime Jumeirah"
+      ],
+      "description": "Make your own rug at this Town Centre Jumeirah studio. Choose a design and yarn colours, then learn to use a tufting gun with step-by-step guidance. Smaller projects take around 90 minutes to two hours. Book this branch specifically and confirm when your finished rug can be collected.",
+      "sourceUrls": [
+        "https://www.tuftingtime.com/",
+        "https://www.tuftingtime.com/bookings"
+      ],
+      "locationHint": "Ground Floor, Town Centre Jumeirah, Jumeirah 1, Dubai, UAE",
+      "placeId": "ChIJ2d_IbwBDXz4RPkLZrY8-fus",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop"
+        ]
+      }
+    },
+    {
+      "id": "tufting-time-dubai-festival-city",
+      "name": "Tufting Time — Dubai Festival City",
+      "aliases": [
+        "Tufting Time Dubai Festival City",
+        "Tufting Time Festival City Mall",
+        "TuftingTime DFC"
+      ],
+      "description": "A rug-making studio on the mezzanine floor of Dubai Festival City Mall, near PAN and IKEA. Create a design in yarn with guided tufting, choosing the size and colours together. The studio advertises date-night sessions; choose the Festival City branch when booking and confirm the finishing and collection time.",
+      "sourceUrls": [
+        "https://www.tuftingtime.com/",
+        "https://www.tuftingtime.com/bookings"
+      ],
+      "locationHint": "Mezzanine Floor, Dubai Festival City Mall, near PAN and IKEA, Dubai, UAE",
+      "placeId": "ChIJKQW3u1RdXz4RfHNHinPzhl4",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop"
+        ]
+      }
+    },
+    {
+      "id": "resin-art-world-barsha-heights",
+      "name": "Resin Art World — Barsha Heights",
+      "aliases": [
+        "Resin Art World",
+        "Resin Art World Dubai",
+        "Resin Art World Tecom"
+      ],
+      "description": "A craft studio and art-supplies shop in Barsha Heights with guided workshops for beginners. Make mosaic-tile coasters and trinket trays, or choose resin art, eco-cast décor and candle-making sessions. Book the specific workshop and date online before heading to the first-floor studio in Sheikha Noora Tower.",
+      "sourceUrls": [
+        "https://resinartworld.ae/pages/workshop",
+        "https://resinartworld.ae/products/mosaic-tiles-art-workshop-in-uae"
+      ],
+      "locationHint": "Sheikha Noora Tower, First Floor, Office 109, Barsha Heights, Dubai, UAE",
+      "placeId": "ChIJ7ZLhG8ppXz4RRuFYI227XSo",
+      "listingType": "place",
+      "taxonomy": {
+        "primary": "creative-workshop",
+        "tags": [
+          "creative-workshop"
+        ]
+      }
     }
   ]
 }
