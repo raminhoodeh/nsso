@@ -3,10 +3,10 @@
     "title": "Places to go in the UAE",
     "source": "__PLACES TO GO 33a6fe2ecf3780ad8ae6d96a09ae854f.csv",
     "sourceRecordCount": 86,
-    "curatedRecordCount": 111,
-    "eventCount": 34,
-    "placeCount": 189,
-    "generatedAt": "2026-11-06T18:12:46Z",
+    "curatedRecordCount": 113,
+    "eventCount": 149,
+    "placeCount": 191,
+    "generatedAt": "2026-11-06T18:57:32.866Z",
     "expiresAt": "2026-09-21T13:04:30.891Z",
     "cacheMisses": 0,
     "geocoder": "google-places-new",
@@ -6201,11 +6201,18 @@
       "name": "Museum of the Future",
       "aliases": [
         "The Museum of the Future",
-        "MOTF"
+        "MOTF",
+        "Dubai Future Week",
+        "Dubai Future Week Big Stage",
+        "The Big Stage",
+        "Dubai FutureWeek",
+        "DFW"
       ],
-      "description": "An immersive journey to 2071 through space, ecology, wellness and future technologies, inside one of Dubai’s most distinctive buildings.",
+      "description": "Dubai landmark and venue for Dubai Future Week’s Big Stage auditorium sessions. The main museum exhibitions are being renewed, with reopening planned for Q1 2027; check the museum’s latest visitor information before planning a separate exhibition visit.",
       "sourceUrls": [
-        "https://museumofthefuture.ae/en/experience"
+        "https://museumofthefuture.ae/en/experience",
+        "https://www.dubaifutureweek.com/en/whats-happening",
+        "https://museumofthefuture.ae/en/get-help"
       ],
       "locationHint": "Sheikh Zayed Road, Trade Centre 2, Dubai, UAE",
       "placeId": "ChIJqU_DoUtDXz4RxC8gnP8G_Ss",
@@ -6242,7 +6249,760 @@
         "websiteUri": "https://museumofthefuture.ae/ar",
         "businessStatus": "OPERATIONAL"
       },
-      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Museum%20of%20the%20Future%2C%20Sheikh%20Zayed%20Road%2C%20Trade%20Centre%202%2C%20Dubai%2C%20United%20Arab%20Emirates"
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Museum%20of%20the%20Future%2C%20Sheikh%20Zayed%20Road%2C%20Trade%20Centre%202%2C%20Dubai%2C%20United%20Arab%20Emirates",
+      "events": [
+        {
+          "id": "dfw-2026-seswsmm2up6",
+          "title": "Dubai Future Week — A Big Welcome to Dubai Future Week",
+          "description": "Dubai Future Foundation CEO Khalfan Belhoul introduces the week, offering an opening overview of its programme and the conversations ahead.",
+          "startsAt": "2026-11-18T09:30:00+04:00",
+          "endsAt": "2026-11-18T09:45:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T09:45:00+04:00",
+          "dateLabel": "18 Nov 2026 · 9:30am–9:45am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesmc9wjl67",
+          "title": "Dubai Future Week — Why We Need to Think Outside the Box",
+          "description": "Architect Ma Yansong considers cities shaped by organic forms, exploring how buildings might strengthen people’s relationships with nature and with one another.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T10:20:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T10:20:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–10:20am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesa8wbfpq5",
+          "title": "Dubai Future Week — The Future of Humankind and Our Entanglement with Technology",
+          "description": "Inventor Danny Hillis discusses meaning, creativity and trust as technology becomes more entwined with human lives and the systems we build.",
+          "startsAt": "2026-11-18T10:30:00+04:00",
+          "endsAt": "2026-11-18T10:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T10:50:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:30am–10:50am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-seseknunqs3",
+          "title": "Dubai Future Week — What if AI Worked Only for You?",
+          "description": "Siri co-founder Thomas Gruber considers personal AI agents that follow individual values, and how they might change the way people access goods and services.",
+          "startsAt": "2026-11-18T11:00:00+04:00",
+          "endsAt": "2026-11-18T11:10:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T11:10:00+04:00",
+          "dateLabel": "18 Nov 2026 · 11:00am–11:10am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-seszwv375o6",
+          "title": "Dubai Future Week — How to Design an Immune System for Buildings",
+          "description": "Jessica Green examines buildings that could detect airborne pathogens and respond to them, asking how indoor environments might better support human health.",
+          "startsAt": "2026-11-18T11:15:00+04:00",
+          "endsAt": "2026-11-18T11:25:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T11:25:00+04:00",
+          "dateLabel": "18 Nov 2026 · 11:15am–11:25am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesw0phocew",
+          "title": "Dubai Future Week — Turning Inspiration into Innovation",
+          "description": "Khalifa Al Qama considers the difficult steps between an exciting idea and a working innovation, including testing, regulation, trust and finding demand.",
+          "startsAt": "2026-11-18T11:40:00+04:00",
+          "endsAt": "2026-11-18T12:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T12:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 11:40am–12:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses5edhc64m",
+          "title": "Dubai Future Week — Opening Notes",
+          "description": "Vincent Corver opens the day with live piano, inviting listeners to consider the relationship between music, mood and attention.",
+          "startsAt": "2026-11-19T09:15:00+04:00",
+          "endsAt": "2026-11-19T09:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T09:30:00+04:00",
+          "dateLabel": "19 Nov 2026 · 9:15am–9:30am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesilbh0870",
+          "title": "Dubai Future Week — Redefining the Future of Measuring Success",
+          "description": "Ohood Al Roumi considers how countries might assess progress as new priorities emerge alongside established measures such as GDP, productivity and competitiveness.",
+          "startsAt": "2026-11-19T09:30:00+04:00",
+          "endsAt": "2026-11-19T09:45:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T09:45:00+04:00",
+          "dateLabel": "19 Nov 2026 · 9:30am–9:45am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses5xo84b4u",
+          "title": "Dubai Future Week — The Readiness Gap",
+          "description": "Amy Webb introduces the Future Readiness Index, examining how organisations anticipate disruption, make decisions amid uncertainty and compare perceived preparedness with actual capabilities.",
+          "startsAt": "2026-11-19T09:45:00+04:00",
+          "endsAt": "2026-11-19T10:15:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T10:15:00+04:00",
+          "dateLabel": "19 Nov 2026 · 9:45am–10:15am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses2il2f4n0",
+          "title": "Dubai Future Week — The City That Moves Itself",
+          "description": "Explore autonomous vehicles in ports, airports and industrial settings, including the practical challenges of integration, regulation and trust as logistics moves beyond the driver’s seat.",
+          "startsAt": "2026-11-19T10:15:00+04:00",
+          "endsAt": "2026-11-19T10:45:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T10:45:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:15am–10:45am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses9za7m53d",
+          "title": "Dubai Future Week — Why Do We Keep Climbing?",
+          "description": "A conversation about ambition and its pressures asks how discipline, purpose and recognising limits might support a more sustainable sense of success.",
+          "startsAt": "2026-11-19T10:45:00+04:00",
+          "endsAt": "2026-11-19T11:15:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T11:15:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:45am–11:15am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses1as9zxfl",
+          "title": "Dubai Future Week — The Future Is too Important to Be Boring",
+          "description": "Julian Bleecker explores curiosity, close observation and imagination as ways for anyone to question today’s assumptions and consider unfamiliar possibilities.",
+          "startsAt": "2026-11-19T11:15:00+04:00",
+          "endsAt": "2026-11-19T11:35:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T11:35:00+04:00",
+          "dateLabel": "19 Nov 2026 · 11:15am–11:35am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesp53zzpew",
+          "title": "Dubai Future Week — What Must Stay Human?",
+          "description": "A panel asks how relying on AI might affect learning and thought, and how people can continue developing independent judgement, curiosity and creativity.",
+          "startsAt": "2026-11-19T11:35:00+04:00",
+          "endsAt": "2026-11-19T12:15:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T12:15:00+04:00",
+          "dateLabel": "19 Nov 2026 · 11:35am–12:15pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesm4ec58qa",
+          "title": "Dubai Future Week — Three Minutes. Three Slides. Three Signals. Three Questions.",
+          "description": "Futurists give rapid presentations on emerging signals of change, using short slide sets and questions to challenge assumptions about the future.",
+          "startsAt": "2026-11-19T13:30:00+04:00",
+          "endsAt": "2026-11-19T14:10:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T14:10:00+04:00",
+          "dateLabel": "19 Nov 2026 · 1:30pm–2:10pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses67x5kiz6",
+          "title": "Dubai Future Week — Confessions of an Entrepreneur",
+          "description": "Dubai entrepreneurs discuss the mistakes, risks and unexpected opportunities behind building a business, with different speakers across the two sessions.",
+          "startsAt": "2026-11-19T14:15:00+04:00",
+          "endsAt": "2026-11-19T15:05:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T15:05:00+04:00",
+          "dateLabel": "19 Nov 2026 · 2:15pm–3:05pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses78m8wbum",
+          "title": "Dubai Future Week — Robots will Make Us More Human, Actually",
+          "description": "LOVOT creator Kaname Hayashi considers whether robots designed for affection and companionship can encourage human care, connection and emotional engagement.",
+          "startsAt": "2026-11-19T15:05:00+04:00",
+          "endsAt": "2026-11-19T15:20:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T15:20:00+04:00",
+          "dateLabel": "19 Nov 2026 · 3:05pm–3:20pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesdy7m8oz0",
+          "title": "Dubai Future Week — Can We Design Cities That Breathe?",
+          "description": "An architecture and urban ecology discussion examines how cities might support nature, cultural identity and new ways of living together.",
+          "startsAt": "2026-11-19T15:30:00+04:00",
+          "endsAt": "2026-11-19T16:10:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T16:10:00+04:00",
+          "dateLabel": "19 Nov 2026 · 3:30pm–4:10pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses83s96rim",
+          "title": "Dubai Future Week — What Have Millions of People Taught You About Humanity?",
+          "description": "An unnamed guest creator reflects on storytelling, shared emotions and the lessons learned from reaching audiences across cultures and communities.",
+          "startsAt": "2026-11-19T16:10:00+04:00",
+          "endsAt": "2026-11-19T16:40:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T16:40:00+04:00",
+          "dateLabel": "19 Nov 2026 · 4:10pm–4:40pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesytvzq3al",
+          "title": "Dubai Future Week — What Will You Do on Monday?",
+          "description": "A closing reflection invites participants to identify meaningful ideas from the day and commit to something they can change themselves.",
+          "startsAt": "2026-11-19T16:40:00+04:00",
+          "endsAt": "2026-11-19T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T17:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 4:40pm–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sest8x6wsog",
+          "title": "Dubai Future Week — Opening Notes",
+          "description": "Vincent Corver opens the day with live piano, inviting listeners to consider the relationship between music, mood and attention.",
+          "startsAt": "2026-11-20T09:15:00+04:00",
+          "endsAt": "2026-11-20T09:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T09:30:00+04:00",
+          "dateLabel": "20 Nov 2026 · 9:15am–9:30am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses9wbk0a5s",
+          "title": "Dubai Future Week — Foresight Without Borders",
+          "description": "A panel considers how international institutions can use foresight to address shared challenges, anticipate change and make decisions under uncertainty.",
+          "startsAt": "2026-11-20T09:40:00+04:00",
+          "endsAt": "2026-11-20T10:20:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T10:20:00+04:00",
+          "dateLabel": "20 Nov 2026 · 9:40am–10:20am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesl9xehdah",
+          "title": "Dubai Future Week — The Future Has a History",
+          "description": "Nils Gilman looks at earlier reactions to technological and social change, asking what past expectations can teach us about today’s future anxieties.",
+          "startsAt": "2026-11-20T10:20:00+04:00",
+          "endsAt": "2026-11-20T10:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T10:50:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:20am–10:50am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses28uvxlci",
+          "title": "Dubai Future Week — How Do We Legislate the Unknown?",
+          "description": "A keynote explores how governments could create adaptable laws that anticipate emerging technologies while protecting people and supporting responsible innovation.",
+          "startsAt": "2026-11-20T10:50:00+04:00",
+          "endsAt": "2026-11-20T11:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T11:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:50am–11:00am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesgyjpm1gt",
+          "title": "Dubai Future Week — When AI Meets Everything",
+          "description": "A panel examines regulation where AI, emerging technologies and changing markets intersect, considering accountability, public trust and coordination between institutions.",
+          "startsAt": "2026-11-20T11:00:00+04:00",
+          "endsAt": "2026-11-20T11:20:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T11:20:00+04:00",
+          "dateLabel": "20 Nov 2026 · 11:00am–11:20am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-seso146cy63",
+          "title": "Dubai Future Week — AI Will Learn the Language of Life",
+          "description": "Giulio Deangeli explores how AI and computational biology could improve disease understanding, therapy discovery and approaches to health and longevity.",
+          "startsAt": "2026-11-20T11:20:00+04:00",
+          "endsAt": "2026-11-20T11:35:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T11:35:00+04:00",
+          "dateLabel": "20 Nov 2026 · 11:20am–11:35am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesmzk5pt8a",
+          "title": "Dubai Future Week — Confessions of an Entrepreneur",
+          "description": "Dubai entrepreneurs discuss the mistakes, risks and unexpected opportunities behind building a business, with different speakers across the two sessions.",
+          "startsAt": "2026-11-20T11:35:00+04:00",
+          "endsAt": "2026-11-20T12:05:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T12:05:00+04:00",
+          "dateLabel": "20 Nov 2026 · 11:35am–12:05pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-seslipheq0g",
+          "title": "Dubai Future Week — The Future We Wear",
+          "description": "Explore the intersection of fashion, smart materials and digital identity, including clothing that could respond to its wearer and surroundings.",
+          "startsAt": "2026-11-20T12:05:00+04:00",
+          "endsAt": "2026-11-20T12:45:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T12:45:00+04:00",
+          "dateLabel": "20 Nov 2026 · 12:05pm–12:45pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses3rkdkrqu",
+          "title": "Dubai Future Week — What Will You Do on Monday?",
+          "description": "A closing reflection invites participants to identify meaningful ideas from the day and commit to something they can change themselves.",
+          "startsAt": "2026-11-20T16:10:00+04:00",
+          "endsAt": "2026-11-20T16:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T16:30:00+04:00",
+          "dateLabel": "20 Nov 2026 · 4:10pm–4:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses2jfw8y6v",
+          "title": "Dubai Future Week — The Sound of Being Human",
+          "description": "Philosopher Maxime Rovere and pianist Vincent Corver combine conversation and live music to explore ageing, care, connection and our reliance on others.",
+          "startsAt": "2026-11-21T13:00:00+04:00",
+          "endsAt": "2026-11-21T13:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T13:30:00+04:00",
+          "dateLabel": "21 Nov 2026 · 1:00pm–1:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses7quxs8mn",
+          "title": "Dubai Future Week — Dear Future Me, Remember to Wonder",
+          "description": "Explorers read letters to the future and discuss what extreme environments reveal about Earth, discovery and the importance of sharing scientific stories.",
+          "startsAt": "2026-11-21T13:30:00+04:00",
+          "endsAt": "2026-11-21T14:10:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T14:10:00+04:00",
+          "dateLabel": "21 Nov 2026 · 1:30pm–2:10pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses7gckjh67",
+          "title": "Dubai Future Week — Hey Chat, I'm Growing Up",
+          "description": "A panel explores how AI could support children’s curiosity and learning while giving young people a voice in shaping their digital world.",
+          "startsAt": "2026-11-21T14:10:00+04:00",
+          "endsAt": "2026-11-21T14:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T14:50:00+04:00",
+          "dateLabel": "21 Nov 2026 · 2:10pm–2:50pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesf6adcgb3",
+          "title": "Dubai Future Week — Cyborg Psychology: The Mind After AI",
+          "description": "Pat Pataranutaporn examines how AI assistance might reshape thinking, emotions and behaviour, and how human wellbeing could guide its design.",
+          "startsAt": "2026-11-21T14:50:00+04:00",
+          "endsAt": "2026-11-21T15:20:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T15:20:00+04:00",
+          "dateLabel": "21 Nov 2026 · 2:50pm–3:20pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesb6ymglfl",
+          "title": "Dubai Future Week — What Are We Not Measuring About Our Bodies?",
+          "description": "A healthcare panel considers missing signals in personal health data, using women’s experiences to explore more individual approaches to predictive care.",
+          "startsAt": "2026-11-21T15:20:00+04:00",
+          "endsAt": "2026-11-21T15:50:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T15:50:00+04:00",
+          "dateLabel": "21 Nov 2026 · 3:20pm–3:50pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesaoe83000",
+          "title": "Dubai Future Week — Landscapes of the Future",
+          "description": "Daan Roosegaarde presents projects combining design, technology and public space, exploring how beauty and cleaner environments could shape more liveable cities.",
+          "startsAt": "2026-11-21T16:30:00+04:00",
+          "endsAt": "2026-11-21T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T17:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 4:30pm–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Big Stage, Museum of the Future, Auditorium. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. Auditorium event; the main museum exhibitions are being renewed, with reopening planned for Q1 2027. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        }
+      ]
     },
     {
       "id": "oath-cafe-jumeirah",
@@ -9801,6 +10561,1936 @@
         "businessStatus": null
       },
       "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai%20International%20Financial%20Centre&query_place_id=ChIJTSevApJCXz4Ry6uFtXbgsRo"
+    },
+    {
+      "id": "emirates-towers-dubai-future-week",
+      "name": "Emirates Towers — Dubai Future Week",
+      "aliases": [
+        "Dubai Future Week",
+        "Dubai FutureWeek",
+        "DFW",
+        "Emirates Towers",
+        "AREA 2071",
+        "The District",
+        "The Prototype Floor",
+        "STARS Experience",
+        "The Challenge Dome",
+        "Book Corner",
+        "Prompt House"
+      ],
+      "description": "Dubai Future Week’s Emirates Towers campus hosts public talks, design and research exhibitions, creative workshops, pop-ups and outdoor activities from 18–21 November 2026. Check each session’s room, floor and registration details.",
+      "sourceUrls": [
+        "https://www.dubaifutureweek.com/en",
+        "https://www.dubaifutureweek.com/en/whats-happening",
+        "https://mediaoffice.ae/en/news/2026/october/12-10/dubai-future-week"
+      ],
+      "locationHint": "Emirates Towers, 2 Sheikh Zayed Road, Trade Centre 2, Dubai, UAE",
+      "placeId": "ChIJy91k8pJCXz4R05SelPC02fY",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities"
+        ]
+      },
+      "events": [
+        {
+          "id": "dfw-2026-sesy4qhacj0",
+          "title": "Dubai Future Week — Lagree by Gigi",
+          "description": "A Lagree by Gigi activity in the outdoor Move area at Emirates Towers; check the organiser for class format and participation requirements.",
+          "startsAt": "2026-11-18T09:00:00+04:00",
+          "endsAt": "2026-11-18T19:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T19:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 9:00am–7:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Move, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses9t1qbq58",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (School Session 1)",
+          "description": "A school workshop about imagining Dubai’s future city, held in the outdoor Courtyard. Confirm school participation arrangements with the organiser.",
+          "startsAt": "2026-11-18T09:00:00+04:00",
+          "endsAt": "2026-11-18T11:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T11:30:00+04:00",
+          "dateLabel": "18 Nov 2026 · 9:00am–11:30am UAE time · School session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. School group session: confirm eligibility and participation arrangements with the organiser. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesyxllj55d",
+          "title": "Dubai Future Week — Research Encounters",
+          "description": "Explore 30 research papers presented as digital artworks, with conversational AI agents that answer questions and help visitors investigate the ideas behind each study.",
+          "startsAt": "2026-11-18T09:00:00+04:00",
+          "endsAt": "2026-11-18T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T21:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 9:00am–9:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "art-exhibitions",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "STARS Experience, Emirates Towers, Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesvjobwntv",
+          "title": "Dubai Future Week — Dubai Future Solutions - Prototypes For Humanity Exhibition",
+          "description": "Browse 100 innovations from universities and emerging inventors worldwide, gathered on the Prototype Floor to demonstrate approaches to real-world challenges.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T17:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "art-exhibitions",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "The Prototype Floor, Emirates Towers, Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses0g7fnxky",
+          "title": "Dubai Future Week — AI Grandmaster Challenge",
+          "description": "Watch 20 AI practitioners tackle live challenges involving tools, product thinking and delivery, competing for a championship title and AED 1 million. Public attendance does not imply competition entry.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T17:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesodg0z19p",
+          "title": "Dubai Future Week — The Future: A User's Guide",
+          "description": "Florence Gaub explores imagination, uncertainty and our ability to shape tomorrow in an author conversation and signing. The programme offers signed books to the first 30 participants.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T11:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T11:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–11:00am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "Book Corner, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses6qgmpaw8",
+          "title": "Dubai Future Week — Are You Well?",
+          "description": "Join a playful wellbeing check-in in the outdoor Courtyard, contributing to a shared picture of how visitors feel during the week.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T22:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses3ba6k49p",
+          "title": "Dubai Future Week — A Picture from 10,000 Prompts",
+          "description": "Turn a written prompt into a ten-second AI video, then contribute it to a growing collective mosaic of visitors’ visions of the future.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T16:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Prompt House, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sest67qvxxo",
+          "title": "Dubai Future Week — Byredo",
+          "description": "A Byredo pop-up in the outdoor District explores fragrance through the question of what tomorrow might smell like.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T22:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesr2tn7yol",
+          "title": "Dubai Future Week — Flick Cameras",
+          "description": "Capture moments around the festival on film with a disposable-camera pop-up in the District. Check the stand for camera availability and pricing.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T22:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesggjt3fpp",
+          "title": "Dubai Future Week — Karen Wazen",
+          "description": "A Karen Wazen photo-booth pop-up in the District offers a visual stop within the festival’s outdoor programme.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T22:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-seswu7c9i56",
+          "title": "Dubai Future Week — Weaving the Future Together",
+          "description": "Help complete a shared carpet in the Courtyard, adding to a collaborative work that connects traditional making techniques with visitors’ contributions.",
+          "startsAt": "2026-11-18T10:00:00+04:00",
+          "endsAt": "2026-11-18T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T22:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesi6dyn3tp",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (School Session 2)",
+          "description": "The second school workshop on imagining Dubai’s future city takes place in the outdoor Courtyard. Confirm school participation arrangements with the organiser.",
+          "startsAt": "2026-11-18T12:00:00+04:00",
+          "endsAt": "2026-11-18T14:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T14:30:00+04:00",
+          "dateLabel": "18 Nov 2026 · 12:00pm–2:30pm UAE time · School session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. School group session: confirm eligibility and participation arrangements with the organiser. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesacl8crei",
+          "title": "Dubai Future Week — Gaming for Good",
+          "description": "Jude Ower leads a lunchtime conversation about games as places for cooperation, creativity and community, exploring uses beyond entertainment alone.",
+          "startsAt": "2026-11-18T12:30:00+04:00",
+          "endsAt": "2026-11-18T13:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T13:30:00+04:00",
+          "dateLabel": "18 Nov 2026 · 12:30pm–1:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Work Room 02, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-seszritvcgf",
+          "title": "Dubai Future Week — Asking, Looking, Playing, Making",
+          "description": "Architect Michael Tonkin discusses a design book that connects storytelling, observation and experimentation with the process of creating buildings grounded in their surroundings.",
+          "startsAt": "2026-11-18T14:00:00+04:00",
+          "endsAt": "2026-11-18T15:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T15:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 2:00pm–3:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "Book Corner, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesacieczve",
+          "title": "Dubai Future Week — The Many Futures of AI Across Borders",
+          "description": "Hear perspectives from the UAE, Malaysia and Rwanda on how AI adoption, governance and local expertise could shape public services and economic opportunity.",
+          "startsAt": "2026-11-18T14:30:00+04:00",
+          "endsAt": "2026-11-18T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T16:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 2:30pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Work Room 02, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sessov7op4n",
+          "title": "Dubai Future Week — Meet The Futurists",
+          "description": "An informal meetup with professional futurists offers a chance to ask about foresight, exchange perspectives and meet people working with possible futures.",
+          "startsAt": "2026-11-18T15:00:00+04:00",
+          "endsAt": "2026-11-18T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T16:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 3:00pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Meetups, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesukc7y5s0",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (Public Session 1)",
+          "description": "The first public workshop on imagining Dubai’s future city is held in Work Room 01. Confirm the activity format and participation details with the organiser.",
+          "startsAt": "2026-11-18T16:00:00+04:00",
+          "endsAt": "2026-11-18T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T17:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 4:00pm–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 01, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesfwjczw4d",
+          "title": "Dubai Future Week — Claude As Your Co-Founder",
+          "description": "A practical founder workshop explores using Claude to work through business fundamentals, followed by an activity that puts participants’ ideas to the test.",
+          "startsAt": "2026-11-18T16:30:00+04:00",
+          "endsAt": "2026-11-18T18:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T18:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 4:30pm–6:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 02, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses1yuq0xui",
+          "title": "Dubai Future Week — Mini-Bot Battles",
+          "description": "Take control of a small battle robot, choose an attachment and compete against another visitor. The organiser welcomes newcomers and says no previous experience is needed.",
+          "startsAt": "2026-11-18T17:00:00+04:00",
+          "endsAt": "2026-11-18T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T22:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 5:00pm–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses0x495v5d",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (Public Session 2)",
+          "description": "The second public workshop on imagining Dubai’s future city takes place in Work Room 01. Check the programme for participation details.",
+          "startsAt": "2026-11-18T17:00:00+04:00",
+          "endsAt": "2026-11-18T18:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T18:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 5:00pm–6:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 01, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses0ef7480m",
+          "title": "Dubai Future Week — Run by Technogym",
+          "description": "Technogym’s running activity is listed in the outdoor Move area at Emirates Towers. Confirm the format, equipment and participation requirements with the organiser.",
+          "startsAt": "2026-11-18T17:30:00+04:00",
+          "endsAt": "2026-11-18T20:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T20:30:00+04:00",
+          "dateLabel": "18 Nov 2026 · 5:30pm–8:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Move, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-ses6xjwe3sb",
+          "title": "Dubai Future Week — Dubai Future Solutions - Prototypes For Humanity Exhibition",
+          "description": "Browse 100 innovations from universities and emerging inventors worldwide, gathered on the Prototype Floor to demonstrate approaches to real-world challenges.",
+          "startsAt": "2026-11-19T09:00:00+04:00",
+          "endsAt": "2026-11-19T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T17:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 9:00am–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "art-exhibitions",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "The Prototype Floor, Emirates Towers, Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesh1uv75cw",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (School Session 1)",
+          "description": "A school workshop about imagining Dubai’s future city, held in the outdoor Courtyard. Confirm school participation arrangements with the organiser.",
+          "startsAt": "2026-11-19T09:00:00+04:00",
+          "endsAt": "2026-11-19T11:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T11:30:00+04:00",
+          "dateLabel": "19 Nov 2026 · 9:00am–11:30am UAE time · School session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. School group session: confirm eligibility and participation arrangements with the organiser. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesejyome0a",
+          "title": "Dubai Future Week — Research Encounters",
+          "description": "Explore 30 research papers presented as digital artworks, with conversational AI agents that answer questions and help visitors investigate the ideas behind each study.",
+          "startsAt": "2026-11-19T09:00:00+04:00",
+          "endsAt": "2026-11-19T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T21:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 9:00am–9:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "art-exhibitions",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "STARS Experience, Emirates Towers, Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesqelvc52a",
+          "title": "Dubai Future Week — Micro by Reform Athletica",
+          "description": "Reform Athletica’s Micro programme is listed in the outdoor Move area at Emirates Towers. Check the organiser for activity format and participation details.",
+          "startsAt": "2026-11-19T09:30:00+04:00",
+          "endsAt": "2026-11-19T19:45:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T19:45:00+04:00",
+          "dateLabel": "19 Nov 2026 · 9:30am–7:45pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Move, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesjrb5w7yn",
+          "title": "Dubai Future Week — Rebrainding",
+          "description": "Laura Aymerich-Franch discusses her book on learned thinking patterns and changing mental habits, using a forest metaphor to explore the possibility of personal change.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T11:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T11:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–11:00am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "Book Corner, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesvtwpr36w",
+          "title": "Dubai Future Week — A Picture from 10,000 Prompts",
+          "description": "Turn a written prompt into a ten-second AI video, then contribute it to a growing collective mosaic of visitors’ visions of the future.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T16:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Prompt House, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses5pxw9piz",
+          "title": "Dubai Future Week — Are You Well?",
+          "description": "Join a playful wellbeing check-in in the outdoor Courtyard, contributing to a shared picture of how visitors feel during the week.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T22:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesssyv9j35",
+          "title": "Dubai Future Week — Keeta Drone Delivery",
+          "description": "See a Keeta drone-delivery activation in the Courtyard, presenting autonomous aircraft as a possible way to move goods with less direct contact.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T22:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses3q0f7nz1",
+          "title": "Dubai Future Week — Byredo",
+          "description": "A Byredo pop-up in the outdoor District explores fragrance through the question of what tomorrow might smell like.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T22:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses5zhny982",
+          "title": "Dubai Future Week — Flick Cameras",
+          "description": "Capture moments around the festival on film with a disposable-camera pop-up in the District. Check the stand for camera availability and pricing.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T22:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-seso7rkvy75",
+          "title": "Dubai Future Week — Karen Wazen",
+          "description": "A Karen Wazen photo-booth pop-up in the District offers a visual stop within the festival’s outdoor programme.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T22:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sescmml103l",
+          "title": "Dubai Future Week — Weaving the Future Together",
+          "description": "Help complete a shared carpet in the Courtyard, adding to a collaborative work that connects traditional making techniques with visitors’ contributions.",
+          "startsAt": "2026-11-19T10:00:00+04:00",
+          "endsAt": "2026-11-19T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T22:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses6xi7h13k",
+          "title": "Dubai Future Week — AI Grandmaster Award",
+          "description": "An awards session for the AI Grandmaster competition recognises the outcome of its live challenges, whose overall winner receives the title and AED 1 million.",
+          "startsAt": "2026-11-19T12:00:00+04:00",
+          "endsAt": "2026-11-19T12:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T12:30:00+04:00",
+          "dateLabel": "19 Nov 2026 · 12:00pm–12:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-seslyqpsmdw",
+          "title": "Dubai Future Week — Food That Heals: The Future on Our Plates",
+          "description": "Hadil Al Khatib and Omar Shihab discuss future diets, regenerative farming and food innovation in a lunchtime conversation connecting nourishment, sustainability and enjoyment.",
+          "startsAt": "2026-11-19T12:30:00+04:00",
+          "endsAt": "2026-11-19T13:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T13:30:00+04:00",
+          "dateLabel": "19 Nov 2026 · 12:30pm–1:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses0pge6sf3",
+          "title": "Dubai Future Week — Government Foresight Peers: In Practice",
+          "description": "An open session of short presentations showing how government teams use foresight in practical decisions; it follows a separate closed meeting.",
+          "startsAt": "2026-11-19T12:30:00+04:00",
+          "endsAt": "2026-11-19T13:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T13:30:00+04:00",
+          "dateLabel": "19 Nov 2026 · 12:30pm–1:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Dubai Future Auditorium, Emirates Towers, First Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-seshbqmzzpj",
+          "title": "Dubai Future Week — Women in AI Regional Forum: Launch of the Women in AI Arab States Initiative",
+          "description": "A panel and founder showcase launch a regional initiative supporting Arab women in AI careers, entrepreneurship and policy leadership.",
+          "startsAt": "2026-11-19T13:00:00+04:00",
+          "endsAt": "2026-11-19T15:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T15:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 1:00pm–3:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 02, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesmr981wug",
+          "title": "Dubai Future Week — Beyond Screens: A New Layer of Human Capability",
+          "description": "Explore how computing within our field of vision could change health monitoring, identity, work and everyday interaction without conventional screens.",
+          "startsAt": "2026-11-19T13:45:00+04:00",
+          "endsAt": "2026-11-19T14:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T14:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 1:45pm–2:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses1lbcdtm6",
+          "title": "Dubai Future Week — The Parliament of the Republic of Longevity",
+          "description": "Join a theatrical debate about longer lives, weigh competing visions for work, welfare and inequality, and vote on the arguments.",
+          "startsAt": "2026-11-19T14:00:00+04:00",
+          "endsAt": "2026-11-19T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T16:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 2:00pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesagm88bd6",
+          "title": "Dubai Future Week — Designing Tomorrow’s Dubai: People, Place & Intelligence",
+          "description": "WSP hosts three discussions on Dubai’s urban experience, mobility and AI-assisted planning, considering how future development could better serve residents.",
+          "startsAt": "2026-11-19T14:00:00+04:00",
+          "endsAt": "2026-11-19T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T17:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 2:00pm–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Dubai Future Auditorium, Emirates Towers, First Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses790fidhz",
+          "title": "Dubai Future Week — Reading Between the Lines",
+          "description": "Write a short sample and signature for Emma Bache’s handwriting interpretations, presented as an intimate exploration of personality and perception. Capacity is limited.",
+          "startsAt": "2026-11-19T14:30:00+04:00",
+          "endsAt": "2026-11-19T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T16:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 2:30pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "Book Corner, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses2oc7adq4",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (Public Session 1)",
+          "description": "The first public workshop on imagining Dubai’s future city is held in Work Room 01. Confirm the activity format and participation details with the organiser.",
+          "startsAt": "2026-11-19T16:00:00+04:00",
+          "endsAt": "2026-11-19T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T17:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 4:00pm–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 01, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesl7kfka0h",
+          "title": "Dubai Future Week — Claude As Your Co-Founder",
+          "description": "A practical founder workshop explores using Claude to work through business fundamentals, followed by an activity that puts participants’ ideas to the test.",
+          "startsAt": "2026-11-19T16:00:00+04:00",
+          "endsAt": "2026-11-19T17:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T17:30:00+04:00",
+          "dateLabel": "19 Nov 2026 · 4:00pm–5:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 02, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses5zi7eudn",
+          "title": "Dubai Future Week — Silent Jam by Longevity Rave",
+          "description": "An experience combining music, movement and ideas about human connection invites visitors to explore how shared activities might influence wellbeing.",
+          "startsAt": "2026-11-19T17:00:00+04:00",
+          "endsAt": "2026-11-19T19:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T19:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 5:00pm–7:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesvvfqz7jo",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (Public Session 2)",
+          "description": "The second public workshop on imagining Dubai’s future city takes place in Work Room 01. Check the programme for participation details.",
+          "startsAt": "2026-11-19T17:00:00+04:00",
+          "endsAt": "2026-11-19T18:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T18:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 5:00pm–6:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 01, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-sesc0yewb31",
+          "title": "Dubai Future Week — Dubai Future Solutions - Prototypes For Humanity Exhibition",
+          "description": "Browse 100 innovations from universities and emerging inventors worldwide, gathered on the Prototype Floor to demonstrate approaches to real-world challenges.",
+          "startsAt": "2026-11-20T09:00:00+04:00",
+          "endsAt": "2026-11-20T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T17:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 9:00am–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "art-exhibitions",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "The Prototype Floor, Emirates Towers, Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesmuhlokk8",
+          "title": "Dubai Future Week — Research Encounters",
+          "description": "Explore 30 research papers presented as digital artworks, with conversational AI agents that answer questions and help visitors investigate the ideas behind each study.",
+          "startsAt": "2026-11-20T09:00:00+04:00",
+          "endsAt": "2026-11-20T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T21:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 9:00am–9:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "art-exhibitions",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "STARS Experience, Emirates Towers, Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses469zfwob",
+          "title": "Dubai Future Week — Playing with Time",
+          "description": "Catarina Tully discusses her book on imagining possible futures, collaborative leadership and practical ways to create change in the present.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T11:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T11:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–11:00am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "Book Corner, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses0i63kkj5",
+          "title": "Dubai Future Week — The Philosopher’s Circle",
+          "description": "A participatory debate pits long-term thinking against attention to everyday life, inviting audience arguments about business, philosophy and human relationships.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T12:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T12:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–12:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesevu40pad",
+          "title": "Dubai Future Week — Building the Mindset for the Economy of Tomorrow",
+          "description": "Practise entrepreneurial thinking through an interactive workshop on adaptability, creativity and solving emerging problems across businesses and public-sector organisations.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T12:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T12:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–12:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 02, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesv8l644nl",
+          "title": "Dubai Future Week — A Picture from 10,000 Prompts",
+          "description": "Turn a written prompt into a ten-second AI video, then contribute it to a growing collective mosaic of visitors’ visions of the future.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T16:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Prompt House, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesmojjjycw",
+          "title": "Dubai Future Week — Are You Well?",
+          "description": "Join a playful wellbeing check-in in the outdoor Courtyard, contributing to a shared picture of how visitors feel during the week.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T22:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses6wznym3w",
+          "title": "Dubai Future Week — Byredo",
+          "description": "A Byredo pop-up in the outdoor District explores fragrance through the question of what tomorrow might smell like.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T22:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses1gzsdpj6",
+          "title": "Dubai Future Week — Flick Cameras",
+          "description": "Capture moments around the festival on film with a disposable-camera pop-up in the District. Check the stand for camera availability and pricing.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T22:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses2qp98o74",
+          "title": "Dubai Future Week — Karen Wazen",
+          "description": "A Karen Wazen photo-booth pop-up in the District offers a visual stop within the festival’s outdoor programme.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T22:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-seswwq73hx2",
+          "title": "Dubai Future Week — Weaving the Future Together",
+          "description": "Help complete a shared carpet in the Courtyard, adding to a collaborative work that connects traditional making techniques with visitors’ contributions.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T22:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-ses5qrshrry",
+          "title": "Dubai Future Week — The Future Generations Trial: What Future Did You Promise Us?",
+          "description": "A staged courtroom debate places today’s decisions before young advocates, leaders and an intergenerational jury to consider their consequences for future generations.",
+          "startsAt": "2026-11-20T14:00:00+04:00",
+          "endsAt": "2026-11-20T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T16:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 2:00pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesyu1bvqlj",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (Public Session 1)",
+          "description": "The first public workshop on imagining Dubai’s future city is held in Work Room 01. Confirm the activity format and participation details with the organiser.",
+          "startsAt": "2026-11-20T16:00:00+04:00",
+          "endsAt": "2026-11-20T17:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T17:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 4:00pm–5:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 01, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesmzpazdgl",
+          "title": "Dubai Future Week — If I Owned a City of the Future - Dubai Edition (Public Session 2)",
+          "description": "The second public workshop on imagining Dubai’s future city takes place in Work Room 01. Check the programme for participation details.",
+          "startsAt": "2026-11-20T17:00:00+04:00",
+          "endsAt": "2026-11-20T18:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T18:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 5:00pm–6:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 01, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesz1okvosh",
+          "title": "Dubai Future Week — Mini-Bot Battles",
+          "description": "Take control of a small battle robot, choose an attachment and compete against another visitor. The organiser welcomes newcomers and says no previous experience is needed.",
+          "startsAt": "2026-11-20T17:00:00+04:00",
+          "endsAt": "2026-11-20T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T22:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 5:00pm–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        },
+        {
+          "id": "dfw-2026-sesljv801rt",
+          "title": "Dubai Future Week — Shark Tank Dubai Finale",
+          "description": "Watch four selected startups pitch to Shark Tank Dubai investors, answer questions and seek investment for ventures addressing the city’s challenges.",
+          "startsAt": "2026-11-21T09:00:00+04:00",
+          "endsAt": "2026-11-21T11:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T11:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 9:00am–11:00am UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Pitch, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesg1r8jhgl",
+          "title": "Dubai Future Week — Emirates Robotics Competition - Round One",
+          "description": "Watch university teams compete to make autonomous robots identify and deliver library books, testing perception, navigation and grasping in the first round.",
+          "startsAt": "2026-11-21T09:00:00+04:00",
+          "endsAt": "2026-11-21T12:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T12:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 9:00am–12:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesmmvu5ce1",
+          "title": "Dubai Future Week — Research Encounters",
+          "description": "Explore 30 research papers presented as digital artworks, with conversational AI agents that answer questions and help visitors investigate the ideas behind each study.",
+          "startsAt": "2026-11-21T09:00:00+04:00",
+          "endsAt": "2026-11-21T21:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T21:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 9:00am–9:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "art-exhibitions",
+            "arts-culture-heritage"
+          ],
+          "visitNote": "STARS Experience, Emirates Towers, Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesyjfnpj2n",
+          "title": "Dubai Future Week — A Picture from 10,000 Prompts",
+          "description": "Turn a written prompt into a ten-second AI video, then contribute it to a growing collective mosaic of visitors’ visions of the future.",
+          "startsAt": "2026-11-21T10:00:00+04:00",
+          "endsAt": "2026-11-21T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T16:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 10:00am–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Prompt House, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesp5deate3",
+          "title": "Dubai Future Week — Are You Well?",
+          "description": "Join a playful wellbeing check-in in the outdoor Courtyard, contributing to a shared picture of how visitors feel during the week.",
+          "startsAt": "2026-11-21T10:00:00+04:00",
+          "endsAt": "2026-11-21T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T22:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses4xkx4rk5",
+          "title": "Dubai Future Week — Byredo",
+          "description": "A Byredo pop-up in the outdoor District explores fragrance through the question of what tomorrow might smell like.",
+          "startsAt": "2026-11-21T10:00:00+04:00",
+          "endsAt": "2026-11-21T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T22:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses8xzeq5bj",
+          "title": "Dubai Future Week — Flick Cameras",
+          "description": "Capture moments around the festival on film with a disposable-camera pop-up in the District. Check the stand for camera availability and pricing.",
+          "startsAt": "2026-11-21T10:00:00+04:00",
+          "endsAt": "2026-11-21T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T22:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-seswta8hjdl",
+          "title": "Dubai Future Week — Karen Wazen",
+          "description": "A Karen Wazen photo-booth pop-up in the District offers a visual stop within the festival’s outdoor programme.",
+          "startsAt": "2026-11-21T10:00:00+04:00",
+          "endsAt": "2026-11-21T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T22:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The District, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesi5vrb7x1",
+          "title": "Dubai Future Week — Weaving the Future Together",
+          "description": "Help complete a shared carpet in the Courtyard, adding to a collaborative work that connects traditional making techniques with visitors’ contributions.",
+          "startsAt": "2026-11-21T10:00:00+04:00",
+          "endsAt": "2026-11-21T22:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T22:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 10:00am–10:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "Courtyard, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sese4gcqgnp",
+          "title": "Dubai Future Week — Meet the Robot Generation",
+          "description": "A lunchtime panel explores practical robotics, the skills needed to work with it and how competitions help teams develop new applications.",
+          "startsAt": "2026-11-21T12:30:00+04:00",
+          "endsAt": "2026-11-21T13:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T13:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 12:30pm–1:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses6125qp5o",
+          "title": "Dubai Future Week — Africa 2525: Futures Beyond the Horizon",
+          "description": "Work in groups to imagine contrasting futures for Africa in 2525, then trace those scenarios back to possible actions today.",
+          "startsAt": "2026-11-21T13:00:00+04:00",
+          "endsAt": "2026-11-21T15:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T15:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 1:00pm–3:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Work Room 02, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesbweikn89",
+          "title": "Dubai Future Week — Acrobot: The Human-Robot Duet",
+          "description": "Daniel Simu performs alongside his robotic acrobat, combining dance, juggling and storytelling to explore collaboration between people and machines.",
+          "startsAt": "2026-11-21T13:00:00+04:00",
+          "endsAt": "2026-11-21T13:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T13:30:00+04:00",
+          "dateLabel": "21 Nov 2026 · 1:00pm–1:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "shows-immersive"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesepaclx1k",
+          "title": "Dubai Future Week — Emirates Robotics Competition - Round Two",
+          "description": "The second round follows university teams testing autonomous robots on library book identification and delivery, with navigation, grasping and perception under scrutiny.",
+          "startsAt": "2026-11-21T13:30:00+04:00",
+          "endsAt": "2026-11-21T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T16:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 1:30pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses5wkms0cw",
+          "title": "Dubai Future Week — Creators Special: Going from Solo to CEO",
+          "description": "Ahmad Aburob discusses turning solo content creation into a business, including when to build a team and the realities of professional creator work.",
+          "startsAt": "2026-11-21T14:00:00+04:00",
+          "endsAt": "2026-11-21T14:30:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T14:30:00+04:00",
+          "dateLabel": "21 Nov 2026 · 2:00pm–2:30pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Media & Creators Lounge, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses1jxnqwvl",
+          "title": "Dubai Future Week — Creator's Special: Content Without An Age Limit",
+          "description": "The Retirement House team discusses creating content with older performers, connecting generations and maintaining emotional authenticity as online trends change.",
+          "startsAt": "2026-11-21T14:45:00+04:00",
+          "endsAt": "2026-11-21T15:15:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T15:15:00+04:00",
+          "dateLabel": "21 Nov 2026 · 2:45pm–3:15pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Media & Creators Lounge, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-ses9ft5ztm9",
+          "title": "Dubai Future Week — Creator's Special: The Dead Ideas Club",
+          "description": "Creators and businesspeople discuss abandoned projects and failed ideas, sharing how setbacks influenced their later work and willingness to begin again.",
+          "startsAt": "2026-11-21T15:30:00+04:00",
+          "endsAt": "2026-11-21T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T16:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 3:30pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "Media & Creators Lounge, Emirates Towers, The Prototype Floor on the Ground Floor. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        },
+        {
+          "id": "dfw-2026-sesg7k2qfsj",
+          "title": "Dubai Future Week — Mini-Bot Battles",
+          "description": "Take control of a small battle robot, choose an attachment and compete against another visitor. The organiser welcomes newcomers and says no previous experience is needed.",
+          "startsAt": "2026-11-21T17:00:00+04:00",
+          "endsAt": "2026-11-21T20:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-21T20:00:00+04:00",
+          "dateLabel": "21 Nov 2026 · 5:00pm–8:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities"
+          ],
+          "visitNote": "The Challenge Dome, Emirates Towers, Outdoors in The District. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-21",
+            "endDateExclusive": "2026-11-22"
+          }
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "2 Sheikh Zayed Road, Trade Center Second, Dubai, United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2174377,
+        "lng": 55.2827632
+      },
+      "googleTypes": [],
+      "primaryGoogleType": null,
+      "resolution": {
+        "status": "resolved",
+        "source": "firecrawl-maps",
+        "matchedAt": "2026-11-06T18:57:32.866Z",
+        "osm": null,
+        "matchedName": "Emirates Towers",
+        "websiteUri": "https://www.dubaifutureweek.com/en",
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Emirates+Towers+Dubai&query_place_id=ChIJy91k8pJCXz4R05SelPC02fY"
+    },
+    {
+      "id": "office-of-the-future-dfw",
+      "name": "Office of the Future — The Learning Centre",
+      "aliases": [
+        "Dubai Future Week",
+        "Dubai FutureWeek",
+        "DFW",
+        "Office of the Future",
+        "3D Printed Office",
+        "Dubai Future Foundation",
+        "The Learning Centre"
+      ],
+      "description": "The 3D-printed Office of the Future near Emirates Towers hosts Dubai Future Week’s Learning Centre workshops on business innovation, design fiction and AI ethics. This building pin is separate from the festival’s main campus; confirm classroom access with the organiser.",
+      "sourceUrls": [
+        "https://www.dubaifutureweek.com/en/whats-happening",
+        "https://www.visitdubai.com/en/places-to-visit/the-office-of-the-future",
+        "https://www.dubaifuture.ae/initiatives/capacity-building/dubai-future-academy/contact-dubai-future-academy/"
+      ],
+      "locationHint": "Office of the Future, Dubai Future Foundation, 77 Sheikh Zayed Road, Trade Centre 2, Dubai, UAE",
+      "placeId": "ChIJ76hFh5JCXz4RqvlK9fWWjts",
+      "listingType": "event-venue",
+      "taxonomy": {
+        "primary": "events-activities",
+        "tags": [
+          "events-activities"
+        ]
+      },
+      "events": [
+        {
+          "id": "dfw-2026-sesjilw15xu",
+          "title": "Dubai Future Week — How Future Bets Become Business Reality",
+          "description": "Work through a business scenario using the Future Bet Canvas, interpreting emerging signals and turning uncertain possibilities into an initial innovation concept.",
+          "startsAt": "2026-11-18T14:00:00+04:00",
+          "endsAt": "2026-11-18T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-18T16:00:00+04:00",
+          "dateLabel": "18 Nov 2026 · 2:00pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Learning Centre, 3D Printed Office, Classroom. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-18",
+            "endDateExclusive": "2026-11-19"
+          }
+        },
+        {
+          "id": "dfw-2026-sesn4y9vllz",
+          "title": "Dubai Future Week — An Expedition into Possibility: A Design Fiction Workshop",
+          "description": "Create a fictional everyday object from a possible future, then discuss the assumptions and social changes it makes visible.",
+          "startsAt": "2026-11-19T14:00:00+04:00",
+          "endsAt": "2026-11-19T16:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-19T16:00:00+04:00",
+          "dateLabel": "19 Nov 2026 · 2:00pm–4:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Learning Centre, 3D Printed Office, Classroom. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-19",
+            "endDateExclusive": "2026-11-20"
+          }
+        },
+        {
+          "id": "dfw-2026-ses25f1skrt",
+          "title": "Dubai Future Week — Who Decides What AI Should Do?",
+          "description": "Work through an agentic AI scenario using the IEEE CertifAIEd framework to identify ethical risks and examine the reasoning behind decisions.",
+          "startsAt": "2026-11-20T10:00:00+04:00",
+          "endsAt": "2026-11-20T12:00:00+04:00",
+          "timezone": "Asia/Dubai",
+          "status": "scheduled",
+          "bookingUrl": "https://www.dubaifutureweek.com/en#register",
+          "sourceUrl": "https://www.dubaifutureweek.com/en/whats-happening",
+          "verifiedAt": "2026-11-06T18:57:32.866Z",
+          "verifiedUntil": "2026-11-20T12:00:00+04:00",
+          "dateLabel": "20 Nov 2026 · 10:00am–12:00pm UAE time · Public session",
+          "taxonomyTags": [
+            "events-activities",
+            "creative-workshop"
+          ],
+          "visitNote": "The Learning Centre, 3D Printed Office, Classroom. Register for Dubai Future Week via the festival website; check its official app for session booking and availability. The pin marks the building or campus; follow the organiser’s signs to the room or outdoor activity. Programme times may change.",
+          "calendar": {
+            "startDate": "2026-11-20",
+            "endDateExclusive": "2026-11-21"
+          }
+        }
+      ],
+      "sourceRows": [],
+      "emirate": "Dubai",
+      "address": "77 Sheikh Zayed Road, Trade Center Second, Dubai, United Arab Emirates",
+      "coordinates": {
+        "lat": 25.2165451,
+        "lng": 55.2813869
+      },
+      "googleTypes": [],
+      "primaryGoogleType": null,
+      "resolution": {
+        "status": "resolved",
+        "source": "firecrawl-maps",
+        "matchedAt": "2026-11-06T18:57:32.866Z",
+        "osm": null,
+        "matchedName": "Dubai Future Foundation",
+        "websiteUri": "https://www.dubaifuture.ae/",
+        "businessStatus": null
+      },
+      "googleMapsSearchUri": "https://www.google.com/maps/search/?api=1&query=Dubai+Future+Foundation+Dubai&query_place_id=ChIJ76hFh5JCXz4RqvlK9fWWjts"
     }
   ]
 }
