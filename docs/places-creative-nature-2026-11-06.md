@@ -33,7 +33,7 @@ All nine new points were matched through Firecrawl Maps on 6 November 2026. Thei
 | `le-piaf-dubai` | 25.2179644, 55.2818976 | `ChIJM2AB2UtDXz4RFLYY2MZK6Cg` |
 | `vntg-wine-cheese-bar-dubai` | 25.1855372, 55.2578681 | `ChIJ7XIOJxppXz4RK0Bi4JHRkuo` |
 | `silver-soul-al-quoz` | 25.1165788, 55.2402444 | `ChIJDaXGaHxpXz4RRArcA357CAs` |
-| `pots-and-paints-cafe` | 25.2150762, 55.2509837 | `ChIJXx1OfY1DXz4RsIyG9pMOk40` |
+| `pots-paints-cafe` | 25.2150762, 55.2509837 | `ChIJXx1OfY1DXz4RsIyG9pMOk40` |
 | `tufting-time-jumeirah` | 25.2150515, 55.2516685 | `ChIJ2d_IbwBDXz4RPkLZrY8-fus` |
 | `tufting-time-dubai-festival-city` | 25.2224445, 55.3555006 | `ChIJKQW3u1RdXz4RfHNHinPzhl4` |
 | `resin-art-world-barsha-heights` | 25.098493, 55.1762018 | `ChIJ7ZLhG8ppXz4RRuFYI227XSo` |
