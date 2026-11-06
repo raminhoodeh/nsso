@@ -148,7 +148,7 @@ function matchesPlaceSubcategory(place: DubaiPlace, subcategoryId: string) {
     case "parks":
       return hasType(place, /^(?:park|national_park|nature_preserve|garden|botanical_garden|wildlife_park|zoo|farm)$/)
         || (place.taxonomy.primary === "nature-wildlife"
-          && named(place, /\b(?:oasis|wetland|mangrove|gardens?|nature reserve)\b/));
+          && named(place, /\b(?:parks?|oasis|wetland|mangrove|gardens?|nature reserve)\b/));
     case "water":
       return place.taxonomy.primary === "beach-water"
         || hasType(place, /^(?:beach|island|water_park|marina)$/)
