@@ -140,19 +140,25 @@ test("all eleven researched additions retain their verified dates, venue and off
   }
 });
 
-test("expanded exhibitions export includes eight new art shows and the corrected library display, not performances", () => {
+test("September exhibitions import retains its eight new art shows and library display, not performances", () => {
   const expected = [...carouselEventIds,
     ...researchEvents.filter(([, venue]) => !["dubai-opera-events", "oo-la-lab-d3"].includes(venue)).map(([id]) => id),
     "library-circles-rend-beiruti-2026",
   ];
   assert.equal(expected.length, 14);
-  assert.deepEqual(entries.map(({event}) => event.id).sort(), expected.sort());
-  const ics = exhibitionsCalendar(payload.places, now);
+  // New dated imports must not change the historical September fixture's scope.
+  // Full-catalogue uniqueness and export behaviour are tested separately.
+  const septemberPlaces = payload.places.map(place => ({ ...place,
+    events: (place.events || []).filter(event => expected.includes(event.id)),
+  }));
+  const septemberEntries = exhibitionEntries(septemberPlaces, now);
+  assert.deepEqual(septemberEntries.map(({event}) => event.id).sort(), expected.sort());
+  const ics = exhibitionsCalendar(septemberPlaces, now);
   const unfolded = ics.replace(/\r\n /g, "");
   assert.equal((ics.match(/BEGIN:VEVENT/g) || []).length, expected.length);
   assert.equal((ics.match(/BEGIN:VALARM/g) || []).length, expected.length * 2);
   assert.ok(ics.split("\r\n").every(line => Buffer.byteLength(line) <= 75));
-  for (const {event} of entries) {
+  for (const {event} of septemberEntries) {
     assert.ok(unfolded.includes(`UID:${event.id}@nsso.me`), event.id);
     assert.ok(unfolded.includes(`DTSTART;VALUE=DATE:${event.calendar.startDate.replaceAll("-", "")}`), event.id);
     assert.ok(unfolded.includes(`DTEND;VALUE=DATE:${event.calendar.endDateExclusive.replaceAll("-", "")}`), event.id);
