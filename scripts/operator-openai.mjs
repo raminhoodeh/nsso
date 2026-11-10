@@ -75,8 +75,11 @@ async function settle(requestId, usage, kind, maximum) {
   const output = kind === 'embedding' ? 0 : usage?.output_tokens;
   if (![input, output].every(value => Number.isSafeInteger(value) && value >= 0)) throw new OperatorError('operator_usage_unknown_maximum_retained');
   const actual = Math.ceil(input * (kind === 'embedding' ? EMBEDDING_MICROS : INPUT_MICROS) + output * OUTPUT_MICROS);
-  if (actual > maximum) throw new OperatorError('operator_usage_overrun_review_required');
   await rpc('finish_nsso_chat_budget', { p_request_id: requestId, p_micros: actual, p_confirmed: true });
+  if (actual > maximum) {
+    await rpc('hold_nsso_ai_budget', { p_code: 'usage_bound_exceeded' });
+    throw new OperatorError('operator_usage_overrun_review_required');
+  }
   return actual;
 }
 export async function paidRequest({ kind, body, operationHashes, checkpoint, validate }) {
@@ -100,14 +103,21 @@ export async function paidRequest({ kind, body, operationHashes, checkpoint, val
   try {
     response = await fetch(`https://api.openai.com/v1/${kind === 'embedding' ? 'embeddings' : 'responses'}`, { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' }, body: encoded, redirect: 'error', signal: AbortSignal.timeout(45_000) });
   } catch { throw new OperatorError('operator_unknown_outcome_maximum_retained'); }
-  if (!response.ok) { await response.body?.cancel(); throw new OperatorError([401, 402, 403].includes(response.status) ? 'operator_account_review_required' : response.status === 429 ? 'operator_rate_limited_no_retry' : 'operator_provider_failed_no_retry'); }
+  if (!response.ok) {
+    await response.body?.cancel();
+    if ([401, 402, 403].includes(response.status)) {
+      await rpc('hold_nsso_ai_budget', { p_code: 'provider_access_requires_review' });
+      throw new OperatorError('operator_account_review_required');
+    }
+    throw new OperatorError(response.status === 429 ? 'operator_rate_limited_no_retry' : 'operator_provider_failed_no_retry');
+  }
   let reply;
   try { reply = await response.json(); } catch { throw new OperatorError('operator_unknown_reply_maximum_retained'); }
   const input = kind === 'embedding' ? reply.usage?.prompt_tokens : reply.usage?.input_tokens;
   const output = kind === 'embedding' ? 0 : reply.usage?.output_tokens;
   if (![input, output].every(value => Number.isSafeInteger(value) && value >= 0)) throw new OperatorError('operator_usage_unknown_maximum_retained');
   const actualMicros = Math.ceil(input * (kind === 'embedding' ? EMBEDDING_MICROS : INPUT_MICROS) + output * OUTPUT_MICROS);
-  if (actualMicros > maximum) throw new OperatorError('operator_usage_overrun_review_required');
+  if (actualMicros > maximum) await settle(requestId, reply.usage, kind, maximum);
   let validated;
   try { validated = validate(reply); } catch (error) {
     await settle(requestId, reply.usage, kind, maximum);

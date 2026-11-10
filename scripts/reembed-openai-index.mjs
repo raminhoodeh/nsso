@@ -6,7 +6,7 @@ import { applyMode, embeddings, numericOption, readCheckpoints, reportFailure, r
 export async function commitReceipt(receipt) {
   await settleCheckpoint(receipt);
   const result = await rpc('commit_nsso_openai_index_batch', { p_rows: receipt.rows.map(({ id, content_hash, embedding }) => ({ id, content_hash, embedding })) });
-  if (!Number.isSafeInteger(result?.committed) || result.committed < 0 || result.committed > receipt.rows.length) throw new OperatorError('operator_index_commit_unconfirmed');
+  if (!Number.isSafeInteger(result?.committed) || result.committed !== receipt.rows.length) throw new OperatorError('operator_index_commit_unconfirmed');
   await saveCheckpoint(receipt.requestId, { requestId: receipt.requestId, kind: 'index', state: 'committed', submitted: receipt.rows.length, committed: result.committed });
   return result.committed;
 }
