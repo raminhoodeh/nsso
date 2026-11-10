@@ -10,6 +10,8 @@ export class ChatAllowanceError extends Error {
       ? "You've reached today's complimentary AI allowance for this internet connection. It resets at midnight Dubai time."
       : code === "daily_shared_allowance_exhausted"
         ? "Today's shared AI allowance has been reached. Please come back after midnight Dubai time or request more access."
+        : code === "monthly_allowance_exhausted"
+          ? "This month’s shared AI allowance has been reached. Please return next month or request more access."
         : code === "chat_prompt_too_large" || code === "invalid_chat_request"
           ? "That message or conversation is too long or could not be read. Please start a shorter chat."
         : code === "chat_origin_denied"
@@ -28,7 +30,7 @@ export class ChatAllowanceError extends Error {
 }
 
 export function isDailyAllowanceCode(code: unknown): boolean {
-  return code === "daily_ip_allowance_exhausted" || code === "daily_shared_allowance_exhausted";
+  return code === "monthly_allowance_exhausted" || code === "daily_ip_allowance_exhausted" || code === "daily_shared_allowance_exhausted";
 }
 
 export function allowanceResponse(error: ChatAllowanceError): Response {

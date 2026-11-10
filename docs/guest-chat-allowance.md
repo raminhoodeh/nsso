@@ -7,7 +7,7 @@ does not bypass it. Shared networks/VPNs share an allowance. IP rotation cannot 
 fully prevented; a USD 3.00 site-wide daily backstop bounds distributed abuse.
 
 The allowance resets at midnight Asia/Dubai. It meters conservative estimated
-Gemini API usage, not an invoice, taxes, exchange rates, other Google services or
+OpenAI API usage, not an invoice, taxes, exchange rates, other Google services or
 other applications sharing the billing project. Reservations include the maximum
 completion cost and are adjusted only when provider usage is confirmed. Unknown
 usage and provider errors retain their reservation until reset. A near-limit
@@ -19,7 +19,7 @@ request may be declined if its maximum possible completion would exceed the cap.
   tables. Anonymous and authenticated database clients have no privileges.
 - SECURITY INVOKER RPCs serialize reservations and settlements under one
   transaction-level advisory lock. Reservations and settlement are idempotent.
-- Each generation uses Gemini 2.5 Flash, bounded output, thinking disabled and a
+- Each generation uses GPT-6 Luna, bounded output, reasoning disabled and a
   bounded provider timeout. The main chat retries at most once for an explicit
   HTTP 503 before any response stream exists, only with enough deadline remaining.
   The first reservation is retained and a separate second reservation must pass
@@ -33,11 +33,10 @@ request may be declined if its maximum possible completion would exceed the cap.
   stores no raw IPs, prompts, profile data or API keys. Technical records expire
   after 30 days. Do not rotate this secret during a day without accounting for
   the resulting new IP identities.
-- The server prices text input at USD 0.30/M tokens and output including thinking
-  at USD 2.50/M tokens. Embeddings use a conservative UTF-8 byte upper bound at
-  the text-input rate. Cached input is not discounted in allowance accounting.
-  Review these assumptions before changing models or enabling paid grounding.
-  Source: https://ai.google.dev/gemini-api/docs/pricing#gemini-2.5-flash
+- A shared US$5 UTC calendar-month ceiling covers chat, Places, editorial work and operator indexing. It supplements the existing IP/day and site/day limits and uses the same locked durable reservations across production, preview and development. Unknown charges remain retained across month boundaries.
+- Input reservations conservatively use US$0.25/M tokens (covering published cache-write rates), output US$0.50/M and embeddings US$0.02/M with UTF-8 byte token ceilings. No hosted paid tools are enabled. Exact model and prices are pinned in code; review before changing them.
+- Provider access failures and credible usage exceeding the reservation hold the service for explicit operator review. User sign-in failures never create a provider hold. Disabled/unconfigured AI acquires no paid reservation.
+- Source: https://developers.openai.com/api/docs/pricing
 
 ## Visitor Experience
 
@@ -50,7 +49,7 @@ Optional RazinFlix enrichment instead falls back to verified TMDB metadata.
 
 ## Operations
 
-Production requires `GOOGLE_GENERATIVE_AI_API_KEY` (NSSO's dedicated server key),
+Production requires `OPENAI_API_KEY` (nsso's dedicated server key), `NSSO_AI_ENABLED=true`,
 `NSSO_CHAT_IP_HASH_SECRET` (at least 32 characters, generated randomly),
 `NEXT_PUBLIC_SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`.
 Never expose either private key as a `NEXT_PUBLIC_` variable. Apply the checked-in
@@ -63,7 +62,4 @@ assertions for caps/reset/idempotency/privileges, and concurrent service-role RP
 claims. New tables intentionally have no client policies: that is a deny-all
 design, not a missing public read policy.
 
-Unrelated existing Supabase findings (including disabled RLS on
-`razinflix_films` and public SECURITY DEFINER functions) are not repaired by this
-allowance feature. They require a separate policy/access review. This release
-does not revoke old Google keys or complete Dreamsea's backend migration.
+Apply both OpenAI accounting/index migrations before release. Use the separate versioned 1,536-dimensional index; never compare or write OpenAI vectors in the original 768-dimensional index. See `openai-migration.md` and `../scripts/OPENAI_OPERATIONS.md` for cutover/recovery. Key retirement is separately recorded in the private migration ledger; source checks alone are not proof of provider revocation.

@@ -227,11 +227,11 @@ test("provider failures return an honest safe error without leaking provider cre
   assert.equal(body.includes("private-user-content"), false);
 });
 
-test("Places provider reuses the existing server Gemini key and stays separate from account mutations", async () => {
+test("Places provider uses the budgeted server OpenAI transport and stays separate from account mutations", async () => {
   const provider = await readFile(new URL("../src/lib/deity/places-provider.ts", import.meta.url), "utf8");
   const route = await readFile(new URL("../src/app/api/deity/places/route.ts", import.meta.url), "utf8");
-  assert.match(provider, /GOOGLE_GENERATIVE_AI_API_KEY/);
+  assert.match(provider, /generateOpenAI/);
   assert.match(provider, /Math\.min\(25_000/);
-  assert.match(provider, /responseMimeType: "application\/json"/);
+  assert.match(provider, /schema: responseSchema/);
   assert.doesNotMatch(provider + route, /SUPABASE_SERVICE|NEXT_PUBLIC.*KEY|get_agent_context|UPDATE_PROFILE|DEITY_TOOLS/);
 });

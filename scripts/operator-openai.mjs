@@ -14,7 +14,7 @@ const OUTPUT_MICROS = 0.60;
 const EMBEDDING_MICROS = 0.02;
 const OPERATOR_HASH = createHash('sha256').update('nsso-reviewed-operator-ingestion-v1').digest('hex');
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
-export class OperatorError extends Error { constructor(code) { super(code); this.code = code; } }
+export class OperatorError extends Error { constructor(code, { retryable = false } = {}) { super(code); this.code = code; this.retryable = retryable; } }
 function canonical(value) { if (Array.isArray(value)) return value.map(canonical); if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])); return value; }
 export function fingerprint(value) { return createHash('sha256').update(typeof value === 'string' ? value : JSON.stringify(canonical(value))).digest('hex'); }
 export function applyMode(argv = process.argv.slice(2)) { return argv.includes('--apply'); }
@@ -31,18 +31,59 @@ function databaseConfig() {
   if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(url) || !key) throw new OperatorError('operator_database_not_configured');
   return { url, key };
 }
-export async function database(route, { method = 'GET', body, headers = {} } = {}) {
-  const { url, key } = databaseConfig();
-  let response;
-  try {
-    response = await fetch(`${url}/rest/v1/${route}`, { method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...headers }, ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: 'error', signal: AbortSignal.timeout(15_000) });
-  } catch { throw new OperatorError('operator_database_unavailable'); }
-  if (!response.ok) { await response.body?.cancel(); throw new OperatorError('operator_database_request_rejected'); }
-  const text = await response.text();
-  if (!text) return null;
-  try { return JSON.parse(text); } catch { throw new OperatorError('operator_database_invalid_reply'); }
+function databaseTiming(value) {
+  if (process.env.NSSO_OPENAI_DB_TIMINGS === 'true' || process.argv.includes('--db-timings')) console.error(JSON.stringify({ kind: 'openai-operator-database-timing', ...value }));
 }
-export function rpc(name, values) { return database(`rpc/${name}`, { method: 'POST', body: values }); }
+const DATABASE_RPC_POLICIES = Object.freeze({
+  // These exact SQL functions are safe to repeat after an ambiguous HTTP result:
+  // read-only selection, same-receipt settlement, or same hash-checked vector upsert.
+  nsso_openai_index_batch: { timeoutMs: 30_000, attempts: 3 },
+  finish_nsso_chat_budget: { timeoutMs: 60_000, attempts: 3 },
+  commit_nsso_openai_index_batch: { timeoutMs: 120_000, attempts: 3 },
+});
+export async function database(route, { method = 'GET', body, headers = {}, timeoutMs = 15_000, attempt = 1 } = {}) {
+  const { url, key } = databaseConfig();
+  const started = performance.now();
+  const encoded = body === undefined ? undefined : JSON.stringify(body);
+  // Route query parameters may contain authored text. Only a code-owned table or
+  // RPC identifier is diagnostic; never log a URL, request body, response or key.
+  const identifier = route.replace(/^rpc\//, '').split('?')[0];
+  const operation = /^[a-z0-9_]+$/.test(identifier) ? identifier : 'database';
+  const metadata = { operation, attempt, timeoutMs, requestBytes: encoded === undefined ? 0 : Buffer.byteLength(encoded), headersMs: null, responseBytes: null, httpStatus: null };
+  try {
+    const response = await fetch(`${url}/rest/v1/${route}`, { method, headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...headers }, ...(encoded === undefined ? {} : { body: encoded }), redirect: 'error', signal: AbortSignal.timeout(timeoutMs) });
+    metadata.headersMs = Math.round(performance.now() - started);
+    metadata.httpStatus = response.status;
+    const text = await response.text();
+    metadata.responseBytes = Buffer.byteLength(text);
+    if (!response.ok) {
+      let code;
+      try { code = JSON.parse(text)?.code; } catch { /* Error bodies stay private. */ }
+      if (typeof code === 'string' && /^[A-Z0-9]{5,12}$/.test(code)) metadata.databaseCode = code;
+      throw new OperatorError('operator_database_request_rejected', { retryable: [408, 429, 500, 502, 503, 504].includes(response.status) || ['57014', '40001', '40P01', 'PGRST000', 'PGRST001', 'PGRST002', 'PGRST003'].includes(code) });
+    }
+    let value = null;
+    try { if (text) value = JSON.parse(text); } catch { throw new OperatorError('operator_database_invalid_reply'); }
+    databaseTiming({ ...metadata, elapsedMs: Math.round(performance.now() - started), outcome: 'ok' });
+    return value;
+  } catch (error) {
+    const failure = error instanceof OperatorError ? error : new OperatorError('operator_database_unavailable', { retryable: true });
+    databaseTiming({ ...metadata, elapsedMs: Math.round(performance.now() - started), outcome: failure.code, errorClass: error instanceof OperatorError ? 'OperatorError' : /^[A-Za-z]+$/.test(error?.name || '') ? error.name : 'TransportError' });
+    throw failure;
+  }
+}
+export async function rpc(name, values) {
+  const policy = Object.hasOwn(DATABASE_RPC_POLICIES, name) ? DATABASE_RPC_POLICIES[name] : { timeoutMs: 15_000, attempts: 1 };
+  for (let attempt = 1; attempt <= policy.attempts; attempt++) {
+    try { return await database(`rpc/${name}`, { method: 'POST', body: values, timeoutMs: policy.timeoutMs, attempt }); }
+    catch (error) {
+      if (!error.retryable || attempt === policy.attempts) throw error;
+      const delayMs = attempt * 2_000;
+      databaseTiming({ operation: name, attempt, outcome: 'idempotent_retry_scheduled', delayMs });
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+}
 function checkpointDirectory() { return path.resolve(process.env.NSSO_OPENAI_CHECKPOINT_DIR || path.join(os.homedir(), '.config/nsso/openai-operator-v1')); }
 export async function saveCheckpoint(id, value) {
   if (!UUID.test(id)) throw new OperatorError('invalid_checkpoint_id');

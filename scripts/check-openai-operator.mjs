@@ -13,8 +13,8 @@ const checkpointRoot = await mkdtemp(path.join(tmpdir(), 'nsso-openai-operator-p
 Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: 'https://fixture.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'fixture-only', OPENAI_API_KEY: 'fixture-only', NSSO_AI_ENABLED: 'true', NSSO_OPENAI_OPERATOR_ENABLED: 'true', NSSO_OPENAI_CHECKPOINT_DIR: checkpointRoot });
 delete process.env.OPENAI_BASE_URL;
 const source = { id: '11111111-1111-1111-1111-111111111111', content: 'Synthetic source text for migration proof.', metadata: {}, content_hash: 'a'.repeat(32) };
-let events, claims, mode, indexed, providerCalls, sourceWrites, currentFilms, held, lastCharge, maximum;
-function reset(nextMode = 'success') { events = []; claims = new Set(); mode = nextMode; indexed = false; providerCalls = 0; sourceWrites = 0; currentFilms = []; held = false; lastCharge = 0; maximum = 0; }
+let events, claims, mode, indexed, providerCalls, sourceWrites, currentFilms, held, lastCharge, maximum, commitCalls;
+function reset(nextMode = 'success') { events = []; claims = new Set(); mode = nextMode; indexed = false; providerCalls = 0; sourceWrites = 0; currentFilms = []; held = false; lastCharge = 0; maximum = 0; commitCalls = 0; }
 function reply(value, status = 200) { return new Response(value === null ? null : JSON.stringify(value), { status }); }
 globalThis.fetch = async (url, options = {}) => {
   const route = String(url), body = options.body ? JSON.parse(options.body) : null;
@@ -32,12 +32,15 @@ globalThis.fetch = async (url, options = {}) => {
     if (action === 'finish_nsso_chat_budget') { assert(Number.isSafeInteger(body.p_micros) && body.p_confirmed); lastCharge = body.p_micros; return reply(null); }
     if (action === 'nsso_openai_index_batch') return reply(indexed ? [] : [source]);
     if (action === 'commit_nsso_openai_index_batch') {
+      commitCalls++;
       if (mode === 'commit_down') return reply({}, 503);
       if (mode === 'commit_zero') return reply({ committed: 0 });
       if (mode === 'commit_partial') return reply({ committed: 1 });
       assert.equal(body.p_rows[0].content_hash, source.content_hash);
       assert.equal(body.p_rows[0].embedding.length, 1536);
-      indexed = true; return reply({ committed: 1 });
+      indexed = true;
+      if (mode === 'commit_reply_lost' && commitCalls === 1) throw new DOMException('private database response lost after commit', 'TimeoutError');
+      return reply({ committed: 1 });
     }
     if (route.includes('razinflix_films?') && (!options.method || options.method === 'GET')) return reply(currentFilms);
     if (route.includes('razinflix_films?') && options.method === 'PATCH') { sourceWrites++; return reply([{ id: 'film-fixture' }]); }
@@ -90,6 +93,8 @@ try {
   // Validated vectors survive database failure and resume without a paid replay.
   reset('commit_down'); await assert.rejects(backfill({ apply: true, maxBatches: 1 })); assert.equal(providerCalls, 1);
   mode = 'success'; const resumed = await backfill({ apply: true, maxBatches: 1 }); assert.equal(providerCalls, 1); assert.equal(resumed.rows, 1); checks++;
+  reset('commit_reply_lost'); const recovered = await backfill({ apply: true, maxBatches: 1 });
+  assert.equal(recovered.rows, 1); assert.equal(providerCalls, 1); assert.equal(commitCalls, 2); checks++;
   for (const acknowledgement of ['commit_zero', 'commit_partial']) {
     reset(acknowledgement);
     const second = { ...source, id: '33333333-3333-3333-3333-333333333333' };

@@ -7,7 +7,7 @@ const hooks = registerHooks({ resolve(specifier, context, next) {
     const mocks = {
         '@/lib/server/runtime-route': 'export const withRuntimeGuard = handler => handler;',
         'next/server': 'export const NextResponse={json:(...args)=>Response.json(...args)};',
-        '@google/generative-ai': 'export class GoogleGenerativeAI {}',
+        '@/lib/deity/openai-provider': 'export const generateOpenAI=()=>{throw Error("Unexpected editorial call")};export const responseInputBound=()=>1;',
         '@/lib/deity/chat-budget-server': 'export const CHAT_MODEL="fixture"; export const openChatBudget=()=>{throw Error("Unexpected editorial call")};',
         '@/lib/server/permissions': `
             export const requirePermission=async()=>{};
@@ -32,8 +32,8 @@ const { POST } = await import('../src/app/api/razinflix/add/route.ts');
 hooks.deregister();
 
 test('an interrupted film lookup cannot start a database mutation after cancellation', async () => {
-    const previousKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const previousKey = process.env.OPENAI_API_KEY;
+    delete process.env.OPENAI_API_KEY;
     globalThis.__cancelledFilmWrites = [];
     try {
         const controller = new AbortController();
@@ -48,8 +48,8 @@ test('an interrupted film lookup cannot start a database mutation after cancella
         assert.equal(liveResponse.status, 200);
         assert.equal(globalThis.__cancelledFilmWrites.length, 1);
     } finally {
-        if (previousKey === undefined) delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-        else process.env.GOOGLE_GENERATIVE_AI_API_KEY = previousKey;
+        if (previousKey === undefined) delete process.env.OPENAI_API_KEY;
+        else process.env.OPENAI_API_KEY = previousKey;
         delete globalThis.__cancelledFilmWrites;
     }
 });

@@ -1,8 +1,8 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI, type Content } from '@google/generative-ai';
+import { embedOpenAI, streamOpenAI, responseInputBound } from '@/lib/deity/openai-provider';
 import { ChatAllowanceError, allowanceResponse } from '@/lib/deity/chat-allowance';
-import { openChatBudget, CHAT_MODEL, CHAT_OUTPUT_TOKENS, type ChatBudget } from '@/lib/deity/chat-budget-server';
+import { openChatBudget, CHAT_OUTPUT_TOKENS, type ChatBudget } from '@/lib/deity/chat-budget-server';
 import { readChatRequest } from '@/lib/deity/chat-request';
 import { isNssoProductQuestion } from '@/lib/deity/product-context';
 import { chatFailureDetails, type ChatPhase } from '@/lib/deity/chat-diagnostics';
@@ -110,8 +110,6 @@ async function handlePOST(req: Request) {
                 }
             } },
         });
-        const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
-        const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
 
         // Optimization: Fast-track system follow-ups (Skip Search)
         const isSystemFollowUp = message.startsWith('[SYSTEM:');
@@ -278,8 +276,7 @@ async function handlePOST(req: Request) {
             // 1. Generate embedding for user query
             phase = 'query_embedding';
             budget.addEmbedding(message);
-            const embeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: message }] }, outputDimensionality: 768 } as any, { timeout: 10_000, signal: providerSignal(10_000) });
-            const embedding = embeddingResult.embedding.values;
+            const embedding = await embedOpenAI(message, providerSignal(10_000));
 
             // 1b. Generate embedding for user profile (for re-ranking)
             let profileEmbedding = null;
@@ -288,16 +285,17 @@ async function handlePOST(req: Request) {
                     phase = 'profile_embedding';
                     const contextForEmbedding = userContext.substring(0, 1000);
                     budget.addEmbedding(contextForEmbedding);
-                    const profileEmbeddingResult = await embeddingModel.embedContent({ content: { parts: [{ text: contextForEmbedding }] }, outputDimensionality: 768 } as any, { timeout: 10_000, signal: providerSignal(10_000) });
-                    profileEmbedding = profileEmbeddingResult.embedding.values;
+                    profileEmbedding = await embedOpenAI(contextForEmbedding, providerSignal(10_000));
                 } catch (err) {
+                    if (err && typeof err === 'object' && 'provider' in err && err.provider === 'openai'
+                        && 'status' in err && [401, 402, 403].includes(err.status as number)) throw err;
                     console.error('Deity optional profile embedding unavailable', chatFailureDetails(err, 'profile_embedding', requestId));
                 }
             }
 
             // Primary Search
             phase = 'retrieval';
-            const { data: primaryResults, error: primaryError } = await supabase.rpc('intelligent_search', {
+            const { data: primaryResults, error: primaryError } = await supabase.rpc('intelligent_search_openai_v1', {
                 query_embedding: embedding,
                 query_text: message,
                 profile_embedding: profileEmbedding,
@@ -318,7 +316,7 @@ async function handlePOST(req: Request) {
 
             if (detectedCategory && filterFiles && topScore < SOFT_FILTER_THRESHOLD) {
                 console.log(`⚠️ Soft-Filter Triggered. Switching to Global Search.`);
-                const { data: globalResults, error: globalError } = await supabase.rpc('intelligent_search', {
+                const { data: globalResults, error: globalError } = await supabase.rpc('intelligent_search_openai_v1', {
                     query_embedding: embedding,
                     query_text: message,
                     profile_embedding: profileEmbedding,
@@ -369,48 +367,21 @@ async function handlePOST(req: Request) {
 
         // 4. Initialize Model with System Instruction AND Tools
         // Disable tools entirely for Guest Users to prevent any hallucinated profile updates, and save tokens!
-        const modelOptions: any = {
-            model: CHAT_MODEL,
-            systemInstruction: systemPrompt,
-            generationConfig: { maxOutputTokens: CHAT_OUTPUT_TOKENS, thinkingConfig: { thinkingBudget: 0 } },
-        };
-        
-        if (!disableTools && userId) {
-            modelOptions.tools = [{ functionDeclarations: DEITY_TOOLS }];
-        }
-
-        const model = genAI.getGenerativeModel(modelOptions);
-
-        // 5. Build Content History
-        const chatContents: Content[] = [];
-        if (history && Array.isArray(history)) {
-            history.forEach((msg: any) => {
-                if (msg.role && msg.content) {
-                    chatContents.push({
-                        role: msg.role === 'model' ? 'model' : 'user',
-                        parts: [{ text: msg.content }]
-                    });
-                }
-            });
-        }
-
-        // Add current message
-        chatContents.push({
-            role: 'user',
-            parts: [{ text: message }]
-        });
+        const chatContents: Array<{ role: 'user' | 'assistant'; content: string }> = (history || []).map(msg => ({ role: msg.role === 'model' ? 'assistant' : 'user', content: msg.content }));
+        chatContents.push({ role: 'user', content: message });
+        const generationOptions = { system: systemPrompt, messages: chatContents, maxOutputTokens: CHAT_OUTPUT_TOKENS,
+            ...(!disableTools && userId ? { tools: DEITY_TOOLS } : {}) };
 
         // 6. Generate Response Stream
         phase = 'count_tokens';
-        const tokenCount = await model.countTokens({ contents: chatContents }, { timeout: 10_000, signal: providerSignal(10_000) });
+        const tokenCount = { totalTokens: responseInputBound(generationOptions) };
         phase = 'completion_allowance';
         await budget.prepare(tokenCount.totalTokens, CHAT_OUTPUT_TOKENS);
         phase = 'generation';
         const result = await startChatWithRecovery({
             generate: () => {
                 upstream.signal.throwIfAborted();
-                return model.generateContentStream({ contents: chatContents },
-                    { timeout: 30_000, signal: providerSignal(40_000) });
+                return streamOpenAI(generationOptions, providerSignal(40_000));
             },
             budget,
             deadline,
@@ -445,14 +416,14 @@ async function handlePOST(req: Request) {
                 for await (const chunk of result.stream) {
                     upstream.signal.throwIfAborted();
                     // Handle Text
-                    const chunkText = chunk.text();
+                    const chunkText = chunk.text;
                     if (chunkText) {
                         fullResponse += chunkText;
                         controller.enqueue(new TextEncoder().encode(chunkText));
                     }
 
                     // Handle Function Calls (Tools)
-                    const calls = chunk.functionCalls();
+                    const calls = chunk.calls;
                     if (calls && calls.length > 0) {
                         calls.forEach(call => {
                             console.log('Deity tool call received', { requestId });
@@ -512,7 +483,7 @@ async function handlePOST(req: Request) {
                 }
 
                 const response = await result.response;
-                await activeBudget.finish(response.usageMetadata);
+                await activeBudget.finish(response.usage);
                 try { console.info('Deity chat proposal outcome', { requestId,
                     acceptedProposalCount: collectedActions.length, rejectedProposalCount,
                     textPresent: !!fullResponse.trim() }); } catch { /* No raw reply is retained. */ }
@@ -568,6 +539,7 @@ async function handlePOST(req: Request) {
     } catch (err: unknown) {
         upstream.abort();
         cleanup();
+        await budget?.blockOnProviderFailure(err);
         await budget?.finish();
         if (req.signal.aborted) return Response.json({ error: 'This chat request was cancelled.', code: 'chat_cancelled' }, {
             status: 499, headers: { 'Cache-Control': 'no-store', 'X-Deity-Request-Id': requestId },

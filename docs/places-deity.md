@@ -41,8 +41,8 @@ read-only context instead of the account assistant's profile tools.
 
 ## Backend and configuration
 
-`POST /api/deity/places` uses `GOOGLE_GENERATIVE_AI_API_KEY`, already used by NSSO
-Deity. Optional `DEITY_PLACES_MODEL` defaults to `gemini-2.5-flash` and
+`POST /api/deity/places` uses `OPENAI_API_KEY`, already used by NSSO
+Deity. Optional `DEITY_PLACES_MODEL` defaults to `gpt-6-luna` and
 `DEITY_PLACES_TIMEOUT_MS` defaults to 22000 (bounded to 1000–25000ms). Neither the
 provider key nor private profile context is exposed to the client.
 

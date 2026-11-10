@@ -50,7 +50,7 @@ Before inserting, RazinFlix compares the canonical and alternate titles against 
 ## Required Environment Variables
 
 - `TMDB_API_KEY`: TMDB v3 API key used for movie matching and canonical metadata.
-- `GOOGLE_GENERATIVE_AI_API_KEY`: Gemini key used only for grounded description formatting and category selection.
+- `OPENAI_API_KEY`: OpenAI key used only for grounded description formatting and category selection.
 - `YOUTUBE_API_KEY`: Dedicated Google Cloud key with YouTube Data API v3 enabled. This provides the highest-coverage trailer fallback.
 - `GOOGLE_SEARCH_API_KEY`: Optional dedicated key with Custom Search JSON API enabled.
 - `GOOGLE_SEARCH_ENGINE_ID`: Optional programmable search-engine ID paired with `GOOGLE_SEARCH_API_KEY`.

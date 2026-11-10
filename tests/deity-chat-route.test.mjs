@@ -9,7 +9,7 @@ const previousEnv = { ...process.env };
 Object.assign(process.env, {
   NEXT_PUBLIC_SUPABASE_URL: 'https://chat-test.supabase.co',
   SUPABASE_SERVICE_ROLE_KEY: 'test-only-not-a-real-service-key',
-  GOOGLE_GENERATIVE_AI_API_KEY: 'test-only-not-a-real-gemini-key',
+  OPENAI_API_KEY: 'test-only-not-a-real-openai-key', NSSO_AI_ENABLED: 'true',
   NSSO_CHAT_IP_HASH_SECRET: 'test-only-hmac-secret-longer-than-32-characters', VERCEL: '1',
 });
 const hooks = registerHooks({ resolve(specifier, context, next) {
@@ -50,6 +50,7 @@ beforeEach(() => {
     if (path.endsWith('/reserve_nsso_chat_budget')) return Response.json(mode === 'quota'
       ? { allowed: false, code: 'daily_ip_allowance_exhausted' } : { allowed: true });
     if (path.endsWith('/finish_nsso_chat_budget')) return Response.json(null);
+    if (path.endsWith('/hold_nsso_ai_budget')) return Response.json(null);
     if (path === '/auth/v1/user') {
       if (mode === 'auth_unavailable') return Response.json({ code: 'unexpected_failure', msg: privateText }, { status: 503 });
       if (mode === 'auth_invalid') return Response.json({ code: 'bad_jwt', msg: privateText }, { status: 401 });
@@ -89,21 +90,23 @@ beforeEach(() => {
       if (mode === 'links_too_many') return Response.json(Array.from({ length: 501 }, () => row));
       return Response.json([row]);
     }
-    if (path.endsWith('/intelligent_search')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
-    if (path.endsWith(':embedContent')) return Response.json({ embedding: { values: Array(768).fill(0.01) } });
-    if (path.endsWith(':countTokens')) return Response.json({ totalTokens: 500 });
-    if (path.endsWith(':streamGenerateContent')) {
+    if (path.endsWith('/intelligent_search_openai_v1')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
+    if (path.endsWith('/v1/embeddings')) {
+      if (mode === 'profile_embedding_auth' && calls.filter(call => call.path.endsWith('/v1/embeddings')).length === 2) return Response.json({ error: { message: privateText } }, { status: 401 });
+      return Response.json({ data: [{ embedding: Array(1536).fill(0.01) }] });
+    }
+        if (path.endsWith('/v1/responses')) {
       if (mode === 'pending_headers') return new Promise((_resolve, reject) => {
         init.signal.addEventListener('abort', () => { providerAborted = true; reject(new DOMException('Fixture cancelled', 'AbortError')); }, { once: true });
       });
       if (mode === 'hanging_stream') {
         return new Response(new ReadableStream({ start(controller) {
           init.signal.addEventListener('abort', () => { providerAborted = true; controller.error(new DOMException('Fixture cancelled', 'AbortError')); }, { once: true });
-          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ candidates: [{ index: 0, content: { role: 'model', parts: [{ text: 'Partial fixture response' }] } }] })}\n\n`));
+          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'response.output_text.delta', delta: 'Partial fixture response' })}\n\n`));
         } }), { headers: { 'content-type': 'text/event-stream' } });
       }
       if (mode === 'retired') return Response.json({ error: { code: 404, message: `Model retired ${privateText}` } }, { status: 404 });
-      if (mode === 'always_busy' || (mode === 'busy_once' && calls.filter(c => c.path.endsWith(':streamGenerateContent')).length === 1)) {
+      if (mode === 'always_busy' || (mode === 'busy_once' && calls.filter(c => c.path.endsWith('/v1/responses')).length === 1)) {
         return Response.json({ error: { code: 503, message: `Busy ${privateText}` } }, { status: 503 });
       }
       const validTool = { functionCall: { name: 'update_link', args: { linkId: fixtureLinkId, name: 'Fixture renamed link' } } };
@@ -116,9 +119,12 @@ beforeEach(() => {
         : mode === 'mixed_tools' ? [validTool, invalidTool]
         : mode === 'tool_broken_stream' ? [{ text: 'A partial fixture response.' }, validTool]
         : [{ text: 'NSSO stands for new sovereign self online.' }];
-      const candidate = { candidates: [{ index: 0, content: { role: 'model', parts }, finishReason: 'STOP' }],
-        usageMetadata: { promptTokenCount: 500, candidatesTokenCount: 20, totalTokenCount: 520 } };
-      const wire = `data: ${JSON.stringify(candidate)}\n\n${['broken_stream', 'tool_broken_stream'].includes(mode) ? 'data: {broken JSON}\n\n' : ''}`;
+      const events = parts.flatMap(part => part.text ? [{ type: 'response.output_text.delta', delta: part.text }]
+        : [{ type: 'response.output_item.added', item: { id: 'call-item', type: 'function_call', name: part.functionCall.name } },
+          { type: 'response.function_call_arguments.done', item_id: 'call-item', arguments: JSON.stringify(part.functionCall.args) }]);
+      const broken = ['broken_stream', 'tool_broken_stream'].includes(mode);
+      if (!broken) events.push({ type: 'response.completed', response: { usage: { input_tokens: 500, output_tokens: 20 } } });
+      const wire = events.map(event => `data: ${JSON.stringify(event)}\n\n`).join('') + (broken ? 'data: {broken JSON}\n\n' : '');
       return new Response(wire, { headers: { 'content-type': 'text/event-stream' } });
     }
     throw new Error(`Unexpected test network call: ${path}`);
@@ -134,10 +140,10 @@ const ownerRequest = (patch = {}) => {
   return input;
 };
 const assertNoMutationOrRetry = () => {
-  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+  assert.equal(calls.filter(call => call.path.endsWith('/v1/responses')).length, 1);
   assert.equal(calls.filter(call => call.path.endsWith('/reserve_nsso_chat_budget')).length, 2);
   assert.equal(calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget')).length, 1);
-  const allowedRpcs = ['reserve_nsso_chat_budget', 'finish_nsso_chat_budget', 'get_agent_context', 'intelligent_search'];
+  const allowedRpcs = ['reserve_nsso_chat_budget', 'finish_nsso_chat_budget', 'get_agent_context', 'intelligent_search_openai_v1'];
   assert.ok(calls.filter(call => call.path.includes('/rpc/')).every(call => allowedRpcs.some(name => call.path.endsWith('/' + name))), 'A proposed change must never invoke a profile mutation');
 };
 
@@ -150,7 +156,7 @@ test('legacy RPC links without IDs are replaced by separately verified owner-sco
   const canonical = calls.filter(call => call.path === '/rest/v1/links');
   assert.equal(canonical.length, 1);
   assert.deepEqual(canonical[0].query, { select: 'id,user_id,link_name,link_url', user_id: `eq.${fixtureOwnerId}`, order: 'display_order.asc,id.asc', limit: '501' });
-  for (const suffix of [':countTokens', ':streamGenerateContent']) {
+  for (const suffix of ['/v1/responses']) {
     const input = JSON.stringify(calls.find(call => call.path.endsWith(suffix)).body);
     assert.ok(input.includes(`[id: ${fixtureLinkId}] Canonical fixture link: https://example.test/`));
     assert.doesNotMatch(input, /\[id: undefined\]|Legacy link label|legacy\.example\.test/);
@@ -159,7 +165,7 @@ test('legacy RPC links without IDs are replaced by separately verified owner-sco
   const index = path => calls.findIndex(call => call.path.endsWith(path));
   assert.ok(index('/auth/v1/user') < index('/get_agent_context'));
   assert.ok(index('/get_agent_context') < index('/rest/v1/links'));
-  assert.ok(index('/rest/v1/links') < index(':countTokens'));
+  assert.ok(index('/rest/v1/links') < index('/v1/responses'));
   assertNoMutationOrRetry();
 });
 
@@ -175,7 +181,7 @@ for (const state of ['links_unavailable', 'links_missing', 'links_malformed', 'l
     assert.equal(body.code, 'chat_profile_context_unavailable');
     assert.match(body.error, /Nothing was changed/);
     assert.doesNotMatch(JSON.stringify({ body, logs }), /SHOULD_NEVER_LEAK/);
-    assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
+    assert.equal(calls.filter(call => call.path.startsWith('/v1/')).length, 0);
     assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 1);
     assert.equal(calls.filter(call => call.path === '/rest/v1/links' && call.method !== 'GET').length, 0);
   });
@@ -188,7 +194,7 @@ for (const state of ['links_empty', 'links_legacy_url', 'links_nullable_fields',
     assert.equal(response.status, 200);
     const wire = await response.text();
     assert.doesNotMatch(wire, /__DEITY_ACTIONS__/);
-    const generation = JSON.stringify(calls.find(call => call.path.endsWith(':streamGenerateContent')).body.systemInstruction);
+    const generation = JSON.stringify(calls.find(call => call.path.endsWith('/v1/responses')).body.instructions);
     assert.doesNotMatch(generation, /\[id: undefined\]|Legacy link label|legacy\.example\.test/);
     if (state === 'links_legacy_url') assert.ok(generation.includes('legacy-invalid-url'));
     if (state === 'links_empty') assert.ok(!generation.includes(`[id: ${fixtureLinkId}]`));
@@ -218,7 +224,7 @@ for (const [state, status, code] of [
     assert.match(body.error, /Nothing was changed/);
     assert.doesNotMatch(JSON.stringify(body), /SHOULD_NEVER_LEAK/);
     assert.doesNotMatch(JSON.stringify(logs), /SHOULD_NEVER_LEAK/);
-    assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
+    assert.equal(calls.filter(call => call.path.startsWith('/v1/')).length, 0);
     assert.equal(calls.filter(call => call.path === '/auth/v1/user').length, 1);
     assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
     assert.ok(calls.filter(call => call.path.includes('/rpc/')).every(call => ['reserve_nsso_chat_budget', 'finish_nsso_chat_budget', 'get_agent_context'].some(name => call.path.endsWith('/' + name))));
@@ -231,7 +237,7 @@ test('the expected owner cannot supply identity or silently omit authentication'
     assert.equal(response.status, 401);
     assert.match((await response.json()).error, /Nothing was changed/);
   }
-  assert.equal(calls.filter(call => call.path.includes('/models/')).length, 0);
+  assert.equal(calls.filter(call => call.path.startsWith('/v1/')).length, 0);
   assert.equal(calls.filter(call => call.path.endsWith('/get_agent_context')).length, 0);
   assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
 });
@@ -241,7 +247,7 @@ test('a malformed bearer is never treated as a guest', async () => {
   const response = await POST(input);
   assert.equal(response.status, 401);
   assert.equal((await response.json()).code, 'chat_authentication_required');
-  assert.equal(calls.filter(call => call.path.includes('/models/') || call.path === '/auth/v1/user').length, 0);
+  assert.equal(calls.filter(call => call.path.startsWith('/v1/') || call.path === '/auth/v1/user').length, 0);
   assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
 });
 
@@ -250,24 +256,24 @@ test('native tools prepare review proposals and an explicit no-save request is n
   const response = await POST(ownerRequest({ message: 'Rename my fixture link for review, but do not save yet.', expectedAccountId: fixtureOwnerId }));
   const { actionsJson } = splitActionPayload(await response.text());
   assert.equal(parseActionList(JSON.parse(actionsJson)).length, 1);
-  const generation = calls.find(call => call.path.endsWith(':streamGenerateContent')).body;
-  const prompt = JSON.stringify(generation.systemInstruction);
+  const generation = calls.find(call => call.path.endsWith('/v1/responses')).body;
+  const prompt = JSON.stringify(generation.instructions);
   assert.match(prompt, /Calling a tool does NOT save or change the profile/);
   assert.match(prompt, /only the user's separate Apply click can persist/);
   assert.match(prompt, /mean prepare the tool proposal, NOT skip the tool/);
   assert.match(prompt, /never invent one/);
   assert.equal(generation.toolConfig, undefined);
-  assert.deepEqual(generation.tools[0].functionDeclarations.find(tool => tool.name === 'update_profile_field').parameters.properties.target.enum, ['bio', 'headline', 'full_name']);
+  assert.deepEqual(generation.tools.find(tool => tool.type === 'function' && tool.name === 'update_profile_field').parameters.properties.target.enum, ['bio', 'headline', 'full_name']);
   assertNoMutationOrRetry();
 });
 
 test('an authenticated read-only request disables native tools without pretending it can save', async () => {
   const response = await POST(ownerRequest({ disableTools: true, expectedAccountId: fixtureOwnerId }));
   await response.text();
-  const generation = calls.find(call => call.path.endsWith(':streamGenerateContent')).body;
+  const generation = calls.find(call => call.path.endsWith('/v1/responses')).body;
   assert.equal(generation.tools, undefined);
-  assert.match(JSON.stringify(generation.systemInstruction), /Profile-change tools are disabled for this request/);
-  assert.doesNotMatch(JSON.stringify(generation.systemInstruction), /AVAILABLE ACTIONS:/);
+  assert.match(JSON.stringify(generation.instructions), /Profile-change tools are disabled for this request/);
+  assert.doesNotMatch(JSON.stringify(generation.instructions), /AVAILABLE ACTIONS:/);
 });
 
 test('guest and explicitly read-only responses cannot expose unexpected provider tool proposals', async () => {
@@ -292,8 +298,8 @@ test('authenticated native update_link remains terminal JSON after a category ti
   assert.deepEqual(actions, [{ version: 1, label: 'Update link', change: { kind: 'link.patch', id: fixtureLinkId, patch: { link_name: 'Fixture renamed link' } } }]);
   assert.equal(wire.indexOf('__DEITY_ACTIONS__'), wire.lastIndexOf('__DEITY_ACTIONS__'));
   assert.equal(calls.find(call => call.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, true);
-  const generation = calls.find(call => call.path.endsWith(':streamGenerateContent')).body;
-  assert.ok(generation.tools[0].functionDeclarations.some(tool => tool.name === 'update_link'));
+  const generation = calls.find(call => call.path.endsWith('/v1/responses')).body;
+  assert.ok(generation.tools.some(tool => tool.type === 'function' && tool.name === 'update_link'));
   assert.equal(generation.toolConfig, undefined, 'Do not force model tool choice');
   assertNoMutationOrRetry();
 });
@@ -364,15 +370,15 @@ test('real route answers the reported guest question with the budgeted, supporte
   assert.equal(response.status, 200);
   assert.match(await response.text(), /new sovereign self online/);
   assert.match(response.headers.get('x-deity-request-id'), /^[a-f0-9-]{36}$/);
-  assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search') || c.path.endsWith(':embedContent')).length, 0);
+  assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search_openai_v1') || c.path.endsWith('/v1/embeddings')).length, 0);
   assert.equal(calls.filter(call => call.path === '/rest/v1/links').length, 0);
-  const generation = calls.find(c => c.path.endsWith(':streamGenerateContent'));
-  assert.match(generation.path, /gemini-2\.5-flash:/);
-  assert.equal(generation.body.generationConfig.thinkingConfig.thinkingBudget, 0);
-  assert.equal(generation.body.generationConfig.maxOutputTokens, 2048);
-  assert.match(JSON.stringify(generation.body.systemInstruction), /AUTHORITATIVE nsso PRODUCT IDENTITY/);
-  assert.match(JSON.stringify(generation.body.systemInstruction), /Always write the product name as/);
-  assert.deepEqual(generation.body.contents, [{ role: 'user', parts: [{ text: 'what is nsso?' }] }]);
+  const generation = calls.find(c => c.path.endsWith('/v1/responses'));
+  assert.equal(generation.body.model, 'gpt-6-luna');
+  assert.equal(generation.body.reasoning.effort, 'none');
+  assert.equal(generation.body.max_output_tokens, 2048);
+  assert.match(JSON.stringify(generation.body.instructions), /AUTHORITATIVE nsso PRODUCT IDENTITY/);
+  assert.match(JSON.stringify(generation.body.instructions), /Always write the product name as/);
+  assert.deepEqual(generation.body.input, [{ role: 'user', content: 'what is nsso?' }]);
   assert.equal(calls.filter(c => c.path.endsWith('/reserve_nsso_chat_budget')).length, 2);
   assert.equal(calls.find(c => c.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, true);
 });
@@ -384,7 +390,7 @@ test('a retired-model response produces a specific safe error, not a vague conne
   assert.equal(error.code, 'chat_model_unavailable');
   assert.match(error.error, /Reference:/);
   assert.ok(!JSON.stringify(error).includes(privateText));
-  assert.equal(calls.filter(c => c.path.endsWith(':streamGenerateContent')).length, 1);
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/responses')).length, 1);
   assert.equal(calls.find(c => c.path.endsWith('/finish_nsso_chat_budget')).body.p_confirmed, false);
 });
 test('a broken provider stream ends with an explicit safe interruption message instead of a broken HTTP body', async () => {
@@ -403,23 +409,23 @@ test('an empty completion cannot silently look successful in the UI', async () =
 test('normal resource questions retain retrieval and authentic conversation turns', async () => {
   const response = await POST(request({ message: 'Recommend design books', history: [{ role: 'user', content: 'I design websites' }, { role: 'model', content: 'What would you like to learn?' }] }));
   assert.equal(response.status, 200); await response.text();
-  assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search')).length, 1);
-  assert.equal(calls.find(c => c.path.endsWith(':streamGenerateContent')).body.contents.length, 3);
+  assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search_openai_v1')).length, 1);
+  assert.equal(calls.find(c => c.path.endsWith('/v1/responses')).body.input.length, 3);
   assert.equal(calls.some(c => c.path === '/books'), false, 'Corpus URLs must never trigger a server health fetch');
-  assert.match(JSON.stringify(calls.find(c => c.path.endsWith(':streamGenerateContent')).body.systemInstruction), /NOT LIVE-VERIFIED/);
+  assert.match(JSON.stringify(calls.find(c => c.path.endsWith('/v1/responses')).body.instructions), /NOT LIVE-VERIFIED/);
 });
 test('the original daily allowance still blocks all provider calls with the LinkedIn CTA', async () => {
   mode = 'quota';
   const response = await POST(request());
   assert.equal(response.status, 429);
   assert.equal((await response.json()).cta.href, 'https://www.linkedin.com/in/raminhoodeh/');
-  assert.equal(calls.filter(c => c.path.includes('/models/')).length, 0);
+  assert.equal(calls.filter(c => c.path.startsWith('/v1/')).length, 0);
 });
 test('a transient 503 gets exactly one separately budgeted attempt and settles each independently', async () => {
   mode = 'busy_once';
   const response = await POST(request());
   assert.equal(response.status, 200); assert.match(await response.text(), /new sovereign self online/);
-  assert.equal(calls.filter(c => c.path.endsWith(':streamGenerateContent')).length, 2);
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/responses')).length, 2);
   const finishes = calls.filter(c => c.path.endsWith('/finish_nsso_chat_budget'));
   assert.deepEqual(finishes.map(c => c.body.p_confirmed), [false, true]);
   assert.notEqual(finishes[0].body.p_request_id, finishes[1].body.p_request_id);
@@ -430,7 +436,7 @@ test('sustained provider 503s stop after two attempts, without leaking errors or
   mode = 'always_busy';
   const response = await POST(request());
   assert.equal(response.status, 503); assert.ok(!JSON.stringify(await response.json()).includes(privateText));
-  assert.equal(calls.filter(c => c.path.endsWith(':streamGenerateContent')).length, 2);
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/responses')).length, 2);
   assert.deepEqual(calls.filter(c => c.path.endsWith('/finish_nsso_chat_budget')).map(c => c.body.p_confirmed), [false, false]);
 });
 test('recovery never retries billing, authentication, retirement, ambiguous network errors or an exhausted deadline', async () => {
@@ -496,7 +502,7 @@ test('request disconnect aborts an active provider stream and conservatively set
   const settlements = calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget'));
   assert.equal(settlements.length, 1);
   assert.equal(settlements[0].body.p_confirmed, false);
-  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+  assert.equal(calls.filter(call => call.path.endsWith('/v1/responses')).length, 1);
 });
 
 test('response cancellation aborts upstream work without requiring request.signal to change', async () => {
@@ -514,14 +520,14 @@ test('disconnect while awaiting provider headers aborts the request and retains 
   mode = 'pending_headers';
   const abort = new AbortController();
   const pending = POST(request({}, abort.signal));
-  for (let attempt = 0; attempt < 100 && !calls.some(call => call.path.endsWith(':streamGenerateContent')); attempt++) await new Promise(resolve => setTimeout(resolve, 1));
-  assert.ok(calls.some(call => call.path.endsWith(':streamGenerateContent')));
+  for (let attempt = 0; attempt < 100 && !calls.some(call => call.path.endsWith('/v1/responses')); attempt++) await new Promise(resolve => setTimeout(resolve, 1));
+  assert.ok(calls.some(call => call.path.endsWith('/v1/responses')));
   abort.abort();
   const response = await pending;
   assert.equal(response.status, 499);
   assert.equal(providerAborted, true);
   assert.equal(calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget'))[0].body.p_confirmed, false);
-  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+  assert.equal(calls.filter(call => call.path.endsWith('/v1/responses')).length, 1);
 });
 
 test('cancellation during the pre-stream retry pause never reserves or starts a second attempt', async () => {
@@ -531,7 +537,20 @@ test('cancellation during the pre-stream retry pause never reserves or starts a 
   for (let attempt = 0; attempt < 100 && !calls.some(call => call.path.endsWith('/finish_nsso_chat_budget')); attempt++) await new Promise(resolve => setTimeout(resolve, 1));
   abort.abort();
   assert.equal((await pending).status, 499);
-  assert.equal(calls.filter(call => call.path.endsWith(':streamGenerateContent')).length, 1);
+  assert.equal(calls.filter(call => call.path.endsWith('/v1/responses')).length, 1);
   assert.equal(calls.filter(call => call.path.endsWith('/reserve_nsso_chat_budget')).length, 2);
   assert.equal(calls.filter(call => call.path.endsWith('/finish_nsso_chat_budget')).length, 1);
+});
+
+test('an optional profile embedding account failure holds the provider and cannot continue paid generation', async t => {
+  mode = 'profile_embedding_auth';
+  const logs = [];
+  t.mock.method(console, 'error', (...values) => logs.push(values));
+  const response = await POST(ownerRequest({ message: 'Show me useful AI tools.', expectedAccountId: fixtureOwnerId }));
+  const body = await response.text();
+  assert(response.status >= 400);
+  assert.equal(calls.filter(call => call.path.endsWith('/v1/embeddings')).length, 2);
+  assert.equal(calls.filter(call => call.path.endsWith('/v1/responses')).length, 0);
+  assert(calls.some(call => call.path.endsWith('/hold_nsso_ai_budget')));
+  assert(!JSON.stringify({ body, logs }).includes(privateText));
 });
