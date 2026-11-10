@@ -142,4 +142,5 @@ try {
   await rm(checkpointRoot, { recursive: true, force: true });
 }
 process.stdout.write(execFileSync(process.execPath, [new URL('./check-openai-index-codec.mjs', import.meta.url).pathname], { encoding: 'utf8', timeout: 10000 }));
+process.stdout.write(execFileSync(process.execPath, [new URL('./check-openai-index-chunks.mjs', import.meta.url).pathname], { encoding: 'utf8', timeout: 10000 }));
 console.log(`OpenAI operator proof passed: ${checks} offline budget/claim/schema/resume/preservation checks; no real network or database requests.`);

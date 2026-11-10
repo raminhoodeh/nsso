@@ -4,11 +4,20 @@ import { resolve } from 'node:path';
 import { applyMode, embeddings, numericOption, readCheckpoints, reportFailure, rpc, saveCheckpoint, settleCheckpoint, OperatorError } from './operator-openai.mjs';
 
 export async function commitReceipt(receipt) {
+  if (!Array.isArray(receipt?.rows) || receipt.rows.length < 1 || receipt.rows.length > 128 || new Set(receipt.rows.map(row => row?.id)).size !== receipt.rows.length) throw new OperatorError('operator_index_receipt_contract_rejected');
   await settleCheckpoint(receipt);
-  const result = await rpc('commit_nsso_openai_index_batch', { p_rows: receipt.rows.map(({ id, content_hash, embedding }) => ({ id, content_hash, embedding })) });
-  if (!Number.isSafeInteger(result?.committed) || result.committed !== receipt.rows.length) throw new OperatorError('operator_index_commit_unconfirmed');
-  await saveCheckpoint(receipt.requestId, { requestId: receipt.requestId, kind: 'index', state: 'committed', submitted: receipt.rows.length, committed: result.committed });
-  return result.committed;
+  let committed = 0;
+  // Use smaller SQL transactions under the API role deadline. The full generated
+  // receipt stays intact until every chunk is acknowledged, so recovery repeats
+  // only the same hash-checked upserts and never asks the provider again.
+  for (let offset = 0; offset < receipt.rows.length; offset += 32) {
+    const rows = receipt.rows.slice(offset, offset + 32).map(({ id, content_hash, embedding }) => ({ id, content_hash, embedding }));
+    const result = await rpc('commit_nsso_openai_index_batch', { p_rows: rows });
+    if (!Number.isSafeInteger(result?.committed) || result.committed !== rows.length) throw new OperatorError('operator_index_commit_unconfirmed');
+    committed += result.committed;
+  }
+  await saveCheckpoint(receipt.requestId, { requestId: receipt.requestId, kind: 'index', state: 'committed', submitted: receipt.rows.length, committed });
+  return committed;
 }
 export async function backfill({ apply = applyMode(), maxBatches = numericOption('--max-batches', 1000, 10000), after = null } = {}) {
   const afterFlag = process.argv.indexOf('--after');
