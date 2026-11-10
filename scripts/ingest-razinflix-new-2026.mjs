@@ -66,7 +66,7 @@ function parseArguments(argv) {
     const values = { commit: false, envFile: null };
     for (let index = 0; index < argv.length; index += 1) {
         const argument = argv[index];
-        if (argument === '--commit') values.commit = true;
+        if (argument === '--apply') values.commit = true;
         else if (argument === '--env-file') values.envFile = argv[++index] ?? null;
         else throw new Error(`Unknown argument: ${argument}`);
     }
@@ -179,7 +179,7 @@ async function main() {
 
     if (!commit) {
         console.log(`\nPreflight complete: ${resolvedEntries.length} films are complete and absent from RazinFlix.`);
-        console.log('No database changes made. Re-run with --commit to insert the verified batch.');
+        console.log('No database changes made. Re-run with --apply to insert the verified batch.');
         return;
     }
 
