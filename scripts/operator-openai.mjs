@@ -4,6 +4,7 @@ import { mkdir, open, readFile, rename, readdir } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import dotenv from 'dotenv';
+import { decodeBase64Embedding, encodeIndexCommit } from './openai-index-wire.mjs';
 dotenv.config({ path: '.env.local', quiet: true });
 
 export const TEXT_MODEL = 'gpt-6-luna';
@@ -13,6 +14,9 @@ const INPUT_MICROS = 0.25; // Highest published cache-write rate; no cached disc
 const OUTPUT_MICROS = 0.60;
 const EMBEDDING_MICROS = 0.02;
 const OPERATOR_HASH = createHash('sha256').update('nsso-reviewed-operator-ingestion-v1').digest('hex');
+// This marker exists only after a settlement acknowledgement in this process.
+// Persisted or cloned receipts must always use the durable idempotent RPC.
+const acknowledgedSettlements = new WeakMap();
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 export class OperatorError extends Error { constructor(code, { retryable = false } = {}) { super(code); this.code = code; this.retryable = retryable; } }
 function canonical(value) { if (Array.isArray(value)) return value.map(canonical); if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])); return value; }
@@ -44,7 +48,9 @@ const DATABASE_RPC_POLICIES = Object.freeze({
 export async function database(route, { method = 'GET', body, headers = {}, timeoutMs = 15_000, attempt = 1 } = {}) {
   const { url, key } = databaseConfig();
   const started = performance.now();
-  const encoded = body === undefined ? undefined : JSON.stringify(body);
+  let encoded;
+  try { encoded = body === undefined ? undefined : route === 'rpc/commit_nsso_openai_index_batch' ? encodeIndexCommit(body) : JSON.stringify(body); }
+  catch { throw new OperatorError('operator_database_payload_invalid'); }
   // Route query parameters may contain authored text. Only a code-owned table or
   // RPC identifier is diagnostic; never log a URL, request body, response or key.
   const identifier = route.replace(/^rpc\//, '').split('?')[0];
@@ -142,16 +148,26 @@ export async function paidRequest({ kind, body, operationHashes, checkpoint, val
   await saveCheckpoint(requestId, { requestId, ...checkpoint, state: 'claimed', operationHashes });
   let response;
   try {
-    response = await fetch(`https://api.openai.com/v1/${kind === 'embedding' ? 'embeddings' : 'responses'}`, { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' }, body: encoded, redirect: 'error', signal: AbortSignal.timeout(45_000) });
+    response = await fetch(`https://api.openai.com/v1/${kind === 'embedding' ? 'embeddings' : 'responses'}`, { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' }, body: encoded, redirect: 'error', signal: AbortSignal.timeout(kind === 'embedding' ? 120_000 : 45_000) });
   } catch { throw new OperatorError('operator_unknown_outcome_maximum_retained'); }
+  // A known account failure must hold the service before filesystem work or
+  // body cancellation can fail. Neither may hide an authoritative HTTP status.
+  if ([401, 402, 403].includes(response.status)) {
+    await rpc('hold_nsso_ai_budget', { p_code: 'provider_access_requires_review' });
+    try { await response.body?.cancel(); } catch { /* The hold is already durable. */ }
+    throw new OperatorError('operator_account_review_required');
+  }
   if (!response.ok) {
-    await response.body?.cancel();
-    if ([401, 402, 403].includes(response.status)) {
-      await rpc('hold_nsso_ai_budget', { p_code: 'provider_access_requires_review' });
-      throw new OperatorError('operator_account_review_required');
-    }
+    try { await response.body?.cancel(); } catch { /* Preserve the known HTTP failure. */ }
     throw new OperatorError(response.status === 429 ? 'operator_rate_limited_no_retry' : 'operator_provider_failed_no_retry');
   }
+  // Large embedding replies may take longer to download than text. Preserve
+  // only safe header metadata before reading; a lost body is never replayed.
+  const upstreamId = response.headers.get('x-request-id');
+  await saveCheckpoint(requestId, { requestId, ...checkpoint, state: 'claimed', operationHashes,
+    providerStatus: response.status,
+    ...(upstreamId && /^req_[A-Za-z0-9_-]{1,140}$/.test(upstreamId) ? { providerRequestId: upstreamId } : {}),
+  });
   let reply;
   try { reply = await response.json(); } catch { throw new OperatorError('operator_unknown_reply_maximum_retained'); }
   const input = kind === 'embedding' ? reply.usage?.prompt_tokens : reply.usage?.input_tokens;
@@ -168,15 +184,24 @@ export async function paidRequest({ kind, body, operationHashes, checkpoint, val
   // lose it. Recovery uses this result only, never another provider attempt.
   await saveCheckpoint(requestId, { requestId, ...checkpoint, ...validated, state: 'generated', actualMicros });
   await settle(requestId, reply.usage, kind, maximum);
-  return { requestId, ...validated, actualMicros };
+  const receipt = { requestId, ...validated, actualMicros };
+  acknowledgedSettlements.set(receipt, { requestId, actualMicros });
+  return receipt;
 }
 export async function embeddings(rows) {
   if (!rows.length || rows.length > 128 || rows.some(row => typeof row.content !== 'string' || !row.content.trim() || Buffer.byteLength(row.content, 'utf8') > 8000)) throw new OperatorError('embedding_source_exceeds_reviewed_token_bound');
   if (rows.reduce((sum, row) => sum + Buffer.byteLength(row.content, 'utf8'), 0) > 250_000) throw new OperatorError('embedding_batch_exceeds_reviewed_token_bound');
-  return paidRequest({ kind: 'embedding', body: { model: EMBEDDING_MODEL, input: rows.map(row => row.content), dimensions: DIMENSIONS, encoding_format: 'float' }, operationHashes: rows.map(row => fingerprint(`index-v1:${EMBEDDING_MODEL}:${row.id}:${row.content_hash}`)), checkpoint: { kind: 'index', sources: rows.map(({ id, content_hash }) => ({ id, content_hash })) }, validate(reply) {
+  return paidRequest({ kind: 'embedding', body: { model: EMBEDDING_MODEL, input: rows.map(row => row.content), dimensions: DIMENSIONS, encoding_format: 'base64' }, operationHashes: rows.map(row => fingerprint(`index-v1:${EMBEDDING_MODEL}:${row.id}:${row.content_hash}`)), checkpoint: { kind: 'index', sources: rows.map(({ id, content_hash }) => ({ id, content_hash })) }, validate(reply) {
     const data = reply.data;
-    if (!Array.isArray(data) || data.length !== rows.length || data.some((row, index) => row.index !== index || !Array.isArray(row.embedding) || row.embedding.length !== DIMENSIONS || !row.embedding.every(Number.isFinite) || !row.embedding.some(value => value !== 0))) throw new OperatorError('operator_embedding_contract_rejected');
-    return { rows: rows.map((row, index) => ({ id: row.id, content_hash: row.content_hash, model: EMBEDDING_MODEL, embedding: data[index].embedding })) };
+    if (!Array.isArray(data) || data.length !== rows.length) throw new OperatorError('operator_embedding_contract_rejected');
+    let vectors;
+    try {
+      vectors = rows.map((_, index) => {
+        if (!data[index] || data[index].index !== index) throw new TypeError('Invalid embedding index');
+        return decodeBase64Embedding(data[index].embedding);
+      });
+    } catch { throw new OperatorError('operator_embedding_contract_rejected'); }
+    return { rows: rows.map((row, index) => ({ id: row.id, content_hash: row.content_hash, model: EMBEDDING_MODEL, embedding: vectors[index] })) };
   } });
 }
 
@@ -196,5 +221,10 @@ export async function generateFilm(film, operation, prompt, schema) {
   } });
 }
 export async function settleCheckpoint(receipt) {
-  if (Number.isSafeInteger(receipt.actualMicros) && receipt.actualMicros >= 0) await rpc('finish_nsso_chat_budget', { p_request_id: receipt.requestId, p_micros: receipt.actualMicros, p_confirmed: true });
+  const acknowledged = acknowledgedSettlements.get(receipt);
+  if (acknowledged && acknowledged.requestId === receipt.requestId && acknowledged.actualMicros === receipt.actualMicros) return;
+  if (Number.isSafeInteger(receipt.actualMicros) && receipt.actualMicros >= 0) {
+    await rpc('finish_nsso_chat_budget', { p_request_id: receipt.requestId, p_micros: receipt.actualMicros, p_confirmed: true });
+    acknowledgedSettlements.set(receipt, { requestId: receipt.requestId, actualMicros: receipt.actualMicros });
+  }
 }

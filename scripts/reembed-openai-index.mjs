@@ -10,7 +10,10 @@ export async function commitReceipt(receipt) {
   await saveCheckpoint(receipt.requestId, { requestId: receipt.requestId, kind: 'index', state: 'committed', submitted: receipt.rows.length, committed: result.committed });
   return result.committed;
 }
-export async function backfill({ apply = applyMode(), maxBatches = numericOption('--max-batches', 1000, 10000) } = {}) {
+export async function backfill({ apply = applyMode(), maxBatches = numericOption('--max-batches', 1000, 10000), after = null } = {}) {
+  const afterFlag = process.argv.indexOf('--after');
+  if (after === null && afterFlag >= 0) after = process.argv[afterFlag + 1];
+  if (after !== null && (typeof after !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(after))) throw new OperatorError('invalid_backfill_cursor');
   if (!apply) {
     console.log(JSON.stringify({ dryRun: true, providerRequests: 0, databaseWrites: 0, target: 'agent_knowledge_openai_v1', model: 'text-embedding-3-small', dimensions: 1536, batchMaximum: 128, applyFlag: '--apply' }));
     return { rows: 0, batches: 0 };
@@ -21,7 +24,7 @@ export async function backfill({ apply = applyMode(), maxBatches = numericOption
   for (const receipt of await readCheckpoints('index')) committed += await commitReceipt(receipt);
   let batches = 0;
   for (; batches < maxBatches; batches++) {
-    const rows = await rpc('nsso_openai_index_batch', { p_after: null, p_limit: 128 });
+    const rows = await rpc('nsso_openai_index_batch', { p_after: after, p_limit: 128 });
     if (!Array.isArray(rows)) throw new OperatorError('operator_index_source_contract_rejected');
     if (!rows.length) break;
     if (rows.some(row => !/^[a-f0-9]{32}$/i.test(row.content_hash) || typeof row.id !== 'string' || typeof row.content !== 'string')) throw new OperatorError('operator_index_source_contract_rejected');
@@ -38,7 +41,7 @@ export async function backfill({ apply = applyMode(), maxBatches = numericOption
     if (group.length) committed += await commitReceipt(await embeddings(group));
     console.log(JSON.stringify({ kind: 'openai-index-progress', completedBatches: batches + 1, committedRows: committed }));
   }
-  console.log(JSON.stringify({ kind: 'openai-index-checkpoint', completedBatches: batches, committedRows: committed, boundedStop: batches === maxBatches }));
+  console.log(JSON.stringify({ kind: 'openai-index-checkpoint', completedBatches: batches, committedRows: committed, boundedStop: batches === maxBatches, rangeOnly: after !== null }));
   return { rows: committed, batches };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) backfill().catch(reportFailure);

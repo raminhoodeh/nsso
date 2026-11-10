@@ -3,19 +3,28 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { embeddings, generateFilm, fingerprint, readCheckpoints } from './operator-openai.mjs';
 import { backfill } from './reembed-openai-index.mjs';
 import { maintainFilms } from './operator-film-maintenance.mjs';
 import { ingestSources } from './operator-ingestion.mjs';
 
-const originalFetch = globalThis.fetch, originalLog = console.log, originalArgv = [...process.argv];
+const originalFetch = globalThis.fetch, originalLog = console.log, originalArgv = [...process.argv], originalTimer = globalThis.setTimeout;
 const checkpointRoot = await mkdtemp(path.join(tmpdir(), 'nsso-openai-operator-proof-'));
 Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: 'https://fixture.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'fixture-only', OPENAI_API_KEY: 'fixture-only', NSSO_AI_ENABLED: 'true', NSSO_OPENAI_OPERATOR_ENABLED: 'true', NSSO_OPENAI_CHECKPOINT_DIR: checkpointRoot });
 delete process.env.OPENAI_BASE_URL;
+// Retry policy timings have their own transport proof; these fixtures need no
+// real wall-clock delay while exercising the same retry/resume branches.
+globalThis.setTimeout = (callback, _milliseconds) => originalTimer(callback, 0);
 const source = { id: '11111111-1111-1111-1111-111111111111', content: 'Synthetic source text for migration proof.', metadata: {}, content_hash: 'a'.repeat(32) };
-let events, claims, mode, indexed, providerCalls, sourceWrites, currentFilms, held, lastCharge, maximum, commitCalls;
+let events, claims, mode, indexed, providerCalls, sourceWrites, currentFilms, held, lastCharge, maximum, commitCalls, lastCursor;
 function reset(nextMode = 'success') { events = []; claims = new Set(); mode = nextMode; indexed = false; providerCalls = 0; sourceWrites = 0; currentFilms = []; held = false; lastCharge = 0; maximum = 0; commitCalls = 0; }
 function reply(value, status = 200) { return new Response(value === null ? null : JSON.stringify(value), { status }); }
+function base64Vector(dimensions = 1536) {
+  const bytes = Buffer.alloc(dimensions * 4);
+  for (let index = 0; index < dimensions; index++) bytes.writeFloatLE(0.01, index * 4);
+  return bytes.toString('base64');
+}
 globalThis.fetch = async (url, options = {}) => {
   const route = String(url), body = options.body ? JSON.parse(options.body) : null;
   if (route.startsWith('https://fixture.supabase.co/rest/v1/')) {
@@ -30,7 +39,7 @@ globalThis.fetch = async (url, options = {}) => {
       body.p_operation_hashes.forEach(hash => claims.add(hash)); return reply({ claimed: true });
     }
     if (action === 'finish_nsso_chat_budget') { assert(Number.isSafeInteger(body.p_micros) && body.p_confirmed); lastCharge = body.p_micros; return reply(null); }
-    if (action === 'nsso_openai_index_batch') return reply(indexed ? [] : [source]);
+    if (action === 'nsso_openai_index_batch') { lastCursor = body.p_after; return reply(indexed ? [] : [source]); }
     if (action === 'commit_nsso_openai_index_batch') {
       commitCalls++;
       if (mode === 'commit_down') return reply({}, 503);
@@ -54,9 +63,10 @@ globalThis.fetch = async (url, options = {}) => {
   assert.equal(options.redirect, 'error'); assert(options.signal);
   if (mode === 'timeout') throw new DOMException('private fixture timeout body', 'TimeoutError');
   if (mode === 'auth') return new Response('private upstream HTML', { status: 401 });
+  if (mode === 'body_lost') return { ok: true, status: 200, headers: new Headers({ 'x-request-id': 'req_safe_fixture' }), json: async () => { throw new DOMException('private body timeout', 'TimeoutError'); } };
   if (route.endsWith('/embeddings')) {
-    assert.equal(body.model, 'text-embedding-3-small'); assert.equal(body.dimensions, 1536); assert(body.input.length <= 128);
-    return reply({ data: body.input.map((text, index) => ({ index, embedding: Array(mode === 'bad_dimensions' ? 768 : 1536).fill(0.01) })), ...(mode === 'missing_usage' ? {} : { usage: { prompt_tokens: mode === 'overspend' ? 1000000 : 20, total_tokens: mode === 'overspend' ? 1000000 : 20 } }) });
+    assert.equal(body.model, 'text-embedding-3-small'); assert.equal(body.dimensions, 1536); assert.equal(body.encoding_format, 'base64'); assert(body.input.length <= 128);
+    return reply({ data: body.input.map((text, index) => ({ index, embedding: base64Vector(mode === 'bad_dimensions' ? 768 : 1536) })), ...(mode === 'missing_usage' ? {} : { usage: { prompt_tokens: mode === 'overspend' ? 1000000 : 20, total_tokens: mode === 'overspend' ? 1000000 : 20 } }) });
   }
   assert.equal(body.model, 'gpt-6-luna'); assert.equal(body.store, false);
   return reply({ status: mode === 'incomplete' ? 'incomplete' : 'completed', usage: { input_tokens: 40, output_tokens: 20 }, output: [{ content: mode === 'refusal' ? [{ type: 'refusal', refusal: 'private refusal' }] : [{ type: 'output_text', text: JSON.stringify({ category: 'Japanese Anime' }) }] }] });
@@ -71,11 +81,15 @@ try {
   assert.equal((await stat(receiptPath)).mode & 0o777, 0o600); assert.equal(JSON.parse(await readFile(receiptPath, 'utf8')).state, 'generated'); checks++;
   await assert.rejects(embeddings([source]), error => error.code === 'operator_operation_already_claimed_review_required'); assert.equal(providerCalls, 1); checks++;
   await rm(receiptPath);
-  for (const failure of ['budget_denied', 'timeout', 'auth', 'missing_usage', 'bad_dimensions', 'overspend']) {
+  for (const failure of ['budget_denied', 'timeout', 'body_lost', 'auth', 'missing_usage', 'bad_dimensions', 'overspend']) {
     reset(failure);
     await assert.rejects(embeddings([source]), error => error.code.startsWith('operator_'));
     assert.equal(providerCalls, failure === 'budget_denied' ? 0 : 1);
-    if (['timeout', 'auth', 'missing_usage'].includes(failure)) assert(!events.includes('finish_nsso_chat_budget'));
+    if (['timeout', 'body_lost', 'auth', 'missing_usage'].includes(failure)) assert(!events.includes('finish_nsso_chat_budget'));
+    if (failure === 'body_lost') {
+      const saved = await Promise.all((await readdir(checkpointRoot)).filter(name => name.endsWith('.json')).map(async name => JSON.parse(await readFile(path.join(checkpointRoot, name), 'utf8'))));
+      assert(saved.some(value => value.providerRequestId === 'req_safe_fixture' && value.providerStatus === 200 && value.state === 'claimed'));
+    }
     if (failure === 'auth' || failure === 'overspend') {
       assert(held); if (failure === 'overspend') assert(lastCharge > maximum);
       await assert.rejects(embeddings([{ ...source, id: '22222222-2222-2222-2222-222222222222' }]));
@@ -84,6 +98,8 @@ try {
     checks++;
   }
   reset(); await assert.rejects(embeddings([{ ...source, content: 'x'.repeat(8001) }])); assert.equal(providerCalls, 0); checks++;
+  reset(); await assert.rejects(backfill({ apply: true, after: 'invalid-cursor' }), error => error.code === 'invalid_backfill_cursor'); assert.equal(events.length, 0); checks++;
+  reset(); indexed = true; await backfill({ apply: true, after: source.id }); assert.equal(lastCursor, source.id); assert.equal(providerCalls, 0); checks++;
   await assert.rejects(embeddings(Array(129).fill(source))); assert.equal(providerCalls, 0); checks++;
   for (const failure of ['refusal', 'incomplete']) {
     reset(failure);
@@ -122,7 +138,8 @@ try {
     assert(!/GoogleGenerativeAI|generativelanguage\.googleapis|GEMINI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|\.delete\(/.test(text));
   } checks++;
 } finally {
-  globalThis.fetch = originalFetch; console.log = originalLog; process.argv = originalArgv;
+  globalThis.fetch = originalFetch; console.log = originalLog; process.argv = originalArgv; globalThis.setTimeout = originalTimer;
   await rm(checkpointRoot, { recursive: true, force: true });
 }
+process.stdout.write(execFileSync(process.execPath, [new URL('./check-openai-index-codec.mjs', import.meta.url).pathname], { encoding: 'utf8', timeout: 10000 }));
 console.log(`OpenAI operator proof passed: ${checks} offline budget/claim/schema/resume/preservation checks; no real network or database requests.`);
