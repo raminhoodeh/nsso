@@ -2,7 +2,7 @@ import test, { beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   OPENAI_TEXT_MODEL, OPENAI_EMBEDDING_MODEL, OPENAI_EMBEDDING_DIMENSIONS,
-  OpenAIProviderError, responseBody, responseInputBound, embedOpenAI, generateOpenAI, streamOpenAI,
+  OpenAIProviderError, isOpenAIAccountFailure, responseBody, responseInputBound, embedOpenAI, generateOpenAI, streamOpenAI,
 } from '../src/lib/deity/openai-provider.ts';
 
 const originalFetch = globalThis.fetch;
@@ -79,6 +79,51 @@ test('HTTP account errors preserve status without parsing, exposing or retrying 
   } finally { console.error = prior; }
 });
 
+test('authoritative account status survives rejecting or hanging body cleanup', async () => {
+  for (const status of [401, 402, 403]) for (const hanging of [false, true]) {
+    mockFetch(() => new Response(new ReadableStream({ cancel() {
+      return hanging ? new Promise(() => {}) : Promise.reject(new Error('PRIVATE_CLEANUP_FIXTURE'));
+    } }), { status }));
+    await assert.rejects(generateOpenAI(options), error => error instanceof OpenAIProviderError && error.status === status && isOpenAIAccountFailure(error));
+  }
+  assert.equal(calls.length, 6);
+});
+
+for (const code of ['insufficient_quota', 'credit_balance_exhausted', 'organization_spend_limit_exceeded', 'project_spend_limit_exceeded', 'organization_usage_limit_exceeded']) {
+  test(`HTTP429 ${code} preserves only an allowlisted billing code without retry`, async () => {
+    mockFetch(() => json({ error: { code, type: 'insufficient_quota', message: 'PRIVATE_BILLING_BODY_FIXTURE' } }, 429));
+    await assert.rejects(generateOpenAI(options), error => error.status === 429 && error.code === code && isOpenAIAccountFailure(error) && !error.message.includes('PRIVATE_'));
+    assert.equal(calls.length, 1);
+  });
+}
+
+test('ordinary, malformed and oversized429 replies cannot create an account hold or expose bodies', async () => {
+  for (const body of [JSON.stringify({ error: { code: 'rate_limit_exceeded' } }), JSON.stringify({ error: { code: 'slow_down' } }),
+    '{invalid PRIVATE_BODY_FIXTURE', JSON.stringify({ error: { code: 'PRIVATE_UNKNOWN_CODE' } }),
+    JSON.stringify({ error: { code: 'credit_balance_exhausted', message: 'x'.repeat(16_384) } })]) {
+    mockFetch(() => new Response(body, { status: 429 }));
+    await assert.rejects(generateOpenAI(options), error => error.status === 429 && error.code === 'provider_unavailable' && !isOpenAIAccountFailure(error) && !error.message.includes('PRIVATE_'));
+  }
+  assert.equal(calls.length, 5);
+});
+
+test('a hanging429 error body has a bounded deadline and preserves the HTTP status', { timeout: 5000 }, async () => {
+  mockFetch(() => new Response(new ReadableStream({ cancel() { return new Promise(() => {}); } }), { status: 429 }));
+  await assert.rejects(generateOpenAI(options), error => error.status === 429 && !isOpenAIAccountFailure(error));
+  assert.equal(calls.length, 1);
+});
+
+test('zero-byte429 chunks cannot evade the read deadline by starving timers', { timeout: 5000 }, async () => {
+  mockFetch(() => new Response(new ReadableStream({ pull(controller) { controller.enqueue(new Uint8Array()); } }), { status: 429 }));
+  await assert.rejects(generateOpenAI(options), error => error.status === 429 && !isOpenAIAccountFailure(error));
+  assert.equal(calls.length, 1);
+});
+
+test('a locked429 body cannot hide the authoritative HTTP status', async () => {
+  mockFetch(() => { const reply = new Response('{}', { status: 429 }); reply.body.getReader(); return reply; });
+  await assert.rejects(generateOpenAI(options), error => error.status === 429 && !isOpenAIAccountFailure(error));
+});
+
 for (const status of ['incomplete', 'failed', 'queued', undefined]) {
   test(`nonstream ${status || 'missing'} status is rejected once`, async () => {
     mockFetch(() => json({ ...completed(), status }));
@@ -122,6 +167,29 @@ for (const type of ['response.refusal.done', 'response.incomplete', 'response.fa
     await assert.rejects(result.response, OpenAIProviderError); assert.equal(chunks[0].text, 'Partial output'); assert.equal(calls.length, 1);
   });
 }
+
+test('billing failure after partial SSE output remains a typed account hold without replay', async () => {
+  for (const terminal of [{ type: 'error', code: 'credit_balance_exhausted', message: 'PRIVATE_BODY_FIXTURE' },
+    { type: 'response.failed', response: { error: { code: 'project_spend_limit_exceeded', message: 'PRIVATE_BODY_FIXTURE' } } }]) {
+    mockFetch(() => sse([{ type: 'response.output_text.delta', delta: 'Partial output' }, terminal]));
+    const result = await streamOpenAI(options, new AbortController().signal); const chunks = [];
+    await assert.rejects(async () => { for await (const chunk of result.stream) chunks.push(chunk); }, isOpenAIAccountFailure);
+    await assert.rejects(result.response, isOpenAIAccountFailure);
+    assert.equal(chunks[0].text, 'Partial output');
+  }
+  assert.equal(calls.length, 2);
+});
+
+test('SSE billing failure reaches the caller even if terminal cleanup never resolves', { timeout: 5000 }, async () => {
+  mockFetch(() => new Response(new ReadableStream({
+    start(controller) { controller.enqueue(new TextEncoder().encode(event({ type: 'error', code: 'credit_balance_exhausted' }))); },
+    cancel() { return new Promise(() => {}); },
+  }), { headers: { 'content-type': 'text/event-stream' } }));
+  const result = await streamOpenAI(options, new AbortController().signal);
+  await assert.rejects(collect(result), isOpenAIAccountFailure);
+  await assert.rejects(result.response, isOpenAIAccountFailure);
+  assert.equal(calls.length, 1);
+});
 
 test('interrupted stream and malformed tool arguments cannot report successful completion', async () => {
   for (const events of [[{ type: 'response.output_text.delta', delta: 'Partial output' }], [{ type: 'response.function_call_arguments.done', name: 'update_profile_field', arguments: '{invalid' }]]) {

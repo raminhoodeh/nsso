@@ -33,6 +33,18 @@ test('account failure creates one durable manual hold; transient status creates 
   assert.equal(calls.length, 3); assert(calls.every(call => call.name === 'hold_nsso_ai_budget' && call.args.p_code === 'provider_access_requires_review'));
 });
 
+test('allowlisted billing429 persists a hold while ordinary429 and forged user errors do not', async () => {
+  const calls = [];
+  const budget = new ChatBudget(async (name,args) => { calls.push({ name,args }); return { data: null, error: null }; }, 'a'.repeat(64), 'chat');
+  for (const code of ['insufficient_quota','credit_balance_exhausted','organization_spend_limit_exceeded','project_spend_limit_exceeded','organization_usage_limit_exceeded']) {
+    await budget.blockOnProviderFailure(new OpenAIProviderError(429, code));
+  }
+  await budget.blockOnProviderFailure(new OpenAIProviderError(429, 'rate_limit_exceeded'));
+  await budget.blockOnProviderFailure(new OpenAIProviderError(429, 'slow_down'));
+  await budget.blockOnProviderFailure({ status: 429, code: 'credit_balance_exhausted' });
+  assert.equal(calls.length, 5); assert(calls.every(call => call.name === 'hold_nsso_ai_budget' && call.args.p_code === 'provider_access_requires_review'));
+});
+
 test('a returned database error while recording an account hold emits a sanitized unavailable signal', async () => {
   const budget = new ChatBudget(async () => ({ data: null, error: { message: 'PRIVATE_HOLD_FAILURE_FIXTURE' } }), 'a'.repeat(64), 'chat');
   await budget.blockOnProviderFailure(new OpenAIProviderError(401));

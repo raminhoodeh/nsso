@@ -7,7 +7,7 @@ const root = new URL("../src/lib/deity/", import.meta.url);
 globalThis.__budgetRuntimeSignals = [];
 const hooks = registerHooks({ resolve(specifier, context, next) {
   if (specifier === '@/lib/server/runtime-signals') return { url: 'data:text/javascript,' + encodeURIComponent('export function reportRuntimeSignal(...args) { globalThis.__budgetRuntimeSignals.push(args); return "synthetic-signal-id"; }'), shortCircuit: true };
-  if (context.parentURL?.startsWith(root.href) && specifier === "./chat-allowance") return next(new URL("chat-allowance.ts", root).href, context);
+  if (context.parentURL?.startsWith(root.href) && ["./chat-allowance", "./openai-provider"].includes(specifier)) return next(new URL(specifier.slice(2) + ".ts", root).href, context);
   return next(specifier, context);
 } });
 const { ChatBudget, clientIpHash, openChatBudget } = await import(new URL("chat-budget-server.ts", root));

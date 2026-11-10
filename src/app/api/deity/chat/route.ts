@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { embedOpenAI, streamOpenAI, responseInputBound } from '@/lib/deity/openai-provider';
+import { embedOpenAI, streamOpenAI, responseInputBound, isOpenAIAccountFailure } from '@/lib/deity/openai-provider';
 import { ChatAllowanceError, allowanceResponse } from '@/lib/deity/chat-allowance';
 import { openChatBudget, CHAT_OUTPUT_TOKENS, type ChatBudget } from '@/lib/deity/chat-budget-server';
 import { readChatRequest } from '@/lib/deity/chat-request';
@@ -287,8 +287,7 @@ async function handlePOST(req: Request) {
                     budget.addEmbedding(contextForEmbedding);
                     profileEmbedding = await embedOpenAI(contextForEmbedding, providerSignal(10_000));
                 } catch (err) {
-                    if (err && typeof err === 'object' && 'provider' in err && err.provider === 'openai'
-                        && 'status' in err && [401, 402, 403].includes(err.status as number)) throw err;
+                    if (isOpenAIAccountFailure(err)) throw err;
                     console.error('Deity optional profile embedding unavailable', chatFailureDetails(err, 'profile_embedding', requestId));
                 }
             }
@@ -501,6 +500,7 @@ async function handlePOST(req: Request) {
                 }
                 controller.close();
                 } catch (error) {
+                    await activeBudget.blockOnProviderFailure(error);
                     await activeBudget.finish();
                     if (consumerCancelled || req.signal.aborted) {
                         try { controller.close(); } catch { /* The consumer already cancelled. */ }

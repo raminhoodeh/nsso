@@ -93,9 +93,14 @@ beforeEach(() => {
     if (path.endsWith('/intelligent_search_openai_v1')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
     if (path.endsWith('/v1/embeddings')) {
       if (mode === 'profile_embedding_auth' && calls.filter(call => call.path.endsWith('/v1/embeddings')).length === 2) return Response.json({ error: { message: privateText } }, { status: 401 });
+      if (['profile_embedding_billing', 'profile_embedding_rate_limit'].includes(mode) && calls.filter(call => call.path.endsWith('/v1/embeddings')).length === 2) return Response.json({ error: { code: mode === 'profile_embedding_billing' ? 'project_spend_limit_exceeded' : 'slow_down', message: privateText } }, { status: 429 });
       return Response.json({ data: [{ embedding: Array(1536).fill(0.01) }] });
     }
         if (path.endsWith('/v1/responses')) {
+      if (mode === 'stream_billing') return new Response([
+        { type: 'response.output_text.delta', delta: 'Partial fixture response.' },
+        { type: 'error', code: 'credit_balance_exhausted', message: privateText },
+      ].map(value => `data: ${JSON.stringify(value)}\n\n`).join(''), { headers: { 'content-type': 'text/event-stream' } });
       if (mode === 'pending_headers') return new Promise((_resolve, reject) => {
         init.signal.addEventListener('abort', () => { providerAborted = true; reject(new DOMException('Fixture cancelled', 'AbortError')); }, { once: true });
       });
@@ -450,6 +455,39 @@ test('recovery never retries billing, authentication, retirement, ambiguous netw
   await assert.rejects(startChatWithRecovery({ generate: async () => { attempts++; throw { status: 503 }; }, budget: { finish: async () => {} },
     reserveRetry: async () => {}, deadline: Date.now(), pause: async () => {} }));
   assert.equal(attempts, 1);
+});
+
+test('optional profile embedding billing failure stops generation and holds before settlement', async () => {
+  mode = 'profile_embedding_billing';
+  const response = await POST(ownerRequest({ message: 'Recommend creative career courses', category: 'Career' }));
+  assert.equal(response.status, 503); assert.ok(!JSON.stringify(await response.json()).includes(privateText));
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/embeddings')).length, 2);
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/responses')).length, 0);
+  const hold = calls.findIndex(c => c.path.endsWith('/hold_nsso_ai_budget'));
+  const finish = calls.findIndex(c => c.path.endsWith('/finish_nsso_chat_budget'));
+  assert(hold >= 0 && finish > hold);
+  assert.equal(calls[finish].body.p_confirmed, false);
+});
+
+test('ordinary optional profile embedding rate limit can continue without an account hold', async () => {
+  mode = 'profile_embedding_rate_limit';
+  const response = await POST(ownerRequest({ message: 'Recommend creative career courses', category: 'Career' }));
+  assert.equal(response.status, 200); await response.text();
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/embeddings')).length, 2);
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/responses')).length, 1);
+  assert.equal(calls.filter(c => c.path.endsWith('/hold_nsso_ai_budget')).length, 0);
+});
+
+test('partial-stream billing failure records one hold and retains maximum without a retry or action suffix', async () => {
+  mode = 'stream_billing';
+  const response = await POST(request()); const body = await response.text();
+  assert.equal(response.status, 200); assert.match(body, /Partial fixture response/);
+  assert.ok(!body.includes(privateText)); assert.equal(splitActionPayload(body).actionsJson, null);
+  assert.equal(calls.filter(c => c.path.endsWith('/v1/responses')).length, 1);
+  assert.equal(calls.filter(c => c.path.endsWith('/hold_nsso_ai_budget')).length, 1);
+  const finish = calls.find(c => c.path.endsWith('/finish_nsso_chat_budget'));
+  assert.equal(finish.body.p_confirmed, false);
+  assert(calls.findIndex(c => c.path.endsWith('/hold_nsso_ai_budget')) < calls.indexOf(finish));
 });
 test('a denied retry reservation cannot cause a second provider call', async () => {
   let attempts = 0, settlements = 0;

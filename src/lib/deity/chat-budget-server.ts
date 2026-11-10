@@ -3,6 +3,7 @@ import { isIP } from "node:net";
 import { createClient } from "@supabase/supabase-js";
 import { ChatAllowanceError } from "./chat-allowance";
 import { reportRuntimeSignal } from "@/lib/server/runtime-signals";
+import { isOpenAIAccountFailure } from "./openai-provider";
 
 // OpenAI prices verified 2026-11-10. Input includes the highest published cache-write rate.
 export const CHAT_MODEL = "gpt-6-luna";
@@ -75,9 +76,7 @@ export class ChatBudget {
 
   async blockOnProviderFailure(error: unknown) {
     // A user's invalid/expired session is not an upstream provider incident.
-    if (!error || typeof error !== 'object' || !('provider' in error) || error.provider !== 'openai') return;
-    const status = error && typeof error === 'object' && 'status' in error ? error.status : undefined;
-    if (![401, 402, 403].includes(status as number)) return;
+    if (!isOpenAIAccountFailure(error)) return;
     try { const { error } = await this.rpc('hold_nsso_ai_budget', { p_code: 'provider_access_requires_review' }); if (error) throw new Error('Hold unavailable'); }
     catch { reportRuntimeSignal('budget_unavailable'); }
   }

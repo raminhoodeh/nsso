@@ -7,6 +7,61 @@ type Message = { role: 'user' | 'assistant'; content: string };
 type Tool = { name: string; description?: string; parameters?: Record<string, unknown> };
 type Options = { system: string; messages: Message[]; maxOutputTokens: number; tools?: Tool[]; schema?: Record<string, unknown> };
 type Reply = { status?: string; usage?: OpenAIUsage; output?: Array<{ type: string; content?: Array<{ type: string; text?: string }> }> };
+// OpenAI documents these as billing/spend failures, distinct from ordinary429.
+// Keep only allowlisted codes; never expose an upstream message or body.
+// https://developers.openai.com/api/docs/guides/error-codes (checked2026-11-10).
+const ACCOUNT_BILLING_CODES = new Set(['insufficient_quota', 'credit_balance_exhausted',
+  'organization_spend_limit_exceeded', 'project_spend_limit_exceeded', 'organization_usage_limit_exceeded']);
+const MAX_ERROR_BYTES = 16_384;
+const ERROR_BODY_TIMEOUT_MS = 1_000;
+
+function billingCode(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object' || !('code' in error) || typeof error.code !== 'string') return;
+  return ACCOUNT_BILLING_CODES.has(error.code) ? error.code : undefined;
+}
+export function isOpenAIAccountFailure(error: unknown): boolean {
+  if (!error || typeof error !== 'object' || !('provider' in error) || error.provider !== 'openai' || !('status' in error)) return false;
+  return [401, 402, 403].includes(error.status as number) || error.status === 429 && !!billingCode(error);
+}
+
+function discardBody(response: Response) {
+  // An authoritative HTTP error must survive failed or hanging cleanup.
+  try { void response.body?.cancel().catch(() => undefined); } catch { /* No upstream content is logged. */ }
+}
+async function responseBillingCode(response: Response): Promise<string | undefined> {
+  let cleanupReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = performance.now() + ERROR_BODY_TIMEOUT_MS;
+  try {
+    const reader = response.body?.getReader();
+    if (!reader) return;
+    cleanupReader = reader;
+    const bytes = await Promise.race([
+      (async () => {
+        const chunks: Uint8Array[] = []; let length = 0;
+        while (true) {
+          if (performance.now() >= deadline) throw new Error('Error body deadline');
+          const part = await reader.read();
+          if (part.done) break;
+          if (!part.value.byteLength) continue;
+          length += part.value.byteLength;
+          if (length > MAX_ERROR_BYTES) throw new Error('Error body bound exceeded');
+          chunks.push(part.value);
+        }
+        const result = new Uint8Array(length); let offset = 0;
+        for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.byteLength; }
+        return result;
+      })(),
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('Error body deadline')), ERROR_BODY_TIMEOUT_MS); }),
+    ]);
+    return billingCode(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes))?.error);
+  } catch { return undefined; }
+  finally {
+    if (timer !== undefined) clearTimeout(timer);
+    try { void cleanupReader?.cancel().catch(() => undefined); } catch { /* Preserve the status. */ }
+    try { cleanupReader?.releaseLock(); } catch { /* A failed reader cannot hide the status. */ }
+  }
+}
 
 export class OpenAIProviderError extends Error {
   readonly provider = 'openai';
@@ -31,7 +86,11 @@ export function responseBody(options: Options, stream = false) {
 export function responseInputBound(options: Options) { return Buffer.byteLength(JSON.stringify(responseBody(options)), 'utf8') + 2048; }
 async function post(path: 'responses' | 'embeddings', body: unknown, signal: AbortSignal) {
   const response = await fetch(`https://api.openai.com/v1/${path}`, { method: 'POST', headers: headers(), body: JSON.stringify(body), signal, redirect: 'error' });
-  if (!response.ok) { await response.body?.cancel(); throw new OpenAIProviderError(response.status); }
+  if (!response.ok) {
+    const code = response.status === 429 ? await responseBillingCode(response) : undefined;
+    discardBody(response);
+    throw new OpenAIProviderError(response.status, code);
+  }
   return response;
 }
 export async function embedOpenAI(text: string, signal = AbortSignal.timeout(10_000)) {
@@ -85,13 +144,21 @@ export async function streamOpenAI(options: Options, signal: AbortSignal) {
             yield { text: '', calls: [{ name, args: JSON.parse(value.arguments) }] };
           }
           if (value.type === 'response.completed') { completed = true; resolve({ usage: value.response?.usage }); }
-          if (['error', 'response.failed', 'response.incomplete', 'response.refusal.done'].includes(value.type)) throw new OpenAIProviderError(502, 'incomplete_or_refused_response');
+          if (['error', 'response.failed', 'response.incomplete', 'response.refusal.done'].includes(value.type)) {
+            const code = billingCode(value.error ?? value.response?.error ?? value);
+            throw new OpenAIProviderError(code ? 429 : 502, code ?? 'incomplete_or_refused_response');
+          }
         }
         if (part.done) break;
       }
       if (!completed) throw new OpenAIProviderError(502, 'interrupted_response');
     } catch (error) { reject(error); throw error; }
-    finally { await reader.cancel().catch(() => undefined); reader.releaseLock(); }
+    finally {
+      // Terminal errors must reach the caller's durable hold/settlement path
+      // even when the underlying stream refuses or never finishes cleanup.
+      try { void reader.cancel().catch(() => undefined); } catch { /* Preserve the terminal error. */ }
+      try { reader.releaseLock(); } catch { /* Cleanup never replaces the terminal error. */ }
+    }
   }
   return { stream: chunks(), response: finished };
 }
