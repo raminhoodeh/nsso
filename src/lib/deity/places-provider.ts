@@ -1,6 +1,6 @@
 import { generateOpenAI, responseInputBound } from "./openai-provider";
 import type { PlacesProvider } from "./places-service";
-import { type ChatBudget } from "./chat-budget-server";
+import type { ChatBudget } from "./chat-budget-server";
 
 const string = { type: "string" } as const;
 const recommendation: Record<string, any> = {
@@ -29,11 +29,15 @@ const responseSchema: Record<string, any> = {
   required: ["message", "recommendations", "itinerary"],
 };
 
+export function placesGenerationOptions({ system, user }: Parameters<PlacesProvider>[0]) {
+  return { system, messages: [{ role: 'user' as const, content: user }], maxOutputTokens: 4096, schema: responseSchema };
+}
+
 /** Server-only, budgeted OpenAI generation for the separate personal Places app. */
-export const openAIPlacesProvider = async ({ system, user }: Parameters<PlacesProvider>[0], budget: ChatBudget) => {
+export const openAIPlacesProvider = async (prompt: Parameters<PlacesProvider>[0], budget: ChatBudget) => {
   const configuredTimeout = Number(process.env.DEITY_PLACES_TIMEOUT_MS || 22_000);
   const timeout = Math.min(25_000, Math.max(1_000, Number.isFinite(configuredTimeout) ? configuredTimeout : 22_000));
-  const options = { system, messages: [{ role: 'user' as const, content: user }], maxOutputTokens: 4096, schema: responseSchema };
+  const options = placesGenerationOptions(prompt);
   try {
     await budget.prepare(responseInputBound(options), 4096);
     const result = await generateOpenAI(options, AbortSignal.timeout(timeout));
