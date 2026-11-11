@@ -13,36 +13,41 @@ const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400', '600'], 
 const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500'] })
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Dreamsea',
+  title: 'Dreamsea Privacy Policy',
   description: 'Dreamsea privacy policy. We collect minimal data, never sell it, and your dream data belongs only to you.',
 }
 
 const sections = [
   {
-    emoji: '📦',
-    title: 'Data We Collect',
-    body: 'Dreamsea collects your dream audio recordings, AI-generated interpretations, and account information (email address or Apple ID). Audio recordings are stored locally on your device and deleted from our servers immediately after transcription.',
+    "emoji": "🌙",
+    "title": "Anonymous use",
+    "body": "Dreamsea does not ask for a name, email address or Dreamsea account. A random technical session identifies your installation to protect the AI service and enforce your allowance. Apple handles purchases. Dreamsea does not include advertising, data brokers or behavioural analytics."
   },
   {
-    emoji: '🔮',
-    title: 'How We Use Your Data',
-    body: 'Your dream recordings are processed by Google Gemini AI solely to generate interpretations. We do not sell, share, or use your personal data for advertising. Your dream data belongs to you.',
+    "emoji": "📚",
+    "title": "Your library stays on this device",
+    "body": "Your dream library, recordings, images, interpretations and saved narration are stored on this device. Dreamsea does not store this content in its server database or sync your library to another device. Library files are excluded from automatic device backups. Use the in-app export tools to keep or share copies. Dreamsea cannot recover a lost reading or restore your library after the app is deleted."
   },
   {
-    emoji: '🔒',
-    title: 'Data Storage',
-    body: 'Dream interpretations and metadata are stored securely in our Supabase database with row-level security — only you can see your own data. Audio files are stored locally on your device only.',
+    "emoji": "🔮",
+    "title": "Your choice about OpenAI processing",
+    "body": "Dreamsea asks for explicit permission before sending content to OpenAI. If you allow it, recordings, dream text and selected saved interpretation text pass over encrypted connections through Dreamsea's backend to OpenAI for transcription, interpretations, images, monthly reflections, affirmations and AI-generated narration.\n\nDreamsea processes this content transiently and does not write it to its server database or application logs. Dreamsea does not send your technical session or Apple purchase identifiers to OpenAI. OpenAI does not train on API inputs and outputs by default. Its abuse monitoring logs may retain content for up to 30 days, or longer when legally required or necessary to protect its services or others. Disabling response storage does not guarantee zero provider retention. See OpenAI's API data controls.\n\nYou can decline or stop sharing new content in Dreamsea's Privacy Policy. Local recording, existing readings, exports and cached narration remain available. Withdrawing permission cannot recall content already processed. Older app versions require an update before new OpenAI processing is available; older Google processing disclosures do not count as permission to share content with OpenAI."
   },
   {
-    emoji: '✦',
-    title: 'Your Rights',
-    body: 'You may delete your account and all associated data at any time from within the app. Once your dreams are deleted in the app, all data is permanently removed from our database. You can also "Share" your dream interpretations or screenshot them to save them offline before deletion.',
+    "emoji": "🔒",
+    "title": "Service metadata and purchases",
+    "body": "Dreamsea retains random session and request identifiers, one-way input fingerprints, allowance counts, token usage, cost and verified Apple purchase metadata. These records prevent duplicate charges and enforce spending limits without retaining your dream content. Hosting and AI providers also process technical connection data under their own terms. A completed reading that did not reach your phone cannot be retrieved from Dreamsea's servers."
   },
   {
-    emoji: '📬',
-    title: 'Contact',
-    body: 'For any privacy concerns, data requests, or questions, please contact our founder directly at raminhoodeh@gmail.com. We will respond within 48 hours.',
+    "emoji": "✦",
+    "title": "Deletion and control",
+    "body": "You can delete dreams from your local library at any time. Deleting Dreamsea removes its local library; keep any desired exports first. Deletion does not remove copies you exported or change OpenAI's processing retention. Non-content cost and purchase records remain for service protection."
   },
+  {
+    "emoji": "📬",
+    "title": "Contact",
+    "body": "For data requests or privacy questions, contact raminhoodeh@gmail.com."
+  }
 ]
 
 function createDreamseaStarsSvg(): string {
@@ -148,7 +153,7 @@ export default function DreamseaPrivacyPage() {
               marginBottom: '2rem',
             }}
           >
-            Last Updated · April 2026
+            Last Updated · 10 November 2026
           </p>
 
           <p
@@ -187,6 +192,7 @@ export default function DreamseaPrivacyPage() {
                     lineHeight: 1.8,
                     color: 'rgba(193,220,237,0.7)',
                     margin: 0,
+                    whiteSpace: 'pre-line',
                     paddingLeft: '1.75rem',
                   }}
                 >
@@ -206,6 +212,12 @@ export default function DreamseaPrivacyPage() {
             ))}
           </div>
 
+          <p className="mt-8 text-sm text-[#C1DCED]/80">
+            <a href="https://developers.openai.com/api/docs/guides/your-data" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">OpenAI API data controls</a>
+            {' · '}
+            <a href="mailto:raminhoodeh@gmail.com" className="underline underline-offset-4">Privacy contact</a>
+          </p>
+
           <TahoeGlassSurface
             as="aside"
             variant="recessed"
@@ -215,7 +227,7 @@ export default function DreamseaPrivacyPage() {
             className="mt-11 border border-[#C1DCED]/10 px-6 py-5"
           >
             <p className="m-0 text-[0.8rem] leading-[1.7] text-[#C1DCED]/55">
-              By using Dreamsea, you agree to this Privacy Policy. We may update this policy periodically; continued use of the app constitutes acceptance of any changes. This policy applies to the Dreamsea iOS application.
+              This policy applies to the Dreamsea iOS application. Policy updates do not replace your explicit choice about sending content to OpenAI. You can review or change that choice in the app’s Privacy Policy.
             </p>
           </TahoeGlassSurface>
         </TahoeGlassSurface>

@@ -3,14 +3,15 @@ import { isIP } from "node:net";
 import { createClient } from "@supabase/supabase-js";
 import { ChatAllowanceError } from "./chat-allowance";
 import { reportRuntimeSignal } from "@/lib/server/runtime-signals";
+import { isOpenAIAccountFailure } from "./openai-provider";
 
-// Micro-USD rates: Flash 2.5 text input $0.30/M; output including thinking $2.50/M.
-// Embeddings are conservatively charged at the text-input rate, with UTF-8 bytes as an upper bound.
-export const CHAT_MODEL = "gemini-2.5-flash";
+// OpenAI prices verified 2026-11-10. Input includes the highest published cache-write rate.
+export const CHAT_MODEL = "gpt-6-luna";
 export const CHAT_OUTPUT_TOKENS = 2048;
-const INPUT_RATE = 0.3;
-const OUTPUT_RATE = 2.5;
-type Usage = { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number };
+const INPUT_RATE = 0.25;
+const OUTPUT_RATE = 0.5;
+const EMBEDDING_RATE = 0.02;
+type Usage = { input_tokens?: number; output_tokens?: number };
 type Rpc = (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
 
 export function clientIpHash(request: Request, env = process.env): string {
@@ -54,7 +55,7 @@ export class ChatBudget {
     });
     if (error || !data || typeof data !== "object") throw new ChatAllowanceError("chat_budget_unavailable", 503);
     const reply = data as { allowed?: boolean; code?: string; reset_at?: string };
-    if (reply.allowed !== true) throw new ChatAllowanceError(reply.code || "chat_budget_unavailable", reply.code?.startsWith("daily_") || reply.code === "chat_busy" ? 429 : 503, reply.reset_at);
+    if (reply.allowed !== true) throw new ChatAllowanceError(reply.code || "chat_budget_unavailable", (reply.code?.startsWith("daily_") || reply.code === "monthly_allowance_exhausted") || reply.code === "chat_busy" ? 429 : 503, reply.reset_at);
     this.reserved = Math.max(this.reserved, micros);
   }
 
@@ -62,7 +63,7 @@ export class ChatBudget {
     const tokens = Buffer.byteLength(text, "utf8") + 512;
     if (this.embeddingTokens + tokens > 22_000) throw new ChatAllowanceError("chat_prompt_too_large", 413);
     this.embeddingTokens += tokens;
-    this.embeddingMicros += Math.ceil(tokens * INPUT_RATE);
+    this.embeddingMicros += Math.ceil(tokens * EMBEDDING_RATE);
   }
 
   async prepare(promptTokens: number, outputTokens: number) {
@@ -73,12 +74,19 @@ export class ChatBudget {
     await this.reserve(Math.max(10_000, Math.ceil((promptTokens + 2048) * INPUT_RATE + outputTokens * OUTPUT_RATE + this.embeddingMicros)));
   }
 
+  async blockOnProviderFailure(error: unknown) {
+    // A user's invalid/expired session is not an upstream provider incident.
+    if (!isOpenAIAccountFailure(error)) return;
+    try { const { error } = await this.rpc('hold_nsso_ai_budget', { p_code: 'provider_access_requires_review' }); if (error) throw new Error('Hold unavailable'); }
+    catch { reportRuntimeSignal('budget_unavailable'); }
+  }
+
   async finish(usage?: Usage) {
     if (this.finished) return;
     this.finished = true;
-    const numbers = [usage?.promptTokenCount, usage?.candidatesTokenCount, usage?.thoughtsTokenCount ?? 0];
+    const numbers = [usage?.input_tokens, usage?.output_tokens];
     const confirmed = numbers.every(n => typeof n === "number" && Number.isSafeInteger(n) && n >= 0);
-    const micros = confirmed ? Math.ceil(numbers[0]! * INPUT_RATE + (numbers[1]! + numbers[2]!) * OUTPUT_RATE + this.embeddingMicros) : this.reserved;
+    const micros = confirmed ? Math.ceil(numbers[0]! * INPUT_RATE + numbers[1]! * OUTPUT_RATE + this.embeddingMicros) : this.reserved;
     try {
       const { error } = await this.rpc("finish_nsso_chat_budget", { p_request_id: this.id, p_micros: micros, p_confirmed: confirmed });
       if (error) throw new Error("Budget settlement unavailable");
@@ -89,11 +97,13 @@ export class ChatBudget {
   }
 }
 
-export async function openChatBudget(request: Request, route: "chat" | "places" | "editorial") {
+export async function openChatBudget(request: Request, route: "chat" | "places" | "editorial" | "ingestion") {
   const origin = request.headers.get("origin");
   if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== new URL(request.url).origin)) {
     throw new ChatAllowanceError("chat_origin_denied", 403);
   }
+  // Disabled or unconfigured AI must not consume anyone's allowance.
+  if (process.env.NSSO_AI_ENABLED !== 'true' || !process.env.OPENAI_API_KEY) throw new ChatAllowanceError('chat_provider_disabled', 503);
   const ipHash = clientIpHash(request);
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

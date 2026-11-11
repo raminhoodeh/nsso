@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -40,7 +41,9 @@ test('American Doctor uses the official director-linked trailer missing from TMD
 
 test('editing and cleanup preserve the New collection', () => {
     assert.match(modalSource, /\[\s*"New",\s*"Critically-Acclaimed Mind-Bending Sci-Fi"/);
-    assert.match(cleanupSource, /PROTECTED_CATEGORIES = new Set\(\["New"\]\)/);
-    assert.match(cleanupSource, /if \(PROTECTED_CATEGORIES\.has\(catName\)\) continue/);
-    assert.doesNotMatch(cleanupSource, /TARGET_CATEGORIES = \[\s*"New",/);
+    assert.match(cleanupSource, /maintainFilms\('cleanup'\)/);
+    // The operator proof runs with all network replaced by fixtures and verifies
+    // New/Japanese Anime records stay untouched before paid work or writes.
+    const report = execFileSync(process.execPath, [path.join(root, 'scripts/check-openai-operator.mjs')], { cwd: root, encoding: 'utf8', timeout: 15000 });
+    assert.match(report, /OpenAI operator proof passed: \d+ offline/i);
 });

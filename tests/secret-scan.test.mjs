@@ -7,5 +7,6 @@ test('secret scanning rejects private keys and service JWTs without rejecting pu
     assert.deepEqual(secretKinds(jwt('anon')),[])
     assert.deepEqual(secretKinds('-----BEGIN '+'PRIVATE KEY-----'),['private-key'])
     assert.deepEqual(secretKinds('AI'+'za'+'x'.repeat(35)),['google-api-key'])
+    assert.deepEqual(secretKinds('AQ'+'.'+'x'.repeat(50)),['google-api-key'])
     assert.deepEqual(secretKinds('gh'+'p_'+'x'.repeat(36)),['github-token'])
 })

@@ -11,6 +11,7 @@ export async function startChatWithRecovery<T>(options: {
   try { return await options.generate(); }
   catch (error) {
     const status = error && typeof error === 'object' && 'status' in error ? error.status : undefined;
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'provider_not_configured') throw error;
     if (status !== 503 || Date.now() > options.deadline - 50_000) throw error;
     // Keep the first attempt's conservative charge. The retry must acquire its own
     // reservation; a failed request never makes a second paid call for free.

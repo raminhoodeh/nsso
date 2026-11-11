@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 export function secretKinds(text) {
     const kinds = []
     if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(text)) kinds.push('private-key')
-    if (/AIza[A-Za-z0-9_-]{35}/.test(text)) kinds.push('google-api-key')
+    if (/(?:AIza[A-Za-z0-9_-]{35,}|\bAQ\.[A-Za-z0-9_-]{50})/.test(text)) kinds.push('google-api-key')
     if (/(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{60,})/.test(text)) kinds.push('github-token')
     if (/\bsk-(?:proj-)?[A-Za-z0-9_-]{35,}/.test(text)) kinds.push('provider-key')
     for (const match of text.matchAll(/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g)) {

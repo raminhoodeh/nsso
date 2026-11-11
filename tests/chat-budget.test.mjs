@@ -7,7 +7,7 @@ const root = new URL("../src/lib/deity/", import.meta.url);
 globalThis.__budgetRuntimeSignals = [];
 const hooks = registerHooks({ resolve(specifier, context, next) {
   if (specifier === '@/lib/server/runtime-signals') return { url: 'data:text/javascript,' + encodeURIComponent('export function reportRuntimeSignal(...args) { globalThis.__budgetRuntimeSignals.push(args); return "synthetic-signal-id"; }'), shortCircuit: true };
-  if (context.parentURL?.startsWith(root.href) && specifier === "./chat-allowance") return next(new URL("chat-allowance.ts", root).href, context);
+  if (context.parentURL?.startsWith(root.href) && ["./chat-allowance", "./openai-provider"].includes(specifier)) return next(new URL(specifier.slice(2) + ".ts", root).href, context);
   return next(specifier, context);
 } });
 const { ChatBudget, clientIpHash, openChatBudget } = await import(new URL("chat-budget-server.ts", root));
@@ -50,15 +50,15 @@ test("completion reservation covers the hard output limit before generation", as
   const { calls, budget } = fake();
   await budget.reserve(); budget.addEmbedding("hello"); await budget.prepare(10_000, 4096);
   assert.equal(calls[0].args.p_micros, 10_000);
-  assert.ok(calls[1].args.p_micros >= 10_000 * 0.3 + 4096 * 2.5);
+  assert.ok(calls[1].args.p_micros >= 10_000 * 0.25 + 4096 * 0.5);
   assert.equal(calls[0].args.p_request_id, calls[1].args.p_request_id);
-  await budget.finish({ promptTokenCount: 10_000, candidatesTokenCount: 100, thoughtsTokenCount: 10 });
+  await budget.finish({ input_tokens: 10_000, output_tokens: 100 });
   assert.equal(calls[2].args.p_confirmed, true);
-  assert.equal(calls[2].args.p_micros, 3431);
+  assert.equal(calls[2].args.p_micros, 2561);
   await budget.finish(); assert.equal(calls.length, 3);
 });
 test("failure and missing usage retain the reservation, never refund an unknown charge", async () => {
-  for (const usage of [undefined, {}, { promptTokenCount: NaN, candidatesTokenCount: 1 }]) {
+  for (const usage of [undefined, {}, { input_tokens: NaN, output_tokens: 1 }]) {
     const { calls, budget } = fake(); await budget.reserve(); await budget.prepare(90_000, 4096); await budget.finish(usage);
     assert.equal(calls.at(-1).args.p_confirmed, false);
     assert.equal(calls.at(-1).args.p_micros, calls[1].args.p_micros);
@@ -83,7 +83,7 @@ test("settlement RPC errors emit one sanitized aggregate signal without retrying
       await budget.reserve(); await budget.prepare(90_000, 4096);
       const reserved = calls.at(-1).args.p_micros;
       await assert.doesNotReject(budget.finish());
-      await budget.finish({ promptTokenCount: 1, candidatesTokenCount: 1 });
+      await budget.finish({ input_tokens: 1, output_tokens: 1 });
       const settlements = calls.filter(call => call.name === 'finish_nsso_chat_budget');
       assert.equal(settlements.length, 1);
       assert.equal(settlements[0].args.p_confirmed, false);
@@ -96,7 +96,7 @@ test("settlement RPC errors emit one sanitized aggregate signal without retrying
 test("successful settlement does not emit an accounting failure signal", async () => {
   globalThis.__budgetRuntimeSignals = [];
   const { budget } = fake();
-  await budget.reserve(); await budget.finish({ promptTokenCount: 10, candidatesTokenCount: 2 });
+  await budget.reserve(); await budget.finish({ input_tokens: 10, output_tokens: 2 });
   assert.deepEqual(globalThis.__budgetRuntimeSignals, []);
 });
 test("token bounds cannot silently invalidate the cost ceiling", async () => {
