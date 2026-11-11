@@ -330,5 +330,23 @@ try{
   const limits=await Promise.all(Array.from({length:15},()=>rpc('consume_nsso_request_limit',{p_scope:'upload_actor',p_subject_hash:'b'.repeat(64)},'service')))
   assert.equal(limits.filter(x=>x.allowed).length,12)
  })
+ await check('OpenAI retrieval migrations preserve scoped, global, empty and stale-hash contracts through the HTTP gateway',async()=>{
+  migration('openai_monthly_budget');migration('openai_knowledge_index')
+  for(const file of readdirSync(resolve(repo,'supabase/migrations')).filter(x=>/^20261111.*_deity_.*\.sql$/.test(x)).sort())sql(readFileSync(resolve(repo,'supabase/migrations',file),'utf8'))
+  const oldVector='['+[1,...Array(767).fill(0)].join(',')+']'
+  const vector='['+[1,...Array(1535).fill(0)].join(',')+']'
+  sql(`INSERT INTO public.agent_knowledge(content,metadata,embedding) SELECT 'Synthetic accelerator proof '||n,jsonb_build_object('source',CASE WHEN n=1 THEN 'ACCELERATORS.csv' ELSE 'synthetic-large' END),${literal(oldVector)}::public.vector FROM generate_series(1,1100) n`)
+  sql(`INSERT INTO public.agent_knowledge_openai_v1(id,content_hash,embedding) SELECT id,md5(content||coalesce(metadata::text,'')),${literal(vector)}::public.vector FROM public.agent_knowledge WHERE content LIKE 'Synthetic accelerator proof %'`)
+  sql("NOTIFY pgrst,'reload schema'");await new Promise(r=>setTimeout(r,500))
+  const args={query_embedding:vector,query_text:'no matching keyword',match_threshold:0.5,match_count:8,filter_files:['ACCELERATORS.csv'],candidate_count:50}
+  for(const who of ['anon','owner'])assert.ok([401,403].includes((await request('/rpc/intelligent_search_openai_v1',who,args)).http))
+  let rows=await rpc('intelligent_search_openai_v1',args,'service');assert.equal(rows.length,1);assert.equal(rows[0].metadata.source,'ACCELERATORS.csv');assert.equal(rows[0].similarity,1)
+  rows=await rpc('intelligent_search_openai_v1',{...args,profile_embedding:vector},'service');assert.equal(rows.length,1);assert.equal(rows[0].profile_similarity,1);assert.ok(Math.abs(rows[0].combined_score-0.8)<0.00001)
+  for(const filter_files of [null,['synthetic-large']]){rows=await rpc('intelligent_search_openai_v1',{...args,filter_files},'service');assert.equal(rows.length,8);assert.ok(rows.every(x=>x.similarity===1&&(!filter_files||filter_files.includes(x.metadata.source))))}
+  assert.deepEqual(await rpc('intelligent_search_openai_v1',{...args,filter_files:['missing-source']},'service'),[])
+  sql("UPDATE public.agent_knowledge_openai_v1 SET content_hash=repeat('0',32) WHERE id IN (SELECT id FROM public.agent_knowledge WHERE metadata->>'source'='ACCELERATORS.csv')")
+  assert.deepEqual(await rpc('intelligent_search_openai_v1',args,'service'),[])
+  for(const changed of [{query_embedding:'[1,0]'},{match_count:21},{candidate_count:101},{match_threshold:2}])assert.equal((await request('/rpc/intelligent_search_openai_v1','service',{...args,...changed})).http,400)
+ })
  console.log(`Completed ${results.length} local profile journal checks.`)
 }finally{execFileSync('docker',['stop',restName],{encoding:'utf8'})}

@@ -28,6 +28,7 @@ const { POST } = await import(new URL('app/api/deity/chat/route.ts', source));
 const { NSSO_PRODUCT_CONTEXT, isNssoProductQuestion } = await import(new URL('lib/deity/product-context.ts', source));
 const { chatFailureDetails } = await import(new URL('lib/deity/chat-diagnostics.ts', source));
 const { boundedChatHistory } = await import(new URL('lib/deity/chat-allowance.ts', source));
+const { detectCategory, detectResourceFiles } = await import(new URL('lib/deity/contextManager.ts', source));
 const { startChatWithRecovery } = await import(new URL('lib/deity/chat-recovery.ts', source));
 const { splitActionPayload, parseActionList } = await import(new URL('lib/deity/actionParser.ts', source));
 hooks.deregister();
@@ -90,6 +91,10 @@ beforeEach(() => {
       if (mode === 'links_too_many') return Response.json(Array.from({ length: 501 }, () => row));
       return Response.json([row]);
     }
+    if (path.endsWith('/intelligent_search_openai_v1') && mode === 'retrieval_error') return Response.json({code:'57014'}, {status:500});
+    if (path.endsWith('/intelligent_search_openai_v1') && mode === 'fallback_error') return body.filter_files ? Response.json([]) : Response.json({code:'57014'}, {status:500});
+    if (path.endsWith('/intelligent_search_openai_v1') && mode === 'empty_scoped' && body.filter_files) return Response.json([]);
+    if (path.endsWith('/intelligent_search_openai_v1') && mode === 'accelerator') return Response.json([{content:'Acme Accelerator: https://acme.example.test/ Mentorship for early stage SaaS founders.',metadata:{source:'ACCELERATORS.csv'},similarity:0.48,combined_score:0.33}]);
     if (path.endsWith('/intelligent_search_openai_v1')) return Response.json([{ content: 'Network School is in Malaysia.', metadata: { source: 'unrelated.csv', url: 'https://fixtures.example.test/books' } }]);
     if (path.endsWith('/v1/embeddings')) {
       if (mode === 'profile_embedding_auth' && calls.filter(call => call.path.endsWith('/v1/embeddings')).length === 2) return Response.json({ error: { message: privateText } }, { status: 401 });
@@ -591,4 +596,60 @@ test('an optional profile embedding account failure holds the provider and canno
   assert.equal(calls.filter(call => call.path.endsWith('/v1/responses')).length, 0);
   assert(calls.some(call => call.path.endsWith('/hold_nsso_ai_budget')));
   assert(!JSON.stringify({ body, logs }).includes(privateText));
+});
+
+test('accelerators for nsso uses its exact curated source even with a selected unrelated chip', async () => {
+ mode='accelerator';const response=await POST(request({message:'what accelerators do you recommend for nsso',category:'AI Tools'}));assert.equal(response.status,200);await response.text();
+ const searches=calls.filter(c=>c.path.endsWith('/intelligent_search_openai_v1'));assert.equal(searches.length,1);assert.deepEqual(searches[0].body.filter_files,['ACCELERATORS.csv']);assert.equal(searches[0].body.match_threshold,0.3);
+ assert.match(calls.find(c=>c.path.endsWith('/v1/responses')).body.instructions,/Acme Accelerator/);
+});
+test('valid scoped matches are never replaced by global matches because their weighted score is low', async () => {
+ mode='accelerator';const response=await POST(request({message:'Recommend AI tools'}));await response.text();assert.equal(calls.filter(c=>c.path.endsWith('/intelligent_search_openai_v1')).length,1);
+});
+test('a database retrieval failure is reported instead of generating generic ungrounded advice', async () => {
+ mode='retrieval_error';const response=await POST(request({message:'Recommend accelerators for nsso'}));assert.equal(response.status,503);const body=await response.json();assert.equal(body.code,'chat_knowledge_unavailable');assert.equal(calls.filter(c=>c.path.endsWith('/v1/responses')).length,0);
+});
+
+test('product identity and resource requests together still search the accelerator corpus',async()=>{
+ mode='accelerator';const response=await POST(request({message:'What is nsso and which accelerators would fit it?'}));await response.text();assert.deepEqual(calls.find(c=>c.path.endsWith('/intelligent_search_openai_v1')).body.filter_files,['ACCELERATORS.csv']);
+});
+
+for (const [message, category] of [
+  ['Which startup accelerators should nsso apply to?', 'Start-up / Investors'],
+  ['Email me the details', null],
+  ['I want to apply', null],
+  ['AI startup funding', 'Start-up / Investors'],
+  ['Recommend AI tools', 'AI Tools'],
+  ['Find product management courses', 'Courses'],
+  ['Help with my cover letter', 'Career'],
+  ['Find start up investors', 'Start-up / Investors'],
+]) test(`category routing: ${message}`, () => assert.equal(detectCategory(message), category));
+
+test('resource routing supports multiple explicit databases and avoids substring matches', () => {
+  assert.deepEqual(detectResourceFiles('Accelerators and angel investors'), ['ACCELERATORS.csv', 'Angel Investor Database.csv']);
+  assert.deepEqual(detectResourceFiles('Venture capital and family offices'), ['Family Offices Database.csv', 'VC Investor Database.csv']);
+  assert.deepEqual(detectResourceFiles('Incubators and business grants'), ['ACCELERATORS.csv', 'UK Business Grants.csv']);
+  assert.equal(detectResourceFiles('My grantwriting biography'), null);
+});
+
+test('an empty category search can use global context but a global failure cannot generate advice', async () => {
+  mode = 'empty_scoped';
+  let response = await POST(request({message: 'Recommend courses'}));
+  assert.equal(response.status, 200);
+  await response.text();
+  assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search_openai_v1')).length, 2);
+  mode = 'fallback_error';
+  calls = [];
+  response = await POST(request({message: 'Recommend courses'}));
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, 'chat_knowledge_unavailable');
+  assert(!calls.some(c => c.path.endsWith('/v1/responses')));
+});
+
+test('empty explicit accelerator results never substitute unrelated global resources', async () => {
+  mode = 'empty_scoped';
+  const response = await POST(request({message: 'Recommend accelerators for nsso'}));
+  assert.equal(response.status, 200);
+  await response.text();
+  assert.equal(calls.filter(c => c.path.endsWith('/intelligent_search_openai_v1')).length, 1);
 });

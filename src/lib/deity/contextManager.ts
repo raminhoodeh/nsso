@@ -12,7 +12,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     'Courses': ['course', 'learn', 'training', 'class', 'education', 'teach', 'study'],
     'AI Tools': ['ai tool', 'automation', 'software', 'app', 'ai', 'tool'],
     'Career': ['job', 'career', 'resume', 'interview', 'cover letter', 'hire', 'work'],
-    'Start-up / Investors': ['investor', 'vc', 'funding', 'startup', 'pitch', 'accelerator', 'grant', 'capital', 'raise', 'angel', 'seed', 'pre-seed', 'deck', 'valuation'],
+    'Start-up / Investors': ['investor', 'vc', 'funding', 'startup', 'start-up', 'start up', 'pitch', 'accelerator', 'grant', 'capital', 'raise', 'angel', 'seed', 'pre-seed', 'deck', 'valuation'],
     'Services': ['service', 'agency', 'branding', 'marketing'],
     'Places': ['place', 'location', 'venue', 'event', 'restaurant', 'bar'],
     "Member's Clubs": ['club', 'membership', 'founder', 'network']
@@ -138,12 +138,29 @@ export function detectCategory(message: string): string | null {
     // Check for exact category names first (if passed from UI chips)
     // (This is usually handled by the 'category' param in the API, but good fallback)
 
+    // Match whole terms, not "ai" inside "email" or "app" inside "apply".
+    // Prefer the specific topic over generic terms such as AI or app.
+    let best: { category: string; score: number } | null = null;
     for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-        if (keywords.some(kw => lowerMsg.includes(kw))) {
-            return cat;
+        for (const keyword of keywords) {
+            const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+            if (new RegExp(`\\b${escaped}(?:s|es)?\\b`, 'i').test(lowerMsg) && (!best || keyword.length > best.score)) {
+                best = { category: cat, score: keyword.length };
+            }
         }
     }
+    if (best) return best.category;
     return null;
+}
+
+export function detectResourceFiles(message: string): string[] | null {
+    const files: string[] = [];
+    if (/\b(?:accelerators?|incubators?)\b/i.test(message)) files.push('ACCELERATORS.csv');
+    if (/\bfamily\s+offices?\b/i.test(message)) files.push('Family Offices Database.csv');
+    if (/\bangel\s+investors?\b/i.test(message)) files.push('Angel Investor Database.csv');
+    if (/\b(?:venture\s+capital|vc(?:s|\s+investors?)?)\b/i.test(message)) files.push('VC Investor Database.csv');
+    if (/\b(?:business\s+)?grants?\b/i.test(message)) files.push('UK Business Grants.csv');
+    return files.length ? files : null;
 }
 
 /**
