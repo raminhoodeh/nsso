@@ -38,7 +38,7 @@ globalThis.fetch = async (url, options) => {
   }
   if (action === 'nsso_openai_index_batch') { assert.equal(indexed.size, expectedRows, 'Recovery must finish the full receipt before selecting new work'); return reply([]); }
   if (action === 'commit_nsso_openai_index_batch') {
-    assert(body.p_rows.length >= 1 && body.p_rows.length <= 32 && body.p_rows.length <= 128, 'Each transaction must respect both bounds');
+    assert(body.p_rows.length >= 1 && body.p_rows.length <= 16 && body.p_rows.length <= 128, 'Each transaction must respect both bounds');
     const saved = JSON.parse(await readFile(path.join(checkpointRoot, `${receiptId}.json`), 'utf8'));
     assert.equal(saved.state, 'generated'); assert.equal(saved.rows.length, expectedRows, 'Never replace a generated receipt with a partial checkpoint');
     commitBodies.push(body.p_rows);
@@ -58,7 +58,7 @@ try {
   await reset();
   const fresh = await embeddings(sourceRows); receiptId = fresh.requestId;
   assert.equal(await commitReceipt(fresh), 128);
-  assert.deepEqual(commitBodies.map(rows => rows.length), [32, 32, 32, 32]);
+  assert.deepEqual(commitBodies.map(rows => rows.length), [16, 16, 16, 16, 16, 16, 16, 16]);
   assert.deepEqual(commitBodies.flat().map(row => row.id), sourceRows.map(row => row.id));
   assert.equal(finishCalls, 1, 'Fresh receipt settlement must happen once, outside the chunk loop');
   assert.equal(charges.get(receiptId).settlements, 1); assert.equal((await readCheckpoints('index')).length, 0); checks++;
@@ -76,13 +76,13 @@ try {
     const unknown = JSON.stringify({ requestId: '99999999-9999-4999-8999-999999999999', kind: 'index', state: 'claimed', maximumMicros: 881, operationHashes: Array(128).fill('b'.repeat(64)) });
     await writeFile(unknownPath, unknown, { mode: 0o600 });
     await assert.rejects(commitReceipt(paid), error => error.code === (failure === 'fail_after_two' ? 'operator_database_request_rejected' : 'operator_index_commit_unconfirmed'));
-    assert.equal(indexed.size, 64); assert.equal(finishCalls, 1);
+    assert.equal(indexed.size, 32); assert.equal(finishCalls, 1);
     assert.deepEqual(await readFile(receiptPath), before, 'Partial failure must preserve the full generated receipt byte for byte');
     const pending = await readCheckpoints('index'); assert.equal(pending.length, 1); assert.equal(pending[0].rows.length, 128); checks++;
     const priorCommits = commitBodies.length;
     mode = 'success';
     assert.deepEqual(await backfill({ apply: true, maxBatches: 1 }), { rows: 128, batches: 0 });
-    assert.deepEqual(commitBodies.slice(priorCommits).map(rows => rows.length), [32, 32, 32, 32]);
+    assert.deepEqual(commitBodies.slice(priorCommits).map(rows => rows.length), [16, 16, 16, 16, 16, 16, 16, 16]);
     assert.deepEqual(commitBodies.slice(priorCommits).flat().map(row => row.id), sourceRows.map(row => row.id));
     assert.equal(indexed.size, 128); assert.equal(providerCalls, 1); assert.equal(reserveCalls, 1); assert.equal(claimCalls, 1);
     assert.equal(finishCalls, 2, 'Disk recovery must settle idempotently once, not once per chunk');
@@ -99,4 +99,4 @@ try {
   globalThis.fetch = original.fetch; console.log = original.log; globalThis.setTimeout = original.timer;
   await rm(checkpointRoot, { recursive: true, force: true });
 }
-console.log(JSON.stringify({ checks, maximumCommitRows: 32, providerReplayCalls: 0, realNetworkRequests: 0, realDatabaseWrites: 0, realProviderCalls: 0 }));
+console.log(JSON.stringify({ checks, maximumCommitRows: 16, providerReplayCalls: 0, realNetworkRequests: 0, realDatabaseWrites: 0, realProviderCalls: 0 }));

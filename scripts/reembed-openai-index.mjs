@@ -10,8 +10,8 @@ export async function commitReceipt(receipt) {
   // Use smaller SQL transactions under the API role deadline. The full generated
   // receipt stays intact until every chunk is acknowledged, so recovery repeats
   // only the same hash-checked upserts and never asks the provider again.
-  for (let offset = 0; offset < receipt.rows.length; offset += 32) {
-    const rows = receipt.rows.slice(offset, offset + 32).map(({ id, content_hash, embedding }) => ({ id, content_hash, embedding }));
+  for (let offset = 0; offset < receipt.rows.length; offset += 16) {
+    const rows = receipt.rows.slice(offset, offset + 16).map(({ id, content_hash, embedding }) => ({ id, content_hash, embedding }));
     const result = await rpc('commit_nsso_openai_index_batch', { p_rows: rows });
     if (!Number.isSafeInteger(result?.committed) || result.committed !== rows.length) throw new OperatorError('operator_index_commit_unconfirmed');
     committed += result.committed;
