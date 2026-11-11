@@ -14,14 +14,24 @@ const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500'] })
 
 export const metadata: Metadata = {
   title: 'Dreamsea Privacy Policy',
-  description: 'Dreamsea privacy policy. We collect minimal data, never sell it, and your dream data belongs only to you.',
+  description: 'How Dreamsea handles dream content, automated AI processing, technical identifiers, human access, and research into on-device AI.',
 }
 
 const sections = [
   {
     "emoji": "🌙",
-    "title": "Anonymous use",
-    "body": "Dreamsea does not ask for a name, email address or Dreamsea account. A random technical session identifies your installation to protect the AI service and enforce your allowance. Apple handles purchases. Dreamsea does not include advertising, data brokers or behavioural analytics."
+    "title": "No name or email required",
+    "body": "Dreamsea does not ask for your name, email address or a Dreamsea account. A random technical session identifies your installation to protect the AI service and enforce your allowance. Apple handles purchases. Dreamsea does not include advertising, data brokers or behavioural analytics."
+  },
+  {
+    "emoji": "🫧",
+    "title": "Automated interpretation and human access",
+    "body": "Your dreams are interpreted automatically by AI, not by a human dream interpreter. Dreamsea does not retain a server-side library of recordings, dream text or interpretations for staff to browse, and it does not write that content to its application logs. If you choose to send us a dream or recording for support, we can read or listen to what you provide.\n\nAI processing takes place through Dreamsea's backend and OpenAI. OpenAI's access and retention policies apply, including the possibility of authorised human review for abuse monitoring or legal requirements."
+  },
+  {
+    "emoji": "🔎",
+    "title": "Identity and technical identifiers",
+    "body": "Dreamsea does not attach your name, email address, technical session ID or Apple purchase identifiers to OpenAI requests. The service uses random identifiers to link requests and allowances to an installation, rather than asking who you are. These technical records are pseudonymous, not a guarantee of complete anonymity."
   },
   {
     "emoji": "📚",
@@ -30,8 +40,13 @@ const sections = [
   },
   {
     "emoji": "🔮",
-    "title": "Your choice about OpenAI processing",
-    "body": "Dreamsea asks for explicit permission before sending content to OpenAI. If you allow it, recordings, dream text and selected saved interpretation text pass over encrypted connections through Dreamsea's backend to OpenAI for transcription, interpretations, images, monthly reflections, affirmations and AI-generated narration.\n\nDreamsea processes this content transiently and does not write it to its server database or application logs. Dreamsea does not send your technical session or Apple purchase identifiers to OpenAI. OpenAI does not train on API inputs and outputs by default. Its abuse monitoring logs may retain content for up to 30 days, or longer when legally required or necessary to protect its services or others. Disabling response storage does not guarantee zero provider retention. See OpenAI's API data controls.\n\nYou can decline or stop sharing new content in Dreamsea's Privacy Policy. Local recording, existing readings, exports and cached narration remain available. Withdrawing permission cannot recall content already processed. Older app versions require an update before new OpenAI processing is available; older Google processing disclosures do not count as permission to share content with OpenAI."
+    "title": "OpenAI processing",
+    "body": "When you create an AI reading, recordings, dream text and selected saved interpretation text pass over encrypted connections through Dreamsea's backend to OpenAI for transcription, interpretations, images, monthly reflections, affirmations and AI-generated narration.\n\nDreamsea processes this content transiently and does not write it to its server database or application logs. OpenAI does not train on API inputs and outputs by default. Depending on the endpoint, its abuse monitoring logs may retain submitted content for up to 30 days, or longer when legally required or necessary to protect its services or others.\n\nCreating new AI readings currently requires an internet connection and uses this remote processing. Existing readings, exports and cached narration remain on your device. Deleting a local dream cannot recall content already processed by OpenAI. Older app versions require an update before new OpenAI processing is available."
+  },
+  {
+    "emoji": "✦",
+    "title": "Exploring on-device AI",
+    "body": "We are exploring on-device AI, including local speech transcription and local language models, to reduce the need to send dream content off your device. We are evaluating the balance between privacy, transcription accuracy, interpretation quality, speed and device limitations.\n\nTranscription turns your speech into text. Interpreting that text is a separate task: Dreamsea currently draws on a custom context database of dream-interpretation philosophy and expert-curated guidance. Our research includes how local models could access that knowledge and preserve the quality and philosophical grounding of readings."
   },
   {
     "emoji": "🔒",
@@ -153,7 +168,7 @@ export default function DreamseaPrivacyPage() {
               marginBottom: '2rem',
             }}
           >
-            Last Updated · 10 November 2026
+            Last Updated · 11 November 2026
           </p>
 
           <p
@@ -227,7 +242,7 @@ export default function DreamseaPrivacyPage() {
             className="mt-11 border border-[#C1DCED]/10 px-6 py-5"
           >
             <p className="m-0 text-[0.8rem] leading-[1.7] text-[#C1DCED]/55">
-              This policy applies to the Dreamsea iOS application. Policy updates do not replace your explicit choice about sending content to OpenAI. You can review or change that choice in the app’s Privacy Policy.
+              This policy applies to the Dreamsea iOS app. AI readings currently use remote processing; on-device AI remains exploratory.
             </p>
           </TahoeGlassSurface>
         </TahoeGlassSurface>
