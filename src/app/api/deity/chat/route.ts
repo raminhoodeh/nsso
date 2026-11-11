@@ -10,7 +10,7 @@ import { startChatWithRecovery } from '@/lib/deity/chat-recovery';
 import { createActionPayload, normalizeToolCall, type DeityAction } from '@/lib/deity/actionParser';
 import { analyzeSEO } from '@/lib/deity/seoAnalyzer';
 import { DEITY_TOOLS } from '@/lib/deity/tools';
-import { detectCategory, assembleSystemPrompt, detectSectionIntent, detectKnowledgeIntent } from '@/lib/deity/contextManager';
+import { detectCategory, detectResourceFiles, assembleSystemPrompt, detectSectionIntent, detectKnowledgeIntent } from '@/lib/deity/contextManager';
 import { assessLinkHealth } from '@/lib/deity/linkVerifier';
 import { reportRuntimeSignal } from '@/lib/server/runtime-signals';
 import { calculateProfileCompleteness } from '@/lib/profile-completeness';
@@ -115,8 +115,9 @@ async function handlePOST(req: Request) {
         const isSystemFollowUp = message.startsWith('[SYSTEM:');
 
         // Auto-detect category
-        const productQuestion = isNssoProductQuestion(message);
-        const detectedCategory = productQuestion ? null : category || detectCategory(message);
+        const resourceFiles = detectResourceFiles(message);
+        const productQuestion = isNssoProductQuestion(message) && !resourceFiles;
+        const detectedCategory = productQuestion ? null : resourceFiles ? 'Start-up / Investors' : category || detectCategory(message);
 
         // Detect User Intent (Profile vs Knowledge)
         const intents = detectSectionIntent(message, history || []);
@@ -140,6 +141,9 @@ async function handlePOST(req: Request) {
         if (productQuestion) {
             // Similarity search over third-party resources cannot establish our product's identity.
             skipSearch = true;
+        } else if (resourceFiles) {
+            filterFiles = resourceFiles;
+            threshold = 0.3; // Calibrated against fresh OpenAI query embeddings.
         } else if (detectedCategory && CATEGORY_CONFIG[detectedCategory]) {
             // User specified a category or auto-detected knowledge topic - use its filters
             filterFiles = CATEGORY_CONFIG[detectedCategory].files;
@@ -267,7 +271,6 @@ async function handlePOST(req: Request) {
 
         // 3. Search for relevant context (Intelligent Retrieval)
         let documents: any[] = [];
-        const SOFT_FILTER_THRESHOLD = 0.60;
 
         // ONLY perform search if not skipped
         if (!skipSearch) {
@@ -308,12 +311,11 @@ async function handlePOST(req: Request) {
                 documents = primaryResults;
             } else {
                 console.error('Deity retrieval unavailable', { code: 'RETRIEVAL_UNAVAILABLE', requestId });
+                throw new TypeError('Knowledge retrieval unavailable');
             }
 
             // Soft-Filter Logic
-            const topScore = documents.length > 0 ? documents[0].combined_score : 0;
-
-            if (detectedCategory && filterFiles && topScore < SOFT_FILTER_THRESHOLD) {
+            if (!primaryError && !resourceFiles && detectedCategory && filterFiles && documents.length === 0) {
                 console.log(`⚠️ Soft-Filter Triggered. Switching to Global Search.`);
                 const { data: globalResults, error: globalError } = await supabase.rpc('intelligent_search_openai_v1', {
                     query_embedding: embedding,
@@ -325,7 +327,8 @@ async function handlePOST(req: Request) {
                     candidate_count: 50
                 });
 
-                if (!globalError && globalResults?.length > 0) {
+                if (globalError) throw new TypeError('Knowledge retrieval unavailable');
+                if (globalResults?.length > 0) {
                     documents = globalResults;
                 }
             }
