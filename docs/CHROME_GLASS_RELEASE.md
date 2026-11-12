@@ -73,8 +73,9 @@ Browser emulation must not be described as physical-device verification.
   reports `status: ok` and the exact promoted revision.
 - [ ] Live Chrome and WebKit checks repeat the critical visual/interaction matrix,
   including readable Deity/popups and unchanged mobile renderer selection.
-- [ ] `NSSO_PRODUCTION_REVISION` matches the verified promoted revision and the
-  production-health workflow succeeds after promotion.
+- [ ] Vercel has published the successful production deployment record for the
+  promoted revision, and the production-health workflow resolves that revision
+  independently and succeeds after promotion.
 - [ ] A concise handoff states the live revision, evidence, test coverage and
   remaining limitations without claiming native Apple rendering or physical
   iPhone testing unless it actually occurred.
