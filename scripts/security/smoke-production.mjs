@@ -12,7 +12,7 @@ for (const path of paths) {
     if (path==='/api/health') {
         const health=await response.json()
         if (health.status!=='ok' || !/^[a-f0-9]{40}$/.test(health.revision)) throw new Error('Release/schema health unconfirmed')
-        if (health.revision!==expectedRevision) throw new Error('Unexpected deployed revision')
+        if (health.revision!==expectedRevision) throw new Error(`Unexpected deployed revision: expected ${expectedRevision}, received ${health.revision}`)
     } else await response.body?.cancel()
     console.log(JSON.stringify({path,status:response.status,durationMs:Date.now()-start}))
 }
