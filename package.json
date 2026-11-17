@@ -35,7 +35,7 @@
     "framer-motion": "^13.1.1",
     "lucide-react": "^0.562.0",
     "nanoid": "^5.1.6",
-    "next": "16.4.3",
+    "next": "16.4.5",
     "parse5": "8.0.1",
     "qrcode.react": "^4.2.0",
     "react": "19.3.1",
